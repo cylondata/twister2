@@ -39,6 +39,9 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
   private boolean cleanUpCalled = false;
 
+  /**
+   * Wait for threads to finsih
+   */
   private CountDownLatch doneSignal;
 
   public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
@@ -66,6 +69,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     cleanUp(executionPlan, nodes);
+    LOG.info("EXEC DONE");
     return true;
   }
 
@@ -128,6 +132,97 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     scheduleExecution(nodes);
     return new BatchExecution(executionPlan, nodes);
+  }
+
+  @Override
+  public boolean waitFor(ExecutionPlan plan) {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
+
+    if (nodes.size() == 0) {
+      LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
+          + "have more workers than tasks", workerId));
+      return true;
+    }
+
+    BlockingQueue<INodeInstance> tasks;
+
+    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
+    tasks.addAll(nodes.values());
+
+    int curTaskSize = tasks.size();
+    CommunicationWorker[] workers = new CommunicationWorker[curTaskSize];
+
+    doneSignal = new CountDownLatch(curTaskSize);
+    for (int i = 0; i < curTaskSize; i++) {
+      workers[i] = new CommunicationWorker(tasks);
+      threads.submit(workers[i]);
+    }
+
+    // we progress until all the channel finish
+    while (finishedInstances.size() != nodes.size() || !channel.isComplete()) {
+      channel.progress();
+    }
+
+    close(plan, nodes);
+
+    LOG.info("Waitfor DONE");
+    return true;
+  }
+
+  private void close(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+    // lets wait for thread to finish
+    try {
+      doneSignal.await();
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interrupted", e);
+    }
+
+    // clean up the instances
+    for (INodeInstance node : nodes.values()) {
+      node.close();
+    }
+
+    // lets close the operations
+    List<IParallelOperation> ops = executionPlan.getParallelOperations();
+    for (IParallelOperation op : ops) {
+      op.close();
+    }
+
+    // clear the finished instances
+    finishedInstances.clear();
+    cleanUpCalled = true;
+  }
+
+  protected class CommunicationWorker implements Runnable {
+    private BlockingQueue<INodeInstance> tasks;
+
+    public CommunicationWorker(BlockingQueue<INodeInstance> tasks) {
+      this.tasks = tasks;
+    }
+
+    @Override
+    public void run() {
+      while (notStopped) {
+        try {
+          INodeInstance nodeInstance = tasks.poll();
+          if (nodeInstance != null) {
+            boolean complete = nodeInstance.isComplete();
+            if (complete) {
+              finishedInstances.put(nodeInstance.getId(), true);
+            } else {
+              // we need to further execute this task
+              tasks.offer(nodeInstance);
+            }
+          } else {
+            break;
+          }
+        } catch (Throwable t) {
+          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+          throw new RuntimeException("Error occurred in execution of task", t);
+        }
+      }
+      doneSignal.countDown();
+    }
   }
 
   protected class BatchWorker implements Runnable {

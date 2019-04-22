@@ -85,4 +85,9 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   public void reset() {
     op.refresh();
   }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
 }

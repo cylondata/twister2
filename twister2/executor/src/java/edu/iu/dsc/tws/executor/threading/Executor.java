@@ -57,6 +57,10 @@ public class Executor {
     return executor.iExecute(executionPlan);
   }
 
+  public boolean waitFor(ExecutionPlan executionPlan) {
+    return executor.waitFor(executionPlan);
+  }
+
   public void close() {
     executor.close();
   }

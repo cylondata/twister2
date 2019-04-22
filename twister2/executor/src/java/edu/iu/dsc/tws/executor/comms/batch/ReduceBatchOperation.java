@@ -108,4 +108,9 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
   public void reset() {
     op.refresh();
   }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
 }

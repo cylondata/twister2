@@ -59,6 +59,12 @@ public interface IParallelOperation {
   boolean progress();
 
   /**
+   * Check weather the operation is complete
+   * @return true if the operation is complete
+   */
+  boolean isComplete();
+
+  /**
    * Indicate the end of the operation
    * @param source the source
    */

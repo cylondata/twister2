@@ -200,7 +200,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     }
 
     // lets progress the communication
-    boolean needsFurther = communicationProgress();
+    boolean needsFurther = progressCommunication();
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE)) {
       state.addState(InstanceState.SENDING_DONE);
@@ -244,7 +244,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
    *
    * @return true if further progress is needed
    */
-  public boolean communicationProgress() {
+  public boolean progressCommunication() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
       if (e.getValue().progress()) {
@@ -252,6 +252,17 @@ public class SourceBatchInstance implements INodeInstance, ISync {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+    return complete;
   }
 
 

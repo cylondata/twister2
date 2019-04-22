@@ -144,7 +144,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       }
 
       // lets progress the communication
-      boolean needsFurther = communicationProgress();
+      boolean needsFurther = progressCommunication();
 
       // we don't have incoming and our inqueue in empty
       if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
@@ -156,10 +156,13 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     return !state.isSet(InstanceState.EXECUTION_DONE | InstanceState.SYNCED);
   }
 
+  private int count = 0;
+
   public boolean sync(String edge, byte[] value) {
     syncReceived.add(edge);
     if (syncReceived.equals(batchInParOps.keySet())) {
-      LOG.info("SYNCED");
+      count++;
+      LOG.info("SYNCED "  + count);
       state.addState(InstanceState.SYNCED);
       syncReceived.clear();
     }
@@ -188,7 +191,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    *
    * @return true if further progress is needed
    */
-  private boolean communicationProgress() {
+  public boolean progressCommunication() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
       if (e.getValue().progress()) {
@@ -196,6 +199,17 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+    return complete;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {

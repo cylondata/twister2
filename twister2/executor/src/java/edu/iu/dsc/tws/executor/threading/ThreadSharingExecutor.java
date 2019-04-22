@@ -15,6 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -41,7 +43,8 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
     this.config = config;
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
-    this.threads = Executors.newFixedThreadPool(numThreads);
+    this.threads = Executors.newFixedThreadPool(numThreads,
+        new ThreadFactoryBuilder().setNameFormat("executor-%d").build());
   }
 
   public boolean execute(ExecutionPlan plan) {

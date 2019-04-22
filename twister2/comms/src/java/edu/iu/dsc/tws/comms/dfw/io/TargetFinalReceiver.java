@@ -53,7 +53,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
     for (Integer target : expectedIds.keySet()) {
       syncReceived.put(target, new HashSet<>());
-      targetStates.put(target, ReceiverState.RECEIVING);
+      targetStates.put(target, ReceiverState.INIT);
     }
 
     for (int target : thisDestinations) {
@@ -94,6 +94,10 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       return false;
     }
 
+    if (targetStates.get(target) == ReceiverState.INIT) {
+      targetStates.put(target, ReceiverState.RECEIVING);
+    }
+
     Queue<Object> msgQueue = messages.get(target);
     return msgQueue.size() < highWaterMark;
   }
@@ -102,6 +106,12 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected boolean sync() {
     boolean allSynced = true;
     for (int target : thisDestinations) {
+      // if we have synced no need to go forward
+      if (targetStates.get(target) == ReceiverState.INIT
+          || targetStates.get(target) == ReceiverState.SYNCED) {
+        continue;
+      }
+
       if (targetStates.get(target) == ReceiverState.RECEIVING) {
         allSynced = false;
       }
@@ -130,7 +140,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     for (int taraget : targetStates.keySet()) {
       clearTarget(taraget);
 
-      targetStates.put(taraget, ReceiverState.RECEIVING);
+      targetStates.put(taraget, ReceiverState.INIT);
     }
 
     for (Map.Entry<Integer, Set<Integer>> e : syncReceived.entrySet()) {

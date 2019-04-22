@@ -123,6 +123,11 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     cleanUpCalled = true;
   }
 
+  @Override
+  public boolean waitFor(ExecutionPlan plan) {
+    return false;
+  }
+
   protected class StreamWorker implements Runnable {
     private BlockingQueue<INodeInstance> tasks;
 

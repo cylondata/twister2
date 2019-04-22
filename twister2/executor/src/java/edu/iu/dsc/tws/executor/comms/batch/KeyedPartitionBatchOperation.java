@@ -101,4 +101,9 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   public void reset() {
     op.refresh();
   }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
 }

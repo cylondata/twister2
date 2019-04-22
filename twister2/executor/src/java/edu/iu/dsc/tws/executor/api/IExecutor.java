@@ -28,6 +28,13 @@ public interface IExecutor {
   IExecution iExecute(ExecutionPlan plan);
 
   /**
+   * Wait for the execution to complete
+   * @param plan the execution plan
+   * @return true if successful
+   */
+  boolean waitFor(ExecutionPlan plan);
+
+  /**
    * Terminate the executor
    */
   void close();

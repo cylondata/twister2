@@ -140,4 +140,9 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   public void reset() {
     op.refresh();
   }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
 }

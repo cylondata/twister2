@@ -193,7 +193,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // for compute we don't have to have the context done as when the inputs finish and execution
       // is done, we are done executing
       // progress in communication
-      boolean needsFurther = communicationProgress(inParOps);
+      boolean needsFurther = progressCommunication(inParOps);
       // if we no longer needs to progress comm and input is empty
       if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
         state.addState(InstanceState.EXECUTION_DONE);
@@ -228,7 +228,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     }
 
     // lets progress the communication
-    boolean needsFurther = communicationProgress(outParOps);
+    boolean needsFurther = progressCommunication(outParOps);
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE)) {
       state.addState(InstanceState.SENDING_DONE);
@@ -250,7 +250,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
    *
    * @return true if further progress is needed
    */
-  public boolean communicationProgress(Map<String, IParallelOperation> ops) {
+  public boolean progressCommunication(Map<String, IParallelOperation> ops) {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
       if (e.getValue().progress()) {
@@ -258,6 +258,24 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    return complete;
   }
 
   @Override

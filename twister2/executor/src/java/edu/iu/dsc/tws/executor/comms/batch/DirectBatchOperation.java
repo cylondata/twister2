@@ -76,6 +76,11 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
+
+  @Override
   public void finish(int source) {
     op.finish(source);
   }

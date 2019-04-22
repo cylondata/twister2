@@ -85,6 +85,11 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
+
+  @Override
   public void close() {
     op.close();
   }
