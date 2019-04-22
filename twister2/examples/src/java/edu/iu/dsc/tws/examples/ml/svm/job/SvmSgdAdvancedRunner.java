@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.job;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -34,6 +35,7 @@ import edu.iu.dsc.tws.examples.ml.svm.test.PredictionReduceTask;
 import edu.iu.dsc.tws.examples.ml.svm.test.PredictionSourceTask;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -95,6 +97,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
   private static final double NANO_TO_SEC = 1000000000;
 
+  private static final double B2MB = 1024.0 * 1024.0;
+
 
   @Override
   public void execute() {
@@ -142,13 +146,26 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     testingData = executeTestingDataLoadingTaskGraph();
     dataLoadingTime += (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
-    if (operationMode.equals(OperationMode.BATCH)) {
-      t1 = System.nanoTime();
-      testingResults = executeTestingTaskGraph();
-      accuracy = retriveFinalTestingAccuracy(testingResults);
-      testingTime += (double) (System.nanoTime() - t1) / NANO_TO_SEC;
-      printTaskSummary();
+    //TODO : Handle Distributed Weight Vector Loading
+
+//    if (operationMode.equals(OperationMode.BATCH)) {
+//      t1 = System.nanoTime();
+//      testingResults = executeTestingTaskGraph();
+//      accuracy = retriveFinalTestingAccuracy(testingResults);
+//      testingTime += (double) (System.nanoTime() - t1) / NANO_TO_SEC;
+//      printTaskSummary();
+//    }
+    printTaskSummary();
+    if (workerId == 0) {
+      try {
+        saveResults();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
+    LOG.info(String.format("Rank[%d] Total Memory %f MB, Max Memory %f MB", workerId,
+        ((double) Runtime.getRuntime().totalMemory()) / B2MB,
+        ((double) Runtime.getRuntime().maxMemory()) / B2MB));
 
     if (operationMode.equals(OperationMode.STREAMING)) {
       LOG.info("Not Yet Implemented");
@@ -255,8 +272,11 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
             Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
+//    svmReduceConnection
+//        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+//            new ReduceAggregator(), DataType.OBJECT);
     svmReduceConnection
-        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
+        .allreduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
             new ReduceAggregator(), DataType.OBJECT);
 
     trainingBuilder.setMode(operationMode);
@@ -270,8 +290,10 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     taskExecutor.execute(graph, plan);
 
     LOG.info("Task Graph Executed !!! ");
-
-    trainedWeight = retrieveWeightVectorFromTaskGraph(graph, plan);
+    if (workerId == 0) {
+      trainedWeight = retrieveWeightVectorFromTaskGraph(graph, plan);
+      this.trainedWeightVector = trainedWeight;
+    }
 
     return trainedWeight;
   }
@@ -400,12 +422,19 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
         dataLoadingTime) + "  s \n";
     s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingTime) + "  s \n";
-    s += "Testing Time  \t\t\t\t\t\t\t= " +  String.format("%3.9f", testingTime) + "  s \n";
+    s += "Testing Time  \t\t\t\t\t\t\t= " + String.format("%3.9f", testingTime) + "  s \n";
     s += "Total Time (Data Loading Time + Training Time + Testing Time) \t="
         + String.format(" %.9f", dataLoadingTime + trainingTime + testingTime) + "  s \n";
     s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
     s += "======================================================================================\n";
     LOG.info(String.format(s));
+  }
+
+  public void saveResults() throws IOException {
+    ResultsSaver resultsSaver = new ResultsSaver(this.trainingTime, this.testingTime,
+        this.dataLoadingTime, this.dataLoadingTime + this.trainingTime + this.testingTime,
+        this.svmJobParameters, "task");
+    resultsSaver.save();
   }
 
 

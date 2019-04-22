@@ -21,6 +21,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.IWindowedSink;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphConstraints;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -104,6 +106,23 @@ public final class TaskGraphBuilder {
    */
   public ComputeConnection addSink(String name, ISink sink, int parallel) {
     Vertex vertex = new Vertex(name, sink, parallel);
+    nodes.put(name, vertex);
+
+    return createComputeConnection(name);
+  }
+
+  /**
+   * Add a sink node to the graph
+   *
+   * @param name name of the node
+   * @param sink implementation of the node
+   * @param parallel number of parallel instances
+   * @param win windowing policy associated with the vertex
+   * @return a compute connection, that can be used to connect this node to other nodes as a child
+   */
+  public ComputeConnection addSink(String name, IWindowedSink sink, int parallel,
+                                   WindowingPolicy win) {
+    Vertex vertex = new Vertex(name, sink, parallel, win);
     nodes.put(name, vertex);
 
     return createComputeConnection(name);

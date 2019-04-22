@@ -50,6 +50,8 @@ public class JobParameters {
 
   private boolean stream = false;
 
+  private boolean window = false;
+
   public JobParameters(int size, int iterations, String col,
                        int containers, List<Integer> taskStages, int gap) {
     this.size = size;
@@ -124,6 +126,14 @@ public class JobParameters {
     return this.getIterations() + this.getWarmupIterations();
   }
 
+  public boolean isWindow() {
+    return window;
+  }
+
+  public void setWindow(boolean window) {
+    this.window = window;
+  }
+
   public static JobParameters build(Config cfg) {
     int iterations = Integer.parseInt(cfg.getStringValue(Constants.ARGS_ITR));
     int size = Integer.parseInt(cfg.getStringValue(Constants.ARGS_SIZE));
@@ -139,6 +149,7 @@ public class JobParameters {
     int intItr = Integer.parseInt(cfg.getStringValue(Constants.ARGS_INIT_ITERATIONS));
     boolean doVerify = cfg.getBooleanValue(Constants.ARGS_VERIFY);
     boolean stream = cfg.getBooleanValue(Constants.ARGS_STREAM);
+    boolean window = cfg.getBooleanValue(Constants.ARGS_WINDOW);
     int warmupItr = cfg.getIntegerValue(Constants.ARGS_WARMPU_ITR, 0);
 
     String[] stages = taskStages.split(",");
@@ -161,6 +172,7 @@ public class JobParameters {
     jobParameters.initIterations = intItr;
     jobParameters.doVerify = doVerify;
     jobParameters.stream = stream;
+    jobParameters.window = window;
     jobParameters.warmupIterations = warmupItr;
     return jobParameters;
   }
