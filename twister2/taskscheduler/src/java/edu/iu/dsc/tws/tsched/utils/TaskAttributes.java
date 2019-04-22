@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 public class TaskAttributes {
 
   private static final Logger LOG = Logger.getLogger(TaskAttributes.class.getName());
+
   /**
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified ram value. If the user doesn't specify the required ram configuration it will
@@ -119,21 +120,24 @@ public class TaskAttributes {
    */
   public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    for (Vertex task : iTaskSet) {
-      Config config = task.getConfig();
-      Map<String, String> constraints = task.getGraphConstraintsMap();
-      String taskName = task.getName();
+    for (Vertex taskVertex : iTaskSet) {
+      Config config = taskVertex.getConfig();
+      String taskName = taskVertex.getName();
       int parallelTaskCount;
-      if (!task.getGraphConstraintsMap().containsKey(
-          Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
-        if (task.getParallelism() >= 1) {
-          parallelTaskCount = task.getParallelism();
+      if (taskVertex.getGraphConstraintsMap() != null) {
+        Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
+        if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+          parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
+              Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
         } else {
           parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
         }
       } else {
-        parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
-            Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
+        if (taskVertex.getParallelism() >= 1) {
+          parallelTaskCount = taskVertex.getParallelism();
+        } else {
+          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        }
       }
       parallelTaskMap.put(taskName, parallelTaskCount);
     }
@@ -143,15 +147,19 @@ public class TaskAttributes {
 
   public int getInstancesPerWorker(Vertex taskVertex) {
     int instancesPerWorker;
-    Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
-    if (taskVertex.getGraphConstraintsMap().containsKey(
-        Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
-      instancesPerWorker = Integer.valueOf(String.valueOf(constraints.get(
-          Context.TWISTER2_TASK_INSTANCES_PER_WORKER)));
+    Config config = taskVertex.getConfig();
+    if (taskVertex.getGraphConstraintsMap() != null) {
+      Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
+      if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
+        instancesPerWorker = Integer.valueOf(String.valueOf(constraints.get(
+            Context.TWISTER2_TASK_INSTANCES_PER_WORKER)));
+      } else {
+        instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+      }
     } else {
-      instancesPerWorker = Integer.valueOf(String.valueOf(
-          Context.TWISTER2_TASK_INSTANCES_PER_WORKER));
+      instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
     }
+    LOG.info("number of instances per worker:" + instancesPerWorker);
     return instancesPerWorker;
   }
 
@@ -165,18 +173,21 @@ public class TaskAttributes {
     Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
     Config config = taskVertex.getConfig();
     String taskName = taskVertex.getName();
-    Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
     int parallelTaskCount;
-    if (!taskVertex.getGraphConstraintsMap().containsKey(
-        Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+    if (taskVertex.getGraphConstraintsMap() != null) {
+      Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
+      if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+        parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
+            Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
+      } else {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+      }
+    } else {
       if (taskVertex.getParallelism() >= 1) {
         parallelTaskCount = taskVertex.getParallelism();
       } else {
         parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
       }
-    } else {
-      parallelTaskCount = Integer.valueOf(
-          String.valueOf(constraints.get(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
     }
     parallelTaskMap.put(taskName, parallelTaskCount);
     return parallelTaskMap;

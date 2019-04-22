@@ -59,11 +59,11 @@ public class DataLocalityStreamingExample extends TaskWorker {
     GeneratorTask dataObjectSource = new GeneratorTask();
     ReceivingTask dataObjectSink = new ReceivingTask();
 
+    //Adding the user-defined constraints to the graph
     Map<String, String> taskgraphConstraintsMap = new HashMap<>();
-
     taskgraphConstraintsMap.put(Context.TWISTER2_TASK_CONSTRAINTS, "true");
-    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "2");
-    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "2");
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "4");
+    //taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "2");
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     //Add source, compute, and sink tasks to the task graph builder for the first task graph

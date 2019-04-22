@@ -196,12 +196,11 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     TaskAttributes taskAttributes = new TaskAttributes();
 
     //Maximum task instances can be accommodated to the container
-    //int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
-
     int instancesPerContainer = 0;
-    if (taskVertexSet.iterator().next().getGraphConstraintsMap().containsKey(
-        Context.TWISTER2_TASK_CONSTRAINTS)) {
+    if (taskVertexSet.iterator().next().getGraphConstraintsMap() != null) {
       instancesPerContainer = taskAttributes.getInstancesPerWorker(taskVertexSet.iterator().next());
+    } else {
+      instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
     }
 
     //Total container capacity
