@@ -130,21 +130,31 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     this.messageList = new ArrayList<>(this.windowSize);
   }
 
+  public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
+                                        BlockingQueue<IMessage> streamingInQueue, Config config,
+                                        String tName, int tId, int tIndex, int parallel, int wId,
+                                        Map<String, Object> cfgs, Map<String, String> inEdges,
+                                        TaskSchedulePlan taskSchedulePlan) {
+    this.streamingWindowTask = streamingWindowTask;
+    this.streamingInQueue = streamingInQueue;
+    this.config = config;
+    this.streamingTaskId = tId;
+    this.streamingTaskIndex = tIndex;
+    this.parallelism = parallel;
+    this.nodeConfigs = cfgs;
+    this.workerId = wId;
+    this.taskName = tName;
+    this.inEdges = inEdges;
+    this.taskSchedulePlan = taskSchedulePlan;
+  }
+
   @Override
   public boolean execute() {
 
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
       if (m != null) {
-        this.windowManager.execute(m);
-      }
-
-      if (this.windowManager.isDone()) {
-        LOG.info(String.format("Windowing Completed : %d", this.windowManager.getWindow().size()));
-        streamingWindowTask.execute(this.windowManager.getWindow());
-        this.windowManager.clearWindow();
-      } else {
-        LOG.info(String.format("Window Manager : %d", this.windowManager.getWindow().size()));
+        this.streamingWindowTask.execute(m);
       }
     }
 

@@ -31,16 +31,15 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.compute.WindowedCompute;
+import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Window;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
+import edu.iu.dsc.tws.task.api.window.core.WindowedSink;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
 public class STWindowExample extends BenchTaskWorker {
@@ -62,7 +61,7 @@ public class STWindowExample extends BenchTaskWorker {
     IWindowedSink dw = new DirectWindowedReceivingTask(windowingPolicy);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism, windowingPolicy);
+    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;
@@ -92,39 +91,22 @@ public class STWindowExample extends BenchTaskWorker {
     }
   }
 
-  protected static class DirectWindowedReceivingTask extends WindowedCompute<int[]>
-      implements IWindowedSink, ReduceWindowedFunction<int[]> {
+  protected static class DirectWindowedReceivingTask extends WindowedSink<int[]>  {
 
     private WindowingPolicy windowingPolicy;
 
     public DirectWindowedReceivingTask(WindowingPolicy windowingPolicy) {
+      super(windowingPolicy);
       this.windowingPolicy = windowingPolicy;
     }
 
+
     @Override
-    public List<IMessage<int[]>> window(List<IMessage<int[]>> content) {
-      if (content.size() > 0) {
-        int[][] data = new int[content.size()][];
-        int i = 0;
-        String s = "";
-        for (IMessage<int[]> message : content) {
-          data[i++] = (int[]) message.getContent();
-          s += Arrays.toString(data[i - 1]) + " ";
-        }
-        LOG.info(String.format("Window Size : %d, Data : { %s }", content.size(), s));
-      } else {
-        LOG.info(String.format("Something Went Wrong!!!"));
-      }
-      return content;
+    public IWindowMessage<int[]> window(IWindowMessage<int[]> windowMessage) {
+      LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
+      return null;
     }
 
 
-    @Override
-    public int[] reduce(int[] t0, int[] t1) {
-      for (int i = 0; i < t0.length; i++) {
-        t0[i] += t1[i];
-      }
-      return t0;
-    }
   }
 }

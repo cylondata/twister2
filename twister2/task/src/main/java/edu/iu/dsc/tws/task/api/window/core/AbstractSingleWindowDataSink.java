@@ -9,9 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.graph;
+package edu.iu.dsc.tws.task.api.window.core;
 
-public enum WindowMode {
-  ALL,
-  NONE,
+import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
+
+public abstract class AbstractSingleWindowDataSink<T> extends BaseWindowSink<T> {
 }

@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Window;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
@@ -31,6 +33,10 @@ public class WindowManager<T> implements IManager<T> {
 
   private int windowCountSize = 0;
 
+  private WindowMessageImpl<T> windowMessageImpl;
+
+  private IWindowMessage<T> windowMessage;
+
   private WindowConfig.Duration windowDurationSize;
 
   private boolean windowingCompleted = false;
@@ -38,6 +44,7 @@ public class WindowManager<T> implements IManager<T> {
   public WindowManager(WindowingPolicy windowingPolicy) {
     this.windowingPolicy = windowingPolicy;
     this.windowingPolicy = initializeWindowingPolicy();
+
   }
 
   /**
@@ -74,9 +81,13 @@ public class WindowManager<T> implements IManager<T> {
     return this.windowedObjects;
   }
 
+  public IWindowMessage<T> getWindowMessage() {
+    this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
+    return windowMessage;
+  }
+
   @Override
   public boolean execute(T message) {
-
     boolean status = false;
     if (progress(this.windowedObjects)) {
       if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {

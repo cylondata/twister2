@@ -9,11 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window;
+package edu.iu.dsc.tws.task.api.window.api;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.BaseNode;
 
-public interface IWindowCompute<T> extends INode {
-  boolean execute(IMessage<T> message);
+public abstract class BaseWindowSink<T> extends BaseNode implements IWindowedSink<T> {
 }
