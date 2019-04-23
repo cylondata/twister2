@@ -52,6 +52,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_RECORDS_IN_MEMORY;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
 public class TeraSort extends TaskWorker {
 
@@ -296,6 +297,9 @@ public class TeraSort extends TaskWorker {
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
     jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
 
+    jobConfig.put(ARG_RESOURCE_INSTANCES,
+        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)));
+
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
       jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY,
           Integer.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY)));
@@ -309,6 +313,7 @@ public class TeraSort extends TaskWorker {
     if (cmd.hasOption(ARG_BENCHMARK_METADATA)) {
       jobConfig.put(ARG_BENCHMARK_METADATA,
           cmd.getOptionValue(ARG_BENCHMARK_METADATA));
+      jobConfig.put(ARG_RUN_BENCHMARK, true);
     }
 
     Twister2Job twister2Job;

@@ -11,8 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 
 /**
@@ -22,5 +29,34 @@ import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
  * to a task within the same worker the message will still go through the partial receiver.
  */
 public class PartitionPartialReceiver extends TargetPartialReceiver {
+
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
+
+  private Set<Integer> sourcesWithSyncsSent = new HashSet<>();
+  private int groupingSize = 100;
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+  }
+
+  @Override
+  protected void addSyncMessage(int source, int target) {
+    super.addSyncMessage(source, target);
+    this.sourcesWithSyncsSent.add(source);
+  }
+
+  @Override
+  protected boolean isFilledToSend(int target) {
+    return readyToSend.get(target) != null
+        && readyToSend.get(target).size() > groupingSize
+        && sourcesWithSyncsSent.size() == thisSources.size();
+  }
+
+  @Override
+  public void clean() {
+    super.clean();
+    this.sourcesWithSyncsSent.clear();
+  }
 }

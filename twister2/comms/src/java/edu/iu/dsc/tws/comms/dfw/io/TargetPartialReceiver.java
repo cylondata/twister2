@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
-   * Keep state about the targets
+   * Keep state
    */
   protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
 
