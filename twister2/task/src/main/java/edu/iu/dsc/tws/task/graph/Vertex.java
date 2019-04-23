@@ -54,31 +54,6 @@ public class Vertex {
    */
   private int parallelism = 1;
 
-  private GraphConstraints graphConstraints;
-
-  private Map<String, String> graphConstraintsMap;
-
-  public GraphConstraints getGraphConstraints() {
-    return graphConstraints;
-  }
-
-  public void setGraphConstraints(GraphConstraints graphConstraints) {
-    this.graphConstraints = graphConstraints;
-  }
-
-
-  public Map<String, String> getGraphConstraintsMap() {
-    return graphConstraintsMap;
-  }
-
-  public void setGraphConstraintsMap(Map<String, String> graphConstraintsMap) {
-    this.graphConstraintsMap = graphConstraintsMap;
-  }
-
-  public void setConfig(Map<String, Object> config) {
-    this.config = config;
-  }
-
   /**
    * Config value for the task vertex
    */
@@ -111,22 +86,6 @@ public class Vertex {
     this.task = task;
     this.parallelism = parallelism;
     config = new HashMap<>();
-  }
-
-  public Vertex(String name, INode task, int parallelism, GraphConstraints graphconstraints) {
-    this.name = name;
-    this.task = task;
-    this.parallelism = parallelism;
-    config = new HashMap<>();
-    this.graphConstraints = graphconstraints;
-  }
-
-  public Vertex(String name, INode task, int parallelism, Map<String, String> graphconstraintsMap) {
-    this.name = name;
-    this.task = task;
-    this.parallelism = parallelism;
-    config = new HashMap<>();
-    setGraphConstraintsMap(graphconstraintsMap);
   }
 
   public Vertex(String name, INode task, int parallelism, WindowingPolicy win) {
@@ -188,6 +147,10 @@ public class Vertex {
 
   public void setParallelism(int parallelism) {
     this.parallelism = parallelism;
+  }
+
+  public void setConfig(Map<String, Object> config) {
+    this.config = config;
   }
 
   public void addConfiguration(String key, Object val) {

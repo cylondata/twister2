@@ -99,13 +99,11 @@ public class Context {
 
   public static final String TWISTER2_TASKS_PER_WORKER = "twister2.tasks.per.worker";
 
-  public static final String TWISTER2_TASK_INSTANCES_PER_WORKER
-      = "twister2.task.instances.per.worker";
+  public static final String TWISTER2_MAX_TASK_INSTANCES_PER_WORKER
+      = "twister2.max.task.instances.per.worker";
 
   public static final String TWISTER2_TASK_INSTANCE_ODD_PARALLELISM
       = "twister2.task.instance.odd.parallelism";
-
-  public static final String TWISTER2_TASK_CONSTRAINTS = "twister2.task.constraints";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);

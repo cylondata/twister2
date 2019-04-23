@@ -32,6 +32,158 @@ public class TaskAttributes {
 
   private static final Logger LOG = Logger.getLogger(TaskAttributes.class.getName());
 
+
+  public int getInstancesPerWorker(Vertex taskVertex, Map<String, String> vertexConstraintsMap) {
+    int instancesPerWorker;
+    Config config = taskVertex.getConfig();
+    if (vertexConstraintsMap != null) {
+      if (vertexConstraintsMap.containsKey(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)) {
+        instancesPerWorker = Integer.valueOf(String.valueOf(vertexConstraintsMap.get(
+            Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
+      } else {
+        instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+      }
+    } else {
+      instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+    }
+    return instancesPerWorker;
+  }
+
+  public int getInstancesPerWorker(Map<String, String> graphConstraintsMap) {
+    int instancesPerWorker = 0;
+    if (graphConstraintsMap.containsKey(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)) {
+      instancesPerWorker = Integer.valueOf(String.valueOf(graphConstraintsMap.get(
+          Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
+    }
+    return instancesPerWorker;
+  }
+
+  /**
+   * This method is to calculate the total number of task instances in the task graph which is based
+   * on the parallelism specified in the task graph or else from the task configuration
+   * default values.
+   */
+  public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
+    int totalNumberOfInstances = 0;
+    for (int instances : parallelTaskMap.values()) {
+      totalNumberOfInstances += instances;
+    }
+    return totalNumberOfInstances;
+  }
+
+  public int getTotalNumberOfInstances(Vertex taskVertex) {
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
+    int totalNumberOfInstances = 0;
+    for (int instances : parallelTaskMap.values()) {
+      totalNumberOfInstances += instances;
+    }
+    return totalNumberOfInstances;
+  }
+
+  public int getTotalNumberOfInstances(Set<Vertex> iTaskSet,
+                                       Map<String, Map<String, String>> nodeConstraintsMap) {
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet, nodeConstraintsMap);
+    int totalNumberOfInstances = 0;
+    for (int instances : parallelTaskMap.values()) {
+      totalNumberOfInstances += instances;
+    }
+    return totalNumberOfInstances;
+  }
+
+  public int getTotalNumberOfInstances(Vertex taskVertex,
+                                       Map<String, Map<String, String>> nodeConstraintsMap) {
+    Map<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex, nodeConstraintsMap);
+    int totalNumberOfInstances = 0;
+    for (int instances : parallelTaskMap.values()) {
+      totalNumberOfInstances += instances;
+    }
+    return totalNumberOfInstances;
+  }
+
+  /**
+   * This method is mainly to generate the parallel task map (maintain order) for the task vertex.
+   * If the user specifies the parallelism value greater than or equal "1" will be considered as a
+   * parallelism value. Otherwise, the system assign the default parallelism value to the task
+   * vertex from the task scheduling configuration file.
+   */
+  public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet, Map<String,
+      Map<String, String>> nodeConstraintsMap) {
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    for (Vertex taskVertex : iTaskSet) {
+      Config config = taskVertex.getConfig();
+      String taskName = taskVertex.getName();
+      int parallelTaskCount = 0;
+      if (nodeConstraintsMap != null) {
+        if (nodeConstraintsMap.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+          parallelTaskCount = Integer.valueOf(String.valueOf(nodeConstraintsMap.get(
+              Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
+        } else {
+          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+        }
+      }
+      parallelTaskMap.put(taskName, parallelTaskCount);
+    }
+    return parallelTaskMap;
+  }
+
+  /**
+   * This method is to generate the parallel task map for the task vertex. If the user specifies the
+   * parallelism value greater than or equal "1" will be considered as a parallelism value.
+   * Otherwise, the system assign the default parallelism value to the task vertex from the task
+   * scheduling configuration file.
+   */
+  public Map<String, Integer> getParallelTaskMap(Vertex taskVertex,
+                                                 Map<String,
+                                                     Map<String, String>> nodeConstraintsMap) {
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    Config config = taskVertex.getConfig();
+    String taskName = taskVertex.getName();
+    int parallelTaskCount = 0;
+    if (nodeConstraintsMap != null) {
+      if (nodeConstraintsMap.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
+        parallelTaskCount = Integer.valueOf(String.valueOf(nodeConstraintsMap.get(
+            Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
+      } else {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+      }
+    }
+    parallelTaskMap.put(taskName, parallelTaskCount);
+    return parallelTaskMap;
+  }
+
+  public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    for (Vertex taskVertex : iTaskSet) {
+      Config config = taskVertex.getConfig();
+      String taskName = taskVertex.getName();
+      int parallelTaskCount;
+      if (taskVertex.getParallelism() >= 1) {
+        parallelTaskCount = taskVertex.getParallelism();
+      } else {
+        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+      }
+      parallelTaskMap.put(taskName, parallelTaskCount);
+    }
+    return parallelTaskMap;
+  }
+
+  public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
+    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
+    Config config = taskVertex.getConfig();
+    String taskName = taskVertex.getName();
+    int parallelTaskCount;
+    if (taskVertex.getParallelism() >= 1) {
+      parallelTaskCount = taskVertex.getParallelism();
+    } else {
+      parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
+    }
+    parallelTaskMap.put(taskName, parallelTaskCount);
+    return parallelTaskMap;
+  }
+
+
+
   /**
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified ram value. If the user doesn't specify the required ram configuration it will
@@ -99,113 +251,6 @@ public class TaskAttributes {
   }
 
   /**
-   * This method is to calculate the total number of task instances in the task graph which is based
-   * on the parallelism specified in the task graph or else from the task configuration
-   * default values.
-   */
-  public int getTotalNumberOfInstances(Set<Vertex> iTaskSet) {
-    Map<String, Integer> parallelTaskMap = getParallelTaskMap(iTaskSet);
-    int totalNumberOfInstances = 0;
-    for (int instances : parallelTaskMap.values()) {
-      totalNumberOfInstances += instances;
-    }
-    return totalNumberOfInstances;
-  }
-
-  /**
-   * This method is mainly to generate the parallel task map (maintain order) for the task vertex.
-   * If the user specifies the parallelism value greater than or equal "1" will be considered as a
-   * parallelism value. Otherwise, the system assign the default parallelism value to the task
-   * vertex from the task scheduling configuration file.
-   */
-  public Map<String, Integer> getParallelTaskMap(Set<Vertex> iTaskSet) {
-    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    for (Vertex taskVertex : iTaskSet) {
-      Config config = taskVertex.getConfig();
-      String taskName = taskVertex.getName();
-      int parallelTaskCount;
-      if (taskVertex.getGraphConstraintsMap() != null) {
-        Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
-        if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
-          parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
-              Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
-        } else {
-          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-        }
-      } else {
-        if (taskVertex.getParallelism() >= 1) {
-          parallelTaskCount = taskVertex.getParallelism();
-        } else {
-          parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-        }
-      }
-      parallelTaskMap.put(taskName, parallelTaskCount);
-    }
-    return parallelTaskMap;
-  }
-
-
-  public int getInstancesPerWorker(Vertex taskVertex) {
-    int instancesPerWorker;
-    Config config = taskVertex.getConfig();
-    if (taskVertex.getGraphConstraintsMap() != null) {
-      Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
-      if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCES_PER_WORKER)) {
-        instancesPerWorker = Integer.valueOf(String.valueOf(constraints.get(
-            Context.TWISTER2_TASK_INSTANCES_PER_WORKER)));
-      } else {
-        instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-      }
-    } else {
-      instancesPerWorker = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-    }
-    return instancesPerWorker;
-  }
-
-  /**
-   * This method is to generate the parallel task map for the task vertex. If the user specifies the
-   * parallelism value greater than or equal "1" will be considered as a parallelism value.
-   * Otherwise, the system assign the default parallelism value to the task vertex from the task
-   * scheduling configuration file.
-   */
-  public Map<String, Integer> getParallelTaskMap(Vertex taskVertex) {
-    Map<String, Integer> parallelTaskMap = new LinkedHashMap<>();
-    Config config = taskVertex.getConfig();
-    String taskName = taskVertex.getName();
-    int parallelTaskCount;
-    if (taskVertex.getGraphConstraintsMap() != null) {
-      Map<String, String> constraints = taskVertex.getGraphConstraintsMap();
-      if (constraints.containsKey(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)) {
-        parallelTaskCount = Integer.valueOf(String.valueOf(constraints.get(
-            Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM)));
-      } else {
-        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-      }
-    } else {
-      if (taskVertex.getParallelism() >= 1) {
-        parallelTaskCount = taskVertex.getParallelism();
-      } else {
-        parallelTaskCount = TaskSchedulerContext.taskParallelism(config);
-      }
-    }
-    parallelTaskMap.put(taskName, parallelTaskCount);
-    return parallelTaskMap;
-  }
-
-
-  /**
-   * This method is to calculate the total number of task vertex based on the parallelism value.
-   */
-  public int getTotalNumberOfInstances(Vertex taskVertex) {
-    Map<String, Integer> parallelTaskMap = getParallelTaskMap(taskVertex);
-    int totalNumberOfInstances = 0;
-    for (int instances : parallelTaskMap.values()) {
-      totalNumberOfInstances += instances;
-    }
-    return totalNumberOfInstances;
-  }
-
-  /**
    * This method retrieve the set of task vertices and check if the task vertex has the user
    * specified network value. If the user doesn't specify the required network configuration it will
    * assign the default network value from the task configuration file and store it in the map.
@@ -226,5 +271,7 @@ public class TaskAttributes {
     }
     return taskNetworkMap;
   }
+
+
 }
 

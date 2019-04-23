@@ -62,26 +62,30 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
 
     //Adding the user-defined constraints to the graph
     Map<String, String> taskgraphConstraintsMap = new HashMap<>();
-    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_CONSTRAINTS, "true");
-    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCES_PER_WORKER, "4");
-    //taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+    taskgraphConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1"); //it will be 1
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue,
-        taskgraphConstraintsMap);
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("datapointsink", dataObjectSink,
-        parallelismValue, taskgraphConstraintsMap);
+        parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
     //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
     //    DataType.OBJECT);
     computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.STREAMING);
+    taskGraphBuilder.addNodeConstraints("datapointsource", taskgraphConstraintsMap);
+    taskGraphBuilder.addNodeConstraints("datapointsink", taskgraphConstraintsMap);
+    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
-    LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints("datapointsource"));
+    LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints()
+        + "\tNode Constraints:%%%" + taskGraph.getNodeConstraints());
+
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph

@@ -114,7 +114,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     Map<Integer, List<InstanceId>> containerInstanceMap = dataLocalityStreamingSchedulingAlgorithm(
-        taskVertexSet, workerPlan.getNumberOfWorkers(), workerPlan);
+        graph, workerPlan.getNumberOfWorkers(), workerPlan);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -174,14 +174,16 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
   private Map<Integer, List<InstanceId>> dataLocalityStreamingSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers, WorkerPlan workerPlan) {
+      DataFlowTaskGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
+    Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     //Maximum task instances can be accommodated to the container
     int instancesPerContainer = 0;
-    if (taskVertexSet.iterator().next().getGraphConstraintsMap() != null) {
-      instancesPerContainer = taskAttributes.getInstancesPerWorker(taskVertexSet.iterator().next());
+
+    if (graph.getGraphConstraints() != null) {
+      instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
     } else {
       instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
     }
@@ -190,9 +192,15 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     int containerCapacity = instancesPerContainer * numberOfContainers;
     int localIndex = 0;
     int containerIndex = 0;
+    int totalTask = 0;
 
     //Total task instances in the taskgraph
-    int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    if (graph.getNodeConstraints() != null) {
+      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
+          graph.getNodeConstraints());
+    } else {
+      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+    }
 
     //Map to hold the allocation of task instances into the containers/workers
     Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
@@ -213,7 +221,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
 
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(
+        orderedTaskSet, graph.getNodeConstraints());
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
 
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {

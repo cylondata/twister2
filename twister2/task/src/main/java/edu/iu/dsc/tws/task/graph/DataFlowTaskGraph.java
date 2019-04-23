@@ -28,9 +28,10 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   private Map<String, Vertex> taskMap = new HashMap<>();
 
-  private OperationMode operationMode = OperationMode.STREAMING;
+  private Map<String, String> graphConstraintsMap = new HashMap<>();
+  private Map<String, Map<String, String>> nodeConstraintsMap = new HashMap<>();
 
-  private Map<String, Map<String, String>> graphConstraintsMap = new HashMap<>();
+  private OperationMode operationMode = OperationMode.STREAMING;
 
   private WindowMode windowMode = WindowMode.NONE;
 
@@ -67,16 +68,21 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return true;
   }
 
-  public void addGraphConstraints(String name, Map<String, String> constraintsmap) {
-    graphConstraintsMap.put(name, constraintsmap);
+
+  public void addNodeConstraints(Map<String, Map<String, String>> nodeConstraintsmap) {
+    this.nodeConstraintsMap = nodeConstraintsmap;
   }
 
-  public Map<String, String> getGraphConstraints(String name) {
-    Map<String, String> graphconstaintsMap = new HashMap<>();
-    if (taskMap.containsKey(name) && graphConstraintsMap.containsKey(name)) {
-      graphconstaintsMap = graphConstraintsMap.get(name);
-    }
-    return graphconstaintsMap;
+  public void addGraphConstraints(Map<String, String> graphConstraintsmap) {
+    this.graphConstraintsMap = graphConstraintsmap;
+  }
+
+  public Map<String, String> getGraphConstraints() {
+    return graphConstraintsMap;
+  }
+
+  public Map<String, Map<String, String>> getNodeConstraints() {
+    return nodeConstraintsMap;
   }
 
   /**
