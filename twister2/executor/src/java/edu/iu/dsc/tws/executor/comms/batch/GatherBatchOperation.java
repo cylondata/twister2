@@ -34,7 +34,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
   public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                               Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                               Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
     communicationEdge = e.generate(edge.getName());
 
@@ -83,9 +83,14 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       // add the object to the map
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
+    }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
     }
   }
 
@@ -97,5 +102,10 @@ public class GatherBatchOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

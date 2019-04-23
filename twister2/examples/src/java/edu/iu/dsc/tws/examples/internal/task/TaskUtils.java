@@ -60,8 +60,8 @@ public final class TaskUtils {
           workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID,
-        plan, network, OperationMode.BATCH);
-    executor.execute();
+        network, OperationMode.BATCH);
+    executor.execute(plan);
   }
 
   public static void execute(Config config, int workerID, DataFlowTaskGraph graph,
@@ -84,8 +84,8 @@ public final class TaskUtils {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
           workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, network);
-    executor.execute();
+    Executor executor = new Executor(config, workerID, network);
+    executor.execute(plan);
   }
 
   public static WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {

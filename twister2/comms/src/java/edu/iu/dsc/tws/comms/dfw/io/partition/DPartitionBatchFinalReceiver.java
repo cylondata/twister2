@@ -247,6 +247,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
+  }
+
+  @Override
   public void onFinish(int source) {
   }
 

@@ -123,4 +123,9 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
   protected boolean isFilledToSend(int target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
+  }
 }

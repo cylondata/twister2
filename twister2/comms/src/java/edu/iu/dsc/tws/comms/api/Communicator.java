@@ -46,7 +46,6 @@ public class Communicator {
   private TaskIdGenerator idGenerator;
 
   private List<String> persistentDirectories;
-  private int currentDirectoryIndex = 0;
 
   public Communicator(Config cfg, TWSChannel ch) {
     this(cfg, ch, (List<String>) null);

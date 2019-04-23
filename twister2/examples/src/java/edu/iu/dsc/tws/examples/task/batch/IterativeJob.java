@@ -58,16 +58,17 @@ public class IterativeJob extends TaskWorker {
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
     for (int i = 0; i < 10; i++) {
-      ExecutionPlan plan = taskExecutor.plan(graph);
+      LOG.info("Starting iteration: " + i);
       taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
 
       // this is a blocking call
       taskExecutor.execute(graph, plan);
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<Object>[] values = dataSet.getPartitions();
-//      LOG.log(Level.INFO, "Values: " + values);
     }
+    taskExecutor.waitFor(graph, plan);
   }
 
   private static class IterativeSourceTask extends BaseSource implements Receptor {
@@ -93,8 +94,12 @@ public class IterativeJob extends TaskWorker {
     @Override
     @SuppressWarnings("rawtypes")
     public void add(String name, DataObject<?> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
       input = (DataObjectImpl<Object>) data;
+    }
+
+    @Override
+    public void refresh() {
+      count = 0;
     }
   }
 
@@ -107,18 +112,20 @@ public class IterativeJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received message: " + message.getContent());
-
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           Object ret = ((Iterator) message.getContent()).next();
           count++;
           list.add(ret.toString());
         }
-        LOG.info("Message Partition Received : " + message.getContent() + ", Count : " + count);
       }
-      count++;
+      LOG.info("RECEIVE Count: " + count);
       return true;
+    }
+
+    @Override
+    public void refresh() {
+      count = 0;
     }
 
     @Override

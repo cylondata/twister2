@@ -40,7 +40,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
   public KeyedPartitionStreamOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                        Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
     MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
     this.selector = edge.getSelector();
@@ -110,5 +110,10 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }
