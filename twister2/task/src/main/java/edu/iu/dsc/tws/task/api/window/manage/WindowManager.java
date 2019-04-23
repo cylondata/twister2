@@ -12,7 +12,9 @@
 package edu.iu.dsc.tws.task.api.window.manage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
@@ -41,6 +43,10 @@ public class WindowManager<T> implements IManager<T> {
 
   private boolean windowingCompleted = false;
 
+  private Map<Integer, WindowingPolicy> windowingPolicyMap = new HashMap<>();
+
+  private Map<Integer, List<T>> mapOfPolicyIdAndWindows = new HashMap<>();
+
   public WindowManager(WindowingPolicy windowingPolicy) {
     this.windowingPolicy = windowingPolicy;
     this.windowingPolicy = initializeWindowingPolicy();
@@ -48,7 +54,7 @@ public class WindowManager<T> implements IManager<T> {
   }
 
   /**
-   * TODO : Windowing Graph must be considered and policy has to be arranged
+   * TODO : Windowing Graph/Map must be considered and policy has to be arranged
    * When multiple windowing policies are applied, they need to be handled sequentially
    */
   @Override
@@ -74,6 +80,23 @@ public class WindowManager<T> implements IManager<T> {
     }
 
     return this.windowingPolicy;
+  }
+
+  /**
+   * TODO : set validation to avoid adding same policy
+   */
+  @Override
+  public WindowingPolicy addWindowingPolicy(WindowingPolicy win) {
+    int size = this.windowingPolicyMap.size();
+    int key = -1;
+    if (size == 0) {
+      key = 1;
+    } else {
+      key = size;
+    }
+    this.windowingPolicyMap.put(key, win);
+    this.mapOfPolicyIdAndWindows.put(key, new ArrayList<T>());
+    return win;
   }
 
   @Override

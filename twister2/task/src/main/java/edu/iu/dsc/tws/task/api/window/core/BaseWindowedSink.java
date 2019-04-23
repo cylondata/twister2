@@ -15,22 +15,25 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.constant.Window;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
-public abstract class WindowedSink<T> extends AbstractSingleWindowDataSink<T>
+public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
     implements IWindowCompute<T> {
 
-  private static final Logger LOG = Logger.getLogger(WindowedSink.class.getName());
+  private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract IWindowMessage<T> window(IWindowMessage<T> windowMessage);
+  public abstract IWindowMessage<T> execute(IWindowMessage<T> windowMessage);
 
   private WindowManager<T> windowManager;
 
   private WindowingPolicy windowingPolicy;
 
-  public WindowedSink(WindowingPolicy win) {
+  public BaseWindowedSink(WindowingPolicy win) {
     this.windowingPolicy = win;
     this.windowManager = new WindowManager<>(win);
   }
@@ -39,9 +42,22 @@ public abstract class WindowedSink<T> extends AbstractSingleWindowDataSink<T>
   public boolean execute(IMessage<T> message) {
     this.windowManager.execute(message.getContent());
     if (this.windowManager.isDone()) {
-      window(this.windowManager.getWindowMessage());
+      execute(this.windowManager.getWindowMessage());
       this.windowManager.clearWindow();
     }
     return false;
   }
+
+  private BaseWindowSink<T> withWindowCount(Window window, WindowConfig.Count count) {
+    WindowingPolicy win = new WindowingPolicy(window, count);
+    this.windowManager.addWindowingPolicy(win);
+    return this;
+  }
+
+  private BaseWindowSink<T> withWindowDuration(Window window, WindowConfig.Duration duration) {
+    WindowingPolicy win = new WindowingPolicy(window, duration);
+    this.windowManager.addWindowingPolicy(win);
+    return this;
+  }
+
 }

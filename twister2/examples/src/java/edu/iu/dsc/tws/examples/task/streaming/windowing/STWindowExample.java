@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Window;
-import edu.iu.dsc.tws.task.api.window.core.WindowedSink;
+import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
 public class STWindowExample extends BenchTaskWorker {
@@ -91,7 +91,7 @@ public class STWindowExample extends BenchTaskWorker {
     }
   }
 
-  protected static class DirectWindowedReceivingTask extends WindowedSink<int[]>  {
+  protected static class DirectWindowedReceivingTask extends BaseWindowedSink<int[]> {
 
     private WindowingPolicy windowingPolicy;
 
@@ -102,9 +102,9 @@ public class STWindowExample extends BenchTaskWorker {
 
 
     @Override
-    public IWindowMessage<int[]> window(IWindowMessage<int[]> windowMessage) {
+    public IWindowMessage<int[]> execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
-      return null;
+      return windowMessage;
     }
 
 

@@ -26,7 +26,6 @@ public class WindowingPolicy implements Serializable {
 
   private WindowConfig.Duration duration;
 
-
   public WindowingPolicy(Window window, WindowConfig.Count count) {
     this.window = window;
     this.count = count;

@@ -20,6 +20,8 @@ public interface IManager<T> extends Serializable {
 
   WindowingPolicy initializeWindowingPolicy();
 
+  WindowingPolicy addWindowingPolicy(WindowingPolicy windowingPolicy);
+
   List<T> getWindow();
 
   boolean execute(T message);
