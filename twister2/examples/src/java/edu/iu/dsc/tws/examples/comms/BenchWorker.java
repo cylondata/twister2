@@ -220,7 +220,7 @@ public abstract class BenchWorker implements IWorker {
 
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
-        int flag = (i == jobParameters.getIterations() - 1) ? MessageFlags.SYNC_MESSAGE : 0;
+        int flag = (i == jobParameters.getTotalIterations() - 1) ? MessageFlags.SYNC_MESSAGE : 0;
 
         if (i == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);

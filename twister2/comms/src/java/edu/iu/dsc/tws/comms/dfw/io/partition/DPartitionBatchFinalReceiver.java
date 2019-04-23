@@ -107,15 +107,15 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The directory in which we will be saving the shuffle objects
    */
-  private String shuffleDirectory;
+  private List<String> shuffleDirectories;
 
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
-                                      String shuffleDir, Comparator<Object> com) {
+                                      List<String> shuffleDirs, Comparator<Object> com) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.kryoSerializer = new KryoSerializer();
     this.comparator = com;
-    this.shuffleDirectory = shuffleDir;
+    this.shuffleDirectories = shuffleDirs;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -129,7 +129,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     targets = new HashSet<>(expectedIds.keySet());
 
     for (Integer target : expectedIds.keySet()) {
-
+      String shuffleDirectory = this.shuffleDirectories.get(
+          target % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,

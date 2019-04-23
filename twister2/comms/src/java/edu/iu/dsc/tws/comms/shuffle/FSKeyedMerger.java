@@ -173,7 +173,7 @@ public class FSKeyedMerger implements Shuffle {
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
         long totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
         filePartBytes.add(totalSize);
 
         recordsInMemory.clear();

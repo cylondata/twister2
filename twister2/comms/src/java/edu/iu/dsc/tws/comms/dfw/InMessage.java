@@ -204,7 +204,7 @@ public class InMessage {
     int remaining = buffer.getSize();
     int currentLocation = 0;
 
-    // eventough we are not expecting buffers, header came in this buffer
+    // even though we are not expecting buffers, header came in this buffer
     // so we need to add it
     if (expectedObjects == 0) {
       buffers.add(buffer);

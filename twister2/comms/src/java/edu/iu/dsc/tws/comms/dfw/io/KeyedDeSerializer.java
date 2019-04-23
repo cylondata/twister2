@@ -117,6 +117,10 @@ public class KeyedDeSerializer implements MessageDeSerializer {
 
         try {
           currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
+
+
+          currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
           // we are going to read the key first
           currentMessage.setReadingKey(true);
         } catch (NegativeArraySizeException e) {
@@ -132,6 +136,7 @@ public class KeyedDeSerializer implements MessageDeSerializer {
               currentLocation,
               buffer
           );
+
           keyBuilder.incrementCompletedSizeBy(bytesRead);
 
           currentLocation += bytesRead;
@@ -194,6 +199,9 @@ public class KeyedDeSerializer implements MessageDeSerializer {
             currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
 
             currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
+
+            currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
+            currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
             // we are going to read the key first
             currentMessage.setReadingKey(true);
           } else if (remaining >= Integer.BYTES) {

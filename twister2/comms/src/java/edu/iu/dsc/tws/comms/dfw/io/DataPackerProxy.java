@@ -56,7 +56,7 @@ public final class DataPackerProxy {
     if (!typeDefinition.getDataPacker().isHeaderRequired()) {
       return Pair.of(typeDefinition.getUnitSizeInBytes(), 0);
     } else {
-      return Pair.of(buffer.getByteBuffer().getInt(location), Integer.SIZE);
+      return Pair.of(buffer.getByteBuffer().getInt(location), Integer.BYTES);
     }
   }
 }
