@@ -123,6 +123,7 @@ public class TaskExecutor {
           graph.getOperationMode());
     }
     executor.execute(plan);
+    executor.waitFor(plan);
   }
 
   /**
@@ -134,6 +135,23 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    if (executor == null) {
+      executor = new Executor(config, workerID, communicator.getChannel(),
+          graph.getOperationMode());
+    }
+    executor.execute(plan);
+    executor.waitFor(plan);
+  }
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public void itrExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       executor = new Executor(config, workerID, communicator.getChannel(),
           graph.getOperationMode());
