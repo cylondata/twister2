@@ -62,9 +62,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   public boolean addTaskVertex(String name, Vertex taskVertex) {
     if (!validateTaskVertex(name)) {
       addTaskVertex(taskVertex);
-      if (taskVertex.getGraphConstraintsMap() != null) {
-        //addGraphConstraints(name, taskVertex.getGraphConstraintsMap());
-      }
       taskMap.put(name, taskVertex);
     }
     return true;
