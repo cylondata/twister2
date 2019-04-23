@@ -65,6 +65,7 @@ public class ExampleMain {
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
     options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
+    options.addOption(Utils.createOption(Constants.ARGS_WINDOW, false, "Weather windowing is used", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -126,6 +127,8 @@ public class ExampleMain {
       benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
     }
 
+    boolean window = cmd.hasOption(Constants.ARGS_WINDOW);
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
@@ -147,6 +150,7 @@ public class ExampleMain {
     if (runBenchmark) {
       jobConfig.put(BenchmarkMetadata.ARG_BENCHMARK_METADATA, benchmarkMetadata);
     }
+    jobConfig.put(Constants.ARGS_WINDOW, window);
 
     // build the job
     if (!stream) {

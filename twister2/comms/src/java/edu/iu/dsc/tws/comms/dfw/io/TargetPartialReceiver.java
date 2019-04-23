@@ -62,7 +62,7 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
     // we are at the receiving state
     for (int source : thisSources) {
-      sourceStates.put(source, ReceiverState.RECEIVING);
+      sourceStates.put(source, ReceiverState.INIT);
       syncSent.put(source, new HashSet<>());
     }
   }
@@ -134,8 +134,12 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   protected boolean canAcceptMessage(int source, int target) {
     if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
-        || sourceStates.get(target) == ReceiverState.SYNCED) {
+        || sourceStates.get(source) == ReceiverState.SYNCED) {
       return false;
+    }
+
+    if (sourceStates.get(source) == ReceiverState.INIT) {
+      sourceStates.put(source, ReceiverState.RECEIVING);
     }
 
     Queue<Object> msgQueue = messages.get(target);
@@ -159,7 +163,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       }
 
       // if we have synced no need to go forward
-      if (e.getValue() == ReceiverState.SYNCED) {
+      if (e.getValue() == ReceiverState.INIT || e.getValue() == ReceiverState.SYNCED) {
         continue;
       }
 
@@ -218,7 +222,7 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
 
     for (int source : thisSources) {
-      sourceStates.put(source, ReceiverState.RECEIVING);
+      sourceStates.put(source, ReceiverState.INIT);
     }
     syncState = SyncState.SYNC;
     barriers.clear();

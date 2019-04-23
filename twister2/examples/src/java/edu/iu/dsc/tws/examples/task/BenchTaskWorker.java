@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
+
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
@@ -32,10 +33,13 @@ import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
+
 
 public abstract class BenchTaskWorker extends TaskWorker {
 
@@ -52,6 +56,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
   protected ExecutionPlan executionPlan;
 
   protected ComputeConnection computeConnection;
+
+  protected WindowingPolicy windowingPolicy = null;
 
   protected static JobParameters jobParameters;
 
@@ -160,6 +166,80 @@ public abstract class BenchTaskWorker extends TaskWorker {
     }
 
     public SourceTask(String e, boolean keyed) {
+      this(e);
+      this.keyed = keyed;
+    }
+
+    public void setMarkTimingOnlyForLowestTarget(boolean markTimingOnlyForLowestTarget) {
+      this.markTimingOnlyForLowestTarget = markTimingOnlyForLowestTarget;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SOURCE, ctx);
+      this.noOfTargets = ctx.getTasksByName(SINK).size();
+      sendersInProgress.incrementAndGet();
+    }
+
+    private void notifyEnd() {
+      if (endNotified) {
+        return;
+      }
+      sendersInProgress.decrementAndGet();
+      endNotified = true;
+      LOG.info(String.format("Source : %d done sending.", context.taskIndex()));
+    }
+
+    @Override
+    public void execute() {
+      if (count < iterations) {
+        if (count == jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_ALL_SEND, this.timingCondition);
+        }
+
+
+        if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
+            || (!this.keyed && context.write(this.edge, inputDataArray))) {
+          count++;
+        }
+
+        if (jobParameters.isStream() && count >= jobParameters.getWarmupIterations()) {
+          // if we should mark timing only for lowest target, consider that for timing condition
+          boolean sendingToLowestTarget = count % noOfTargets == 0;
+          Timing.mark(TIMING_MESSAGE_SEND,
+              this.timingCondition
+                  && (!this.markTimingOnlyForLowestTarget || sendingToLowestTarget)
+          );
+        }
+      } else {
+        context.end(this.edge);
+        this.notifyEnd();
+      }
+    }
+  }
+
+  protected static class SourceWindowTask extends BaseWindowSource {
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
+    private String edge;
+    private int iterations;
+    private boolean timingCondition;
+    private boolean keyed = false;
+
+    private boolean endNotified = false;
+
+    // if this is set to true, Timing.mark(TIMING_MESSAGE_SEND, this.timingCondition);
+    // will be marked only for the lowest target(sink)
+    private boolean markTimingOnlyForLowestTarget = false;
+    private int noOfTargets = 0;
+
+    public SourceWindowTask(String e) {
+      this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
+      this.edge = e;
+    }
+
+    public SourceWindowTask(String e, boolean keyed) {
       this(e);
       this.keyed = keyed;
     }

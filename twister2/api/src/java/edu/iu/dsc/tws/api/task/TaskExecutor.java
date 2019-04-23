@@ -63,6 +63,11 @@ public class TaskExecutor {
   private Communicator communicator;
 
   /**
+   * The executor used by this task executor
+   */
+  private Executor executor;
+
+  /**
    * Creates a task executor.
    *
    * @param cfg the configuration
@@ -113,9 +118,12 @@ public class TaskExecutor {
   public void execute(Config taskConfig, DataFlowTaskGraph graph, ExecutionPlan plan) {
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
-    Executor executor = new Executor(newCfg, workerID, plan, communicator.getChannel(),
-        graph.getOperationMode());
-    executor.execute();
+    if (executor == null) {
+      executor = new Executor(newCfg, workerID, communicator.getChannel(),
+          graph.getOperationMode());
+    }
+    executor.execute(plan);
+    executor.waitFor(plan);
   }
 
   /**
@@ -127,9 +135,40 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
-        graph.getOperationMode());
-    executor.execute();
+    if (executor == null) {
+      executor = new Executor(config, workerID, communicator.getChannel(),
+          graph.getOperationMode());
+    }
+    executor.execute(plan);
+    executor.waitFor(plan);
+  }
+
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   * @param plan the execution plan
+   */
+  public void itrExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    if (executor == null) {
+      executor = new Executor(config, workerID, communicator.getChannel(),
+          graph.getOperationMode());
+    }
+    executor.execute(plan);
+  }
+
+  /**
+   * Wait for the execution to complete
+   * @param plan the dataflow graph
+   * @param graph the task graph
+   */
+  public void waitFor(DataFlowTaskGraph graph, ExecutionPlan plan) {
+    if (executor == null) {
+      throw new IllegalStateException("Cannot call waifor before calling execute");
+    }
+    executor.waitFor(plan);
   }
 
   /**
@@ -141,9 +180,11 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public IExecution iExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
-    Executor executor = new Executor(config, workerID, plan, communicator.getChannel(),
-        graph.getOperationMode());
-    return executor.iExecute();
+    if (executor == null) {
+      executor = new Executor(config, workerID, communicator.getChannel(),
+          graph.getOperationMode());
+    }
+    return executor.iExecute(plan);
   }
 
   /**
@@ -304,5 +345,11 @@ public class TaskExecutor {
     }
 
     return new WorkerPlan(workers);
+  }
+
+  public void close() {
+    if (executor != null) {
+      executor.close();
+    }
   }
 }

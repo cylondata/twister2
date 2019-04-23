@@ -38,7 +38,7 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                       Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                       Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
     this.selector = edge.getSelector();
 
@@ -85,6 +85,11 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
   }
 
   @Override
@@ -95,5 +100,10 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

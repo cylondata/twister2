@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 public enum ReceiverState {
+  INIT,
   // we are in the receiving state initially
   RECEIVING,
   // all the syncs required are received
