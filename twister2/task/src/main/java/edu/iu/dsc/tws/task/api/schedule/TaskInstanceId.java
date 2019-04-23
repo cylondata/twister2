@@ -46,13 +46,6 @@ public class TaskInstanceId {
 
     TaskInstanceId that = (TaskInstanceId) o;
 
-//    return taskId == that.taskId
-//        && taskIndex == that.taskIndex
-//        && taskName.equals(that.taskName);
-
-    /*return taskId == that.taskId && taskIndex == that.taskIndex
-        && (taskName != null ? taskName.equals(that.taskName) : that.taskName == null);*/
-
     if (taskId != that.taskId) {
       return false;
     }

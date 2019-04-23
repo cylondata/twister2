@@ -83,7 +83,6 @@ public class DataObjectSource<T> extends BaseSource {
    */
   @Override
   public void execute() {
-    LOG.info("Context Task Index:" + context.taskIndex() + "\t" + getEdgeName());
     InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
     while (inputSplit != null) {
       try {

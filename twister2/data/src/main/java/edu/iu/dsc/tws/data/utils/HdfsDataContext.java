@@ -35,7 +35,7 @@ public final class HdfsDataContext extends Context {
       = "$HADOOP_HOME/etc/hadoop/core-site.xml";
 
   private static final String HDFS_DATA_DIRECTORY = "twister2.hdfs.data.directory";
-  private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user/kannan";
+  private static final String HDFS_DATA_DIRECTORY_DEFAULT = "/user";
 
   private static final String HDFS_NAMENODE_NAME = "twister2.hdfs.namenode";
   private static final String HDFS_NAMENODE_DEFAULT = "hostaname";
