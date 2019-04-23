@@ -69,7 +69,6 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     cleanUp(executionPlan, nodes);
-    LOG.info("EXEC DONE");
     return true;
   }
 
@@ -165,7 +164,6 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     close(plan, nodes);
 
-    LOG.info("Waitfor DONE");
     return true;
   }
 

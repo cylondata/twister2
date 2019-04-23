@@ -89,6 +89,11 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
   @Override
   protected boolean canAcceptMessage(int source, int target) {
+    Set<Integer> sources = syncReceived.get(target);
+    if (sources.contains(source)) {
+      return false;
+    }
+
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         || targetStates.get(target) == ReceiverState.SYNCED) {
       return false;

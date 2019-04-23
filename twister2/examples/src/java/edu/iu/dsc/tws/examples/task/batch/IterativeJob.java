@@ -119,8 +119,13 @@ public class IterativeJob extends TaskWorker {
           list.add(ret.toString());
         }
       }
-      count++;
+      LOG.info("RECEIVE Count: " + count);
       return true;
+    }
+
+    @Override
+    public void refresh() {
+      count = 0;
     }
 
     @Override

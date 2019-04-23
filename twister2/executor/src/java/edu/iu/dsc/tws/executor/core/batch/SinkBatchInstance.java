@@ -156,13 +156,9 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     return !state.isSet(InstanceState.EXECUTION_DONE | InstanceState.SYNCED);
   }
 
-  private int count = 0;
-
   public boolean sync(String edge, byte[] value) {
     syncReceived.add(edge);
     if (syncReceived.equals(batchInParOps.keySet())) {
-      count++;
-      LOG.info("SYNCED "  + count);
       state.addState(InstanceState.SYNCED);
       syncReceived.clear();
     }
