@@ -257,10 +257,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskBatchInstance.getInQueue());
             taskBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            op.registerSync(i, taskBatchInstance);
           } else if (batchSinkInstances.contains(c.getTargetTask(), i)) {
             SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(c.getTargetTask(), i);
             sinkBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, sinkBatchInstance.getBatchInQueue());
+            op.registerSync(i, sinkBatchInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }

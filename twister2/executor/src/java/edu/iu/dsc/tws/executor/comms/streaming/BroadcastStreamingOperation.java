@@ -32,7 +32,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                      Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
 
     if (dests.size() == 0) {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
@@ -85,5 +85,10 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

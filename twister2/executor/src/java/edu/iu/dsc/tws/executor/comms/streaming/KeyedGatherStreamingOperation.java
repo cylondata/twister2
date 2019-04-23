@@ -39,7 +39,7 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
   public KeyedGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                        Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
     this.selector = edge.getSelector();
 
@@ -95,5 +95,10 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

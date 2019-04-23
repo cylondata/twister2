@@ -60,6 +60,11 @@ public interface TWSChannel {
   void progress();
 
   /**
+   * Check weather we have any pending sends
+   */
+  boolean isComplete();
+
+  /**
    * Create a buffer
    * @param capacity capacity
    * @return the byte buffer

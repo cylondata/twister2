@@ -50,4 +50,9 @@ public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver
   protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
     return false;
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
+  }
 }
