@@ -108,6 +108,10 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
         + "CPUValue:" + this.maxContainerResourceValue.getCpu());
   }
 
+  @Override
+  public void initialize(Config cfg, int workerId) {
+  }
+
   /**
    * This method set the size of the container, instance default resource, container padding,
    * ram map, disk map, and cpu map values.

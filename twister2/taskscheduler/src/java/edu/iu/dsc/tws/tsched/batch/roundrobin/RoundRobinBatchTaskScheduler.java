@@ -86,12 +86,8 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
   }
 
-
+  @Override
   public void initialize(Config cfg, int workerid) {
-    this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
   }
 
   /**

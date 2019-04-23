@@ -43,9 +43,17 @@ public class TaskScheduler implements ITaskScheduler {
 
   private String schedulingType;
 
+  private int workerId;
+
   @Override
   public void initialize(Config cfg) {
     this.config = cfg;
+  }
+
+  @Override
+  public void initialize(Config cfg, int workerid) {
+    this.config = cfg;
+    this.workerId = workerid;
   }
 
   /**

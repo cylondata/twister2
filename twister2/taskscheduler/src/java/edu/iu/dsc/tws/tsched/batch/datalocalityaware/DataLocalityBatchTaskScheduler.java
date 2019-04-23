@@ -86,6 +86,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
 
+  @Override
   public void initialize(Config cfg, int workerid) {
     this.workerId = workerid;
     this.config = cfg;

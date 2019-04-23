@@ -76,6 +76,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
   }
 
+  @Override
+  public void initialize(Config cfg, int workerId) {
+  }
+
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
@@ -155,23 +159,6 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
           new ContainerPlan(containerId,
               new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
-    }
-
-    //TODO: Just for validation purpose and it will be removed finally
-    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, containerPlans);
-    if (taskSchedulePlan != null) {
-      Map<Integer, ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
-        }
-      }
     }
     return new TaskSchedulePlan(0, containerPlans);
   }
