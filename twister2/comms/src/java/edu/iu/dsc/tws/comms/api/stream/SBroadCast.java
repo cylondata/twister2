@@ -17,14 +17,14 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
 
 /**
  * Streaming Broadcast Operation
  */
 public class SBroadCast {
-  private DataFlowBroadcast bCast;
+  private TreeBroadcast bCast;
 
   /**
    * Construct a Streaming Broadcast operation
@@ -38,7 +38,7 @@ public class SBroadCast {
   public SBroadCast(Communicator comm, TaskPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr) {
-    this.bCast = new DataFlowBroadcast(comm.getChannel(), source, targets,
+    this.bCast = new TreeBroadcast(comm.getChannel(), source, targets,
         new DirectStreamingFinalReceiver(rcvr));
     this.bCast.init(comm.getConfig(), dataType, plan, comm.nextEdge());
   }
@@ -74,5 +74,12 @@ public class SBroadCast {
 
   public void close() {
     bCast.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    bCast.clean();
   }
 }

@@ -9,36 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Sorted merger implementation
@@ -82,12 +72,19 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private List<Tuple> recordsInMemory = new ArrayList<>();
+  private List<Tuple>[] recordsInMemory;
+  private int currentKeyIndex = 0;
+  private Map<Object, Integer> keyToArrayIndexMap = new HashMap<>();
 
   /**
    * The deserialized objects in memory
    */
   private List<Tuple> objectsInMemory = new ArrayList<>();
+
+  /**
+   * Amount of bytes in the memory
+   */
+  private int numOfRecordsInMemory = 0;
 
   /**
    * Maximum size of a tuple written to disk in each file
@@ -113,7 +110,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * The key comparator used for comparing keys
    */
   private Comparator keyComparator;
+
   private ComparatorWrapper comparatorWrapper;
+  private ListComparatorWrapper listComparatorWrapper;
 
   private Lock lock = new ReentrantLock();
 
@@ -121,11 +120,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * The id of the task
    */
   private int target;
-
-  /**
-   * The kryo serializer
-   */
-  private KryoMemorySerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -143,13 +137,18 @@ public class FSKeyedSortedMerger2 implements Shuffle {
                               MessageType dType, Comparator kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
+
+    //we can expect atmost this much of unique keys
+    this.recordsInMemory = new List[this.maxRecordsInMemory];
+
     this.folder = dir;
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.comparatorWrapper = new ComparatorWrapper(keyComparator);
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.listComparatorWrapper = new ListComparatorWrapper(this.comparatorWrapper);
+
     this.target = tar;
     LOG.info("Disk merger configured. Folder : " + folder
         + ", Bytes in memory :" + maxBytesInMemory + ", Records in memory : " + maxRecsInMemory);
@@ -165,10 +164,20 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     lock.lock();
     try {
-      recordsInMemory.add(new Tuple(key, data));
-      bytesLength.add(length);
+      //get existing index for this key, or generate a new index
+      int thisKeyIndex = this.keyToArrayIndexMap.computeIfAbsent(key,
+          k -> this.currentKeyIndex++);
+      //if this is a new key, we will have to assign a new array list
+      if (this.recordsInMemory[thisKeyIndex] == null) {
+        this.recordsInMemory[thisKeyIndex] = new ArrayList<>();
+      }
+      this.recordsInMemory[thisKeyIndex].add(new Tuple(key, data));
 
-      numOfBytesInMemory += length;
+      this.numOfRecordsInMemory++;
+
+      // todo ignoring length for now
+      // this.bytesLength.add(length);
+      this.numOfBytesInMemory += length;
     } finally {
       lock.unlock();
     }
@@ -182,6 +191,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       // lets convert the in-memory data to objects
       deserializeObjects();
       // lets sort the in-memory objects
+      //todo can be improved
       objectsInMemory.sort(this.comparatorWrapper);
     } finally {
       lock.unlock();
@@ -204,12 +214,30 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     }
   }
 
-  private void deserializeObjects() {
-    for (int i = 0; i < recordsInMemory.size(); i++) {
-      Tuple kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
-      objectsInMemory.add(new Tuple(kv.getKey(), o));
+  /**
+   * Wrapper for comparing KeyValue with the user defined comparator
+   */
+  private class ListComparatorWrapper implements Comparator<List<Tuple>> {
+    private ComparatorWrapper comparator;
+
+    ListComparatorWrapper(ComparatorWrapper com) {
+      this.comparator = com;
     }
+
+    @Override
+    public int compare(List<Tuple> o1, List<Tuple> o2) {
+      return this.comparator.compare(o1.get(0), o2.get(0));
+    }
+  }
+
+  private void deserializeObjects() {
+    this.objectsInMemory = Arrays.stream(this.recordsInMemory, 0, this.currentKeyIndex)
+        .flatMap(List::stream)
+        .parallel()
+        .map(tuple -> {
+          Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
+          return new Tuple(tuple.getKey(), o);
+        }).collect(Collectors.toList());
   }
 
   /**
@@ -220,20 +248,33 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     try {
       // it is time to write
       if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
+          || numOfRecordsInMemory > maxRecordsInMemory) {
 
         // first sort the values
-        recordsInMemory.sort(this.comparatorWrapper);
+
+        Arrays.parallelSort(this.recordsInMemory, 0,
+            this.currentKeyIndex, listComparatorWrapper);
+        if (this.currentKeyIndex != this.numOfRecordsInMemory) {
+          System.out.println("Sorting " + this.currentKeyIndex + " instead of "
+              + this.numOfRecordsInMemory);
+        }
 
         // save the bytes to disk
-        long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+        long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory,
+            this.currentKeyIndex,
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
         largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
 
-        recordsInMemory.clear();
+        numOfRecordsInMemory = 0;
+        numOfBytesInMemory = 0;
+
+        //making previous things garbage collectible
+        this.recordsInMemory = new List[this.maxRecordsInMemory];
+        this.keyToArrayIndexMap = new HashMap<>();
+
+        currentKeyIndex = 0;
         bytesLength.clear();
         noOfFileWritten++;
-        numOfBytesInMemory = 0;
       }
     } finally {
       lock.unlock();
@@ -333,7 +374,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
             getSaveFileName(i),
             keyType,
             dataType,
-            kryoSerializer,
             keyComparator
         );
         if (fr.hasNext()) {

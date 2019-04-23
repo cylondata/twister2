@@ -101,7 +101,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean onMessage(int source, int path, int target, int flags, Object object) {
-      if ((flags & MessageFlags.BARRIER) == MessageFlags.BARRIER) {
+      if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
         if (!checkpointStarted) {
           checkpointStarted = true;
         }
@@ -157,5 +157,10 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   @Override
   public void close() {
     op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
   }
 }

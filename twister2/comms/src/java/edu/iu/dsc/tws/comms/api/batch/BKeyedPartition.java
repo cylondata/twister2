@@ -12,30 +12,32 @@
 package edu.iu.dsc.tws.comms.api.batch;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
 public class BKeyedPartition {
-  private DataFlowPartition partition;
+  private MToNSimple partition;
 
   private DestinationSelector destinationSelector;
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
-                         MessageType dataType, MessageType keyType,
+                         MessageType keyType, MessageType dataType,
                          BulkReceiver rcvr, DestinationSelector destSelector) {
     this.destinationSelector = destSelector;
-    this.partition = new DataFlowPartition(comm.getChannel(), sources, destinations,
+    this.partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
     this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -43,16 +45,16 @@ public class BKeyedPartition {
   }
 
   public BKeyedPartition(Communicator comm, TaskPlan plan,
-                         Set<Integer> sources, Set<Integer> destinations, MessageType dataType,
-                         MessageType keyType, BulkReceiver rcvr,
+                         Set<Integer> sources, Set<Integer> destinations,
+                         MessageType dataType, MessageType keyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
-    String shuffleDir = comm.getPersistentDirectory();
+    List<String> shuffleDirs = comm.getPersistentDirectories();
     int e = comm.nextEdge();
-    this.partition = new DataFlowPartition(comm.getConfig(), comm.getChannel(), plan,
+    this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDir, comparator),
-        new PartitionPartialReceiver(), dataType, MessageType.BYTE, keyType,
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator),
+        new PartitionPartialReceiver(), dataType, MessageTypes.BYTE_ARRAY, keyType,
         keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
@@ -80,5 +82,12 @@ public class BKeyedPartition {
   public void close() {
     // deregister from the channel
     partition.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    partition.clean();
   }
 }

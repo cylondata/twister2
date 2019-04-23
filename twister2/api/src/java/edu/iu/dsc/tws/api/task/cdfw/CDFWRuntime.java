@@ -24,9 +24,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -51,7 +51,7 @@ public class CDFWRuntime implements JobListener {
   /**
    * Kryo serializer
    */
-  private KryoMemorySerializer serializer;
+  private KryoSerializer serializer;
 
   /**
    * The outputs from previous graphs
@@ -77,7 +77,7 @@ public class CDFWRuntime implements JobListener {
     taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
-    this.serializer = new KryoMemorySerializer();
+    this.serializer = new KryoSerializer();
   }
 
   /**

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
@@ -58,7 +58,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
     }
 
     keyedGather = new SKeyedGather(communicator, taskPlan, sources, targets,
-        MessageType.OBJECT, MessageType.OBJECT,
+        MessageTypes.OBJECT, MessageTypes.OBJECT,
         new GatherBulkReceiver(), new LoadBalanceSelector());
 
     Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -87,8 +87,8 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    keyedGather.progress();
+  protected boolean progressCommunication() {
+    return keyedGather.progress();
   }
 
   @Override

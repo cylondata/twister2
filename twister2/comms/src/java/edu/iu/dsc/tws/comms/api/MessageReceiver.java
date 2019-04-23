@@ -81,4 +81,12 @@ public interface MessageReceiver {
    */
   default void clean() {
   }
+
+  /**
+   * This method is called when there is a sync event on the operation
+   * @param target the target to which the sync event belong
+   * @param value the byte value, can be null
+   */
+  default void onSyncEvent(int target, byte[] value) {
+  }
 }

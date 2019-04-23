@@ -21,7 +21,7 @@ import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
@@ -62,8 +62,8 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
     }
 
     // create the communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        MessageType.INTEGER, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+        MessageTypes.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -84,8 +84,8 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    join.progress();
+  protected boolean progressCommunication() {
+    return join.progress();
   }
 
   @Override

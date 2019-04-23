@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.DataFlowReduce;
+import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
 
@@ -29,7 +29,7 @@ public class BReduce {
   /**
    * The actual operation
    */
-  private DataFlowReduce reduce;
+  private MToOneTree reduce;
 
   /**
    * Construct a Streaming Reduce operation
@@ -45,7 +45,7 @@ public class BReduce {
   public BReduce(Communicator comm, TaskPlan plan,
                  Set<Integer> sources, int target, ReduceFunction fnc,
                  SingularReceiver rcvr, MessageType dataType) {
-    reduce = new DataFlowReduce(comm.getChannel(), sources, target,
+    reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceBatchFinalReceiver(fnc, rcvr),
         new ReduceBatchPartialReceiver(target, fnc));
     reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
@@ -91,5 +91,12 @@ public class BReduce {
   public void close() {
     // deregister from the channel
     reduce.close();
+  }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    reduce.clean();
   }
 }

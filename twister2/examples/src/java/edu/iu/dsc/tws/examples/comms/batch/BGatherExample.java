@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -59,7 +59,7 @@ public class BGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
     // create the communication
     gather = new BGather(communicator, taskPlan, sources, target,
-        MessageType.INTEGER, new FinalReduceReceiver(), false);
+        MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(), false);
 
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -108,8 +108,8 @@ public class BGatherExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    gather.progress();
+  protected boolean progressCommunication() {
+    return gather.progress();
   }
 
   @Override

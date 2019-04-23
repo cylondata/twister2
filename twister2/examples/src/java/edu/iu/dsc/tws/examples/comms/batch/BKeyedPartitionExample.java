@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
@@ -67,8 +67,8 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        MessageType.INTEGER, new PartitionReceiver(), new SimpleKeyBasedSelector());
+    partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -115,8 +115,8 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    partition.progress();
+  protected boolean progressCommunication() {
+    return partition.progress();
   }
 
   @Override

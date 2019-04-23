@@ -16,13 +16,14 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 
 public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialReceiver {
-  private DataFlowBroadcast broadcast;
+  private TreeBroadcast broadcast;
 
-  public AllGatherStreamingFinalReceiver(DataFlowBroadcast broadcast) {
+  public AllGatherStreamingFinalReceiver(TreeBroadcast broadcast) {
     this.broadcast = broadcast;
   }
 
@@ -34,5 +35,11 @@ public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialRecei
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     return broadcast.send(task, message, flags, dest);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+        barriers, broadcast, isSyncSent);
   }
 }

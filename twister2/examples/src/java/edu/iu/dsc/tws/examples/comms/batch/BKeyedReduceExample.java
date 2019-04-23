@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
@@ -67,8 +67,8 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
-        new FinalBulkReceiver(), MessageType.INTEGER, MessageType.INTEGER,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
+        new FinalBulkReceiver(), MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -129,8 +129,8 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    keyedReduce.progress();
+  protected boolean progressCommunication() {
+    return keyedReduce.progress();
   }
 
   @Override

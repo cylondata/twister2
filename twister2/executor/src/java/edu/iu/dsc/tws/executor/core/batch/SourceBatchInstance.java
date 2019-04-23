@@ -145,7 +145,7 @@ public class SourceBatchInstance implements INodeInstance {
   public boolean execute() {
     // we started the execution
     if (state.isEqual(InstanceState.INIT)) {
-      state.set(InstanceState.EXECUTING);
+      state.addState(InstanceState.EXECUTING);
     }
 
     if (batchTask != null) {
@@ -166,7 +166,7 @@ public class SourceBatchInstance implements INodeInstance {
       }
       // if all the edges are done
       if (isDone) {
-        state.set(InstanceState.EXECUTION_DONE);
+        state.addState(InstanceState.EXECUTION_DONE);
       }
 
       // now check the output queue
@@ -190,7 +190,7 @@ public class SourceBatchInstance implements INodeInstance {
         for (IParallelOperation op : outBatchParOps.values()) {
           op.finish(batchTaskId);
         }
-        state.set(InstanceState.OUT_COMPLETE);
+        state.addState(InstanceState.OUT_COMPLETE);
       }
     }
 
@@ -198,7 +198,7 @@ public class SourceBatchInstance implements INodeInstance {
     boolean needsFurther = communicationProgress();
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
-      state.set(InstanceState.SENDING_DONE);
+      state.addState(InstanceState.SENDING_DONE);
     }
 
     return !state.isEqual(InstanceState.FINISH);
@@ -212,6 +212,14 @@ public class SourceBatchInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return batchTask;
+  }
+
+  @Override
+  public void reset() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).refresh();
+    }
+    state = new InstanceState(InstanceState.INIT);
   }
 
   @Override

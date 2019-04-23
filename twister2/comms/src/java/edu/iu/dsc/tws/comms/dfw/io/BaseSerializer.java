@@ -16,21 +16,21 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
 
 public abstract class BaseSerializer implements MessageSerializer {
   private static final Logger LOG = Logger.getLogger(BaseSerializer.class.getName());
 
   // we need to put the message length and key length if keyed message
-  protected static final int MAX_SUB_MESSAGE_HEADER_SPACE = 4 + 4;
+  protected static final int MAX_SUB_MESSAGE_HEADER_SPACE = Integer.BYTES + Integer.BYTES;
   // for s normal message we only put the length
-  protected static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = 4;
+  protected static final int NORMAL_SUB_MESSAGE_HEADER_SIZE = Integer.BYTES;
 
   /**
    * The DataBuffers available
@@ -79,12 +79,12 @@ public abstract class BaseSerializer implements MessageSerializer {
         // we set the state here, because we can set it to serialized below
         sendMessage.setSendState(OutMessage.SendState.HEADER_BUILT);
         // build the header
-        if (data instanceof List) {
+        if (data instanceof AggregatedObjects) {
           // for list message we need to put the size of the list
           DFWIOUtils.buildHeader(buffer, sendMessage, ((List) data).size());
           buildHeader(sendMessage, channelMessage, ((List) data).size());
         } else {
-          if ((sendMessage.getFlags() & MessageFlags.END) == MessageFlags.END) {
+          if ((sendMessage.getFlags() & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
             sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
             // we set the number of messages to 0, only header will be sent
             DFWIOUtils.buildHeader(buffer, sendMessage, 0);
@@ -123,6 +123,7 @@ public abstract class BaseSerializer implements MessageSerializer {
 
   /**
    * Build the header to set for channel messages laters
+   *
    * @param sendMessage messages
    * @param channelMessage channel message
    * @param numMessages number of messages
@@ -164,14 +165,13 @@ public abstract class BaseSerializer implements MessageSerializer {
 
     if (payload instanceof AggregatedObjects) {
       List objectList = (List) payload;
-      int startIndex = state.getCurrentObject();
+      int startIndex = state.getCurrentObjectIndex();
       // we will copy until we have space left or we are have serialized all the objects
       for (int i = startIndex; i < objectList.size(); i++) {
         Object o = objectList.get(i);
         boolean complete = serializeSingleMessage(o, sendMessage, targetBuffer);
         if (complete) {
-          state.setCurretHeaderLength(state.getTotalBytes());
-          state.setCurrentObject(i + 1);
+          state.setCurrentObjectIndex(i + 1);
         } else {
           break;
         }
@@ -179,15 +179,15 @@ public abstract class BaseSerializer implements MessageSerializer {
         // check how much space left in this targetBuffer
         remaining = targetBuffer.getByteBuffer().remaining();
         // if we have less than this amount of space, that means we may not be able to put the next
-        // header in a contigous space, so we cannot use this targetBuffer anymore
+        // header in a contiguous space, so we cannot use this targetBuffer anymore
         if (!(remaining > MAX_SUB_MESSAGE_HEADER_SPACE
-            && state.getCurrentObject() < objectList.size())) {
+            && state.getCurrentObjectIndex() < objectList.size())) {
           break;
         }
       }
 
       // we have serialized all the objects
-      if (state.getCurrentObject() == objectList.size()) {
+      if (state.getCurrentObjectIndex() == objectList.size()) {
         sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
       } else {
         sendMessage.setSendState(OutMessage.SendState.PARTIALLY_SERIALIZED);
@@ -209,5 +209,5 @@ public abstract class BaseSerializer implements MessageSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   public abstract boolean serializeSingleMessage(Object payload,
-                                         OutMessage sendMessage, DataBuffer targetBuffer);
+                                                 OutMessage sendMessage, DataBuffer targetBuffer);
 }

@@ -16,7 +16,7 @@ import java.util.List;
 
 import com.google.protobuf.ByteString;
 
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -46,7 +46,7 @@ public final class DataFlowGraph {
   // output names to this dataflow
   private List<String> outputs = new ArrayList<>();
 
-  private KryoMemorySerializer kryoMemorySerializer;
+  private KryoSerializer kryoSerializer;
 
   // name to be used
   private String graphName;
@@ -56,7 +56,7 @@ public final class DataFlowGraph {
 
   private DataFlowGraph(String name, DataFlowTaskGraph g) {
     this.graph = g;
-    this.kryoMemorySerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
     this.graphName = name;
   }
 
@@ -152,10 +152,10 @@ public final class DataFlowGraph {
     }
 
     dafaFlowJobConfig.forEach((key, value) -> {
-      byte[] objectByte = kryoMemorySerializer.serialize(value);
+      byte[] objectByte = kryoSerializer.serialize(value);
       configBuilder.putConfigByteMap(key, ByteString.copyFrom(objectByte));
     });
-    byte[] graphBytes = kryoMemorySerializer.serialize(graph);
+    byte[] graphBytes = kryoSerializer.serialize(graph);
 
     //Construct the CDFWJob object to be sent to the CDFW Driver
     return CDFWJobAPI.SubGraph.newBuilder()

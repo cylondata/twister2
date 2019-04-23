@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -60,8 +60,8 @@ public class SAllReduceExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageType.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver());
 
 
@@ -99,8 +99,8 @@ public class SAllReduceExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    reduce.progress();
+  protected boolean progressCommunication() {
+    return reduce.progress();
   }
 
   @Override
