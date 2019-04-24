@@ -115,7 +115,6 @@ public class TaskScheduler implements ITaskScheduler {
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-      LOG.info("%%%% Instantiated Task Scheduler Class:%%%%" + taskSchedulerClass);
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
       method = taskSchedulerClass.getMethod("schedule",
