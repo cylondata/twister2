@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
+import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -42,9 +43,17 @@ public class TaskScheduler implements ITaskScheduler {
 
   private String schedulingType;
 
+  private int workerId;
+
   @Override
   public void initialize(Config cfg) {
     this.config = cfg;
+  }
+
+  @Override
+  public void initialize(Config cfg, int workerid) {
+    this.config = cfg;
+    this.workerId = workerid;
   }
 
   /**
@@ -78,9 +87,7 @@ public class TaskScheduler implements ITaskScheduler {
     } else {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
-
     LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
-
     return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
 
@@ -97,22 +104,18 @@ public class TaskScheduler implements ITaskScheduler {
     } else {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
-
     LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
-
     return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
 
   private TaskSchedulePlan generateTaskSchedulePlan(String className) {
-
     Class<?> taskSchedulerClass;
     Method method;
-    TaskSchedulePlan taskSchedulePlan = null;
-
+    TaskSchedulePlan taskSchedulePlan;
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
-      LOG.info("%%%% Task Scheduler Class:%%%%" + taskSchedulerClass);
+      LOG.info("%%%% Instantiated Task Scheduler Class:%%%%" + taskSchedulerClass);
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
       method = taskSchedulerClass.getMethod("schedule",
@@ -120,8 +123,8 @@ public class TaskScheduler implements ITaskScheduler {
       taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, dataFlowTaskGraph,
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
-        | InstantiationException | ClassNotFoundException e) {
-      throw new RuntimeException("Task Schedule Plan Not Able to Generate:" + e);
+        | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
+      throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
     }
 
     if (taskSchedulePlan != null) {
@@ -143,5 +146,3 @@ public class TaskScheduler implements ITaskScheduler {
     return taskSchedulePlan;
   }
 }
-
-

@@ -13,9 +13,11 @@ package edu.iu.dsc.tws.tsched.streaming.firstfit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -106,6 +108,10 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
         + "CPUValue:" + this.maxContainerResourceValue.getCpu());
   }
 
+  @Override
+  public void initialize(Config cfg, int workerId) {
+  }
+
   /**
    * This method set the size of the container, instance default resource, container padding,
    * ram map, disk map, and cpu map values.
@@ -143,9 +149,18 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    */
   private TaskSchedulePlanBuilder FirstFitFTaskSchedulingAlgorithm(
       TaskSchedulePlanBuilder taskSchedulePlanBuilder) throws TaskSchedulerException {
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(this.taskVertexSet);
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(this.taskVertexSet);
     assignInstancesToContainers(taskSchedulePlanBuilder, parallelTaskMap);
     return taskSchedulePlanBuilder;
+  }
+
+  private static class VertexComparator implements Comparator<Vertex> {
+    @Override
+    public int compare(Vertex o1, Vertex o2) {
+      return o1.getName().compareTo(o2.getName());
+    }
   }
 
   /**
@@ -170,14 +185,13 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * configuration values.
    */
   private ArrayList<RequiredRam> getSortedRAMInstances(Set<String> taskNameSet) {
-
     ArrayList<RequiredRam> ramRequirements = new ArrayList<>();
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(this.taskVertexSet);
     Map<String, Double> taskRamMap = taskAttributes.getTaskRamMap(this.taskVertexSet);
-
     for (String taskName : taskNameSet) {
-      Resource resource = TaskScheduleUtils.getResourceRequirement(
-          taskName, taskRamMap, this.defaultResourceValue,
-          this.maxContainerResourceValue, this.paddingPercentage);
+      Resource resource = TaskScheduleUtils.getResourceRequirement(taskName, taskRamMap,
+          this.defaultResourceValue, this.maxContainerResourceValue, this.paddingPercentage);
       ramRequirements.add(new RequiredRam(taskName, resource.getRam()));
     }
     ramRequirements.sort(Collections.reverseOrder());
@@ -202,7 +216,3 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
     }
   }
 }
-
-
-
-
