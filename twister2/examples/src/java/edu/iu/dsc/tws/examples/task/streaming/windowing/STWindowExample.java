@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -35,8 +36,8 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Window;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
@@ -53,12 +54,21 @@ public class STWindowExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    initPolicy();
+
     String edge = "edge";
     BaseWindowSource g = new SourceWindowTask(edge);
     ISink d = new DirectReceiveTask();
 
-    IWindowedSink dw = new DirectWindowedReceivingTask(windowingPolicy);
+    WindowConfig.Count count1 = new WindowConfig.Count(10);
+    Window window1 = Window.TUMBLING;
+    WindowConfig.Count count2 = new WindowConfig.Count(3);
+    Window window2 = Window.TUMBLING;
+    WindowConfig.Duration duration1 = new WindowConfig.Duration(10, TimeUnit.MINUTES);
+    Window window3 = Window.TUMBLING;
+
+    // Adding multiple policies
+    BaseWindowSink dw = new DirectWindowedReceivingTask()
+        .withWindowCount(window1, count1);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
@@ -67,11 +77,7 @@ public class STWindowExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-  public void initPolicy() {
-    WindowConfig.Count count = new WindowConfig.Count(5);
-    this.window = Window.TUMBLING;
-    windowingPolicy = new WindowingPolicy(this.window, count);
-  }
+
 
   protected static class DirectReceiveTask extends DirectCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
@@ -95,12 +101,21 @@ public class STWindowExample extends BenchTaskWorker {
 
     private WindowingPolicy windowingPolicy;
 
+    public DirectWindowedReceivingTask() {
+    }
+
     public DirectWindowedReceivingTask(WindowingPolicy windowingPolicy) {
       super(windowingPolicy);
       this.windowingPolicy = windowingPolicy;
     }
 
 
+    /**
+     * This method returns the final windowing message
+     * @param windowMessage Aggregated IWindowMessage is obtained here
+     * windowMessage contains [expired-tuples, current-tuples]
+     * @return
+     */
     @Override
     public IWindowMessage<int[]> execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));

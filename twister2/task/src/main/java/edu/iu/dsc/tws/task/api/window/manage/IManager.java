@@ -30,6 +30,10 @@ public interface IManager<T> extends Serializable {
 
   boolean progress(List<T> window);
 
+  boolean progress(WindowingPolicy windowingPolicy, List<T> window);
+
   boolean isDone();
+
+  boolean isDone(WindowingPolicy windowingPolicy, List<T> window);
 
 }
