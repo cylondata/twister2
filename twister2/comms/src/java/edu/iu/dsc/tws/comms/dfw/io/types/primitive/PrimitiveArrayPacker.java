@@ -106,7 +106,7 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
         break;
       }
     }
-    if (totalDataLength == bytesRead + startIndex) {
+    if (totalDataLength == bytesRead + startIndex * unitSize) {
       objectBuilder.setFinalObject(val);
     }
     return bytesRead;
