@@ -189,6 +189,13 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
+  @Override
+  public boolean isComplete() {
+    // nothing to do here
+    return this.pendingCloseRequests.isEmpty()
+        && this.pendingSends.isEmpty() && this.waitForCompletionSends.isEmpty();
+  }
+
   /**
    * Send a message to the given rank.
    *

@@ -60,4 +60,9 @@ public class GatherBatchFinalReceiver extends BaseGatherBatchReceiver {
     }
     return false;
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
+  }
 }

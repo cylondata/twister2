@@ -210,4 +210,9 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
       s.clean();
     }
   }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
+  }
 }

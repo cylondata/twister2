@@ -194,9 +194,9 @@ public class TeraSort extends TaskWorker {
       int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);
 
       int totalSize = valueSize + keySize;
-      this.toSend = cfg.getLongValue(
-          ARG_SIZE, 1
-      ) * 1024 * 1024 * 1024 / totalSize / noOfSources;
+      this.toSend = (long) (cfg.getDoubleValue(
+                ARG_SIZE, 1.0
+            ) * 1024 * 1024 * 1024 / totalSize / noOfSources);
 
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
@@ -289,7 +289,7 @@ public class TeraSort extends TaskWorker {
     CommandLine cmd = commandLineParser.parse(options, args);
 
 
-    jobConfig.put(ARG_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_SIZE)));
+    jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
     jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
     jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
 

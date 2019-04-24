@@ -18,7 +18,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
@@ -38,6 +40,12 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
 
   public DirectBatchFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
+  }
+
+  @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.receiver.init(cfg, expectedIds.keySet());
   }
 
   @Override
@@ -67,6 +75,17 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
+  }
+
+  @Override
   protected boolean sendToTarget(int source, int target) {
     List<Object> values = readyToSend.get(target);
 
@@ -87,5 +106,10 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
   }
 }

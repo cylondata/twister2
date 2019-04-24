@@ -43,4 +43,10 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
     onSyncEvent(target, barriers.get(target));
     return needsFurtherProgress;
   }
+
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    singularReceiver.sync(target, value);
+  }
 }

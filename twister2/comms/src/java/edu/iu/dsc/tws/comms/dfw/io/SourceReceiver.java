@@ -102,7 +102,7 @@ public abstract class SourceReceiver implements MessageReceiver {
       messages.put(e.getKey(), messagesPerTask);
       isSyncSent.put(e.getKey(), false);
       sourcesOfTarget.put(e.getKey(), e.getValue().size());
-      targetStates.put(e.getKey(), ReceiverState.RECEIVING);
+      targetStates.put(e.getKey(), ReceiverState.INIT);
     }
   }
 
@@ -127,6 +127,10 @@ public abstract class SourceReceiver implements MessageReceiver {
       syncState = SyncState.BARRIER_SYNC;
       barriers.put(target, (byte[]) object);
       return true;
+    }
+
+    if (targetStates.get(target) == ReceiverState.INIT) {
+      targetStates.put(target, ReceiverState.RECEIVING);
     }
 
     // if we have a sync from this source we cannot accept more data
@@ -158,6 +162,10 @@ public abstract class SourceReceiver implements MessageReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
     for (int target : messages.keySet()) {
+      // if we are at init state nothing to do
+      if (targetStates.get(target) == ReceiverState.INIT) {
+        continue;
+      }
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
       Set<Integer> finishedForTarget = syncReceived.get(target);
@@ -198,8 +206,7 @@ public abstract class SourceReceiver implements MessageReceiver {
         // finally if there is a sync, and all queues are empty
         if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
             && allQueuesEmpty(messagePerTarget)
-            && isAllEmpty(target)
-            && operation.isDelegateComplete()) {
+            && isAllEmpty(target)) {
           needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
           if (!needsFurtherProgress) {
             targetStates.put(target, ReceiverState.SYNCED);
@@ -307,7 +314,7 @@ public abstract class SourceReceiver implements MessageReceiver {
   public void clean() {
     for (int target : messages.keySet()) {
       clearTarget(target);
-      targetStates.put(target, ReceiverState.RECEIVING);
+      targetStates.put(target, ReceiverState.INIT);
     }
   }
 }

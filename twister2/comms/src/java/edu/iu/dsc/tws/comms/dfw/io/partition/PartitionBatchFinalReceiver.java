@@ -76,8 +76,24 @@ public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
+  }
+
+  @Override
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
   }
 }

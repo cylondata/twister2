@@ -112,8 +112,8 @@ public class TaskCheckpointExample implements IWorker {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
         workerList, new Communicator(config, channel));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, channel);
-    executor.execute();
+    Executor executor = new Executor(config, workerID, channel);
+    executor.execute(plan);
   }
 
   private static class GeneratorCheckpointTask extends SourceTask {
