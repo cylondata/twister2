@@ -101,7 +101,7 @@ public class LocalFileSystem extends FileSystem {
       return new LocalFileStatus(pathToFile(f), this);
     } else {
       throw new FileNotFoundException("File " + f + " does not exist or the user running "
-          + "Flink ('" + System.getProperty("user.name")
+          + "Twister2 ('" + System.getProperty("user.name")
           + "') has insufficient permissions to access it.");
     }
   }

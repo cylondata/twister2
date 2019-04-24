@@ -79,6 +79,10 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
   }
 
+  @Override
+  public void initialize(Config cfg, int workerId) {
+  }
+
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.

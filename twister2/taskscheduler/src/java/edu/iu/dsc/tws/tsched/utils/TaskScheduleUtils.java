@@ -30,7 +30,7 @@ public final class TaskScheduleUtils {
 
   private TaskScheduleUtils(Config cfg) {
     this.config = cfg;
-    this.minRamPerInstance = TaskSchedulerContext.taskInstanceRam(config);
+    minRamPerInstance = TaskSchedulerContext.taskInstanceRam(config);
   }
 
   /**
@@ -64,7 +64,7 @@ public final class TaskScheduleUtils {
                                             Resource maxContainerResources,
                                             int paddingPercentage) throws TaskSchedulerException {
 
-    if (instanceResources.getRam() < (double) TaskScheduleUtils.minRamPerInstance) {
+    if (instanceResources.getRam() < TaskScheduleUtils.minRamPerInstance) {
       throw new TaskSchedulerException(String.format(
           "Instance requires ram %s which is less than the minimum ram per instance of %s",
           instanceResources.getRam(), TaskScheduleUtils.minRamPerInstance));

@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -99,14 +98,8 @@ public class TeraSort extends TaskWorker {
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    IExecution iExecution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
-    iExecution.progress();
-    while (tasksCount.get() > 0) {
-      iExecution.progress();
-    }
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
     LOG.info("Stopping execution...");
-    iExecution.stop();
-    iExecution.close();
   }
 
   /**

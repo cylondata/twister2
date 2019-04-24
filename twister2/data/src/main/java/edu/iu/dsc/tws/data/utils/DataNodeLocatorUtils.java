@@ -11,18 +11,29 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.ClientProtocol;
+import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.tools.DFSck;
+import org.apache.hadoop.util.ToolRunner;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.IDataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.fs.FileStatus;
+import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
-import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**
  * This class is to find out the location of the datanodes corresponding to the input file names.
@@ -33,7 +44,6 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
   private static final Logger LOG = Logger.getLogger(DataNodeLocatorUtils.class.getName());
 
   private Config config;
-  private HdfsUtils hdfsUtils;
   private String datasetName;
 
   public DataNodeLocatorUtils(Config cfg) {
@@ -46,37 +56,30 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
    */
   public List<String> findDataNodesLocation(List<String> inputFileList) {
 
-    Configuration conf = new Configuration(false);
-    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-    hdfsUtils = new HdfsUtils(config);
-    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-
     List<String> dataNodes = new ArrayList<>();
-    for (int i = 0; i < inputFileList.size(); i++) {
-      this.datasetName = inputFileList.get(i);
-      String[] fName;
-      if (inputFileList.size() == 1) {
-        fName = new String[1];
-        fName[0] = inputFileList.get(i);
-      } else {
-        fName = new String[inputFileList.size() - 1];
-        fName[0] = inputFileList.get(i);
-      }
-
-      try {
-        Path path = new Path(datasetName);
-        FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
-        if (!fileStatus.getPath().isNullOrEmpty()) {
-          String fileURL = fileStatus.getPath().toString();
-          String datanodeName = hdfsUtils.getDFSCK(fName);
-          dataNodes.add(datanodeName);
-          LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
+    FileSystem fileSystem;
+    try {
+      for (String anInputFileList : inputFileList) {
+        Path path = new Path(anInputFileList);
+        fileSystem = FileSystem.get(path.toUri(), config);
+        this.datasetName = anInputFileList;
+        if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
+          FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
+          if (!fileStatus.getPath().isNullOrEmpty()) {
+            //dataNodes = getDataNodes(new String[]{this.datasetName});
+            dataNodes = getDataNodes();
+          }
+        } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+            Context.TWISTER2_LOCAL_FILESYSTEM)) {
+          FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
+          if (!fileStatus.getPath().isNullOrEmpty()) {
+            String datanodeName = InetAddress.getLocalHost().getHostName();
+            dataNodes.add(datanodeName);
+          }
         }
-      } catch (IOException ioe) {
-        throw new RuntimeException("IO Exception occured:", ioe);
-      } catch (NullPointerException npe) {
-        throw new RuntimeException("Datanode not able to retrieve:", npe);
       }
+    } catch (IOException ioe) {
+      throw new RuntimeException("IOException Occured");
     }
     return dataNodes;
   }
@@ -89,25 +92,88 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
    */
   public List<String> findDataNodesLocation(String inputFileName) {
 
-    Configuration conf = new Configuration(false);
-    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
-    hdfsUtils = new HdfsUtils(config);
-    HadoopFileSystem hadoopFileSystem = hdfsUtils.createHDFSFileSystem();
-
     List<String> dataNodes = new ArrayList<>();
+    FileSystem fileSystem;
     try {
       Path path = new Path(inputFileName);
-      FileStatus fileStatus = hadoopFileSystem.getFileStatus(path);
-      if (!fileStatus.getPath().isNullOrEmpty()) {
-        String fileURL = fileStatus.getPath().toString();
-        String[] fName = {inputFileName};
-        String datanodeName = hdfsUtils.getDFSCK(fName);
-        LOG.fine("HDFS URL:" + fileURL + "\tDataNode:" + datanodeName);
+      fileSystem = FileSystem.get(path.toUri(), config);
+      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+          Context.TWISTER2_HDFS_FILESYSTEM)) {
+        FileStatus fileStatus = fileSystem.getFileStatus(path);
+        if (!fileStatus.getPath().isNullOrEmpty()) {
+          dataNodes = getDataNodes();
+        }
+      } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+          Context.TWISTER2_LOCAL_FILESYSTEM)) {
+        FileStatus fileStatus = fileSystem.getFileStatus(path);
+        if (!fileStatus.getPath().isNullOrEmpty()) {
+          String datanodeName = InetAddress.getLocalHost().getHostName();
+          dataNodes.add(datanodeName);
+        }
       }
     } catch (IOException ioe) {
-      throw new RuntimeException("IO Exception occured:", ioe);
+      throw new RuntimeException("IOException Occured");
     }
     return dataNodes;
   }
-}
 
+  /**
+   * This method retrieve all the datanodes of a hdfs cluster
+   */
+  private List<String> getDataNodes() throws IOException {
+
+    Configuration conf = new Configuration(false);
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+
+    List<String> datanodesList = new ArrayList<>();
+    InetSocketAddress namenodeAddress = new InetSocketAddress(
+        HdfsDataContext.getHdfsNamenodeDefault(config),
+        HdfsDataContext.getHdfsNamenodePortDefault(config));
+    DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+    ClientProtocol nameNode = dfsClient.getNamenode();
+    DatanodeInfo[] datanodeReport =
+        nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+    for (DatanodeInfo di : datanodeReport) {
+      datanodesList.add(di.getHostName());
+    }
+    return datanodesList;
+  }
+
+
+  /**
+   * This method retrieve the datanode name of the file in the hdfs cluster
+   * @param fName
+   * @return
+   * @throws IOException
+   */
+  private List<String> getDataNodes(String[] fName) throws IOException {
+
+    Configuration conf = new Configuration(false);
+    conf.addResource(new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+    PrintStream out = new PrintStream(bStream, true);
+
+    List<String> datanodesList = new ArrayList<>();
+    InetSocketAddress namenodeAddress = new InetSocketAddress(
+        HdfsDataContext.getHdfsNamenodeDefault(config),
+        HdfsDataContext.getHdfsNamenodePortDefault(config));
+    DFSClient dfsClient = new DFSClient(namenodeAddress, conf);
+    ClientProtocol nameNode = dfsClient.getNamenode();
+    DatanodeInfo[] datanodeReport =
+        nameNode.getDatanodeReport(HdfsConstants.DatanodeReportType.ALL);
+    for (DatanodeInfo di : datanodeReport) {
+      datanodesList.add(di.getHostName());
+    }
+
+    //To retrieve the datanode name of the respective file
+    try {
+      ToolRunner.run(new DFSck(conf, out), fName);
+      out.println();
+    } catch (Exception e) {
+      throw new RuntimeException("Exception Occured:" + e.getMessage());
+    }
+    bStream.close();
+    out.close();
+    return datanodesList;
+  }
+}
