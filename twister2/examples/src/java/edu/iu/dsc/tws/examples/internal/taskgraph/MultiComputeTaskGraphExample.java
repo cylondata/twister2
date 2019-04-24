@@ -55,11 +55,11 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
  * elements. The structure of the graph is as given below:
  * <p>
  * SourceTask (Two Outgoing Edges)
- * |           | (Direct Communication)
- * V           V
+ * |                    | (Direct Communication)
+ * V                    V
  * FirstComputeTask  SecondComputeTask
- * |            | (All-Reduce Communication)
- * V            V
+ * |                    | (All-Reduce Communication)
+ * V                    V
  * ReduceTask (Two Incoming Edges)
  */
 

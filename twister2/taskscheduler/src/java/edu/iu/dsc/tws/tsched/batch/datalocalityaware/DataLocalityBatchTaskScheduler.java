@@ -111,7 +111,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     LinkedHashMap<Integer, ContainerPlan> containerPlans = new LinkedHashMap<>();
 
     LinkedHashSet<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-    List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(graph);
+
+    //List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(graph);
+    TaskVertexParser taskVertexParser = new TaskVertexParser();
+    List<Set<Vertex>> taskVertexList = taskVertexParser.parseVertexSet(graph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {

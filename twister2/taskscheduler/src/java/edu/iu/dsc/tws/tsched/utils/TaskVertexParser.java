@@ -28,9 +28,9 @@ public final class TaskVertexParser {
 
   private static final Logger LOG = Logger.getLogger(TaskVertexParser.class.getName());
 
-  private static List<Set<Vertex>> taskVertexList = new LinkedList<>();
+  private List<Set<Vertex>> taskVertexList = new LinkedList<>();
 
-  protected TaskVertexParser() {
+  public TaskVertexParser() {
   }
 
   /**
@@ -39,37 +39,49 @@ public final class TaskVertexParser {
    * separate Set.
    */
   @SuppressWarnings("unchecked")
-  public static List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
-
+  public List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
-
     for (Vertex vertex : taskVertexSet) {
-
-      if (dataFlowTaskGraph.inDegreeOfTask(vertex) == 0) {
+      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 1
+          || dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0) {
+        LOG.info("I am receiving the task vertex(outer if):" + vertex.getName());
         add(vertex);
-        if (!dataFlowTaskGraph.childrenOfTask(vertex).isEmpty()) {
+      } else {
+        if (dataFlowTaskGraph.inDegreeOfTask(vertex) == 0) {
+          add(vertex);
+          LOG.info("I am receiving the task vertex(if):" + vertex.getName());
+          if (!dataFlowTaskGraph.childrenOfTask(vertex).isEmpty()) {
+            LOG.info("%%%%%%%% Received task vertex(inner if):" + vertex.getName()
+                + "\tchild tasks:" + dataFlowTaskGraph.childrenOfTask(vertex));
+            add(dataFlowTaskGraph.childrenOfTask(vertex));
+          }
+        } else if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1) {
+          LOG.info("I am receiving the task vertex(first else):" + vertex.getName());
           add(dataFlowTaskGraph.childrenOfTask(vertex));
+        } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1) {
+          LOG.info("I am receiving the task vertex:(second else)" + vertex.getName());
+          add(vertex);
+        } else if ((dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 1)
+            && (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0)) {
+          LOG.info("I am receiving the task vertex:(third else)" + vertex.getName());
+          add(vertex);
         }
-      } else if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1) {
-        add(dataFlowTaskGraph.childrenOfTask(vertex));
-      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1) {
-        add(vertex);
-      } else if ((dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 1)
-              && (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0)) {
-        add(vertex);
       }
     }
-    LOG.fine("%%%%% Batch Task Vertex List:%%%%%%%" + taskVertexList);
+    //LOG.info("%%%%% Batch Task Vertex List:%%%%%%%" + taskVertexList);
+    for (Set<Vertex> aTaskVertexList : taskVertexList) {
+      LOG.info("Batch Task Vertex Details:" + aTaskVertexList.iterator().next().getName());
+    }
     return taskVertexList;
   }
 
-  private static void add(Vertex vertex) {
+  private void add(Vertex vertex) {
     Set<Vertex> vSet = new LinkedHashSet<>();
     vSet.add(vertex);
     taskVertexList.add(vSet);
   }
 
-  private static void add(Set<Vertex> taskVertexSet) {
+  private void add(Set<Vertex> taskVertexSet) {
     taskVertexList.add(taskVertexSet);
   }
 }
