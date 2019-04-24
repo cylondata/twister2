@@ -167,25 +167,30 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * the task in a round robin fashion.
    */
   private Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
-      DataFlowTaskGraph dataFlowTaskGraph, int numberOfContainers) throws ScheduleException {
+      DataFlowTaskGraph graph, int numberOfContainers) throws ScheduleException {
 
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
 
     TaskAttributes taskAttributes = new TaskAttributes();
     int globalTaskIndex = 0;
-
-    for (Vertex vertex : orderedTaskSet) {
-      int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
-      if (dataFlowTaskGraph.getNodeConstraints() != null) {
+    for (Vertex vertex : taskVertexSet) {
+      int totalTaskInstances;
+      if (!graph.getNodeConstraints().isEmpty()) {
+        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
+            graph.getNodeConstraints());
+      } else {
+        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+      }
+      if (!graph.getNodeConstraints().isEmpty()) {
         int instancesPerWorker = taskAttributes.getInstancesPerWorker(
-            vertex, dataFlowTaskGraph.getNodeConstraints().get(vertex.getName()));
+            vertex, graph.getNodeConstraints().get(vertex.getName()));
         int maxTaskInstancesPerContainer = 0;
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {

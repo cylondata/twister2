@@ -227,6 +227,14 @@ public final class TaskGraphBuilder {
     return graphConstraints;
   }
 
+  /**
+   * Adding Graph Constraints
+   */
+  public Map<String, String> addGraphConstraints(Map<String, String> graphconstraints) {
+    this.graphConstraints = graphconstraints;
+    return graphConstraints;
+  }
+
   //Adding Node Constraints
   public Map<String, Map<String, String>> addNodeConstraints(String nodeName,
                                                              Map<String, String> nodeconstraints) {

@@ -61,9 +61,13 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
     ReceivingTask dataObjectSink = new ReceivingTask();
 
     //Adding the user-defined constraints to the graph
-    Map<String, String> taskgraphConstraintsMap = new HashMap<>();
-    taskgraphConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
-    taskgraphConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1"); //it will be 1
+    Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+    //sourceTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
+    sinkTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+    //sinkTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -72,13 +76,14 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
         parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    //datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-    //    DataType.OBJECT);
+    /*datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+    DataType.OBJECT);*/
     computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
-
     taskGraphBuilder.setMode(OperationMode.STREAMING);
-    taskGraphBuilder.addNodeConstraints("datapointsource", taskgraphConstraintsMap);
-    taskGraphBuilder.addNodeConstraints("datapointsink", taskgraphConstraintsMap);
+
+    //Adding graph and node level constraints
+    taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
+    taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
 
     //Build the first taskgraph

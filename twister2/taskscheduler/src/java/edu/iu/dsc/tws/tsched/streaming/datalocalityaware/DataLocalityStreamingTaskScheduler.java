@@ -180,9 +180,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     //Maximum task instances can be accommodated to the container
-    int instancesPerContainer = 0;
+    int instancesPerContainer;
 
-    if (graph.getGraphConstraints() != null) {
+    if (!graph.getGraphConstraints().isEmpty()) {
       instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
     } else {
       instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(this.config);
@@ -192,10 +192,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     int containerCapacity = instancesPerContainer * numberOfContainers;
     int localIndex = 0;
     int containerIndex = 0;
-    int totalTask = 0;
+    int totalTask;
 
     //Total task instances in the taskgraph
-    if (graph.getNodeConstraints() != null) {
+    if (!graph.getNodeConstraints().isEmpty()) {
       totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
           graph.getNodeConstraints());
     } else {
@@ -221,10 +221,15 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
 
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(
-        orderedTaskSet, graph.getNodeConstraints());
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+    Map<String, Integer> parallelTaskMap;
+    if (!graph.getNodeConstraints().isEmpty()) {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet,
+          graph.getNodeConstraints());
+    } else {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+    }
 
+    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
@@ -240,6 +245,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
               dataAwareAllocationMap.get(containerIndex).add(
                   new InstanceId(vertex.getName(), globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
+            } else {
+              throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+                  + "configuration, please check the number of workers, "
+                  + "maximum instances per worker");
             }
           }
           globalTaskIndex++;
