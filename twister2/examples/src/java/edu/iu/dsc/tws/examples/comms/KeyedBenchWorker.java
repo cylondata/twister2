@@ -132,21 +132,28 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected void progress() {
     // we need to progress the communication
+    boolean needProgress = true;
+
     while (true) {
-      if (jobParameters.isStream()) {
-        if (isDone() && streamWait == 0) {
-          streamWait = System.currentTimeMillis();
-        }
-        if (isDone() && streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
+      boolean seemsDone = !needProgress && isDone();
+      if (seemsDone) {
+        if (jobParameters.isStream()) {
+          if (streamWait == 0) {
+            streamWait = System.currentTimeMillis();
+          }
+          if (streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
+            break;
+          }
+        } else {
           break;
         }
-      } else if (isDone()) {
-        break;
+      } else {
+        streamWait = 0;
       }
-      // progress the channel
+      // communicationProgress the channel
       channel.progress();
-      // we should progress the communication directive
-      progressCommunication();
+      // we should communicationProgress the communication directive
+      needProgress = progressCommunication();
     }
   }
 
@@ -167,7 +174,7 @@ public abstract class KeyedBenchWorker implements IWorker {
   public void close() {
   }
 
-  protected abstract void progressCommunication();
+  protected abstract boolean progressCommunication();
 
   protected abstract boolean isDone();
 

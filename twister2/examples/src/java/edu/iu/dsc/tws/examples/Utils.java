@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +37,7 @@ public final class Utils {
   /**
    * Let assume we have 2 tasks per container and one additional for first container,
    * which will be the destination
+   *
    * @return task plan
    */
   public static TaskPlan createReduceTaskPlan(Config cfg,
@@ -49,7 +51,7 @@ public final class Utils {
     int thisExecutor = workerID;
 
     Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode = new HashMap<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       String name = Integer.toString(workerInfo.getWorkerID());
       List<JobMasterAPI.WorkerInfo> containerList;
       if (!containersPerNode.containsKey(name)) {
@@ -90,7 +92,8 @@ public final class Utils {
     LOG.fine("Groups to executors: " + print);
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
+    return new TaskPlan(executorToGraphNodes, groupsToExeuctors,
+        Collections.emptyMap(), thisExecutor);
   }
 
   private static int nextExecutorId(int current, int noOfContainers) {
@@ -122,6 +125,7 @@ public final class Utils {
 
   /**
    * Create task plan according to stages
+   *
    * @param cfg configuration
    * @param noOfTaskEachStage no of tasks at each stage
    * @return task plan
@@ -155,11 +159,17 @@ public final class Utils {
       totalTasksPreviously += noOfTasks;
     }
 
+    Map<String, Set<Integer>> nodeToTasks = new HashMap<>();
+
     int i = 0;
     for (Map.Entry<String, List<JobMasterAPI.WorkerInfo>> entry : containersPerNode.entrySet()) {
       Set<Integer> executorsOfGroup = new HashSet<>();
       for (JobMasterAPI.WorkerInfo workerInfo : entry.getValue()) {
         executorsOfGroup.add(workerInfo.getWorkerID());
+        Set<Integer> tasksInNode = nodeToTasks.computeIfAbsent(
+            workerInfo.getNodeInfo().getNodeIP(),
+            k -> new HashSet<>());
+        tasksInNode.addAll(executorToGraphNodes.get(workerInfo.getWorkerID()));
       }
       groupsToExeuctors.put(i, executorsOfGroup);
       i++;
@@ -169,7 +179,7 @@ public final class Utils {
 //    groupsToExeuctors.put(2, new HashSet<>(Arrays.asList(0)));
 //    groupsToExeuctors.put(3, new HashSet<>(Arrays.asList(3)));
 
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, thisExecutor);
+    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, nodeToTasks, thisExecutor);
   }
 
   public static Set<Integer> getTasksOfExecutor(int exec, TaskPlan plan,

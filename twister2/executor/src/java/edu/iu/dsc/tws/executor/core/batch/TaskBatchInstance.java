@@ -13,12 +13,15 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
@@ -33,7 +36,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 /**
  * The class represents the instance of the executing task
  */
-public class TaskBatchInstance implements INodeInstance {
+public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * The actual task executing
    */
@@ -130,8 +133,15 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * The task schedule
+   */
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep track of syncs received
+   */
+  private Set<String> syncReceived = new HashSet<>();
 
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -177,16 +187,16 @@ public class TaskBatchInstance implements INodeInstance {
       while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
         IMessage m = inQueue.poll();
         task.execute(m);
-        state.set(InstanceState.EXECUTING);
+        state.addState(InstanceState.EXECUTING);
       }
 
       // for compute we don't have to have the context done as when the inputs finish and execution
       // is done, we are done executing
       // progress in communication
-      boolean needsFurther = communicationProgress(inParOps);
+      boolean needsFurther = progressCommunication(inParOps);
       // if we no longer needs to progress comm and input is empty
       if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
-        state.set(InstanceState.EXECUTION_DONE);
+        state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 
@@ -214,16 +224,25 @@ public class TaskBatchInstance implements INodeInstance {
       for (IParallelOperation op : outParOps.values()) {
         op.finish(taskId);
       }
-      state.set(InstanceState.OUT_COMPLETE);
+      state.addState(InstanceState.OUT_COMPLETE);
     }
 
     // lets progress the communication
-    boolean needsFurther = communicationProgress(outParOps);
+    boolean needsFurther = progressCommunication(outParOps);
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
-      state.set(InstanceState.SENDING_DONE);
+    if (state.isSet(InstanceState.OUT_COMPLETE)) {
+      state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);
+  }
+
+  public boolean sync(String edge, byte[] value) {
+    syncReceived.add(edge);
+    if (syncReceived.equals(inParOps.keySet())) {
+      state.addState(InstanceState.SYNCED);
+      syncReceived.clear();
+    }
+    return true;
   }
 
   /**
@@ -231,7 +250,7 @@ public class TaskBatchInstance implements INodeInstance {
    *
    * @return true if further progress is needed
    */
-  public boolean communicationProgress(Map<String, IParallelOperation> ops) {
+  public boolean progressCommunication(Map<String, IParallelOperation> ops) {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
       if (e.getValue().progress()) {
@@ -239,6 +258,24 @@ public class TaskBatchInstance implements INodeInstance {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    return complete;
   }
 
   @Override
@@ -256,6 +293,14 @@ public class TaskBatchInstance implements INodeInstance {
     if (task instanceof Closable) {
       ((Closable) task).close();
     }
+  }
+
+  @Override
+  public void reset() {
+    if (task instanceof Closable) {
+      ((Closable) task).refresh();
+    }
+    state = new InstanceState(InstanceState.INIT);
   }
 
   public BlockingQueue<IMessage> getInQueue() {

@@ -53,7 +53,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
     for (Integer target : expectedIds.keySet()) {
       syncReceived.put(target, new HashSet<>());
-      targetStates.put(target, ReceiverState.RECEIVING);
+      targetStates.put(target, ReceiverState.INIT);
     }
 
     for (int target : thisDestinations) {
@@ -89,9 +89,18 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
   @Override
   protected boolean canAcceptMessage(int source, int target) {
+    Set<Integer> sources = syncReceived.get(target);
+    if (sources.contains(source)) {
+      return false;
+    }
+
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         || targetStates.get(target) == ReceiverState.SYNCED) {
       return false;
+    }
+
+    if (targetStates.get(target) == ReceiverState.INIT) {
+      targetStates.put(target, ReceiverState.RECEIVING);
     }
 
     Queue<Object> msgQueue = messages.get(target);
@@ -102,6 +111,12 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected boolean sync() {
     boolean allSynced = true;
     for (int target : thisDestinations) {
+      // if we have synced no need to go forward
+      if (targetStates.get(target) == ReceiverState.INIT
+          || targetStates.get(target) == ReceiverState.SYNCED) {
+        continue;
+      }
+
       if (targetStates.get(target) == ReceiverState.RECEIVING) {
         allSynced = false;
       }
@@ -123,5 +138,21 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     }
 
     return allSynced;
+  }
+
+  @Override
+  public void clean() {
+    for (int taraget : targetStates.keySet()) {
+      clearTarget(taraget);
+
+      targetStates.put(taraget, ReceiverState.INIT);
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : syncReceived.entrySet()) {
+      e.getValue().clear();
+    }
+
+    barriers.clear();
+    stateCleared = false;
   }
 }

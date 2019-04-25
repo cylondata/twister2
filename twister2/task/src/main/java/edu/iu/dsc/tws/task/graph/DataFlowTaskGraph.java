@@ -16,15 +16,24 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
  */
 public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
+
+  private static final Logger LOG = Logger.getLogger(DataFlowTaskGraph.class.getName());
+
   private Map<String, Vertex> taskMap = new HashMap<>();
 
+  private Map<String, String> graphConstraintsMap = new HashMap<>();
+  private Map<String, Map<String, String>> nodeConstraintsMap = new HashMap<>();
+
   private OperationMode operationMode = OperationMode.STREAMING;
+
+  private WindowMode windowMode = WindowMode.NONE;
 
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
@@ -57,6 +66,23 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
       taskMap.put(name, taskVertex);
     }
     return true;
+  }
+
+
+  public void addNodeConstraints(Map<String, Map<String, String>> nodeConstraintsmap) {
+    this.nodeConstraintsMap = nodeConstraintsmap;
+  }
+
+  public void addGraphConstraints(Map<String, String> graphConstraintsmap) {
+    this.graphConstraintsMap = graphConstraintsmap;
+  }
+
+  public Map<String, String> getGraphConstraints() {
+    return graphConstraintsMap;
+  }
+
+  public Map<String, Map<String, String>> getNodeConstraints() {
+    return nodeConstraintsMap;
   }
 
   /**
@@ -155,6 +181,7 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return operationMode;
   }
 
+
   /**
    * This is the setter method to set the property of the operation mode which is either
    * "STREAMING" or "BATCH"
@@ -162,6 +189,24 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
+
+
+  /**
+   * Setting the window mode "ALL" or "NONE"
+   * @param windowMode
+   */
+  public void setWindowMode(WindowMode windowMode) {
+    this.windowMode = windowMode;
+  }
+
+  /**
+   * This is the getter method to get the property of windowing mode "ALL" or "NONE"
+   * @return
+   */
+  public WindowMode getWindowMode() {
+    return windowMode;
+  }
+
 
   private static class VertexComparator implements Comparator<Vertex> {
 

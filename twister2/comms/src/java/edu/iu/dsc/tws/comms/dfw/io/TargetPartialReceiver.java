@@ -62,13 +62,14 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
     // we are at the receiving state
     for (int source : thisSources) {
-      sourceStates.put(source, ReceiverState.RECEIVING);
+      sourceStates.put(source, ReceiverState.INIT);
       syncSent.put(source, new HashSet<>());
     }
   }
 
   /**
    * Swap the messages to the ready queue
+   *
    * @param dest the target
    * @param dests message queue to switch to ready
    */
@@ -82,6 +83,13 @@ public class TargetPartialReceiver extends TargetReceiver {
     dests.clear();
   }
 
+  /**
+   * This gets called with a represented source
+   *
+   * @param source the sources the represented source
+   * @param target the target the true target
+   * @return true if send if successful or nothing to send
+   */
   @Override
   protected boolean sendToTarget(int source, int target) {
     List<Object> values = readyToSend.get(target);
@@ -126,8 +134,12 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   protected boolean canAcceptMessage(int source, int target) {
     if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
-        || sourceStates.get(target) == ReceiverState.SYNCED) {
+        || sourceStates.get(source) == ReceiverState.SYNCED) {
       return false;
+    }
+
+    if (sourceStates.get(source) == ReceiverState.INIT) {
+      sourceStates.put(source, ReceiverState.RECEIVING);
     }
 
     Queue<Object> msgQueue = messages.get(target);
@@ -144,43 +156,41 @@ public class TargetPartialReceiver extends TargetReceiver {
     boolean allSynced = true;
 
     for (Map.Entry<Integer, ReceiverState> e : sourceStates.entrySet()) {
+      int source = e.getKey();
       if (e.getValue() == ReceiverState.RECEIVING) {
         allSynced = false;
         continue;
       }
 
       // if we have synced no need to go forward
-      if (e.getValue() == ReceiverState.SYNCED) {
+      if (e.getValue() == ReceiverState.INIT || e.getValue() == ReceiverState.SYNCED) {
         continue;
       }
 
-      for (int source : thisSources) {
-        Set<Integer> finishedDestPerSource = syncSent.get(source);
-        for (int dest : thisDestinations) {
-          if (!finishedDestPerSource.contains(dest)) {
+      Set<Integer> finishedDestPerSource = syncSent.get(source);
+      for (int dest : thisDestinations) {
+        if (!finishedDestPerSource.contains(dest)) {
 
-            byte[] message;
-            int flags;
-            if (syncState == SyncState.SYNC) {
-              flags = MessageFlags.SYNC_EMPTY;
-              message = new byte[1];
-            } else {
-              flags = MessageFlags.SYNC_BARRIER;
-              message = barriers.get(source);
+          byte[] message;
+          int flags;
+          if (syncState == SyncState.SYNC) {
+            flags = MessageFlags.SYNC_EMPTY;
+            message = new byte[1];
+          } else {
+            flags = MessageFlags.SYNC_BARRIER;
+            message = barriers.get(source);
+          }
+
+          if (operation.sendPartial(source, message, flags, dest)) {
+            finishedDestPerSource.add(dest);
+
+            if (finishedDestPerSource.size() == thisDestinations.size()) {
+              sourceStates.put(source, ReceiverState.SYNCED);
             }
-
-            if (operation.sendPartial(source, message, flags, dest)) {
-              finishedDestPerSource.add(dest);
-
-              if (finishedDestPerSource.size() == thisDestinations.size()) {
-                sourceStates.put(source, ReceiverState.SYNCED);
-              }
-            } else {
-
-              allSynced = false;
-              // no point in going further
-              break;
-            }
+          } else {
+            allSynced = false;
+            // no point in going further
+            break;
           }
         }
       }
@@ -199,5 +209,23 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
 
     return allSynced;
+  }
+
+  @Override
+  public void clean() {
+    for (int t : thisDestinations) {
+      clearTarget(t);
+    }
+
+    for (Map.Entry<Integer, Set<Integer>> e : syncSent.entrySet()) {
+      e.getValue().clear();
+    }
+
+    for (int source : thisSources) {
+      sourceStates.put(source, ReceiverState.INIT);
+    }
+    syncState = SyncState.SYNC;
+    barriers.clear();
+    stateCleared = false;
   }
 }

@@ -85,9 +85,9 @@ public class TaskBarrierExample implements IWorker {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
           workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, workerID, plan, network,
+    Executor executor = new Executor(config, workerID, network,
         OperationMode.STREAMING);
-    executor.execute();
+    executor.execute(plan);
 
   }
 

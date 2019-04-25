@@ -70,11 +70,11 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < iter; i++) {
       taskExecutor.execute(graph, plan);
-      LOG.info("%%%%%%%%%%%%%%%%%Iteration Completed%%%%%%%%%%%%%%%%%%:" + iter);
+      LOG.info("Completed Iteration:" + i);
     }
     long stopTime = System.currentTimeMillis();
     long executionTime = stopTime - startTime;
-    LOG.info("Total Execution Time to Complete Dataflow Add Node Experiment"
+    LOG.info("Total Execution Time to complete Dataflow Additional Node Experiment"
         + "\t" + executionTime + "(in milliseconds)");
   }
 
@@ -109,7 +109,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points (First Compute Task): " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received Points (First Compute Task): " + context.getWorkerId()
           + ":" + context.taskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
@@ -118,8 +118,6 @@ public class DataflowAddNodeExperiment extends TaskWorker {
           context.write("sdirect", it.next());
         }
       }
-      /*LOG.info(String.format("%d %d All-Reduce Received count: %d", context.getWorkerId(),
-          context.taskId(), count));*/
       context.end("sdirect");
       return true;
     }
@@ -132,7 +130,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points (Second Compute Task): " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received Points (Second Compute Task): " + context.getWorkerId()
           + ":" + context.taskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
@@ -141,8 +139,6 @@ public class DataflowAddNodeExperiment extends TaskWorker {
           context.write("all-reduce", it.next());
         }
       }
-      /*LOG.info(String.format("%d %d All-Reduce Received count: %d", context.getWorkerId(),
-          context.taskId(), count));*/
       context.end("all-reduce");
       return true;
     }
@@ -154,8 +150,6 @@ public class DataflowAddNodeExperiment extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      /*LOG.log(Level.INFO, "Received Points: " + context.getWorkerId()
-          + ":" + context.taskId());*/
       datapoints = (double[]) message.getContent();
       return true;
     }
@@ -195,7 +189,6 @@ public class DataflowAddNodeExperiment extends TaskWorker {
         double newVal = object11[j] + object21[j];
         object31[j] = newVal;
       }
-      /*LOG.info("New double value is::::" + Arrays.toString(object31) + "\t" + object31.length);*/
       return object31;
     }
   }
@@ -212,7 +205,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     Options options = new Options();
     options.addOption(DataObjectConstants.ARGS_ITERATIONS, true, "iter");
     options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(DataObjectConstants.WORKERS, true, "Workers");
+    options.addOption(DataObjectConstants.WORKERS, true, "workers");
     options.addOption(DataObjectConstants.DSIZE, true, "dsize");
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -233,7 +226,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("Experimentjob");
+    jobBuilder.setJobName("Experiment2");
     jobBuilder.setWorkerClass(DataflowAddNodeExperiment.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);

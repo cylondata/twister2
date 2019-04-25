@@ -108,6 +108,8 @@ public abstract class TaskWorker implements IWorker {
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
+    // close the task executor
+    taskExecutor.close();
     // lets terminate the network
     communicator.close();
     // we are done executing

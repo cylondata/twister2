@@ -46,7 +46,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                      Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
 
     if (srcs.size() == 0) {
@@ -157,5 +157,15 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
   @Override
   public void close() {
     op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

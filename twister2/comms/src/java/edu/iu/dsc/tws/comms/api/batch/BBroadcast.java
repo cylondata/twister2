@@ -85,4 +85,11 @@ public class BBroadcast {
     // deregister from the channel
     bcast.close();
   }
+
+  /**
+   * Clean the operation, this doesn't close it
+   */
+  public void refresh() {
+    bcast.clean();
+  }
 }

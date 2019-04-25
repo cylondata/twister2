@@ -46,7 +46,6 @@ public class Communicator {
   private TaskIdGenerator idGenerator;
 
   private List<String> persistentDirectories;
-  private int currentDirectoryIndex = 0;
 
   public Communicator(Config cfg, TWSChannel ch) {
     this(cfg, ch, (List<String>) null);
@@ -59,7 +58,7 @@ public class Communicator {
     if (persDirs == null) {
       this.persistentDirectories = CommunicationContext.persistentDirectory(config);
       if (this.persistentDirectories.size() > 0) {
-        LOG.info("The persistence operations will be load balanced between : "
+        LOG.log(Level.FINE, "The persistence operations will be load balanced between : "
             + this.persistentDirectories);
       }
     } else {

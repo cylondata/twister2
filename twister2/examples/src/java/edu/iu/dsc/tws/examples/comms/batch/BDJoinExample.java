@@ -84,8 +84,8 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    join.progress();
+  protected boolean progressCommunication() {
+    return join.progress();
   }
 
   @Override

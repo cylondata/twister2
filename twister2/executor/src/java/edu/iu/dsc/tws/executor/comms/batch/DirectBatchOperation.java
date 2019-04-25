@@ -34,7 +34,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   public DirectBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                               Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                               Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
 
     // we assume a uniform task id association, so this will work
@@ -68,6 +68,16 @@ public class DirectBatchOperation extends AbstractParallelOperation {
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 
   @Override
@@ -83,5 +93,10 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   @Override
   public void close() {
     op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
   }
 }

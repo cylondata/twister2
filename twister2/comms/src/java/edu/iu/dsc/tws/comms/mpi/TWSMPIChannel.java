@@ -143,6 +143,7 @@ public class TWSMPIChannel implements TWSChannel {
 
   /**
    * Constructs the MPI channel
+   *
    * @param config configuration
    * @param comm communicator
    * @param worker worker id
@@ -182,6 +183,17 @@ public class TWSMPIChannel implements TWSChannel {
   @Override
   public void close() {
     // nothing to do here
+    while (!this.pendingCloseRequests.isEmpty()
+        || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
+      this.progress();
+    }
+  }
+
+  @Override
+  public boolean isComplete() {
+    // nothing to do here
+    return this.pendingCloseRequests.isEmpty()
+        && this.pendingSends.isEmpty() && this.waitForCompletionSends.isEmpty();
   }
 
   /**

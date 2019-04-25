@@ -203,7 +203,7 @@ public abstract class TargetReceiver implements MessageReceiver {
         }
       }
 
-      if (!isAllEmpty() || !sync() || !operation.isDelegateComplete()) {
+      if (!isAllEmpty() || !sync()) {
         needsFurtherProgress = true;
       }
     } finally {

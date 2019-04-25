@@ -46,6 +46,7 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
   @Override
   public double[] map(Iterable<double[][]> t) {
     double[][] dataPoints = t.iterator().next();
+    LOG.info(String.format("Training Dimensions [%d,%d]", dataPoints.length, dataPoints[0].length));
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
         this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),

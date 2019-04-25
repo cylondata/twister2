@@ -47,9 +47,22 @@ public interface IParallelOperation {
   void register(int targetTask, BlockingQueue<IMessage> queue);
 
   /**
+   * Register a callback to notify when a sync happens
+   * @param targetTask the target
+   * @param sync sync
+   */
+  void registerSync(int targetTask, ISync sync);
+
+  /**
    * Progress the parallel operation
    */
   boolean progress();
+
+  /**
+   * Check weather the operation is complete
+   * @return true if the operation is complete
+   */
+  boolean isComplete();
 
   /**
    * Indicate the end of the operation
@@ -62,5 +75,11 @@ public interface IParallelOperation {
    * Close the parallel operation
    */
   default void close() {
+  }
+
+  /**
+   * Refresh the operation to start from beginning
+   */
+  default void reset() {
   }
 }

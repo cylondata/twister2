@@ -143,27 +143,34 @@ public abstract class BenchWorker implements IWorker {
   protected void progress() {
     // we need to progress the communication
 
+    boolean needProgress = true;
+
     while (true) {
-      if (jobParameters.isStream()) {
-        if (isDone() && streamWait == 0) {
-          streamWait = System.currentTimeMillis();
-        }
-        if (isDone() && streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
+      boolean seemsDone = !needProgress && isDone();
+      if (seemsDone) {
+        if (jobParameters.isStream()) {
+          if (streamWait == 0) {
+            streamWait = System.currentTimeMillis();
+          }
+          if (streamWait > 0 && (System.currentTimeMillis() - streamWait) > 5000) {
+            break;
+          }
+        } else {
           break;
         }
-      } else if (isDone()) {
-        break;
+      } else {
+        streamWait = 0;
       }
       // communicationProgress the channel
       channel.progress();
       // we should communicationProgress the communication directive
-      progressCommunication();
+      needProgress = progressCommunication();
     }
 
     LOG.info(() -> workerId + " FINISHED PROGRESS");
   }
 
-  protected abstract void progressCommunication();
+  protected abstract boolean progressCommunication();
 
   protected abstract boolean isDone();
 
