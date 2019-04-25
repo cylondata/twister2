@@ -31,7 +31,7 @@ public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
   @Override
   protected boolean execute(IMessage<T> message) {
     boolean status = false;
-    if(message.getContent() != null) {
+    if (message.getContent() != null) {
 
       status = true;
     }
