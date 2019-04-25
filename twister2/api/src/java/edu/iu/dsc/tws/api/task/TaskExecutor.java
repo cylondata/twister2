@@ -99,8 +99,8 @@ public class TaskExecutor {
 
     WorkerPlan workerPlan = createWorkerPlan();
 
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator);
