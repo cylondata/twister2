@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -46,11 +47,15 @@ public class BcastGatherBatchReceiver extends TargetFinalReceiver {
 
   @Override
   protected void addSyncMessage(int source, int target) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
   @Override
   protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
     barriers.put(target, barrier);
   }
@@ -64,6 +69,17 @@ public class BcastGatherBatchReceiver extends TargetFinalReceiver {
       ready.addAll(dests);
     }
     dests.clear();
+  }
+
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
+      }
+    }
+    return b;
   }
 
   @Override
@@ -87,5 +103,10 @@ public class BcastGatherBatchReceiver extends TargetFinalReceiver {
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
   }
 }

@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
@@ -121,6 +122,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    */
   private int maxRecordsInMemory;
 
+  /**
+   * Keep state about the targets
+   */
+  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
+
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                       List<String> shuffleDirs, Comparator<Object> com) {
     this.bulkReceiver = receiver;
@@ -140,6 +146,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     targets = new HashSet<>(expectedIds.keySet());
     initMergers();
     this.bulkReceiver.init(cfg, expectedIds.keySet());
+
+    for (Integer target : expectedIds.keySet()) {
+      targetStates.put(target, ReceiverState.INIT);
+    }
   }
 
   /**
@@ -178,6 +188,15 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        || targetStates.get(target) == ReceiverState.SYNCED) {
+      return false;
+    }
+
+    if (targetStates.get(target) == ReceiverState.INIT) {
+      targetStates.put(target, ReceiverState.RECEIVING);
+    }
+
     if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
@@ -189,6 +208,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       }
       if (finished.size() == partition.getSources().size()) {
         finishedTargets.add(target);
+        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
       return true;
     }
@@ -228,9 +248,22 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       sorts.run();
     }
 
+    boolean needFurtherProgress = false;
+    for (Map.Entry<Integer, ReceiverState> e : targetStates.entrySet()) {
+      if (e.getValue() != ReceiverState.INIT) {
+        needFurtherProgress = true;
+      }
+    }
+
+    if (!needFurtherProgress) {
+      return needFurtherProgress;
+    }
+
     for (int i : finishedTargets) {
       if (!finishedTargetsCompleted.contains(i)) {
         finishTarget(i);
+        targetStates.put(i, ReceiverState.SYNCED);
+        onSyncEvent(i, null);
         finishedTargetsCompleted.add(i);
       }
     }
@@ -244,6 +277,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     Iterator<Object> itr = sortedMerger.readIterator();
     bulkReceiver.receive(target, itr);
     onFinish(target);
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 
   @Override
@@ -265,7 +303,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     finishedTargetsCompleted.clear();
     finishedTargets.clear();
     finishedSources.forEach((k, v) -> v.clear());
+
+    for (int taraget : targetStates.keySet()) {
+      targetStates.put(taraget, ReceiverState.INIT);
+    }
+
     refresh++;
-    initMergers();
   }
 }

@@ -22,5 +22,7 @@ public interface ITaskScheduler {
 
   void initialize(Config cfg);
 
+  void initialize(Config cfg, int workerId);
+
   TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan);
 }

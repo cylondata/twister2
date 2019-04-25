@@ -158,6 +158,16 @@ public class TWSTCPChannel implements TWSChannel {
     comm.stop();
   }
 
+  @Override
+  public boolean isComplete() {
+    // nothing to do here
+    if (!this.pendingCloseRequests.isEmpty()
+        || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Send a message to the given rank.
    *

@@ -19,59 +19,49 @@ import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class Executor {
-  private ExecutionPlan executionPlan;
-
-  private TWSChannel channel;
-
-  private OperationMode operationMode;
-
   private Config config;
 
   private int workerId;
 
-  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
-                  TWSChannel channel) {
-    this(cfg, wId, executionPlan, channel, OperationMode.STREAMING);
+  private IExecutor executor;
+
+  public Executor(Config cfg, int wId, TWSChannel channel) {
+    this(cfg, wId, channel, OperationMode.STREAMING);
   }
 
-  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
-                  TWSChannel channel, OperationMode operationMode) {
-    this.executionPlan = executionPlan;
-    this.channel = channel;
-    this.operationMode = operationMode;
+  public Executor(Config cfg, int wId, TWSChannel channel, OperationMode operationMode) {
     this.config = cfg;
     this.workerId = wId;
+
+    // lets start the execution
+    if (operationMode == OperationMode.STREAMING) {
+      executor = new StreamingSharingExecutor(config, workerId, channel);
+    } else {
+      executor = new BatchSharingExecutor(config, workerId, channel);
+    }
   }
 
   /***
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
-  public boolean execute() {
-    // lets start the execution
-    IExecutor executor;
-    if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingSharingExecutor(workerId);
-    } else {
-      executor = new BatchSharingExecutor(workerId);
-    }
-
-    return executor.execute(config, executionPlan, channel);
+  public boolean execute(ExecutionPlan executionPlan) {
+    return executor.execute(executionPlan);
   }
 
   /***
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
-  public IExecution iExecute() {
-    // lets start the execution
-    IExecutor executor;
-    if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingSharingExecutor(workerId);
-    } else {
-      executor = new BatchSharingExecutor(workerId);
-    }
+  public IExecution iExecute(ExecutionPlan executionPlan) {
+    return executor.iExecute(executionPlan);
+  }
 
-    return executor.iExecute(config, executionPlan, channel);
+  public boolean waitFor(ExecutionPlan executionPlan) {
+    return executor.waitFor(executionPlan);
+  }
+
+  public void close() {
+    executor.close();
   }
 }

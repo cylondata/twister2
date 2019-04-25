@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -35,7 +36,7 @@ public final class TaskGraphBuilder {
   /**
    * Keep track of the nodes with their names
    */
-  private Map<String, Vertex> nodes = new HashMap<>();
+  private Map<String, Vertex> nodes = new LinkedHashMap<>();
 
   /**
    * The parent edges of a node
@@ -184,11 +185,11 @@ public final class TaskGraphBuilder {
    *
    * @param name name of the node
    * @param source implementation of the node
-   * @param parllel parallelism of the node
+   * @param parallel parallelism of the node
    * @return a compute connection, that can be used to connect this node to other nodes as a child
    */
-  public SourceConnection addSource(String name, ISource source, int parllel) {
-    Vertex vertex = new Vertex(name, source, parllel);
+  public SourceConnection addSource(String name, ISource source, int parallel) {
+    Vertex vertex = new Vertex(name, source, parallel);
     nodes.put(name, vertex);
 
     return createSourceConnection(name);
@@ -209,9 +210,41 @@ public final class TaskGraphBuilder {
     return mode;
   }
 
+  //For Graph Constraints
+  private Map<String, String> graphConstraints = new HashMap<>();
+
+  //For Node Constraints
+  private Map<String, Map<String, String>> nodeConstraints = new HashMap<>();
+
+  /**
+   * Adding Graph Constraints
+   */
+  public Map<String, String> addGraphConstraints(String constraintName, String constraintValue) {
+    this.graphConstraints.put(constraintName, constraintValue);
+    return graphConstraints;
+  }
+
+  /**
+   * Adding Graph Constraints
+   */
+  public Map<String, String> addGraphConstraints(Map<String, String> graphconstraints) {
+    this.graphConstraints = graphconstraints;
+    return graphConstraints;
+  }
+
+  //Adding Node Constraints
+  public Map<String, Map<String, String>> addNodeConstraints(String nodeName,
+                                                             Map<String, String> nodeconstraints) {
+    this.nodeConstraints.put(nodeName, nodeconstraints);
+    return nodeConstraints;
+  }
+
+
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
     graph.setOperationMode(mode);
+    graph.addGraphConstraints(graphConstraints);
+    graph.addNodeConstraints(nodeConstraints);
 
     for (Map.Entry<String, Vertex> e : nodes.entrySet()) {
       graph.addTaskVertex(e.getKey(), e.getValue());

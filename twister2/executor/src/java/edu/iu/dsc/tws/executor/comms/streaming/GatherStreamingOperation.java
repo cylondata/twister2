@@ -32,7 +32,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   public GatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                   Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                   Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
 
     if (srcs.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -84,5 +84,10 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

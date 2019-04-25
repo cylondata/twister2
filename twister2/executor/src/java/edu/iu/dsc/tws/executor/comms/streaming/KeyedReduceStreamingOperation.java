@@ -44,7 +44,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                        Edge edge) {
-    super(config, network, tPlan);
+    super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
       throw new RuntimeException("Sources should have more than 0 elements");
@@ -128,5 +128,10 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   @Override
   public void reset() {
     op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

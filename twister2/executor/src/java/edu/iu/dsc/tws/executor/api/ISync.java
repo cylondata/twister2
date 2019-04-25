@@ -9,14 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io;
+package edu.iu.dsc.tws.executor.api;
 
-public enum ReceiverState {
-  INIT,
-  // we are in the receiving state initially
-  RECEIVING,
-  // all the syncs required are received
-  ALL_SYNCS_RECEIVED,
-  // we have synced
-  SYNCED
+public interface ISync {
+  boolean sync(String edge, byte[] value);
 }

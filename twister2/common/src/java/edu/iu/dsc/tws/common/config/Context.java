@@ -87,6 +87,24 @@ public class Context {
 
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
+  public static final String TWISTER2_PARTITION_EDGE = "partition";
+
+  public static final String TWISTER2_LOCAL_FILESYSTEM = "local";
+
+  public static final String TWISTER2_HDFS_FILESYSTEM = "hdfs";
+
+  public static final String TWISTER2_BANDWIDTH = "bandwidth";
+
+  public static final String TWISTER2_LATENCY = "latency";
+
+  public static final String TWISTER2_TASKS_PER_WORKER = "twister2.tasks.per.worker";
+
+  public static final String TWISTER2_MAX_TASK_INSTANCES_PER_WORKER
+      = "twister2.max.task.instances.per.worker";
+
+  public static final String TWISTER2_TASK_INSTANCE_ODD_PARALLELISM
+      = "twister2.task.instance.odd.parallelism";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);

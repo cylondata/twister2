@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -98,14 +97,8 @@ public class TeraSort extends TaskWorker {
 
     DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    IExecution iExecution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
-    iExecution.progress();
-    while (tasksCount.get() > 0) {
-      iExecution.progress();
-    }
+    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
     LOG.info("Stopping execution...");
-    iExecution.stop();
-    iExecution.close();
   }
 
   /**
@@ -194,9 +187,9 @@ public class TeraSort extends TaskWorker {
       int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);
 
       int totalSize = valueSize + keySize;
-      this.toSend = cfg.getLongValue(
-          ARG_SIZE, 1
-      ) * 1024 * 1024 * 1024 / totalSize / noOfSources;
+      this.toSend = (long) (cfg.getDoubleValue(
+                ARG_SIZE, 1.0
+            ) * 1024 * 1024 * 1024 / totalSize / noOfSources);
 
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
@@ -289,7 +282,7 @@ public class TeraSort extends TaskWorker {
     CommandLine cmd = commandLineParser.parse(options, args);
 
 
-    jobConfig.put(ARG_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_SIZE)));
+    jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
     jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
     jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
 
