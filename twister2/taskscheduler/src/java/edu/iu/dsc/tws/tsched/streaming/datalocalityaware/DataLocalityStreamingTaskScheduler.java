@@ -92,13 +92,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   @Override
   public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
     this.workerId = workerid;
-    this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
-
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the
    * streaming task instances. It retrieves the task vertex set of the task graph and send the set
@@ -229,6 +225,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     }
 
+    /*This loop allocate the task instances to the respective container, before allocation
+    it will check whether the container has reached maximum task instance size */
     Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       for (Vertex vertex : taskVertexSet) {
@@ -237,8 +235,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           int maxContainerTaskObjectSize = 0;
           List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
-          /*This loop allocate the task instances to the respective container, before allocation
-          it will check whether the container has reached maximum task instance size */
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
             if (maxContainerTaskObjectSize < instancesPerContainer) {

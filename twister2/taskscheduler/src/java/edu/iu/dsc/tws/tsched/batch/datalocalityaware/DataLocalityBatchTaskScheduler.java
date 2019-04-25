@@ -88,13 +88,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
   @Override
   public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
     this.workerId = workerid;
-    this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
-
 
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the batch

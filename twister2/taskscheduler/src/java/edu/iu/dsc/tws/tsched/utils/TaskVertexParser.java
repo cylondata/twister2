@@ -30,7 +30,13 @@ public final class TaskVertexParser {
 
   private List<Set<Vertex>> taskVertexList = new LinkedList<>();
 
+  private int workerId;
+
   public TaskVertexParser() {
+  }
+
+  public TaskVertexParser(int workerid) {
+    this.workerId = workerid;
   }
 
   /**
@@ -42,7 +48,24 @@ public final class TaskVertexParser {
   public List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
     for (Vertex vertex : taskVertexSet) {
-      if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 1
+
+      if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 0
+          && dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() >= 1) {
+        add(vertex);
+        Set<Vertex> children = dataFlowTaskGraph.childrenOfTask(vertex);
+        //if (!dataFlowTaskGraph.childrenOfTask(vertex).isEmpty()) {
+        if (!children.isEmpty()) {
+          add(dataFlowTaskGraph.childrenOfTask(vertex));
+        }
+      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() >= 1
+          && dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0
+          && dataFlowTaskGraph.childrenOfTask(vertex).isEmpty()) {
+        if (!taskVertexList.contains(vertex)) {
+          add(vertex);
+        }
+      }
+
+      /*if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 1
           || dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0) {
         LOG.info("I am receiving the task vertex(outer if):" + vertex.getName());
         add(vertex);
@@ -66,11 +89,14 @@ public final class TaskVertexParser {
           LOG.info("I am receiving the task vertex:(third else)" + vertex.getName());
           add(vertex);
         }
-      }
+      }*/
     }
     //LOG.info("%%%%% Batch Task Vertex List:%%%%%%%" + taskVertexList);
-    for (Set<Vertex> aTaskVertexList : taskVertexList) {
-      LOG.info("Batch Task Vertex Details:" + aTaskVertexList.iterator().next().getName());
+
+    if (workerId == 0) {
+      for (Set<Vertex> aTaskVertexList : taskVertexList) {
+        LOG.info("Batch Task Vertex Details:" + aTaskVertexList.iterator().next().getName());
+      }
     }
     return taskVertexList;
   }

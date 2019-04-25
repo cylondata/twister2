@@ -71,6 +71,9 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
+  //WorkerId
+  private int workerId;
+
   /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
@@ -85,6 +88,8 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
   @Override
   public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
+    this.workerId = workerid;
   }
 
   /**
@@ -100,7 +105,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
     //List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(dataFlowTaskGraph);
 
-    TaskVertexParser taskVertexParser = new TaskVertexParser();
+    TaskVertexParser taskVertexParser = new TaskVertexParser(workerId);
     List<Set<Vertex>> taskVertexList = taskVertexParser.parseVertexSet(dataFlowTaskGraph);
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
 
@@ -161,13 +166,9 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
             && worker.getDisk() > 0 && worker.getRam() > 0) {
           containerResource = new Resource((double) worker.getRam(),
               (double) worker.getDisk(), (double) worker.getCpu());
-          LOG.fine("Worker (if loop):" + containerId + "\tRam:" + worker.getRam()
-              + "\tDisk:" + worker.getDisk() + "\tCpu:" + worker.getCpu());
         } else {
           containerResource = new Resource(containerRAMValue, containerDiskValue,
               containerCpuValue);
-          LOG.fine("Worker (else loop):" + containerId + "\tRam:" + containerRAMValue
-              + "\tDisk:" + containerDiskValue + "\tCpu:" + containerCpuValue);
         }
 
         ContainerPlan taskContainerPlan;
@@ -182,20 +183,23 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       }
     }
 
-    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
-        new HashSet<>(containerPlans.values()));
-    if (taskSchedulePlan != null) {
-      Map<Integer, ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances
-            = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
+    //TODO: Just for checking the task schedule plan
+    if (workerId == 0) {
+      TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
+          new HashSet<>(containerPlans.values()));
+      if (taskSchedulePlan != null) {
+        Map<Integer, ContainerPlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+          Integer integer = entry.getKey();
+          ContainerPlan containerPlan = entry.getValue();
+          Set<TaskInstancePlan> containerPlanTaskInstances
+              = containerPlan.getTaskInstances();
+          LOG.info("Task Details for Container Id:" + integer);
+          for (TaskInstancePlan ip : containerPlanTaskInstances) {
+            LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+                + "\tTask Name:" + ip.getTaskName());
+          }
         }
       }
     }
