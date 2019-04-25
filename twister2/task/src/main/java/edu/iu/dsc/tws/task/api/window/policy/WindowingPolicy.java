@@ -14,30 +14,30 @@ package edu.iu.dsc.tws.task.api.window.policy;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Window;
+import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 
 public class WindowingPolicy implements Serializable {
 
   private static final long serialVersionUID = -2786001848413534229L;
 
-  private Window window;
+  private WindowType windowType;
 
   private WindowConfig.Count count;
 
   private WindowConfig.Duration duration;
 
-  public WindowingPolicy(Window window, WindowConfig.Count count) {
-    this.window = window;
+  public WindowingPolicy(WindowType windowType, WindowConfig.Count count) {
+    this.windowType = windowType;
     this.count = count;
   }
 
-  public WindowingPolicy(Window window, WindowConfig.Duration duration) {
-    this.window = window;
+  public WindowingPolicy(WindowType windowType, WindowConfig.Duration duration) {
+    this.windowType = windowType;
     this.duration = duration;
   }
 
-  public Window getWindow() {
-    return window;
+  public WindowType getWindowType() {
+    return windowType;
   }
 
   public WindowConfig.Count getCount() {

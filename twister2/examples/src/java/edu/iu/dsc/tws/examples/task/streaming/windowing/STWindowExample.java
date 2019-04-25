@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Window;
+import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
@@ -47,7 +47,7 @@ public class STWindowExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STWindowExample.class.getName());
 
-  private Window window;
+  private WindowType windowType;
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -60,15 +60,15 @@ public class STWindowExample extends BenchTaskWorker {
     ISink d = new DirectReceiveTask();
 
     WindowConfig.Count count1 = new WindowConfig.Count(10);
-    Window window1 = Window.TUMBLING;
+    WindowType windowType1 = WindowType.TUMBLING;
     WindowConfig.Count count2 = new WindowConfig.Count(3);
-    Window window2 = Window.TUMBLING;
+    WindowType windowType2 = WindowType.TUMBLING;
     WindowConfig.Duration duration1 = new WindowConfig.Duration(10, TimeUnit.MINUTES);
-    Window window3 = Window.TUMBLING;
+    WindowType windowType3 = WindowType.TUMBLING;
 
     // Adding multiple policies
     BaseWindowSink dw = new DirectWindowedReceivingTask()
-        .withWindowCount(window1, count1);
+        .withWindowCount(windowType1, count1);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);

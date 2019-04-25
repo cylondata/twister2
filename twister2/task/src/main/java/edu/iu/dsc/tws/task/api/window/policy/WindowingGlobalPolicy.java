@@ -9,11 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.constant;
+package edu.iu.dsc.tws.task.api.window.policy;
 
-public enum Window {
-  TUMBLING,
-  SLIDING,
-  SESSION,
-  GLOBAL
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.constant.WindowType;
+
+public class WindowingGlobalPolicy extends WindowingPolicy {
+  public WindowingGlobalPolicy(WindowType windowType, WindowConfig.Count count) {
+    super(windowType, count);
+  }
+
+  public WindowingGlobalPolicy(WindowType windowType, WindowConfig.Duration duration) {
+    super(windowType, duration);
+  }
 }

@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Window;
+import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
@@ -44,32 +44,33 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   @Override
   public boolean execute(IMessage<T> message) {
     this.windowManager.execute(message.getContent());
-    if (this.windowManager.isComplete()) {
+    if (this.windowManager.isDone()) {
       execute(this.windowManager.getWindowMessage());
       this.windowManager.clearWindow();
     }
     return false;
   }
 
-  private BaseWindowedSink<T> withWindowCountInit(Window window, WindowConfig.Count count) {
-    WindowingPolicy win = new WindowingPolicy(window, count);
+  private BaseWindowedSink<T> withWindowCountInit(WindowType windowType, WindowConfig.Count count) {
+    WindowingPolicy win = new WindowingPolicy(windowType, count);
     this.windowManager.addWindowingPolicy(win);
     return this;
   }
 
-  private BaseWindowedSink<T> withWindowDurationInit(Window window,
+  private BaseWindowedSink<T> withWindowDurationInit(WindowType windowType,
                                                      WindowConfig.Duration duration) {
-    WindowingPolicy win = new WindowingPolicy(window, duration);
+    WindowingPolicy win = new WindowingPolicy(windowType, duration);
     this.windowManager.addWindowingPolicy(win);
     return this;
   }
 
-  public BaseWindowedSink<T> withWindowCount(Window window, WindowConfig.Count count) {
-    return withWindowCountInit(window, count);
+  public BaseWindowedSink<T> withWindowCount(WindowType windowType, WindowConfig.Count count) {
+    return withWindowCountInit(windowType, count);
   }
 
-  public BaseWindowedSink<T> withWindowDuration(Window window, WindowConfig.Duration duration) {
-    return withWindowDurationInit(window, duration);
+  public BaseWindowedSink<T> withWindowDuration(WindowType windowType,
+                                                WindowConfig.Duration duration) {
+    return withWindowDurationInit(windowType, duration);
   }
 
 }

@@ -65,7 +65,7 @@ public class ExampleTaskMain {
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
-    options.addOption(Constants.ARGS_WINDOW, false, "Window");
+    options.addOption(Constants.ARGS_WINDOW, false, "WindowType");
     options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true,
         "Number of parallel instances of tasks", true));
     options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
