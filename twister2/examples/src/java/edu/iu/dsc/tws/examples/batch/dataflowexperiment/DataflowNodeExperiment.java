@@ -64,7 +64,7 @@ public class DataflowNodeExperiment extends TaskWorker {
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < iter; i++) {
       taskExecutor.execute(graph, plan);
-      LOG.info("%%%%%%%%%%%%%%%%%Iteration Completed%%%%%%%%%%%%%%%%%%:" + iter);
+      LOG.info("Completed Iteration:" + i);
     }
     long stopTime = System.currentTimeMillis();
     long executionTime = stopTime - startTime;
@@ -103,8 +103,6 @@ public class DataflowNodeExperiment extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points (Compute Task): " + context.getWorkerId()
-          + ":" + context.taskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {
@@ -112,8 +110,6 @@ public class DataflowNodeExperiment extends TaskWorker {
           context.write("all-reduce", it.next());
         }
       }
-      /*LOG.info(String.format("%d %d All-Reduce Received count: %d", context.getWorkerId(),
-          context.taskId(), count));*/
       context.end("all-reduce");
       return true;
     }
@@ -126,8 +122,6 @@ public class DataflowNodeExperiment extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points (Reduce Task): " + context.getWorkerId()
-          + ":" + context.taskId());
       datapoints = (double[]) message.getContent();
       return true;
     }
@@ -167,7 +161,6 @@ public class DataflowNodeExperiment extends TaskWorker {
         double newVal = object11[j] + object21[j];
         object31[j] = newVal;
       }
-      /*LOG.info("New double value is::::" + Arrays.toString(object31) + "\t" + object31.length);*/
       return object31;
     }
   }
@@ -183,7 +176,7 @@ public class DataflowNodeExperiment extends TaskWorker {
     Options options = new Options();
     options.addOption(DataObjectConstants.ARGS_ITERATIONS, true, "iter");
     options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(DataObjectConstants.WORKERS, true, "Workers");
+    options.addOption(DataObjectConstants.WORKERS, true, "workers");
     options.addOption(DataObjectConstants.DSIZE, true, "dsize");
 
     CommandLineParser commandLineParser = new DefaultParser();
@@ -204,7 +197,7 @@ public class DataflowNodeExperiment extends TaskWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("Experimentjob");
+    jobBuilder.setJobName("Experiment1");
     jobBuilder.setWorkerClass(DataflowNodeExperiment.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);

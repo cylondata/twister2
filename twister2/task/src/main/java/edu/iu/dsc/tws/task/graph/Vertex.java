@@ -149,7 +149,13 @@ public class Vertex {
     this.parallelism = parallelism;
   }
 
+  public void setConfig(Map<String, Object> config) {
+    this.config = config;
+  }
+
   public void addConfiguration(String key, Object val) {
     this.config.put(key, val);
   }
+
 }
+
