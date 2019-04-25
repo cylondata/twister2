@@ -11,16 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.policy;
 
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.WindowType;
+import edu.iu.dsc.tws.task.api.IMessage;
 
-public class WindowingTumblingPolicy extends WindowingPolicy {
+public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
+    implements IWindowingPolicyManager<T> {
 
-  public WindowingTumblingPolicy(WindowType windowType, WindowConfig.Count count) {
-    super(windowType, count);
+  @Override
+  public WindowingPolicy initialize(WindowingPolicy win) {
+    windowingPolicy = win;
+    return windowingPolicy;
   }
 
-  public WindowingTumblingPolicy(WindowType windowType, WindowConfig.Duration duration) {
-    super(windowType, duration);
+  @Override
+  public boolean clearWindow() {
+    windows.clear();
+    return false;
+  }
+
+  @Override
+  protected boolean execute(IMessage<T> message) {
+    boolean status = false;
+    if(message.getContent() != null) {
+
+      status = true;
+    }
+    return status;
   }
 }

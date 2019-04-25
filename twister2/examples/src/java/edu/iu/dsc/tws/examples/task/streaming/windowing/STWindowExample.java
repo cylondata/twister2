@@ -77,8 +77,6 @@ public class STWindowExample extends BenchTaskWorker {
     return taskGraphBuilder;
   }
 
-
-
   protected static class DirectReceiveTask extends DirectCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
@@ -108,7 +106,6 @@ public class STWindowExample extends BenchTaskWorker {
       super(windowingPolicy);
       this.windowingPolicy = windowingPolicy;
     }
-
 
     /**
      * This method returns the final windowing message
