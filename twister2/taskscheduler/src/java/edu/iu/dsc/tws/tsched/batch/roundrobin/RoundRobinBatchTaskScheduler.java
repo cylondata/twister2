@@ -102,12 +102,11 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     Map<Integer, List<InstanceId>> containerInstanceMap;
     Map<Integer, ContainerPlan> containerPlans = new LinkedHashMap<>();
 
-    //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
-    //List<Set<Vertex>> taskVertexList = TaskVertexParser.parseVertexSet(dataFlowTaskGraph);
-
-    TaskVertexParser taskVertexParser = new TaskVertexParser(workerId);
-    List<Set<Vertex>> taskVertexList = taskVertexParser.parseVertexSet(dataFlowTaskGraph);
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+
+    //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
+    TaskVertexParser taskGraphParser = new TaskVertexParser();
+    List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(dataFlowTaskGraph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       //Based on the size of the task vertex list, it will invoke the respective methods
@@ -255,7 +254,6 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
-
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(orderedTaskSet);
     int containerIndex = 0;
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
