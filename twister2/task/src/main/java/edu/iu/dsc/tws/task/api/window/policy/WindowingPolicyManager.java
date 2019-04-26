@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 
 public abstract class WindowingPolicyManager<T> implements IWindowingPolicyManager<T> {
 
-  protected List<T> windows;
+  protected List<IMessage<T>> windows;
 
   protected WindowingPolicy windowingPolicy;
 

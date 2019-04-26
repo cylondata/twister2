@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api.window.policy;
 
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 
 public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
     implements IWindowingPolicyManager<T> {
@@ -32,6 +33,17 @@ public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
   protected boolean execute(IMessage<T> message) {
     boolean status = false;
     if (message.getContent() != null) {
+      int winSize = windowingPolicy.getCount().value;
+      WindowConfig.Duration windDuration = windowingPolicy.getDuration();
+      if(winSize > 0) {
+        if(windows.size() < winSize) {
+          windows.add(message);
+        }
+      }
+
+      if(windDuration != null) {
+
+      }
 
       status = true;
     }
