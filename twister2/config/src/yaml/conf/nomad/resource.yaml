@@ -13,6 +13,7 @@ twister2.nomad.core.freq.mapping: 2000
 
 # file system uploader to be used
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 # weather we are in a shared file system, if that is the case, each worker will not download the
 # core package and job package, otherwise they will download those packages
