@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.examples.internal.taskgraph;
 
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,19 +62,30 @@ public class DataLocalityBatchTaskGraphExample extends TaskWorker {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
+
+    //Adding the user-defined constraints to the graph
+    Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
+    //sourceTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    Map<String, String> computeTaskConstraintsMap = new HashMap<>();
+    //computeTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
+    //sinkTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
     /* First Graph to partition and read the partitioned data points **/
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
     KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addCompute(
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
+    ComputeConnection datapointComputeConnection = taskGraphBuilder.addCompute(
         "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = datapointsTaskGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -80,17 +93,26 @@ public class DataLocalityBatchTaskGraphExample extends TaskWorker {
         DataType.OBJECT);
     firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
+    taskGraphBuilder.setMode(OperationMode.BATCH);
+
+    //Adding graph and node level constraints
+    //taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
+    //taskGraphBuilder.addNodeConstraints("datapointcompute", computeTaskConstraintsMap);
+    //taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
+    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
 
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
+    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints()
+        + "\tNode Constraints:%%%" + taskGraph.getNodeConstraints());
+
     //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(taskGraph);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    taskExecutor.execute(taskGraph, firstGraphExecutionPlan);
     //Retrieve the output of the first task graph
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+        taskGraph, firstGraphExecutionPlan, "datapointsink");
     for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
       LOG.info("Datapoints values:" + Arrays.deepToString(dataPointsObject.getPartitions()));
     }

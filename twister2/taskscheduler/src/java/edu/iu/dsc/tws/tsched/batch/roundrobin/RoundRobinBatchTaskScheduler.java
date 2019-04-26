@@ -110,12 +110,21 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       //Based on the size of the task vertex list, it will invoke the respective methods
-      if (vertexSet.size() > 1) {
+     /* if (vertexSet.size() > 1) {
         containerInstanceMap = roundRobinBatchSchedulingAlgorithm(vertexSet,
             workerPlan.getNumberOfWorkers());
       } else {
         Vertex vertex = vertexSet.iterator().next();
         containerInstanceMap = roundRobinBatchSchedulingAlgorithm(vertex,
+            workerPlan.getNumberOfWorkers());
+      }*/
+
+      if (vertexSet.size() > 1) {
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertexSet,
+            workerPlan.getNumberOfWorkers());
+      } else {
+        Vertex vertex = vertexSet.iterator().next();
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertex,
             workerPlan.getNumberOfWorkers());
       }
 
@@ -203,6 +212,85 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       }
     }
     return new TaskSchedulePlan(0, new HashSet<>(containerPlans.values()));
+  }
+
+  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
+      DataFlowTaskGraph graph, Vertex vertex, int numberOfContainers)
+      throws ScheduleException {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+
+    Map<String, Integer> parallelTaskMap;
+    if (!graph.getNodeConstraints().isEmpty()) {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(vertex, graph.getNodeConstraints());
+    } else {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
+    }
+
+    int containerIndex = 0;
+    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int numberOfInstances = e.getValue();
+      int maxTaskInstances;
+      if (!graph.getGraphConstraints().isEmpty()) {
+        maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+      } else {
+        maxTaskInstances = e.getValue();
+      }
+      LOG.info("Number of Instances:" + maxTaskInstances);
+      for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        ++containerIndex;
+        if (containerIndex >= roundrobinAllocation.size()) {
+          containerIndex = 0;
+        }
+      }
+      gtaskId++;
+    }
+    return roundrobinAllocation;
+  }
+
+
+  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
+      DataFlowTaskGraph graph, Set<Vertex> taskVertexSet, int numberOfContainers)
+      throws ScheduleException {
+
+    TaskAttributes taskAttributes = new TaskAttributes();
+    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
+
+    for (int i = 0; i < numberOfContainers; i++) {
+      roundrobinAllocation.put(i, new ArrayList<>());
+    }
+
+    TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
+    orderedTaskSet.addAll(taskVertexSet);
+
+    Map<String, Integer> parallelTaskMap;
+    if (!graph.getNodeConstraints().isEmpty()) {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet.iterator().next());
+    } else {
+      parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet.iterator().next());
+    }
+
+    LOG.info("Parallel Task Map Details:" + parallelTaskMap);
+    int containerIndex = 0;
+    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int numberOfInstances = e.getValue();
+      for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        ++containerIndex;
+        if (containerIndex >= roundrobinAllocation.size()) {
+          containerIndex = 0;
+        }
+      }
+      gtaskId++;
+    }
+    return roundrobinAllocation;
   }
 
   /**
