@@ -83,11 +83,6 @@ public class WindowManager<T> implements IManager<T> {
     return win;
   }
 
-  @Override
-  public List<IMessage<T>> getWindow() {
-    return this.windowedObjects;
-  }
-
   public IWindowMessage<T> getWindowMessage() {
     return this.windowMessage;
   }
@@ -105,10 +100,14 @@ public class WindowManager<T> implements IManager<T> {
     boolean status = false;
     if (windowingPolicy instanceof WindowingTumblingPolicy) {
       WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
-      if (progress(this.windowedObjects)) {
-        windowingTumblingPolicyManager.execute(message);
-        this.windowedObjects = windowingTumblingPolicyManager.getWindows();
-        status = true;
+      if (w == null && (w.getCount() == null || w.getDuration() == null)) {
+        throw new RuntimeException("Windowing Tumbling Policy is not initialized");
+      } else {
+        if (progress(this.windowedObjects)) {
+          windowingTumblingPolicyManager.execute(message);
+          this.windowedObjects = windowingTumblingPolicyManager.getWindows();
+          status = true;
+        }
       }
     }
 

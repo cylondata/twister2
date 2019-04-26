@@ -23,8 +23,6 @@ public interface IManager<T> extends Serializable {
 
   IWindowingPolicy addWindowingPolicy(IWindowingPolicy windowingPolicy);
 
-  List<IMessage<T>> getWindow();
-
   boolean execute(IMessage<T> message);
 
   void clearWindow();
