@@ -135,6 +135,7 @@ public class TargetPartialReceiver extends TargetReceiver {
   protected boolean canAcceptMessage(int source, int target) {
     if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
         || sourceStates.get(source) == ReceiverState.SYNCED) {
+      LOG.info(String.format("CANNOT ADD %d -> %d", source, destination));
       return false;
     }
 
@@ -182,9 +183,11 @@ public class TargetPartialReceiver extends TargetReceiver {
           }
 
           if (operation.sendPartial(source, message, flags, dest)) {
+            LOG.info(String.format("Sending sync %d -> %d", source, dest));
             finishedDestPerSource.add(dest);
 
             if (finishedDestPerSource.size() == thisDestinations.size()) {
+              LOG.info("SYNCED source " + source);
               sourceStates.put(source, ReceiverState.SYNCED);
             }
           } else {
