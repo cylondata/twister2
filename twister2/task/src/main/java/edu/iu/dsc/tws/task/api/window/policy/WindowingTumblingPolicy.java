@@ -14,9 +14,7 @@ package edu.iu.dsc.tws.task.api.window.policy;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 
-public class WindowingPolicy implements IWindowingPolicy {
-
-  private static final long serialVersionUID = -2786001848413534229L;
+public class WindowingTumblingPolicy extends WindowingPolicy {
 
   private WindowType windowType;
 
@@ -24,25 +22,42 @@ public class WindowingPolicy implements IWindowingPolicy {
 
   private WindowConfig.Duration duration;
 
-  public WindowingPolicy(WindowType windowType, WindowConfig.Count count) {
-    this.windowType = windowType;
-    this.count = count;
+  public WindowingTumblingPolicy(WindowType winType, WindowConfig.Count cnt) {
+    super(winType, cnt);
+    this.windowType = winType;
+    this.count = cnt;
   }
 
-  public WindowingPolicy(WindowType windowType, WindowConfig.Duration duration) {
-    this.windowType = windowType;
-    this.duration = duration;
+  public WindowingTumblingPolicy(WindowType winType, WindowConfig.Duration dtn) {
+    super(winType, dtn);
+    this.windowType = winType;
+    this.duration = dtn;
   }
 
+  @Override
   public WindowType getWindowType() {
     return windowType;
   }
 
+  public void setWindowType(WindowType winType) {
+    this.windowType = winType;
+  }
+
+  @Override
   public WindowConfig.Count getCount() {
     return count;
   }
 
+  public void setCount(WindowConfig.Count cnt) {
+    this.count = cnt;
+  }
+
+  @Override
   public WindowConfig.Duration getDuration() {
     return duration;
+  }
+
+  public void setDuration(WindowConfig.Duration dtn) {
+    this.duration = dtn;
   }
 }

@@ -13,12 +13,5 @@ package edu.iu.dsc.tws.task.api.window.policy;
 
 import java.io.Serializable;
 
-public interface IWindowingPolicyManager<T> extends Serializable {
-
-  WindowingPolicy initialize(WindowingPolicy windowingPolicy);
-
-  boolean clearWindow();
-
-
-
+public interface IWindowingPolicy extends Serializable {
 }

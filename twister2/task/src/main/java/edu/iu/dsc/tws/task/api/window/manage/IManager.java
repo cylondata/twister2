@@ -14,13 +14,13 @@ package edu.iu.dsc.tws.task.api.window.manage;
 import java.io.Serializable;
 import java.util.List;
 
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 
 public interface IManager<T> extends Serializable {
 
-  WindowingPolicy initializeWindowingPolicy();
+  IWindowingPolicy initializeWindowingPolicy();
 
-  WindowingPolicy addWindowingPolicy(WindowingPolicy windowingPolicy);
+  IWindowingPolicy addWindowingPolicy(IWindowingPolicy windowingPolicy);
 
   List<T> getWindow();
 

@@ -18,8 +18,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.WindowType;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingTumblingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.manager.WindowingPolicyManager;
 
 public class WindowManager<T> implements IManager<T> {
 
@@ -27,7 +28,9 @@ public class WindowManager<T> implements IManager<T> {
 
   private static final long serialVersionUID = -15452808832480739L;
 
-  private WindowingPolicy windowingPolicy;
+  private IWindowingPolicy windowingPolicy;
+
+  private WindowingPolicyManager<T> windowingPolicyManager;
 
   private List<T> windowedObjects;
 
@@ -44,7 +47,7 @@ public class WindowManager<T> implements IManager<T> {
   public WindowManager() {
   }
 
-  public WindowManager(WindowingPolicy windowingPolicy) {
+  public WindowManager(IWindowingPolicy windowingPolicy) {
     this.windowingPolicy = windowingPolicy;
     this.windowingPolicy = initializeWindowingPolicy();
 
@@ -55,7 +58,7 @@ public class WindowManager<T> implements IManager<T> {
    * When multiple windowing policies are applied, they need to be handled sequentially
    */
   @Override
-  public WindowingPolicy initializeWindowingPolicy() {
+  public IWindowingPolicy initializeWindowingPolicy() {
     this.addWindowingPolicy(this.windowingPolicy);
     return this.windowingPolicy;
   }
@@ -68,7 +71,7 @@ public class WindowManager<T> implements IManager<T> {
    * @param win WindowingPolicy
    */
   @Override
-  public WindowingPolicy addWindowingPolicy(WindowingPolicy win) {
+  public IWindowingPolicy addWindowingPolicy(IWindowingPolicy win) {
     this.windowingPolicy = win;
     this.windowedObjects = new ArrayList<>();
     return win;
@@ -94,28 +97,16 @@ public class WindowManager<T> implements IManager<T> {
   @Override
   public boolean execute(T message) {
     boolean status = false;
-    WindowingPolicy w = this.windowingPolicy;
+
     if (progress(this.windowedObjects)) {
-      if (this.windowingPolicy.getWindowType().equals(WindowType.TUMBLING)) {
+      if (windowingPolicy instanceof WindowingTumblingPolicy) {
+        WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
         int winCount = w.getCount().value;
         WindowConfig.Duration duration = windowDurationSize = w.getDuration();
         if (winCount > 0 && this.windowedObjects.size() < winCount) {
           this.windowedObjects.add(message);
           status = true;
         }
-        //TODO : implement the duration logic
-      }
-
-      if (w.getWindowType().equals(WindowType.SLIDING)) {
-        // TODO : implement the logic
-      }
-
-      if (w.getWindowType().equals(WindowType.SESSION)) {
-        // TODO : implement the logic
-      }
-
-      if (w.getWindowType().equals(WindowType.GLOBAL)) {
-        // TODO : implement the logic
       }
     }
 
@@ -137,27 +128,14 @@ public class WindowManager<T> implements IManager<T> {
   @Override
   public boolean progress(List<T> window) {
     boolean progress = true;
-    if (this.windowingPolicy.getWindowType().equals(WindowType.TUMBLING)) {
-      windowCountSize = this.windowingPolicy.getCount().value;
-      windowDurationSize = this.windowingPolicy.getDuration();
+    if (windowingPolicy instanceof WindowingTumblingPolicy) {
+      WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
+      windowCountSize = w.getCount().value;
+      windowDurationSize = w.getDuration();
       if (window.size() == windowCountSize && windowCountSize > 0) {
         progress = false;
       }
-      // TODO : implement duration logic
     }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.SLIDING)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.SESSION)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.GLOBAL)) {
-      // TODO : implement the logic
-    }
-
     return progress;
   }
 
@@ -167,9 +145,12 @@ public class WindowManager<T> implements IManager<T> {
    */
   @Override
   public boolean isDone() {
-    if (this.windowingPolicy.getWindowType().equals(WindowType.TUMBLING)) {
-      windowCountSize = this.windowingPolicy.getCount().value;
-      windowDurationSize = this.windowingPolicy.getDuration();
+
+    if (windowingPolicy instanceof WindowingTumblingPolicy) {
+      WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
+
+      windowCountSize = w.getCount().value;
+      windowDurationSize = w.getDuration();
       if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
         //TODO : handle the expired tuples
         this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
@@ -177,19 +158,6 @@ public class WindowManager<T> implements IManager<T> {
       } else {
         this.windowingCompleted = false;
       }
-      // TODO : implement duration logic
-    }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.SLIDING)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.SESSION)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindowType().equals(WindowType.GLOBAL)) {
-      // TODO : implement the logic
     }
     return this.windowingCompleted;
   }

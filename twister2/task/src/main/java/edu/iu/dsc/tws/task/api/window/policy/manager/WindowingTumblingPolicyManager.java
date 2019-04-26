@@ -9,18 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.policy.manager;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.WindowingTumblingPolicy;
 
 public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
     implements IWindowingPolicyManager<T> {
 
   @Override
-  public WindowingPolicy initialize(WindowingPolicy win) {
-    windowingPolicy = win;
-    return windowingPolicy;
+  public WindowingPolicy initialize(IWindowingPolicy winPolicy) {
+    windowingPolicy = winPolicy;
+    return null;
   }
 
   @Override
@@ -33,19 +36,21 @@ public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
   protected boolean execute(IMessage<T> message) {
     boolean status = false;
     if (message.getContent() != null) {
-      int winSize = windowingPolicy.getCount().value;
-      WindowConfig.Duration windDuration = windowingPolicy.getDuration();
-      if(winSize > 0) {
-        if(windows.size() < winSize) {
-          windows.add(message);
+      if (windowingPolicy instanceof WindowingTumblingPolicy) {
+        WindowingTumblingPolicy windowingTumblingPolicy = (WindowingTumblingPolicy) windowingPolicy;
+        int winSize = windowingTumblingPolicy.getCount().value;
+        WindowConfig.Duration windDuration = windowingTumblingPolicy.getDuration();
+        if (winSize > 0) {
+          if (windows.size() < winSize) {
+            windows.add(message);
+          }
         }
+
+        if (windDuration != null) {
+          // TODO : implement window based on timing logic
+        }
+        status = true;
       }
-
-      if(windDuration != null) {
-
-      }
-
-      status = true;
     }
     return status;
   }
