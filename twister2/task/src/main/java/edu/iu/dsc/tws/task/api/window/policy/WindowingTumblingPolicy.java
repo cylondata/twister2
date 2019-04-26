@@ -22,15 +22,15 @@ public class WindowingTumblingPolicy extends WindowingPolicy {
 
   private WindowConfig.Duration duration;
 
-  public WindowingTumblingPolicy(WindowType winType, WindowConfig.Count cnt) {
-    super(winType, cnt);
-    this.windowType = winType;
+  public WindowingTumblingPolicy(WindowConfig.Count cnt) {
+    super(WindowType.TUMBLING, cnt);
+    windowType = WindowType.TUMBLING;
     this.count = cnt;
   }
 
-  public WindowingTumblingPolicy(WindowType winType, WindowConfig.Duration dtn) {
-    super(winType, dtn);
-    this.windowType = winType;
+  public WindowingTumblingPolicy(WindowConfig.Duration dtn) {
+    super(WindowType.TUMBLING, dtn);
+    this.windowType = WindowType.TUMBLING;
     this.duration = dtn;
   }
 

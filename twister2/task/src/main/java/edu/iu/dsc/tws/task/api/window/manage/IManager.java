@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.task.api.window.manage;
 import java.io.Serializable;
 import java.util.List;
 
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 
 public interface IManager<T> extends Serializable {
@@ -22,13 +23,13 @@ public interface IManager<T> extends Serializable {
 
   IWindowingPolicy addWindowingPolicy(IWindowingPolicy windowingPolicy);
 
-  List<T> getWindow();
+  List<IMessage<T>> getWindow();
 
-  boolean execute(T message);
+  boolean execute(IMessage<T> message);
 
   void clearWindow();
 
-  boolean progress(List<T> window);
+  boolean progress(List<IMessage<T>> window);
 
 //  boolean progress(WindowingPolicy windowingPolicy, List<T> window);
 

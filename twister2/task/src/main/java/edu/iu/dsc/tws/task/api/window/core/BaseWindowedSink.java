@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
+import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
@@ -30,20 +31,20 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private WindowManager<T> windowManager;
 
-  private WindowingPolicy windowingPolicy;
+  private IWindowingPolicy windowingPolicy;
 
   protected BaseWindowedSink() {
     this.windowManager = new WindowManager<>();
   }
 
-  public BaseWindowedSink(WindowingPolicy win) {
+  public BaseWindowedSink(IWindowingPolicy win) {
     this.windowingPolicy = win;
     this.windowManager = new WindowManager<>(win);
   }
 
   @Override
   public boolean execute(IMessage<T> message) {
-    this.windowManager.execute(message.getContent());
+    this.windowManager.execute(message);
     if (this.windowManager.isDone()) {
       execute(this.windowManager.getWindowMessage());
       this.windowManager.clearWindow();
@@ -72,5 +73,11 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
                                                 WindowConfig.Duration duration) {
     return withWindowDurationInit(windowType, duration);
   }
+
+  public BaseWindowedSink<T> withWindowingPolicy(IWindowingPolicy iWindowingPolicy) {
+    this.windowManager.addWindowingPolicy(iWindowingPolicy);
+    return this;
+  }
+
 
 }
