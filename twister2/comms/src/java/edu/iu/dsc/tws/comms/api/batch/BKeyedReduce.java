@@ -17,13 +17,14 @@ import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.DestinationSelector;
+import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
 
 /**
  * Example class for Batch keyed reduce. The reduce destination for each data point will be
@@ -44,11 +45,12 @@ public class BKeyedReduce {
                       DestinationSelector destSelector) {
     this.keyType = kType;
     this.dataType = dType;
+    MessageReceiver partialReceiver = new PartitionPartialReceiver();
 
     this.keyedReduce = new MToNSimple(comm.getConfig(), comm.getChannel(),
         plan, sources, destinations,
         new KReduceBatchFinalReceiver(fnc, rcvr),
-        new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
+        partialReceiver, dataType, dataType,
         keyType, keyType, comm.nextEdge());
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
