@@ -135,7 +135,6 @@ public class TargetPartialReceiver extends TargetReceiver {
   protected boolean canAcceptMessage(int source, int target) {
     if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
         || sourceStates.get(source) == ReceiverState.SYNCED) {
-      LOG.info(String.format("CANNOT ADD %d -> %d", source, destination));
       return false;
     }
 
@@ -154,20 +153,15 @@ public class TargetPartialReceiver extends TargetReceiver {
 
   @Override
   public boolean sync() {
-    boolean allSynced = true;
+    boolean allSyncsSent = true;
 
     for (Map.Entry<Integer, ReceiverState> e : sourceStates.entrySet()) {
-      int source = e.getKey();
-      if (e.getValue() == ReceiverState.RECEIVING) {
-        allSynced = false;
-        continue;
+      if (e.getValue() == ReceiverState.RECEIVING || e.getValue() == ReceiverState.INIT) {
+        return false;
       }
+    }
 
-      // if we have synced no need to go forward
-      if (e.getValue() == ReceiverState.INIT || e.getValue() == ReceiverState.SYNCED) {
-        continue;
-      }
-
+    for (int source : thisSources) {
       Set<Integer> finishedDestPerSource = syncSent.get(source);
       for (int dest : thisDestinations) {
         if (!finishedDestPerSource.contains(dest)) {
@@ -183,15 +177,13 @@ public class TargetPartialReceiver extends TargetReceiver {
           }
 
           if (operation.sendPartial(source, message, flags, dest)) {
-            LOG.info(String.format("Sending sync %d -> %d", source, dest));
             finishedDestPerSource.add(dest);
 
             if (finishedDestPerSource.size() == thisDestinations.size()) {
-              LOG.info("SYNCED source " + source);
               sourceStates.put(source, ReceiverState.SYNCED);
             }
           } else {
-            allSynced = false;
+            allSyncsSent = false;
             // no point in going further
             break;
           }
@@ -199,7 +191,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       }
     }
 
-    if (allSynced && !stateCleared) {
+    if (allSyncsSent && !stateCleared) {
       for (int t : thisDestinations) {
         clearTarget(t);
       }
@@ -211,7 +203,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       stateCleared = true;
     }
 
-    return allSynced;
+    return allSyncsSent;
   }
 
   @Override

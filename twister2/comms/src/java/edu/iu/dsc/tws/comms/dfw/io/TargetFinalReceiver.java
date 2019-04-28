@@ -64,7 +64,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   @Override
   protected void addSyncMessage(int source, int target) {
     Set<Integer> sources = syncReceived.get(target);
-    LOG.info(String.format("FINAL ADD SYNC %d -> %d", source, target));
     sources.add(source);
     for (int t : thisDestinations) {
       Set<Integer> syncSources = syncReceived.get(t);
@@ -92,7 +91,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected boolean canAcceptMessage(int source, int target) {
     Set<Integer> sources = syncReceived.get(target);
     if (sources.contains(source)) {
-      LOG.info(String.format("CANNOT FINAL ADD SYNC %d -> %d", source, target));
       return false;
     }
 
