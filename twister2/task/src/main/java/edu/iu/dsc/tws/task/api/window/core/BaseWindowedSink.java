@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
+import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
@@ -37,7 +38,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     this.windowManager = new WindowManager<>();
   }
 
-  public BaseWindowedSink(IWindowingPolicy win) {
+  public BaseWindowedSink(IWindowingPolicy win) throws InValidWindowingPolicy {
     this.windowingPolicy = win;
     this.windowManager = new WindowManager<>(win);
   }

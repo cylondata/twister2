@@ -9,22 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.exceptions;
 
-import java.io.Serializable;
+public class InValidWindowingPolicy extends Exception {
 
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.WindowType;
-
-public interface IWindowingPolicy extends Serializable {
-
-  boolean validate();
-
-  String whyInvalid();
-
-  WindowType getWindowType();
-
-  WindowConfig.Count getCount();
-
-  WindowConfig.Duration getDuration();
+  public InValidWindowingPolicy(String message) {
+    super(message);
+  }
 }

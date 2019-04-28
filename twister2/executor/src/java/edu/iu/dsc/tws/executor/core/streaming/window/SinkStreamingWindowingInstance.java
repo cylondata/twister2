@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming.window;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -28,7 +26,6 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
-import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
@@ -92,43 +89,14 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
    * The input edges
    */
   private Map<String, String> inEdges;
+
   private TaskSchedulePlan taskSchedulePlan;
 
   private WindowingPolicy windowingPolicy;
 
   private int windowSize = 0;
 
-  private boolean policyApplied = false;
-
-  private List<IMessage<?>> messageList = new ArrayList<>(windowSize);
-
-  private WindowManager<IMessage<?>> windowManager;
-
   private ReentrantLock lock = new ReentrantLock();
-
-
-  public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
-                                        BlockingQueue<IMessage> streamingInQueue, Config config,
-                                        String tName, int tId, int tIndex, int parallel, int wId,
-                                        Map<String, Object> cfgs, Map<String, String> inEdges,
-                                        TaskSchedulePlan taskSchedulePlan,
-                                        WindowingPolicy winPolicy) {
-    this.streamingWindowTask = streamingWindowTask;
-    this.streamingInQueue = streamingInQueue;
-    this.config = config;
-    this.streamingTaskId = tId;
-    this.streamingTaskIndex = tIndex;
-    this.parallelism = parallel;
-    this.nodeConfigs = cfgs;
-    this.workerId = wId;
-    this.taskName = tName;
-    this.inEdges = inEdges;
-    this.taskSchedulePlan = taskSchedulePlan;
-    this.windowingPolicy = winPolicy;
-    this.windowManager = new WindowManager<>(this.windowingPolicy);
-    this.windowSize = this.windowingPolicy.getCount().value;
-    this.messageList = new ArrayList<>(this.windowSize);
-  }
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,

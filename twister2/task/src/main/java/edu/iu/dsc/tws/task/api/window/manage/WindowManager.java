@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingTumblingPolicy;
 
@@ -32,24 +33,20 @@ public class WindowManager<T> implements IManager<T> {
 
   private WindowingPolicyManager<T> windowingPolicyManager;
 
-  private WindowingTumblingPolicyManager<T> windowingTumblingPolicyManager;
-
   private List<IMessage<T>> windowedObjects;
 
   private int windowCountSize = 0;
 
-  private WindowMessageImpl<T> windowMessageImpl;
+  private WindowConfig.Duration windowDurationSize;
 
   private IWindowMessage<T> windowMessage;
-
-  private WindowConfig.Duration windowDurationSize;
 
   private boolean windowingCompleted = false;
 
   public WindowManager() {
   }
 
-  public WindowManager(IWindowingPolicy windowingPolicy) {
+  public WindowManager(IWindowingPolicy windowingPolicy) throws InValidWindowingPolicy {
     this.windowingPolicy = windowingPolicy;
     this.windowingPolicy = initializeWindowingPolicy();
 
@@ -60,11 +57,16 @@ public class WindowManager<T> implements IManager<T> {
    * When multiple windowing policies are applied, they need to be handled sequentially
    */
   @Override
-  public IWindowingPolicy initializeWindowingPolicy() {
-    this.addWindowingPolicy(this.windowingPolicy);
-    if (windowingPolicy instanceof WindowingTumblingPolicy) {
-      windowingTumblingPolicyManager = new WindowingTumblingPolicyManager<>();
-      windowingTumblingPolicyManager.initialize(windowingPolicy);
+  public IWindowingPolicy initializeWindowingPolicy() throws InValidWindowingPolicy {
+    if (windowingPolicy.validate()) {
+      this.addWindowingPolicy(this.windowingPolicy);
+      if (windowingPolicy instanceof WindowingTumblingPolicy) {
+        windowingPolicyManager = new WindowingTumblingPolicyManager<>();
+        windowingPolicyManager.initialize(windowingPolicy);
+      }
+    } else {
+      throw new InValidWindowingPolicy(String.format("Invalid Windowing Policy Included : %s ",
+          windowingPolicy.whyInvalid()));
     }
     return this.windowingPolicy;
   }
@@ -89,8 +91,6 @@ public class WindowManager<T> implements IManager<T> {
 
   /**
    * This method process the input message from the task instance and packages the policy
-   * TODO : Move packaging logic to WindowingPolicyManager to provide a portable model [C-logic]
-   * TODO : This portability allows the user to write their own windowing rules
    * TODO : Handle expired messages : expire visibility (how many previous windows [user decides])
    *
    * @param message Input message from SinkStreamingWindowInstance
@@ -98,19 +98,11 @@ public class WindowManager<T> implements IManager<T> {
   @Override
   public boolean execute(IMessage<T> message) {
     boolean status = false;
-    if (windowingPolicy instanceof WindowingTumblingPolicy) {
-      WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
-      if (w == null && (w.getCount() == null || w.getDuration() == null)) {
-        throw new RuntimeException("Windowing Tumbling Policy is not initialized");
-      } else {
-        if (progress(this.windowedObjects)) {
-          windowingTumblingPolicyManager.execute(message);
-          this.windowedObjects = windowingTumblingPolicyManager.getWindows();
-          status = true;
-        }
-      }
+    if (progress(this.windowedObjects)) {
+      windowingPolicyManager.execute(message);
+      this.windowedObjects = windowingPolicyManager.getWindows();
+      status = true;
     }
-
     return status;
   }
 
@@ -121,24 +113,19 @@ public class WindowManager<T> implements IManager<T> {
   public void clearWindow() {
     this.windowingCompleted = false;
     this.windowedObjects.clear();
-    if (windowingPolicy instanceof WindowingTumblingPolicy) {
-      windowingTumblingPolicyManager.clearWindow();
-    }
+    windowingPolicyManager.clearWindow();
   }
 
   /**
-   * This method is used to decide window packaging is progressed or not   *
+   * This method is used to decide window packaging is progressed or not
    */
   @Override
   public boolean progress(List<IMessage<T>> window) {
     boolean progress = true;
-    if (windowingPolicy instanceof WindowingTumblingPolicy) {
-      WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
-      windowCountSize = w.getCount().value;
-      windowDurationSize = w.getDuration();
-      if (window.size() == windowCountSize && windowCountSize > 0) {
-        progress = false;
-      }
+    windowCountSize = windowingPolicy.getCount().value;
+    windowDurationSize = windowingPolicy.getDuration();
+    if (window.size() == windowCountSize && windowCountSize > 0) {
+      progress = false;
     }
     return progress;
   }
@@ -149,17 +136,14 @@ public class WindowManager<T> implements IManager<T> {
    */
   @Override
   public boolean isDone() {
-    if (windowingPolicy instanceof WindowingTumblingPolicy) {
-      WindowingTumblingPolicy w = (WindowingTumblingPolicy) windowingPolicy;
-      windowCountSize = w.getCount().value;
-      windowDurationSize = w.getDuration();
-      if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
-        //TODO : handle the expired tuples
-        this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
-        this.windowingCompleted = true;
-      } else {
-        this.windowingCompleted = false;
-      }
+    windowCountSize = windowingPolicy.getCount().value;
+    windowDurationSize = windowingPolicy.getDuration();
+    if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
+      //TODO : handle the expired tuples
+      this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
+      this.windowingCompleted = true;
+    } else {
+      this.windowingCompleted = false;
     }
     return this.windowingCompleted;
   }

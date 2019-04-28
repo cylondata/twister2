@@ -16,6 +16,9 @@ import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 
 public class WindowingTumblingPolicy extends WindowingPolicy {
 
+  private static final String RULE = "WindowType TUMBLING && (Window Count > 0 "
+      + "|| Window Duration NOT NULL)";
+
   private WindowType windowType;
 
   private WindowConfig.Count count;
@@ -59,5 +62,16 @@ public class WindowingTumblingPolicy extends WindowingPolicy {
 
   public void setDuration(WindowConfig.Duration dtn) {
     this.duration = dtn;
+  }
+
+  @Override
+  public boolean validate() {
+    return windowType == WindowType.TUMBLING && (count.value > 0 || this.duration != null);
+  }
+
+  @Override
+  public String whyInvalid() {
+    return String.format("Rule : %s, Current Config :WindowType : %s, Window Count : %d, "
+        + "Window Duration : %s", RULE, this.windowType, this.count.value, this.duration);
   }
 }

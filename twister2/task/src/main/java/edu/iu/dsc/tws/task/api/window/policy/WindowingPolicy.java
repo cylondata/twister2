@@ -18,6 +18,9 @@ public class WindowingPolicy implements IWindowingPolicy {
 
   private static final long serialVersionUID = -2786001848413534229L;
 
+  private static final String RULE = "WindowType NOT NULL && (Window Count > 0 "
+      + "|| Window Duration NOT NULL)";
+
   private WindowType windowType;
 
   private WindowConfig.Count count;
@@ -44,5 +47,15 @@ public class WindowingPolicy implements IWindowingPolicy {
 
   public WindowConfig.Duration getDuration() {
     return duration;
+  }
+
+  public boolean validate() {
+    return this.windowType != null && (this.count.value > 0) || this.duration != null;
+  }
+
+  @Override
+  public String whyInvalid() {
+    return String.format("Rule : %s, Current Config :WindowType : %s, Window Count : %d, "
+        + "Window Duration : %s", RULE, this.windowType, this.count.value, this.duration);
   }
 }

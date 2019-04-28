@@ -15,11 +15,12 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 
 public interface IManager<T> extends Serializable {
 
-  IWindowingPolicy initializeWindowingPolicy();
+  IWindowingPolicy initializeWindowingPolicy() throws InValidWindowingPolicy;
 
   IWindowingPolicy addWindowingPolicy(IWindowingPolicy windowingPolicy);
 
