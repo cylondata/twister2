@@ -99,7 +99,7 @@ public class DataLocalityBatchTaskGraphExample extends TaskWorker {
     //taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
     //taskGraphBuilder.addNodeConstraints("datapointcompute", computeTaskConstraintsMap);
     //taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
-    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();

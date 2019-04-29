@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.taskgraph;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +33,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -80,6 +82,17 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     SecondComputeTask secondComputeTask = new SecondComputeTask();
     ReduceTask reduceTask = new ReduceTask();
 
+
+    //Adding the user-defined constraints to the graph
+    Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+
+    Map<String, String> computeTaskConstraintsMap = new HashMap<>();
+    computeTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+
+    Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
+    sinkTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+
     builder.addSource("source", sourceTask, parallel);
     ComputeConnection firstComputeConnection = builder.addCompute(
         "firstcompute", firstComputeTask, parallel);
@@ -93,6 +106,14 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     reduceConnection.allreduce("secondcompute", "sreduce", new Aggregator(), DataType.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
+
+    //Adding graph and node level constraints
+    builder.addNodeConstraints("source", sourceTaskConstraintsMap);
+    builder.addNodeConstraints("firstcompute", computeTaskConstraintsMap);
+    builder.addNodeConstraints("secondcompute", computeTaskConstraintsMap);
+    builder.addNodeConstraints("sink", sinkTaskConstraintsMap);
+    builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
+
     DataFlowTaskGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);

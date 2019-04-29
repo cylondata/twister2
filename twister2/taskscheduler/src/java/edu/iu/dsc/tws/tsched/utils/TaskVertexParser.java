@@ -28,8 +28,8 @@ public final class TaskVertexParser {
 
   private static final Logger LOG = Logger.getLogger(TaskVertexParser.class.getName());
 
-
   private List<Set<Vertex>> taskVertexList = new LinkedList<>();
+
   private Set<Vertex> targetVertexSet = new LinkedHashSet<>();
 
   public List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
@@ -38,17 +38,22 @@ public final class TaskVertexParser {
       if (dataFlowTaskGraph.inDegreeOfTask(vertex) == 0) {
         add(vertex);
         targetVertexSet.add(vertex);
-        checkChildTasks(dataFlowTaskGraph, vertex);
+        if (dataFlowTaskGraph.childrenOfTask(vertex).size() >= 1) {
+          checkChildTasks(dataFlowTaskGraph, vertex);
+        }
       } else {
         if (checkChildTasks(dataFlowTaskGraph, vertex)) {
-          add(vertex);
-          targetVertexSet.add(vertex);
+          if (!targetVertexSet.contains(vertex)) {
+            add(vertex);
+            targetVertexSet.add(vertex);
+          }
         }
       }
     }
+
     for (Set<Vertex> aTaskVertexSet : taskVertexList) {
       for (Vertex vertex : aTaskVertexSet) {
-        LOG.fine("%%% Vertex Details:" + aTaskVertexSet.size() + "\t" + vertex.getName());
+        LOG.fine("%%% Vertex Details:" + vertex.getName() + "\t" + aTaskVertexSet.size());
       }
     }
     return taskVertexList;
@@ -58,15 +63,12 @@ public final class TaskVertexParser {
     boolean flag = false;
     if (dataFlowTaskGraph.outDegreeOfTask(vertex) >= 1) {
       Set<Vertex> childTask = dataFlowTaskGraph.childrenOfTask(vertex);
-      if (dataFlowTaskGraph.parentsOfTask(vertex.getName()).size() <= 1) {
+      if (!targetVertexSet.containsAll(childTask)) {
         add(childTask);
         targetVertexSet.addAll(childTask);
-      } else {
-        if (!targetVertexSet.containsAll(childTask)) {
-          add(childTask);
-          targetVertexSet.addAll(childTask);
-        }
       }
+    } else {
+      flag = true;
     }
     return flag;
   }
