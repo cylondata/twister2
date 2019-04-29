@@ -31,8 +31,7 @@ import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.WindowingTumblingPolicy;
 
-public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T>
-    implements IWindowingPolicyManager<T> {
+public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T> {
 
   private static final Logger LOG = Logger.getLogger(WindowingTumblingPolicyManager.class
       .getName());

@@ -9,24 +9,38 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.api;
 
-import java.io.Serializable;
+public class EventImpl<T> implements Event<T> {
 
-import edu.iu.dsc.tws.task.api.window.api.Event;
+  private final T event;
+  private long ts;
 
-public interface IWindowingPolicy<T> extends Serializable {
+  public EventImpl(T event, long t) {
+    this.event = event;
+    this.ts = t;
+  }
 
-  boolean validate();
+  @Override
+  public long getTimeStamp() {
+    return this.ts;
+  }
 
-  String whyInvalid();
+  @Override
+  public T get() {
+    return this.event;
+  }
 
-  void track(Event<T> event);
+  @Override
+  public boolean isWatermark() {
+    return false;
+  }
 
-  void reset();
-
-  void start();
-
-  void shutdown();
-
+  @Override
+  public String toString() {
+    return "EventImpl{"
+        + "event=" + event
+        + ", ts=" + ts
+        + '}';
+  }
 }

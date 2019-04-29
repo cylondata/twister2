@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.policy;
 
+import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 
-public class WindowingPolicy implements IWindowingPolicy {
+public class WindowingPolicy<T> implements IWindowingPolicy<T> {
 
   private static final long serialVersionUID = -2786001848413534229L;
 
@@ -58,4 +59,26 @@ public class WindowingPolicy implements IWindowingPolicy {
     return String.format("Rule : %s, Current Config :WindowType : %s, Window Count : %d, "
         + "Window Duration : %s", RULE, this.windowType, this.count.value, this.duration);
   }
+
+  @Override
+  public void track(Event<T> event) {
+
+  }
+
+  @Override
+  public void reset() {
+
+  }
+
+  @Override
+  public void start() {
+
+  }
+
+  @Override
+  public void shutdown() {
+
+  }
+
+
 }

@@ -9,24 +9,24 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.config;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.task.api.window.api.BaseWindow;
+import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 
-import edu.iu.dsc.tws.task.api.window.api.Event;
+public final class TumblingCountWindow extends BaseWindow {
 
-public interface IWindowingPolicy<T> extends Serializable {
+  public TumblingCountWindow(int windowLength) {
+    super(windowLength, windowLength);
+  }
 
-  boolean validate();
+  @Override
+  public <T> IWindowStrategy<T> getWindowStrategy() {
+    return null;
+  }
 
-  String whyInvalid();
-
-  void track(Event<T> event);
-
-  void reset();
-
-  void start();
-
-  void shutdown();
+  public static TumblingCountWindow of(int windowLength) {
+    return new TumblingCountWindow(windowLength);
+  }
 
 }

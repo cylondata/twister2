@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.core;
 
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -34,6 +35,12 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private IWindowingPolicy windowingPolicy;
 
+  private WindowConfig.Count count;
+
+  private WindowType windowType;
+
+  private WindowConfig.Duration duration;
+
   protected BaseWindowedSink() {
     this.windowManager = new WindowManager<>();
   }
@@ -53,30 +60,48 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return false;
   }
 
-  private BaseWindowedSink<T> withWindowCountInit(WindowType windowType, WindowConfig.Count count) {
-    WindowingPolicy win = new WindowingPolicy(windowType, count);
+  private BaseWindowedSink<T> withWindowCountInit(WindowType winType, WindowConfig.Count cnt) {
+    WindowingPolicy win = new WindowingPolicy(winType, cnt);
     this.windowManager.addWindowingPolicy(win);
     return this;
   }
 
-  private BaseWindowedSink<T> withWindowDurationInit(WindowType windowType,
-                                                     WindowConfig.Duration duration) {
-    WindowingPolicy win = new WindowingPolicy(windowType, duration);
+  private BaseWindowedSink<T> withWindowDurationInit(WindowType winType,
+                                                     WindowConfig.Duration dtn) {
+    WindowingPolicy win = new WindowingPolicy(winType, dtn);
     this.windowManager.addWindowingPolicy(win);
     return this;
   }
 
-  public BaseWindowedSink<T> withWindowCount(WindowType windowType, WindowConfig.Count count) {
-    return withWindowCountInit(windowType, count);
+  public BaseWindowedSink<T> withWindowCount(WindowType winType, WindowConfig.Count cnt) {
+    return withWindowCountInit(winType, cnt);
   }
 
-  public BaseWindowedSink<T> withWindowDuration(WindowType windowType,
-                                                WindowConfig.Duration duration) {
-    return withWindowDurationInit(windowType, duration);
+  public BaseWindowedSink<T> withWindowDuration(WindowType winType,
+                                                WindowConfig.Duration dtn) {
+    return withWindowDurationInit(winType, dtn);
   }
 
   public BaseWindowedSink<T> withWindowingPolicy(IWindowingPolicy iWindowingPolicy) {
     this.windowManager.addWindowingPolicy(iWindowingPolicy);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withTumblingCountWindow(int tumblingCount) {
+    this.count = new WindowConfig.Count(tumblingCount);
+    this.windowType = WindowType.TUMBLING;
+    return withTumblingCountWindowInit(this.count, this.windowType);
+  }
+
+  private BaseWindowedSink<T> withTumblingCountWindowInit(WindowConfig.Count cnt,
+                                                          WindowType winType) {
+
+    return this;
+  }
+
+  public BaseWindowedSink<T> withTumblingDurationWindow(int tumblingDuration, TimeUnit timeUnit) {
+    this.duration = new WindowConfig.Duration(tumblingDuration, timeUnit);
+    this.windowType = WindowType.TUMBLING;
     return this;
   }
 

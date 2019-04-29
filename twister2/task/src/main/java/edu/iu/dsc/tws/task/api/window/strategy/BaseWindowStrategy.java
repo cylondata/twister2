@@ -9,24 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.strategy;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.task.api.window.api.IWindow;
 
-import edu.iu.dsc.tws.task.api.window.api.Event;
+public abstract class BaseWindowStrategy<T> implements IWindowStrategy<T> {
 
-public interface IWindowingPolicy<T> extends Serializable {
+  protected final IWindow window;
 
-  boolean validate();
-
-  String whyInvalid();
-
-  void track(Event<T> event);
-
-  void reset();
-
-  void start();
-
-  void shutdown();
-
+  protected BaseWindowStrategy(IWindow window) {
+    this.window = window;
+  }
 }

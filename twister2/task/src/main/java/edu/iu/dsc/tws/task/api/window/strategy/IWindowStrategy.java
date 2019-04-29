@@ -9,24 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy;
+package edu.iu.dsc.tws.task.api.window.strategy;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.manage.IManager;
+import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
 
-import edu.iu.dsc.tws.task.api.window.api.Event;
+public interface IWindowStrategy<T> {
 
-public interface IWindowingPolicy<T> extends Serializable {
+  IWindowingPolicy<T> getWindowingPolicy(IManager<T> windowingManager,
+                                                IEvictionPolicy<T> evictionPolicy);
 
-  boolean validate();
-
-  String whyInvalid();
-
-  void track(Event<T> event);
-
-  void reset();
-
-  void start();
-
-  void shutdown();
+  IEvictionPolicy<T> getEvictionPolicy();
 
 }

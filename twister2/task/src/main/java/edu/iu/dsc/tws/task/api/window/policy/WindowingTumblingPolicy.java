@@ -37,7 +37,6 @@ public class WindowingTumblingPolicy extends WindowingPolicy {
     this.duration = dtn;
   }
 
-  @Override
   public WindowType getWindowType() {
     return windowType;
   }
@@ -46,7 +45,6 @@ public class WindowingTumblingPolicy extends WindowingPolicy {
     this.windowType = winType;
   }
 
-  @Override
   public WindowConfig.Count getCount() {
     return count;
   }
@@ -55,7 +53,6 @@ public class WindowingTumblingPolicy extends WindowingPolicy {
     this.count = cnt;
   }
 
-  @Override
   public WindowConfig.Duration getDuration() {
     return duration;
   }

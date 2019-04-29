@@ -122,8 +122,8 @@ public class WindowManager<T> implements IManager<T> {
   @Override
   public boolean progress(List<IMessage<T>> window) {
     boolean progress = true;
-    windowCountSize = windowingPolicy.getCount().value;
-    windowDurationSize = windowingPolicy.getDuration();
+    //windowCountSize = windowingPolicy.getCount().value;
+    //windowDurationSize = windowingPolicy.getDuration();
     if (window.size() == windowCountSize && windowCountSize > 0) {
       progress = false;
     }
@@ -136,8 +136,8 @@ public class WindowManager<T> implements IManager<T> {
    */
   @Override
   public boolean isDone() {
-    windowCountSize = windowingPolicy.getCount().value;
-    windowDurationSize = windowingPolicy.getDuration();
+    //windowCountSize = windowingPolicy.getCount().value;
+    //windowDurationSize = windowingPolicy.getDuration();
     if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
       //TODO : handle the expired tuples
       this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
