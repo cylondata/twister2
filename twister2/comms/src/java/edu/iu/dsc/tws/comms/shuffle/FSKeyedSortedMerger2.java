@@ -257,10 +257,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
       Arrays.parallelSort(this.recordsInMemory, 0,
           this.currentKeyIndex, listComparatorWrapper);
-      if (this.currentKeyIndex != this.numOfRecordsInMemory) {
-        System.out.println("Sorting " + this.currentKeyIndex + " instead of "
-            + this.numOfRecordsInMemory);
-      }
 
       // save the bytes to disk
       this.writeToFile();
@@ -455,6 +451,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         }
       }
     }
+    File folder = new File(this.getSaveFolderName());
+    boolean deleted = folder.delete();
+    if (!deleted) {
+      LOG.warning("Failed to delete the directory");
+    }
     status = FSStatus.DONE;
   }
 
@@ -474,7 +475,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * @return the save file name
    */
   private String getSaveFileName(int filePart) {
-    return folder + "/" + operationName + "/part_" + filePart;
+    return this.getSaveFolderName() + "/part_" + filePart;
   }
 
   /**

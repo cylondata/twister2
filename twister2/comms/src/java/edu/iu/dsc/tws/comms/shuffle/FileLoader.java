@@ -218,7 +218,7 @@ public final class FileLoader {
         MemoryMapUtils.unMapBuffer(os);
       } catch (Exception e) {
         //ignore
-        LOG.warning("Couldn't manually unmap a byte buffer");
+        LOG.warning("Couldn't unmap a byte buffer manually");
       }
       return maxRecord;
     } catch (IOException e) {
