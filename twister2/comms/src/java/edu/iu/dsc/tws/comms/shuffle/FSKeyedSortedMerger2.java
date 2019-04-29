@@ -255,8 +255,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
       // first sort the values
 
-      Arrays.parallelSort(this.recordsInMemory, 0,
-          this.currentKeyIndex, listComparatorWrapper);
+
+//      Arrays.parallelSort(this.recordsInMemory, 0,
+//          this.currentKeyIndex, listComparatorWrapper);
 
       // save the bytes to disk
       this.writeToFile();
@@ -281,6 +282,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void writeToFile() {
     try {
       this.fileWriteLock.acquire(); // allow 1 parallel write to disk
+
+      //create references to existing data
       final List<Tuple>[] referenceToRecordsInMemory = this.recordsInMemory;
       final String fileName = getSaveFileName(noOfFileWritten);
       final long bytesInMemory = numOfBytesInMemory;
@@ -288,6 +291,10 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
       ForkJoinPool.commonPool().execute(() -> {
         try {
+          // do the sort
+          Arrays.sort(referenceToRecordsInMemory, 0,
+              currentIndex, listComparatorWrapper);
+
           long largestTupleWritten = FileLoader.saveKeyValues(referenceToRecordsInMemory,
               currentIndex, bytesInMemory, fileName, keyType);
           //todo get inside set?
@@ -451,8 +458,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         }
       }
     }
-    File folder = new File(this.getSaveFolderName());
-    boolean deleted = folder.delete();
+    File rootFolder = new File(this.getSaveFolderName());
+    boolean deleted = rootFolder.delete();
     if (!deleted) {
       LOG.warning("Failed to delete the directory");
     }
