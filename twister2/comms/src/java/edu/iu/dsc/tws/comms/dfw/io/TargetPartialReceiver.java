@@ -185,7 +185,6 @@ public class TargetPartialReceiver extends TargetReceiver {
           }
 
           if (operation.sendPartial(source, message, flags, dest)) {
-            LOG.info(String.format("SENDING SYNC %d -> %d", source, dest));
             finishedDestPerSource.add(dest);
 
             if (finishedDestPerSource.size() == thisDestinations.size()) {
