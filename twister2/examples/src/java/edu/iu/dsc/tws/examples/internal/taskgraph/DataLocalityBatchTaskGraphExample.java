@@ -65,12 +65,15 @@ public class DataLocalityBatchTaskGraphExample extends TaskWorker {
 
     //Adding the user-defined constraints to the graph
     Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
     //sourceTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
 
     Map<String, String> computeTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
     //computeTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
 
     Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
     //sinkTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
 
     /* First Graph to partition and read the partitioned data points **/
@@ -96,15 +99,15 @@ public class DataLocalityBatchTaskGraphExample extends TaskWorker {
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     //Adding graph and node level constraints
-    //taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
-    //taskGraphBuilder.addNodeConstraints("datapointcompute", computeTaskConstraintsMap);
-    //taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
+    taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
+    taskGraphBuilder.addNodeConstraints("datapointcompute", computeTaskConstraintsMap);
+    taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
     //Build the first taskgraph
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
     LOG.info("%%% Graph Constraints:%%%" + taskGraph.getGraphConstraints()
-        + "\tNode Constraints:%%%" + taskGraph.getNodeConstraints());
+        + "\tNode Constraints:%%%" + taskGraph.getNodeConstraints().entrySet());
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(taskGraph);

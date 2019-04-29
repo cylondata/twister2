@@ -229,32 +229,49 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
-    Map<String, Integer> parallelTaskMap;
-    if (!graph.getNodeConstraints().isEmpty()) {
-      parallelTaskMap = taskAttributes.getParallelTaskMap(vertex, graph.getNodeConstraints());
+    Map<String, Integer> parallelTaskMap = null;
+    if (!graph.getGraphConstraints().isEmpty()) {
+      if (!graph.getNodeConstraints().isEmpty()) {
+        parallelTaskMap = taskAttributes.getParallelTaskMap(vertex, graph.getNodeConstraints());
+      } else {
+        parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
+      }
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        //int numberOfInstances = e.getValue();
+        int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+
+        /*if (!graph.getGraphConstraints().isEmpty()) {
+          maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+        } else {
+          maxTaskInstances = e.getValue();
+        }*/
+
+        for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
+        }
+        gtaskId++;
+      }
     } else {
       parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
-    }
-
-    int containerIndex = 0;
-    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-      String task = e.getKey();
-      //int numberOfInstances = e.getValue();
-      int maxTaskInstances;
-      if (!graph.getGraphConstraints().isEmpty()) {
-        maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-      } else {
-        maxTaskInstances = e.getValue();
-      }
-
-      for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-        ++containerIndex;
-        if (containerIndex >= roundrobinAllocation.size()) {
-          containerIndex = 0;
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
         }
+        gtaskId++;
       }
-      gtaskId++;
     }
     return roundrobinAllocation;
   }
@@ -274,32 +291,42 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     orderedTaskSet.addAll(taskVertexSet);
 
     Map<String, Integer> parallelTaskMap;
-    if (!graph.getNodeConstraints().isEmpty()) {
-      parallelTaskMap = taskAttributes.getParallelTaskMap(
-          taskVertexSet, graph.getNodeConstraints());
+    if (!graph.getGraphConstraints().isEmpty()) {
+      if (!graph.getNodeConstraints().isEmpty()) {
+        parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet,
+            graph.getNodeConstraints());
+      } else {
+        parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+      }
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        //int numberOfInstances = e.getValue();
+        int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+        for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
+        }
+        gtaskId++;
+      }
     } else {
       parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-    }
-
-    int containerIndex = 0;
-    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-      String task = e.getKey();
-      //int numberOfInstances = e.getValue();
-      int maxTaskInstances;
-      if (!graph.getGraphConstraints().isEmpty()) {
-        maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-      } else {
-        maxTaskInstances = e.getValue();
-      }
-
-      for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-        ++containerIndex;
-        if (containerIndex >= roundrobinAllocation.size()) {
-          containerIndex = 0;
+      int containerIndex = 0;
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int numberOfInstances = e.getValue();
+        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+          ++containerIndex;
+          if (containerIndex >= roundrobinAllocation.size()) {
+            containerIndex = 0;
+          }
         }
+        gtaskId++;
       }
-      gtaskId++;
     }
     return roundrobinAllocation;
   }
