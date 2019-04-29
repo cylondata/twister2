@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,13 +77,9 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
     // initialize finished
     // initFinishedInstances();
-    BlockingQueue<INodeInstance> tasks;
-
-    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
-    tasks.addAll(nodes.values());
+    List<INodeInstance> tasks = new ArrayList<>(nodes.values());
 
     int curTaskSize = tasks.size();
-    BatchWorker[] workers = new BatchWorker[curTaskSize];
 
     // prepare the tasks
     for (INodeInstance node : tasks) {
@@ -89,9 +87,23 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     doneSignal = new CountDownLatch(curTaskSize);
-    for (int i = 0; i < curTaskSize; i++) {
-      workers[i] = new BatchWorker(tasks);
-      threads.submit(workers[i]);
+
+    boolean bindTaskToThread = numThreads >= tasks.size();
+
+    if (bindTaskToThread) {
+      for (INodeInstance task : tasks) {
+        threads.submit(new BatchWorker(task));
+      }
+    } else {
+
+      final AtomicBoolean[] taskStatus = new AtomicBoolean[tasks.size()];
+      for (int i = 0; i < tasks.size(); i++) {
+        taskStatus[i] = new AtomicBoolean(false);
+      }
+
+      for (int i = 0; i < numThreads; i++) {
+        threads.submit(new BatchWorker(tasks, taskStatus));
+      }
     }
   }
 
@@ -224,31 +236,65 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   protected class BatchWorker implements Runnable {
-    private BlockingQueue<INodeInstance> tasks;
 
-    public BatchWorker(BlockingQueue<INodeInstance> tasks) {
+    //round robin mode
+    private List<INodeInstance> tasks;
+    private AtomicBoolean[] ignoreIndex;
+    private int lastIndex;
+
+    //dedicated mode
+    private boolean bindTaskToThread;
+    private INodeInstance task;
+
+    public BatchWorker(List<INodeInstance> tasks, AtomicBoolean[] ignoreIndex) {
       this.tasks = tasks;
+      this.ignoreIndex = ignoreIndex;
+    }
+
+    public BatchWorker(INodeInstance task) {
+      this.bindTaskToThread = true;
+      this.task = task;
+    }
+
+    private int getNext() {
+      if (this.lastIndex == tasks.size()) {
+        this.lastIndex = 0;
+      }
+
+      if (ignoreIndex[this.lastIndex].compareAndSet(false, true)) {
+        return this.lastIndex++;
+      }
+      this.lastIndex++;
+      return -1;
     }
 
     @Override
     public void run() {
-      while (notStopped) {
-        try {
-          INodeInstance nodeInstance = tasks.poll();
-          if (nodeInstance != null) {
-            boolean needsFurther = nodeInstance.execute();
-            if (!needsFurther) {
-              finishedInstances.put(nodeInstance.getId(), true);
-            } else {
-              // we need to further execute this task
-              tasks.offer(nodeInstance);
-            }
-          } else {
-            break;
+      if (this.bindTaskToThread) {
+        while (notStopped) {
+          boolean needsFurther = this.task.execute();
+          if (!needsFurther) {
+            finishedInstances.put(task.getId(), true);
           }
-        } catch (Throwable t) {
-          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
-          throw new RuntimeException("Error occurred in execution of task", t);
+        }
+      } else {
+        while (notStopped) {
+          try {
+            int nodeInstanceIndex = this.getNext();
+            if (nodeInstanceIndex != -1) {
+              INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
+              boolean needsFurther = nodeInstance.execute();
+              if (!needsFurther) {
+                finishedInstances.put(nodeInstance.getId(), true);
+              } else {
+                //need further execution
+                this.ignoreIndex[nodeInstanceIndex].set(false);
+              }
+            }
+          } catch (Throwable t) {
+            LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+            throw new RuntimeException("Error occurred in execution of task", t);
+          }
         }
       }
       doneSignal.countDown();
