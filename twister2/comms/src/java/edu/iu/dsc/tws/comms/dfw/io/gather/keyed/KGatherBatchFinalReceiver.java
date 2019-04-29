@@ -93,6 +93,12 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    return b && gathered.isEmpty();
+  }
+
+  @Override
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
@@ -121,5 +127,10 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       return new Tuple(key, value.iterator(),
           operation.getKeyType(), operation.getDataType());
     }
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 }

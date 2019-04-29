@@ -80,6 +80,12 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    return b && reduced.isEmpty();
+  }
+
+  @Override
   protected boolean sendToTarget(int source, int target) {
     Map<Object, Object> values = reduced.get(target);
 
@@ -119,5 +125,10 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
       return new Tuple(entry.getKey(), entry.getValue(),
           operation.getKeyType(), operation.getDataType());
     }
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 }
