@@ -197,7 +197,7 @@ public class NomadController implements IController {
     task.addConfig(NomadContext.NOMAD_TASK_COMMAND_ARGS, args);
     Template template = new Template();
     template.setEmbeddedTmpl(nomadScriptContent);
-    template.setDestPath(NomadContext.NOMAD_HERON_SCRIPT_NAME);
+    template.setDestPath(NomadContext.NOMAD_SCRIPT_NAME);
     task.addTemplates(template);
 
     Resources resourceReqs = new Resources();
@@ -253,9 +253,9 @@ public class NomadController implements IController {
 
   private String[] workerProcessCommand(String workingDirectory, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
-    String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobName(), SchedulerContext.clusterType(config)).toString();
-
+    //String configDirectoryName = Paths.get(workingDirectory,
+    //    job.getJobName(), SchedulerContext.clusterType(config)).toString();
+    String configDirectoryName = "";
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
     Map<String, Object> map = workerCommandArguments(config, workingDirectory, job);
@@ -297,5 +297,8 @@ public class NomadController implements IController {
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
     return slurmCmd;
+  }
+  public String createPersistentJobDirName(String jobName) {
+    return SchedulerContext.nfsServerPath(config) + "/" + jobName;
   }
 }

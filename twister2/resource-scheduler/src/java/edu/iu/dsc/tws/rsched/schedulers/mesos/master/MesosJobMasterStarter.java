@@ -94,7 +94,7 @@ public final class MesosJobMasterStarter {
     try {
       registrar = new ZKJobMasterRegistrar(config,
           Inet4Address.getLocalHost().getHostAddress(), 11011);
-      LOG.info("JobMaster REGISTERED:");
+      LOG.info("JobMaster REGISTERED..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");
       e.printStackTrace();
@@ -120,7 +120,7 @@ public final class MesosJobMasterStarter {
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
                 terminator, job, jobMasterNodeInfo, clusterScaler);
-        LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
+        LOG.info("JobMaster host address...:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
