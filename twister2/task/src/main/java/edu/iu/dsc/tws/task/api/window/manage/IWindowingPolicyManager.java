@@ -37,7 +37,7 @@ package edu.iu.dsc.tws.task.api.window.manage;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public interface IWindowingPolicyManager<T> extends Serializable {
 

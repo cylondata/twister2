@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingTumblingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingTumblingPolicy;
 
 public class WindowingTumblingPolicyManager<T> extends WindowingPolicyManager<T> {
 

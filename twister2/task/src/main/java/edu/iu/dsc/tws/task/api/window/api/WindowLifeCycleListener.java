@@ -11,38 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.api;
 
-import edu.iu.dsc.tws.task.api.IMessage;
+import java.io.Serializable;
 
-public class EventImpl<T> implements Event<T> {
+public interface WindowLifeCycleListener<T> extends Serializable {
 
-  private final IMessage<T> event;
-  private long ts;
+  void onExpiry(IWindowMessage<T> events);
 
-  public EventImpl(IMessage<T> event, long t) {
-    this.event = event;
-    this.ts = t;
-  }
+  void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
+                    IWindowMessage<T> expired);
 
-  @Override
-  public long getTimeStamp() {
-    return this.ts;
-  }
-
-  @Override
-  public IMessage<T> get() {
-    return this.event;
-  }
-
-  @Override
-  public boolean isWatermark() {
-    return false;
-  }
-
-  @Override
-  public String toString() {
-    return "EventImpl{"
-        + "event=" + event
-        + ", ts=" + ts
-        + '}';
-  }
 }

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.api.window.strategy;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public final class TumblingCountWindowStrategy<T> extends BaseWindowStrategy<T> {
 

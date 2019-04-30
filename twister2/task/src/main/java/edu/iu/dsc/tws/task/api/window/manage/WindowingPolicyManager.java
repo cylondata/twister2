@@ -38,7 +38,7 @@ package edu.iu.dsc.tws.task.api.window.manage;
 import java.util.List;
 
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public abstract class WindowingPolicyManager<T> implements IWindowingPolicyManager<T> {
 

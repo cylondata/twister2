@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.api;
 
+import edu.iu.dsc.tws.task.api.IMessage;
+
 public interface Event<T> {
 
   long getTimeStamp();
 
-  T get();
+  IMessage<T> get();
 
   boolean isWatermark();
 

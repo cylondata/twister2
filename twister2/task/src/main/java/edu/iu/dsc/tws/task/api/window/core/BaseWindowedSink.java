@@ -16,13 +16,17 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
     implements IWindowCompute<T> {
@@ -33,7 +37,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private WindowManager<T> windowManager;
 
-  private IWindowingPolicy windowingPolicy;
+  private IWindowingPolicy<T> windowingPolicy;
 
   private WindowConfig.Count count;
 
@@ -41,18 +45,32 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private WindowConfig.Duration duration;
 
+  private WindowLifeCycleListener<T> windowLifeCycleListener;
+
+  private IEvictionPolicy<T> evictionPolicy;
+
   protected BaseWindowedSink() {
-    this.windowManager = new WindowManager<>();
+    prepare();
   }
 
   public BaseWindowedSink(IWindowingPolicy win) throws InValidWindowingPolicy {
     this.windowingPolicy = win;
-    this.windowManager = new WindowManager<>(win);
+    this.windowManager = new WindowManager(win);
+    this.windowLifeCycleListener = newWindowLifeCycleListener();
+  }
+
+  public void prepare() {
+    this.windowLifeCycleListener = newWindowLifeCycleListener();
+    this.windowManager = new WindowManager(this.windowLifeCycleListener);
+    this.evictionPolicy = getEvictionPolicy(count, duration);
+    this.windowingPolicy = getWindowingPolicy(count, duration, this.windowManager,
+        this.evictionPolicy);
+
   }
 
   @Override
   public boolean execute(IMessage<T> message) {
-    this.windowManager.execute(message);
+    this.windowManager.add(message);
     if (this.windowManager.isDone()) {
       execute(this.windowManager.getWindowMessage());
       this.windowManager.clearWindow();
@@ -105,5 +123,39 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return this;
   }
 
+  protected WindowLifeCycleListener<T> newWindowLifeCycleListener() {
+    return new WindowLifeCycleListener<T>() {
+      @Override
+      public void onExpiry(IWindowMessage<T> events) {
+        // TODO : design the logic
+      }
+
+      @Override
+      public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
+                               IWindowMessage<T> expired) {
+        execute(events);
+      }
+    };
+  }
+
+  public IWindowingPolicy<T> getWindowingPolicy(WindowConfig.Count slidingIntervalCount,
+                                                WindowConfig.Duration slidingIntervalDuration,
+                                                WindowManager<T> manager,
+                                                IEvictionPolicy<T> policy) {
+    if (slidingIntervalCount != null) {
+      return new CountWindowPolicy<>(slidingIntervalCount.value, manager, policy);
+    } else {
+      return null;
+    }
+  }
+
+  public IEvictionPolicy<T> getEvictionPolicy(WindowConfig.Count windowLengthCount,
+                                              WindowConfig.Duration windowLengthDuration) {
+    if (windowLengthCount != null) {
+      return new CountEvictionPolicy<>(windowLengthCount.value);
+    } else {
+      return null;
+    }
+  }
 
 }

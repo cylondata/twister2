@@ -15,8 +15,9 @@ import java.io.Serializable;
 import java.util.List;
 
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public interface IManager<T> extends Serializable {
 
@@ -24,7 +25,9 @@ public interface IManager<T> extends Serializable {
 
   IWindowingPolicy addWindowingPolicy(IWindowingPolicy windowingPolicy);
 
-  boolean execute(IMessage<T> message);
+  void add(IMessage<T> message);
+
+  void onEvent(Event<T> event);
 
   void clearWindow();
 

@@ -9,14 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.policy.count;
+package edu.iu.dsc.tws.task.api.window.policy.trigger.count;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
-import edu.iu.dsc.tws.task.api.window.policy.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
 
@@ -36,7 +36,7 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
 
   @Override
   public boolean validate() {
-    return false;
+    return count > 0;
   }
 
   @Override
@@ -46,21 +46,36 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
 
   @Override
   public void track(Event<T> event) {
-
+    if (started && !event.isWatermark()) {
+      if (currentCount.incrementAndGet() >= count) {
+        this.manager.onEvent(event);
+      }
+    }
   }
 
   @Override
   public void reset() {
-
+    this.currentCount.set(0);
   }
 
   @Override
   public void start() {
-
+    this.started = true;
   }
 
   @Override
   public void shutdown() {
 
+  }
+
+  @Override
+  public String toString() {
+    return "CountWindowPolicy{"
+        + "count=" + count
+        + ", currentCount=" + currentCount
+        + ", manager=" + manager
+        + ", evictionPolicy=" + evictionPolicy
+        + ", started=" + started
+        + '}';
   }
 }
