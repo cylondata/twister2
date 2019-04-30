@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -89,7 +91,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * Maximum size of a tuple written to disk in each file
    */
-  private Long largestTupleSizeRecorded = Long.MIN_VALUE;
+  private AtomicLong largestTupleSizeRecorded = new AtomicLong(Long.MIN_VALUE);
 
   /**
    * Amount of bytes in the memory
@@ -114,7 +116,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private ComparatorWrapper comparatorWrapper;
   private ListComparatorWrapper listComparatorWrapper;
 
-  private Lock lock = new ReentrantLock();
+  private volatile Semaphore fileWriteLock = new Semaphore(1);
 
   /**
    * The id of the task
@@ -139,7 +141,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.maxRecordsInMemory = maxRecsInMemory;
 
     //we can expect atmost this much of unique keys
-    this.recordsInMemory = new List[this.maxRecordsInMemory];
+    this.recordsInMemory = new List[this.maxRecordsInMemory + 1];
 
     this.folder = dir;
     this.operationName = opName;
@@ -157,34 +159,37 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * Add the data to the file
    */
-  public void add(Object key, byte[] data, int length) {
+  public synchronized void add(Object key, byte[] data, int length) {
     if (status == FSStatus.READING) {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
-    lock.lock();
-    try {
-      //get existing index for this key, or generate a new index
-      int thisKeyIndex = this.keyToArrayIndexMap.computeIfAbsent(key,
-          k -> this.currentKeyIndex++);
-      //if this is a new key, we will have to assign a new array list
-      if (this.recordsInMemory[thisKeyIndex] == null) {
-        this.recordsInMemory[thisKeyIndex] = new ArrayList<>();
-      }
-      this.recordsInMemory[thisKeyIndex].add(new Tuple(key, data));
-
-      this.numOfRecordsInMemory++;
-
-      // todo ignoring length for now
-      // this.bytesLength.add(length);
-      this.numOfBytesInMemory += length;
-    } finally {
-      lock.unlock();
+    if (this.keyToArrayIndexMap.size() >= this.maxRecordsInMemory) {
+      this.run();
     }
+    //get existing index for this key, or generate a new index
+    int thisKeyIndex = this.keyToArrayIndexMap.computeIfAbsent(key,
+        k -> this.currentKeyIndex++);
+
+    //if this is a new key, we will have to assign a new array list
+    if (this.recordsInMemory[thisKeyIndex] == null) {
+      this.recordsInMemory[thisKeyIndex] = new ArrayList<>();
+    }
+    this.recordsInMemory[thisKeyIndex].add(new Tuple(key, data));
+
+    this.numOfRecordsInMemory++;
+
+    // todo ignoring length for now
+    // this.bytesLength.add(length);
+    this.numOfBytesInMemory += length;
   }
 
-  public void switchToReading() {
-    lock.lock();
+  public synchronized void switchToReading() {
+    try {
+      fileWriteLock.acquire();
+    } catch (InterruptedException iex) {
+      LOG.log(Level.SEVERE, "Couldn't switch to reading", iex);
+    }
     try {
       LOG.info(String.format("Reading from %d files", noOfFileWritten));
       status = FSStatus.READING;
@@ -194,7 +199,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       //todo can be improved
       objectsInMemory.sort(this.comparatorWrapper);
     } finally {
-      lock.unlock();
+      fileWriteLock.release();
     }
   }
 
@@ -243,41 +248,68 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * This method saves the data to file system
    */
-  public void run() {
-    lock.lock();
+  public synchronized void run() {
+    // it is time to write
+    if (numOfBytesInMemory >= maxBytesToKeepInMemory
+        || numOfRecordsInMemory >= maxRecordsInMemory) {
+
+      // first sort the values
+
+
+//      Arrays.parallelSort(this.recordsInMemory, 0,
+//          this.currentKeyIndex, listComparatorWrapper);
+
+      // save the bytes to disk
+      this.writeToFile();
+//      long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory,
+//          this.currentKeyIndex,
+//          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
+//      largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
+
+      numOfRecordsInMemory = 0;
+      numOfBytesInMemory = 0;
+
+      //making previous things garbage collectible
+      this.recordsInMemory = new List[this.maxRecordsInMemory];
+      this.keyToArrayIndexMap = new HashMap<>();
+
+      currentKeyIndex = 0;
+      bytesLength.clear();
+      noOfFileWritten++;
+    }
+  }
+
+  private void writeToFile() {
     try {
-      // it is time to write
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || numOfRecordsInMemory > maxRecordsInMemory) {
+      this.fileWriteLock.acquire(); // allow 1 parallel write to disk
 
-        // first sort the values
+      //create references to existing data
+      final List<Tuple>[] referenceToRecordsInMemory = this.recordsInMemory;
+      final String fileName = getSaveFileName(noOfFileWritten);
+      final long bytesInMemory = numOfBytesInMemory;
+      final int currentIndex = currentKeyIndex;
 
-        Arrays.parallelSort(this.recordsInMemory, 0,
-            this.currentKeyIndex, listComparatorWrapper);
-        if (this.currentKeyIndex != this.numOfRecordsInMemory) {
-          System.out.println("Sorting " + this.currentKeyIndex + " instead of "
-              + this.numOfRecordsInMemory);
+      ForkJoinPool.commonPool().execute(() -> {
+        try {
+          // do the sort
+          Arrays.sort(referenceToRecordsInMemory, 0,
+              currentIndex, listComparatorWrapper);
+
+          long largestTupleWritten = FileLoader.saveKeyValues(referenceToRecordsInMemory,
+              currentIndex, bytesInMemory, fileName, keyType);
+          //todo get inside set?
+          largestTupleSizeRecorded.set(
+              Math.max(largestTupleSizeRecorded.get(), largestTupleWritten)
+          );
+        } finally {
+          fileWriteLock.release();
         }
-
-        // save the bytes to disk
-        long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory,
-            this.currentKeyIndex,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
-        largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
-
-        numOfRecordsInMemory = 0;
-        numOfBytesInMemory = 0;
-
-        //making previous things garbage collectible
-        this.recordsInMemory = new List[this.maxRecordsInMemory];
-        this.keyToArrayIndexMap = new HashMap<>();
-
-        currentKeyIndex = 0;
-        bytesLength.clear();
-        noOfFileWritten++;
-      }
-    } finally {
-      lock.unlock();
+      });
+    } catch (RejectedExecutionException regex) {
+      LOG.log(Level.SEVERE, "Couldn't submit async write task", regex);
+      fileWriteLock.release();
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Couldn't write to the file", e);
     }
   }
 
@@ -357,7 +389,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     FSIterator() {
       ControlledFileReaderFlags meta = new ControlledFileReaderFlags(
-          Math.max(numOfBytesInMemory, largestTupleSizeRecorded),
+          Math.max(numOfBytesInMemory, largestTupleSizeRecorded.get()),
           keyComparator
       );
       if (!objectsInMemory.isEmpty()) {
@@ -426,6 +458,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         }
       }
     }
+    File rootFolder = new File(this.getSaveFolderName());
+    boolean deleted = rootFolder.delete();
+    if (!deleted) {
+      LOG.warning("Failed to delete the directory");
+    }
     status = FSStatus.DONE;
   }
 
@@ -445,7 +482,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * @return the save file name
    */
   private String getSaveFileName(int filePart) {
-    return folder + "/" + operationName + "/part_" + filePart;
+    return this.getSaveFolderName() + "/part_" + filePart;
   }
 
   /**
