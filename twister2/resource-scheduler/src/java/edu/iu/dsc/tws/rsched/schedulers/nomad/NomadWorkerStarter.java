@@ -12,7 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
-import java.nio.file.Paths;
+//import java.nio.file.Paths;
+//import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,8 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class NomadWorkerStarter {
   private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
-
+  private static int startingPort = 30000;
+  private NomadController controller;
   /**
    * The jobmaster client
    */
@@ -75,6 +77,8 @@ public final class NomadWorkerStarter {
       // load the configuration
       // we are loading the configuration for all the components
       this.config = loadConfigurations(cmd, rank);
+      controller = new NomadController(true);
+      controller.initialize(config);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
@@ -241,11 +245,15 @@ public final class NomadWorkerStarter {
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
-
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
+    //Map<String, Integer> additionalPorts =
+    //    NomadContext.generateAdditionalPorts(config, startingPort);
     int port = ports.get("worker");
     String host = localIps.get("worker");
+    JobMasterAPI.NodeInfo nodeInfo = NomadContext.getNodeInfo(config, host);
     JobMasterAPI.WorkerInfo workerInfo =
-        WorkerInfoUtils.createWorkerInfo(workerID, host, port, null);
+        WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
+            computeResource, ports);
 
     this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);
@@ -304,19 +312,27 @@ public final class NomadWorkerStarter {
     // set logging level
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
-    String persistentJobDir = getTaskDirectory();
+    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
+    String jobName = NomadContext.jobName(cfg);
+
+    NomadPersistentVolume pv =
+        new NomadPersistentVolume(controller.createPersistentJobDirName(jobName), workerID);
+    String persistentJobDir = pv.getJobDir().getAbsolutePath();
+    //LOG.log(Level.INFO, "PERSISTENT LOG DIR is ......: " + persistentJobDir);
+    //String persistentJobDir = getTaskDirectory();
     // if no persistent volume requested, return
     if (persistentJobDir == null) {
       return;
     }
 
-    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
-    if (NomadContext.getLoggingSandbox(cfg)) {
-      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
-    }
-
+//    if (NomadContext.getLoggingSandbox(cfg)) {
+//      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+//    }
+    //nfs/shared/twister2/
+    //String logDir = "/etc/nomad.d/"; //"/nfs/shared/twister2" + "/logs";
     String logDir = persistentJobDir + "/logs";
+
+    LOG.log(Level.INFO, "LOG DIR is ......: " + logDir);
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {

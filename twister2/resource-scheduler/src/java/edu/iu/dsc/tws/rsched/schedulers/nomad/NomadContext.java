@@ -11,12 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class NomadContext extends SchedulerContext {
+
   // these are environment variables set in the shell script
   public static final String WORKING_DIRECTORY_ENV = "WORKING_DIRECTORY_ENV";
   public static final String DOWNLOAD_PACKAGE_ENV = "DOWNLOAD_PACKAGE_ENV";
@@ -37,7 +42,7 @@ public class NomadContext extends SchedulerContext {
   public static final String SHARED_FILE_SYSTEM = "twister2.filesystem.shared";
   // shell script to be executed
   public static final String NOMAD_SHELL_SCRIPT = "twister2.nomad.shell.script";
-  public static final String NOMAD_HERON_SCRIPT_NAME = "nomad.sh";
+  public static final String NOMAD_SCRIPT_NAME = "nomad.sh";
   public static final String NOMAD_URI = "twister2.nomad.scheduler.uri";
 
   public static final String LOGGING_SANDBOX = "twister2.logging.sandbox.logging";
@@ -66,4 +71,18 @@ public class NomadContext extends SchedulerContext {
   public static boolean getLoggingSandbox(Config config) {
     return config.getBooleanValue(LOGGING_SANDBOX, false);
   }
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
+    }
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+    return ports;
+  }
+
 }

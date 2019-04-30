@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
-   * Keep state about the targets
+   * Keep state
    */
   protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
 
@@ -153,20 +153,23 @@ public class TargetPartialReceiver extends TargetReceiver {
 
   @Override
   public boolean sync() {
+    boolean allSyncsSent = true;
     boolean allSynced = true;
-
     for (Map.Entry<Integer, ReceiverState> e : sourceStates.entrySet()) {
-      int source = e.getKey();
       if (e.getValue() == ReceiverState.RECEIVING) {
+        return false;
+      }
+
+      if (e.getValue() != ReceiverState.INIT && e.getValue() != ReceiverState.SYNCED) {
         allSynced = false;
-        continue;
       }
+    }
 
-      // if we have synced no need to go forward
-      if (e.getValue() == ReceiverState.INIT || e.getValue() == ReceiverState.SYNCED) {
-        continue;
-      }
+    if (allSynced) {
+      return true;
+    }
 
+    for (int source : thisSources) {
       Set<Integer> finishedDestPerSource = syncSent.get(source);
       for (int dest : thisDestinations) {
         if (!finishedDestPerSource.contains(dest)) {
@@ -188,7 +191,7 @@ public class TargetPartialReceiver extends TargetReceiver {
               sourceStates.put(source, ReceiverState.SYNCED);
             }
           } else {
-            allSynced = false;
+            allSyncsSent = false;
             // no point in going further
             break;
           }
@@ -196,19 +199,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       }
     }
 
-    if (allSynced && !stateCleared) {
-      for (int t : thisDestinations) {
-        clearTarget(t);
-      }
-
-      for (Map.Entry<Integer, Set<Integer>> e : syncSent.entrySet()) {
-        e.getValue().clear();
-      }
-
-      stateCleared = true;
-    }
-
-    return allSynced;
+    return allSyncsSent;
   }
 
   @Override

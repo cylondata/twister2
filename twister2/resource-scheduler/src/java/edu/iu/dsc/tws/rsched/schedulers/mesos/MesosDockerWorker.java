@@ -73,7 +73,7 @@ public class MesosDockerWorker {
         "/persistent-volume/logs", "worker" + workerId);
     logger.initLogging();
 
-    LOG.info("WORKER ID :::::::::::" + workerId);
+    LOG.info("WORKER ID ..:" + workerId);
     Map<String, Integer> additionalPorts =
         MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
 
