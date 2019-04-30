@@ -127,16 +127,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       }
     }
 
-    if (allSynced && !stateCleared) {
-      for (int t : thisDestinations) {
-        clearTarget(t);
-      }
-      for (Map.Entry<Integer, Set<Integer>> e : syncReceived.entrySet()) {
-        e.getValue().clear();
-      }
-      stateCleared = true;
-    }
-
     return allSynced;
   }
 
