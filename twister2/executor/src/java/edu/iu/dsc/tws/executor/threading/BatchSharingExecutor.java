@@ -82,18 +82,15 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     // initFinishedInstances();
     List<INodeInstance> tasks = new ArrayList<>(nodes.values());
 
-    int curTaskSize = tasks.size();
-
     // prepare the tasks
     for (INodeInstance node : tasks) {
       node.prepare(config);
     }
 
-    doneSignal = new CountDownLatch(curTaskSize);
-
     boolean bindTaskToThread = numThreads >= tasks.size();
 
     if (bindTaskToThread) {
+      doneSignal = new CountDownLatch(tasks.size());
       for (INodeInstance task : tasks) {
         threads.submit(new BatchWorker(task));
       }
@@ -103,7 +100,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       for (int i = 0; i < tasks.size(); i++) {
         taskStatus[i] = new AtomicBoolean(false);
       }
-
+      doneSignal = new CountDownLatch(numThreads);
       for (int i = 0; i < numThreads; i++) {
         threads.submit(new BatchWorker(tasks, taskStatus));
       }
@@ -282,6 +279,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           boolean needsFurther = this.task.execute();
           if (!needsFurther) {
             finishedInstances.put(task.getId(), true);
+            break;
           }
         }
       } else {
