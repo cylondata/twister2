@@ -75,10 +75,10 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   private int workerId;
 
   //Round Robin Allocation Map
-  private Map<Integer, List<InstanceId>> roundRobinAllocation = new HashMap<>();
+  private Map<Integer, List<InstanceId>> roundRobinAllocation;
 
   //Task Attributes Object
-  private TaskAttributes taskAttributes = new TaskAttributes();
+  private TaskAttributes taskAttributes;
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -90,6 +90,8 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     this.instanceRAM = TaskSchedulerContext.taskInstanceRam(config);
     this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(config);
     this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(config);
+    this.roundRobinAllocation = new HashMap<>();
+    this.taskAttributes = new TaskAttributes();
   }
 
   @Override
@@ -108,15 +110,14 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     Map<Integer, List<InstanceId>> containerInstanceMap;
     Map<Integer, ContainerPlan> containerPlans = new LinkedHashMap<>();
 
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
-
-    //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
-    TaskVertexParser taskGraphParser = new TaskVertexParser();
-    List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(dataFlowTaskGraph);
-
     for (int i = 0; i < workerPlan.getNumberOfWorkers(); i++) {
       roundRobinAllocation.put(i, new ArrayList<>());
     }
+
+    //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    TaskVertexParser taskGraphParser = new TaskVertexParser();
+    List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(dataFlowTaskGraph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
