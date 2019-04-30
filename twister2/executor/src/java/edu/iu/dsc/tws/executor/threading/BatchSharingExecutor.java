@@ -217,7 +217,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void run() {
-      while (notStopped && finishedInstances.get() == tasks.size()) {
+      while (notStopped && finishedInstances.get() != tasks.size()) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
@@ -284,7 +284,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           }
         }
       } else {
-        while (notStopped && finishedInstances.get() == tasks.size()) {
+        while (notStopped && finishedInstances.get() != tasks.size()) {
           try {
             int nodeInstanceIndex = this.getNext();
             if (nodeInstanceIndex != -1) {
