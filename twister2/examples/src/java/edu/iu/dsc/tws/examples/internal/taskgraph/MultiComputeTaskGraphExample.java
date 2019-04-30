@@ -39,6 +39,7 @@ import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -85,6 +86,21 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     SecondComputeTask secondComputeTask = new SecondComputeTask();
     ReduceTask reduceTask = new ReduceTask();
 
+    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+
+    String dataDirectory = (String) config.get(DataObjectConstants.DINPUT_DIRECTORY) + workerId;
+    String centroidDirectory = (String) config.get(DataObjectConstants.CINPUT_DIRECTORY) + workerId;
+
+    int dimension = Integer.parseInt((String) config.get(DataObjectConstants.DIMENSIONS));
+    int numFiles = Integer.parseInt((String) config.get(DataObjectConstants.NUMBER_OF_FILES));
+
+    int dsize = Integer.parseInt((String) config.get(DataObjectConstants.DSIZE));
+    int csize = Integer.parseInt((String) config.get(DataObjectConstants.CSIZE));
+
+    LOG.info("Input Values:" + dataDirectory + centroidDirectory + dimension + numFiles);
+
+    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     //Adding the user-defined constraints to the graph
     Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
@@ -270,6 +286,14 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     options.addOption(DataObjectConstants.WORKERS, true, "workers");
     options.addOption(DataObjectConstants.DSIZE, true, "dsize");
 
+    //for testing data locality
+    options.addOption(DataObjectConstants.DIMENSIONS, true, "dim");
+    options.addOption(DataObjectConstants.CSIZE, true, "csize");
+    options.addOption(DataObjectConstants.DINPUT_DIRECTORY, true, "dinput");
+    options.addOption(DataObjectConstants.CINPUT_DIRECTORY, true, "cinput");
+    options.addOption(DataObjectConstants.FILE_SYSTEM, true, "filesys");
+    options.addOption(DataObjectConstants.NUMBER_OF_FILES, true, "nFiles");
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -277,12 +301,25 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     int parallelismValue = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.PARALLELISM_VALUE));
     int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
+    int csize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.CSIZE));
+    int dimension = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DIMENSIONS));
+    int numberOfFiles = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.NUMBER_OF_FILES));
+
+    String filesys = cmd.getOptionValue(DataObjectConstants.FILE_SYSTEM);
+    String dinput = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
+    String cinput = cmd.getOptionValue(DataObjectConstants.CINPUT_DIRECTORY);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
     jobConfig.put(DataObjectConstants.WORKERS, Integer.toString(workers));
     jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    jobConfig.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
+    jobConfig.put(DataObjectConstants.CSIZE, Integer.toString(csize));
+    jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, dinput);
+    jobConfig.put(DataObjectConstants.CINPUT_DIRECTORY, cinput);
+    jobConfig.put(DataObjectConstants.FILE_SYSTEM, filesys);
+    jobConfig.put(DataObjectConstants.NUMBER_OF_FILES, Integer.toString(numberOfFiles));
+    jobConfig.put(DataObjectConstants.DIMENSIONS, Integer.toString(dimension));
     jobConfig.putAll(configurations);
 
     //build the job

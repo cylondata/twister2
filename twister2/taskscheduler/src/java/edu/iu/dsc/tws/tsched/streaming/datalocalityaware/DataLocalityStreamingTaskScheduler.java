@@ -188,29 +188,29 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     int containerCapacity = instancesPerContainer * numberOfContainers;
     int localIndex = 0;
     int containerIndex = 0;
-    int totalTask;
+    int totalInstances;
 
     //Total task instances in the taskgraph
     if (!graph.getNodeConstraints().isEmpty()) {
-      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
+      totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
           graph.getNodeConstraints());
     } else {
-      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+      totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
     }
 
     //Map to hold the allocation of task instances into the containers/workers
     Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
 
     //To check the containers can hold all the parallel task instances.
-    if (containerCapacity >= totalTask) {
+    if (containerCapacity >= totalInstances) {
       LOG.info("Task scheduling could be performed for the container capacity of "
-          + containerCapacity + " and " + totalTask + " task instances");
+          + containerCapacity + " and " + totalInstances + " task instances");
       for (int i = 0; i < numberOfContainers; i++) {
         dataAwareAllocationMap.put(i, new ArrayList<>());
       }
     } else {
       throw new ScheduleException("Task scheduling couldn't be performed for the container "
-          + "capacity of " + containerCapacity + " and " + totalTask + " task instances");
+          + "capacity of " + containerCapacity + " and " + totalInstances + " task instances");
     }
 
     //Parallel Task Map for the complete task graph
@@ -231,12 +231,16 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
+
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
+
           List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
+
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
+
             if (maxContainerTaskObjectSize < instancesPerContainer) {
               dataAwareAllocationMap.get(containerIndex).add(
                   new InstanceId(vertex.getName(), globalTaskIndex, i));
@@ -279,14 +283,17 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     if (inputDataList.size() > 0) {
+
       if (index == 0) {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
             allocatedWorkers);
         dataTransferTimeCalculatorList = findBestWorkerNode(workerDatanodeDistanceMap);
+
       } else {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         Worker worker = workerPlan.getWorker(containerIndex);
+
         if (map.get(containerIndex).size() >= maxTaskPerContainer) {
           allocatedWorkers.add(worker.getId());
         }
@@ -301,15 +308,19 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   private List<String> getInputFilesList() {
     List<String> inputDataList = new ArrayList<>();
     String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
+
     try {
       fileSystem = path.getFileSystem(config);
+
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
         final FileStatus pathFile = fileSystem.getFileStatus(path);
         inputDataList.add(String.valueOf(pathFile.getPath()));
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
           Context.TWISTER2_LOCAL_FILESYSTEM)) {
+
         for (FileStatus file : fileSystem.listFiles(path)) {
           String filename = String.valueOf(file.getPath());
           if (filename != null) {
