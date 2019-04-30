@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
     implements IWindowCompute<T> {
@@ -49,6 +51,8 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private IEvictionPolicy<T> evictionPolicy;
 
+  private IWindow iWindow;
+
   protected BaseWindowedSink() {
   }
 
@@ -56,13 +60,24 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public void prepare(Config cfg, TaskContext ctx) {
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
-    this.evictionPolicy = getEvictionPolicy(this.count, this.duration);
-    this.windowingPolicy = getWindowingPolicy(this.count, this.duration, this.windowManager,
-        this.evictionPolicy);
-    this.windowManager.setEvictionPolicy(this.evictionPolicy);
-    this.windowManager.setWindowingPolicy(this.windowingPolicy);
-    start();
-    LOG.info(String.format("Windowing Policy : %s", this.windowingPolicy.toString()));
+    if (this.count != null || this.duration != null) {
+      this.evictionPolicy = getEvictionPolicy(this.count, this.duration);
+      this.windowingPolicy = getWindowingPolicy(this.count, this.duration, this.windowManager,
+          this.evictionPolicy);
+      this.windowManager.setEvictionPolicy(this.evictionPolicy);
+      this.windowManager.setWindowingPolicy(this.windowingPolicy);
+      start();
+      LOG.info(String.format("Windowing Policy : %s", this.windowingPolicy.toString()));
+    } else {
+      IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
+      this.evictionPolicy = windowStrategy.getEvictionPolicy();
+      this.windowingPolicy = windowStrategy.getWindowingPolicy(this.windowManager,
+          this.evictionPolicy);
+      this.windowManager.setEvictionPolicy(this.evictionPolicy);
+      this.windowManager.setWindowingPolicy(this.windowingPolicy);
+      start();
+    }
+
   }
 
   @Override
@@ -79,7 +94,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private BaseWindowedSink<T> withTumblingCountWindowInit(WindowConfig.Count cnt,
                                                           WindowType winType) {
-
+    // TODO : if a logic has to be handled after calling withTumblingCountWindow use this method
     return this;
   }
 
@@ -88,6 +103,12 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     this.windowType = WindowType.TUMBLING;
     return this;
   }
+
+  public BaseWindowedSink<T> withWindow(IWindow window) {
+    this.iWindow = window;
+    return this;
+  }
+
 
   protected WindowLifeCycleListener<T> newWindowLifeCycleListener() {
     return new WindowLifeCycleListener<T>() {

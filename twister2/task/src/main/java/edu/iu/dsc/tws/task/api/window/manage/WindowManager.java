@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Action;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
@@ -39,21 +38,9 @@ public class WindowManager<T> implements IManager<T> {
 
   private IEvictionPolicy<T> evictionPolicy;
 
-  private WindowingPolicyManager<T> windowingPolicyManager;
-
   private WindowLifeCycleListener<T> windowLifeCycleListener;
 
-  private List<IMessage<T>> windowedObjects;
-
   private List<IMessage<T>> expiredEvents;
-
-  private int windowCountSize = 0;
-
-  private WindowConfig.Duration windowDurationSize;
-
-  private IWindowMessage<T> windowMessage;
-
-  private boolean windowingCompleted = false;
 
   private ReentrantLock lock;
 
@@ -63,14 +50,12 @@ public class WindowManager<T> implements IManager<T> {
     this.windowLifeCycleListener = windowLifeCycleListener;
     this.queue = new ConcurrentLinkedQueue<>();
     this.expiredEvents = new ArrayList<>();
-    this.windowedObjects = new ArrayList<>();
     this.lock = new ReentrantLock();
   }
 
   public WindowManager() {
     this.queue = new ConcurrentLinkedQueue<>();
     this.expiredEvents = new ArrayList<>();
-    this.windowedObjects = new ArrayList<>();
     this.lock = new ReentrantLock();
   }
 
@@ -174,7 +159,6 @@ public class WindowManager<T> implements IManager<T> {
 
   public void compactWindow() {
     //TODO : handle the expired window accumilation with caution
-
   }
 
 }

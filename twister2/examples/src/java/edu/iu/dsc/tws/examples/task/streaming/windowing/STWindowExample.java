@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -38,17 +37,11 @@ import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingTumblingPolicy;
 
 public class STWindowExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STWindowExample.class.getName());
-
-  private WindowType windowType;
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -58,19 +51,9 @@ public class STWindowExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseWindowSource g = new SourceWindowTask(edge);
-    ISink d = new DirectReceiveTask();
 
-    WindowConfig.Count count1 = new WindowConfig.Count(10);
-    WindowType windowType1 = WindowType.TUMBLING;
-    WindowConfig.Count count2 = new WindowConfig.Count(3);
-    WindowType windowType2 = WindowType.TUMBLING;
-    WindowConfig.Duration duration1 = new WindowConfig.Duration(10, TimeUnit.MINUTES);
-    WindowType windowType3 = WindowType.TUMBLING;
-
-    WindowingTumblingPolicy windowingTumblingPolicy = new WindowingTumblingPolicy(count1);
-
-    // Adding multiple policies
-    BaseWindowSink dw = new DirectWindowedReceivingTask().withTumblingCountWindow(5);
+    BaseWindowSink dw = new DirectWindowedReceivingTask()
+        .withTumblingCountWindow(5);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
@@ -83,7 +66,6 @@ public class STWindowExample extends BenchTaskWorker {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
-
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
@@ -99,8 +81,6 @@ public class STWindowExample extends BenchTaskWorker {
 
   protected static class DirectWindowedReceivingTask extends BaseWindowedSink<int[]> {
 
-    private IWindowingPolicy windowingPolicy;
-
     public DirectWindowedReceivingTask() {
     }
 
@@ -115,7 +95,6 @@ public class STWindowExample extends BenchTaskWorker {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
       return windowMessage;
     }
-
 
   }
 }

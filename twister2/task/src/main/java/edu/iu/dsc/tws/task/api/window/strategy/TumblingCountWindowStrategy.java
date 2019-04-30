@@ -14,22 +14,24 @@ package edu.iu.dsc.tws.task.api.window.strategy;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
 
 public final class TumblingCountWindowStrategy<T> extends BaseWindowStrategy<T> {
 
-  protected TumblingCountWindowStrategy(IWindow tumblingCountWindow) {
+  public TumblingCountWindowStrategy(IWindow tumblingCountWindow) {
     super(tumblingCountWindow);
   }
 
   @Override
   public IWindowingPolicy<T> getWindowingPolicy(IManager<T> windowingManager,
                                                 IEvictionPolicy<T> evictionPolicy) {
-    return null;
+    return new CountWindowPolicy<>(window.getSlidingLength(), windowingManager, evictionPolicy);
   }
 
   @Override
   public IEvictionPolicy<T> getEvictionPolicy() {
-    return null;
+    return new CountEvictionPolicy<>(window.getWindowLength());
   }
 }
