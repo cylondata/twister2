@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,7 +33,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
 
   // keep track of finished executions
-  private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
+  //private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
+  private AtomicInteger finishedInstances = new AtomicInteger(0);
 
   // worker id
   private int workerId;
@@ -69,7 +70,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleExecution(nodes);
 
     // we progress until all the channel finish
-    while (finishedInstances.size() != nodes.size()) {
+    while (finishedInstances.get() != nodes.size()) {
       channel.progress();
     }
 
@@ -127,7 +128,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     // clear the finished instances
-    finishedInstances.clear();
+    finishedInstances.set(0);
     cleanUpCalled = true;
   }
 
@@ -158,7 +159,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleWaitFor(nodes);
 
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.size() != nodes.size() || !channel.isComplete()) {
+    while (notStopped && finishedInstances.get() != nodes.size() || !channel.isComplete()) {
       channel.progress();
     }
 
@@ -203,7 +204,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     // clear the finished instances
-    finishedInstances.clear();
+    finishedInstances.set(0);
     cleanUpCalled = true;
   }
 
@@ -216,13 +217,13 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (notStopped && finishedInstances.get() == tasks.size()) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
             boolean complete = nodeInstance.isComplete();
             if (complete) {
-              finishedInstances.put(nodeInstance.getId(), true);
+              finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
             } else {
               // we need to further execute this task
               tasks.offer(nodeInstance);
@@ -278,19 +279,19 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         while (notStopped) {
           boolean needsFurther = this.task.execute();
           if (!needsFurther) {
-            finishedInstances.put(task.getId(), true);
+            finishedInstances.incrementAndGet(); //(task.getId(), true);
             break;
           }
         }
       } else {
-        while (notStopped) {
+        while (notStopped && finishedInstances.get() == tasks.size()) {
           try {
             int nodeInstanceIndex = this.getNext();
             if (nodeInstanceIndex != -1) {
               INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
               boolean needsFurther = nodeInstance.execute();
               if (!needsFurther) {
-                finishedInstances.put(nodeInstance.getId(), true);
+                finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
               } else {
                 //need further execution
                 this.ignoreIndex[nodeInstanceIndex].set(false);
@@ -326,7 +327,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.size() != nodeMap.size()) {
+      while (notStopped && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
       }
 
@@ -341,7 +342,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped && finishedInstances.size() != nodeMap.size()) {
+        if (notStopped && finishedInstances.get() != nodeMap.size()) {
           channel.progress();
           return true;
         }
@@ -353,7 +354,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.size() != nodeMap.size() || !channel.isComplete()) {
+      if (notStopped && finishedInstances.get() != nodeMap.size() || !channel.isComplete()) {
         channel.progress();
         return true;
       }
