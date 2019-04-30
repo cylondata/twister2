@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
-   * Keep state about the targets
+   * Keep state
    */
   protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
 
@@ -154,11 +154,19 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   public boolean sync() {
     boolean allSyncsSent = true;
-
+    boolean allSynced = true;
     for (Map.Entry<Integer, ReceiverState> e : sourceStates.entrySet()) {
-      if (e.getValue() == ReceiverState.RECEIVING || e.getValue() == ReceiverState.INIT) {
+      if (e.getValue() == ReceiverState.RECEIVING) {
         return false;
       }
+
+      if (e.getValue() != ReceiverState.INIT && e.getValue() != ReceiverState.SYNCED) {
+        allSynced = false;
+      }
+    }
+
+    if (allSynced) {
+      return true;
     }
 
     for (int source : thisSources) {
@@ -189,18 +197,6 @@ public class TargetPartialReceiver extends TargetReceiver {
           }
         }
       }
-    }
-
-    if (allSyncsSent && !stateCleared) {
-      for (int t : thisDestinations) {
-        clearTarget(t);
-      }
-
-      for (Map.Entry<Integer, Set<Integer>> e : syncSent.entrySet()) {
-        e.getValue().clear();
-      }
-
-      stateCleared = true;
     }
 
     return allSyncsSent;
