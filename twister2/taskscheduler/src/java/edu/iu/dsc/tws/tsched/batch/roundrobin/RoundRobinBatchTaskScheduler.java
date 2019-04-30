@@ -74,6 +74,12 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   //WorkerId
   private int workerId;
 
+  //Round Robin Allocation Map
+  private Map<Integer, List<InstanceId>> roundRobinAllocation = new HashMap<>();
+
+  //Task Attributes Object
+  private TaskAttributes taskAttributes = new TaskAttributes();
+
   /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
@@ -108,28 +114,16 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     TaskVertexParser taskGraphParser = new TaskVertexParser();
     List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(dataFlowTaskGraph);
 
+    for (int i = 0; i < workerPlan.getNumberOfWorkers(); i++) {
+      roundRobinAllocation.put(i, new ArrayList<>());
+    }
+
     for (Set<Vertex> vertexSet : taskVertexList) {
-
-      //Based on the size of the task vertex list, it will invoke the respective methods
-      /*if (vertexSet.size() > 1) {
-        LOG.info("I am going inside if:" + vertexSet.size());
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(vertexSet,
-            workerPlan.getNumberOfWorkers());
-      } else {
-        LOG.info("I am going inside else:" + vertexSet.size());
-        Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(vertex,
-            workerPlan.getNumberOfWorkers());
-      }*/
-
-
       if (vertexSet.size() > 1) {
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertexSet,
-            workerPlan.getNumberOfWorkers());
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertexSet);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertex,
-            workerPlan.getNumberOfWorkers());
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertex);
       }
 
       TaskInstanceMapCalculation instanceMapCalculation =
@@ -219,117 +213,87 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     return new TaskSchedulePlan(0, new HashSet<>(containerPlans.values()));
   }
 
-  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Vertex vertex, int numberOfContainers)
+  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(DataFlowTaskGraph graph,
+                                                                            Vertex vertex)
       throws ScheduleException {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
-    }
-
-    Map<String, Integer> parallelTaskMap = null;
+    Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
       if (!graph.getNodeConstraints().isEmpty()) {
         parallelTaskMap = taskAttributes.getParallelTaskMap(vertex, graph.getNodeConstraints());
       } else {
         parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
       }
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        //int numberOfInstances = e.getValue();
-        int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-
-        /*if (!graph.getGraphConstraints().isEmpty()) {
-          maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-        } else {
-          maxTaskInstances = e.getValue();
-        }*/
-
-        for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
+      roundRobinAllocation = attributeBasedAllocation(parallelTaskMap, graph);
     } else {
       parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
-        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
+      roundRobinAllocation = nonAttributeBasedAllocation(parallelTaskMap);
     }
-    return roundrobinAllocation;
+    return roundRobinAllocation;
   }
 
 
-  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Set<Vertex> taskVertexSet, int numberOfContainers)
+  private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(DataFlowTaskGraph graph,
+                                                                            Set<Vertex> vertexSet)
       throws ScheduleException {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-    for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
-    }
-
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
-    orderedTaskSet.addAll(taskVertexSet);
+    orderedTaskSet.addAll(vertexSet);
 
     Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
       if (!graph.getNodeConstraints().isEmpty()) {
-        parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet,
+        parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet,
             graph.getNodeConstraints());
       } else {
-        parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
+        parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet);
       }
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        //int numberOfInstances = e.getValue();
-        int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-        for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
+      roundRobinAllocation = attributeBasedAllocation(parallelTaskMap, graph);
+
     } else {
-      parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
-      int containerIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
-        for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
-          ++containerIndex;
-          if (containerIndex >= roundrobinAllocation.size()) {
-            containerIndex = 0;
-          }
-        }
-        gtaskId++;
-      }
+      parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet);
+      roundRobinAllocation = nonAttributeBasedAllocation(parallelTaskMap);
     }
-    return roundrobinAllocation;
+    return roundRobinAllocation;
   }
+
+  private Map<Integer, List<InstanceId>> attributeBasedAllocation(Map<String, Integer>
+                                                                      parallelTaskMap,
+                                                                  DataFlowTaskGraph graph) {
+    int containerIndex = 0;
+    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+      for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
+        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        ++containerIndex;
+        if (containerIndex >= roundRobinAllocation.size()) {
+          containerIndex = 0;
+        }
+      }
+      gtaskId++;
+    }
+    return roundRobinAllocation;
+  }
+
+  private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(Map<String, Integer>
+                                                                         parallelTaskMap) {
+    int containerIndex = 0;
+    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+      String task = e.getKey();
+      int numberOfInstances = e.getValue();
+      for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        ++containerIndex;
+        if (containerIndex >= roundRobinAllocation.size()) {
+          containerIndex = 0;
+        }
+      }
+      gtaskId++;
+    }
+    return roundRobinAllocation;
+  }
+
 
   /**
    * This method retrieves the parallel task map and the total number of task instances for the
@@ -339,9 +303,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
       Vertex taskVertex, int numberOfContainers) throws ScheduleException {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new HashMap<>();
-
     for (int i = 0; i < numberOfContainers; i++) {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
@@ -369,17 +331,15 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
    * for the task in a round robin fashion.
    */
   private Map<Integer, List<InstanceId>> roundRobinBatchSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers) throws ScheduleException {
+      Set<Vertex> vertexSet, int numberOfContainers) throws ScheduleException {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
     Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-
     for (int i = 0; i < numberOfContainers; i++) {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
 
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
-    orderedTaskSet.addAll(taskVertexSet);
+    orderedTaskSet.addAll(vertexSet);
     Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(orderedTaskSet);
     int containerIndex = 0;
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
