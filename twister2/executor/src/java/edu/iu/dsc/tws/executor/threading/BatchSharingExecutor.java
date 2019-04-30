@@ -11,12 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,7 +33,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());
 
   // keep track of finished executions
-  private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
+  //private Map<Integer, Boolean> finishedInstances = new ConcurrentHashMap<>();
+  private AtomicInteger finishedInstances = new AtomicInteger(0);
 
   // worker id
   private int workerId;
@@ -67,7 +70,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleExecution(nodes);
 
     // we progress until all the channel finish
-    while (finishedInstances.size() != nodes.size()) {
+    while (finishedInstances.get() != nodes.size()) {
       channel.progress();
     }
 
@@ -78,23 +81,30 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
     // initialize finished
     // initFinishedInstances();
-    BlockingQueue<INodeInstance> tasks;
-
-    tasks = new ArrayBlockingQueue<>(nodes.size() * 2);
-    tasks.addAll(nodes.values());
-
-    int curTaskSize = tasks.size();
-    BatchWorker[] workers = new BatchWorker[curTaskSize];
+    List<INodeInstance> tasks = new ArrayList<>(nodes.values());
 
     // prepare the tasks
     for (INodeInstance node : tasks) {
       node.prepare(config);
     }
 
-    doneSignal = new CountDownLatch(curTaskSize);
-    for (int i = 0; i < curTaskSize; i++) {
-      workers[i] = new BatchWorker(tasks);
-      threads.submit(workers[i]);
+    boolean bindTaskToThread = numThreads >= tasks.size();
+
+    if (bindTaskToThread) {
+      doneSignal = new CountDownLatch(tasks.size());
+      for (INodeInstance task : tasks) {
+        threads.submit(new BatchWorker(task));
+      }
+    } else {
+
+      final AtomicBoolean[] taskStatus = new AtomicBoolean[tasks.size()];
+      for (int i = 0; i < tasks.size(); i++) {
+        taskStatus[i] = new AtomicBoolean(false);
+      }
+      doneSignal = new CountDownLatch(numThreads);
+      for (int i = 0; i < numThreads; i++) {
+        threads.submit(new BatchWorker(tasks, taskStatus));
+      }
     }
   }
 
@@ -118,7 +128,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     // clear the finished instances
-    finishedInstances.clear();
+    finishedInstances.set(0);
     cleanUpCalled = true;
   }
 
@@ -149,7 +159,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleWaitFor(nodes);
 
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.size() != nodes.size() || !channel.isComplete()) {
+    while (notStopped && finishedInstances.get() != nodes.size() || !channel.isComplete()) {
       channel.progress();
     }
 
@@ -194,7 +204,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
 
     // clear the finished instances
-    finishedInstances.clear();
+    finishedInstances.set(0);
     cleanUpCalled = true;
   }
 
@@ -213,7 +223,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           if (nodeInstance != null) {
             boolean complete = nodeInstance.isComplete();
             if (complete) {
-              finishedInstances.put(nodeInstance.getId(), true);
+              finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
             } else {
               // we need to further execute this task
               tasks.offer(nodeInstance);
@@ -231,31 +241,66 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   protected class BatchWorker implements Runnable {
-    private BlockingQueue<INodeInstance> tasks;
 
-    public BatchWorker(BlockingQueue<INodeInstance> tasks) {
+    //round robin mode
+    private List<INodeInstance> tasks;
+    private AtomicBoolean[] ignoreIndex;
+    private int lastIndex;
+
+    //dedicated mode
+    private boolean bindTaskToThread;
+    private INodeInstance task;
+
+    public BatchWorker(List<INodeInstance> tasks, AtomicBoolean[] ignoreIndex) {
       this.tasks = tasks;
+      this.ignoreIndex = ignoreIndex;
+    }
+
+    public BatchWorker(INodeInstance task) {
+      this.bindTaskToThread = true;
+      this.task = task;
+    }
+
+    private int getNext() {
+      if (this.lastIndex == tasks.size()) {
+        this.lastIndex = 0;
+      }
+
+      if (ignoreIndex[this.lastIndex].compareAndSet(false, true)) {
+        return this.lastIndex++;
+      }
+      this.lastIndex++;
+      return -1;
     }
 
     @Override
     public void run() {
-      while (notStopped) {
-        try {
-          INodeInstance nodeInstance = tasks.poll();
-          if (nodeInstance != null) {
-            boolean needsFurther = nodeInstance.execute();
-            if (!needsFurther) {
-              finishedInstances.put(nodeInstance.getId(), true);
-            } else {
-              // we need to further execute this task
-              tasks.offer(nodeInstance);
-            }
-          } else {
+      if (this.bindTaskToThread) {
+        while (notStopped) {
+          boolean needsFurther = this.task.execute();
+          if (!needsFurther) {
+            finishedInstances.incrementAndGet(); //(task.getId(), true);
             break;
           }
-        } catch (Throwable t) {
-          LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
-          throw new RuntimeException("Error occurred in execution of task", t);
+        }
+      } else {
+        while (notStopped && finishedInstances.get() != tasks.size()) {
+          try {
+            int nodeInstanceIndex = this.getNext();
+            if (nodeInstanceIndex != -1) {
+              INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
+              boolean needsFurther = nodeInstance.execute();
+              if (!needsFurther) {
+                finishedInstances.incrementAndGet(); //(nodeInstance.getId(), true);
+              } else {
+                //need further execution
+                this.ignoreIndex[nodeInstanceIndex].set(false);
+              }
+            }
+          } catch (Throwable t) {
+            LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
+            throw new RuntimeException("Error occurred in execution of task", t);
+          }
         }
       }
       doneSignal.countDown();
@@ -282,7 +327,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.size() != nodeMap.size()) {
+      while (notStopped && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
       }
 
@@ -297,7 +342,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped && finishedInstances.size() != nodeMap.size()) {
+        if (notStopped && finishedInstances.get() != nodeMap.size()) {
           channel.progress();
           return true;
         }
@@ -309,7 +354,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.size() != nodeMap.size() || !channel.isComplete()) {
+      if (notStopped && finishedInstances.get() != nodeMap.size() || !channel.isComplete()) {
         channel.progress();
         return true;
       }
