@@ -211,9 +211,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       } else {
         totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
       }
+
       if (!graph.getNodeConstraints().isEmpty()) {
-        /*int instancesPerWorker = taskAttributes.getInstancesPerWorker(
-            vertex, graph.getNodeConstraints().get(vertex.getName()));*/
         int instancesPerWorker = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
         int maxTaskInstancesPerContainer = 0;
         int containerIndex;

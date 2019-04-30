@@ -316,10 +316,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
                                                                   DataFlowTaskGraph graph,
                                                                   WorkerPlan workerPlan,
                                                                   Set<Vertex> vertexSet) {
-    int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
     int cIdx = 0;
     int containerIndex;
-
     for (Map.Entry<String, Integer> aTaskEntrySet : parallelTaskMap.entrySet()) {
 
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
@@ -357,9 +355,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     int cIdx = 0;
     int containerIndex;
 
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
+    for (Map.Entry<String, Integer> aTaskEntrySet : parallelTaskMap.entrySet()) {
 
-    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
       Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
       String taskName = aTaskEntrySet.getKey();
 
@@ -379,8 +376,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
           int maxContainerTaskObjectSize = 0;
           if (maxContainerTaskObjectSize < instancesPerContainer) {
             containerIndex = Integer.parseInt(cal.get(i).getNodeName());
-            dataLocalityAwareAllocation.get(containerIndex).add(
-                new InstanceId(vertex.getName(), gTaskId, i));
+            dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
+                vertex.getName(), gTaskId, i));
             ++maxContainerTaskObjectSize;
           }
         }
@@ -427,6 +424,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
 
+  //TODO: This method will be removed once the final testing is done.
   /**
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
@@ -471,6 +469,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     return dataLocalityAwareAllocation;
   }
 
+  //TODO: This method will be removed once the final testing is done.
   /**
    * This method generates the container and task instance map which is based on the task graph,
    * its configuration, and the allocated worker plan.

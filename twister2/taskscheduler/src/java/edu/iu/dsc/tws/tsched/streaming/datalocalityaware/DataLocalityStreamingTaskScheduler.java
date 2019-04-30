@@ -281,9 +281,9 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     datanodes. Else, if the index values is greater than 0, check the container has reached
     the maximum task instances per container. If it is yes, then calculationList the container to
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
+
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     if (inputDataList.size() > 0) {
-
       if (index == 0) {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
@@ -306,12 +306,16 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   }
 
   private List<String> getInputFilesList() {
+
     List<String> inputDataList = new ArrayList<>();
-    String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+    String directory = null;
+
+    if (config.get(DataObjectConstants.DINPUT_DIRECTORY) != null) {
+      directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+    }
 
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
-
     try {
       fileSystem = path.getFileSystem(config);
 
@@ -320,7 +324,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         inputDataList.add(String.valueOf(pathFile.getPath()));
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
           Context.TWISTER2_LOCAL_FILESYSTEM)) {
-
         for (FileStatus file : fileSystem.listFiles(path)) {
           String filename = String.valueOf(file.getPath());
           if (filename != null) {
@@ -343,7 +346,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       List<String> datanodesList, WorkerPlan workers, int index, List<Integer> assignedWorkers) {
 
     Map<String, List<DataTransferTimeCalculator>> workerDistanceMap = new HashMap<>();
-    //distance between datanode and worker node
     double calculateDistance = 0.0;
     for (String nodesList : datanodesList) {
       GetDistanceCalculation getAllocation = new GetDistanceCalculation(
