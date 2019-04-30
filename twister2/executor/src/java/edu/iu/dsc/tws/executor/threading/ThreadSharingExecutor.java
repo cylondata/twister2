@@ -44,7 +44,7 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
     this.threads = Executors.newFixedThreadPool(numThreads,
-        new ThreadFactoryBuilder().setNameFormat("executor-%d").build());
+        new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
   }
 
   public boolean execute(ExecutionPlan plan) {

@@ -10,22 +10,22 @@
   "args": [
     {
       "id": "size",
-      "name": "Data Size",
+      "name": "Total Data Size",
       "optional": false,
       "values": {
         "type": "steps",
         "from": 1,
-        "to": 128,
-        "step": 4
+        "to": 1024,
+        "step": 10
       }
     },
     {
-      "id": "keyRange",
-      "name": "Range of Keys",
+      "id": "keySize",
+      "name": "Size of Key",
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 1000000
+        "value": 10
       }
     },
     {
@@ -34,7 +34,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 100
+        "value": 90
       }
     },
     {
@@ -43,7 +43,16 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 128
+        "value": 64
+      }
+    },
+    {
+      "id": "sinks",
+      "name": "No of Sinks",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 64
       }
     },
     {
@@ -52,13 +61,14 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 128
+        "value": 64
       }
     },
     {
       "id": "instanceCPUs",
       "name": "cpus",
       "optional": false,
+      "omitInCSV": true,
       "values": {
         "type": "fixed",
         "value": 1
@@ -68,9 +78,10 @@
       "id": "instanceMemory",
       "name": "Memory",
       "optional": false,
+      "omitInCSV": true,
       "values": {
         "type": "fixed",
-        "value": 1
+        "value": 10240
       }
     }
   ]
