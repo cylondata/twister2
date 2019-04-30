@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api.window.policy.trigger.count;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
@@ -19,6 +20,8 @@ import edu.iu.dsc.tws.task.api.window.manage.IManager;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
+
+  private static final Logger LOG = Logger.getLogger(CountWindowPolicy.class.getName());
 
   private final int count;
   private final AtomicInteger currentCount;

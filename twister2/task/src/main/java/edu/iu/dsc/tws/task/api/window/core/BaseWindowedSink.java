@@ -14,18 +14,18 @@ package edu.iu.dsc.tws.task.api.window.core;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
-import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
@@ -50,65 +50,31 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   private IEvictionPolicy<T> evictionPolicy;
 
   protected BaseWindowedSink() {
-    prepare();
   }
 
-  public BaseWindowedSink(IWindowingPolicy win) throws InValidWindowingPolicy {
-    this.windowingPolicy = win;
-    this.windowManager = new WindowManager(win);
-    this.windowLifeCycleListener = newWindowLifeCycleListener();
-  }
-
-  public void prepare() {
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
-    this.evictionPolicy = getEvictionPolicy(count, duration);
-    this.windowingPolicy = getWindowingPolicy(count, duration, this.windowManager,
+    this.evictionPolicy = getEvictionPolicy(this.count, this.duration);
+    this.windowingPolicy = getWindowingPolicy(this.count, this.duration, this.windowManager,
         this.evictionPolicy);
-
+    this.windowManager.setEvictionPolicy(this.evictionPolicy);
+    this.windowManager.setWindowingPolicy(this.windowingPolicy);
+    start();
+    LOG.info(String.format("Windowing Policy : %s", this.windowingPolicy.toString()));
   }
 
   @Override
   public boolean execute(IMessage<T> message) {
     this.windowManager.add(message);
-    if (this.windowManager.isDone()) {
-      execute(this.windowManager.getWindowMessage());
-      this.windowManager.clearWindow();
-    }
-    return false;
-  }
-
-  private BaseWindowedSink<T> withWindowCountInit(WindowType winType, WindowConfig.Count cnt) {
-    WindowingPolicy win = new WindowingPolicy(winType, cnt);
-    this.windowManager.addWindowingPolicy(win);
-    return this;
-  }
-
-  private BaseWindowedSink<T> withWindowDurationInit(WindowType winType,
-                                                     WindowConfig.Duration dtn) {
-    WindowingPolicy win = new WindowingPolicy(winType, dtn);
-    this.windowManager.addWindowingPolicy(win);
-    return this;
-  }
-
-  public BaseWindowedSink<T> withWindowCount(WindowType winType, WindowConfig.Count cnt) {
-    return withWindowCountInit(winType, cnt);
-  }
-
-  public BaseWindowedSink<T> withWindowDuration(WindowType winType,
-                                                WindowConfig.Duration dtn) {
-    return withWindowDurationInit(winType, dtn);
-  }
-
-  public BaseWindowedSink<T> withWindowingPolicy(IWindowingPolicy iWindowingPolicy) {
-    this.windowManager.addWindowingPolicy(iWindowingPolicy);
-    return this;
+    return true;
   }
 
   public BaseWindowedSink<T> withTumblingCountWindow(int tumblingCount) {
     this.count = new WindowConfig.Count(tumblingCount);
     this.windowType = WindowType.TUMBLING;
-    return withTumblingCountWindowInit(this.count, this.windowType);
+    return this;
   }
 
   private BaseWindowedSink<T> withTumblingCountWindowInit(WindowConfig.Count cnt,
@@ -156,6 +122,10 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     } else {
       return null;
     }
+  }
+
+  public void start() {
+    this.windowingPolicy.start();
   }
 
 }

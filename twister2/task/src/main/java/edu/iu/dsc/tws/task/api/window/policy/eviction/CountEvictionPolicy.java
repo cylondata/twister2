@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api.window.policy.eviction;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionContext;
@@ -19,6 +20,8 @@ import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.constant.Action;
 
 public class CountEvictionPolicy<T> implements IEvictionPolicy<T> {
+
+  private static final Logger LOG = Logger.getLogger(CountEvictionPolicy.class.getName());
 
   protected final int threshold;
   protected final AtomicLong currentCount;

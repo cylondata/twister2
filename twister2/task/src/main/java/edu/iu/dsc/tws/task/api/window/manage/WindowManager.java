@@ -27,9 +27,7 @@ import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.Action;
-import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingTumblingPolicy;
 
 public class WindowManager<T> implements IManager<T> {
 
@@ -76,13 +74,6 @@ public class WindowManager<T> implements IManager<T> {
     this.lock = new ReentrantLock();
   }
 
-  public WindowManager(IWindowingPolicy windowingPolicy) throws InValidWindowingPolicy {
-    this.windowingPolicy = windowingPolicy;
-    this.windowingPolicy = initializeWindowingPolicy();
-    this.queue = new ConcurrentLinkedQueue<>();
-    this.lock = new ReentrantLock();
-  }
-
   public IWindowingPolicy<T> getWindowingPolicy() {
     return windowingPolicy;
   }
@@ -97,39 +88,6 @@ public class WindowManager<T> implements IManager<T> {
 
   public void setEvictionPolicy(IEvictionPolicy<T> evictionPolicy) {
     this.evictionPolicy = evictionPolicy;
-  }
-
-  /**
-   * Calls when a single policy is passed via the constructor
-   * When multiple windowing policies are applied, they need to be handled sequentially
-   */
-  @Override
-  public IWindowingPolicy initializeWindowingPolicy() throws InValidWindowingPolicy {
-    if (windowingPolicy.validate()) {
-      this.addWindowingPolicy(this.windowingPolicy);
-      if (windowingPolicy instanceof WindowingTumblingPolicy) {
-        windowingPolicyManager = new WindowingTumblingPolicyManager<>();
-        windowingPolicyManager.initialize(windowingPolicy);
-      }
-    } else {
-      throw new InValidWindowingPolicy(String.format("Invalid Windowing Policy Included : %s ",
-          windowingPolicy.whyInvalid()));
-    }
-    return this.windowingPolicy;
-  }
-
-
-  /**
-   * Adding windowing policy to a map.
-   * Each added policy is added to the windowing policy map with a unique id for each policy.
-   *
-   * @param win WindowingPolicy
-   */
-  @Override
-  public IWindowingPolicy addWindowingPolicy(IWindowingPolicy win) {
-    this.windowingPolicy = win;
-    this.windowedObjects = new ArrayList<>();
-    return win;
   }
 
   @Override
@@ -148,6 +106,7 @@ public class WindowManager<T> implements IManager<T> {
     } else {
       LOG.info(String.format("Event With WaterMark ts %f ", (double) windowEvent.getTimeStamp()));
     }
+    track(windowEvent);
   }
 
 
@@ -167,6 +126,7 @@ public class WindowManager<T> implements IManager<T> {
       IWindowMessage<T> iWindowMessage = bundleWindowMessage(windowEvents);
       this.windowLifeCycleListener.onActivation(iWindowMessage, null, null);
     }
+    this.windowingPolicy.reset();
   }
 
   public List<Event<T>> scanEvents(boolean fullScan) {
@@ -212,67 +172,9 @@ public class WindowManager<T> implements IManager<T> {
     this.windowingPolicy.track(windowEvent);
   }
 
+  public void compactWindow() {
+    //TODO : handle the expired window accumilation with caution
 
-  public IWindowMessage<T> getWindowMessage() {
-    return this.windowMessage;
   }
 
-  /**
-   * This method process the input message from the task instance and packages the policy
-   * TODO : Handle expired messages : expire visibility (how many previous windows [user decides])
-   *
-   * @param message Input message from SinkStreamingWindowInstance
-   */
-//  @Override
-//  public boolean execute(IMessage<T> message) {
-//    boolean status = false;
-//    if (progress(this.windowedObjects)) {
-//      windowingPolicyManager.execute(message);
-//      this.windowedObjects = windowingPolicyManager.getWindows();
-//      status = true;
-//    }
-//    return status;
-//  }
-
-  /**
-   * Clear the windowed message list per windowing policy once a staged windowing is done
-   */
-  @Override
-  public void clearWindow() {
-    this.windowingCompleted = false;
-    this.windowedObjects.clear();
-    windowingPolicyManager.clearWindow();
-  }
-
-  /**
-   * This method is used to decide window packaging is progressed or not
-   */
-  @Override
-  public boolean progress(List<IMessage<T>> window) {
-    boolean progress = true;
-    //windowCountSize = windowingPolicy.getCount().value;
-    //windowDurationSize = windowingPolicy.getDuration();
-    if (window.size() == windowCountSize && windowCountSize > 0) {
-      progress = false;
-    }
-    return progress;
-  }
-
-
-  /**
-   * This method is used to check whether the per stage windowing is completed or not
-   */
-  @Override
-  public boolean isDone() {
-    //windowCountSize = windowingPolicy.getCount().value;
-    //windowDurationSize = windowingPolicy.getDuration();
-    if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
-      //TODO : handle the expired tuples
-      this.windowMessage = new WindowMessageImpl(this.windowedObjects, null);
-      this.windowingCompleted = true;
-    } else {
-      this.windowingCompleted = false;
-    }
-    return this.windowingCompleted;
-  }
 }

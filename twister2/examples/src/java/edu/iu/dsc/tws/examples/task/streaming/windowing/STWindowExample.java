@@ -41,7 +41,6 @@ import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
-import edu.iu.dsc.tws.task.api.window.exceptions.InValidWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingTumblingPolicy;
 
@@ -71,7 +70,7 @@ public class STWindowExample extends BenchTaskWorker {
     WindowingTumblingPolicy windowingTumblingPolicy = new WindowingTumblingPolicy(count1);
 
     // Adding multiple policies
-    BaseWindowSink dw = new DirectWindowedReceivingTask();
+    BaseWindowSink dw = new DirectWindowedReceivingTask().withTumblingCountWindow(5);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
@@ -103,11 +102,6 @@ public class STWindowExample extends BenchTaskWorker {
     private IWindowingPolicy windowingPolicy;
 
     public DirectWindowedReceivingTask() {
-    }
-
-    public DirectWindowedReceivingTask(IWindowingPolicy win) throws InValidWindowingPolicy {
-      super(win);
-      this.windowingPolicy = win;
     }
 
     /**
