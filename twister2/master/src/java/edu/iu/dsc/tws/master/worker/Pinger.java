@@ -79,8 +79,6 @@ public class Pinger implements MessageHandler {
 
     if (requestID == null) {
       LOG.severe("When sending Ping message, the requestID returned null.");
-    } else {
-      LOG.fine("Ping request message sent to the master: \n" + ping);
     }
   }
 
@@ -88,7 +86,6 @@ public class Pinger implements MessageHandler {
   public void onMessage(RequestID id, int workerId, Message message) {
     if (message instanceof JobMasterAPI.Ping) {
       this.pendingResponse = false;
-      LOG.fine("Ping Response message received from the master: \n" + message);
 
       if (!requestID.equals(id)) {
         LOG.severe("Ping Response message requestID does not match.");

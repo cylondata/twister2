@@ -182,7 +182,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   protected abstract void merge(int dest, Queue<Object> dests);
 
   @Override
-  public synchronized boolean progress() {
+  public boolean progress() {
     boolean needsFurtherProgress = false;
 
     lock.lock();

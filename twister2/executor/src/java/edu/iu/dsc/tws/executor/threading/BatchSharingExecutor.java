@@ -159,7 +159,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     scheduleWaitFor(nodes);
 
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size() || !channel.isComplete()) {
+    while (notStopped && finishedInstances.get() != nodes.size()) {
       channel.progress();
     }
 
@@ -342,19 +342,20 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped && finishedInstances.get() != nodeMap.size()) {
+        if (finishedInstances.get() != nodeMap.size()) {
           channel.progress();
           return true;
         }
         // clean up
         cleanUp(executionPlan, nodeMap);
+        cleanUpCalled = false;
         // if we finish, lets schedule
         scheduleWaitFor(nodeMap);
         taskExecution = false;
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.get() != nodeMap.size() || !channel.isComplete()) {
+      if (notStopped && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         return true;
       }
