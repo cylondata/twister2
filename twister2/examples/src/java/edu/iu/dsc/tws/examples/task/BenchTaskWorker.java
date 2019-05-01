@@ -93,7 +93,8 @@ public abstract class BenchTaskWorker extends TaskWorker {
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
 
-    while (execution.progress()) {
+    while (execution.progress()
+        && (sendersInProgress.get() != 0 || receiversInProgress.get() != 0)) {
       //do nothing
       //LOG.info(sendersInProgress.get() + "," + receiversInProgress.get());
     }
