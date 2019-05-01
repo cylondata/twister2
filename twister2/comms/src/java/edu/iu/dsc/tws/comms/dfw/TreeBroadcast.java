@@ -144,6 +144,8 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     if (finalReceiver != null) {
       finalReceiver.clean();
     }
+    pendingFinishSources.clear();
+    finishedSources.clear();
   }
 
   @Override
