@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.TumblingCountWindow;
+import edu.iu.dsc.tws.task.api.window.config.TumblingDurationWindow;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 
 public class STWindowCustomExample extends BenchTaskWorker {
@@ -37,8 +38,10 @@ public class STWindowCustomExample extends BenchTaskWorker {
 
     BaseWindowedSink dw = new DirectCustomWindowReceiver()
         .withWindow(TumblingCountWindow.of(5));
+    BaseWindowedSink dwDuration = new DirectCustomWindowReceiver()
+        .withWindow(TumblingDurationWindow.of(2));
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, dwDuration, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;

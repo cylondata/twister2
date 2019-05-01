@@ -13,21 +13,20 @@ package edu.iu.dsc.tws.task.api.window.config;
 
 import edu.iu.dsc.tws.task.api.window.api.BaseWindow;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
-import edu.iu.dsc.tws.task.api.window.strategy.count.TumblingCountWindowStrategy;
+import edu.iu.dsc.tws.task.api.window.strategy.duration.TumblingDurationWindowStrategy;
 
-public final class TumblingCountWindow extends BaseWindow {
+public class TumblingDurationWindow extends BaseWindow {
 
-  public TumblingCountWindow(int windowLength) {
+  public TumblingDurationWindow(int windowLength) {
     super(windowLength, windowLength);
   }
 
   @Override
   public <T> IWindowStrategy<T> getWindowStrategy() {
-    return new TumblingCountWindowStrategy<>(this);
+    return new TumblingDurationWindowStrategy<>(this);
   }
 
-  public static TumblingCountWindow of(int windowLength) {
-    return new TumblingCountWindow(windowLength);
+  public static TumblingDurationWindow of(int windowLength) {
+    return new TumblingDurationWindow(windowLength);
   }
-
 }
