@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.api.window.strategy;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
-import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
 

@@ -96,7 +96,7 @@ public class WindowManager<T> implements IManager<T> {
 
 
   @Override
-  public void onEvent(Event<T> event) {
+  public void onEvent() {
     List<Event<T>> windowEvents = null;
     List<IMessage<T>> expired = null;
     try {
@@ -143,7 +143,7 @@ public class WindowManager<T> implements IManager<T> {
   public IWindowMessage<T> bundleWindowMessage(List<Event<T>> events) {
     WindowMessageImpl winMessage = null;
     List<IMessage<T>> messages = new ArrayList<>();
-    for (Event<T> event: events) {
+    for (Event<T> event : events) {
       IMessage<T> m = event.get();
       messages.add(m);
     }
@@ -159,6 +159,12 @@ public class WindowManager<T> implements IManager<T> {
 
   public void compactWindow() {
     //TODO : handle the expired window accumilation with caution
+  }
+
+  public void shutdown() {
+    if (windowingPolicy != null) {
+      windowingPolicy.shutdown();
+    }
   }
 
 }

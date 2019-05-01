@@ -51,7 +51,7 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
   public void track(Event<T> event) {
     if (started && !event.isWatermark()) {
       if (currentCount.incrementAndGet() >= count) {
-        this.manager.onEvent(event);
+        this.manager.onEvent();
       }
     }
   }

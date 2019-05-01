@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
@@ -25,13 +26,15 @@ import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.eviction.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
-    implements IWindowCompute<T> {
+    implements IWindowCompute<T>, Closable {
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
@@ -132,7 +135,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     if (slidingIntervalCount != null) {
       return new CountWindowPolicy<>(slidingIntervalCount.value, manager, policy);
     } else {
-      return null;
+      return new DurationWindowPolicy<>(slidingIntervalDuration.value, manager, policy);
     }
   }
 
@@ -141,7 +144,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     if (windowLengthCount != null) {
       return new CountEvictionPolicy<>(windowLengthCount.value);
     } else {
-      return null;
+      return new DurationEvictionPolicy<>(windowLengthDuration.value);
     }
   }
 
@@ -149,4 +152,13 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     this.windowingPolicy.start();
   }
 
+  @Override
+  public void close() {
+    this.windowManager.shutdown();
+  }
+
+  @Override
+  public void refresh() {
+
+  }
 }

@@ -9,16 +9,11 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.manage;
+package edu.iu.dsc.tws.task.api.window.exceptions;
 
-import java.io.Serializable;
+public class FailureException extends Exception {
 
-import edu.iu.dsc.tws.task.api.IMessage;
-
-public interface IManager<T> extends Serializable {
-
-  void add(IMessage<T> message);
-
-  void onEvent();
-
+  public FailureException(String message) {
+    super(message);
+  }
 }

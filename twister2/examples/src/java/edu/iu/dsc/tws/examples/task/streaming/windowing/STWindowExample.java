@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -54,9 +55,12 @@ public class STWindowExample extends BenchTaskWorker {
 
     BaseWindowSink dw = new DirectWindowedReceivingTask()
         .withTumblingCountWindow(5);
+    BaseWindowSink dwDuration = new DirectWindowedReceivingTask()
+        .withTumblingDurationWindow(2, TimeUnit.MILLISECONDS);
+
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, dwDuration, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;

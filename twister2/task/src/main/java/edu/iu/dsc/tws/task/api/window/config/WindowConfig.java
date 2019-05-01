@@ -38,7 +38,7 @@ public class WindowConfig implements Serializable {
   public static class Duration implements Serializable {
 
     private static final long serialVersionUID = -8082429717934376825L;
-    private final int value;
+    public final int value;
 
     public Duration(int value, TimeUnit timeUnit) {
       this.value = (int) timeUnit.toMillis(value);
