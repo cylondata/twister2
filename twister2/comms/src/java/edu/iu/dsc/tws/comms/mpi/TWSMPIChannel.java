@@ -261,7 +261,8 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    for (MPIReceiveRequests receiveRequests : registeredReceives) {
+    for (int i = 0; i < registeredReceives.size(); i++) {
+      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       if (debug) {
         LOG.info(String.format("%d available receive %d %d %s", workerId, receiveRequests.rank,
             receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
@@ -312,7 +313,8 @@ public class TWSMPIChannel implements TWSChannel {
           pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
     }
 
-    for (MPIReceiveRequests receiveRequests : registeredReceives) {
+    for (int i = 0; i < registeredReceives.size(); i++) {
+      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       try {
         IterativeLinkedList.ILLIterator requestIterator
             = receiveRequests.pendingRequests.iterator();
