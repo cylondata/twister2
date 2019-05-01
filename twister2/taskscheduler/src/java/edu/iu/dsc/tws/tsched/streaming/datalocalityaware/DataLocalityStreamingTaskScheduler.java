@@ -95,6 +95,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     this.initialize(cfg);
     this.workerId = workerid;
   }
+
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the
    * streaming task instances. It retrieves the task vertex set of the task graph and send the set
@@ -227,8 +228,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
     /*This loop allocate the task instances to the respective container, before allocation
     it will check whether the container has reached maximum task instance size */
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
+    for (Map.Entry<String, Integer> aTaskEntrySet : parallelTaskMap.entrySet()) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
 

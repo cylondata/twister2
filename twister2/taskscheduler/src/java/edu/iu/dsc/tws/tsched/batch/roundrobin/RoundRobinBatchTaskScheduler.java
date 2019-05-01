@@ -57,7 +57,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   private static final Logger LOG = Logger.getLogger(RoundRobinBatchTaskScheduler.class.getName());
 
   //Represents global task Id
-  private int gtaskId = 0;
+  private int gTaskId = 0;
 
   //Represents the task instance ram
   private Double instanceRAM;
@@ -192,7 +192,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
     //TODO: Just for checking the task schedule plan
     if (workerId == 0) {
-      LOG.info("%%%%%%%%%%%% Final Global Id:" + gtaskId);
+      LOG.info("%%%%%%%%%%%% Final Global Id:" + gTaskId);
       TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
           new HashSet<>(containerPlans.values()));
       if (taskSchedulePlan != null) {
@@ -264,15 +264,15 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     int containerIndex = 0;
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int maxTaskInstances = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-      for (int taskIndex = 0; taskIndex < maxTaskInstances; taskIndex++) {
-        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+      int numberOfInstances = e.getValue();
+      for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
+        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
         if (containerIndex >= roundRobinAllocation.size()) {
           containerIndex = 0;
         }
       }
-      gtaskId++;
+      gTaskId++;
     }
     return roundRobinAllocation;
   }
@@ -284,13 +284,13 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       String task = e.getKey();
       int numberOfInstances = e.getValue();
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
         if (containerIndex >= roundRobinAllocation.size()) {
           containerIndex = 0;
         }
       }
-      gtaskId++;
+      gTaskId++;
     }
     return roundRobinAllocation;
   }
@@ -315,13 +315,13 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       String task = e.getKey();
       int numberOfInstances = e.getValue();
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
         if (containerIndex >= roundrobinAllocation.size()) {
           containerIndex = 0;
         }
       }
-      gtaskId++;
+      gTaskId++;
     }
     return roundrobinAllocation;
   }
@@ -347,13 +347,13 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
       String task = e.getKey();
       int numberOfInstances = e.getValue();
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gtaskId, taskIndex));
+        roundrobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
         if (containerIndex >= roundrobinAllocation.size()) {
           containerIndex = 0;
         }
       }
-      gtaskId++;
+      gTaskId++;
     }
     return roundrobinAllocation;
   }
