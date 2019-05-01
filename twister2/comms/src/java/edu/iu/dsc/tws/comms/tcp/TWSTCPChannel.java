@@ -155,6 +155,10 @@ public class TWSTCPChannel implements TWSChannel {
   @Override
   public void close() {
     // we will call the comm stop
+    while (!this.pendingCloseRequests.isEmpty()
+        || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
+      this.progress();
+    }
     comm.stop();
   }
 

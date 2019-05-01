@@ -31,7 +31,7 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   @Override
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     if (gatherReceiver.send(task, gatheredValuesMap.get(task), flags)) {
-      gatheredValuesMap.put(task, null);
+      gatheredValuesMap.remove(task);
       onFinish(task);
     } else {
       return false;
