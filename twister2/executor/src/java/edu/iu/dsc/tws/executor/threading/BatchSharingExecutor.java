@@ -342,12 +342,13 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     public boolean progress() {
       if (taskExecution) {
         // we progress until all the channel finish
-        if (notStopped && finishedInstances.get() != nodeMap.size()) {
+        if (finishedInstances.get() != nodeMap.size()) {
           channel.progress();
           return true;
         }
         // clean up
         cleanUp(executionPlan, nodeMap);
+        cleanUpCalled = false;
         // if we finish, lets schedule
         scheduleWaitFor(nodeMap);
         taskExecution = false;

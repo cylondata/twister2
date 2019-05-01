@@ -104,6 +104,7 @@ public class AKeyedDeserializer implements MessageDeSerializer {
         // okay we are done with this object
         if (dataBuilder.isBuilt()) {
           currentMessage.addCurrentObject();
+          currentMessage.setUnPkCurrentObjectLength(-1);
         } else {
           // lets break the inner while loop
           break;
@@ -116,6 +117,7 @@ public class AKeyedDeserializer implements MessageDeSerializer {
           currentLocation += Integer.BYTES;
 
           currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
         } else {
           // we have to break here as we cannot read further
           break;
