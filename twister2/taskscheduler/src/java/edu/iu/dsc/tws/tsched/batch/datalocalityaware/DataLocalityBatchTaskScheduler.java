@@ -324,7 +324,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
 
   //TODO: This method will be removed once the final testing is done.
-
   /**
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
@@ -370,7 +369,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
   //TODO: This method will be removed once the final testing is done.
-
   /**
    * This method generates the container and task instance map which is based on the task graph,
    * its configuration, and the allocated worker plan.

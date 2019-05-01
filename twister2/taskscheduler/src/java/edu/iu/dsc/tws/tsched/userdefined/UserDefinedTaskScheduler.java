@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -64,8 +65,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
-  public UserDefinedTaskScheduler() {
-  }
+  private int workerId;
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -80,9 +80,10 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
   }
 
   @Override
-  public void initialize(Config cfg, int workerId) {
+  public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
+    this.workerId = workerid;
   }
-
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
@@ -90,7 +91,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * @return TaskSchedulePlan
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
     int taskSchedulePlanId = 0;
 
@@ -98,34 +99,34 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
     Set<ContainerPlan> containerPlans = new LinkedHashSet<>();
 
     //To get the vertex set from the taskgraph
-    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+    Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     //Allocate the task instances into the logical containers.
-    Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
-        userDefinedSchedulingAlgorithm(taskVertexSet, workerPlan.getNumberOfWorkers());
+    Map<Integer, List<InstanceId>> userDefinedContainerInstanceMap =
+        userDefinedSchedulingAlgorithm(graph, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
     Map<Integer, Map<InstanceId, Double>> instancesRamMap =
-        instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesRamMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
-        instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesDiskMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
     Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
-        instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
+        instanceMapCalculation.getInstancesCPUMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
-    for (int containerId : roundRobinContainerInstanceMap.keySet()) {
+    for (int containerId : userDefinedContainerInstanceMap.keySet()) {
 
       double containerRAMValue = TaskSchedulerContext.containerRamPadding(config);
       double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
-      List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
+      List<InstanceId> taskInstanceIds = userDefinedContainerInstanceMap.get(containerId);
       Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
       for (InstanceId id : taskInstanceIds) {
@@ -173,49 +174,60 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * This method retrieves the parallel task map and the total number of task instances for the task
    * vertex set. Then, it will allocate the instances into the number of containers allocated for
    * the task in a round robin fashion.
+   *
+   * The user could write their own type of allocations into the available workers using their
+   * own scheduling algorithm.
    */
   private static Map<Integer, List<InstanceId>> userDefinedSchedulingAlgorithm(
-      Set<Vertex> taskVertexSet, int numberOfContainers) {
+      DataFlowTaskGraph graph, int numberOfContainers) {
 
-    TaskAttributes taskAttributes = new TaskAttributes();
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
-
+    Map<Integer, List<InstanceId>> userDefinedAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
-      roundrobinAllocation.put(i, new ArrayList<>());
+      userDefinedAllocation.put(i, new ArrayList<>());
     }
 
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
 
-    int totalTaskInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
-    if (numberOfContainers < totalTaskInstances) {
-      int globalTaskIndex = 0;
-      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-        String task = e.getKey();
-        int numberOfInstances = e.getValue();
+    TaskAttributes taskAttributes = new TaskAttributes();
+    int globalTaskIndex = 0;
+    for (Vertex vertex : taskVertexSet) {
+      int totalTaskInstances;
+      if (!graph.getNodeConstraints().isEmpty()) {
+        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
+            graph.getNodeConstraints());
+      } else {
+        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+      }
+
+      if (!graph.getNodeConstraints().isEmpty()) {
+        int instancesPerWorker = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+        int maxTaskInstancesPerContainer = 0;
         int containerIndex;
-        for (int i = 0; i < numberOfInstances; i++) {
+        for (int i = 0; i < totalTaskInstances; i++) {
           containerIndex = i % numberOfContainers;
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+          if (maxTaskInstancesPerContainer < instancesPerWorker) {
+            userDefinedAllocation.get(containerIndex).add(
+                new InstanceId(vertex.getName(), globalTaskIndex, i));
+            ++maxTaskInstancesPerContainer;
+          } else {
+            throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+                + "configuration, please check the number of workers, "
+                + "maximum instances per worker");
+          }
         }
-        globalTaskIndex++;
+      } else {
+        String task = vertex.getName();
+        int containerIndex;
+        for (int i = 0; i < totalTaskInstances; i++) {
+          containerIndex = i % numberOfContainers;
+          userDefinedAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+        }
       }
+      globalTaskIndex++;
     }
-
-    //To print the allocation map
-    for (Map.Entry<Integer, List<InstanceId>> entry : roundrobinAllocation.entrySet()) {
-      Integer integer = entry.getKey();
-      List<InstanceId> instanceIds = entry.getValue();
-      LOG.fine("Container Index:" + integer);
-      for (InstanceId instanceId : instanceIds) {
-        LOG.fine("Task Instance Details:"
-            + "\t Task Name:" + instanceId.getTaskName()
-            + "\t Task id:" + instanceId.getTaskId()
-            + "\t Task index:" + instanceId.getTaskIndex());
-      }
-    }
-    return roundrobinAllocation;
+    return userDefinedAllocation;
   }
 
   private static class VertexComparator implements Comparator<Vertex> {

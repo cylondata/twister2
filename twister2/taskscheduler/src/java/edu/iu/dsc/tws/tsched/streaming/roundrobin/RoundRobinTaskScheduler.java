@@ -161,25 +161,6 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
               new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
       containerPlans.add(taskContainerPlan);
     }
-
-    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, containerPlans);
-    //TODO: Just for checking the task schedule plan
-    if (workerId == 0) {
-      if (taskSchedulePlan != null) {
-        Map<Integer, ContainerPlan> containersMap
-            = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-          Integer integer = entry.getKey();
-          ContainerPlan containerPlan = entry.getValue();
-          Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
-          LOG.info("Task Details for Container Id:" + integer);
-          for (TaskInstancePlan ip : containerPlanTaskInstances) {
-            LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-                + "\tTask Name:" + ip.getTaskName());
-          }
-        }
-      }
-    }
     return new TaskSchedulePlan(0, containerPlans);
   }
 
