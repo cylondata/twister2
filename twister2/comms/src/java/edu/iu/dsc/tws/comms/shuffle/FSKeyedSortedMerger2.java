@@ -238,7 +238,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     this.objectsInMemory = Arrays.stream(this.recordsInMemory, 0, this.currentKeyIndex)
         .flatMap(List::stream)
-        .parallel()
         .map(tuple -> {
           Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
           return new Tuple(tuple.getKey(), o);
