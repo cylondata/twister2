@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.utils.bench;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -110,7 +111,8 @@ public final class Timing {
         flagA, flagB, totalDiffs.toString(), timingUnitMap.get(flagA).getLabel()));
     System.out.println(String.format("Taking average for %d events", flagALongs.size()));
 
-    double average = totalDiffs.divide(BigDecimal.valueOf(flagALongs.size())).doubleValue();
+    double average = totalDiffs.divide(BigDecimal.valueOf(flagALongs.size()),
+        RoundingMode.HALF_UP).doubleValue();
     System.out.println(String.format("Average time [%s - %s] = %f", flagA, flagB, average));
     return average;
   }
