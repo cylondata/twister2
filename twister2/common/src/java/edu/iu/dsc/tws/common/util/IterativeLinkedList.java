@@ -13,80 +13,119 @@ package edu.iu.dsc.tws.common.util;
 
 import java.util.NoSuchElementException;
 
+/**
+ * A double linked list with a resettable iterator
+ * @param <T>
+ */
 public class IterativeLinkedList<T> {
   // number of elements on list
-  private int n;
-  // sentinel before first item
-  private Node pre;
-  // sentinel after last item
-  private Node post;
+  private int numElements;
+  // mark at the begining
+  private Node firstMark;
+  // mark at the end
+  private Node lastMark;
   // the iterator
   private ILLIterator iterator;
 
-  public IterativeLinkedList() {
-    pre = new Node();
-    post = new Node();
-    pre.next = post;
-    post.prev = pre;
-    iterator = new ILLIterator();
-  }
-
-  // linked list node helper data type
+  /**
+   * List node with previous and next
+    */
   private class Node {
     private T item;
     private Node next;
     private Node prev;
   }
 
+  /**
+   * Create the list
+   */
+  public IterativeLinkedList() {
+    firstMark = new Node();
+    lastMark = new Node();
+    firstMark.next = lastMark;
+    lastMark.prev = firstMark;
+    iterator = new ILLIterator();
+  }
+
+  /**
+   * Check weather empty
+   * @return true if empty
+   */
   public boolean isEmpty() {
-    return n == 0;
+    return numElements == 0;
   }
 
+  /**
+   * Size of the list
+   * @return size
+   */
   public int size() {
-    return n;
+    return numElements;
   }
 
-  // add the item to the list
+  /**
+   * Add the element at the end of the list
+    */
   public void add(T item) {
-    Node last = post.prev;
+    Node last = this.lastMark.prev;
     Node x = new Node();
     x.item = item;
-    x.next = post;
+    x.next = this.lastMark;
     x.prev = last;
-    post.prev = x;
+    this.lastMark.prev = x;
     last.next = x;
-    n++;
+    numElements++;
   }
 
+  /**
+   * Create the iterator
+   * @return the iterator and reset it.
+   */
   public ILLIterator iterator() {
     iterator.reset();
     return iterator;
   }
 
-  // assumes no calls to IterativeLinkedList.add() during iteration
+  /**
+   * The iterator
+    */
   public class ILLIterator {
-    // the node that is returned by next()
-    private Node current = pre.next;
-    // the last node to be returned by prev() or next()
+    /**
+     * The current node returned by next
+     */
+    private Node current = firstMark.next;
+
+    /**
+     * Previous node
+      */
     private Node lastAccessed = null;
 
-    // reset to null upon intervening remove() or add()
+    /**
+     * The current index
+     */
     private int index = 0;
 
+    /**
+     * Reset the iterator to begining
+     */
     private void reset() {
-      current = pre.next;
+      current = firstMark.next;
       lastAccessed = null;
       index = 0;
     }
 
     public boolean hasNext() {
-      return index < n;
+      return index < numElements;
     }
 
     public boolean hasPrevious() {
       return index > 0;
     }
 
+    /**
+     * Get the next element
+     * @return next element
+     */
     public T next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
@@ -98,6 +137,10 @@ public class IterativeLinkedList<T> {
       return item;
     }
 
+    /**
+     * The the previous element that was accessed
+     * @return previous element
+     */
     public T previous() {
       if (!hasPrevious()) {
         throw new NoSuchElementException();
@@ -108,17 +151,9 @@ public class IterativeLinkedList<T> {
       return current.item;
     }
 
-    // replace the item of the element that was last accessed by next() or previous()
-    // condition: no calls to remove() or add() after last call to next() or previous()
-    public void set(T item) {
-      if (lastAccessed == null) {
-        throw new IllegalStateException();
-      }
-      lastAccessed.item = item;
-    }
-
-    // remove the element that was last accessed by next() or previous()
-    // condition: no calls to remove() or add() after last call to next() or previous()
+    /**
+     * Remove the last element accessed
+     */
     public void remove() {
       if (lastAccessed == null) {
         throw new IllegalStateException();
@@ -127,7 +162,7 @@ public class IterativeLinkedList<T> {
       Node y = lastAccessed.next;
       x.next = y;
       y.prev = x;
-      n--;
+      numElements--;
       if (current == lastAccessed) {
         current = y;
       } else {
@@ -136,7 +171,10 @@ public class IterativeLinkedList<T> {
       lastAccessed = null;
     }
 
-    // add element to list
+    /**
+     * Add the element to list
+     * @param item to add
+     */
     public void add(T item) {
       Node x = current.prev;
       Node y = new Node();
@@ -146,7 +184,7 @@ public class IterativeLinkedList<T> {
       y.next = z;
       z.prev = y;
       y.prev = x;
-      n++;
+      numElements++;
       index++;
       lastAccessed = null;
     }
