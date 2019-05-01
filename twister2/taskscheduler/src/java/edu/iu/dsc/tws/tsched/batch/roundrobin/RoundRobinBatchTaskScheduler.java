@@ -262,9 +262,16 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
                                                                       parallelTaskMap,
                                                                   DataFlowTaskGraph graph) {
     int containerIndex = 0;
+    int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
@@ -280,9 +287,16 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(Map<String, Integer>
                                                                          parallelTaskMap) {
     int containerIndex = 0;
+    int instancesPerContainer = TaskSchedulerContext.taskParallelism(config);
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;

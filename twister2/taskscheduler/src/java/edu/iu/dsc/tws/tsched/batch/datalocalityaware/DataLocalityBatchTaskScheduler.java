@@ -279,7 +279,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
             task, gTaskId, taskIndex));
@@ -308,7 +314,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
             task, gTaskId, taskIndex));
@@ -324,6 +336,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
 
   //TODO: This method will be removed once the final testing is done.
+
   /**
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
@@ -369,6 +382,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
   //TODO: This method will be removed once the final testing is done.
+
   /**
    * This method generates the container and task instance map which is based on the task graph,
    * its configuration, and the allocated worker plan.
