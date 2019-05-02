@@ -16,6 +16,7 @@ import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class Executor {
@@ -37,7 +38,14 @@ public class Executor {
     if (operationMode == OperationMode.STREAMING) {
       executor = new StreamingSharingExecutor(config, workerId, channel);
     } else {
-      executor = new BatchSharingExecutor2(config, workerId, channel);
+      String batchExecutor = ExecutorContext.getBatchExecutor(config);
+      if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
+        executor = new BatchSharingExecutor(config, workerId, channel);
+      } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
+        executor = new BatchSharingExecutor2(config, workerId, channel);
+      } else {
+        throw new RuntimeException("Un-known batch executor specified - " + batchExecutor);
+      }
     }
   }
 

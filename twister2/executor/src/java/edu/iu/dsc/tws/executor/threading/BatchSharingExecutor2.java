@@ -146,7 +146,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
     doneSignal = new CountDownLatch(numThreads - 1);
     batchWorkers[0] = new BatchWorker(tasks, taskStatus);
-    for (int i = 1; i < numThreads - 1; i++) {
+    for (int i = 1; i < numThreads; i++) {
       BatchWorker task = new BatchWorker(tasks, taskStatus);
       threads.submit(task);
       batchWorkers[i] = task;
@@ -224,7 +224,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     workers[0] = new CommunicationWorker(tasks);
 
     doneSignal = new CountDownLatch(numThreads - 1);
-    for (int i = 0; i < numThreads - 1; i++) {
+    for (int i = 1; i < numThreads; i++) {
       workers[i] = new CommunicationWorker(tasks);
       threads.submit(workers[i]);
     }
