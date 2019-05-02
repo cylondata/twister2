@@ -77,6 +77,7 @@ public class MesosLauncher implements ILauncher {
         mesosMaster);
     int status = driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1;
 
+    LOG.warning("Job already terminated!");
     //driver.stop();
     //System.exit(status);
   }

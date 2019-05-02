@@ -21,5 +21,10 @@ twister2.uploader.ssh.command.options: ""
 # The ssh connection string sets the remote user name and host used by the uploader.
 twister2.uploader.ssh.command.connection: "root@149.165.150.81"
 
+# file system uploader to be used
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
-
+# this is the method that workers use to download the core and job packages
+# it could be  HTTP, HDFS, ..
+twister2.uploader.download.method: "HTTP"
