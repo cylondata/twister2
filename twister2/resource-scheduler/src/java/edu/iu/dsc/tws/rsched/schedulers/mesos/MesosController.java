@@ -50,14 +50,14 @@ public class MesosController {
 
   private Protos.CommandInfo.URI getJobUri() {
     Protos.CommandInfo.URI.Builder uriBuilder = Protos.CommandInfo.URI.newBuilder();
-    uriBuilder.setValue(MesosContext.MesosFetchURI(config)
+    uriBuilder.setValue(MesosContext.getHttpFetchURI(config)
         + "/" + SchedulerContext.jobPackageFileName(config));
     uriBuilder.setExtract(true);
     return uriBuilder.build();
   }
   private Protos.CommandInfo.URI getCoreUri() {
     Protos.CommandInfo.URI.Builder uriBuilder = Protos.CommandInfo.URI.newBuilder();
-    uriBuilder.setValue(MesosContext.MesosFetchURI(config)
+    uriBuilder.setValue(MesosContext.getHttpFetchURI(config)
         + "/" + SchedulerContext.corePackageFileName(config));
     uriBuilder.setExtract(true);
     return uriBuilder.build();
