@@ -37,7 +37,7 @@ public class Executor {
     if (operationMode == OperationMode.STREAMING) {
       executor = new StreamingSharingExecutor(config, workerId, channel);
     } else {
-      executor = new BatchSharingExecutor(config, workerId, channel);
+      executor = new BatchSharingExecutor2(config, workerId, channel);
     }
   }
 
