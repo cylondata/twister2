@@ -11,8 +11,7 @@ if [ $OMPI_COMM_WORLD_RANK = "1" ]; then
     debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
 fi
 
-profile=-agentpath:/home/chathura/jprofiler10/bin/linux-x64/libjprofilerti.so=port=8849,nowait
-#profile=
+profile=
 debug=
 
 # set JAVA_HOME by user
