@@ -95,7 +95,7 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(Integer target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
