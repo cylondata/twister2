@@ -141,7 +141,9 @@ public class AllGather implements DataFlowOperation {
   }
 
   public boolean isComplete() {
-    return gather.isComplete() && broadcast.isComplete();
+    boolean gatherComplete = gather.isComplete();
+    boolean bcastComplete = broadcast.isComplete();
+    return gatherComplete && bcastComplete;
   }
 
   @Override

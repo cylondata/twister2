@@ -128,7 +128,6 @@ public abstract class BaseNetworkChannel {
         selectHandler.handleError(socketChannel);
         return;
       } else {
-        LOG.finest("Send complete");
         // remove the request
         pendingSends.poll();
         writeRequest.setComplete(true);
@@ -153,7 +152,6 @@ public abstract class BaseNetworkChannel {
       writeHeader.putInt(message.getLength());
       writeHeader.putInt(message.getEdge());
       writeHeader.flip();
-      LOG.finest(String.format("WRITE Header %d %d", message.getLength(), message.getEdge()));
     }
 
     if (writeStatus == DataStatus.HEADER) {
@@ -198,7 +196,6 @@ public abstract class BaseNetworkChannel {
     int read;
     try {
       read = channel.read(buffer);
-      LOG.finest("Read size: " + read);
     } catch (java.nio.channels.ClosedByInterruptException e) {
       LOG.warning("ClosedByInterruptException thrown. "
           + "Probably the Channel is closed by the user program intentionally.");

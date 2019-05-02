@@ -5,9 +5,12 @@
 #echo $(ls twister2/)
 
 cd twister2
-#wget web_server_ip_address:port_number/twister2/mesos/twister2-core-0.2.0.tar.gz
-#wget web_server_ip_address:port_number/twister2/mesos/twister2-job.tar.gz
-
+if [ "$DOWNLOAD_METHOD" = 'HTTP' ]; then  
+	wget 149.165.150.81:8082/twister2/mesos/twister2-core-0.2.0.tar.gz
+	wget 149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz
+else 
+	echo "hdfs or other method was choosen"
+fi
 
 #export LD_LIBRARY_PATH="/openmpi-build/lib"
 
@@ -16,7 +19,7 @@ echo "starting sshd"
 
 #chmod 600 ~/.ssh/id_rsa
 
-if [ ! -f twister2-core-0.2.0.tar.gz ]; then
+if [ ! -f twister2-core-0.2.0.tar.gz ]; then 
     echo "file not found. Probably could not download the file"
 else
     tar xvf twister2-core-0.2.0.tar.gz
