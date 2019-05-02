@@ -13,12 +13,9 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.concurrent.ForkJoinPool;
@@ -74,19 +71,12 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private List<Tuple>[] recordsInMemory;
-  private int currentKeyIndex = 0;
-  private Map<Object, Integer> keyToArrayIndexMap = new HashMap<>();
+  private List<Tuple> recordsInMemory;
 
   /**
    * The deserialized objects in memory
    */
   private List<Tuple> objectsInMemory = new ArrayList<>();
-
-  /**
-   * Amount of bytes in the memory
-   */
-  private int numOfRecordsInMemory = 0;
 
   /**
    * Maximum size of a tuple written to disk in each file
@@ -141,7 +131,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.maxRecordsInMemory = maxRecsInMemory;
 
     //we can expect atmost this much of unique keys
-    this.recordsInMemory = new List[this.maxRecordsInMemory + 1];
+    this.recordsInMemory = new ArrayList<>(this.maxRecordsInMemory);
 
     this.folder = dir;
     this.operationName = opName;
@@ -164,20 +154,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
-    if (this.keyToArrayIndexMap.size() >= this.maxRecordsInMemory) {
+    if (this.recordsInMemory.size() >= this.maxRecordsInMemory) {
       this.run();
     }
-    //get existing index for this key, or generate a new index
-    int thisKeyIndex = this.keyToArrayIndexMap.computeIfAbsent(key,
-        k -> this.currentKeyIndex++);
 
-    //if this is a new key, we will have to assign a new array list
-    if (this.recordsInMemory[thisKeyIndex] == null) {
-      this.recordsInMemory[thisKeyIndex] = new ArrayList<>();
-    }
-    this.recordsInMemory[thisKeyIndex].add(new Tuple(key, data));
-
-    this.numOfRecordsInMemory++;
+    this.recordsInMemory.add(new Tuple(key, data));
 
     // todo ignoring length for now
     // this.bytesLength.add(length);
@@ -236,8 +217,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   private void deserializeObjects() {
-    this.objectsInMemory = Arrays.stream(this.recordsInMemory, 0, this.currentKeyIndex)
-        .flatMap(List::stream)
+    this.objectsInMemory = this.recordsInMemory.stream()
         .map(tuple -> {
           Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
           return new Tuple(tuple.getKey(), o);
@@ -250,7 +230,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   public synchronized void run() {
     // it is time to write
     if (numOfBytesInMemory >= maxBytesToKeepInMemory
-        || numOfRecordsInMemory >= maxRecordsInMemory) {
+        || this.recordsInMemory.size() >= maxRecordsInMemory) {
 
       // first sort the values
 
@@ -265,14 +245,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 //          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
 //      largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
 
-      numOfRecordsInMemory = 0;
       numOfBytesInMemory = 0;
 
       //making previous things garbage collectible
-      this.recordsInMemory = new List[this.maxRecordsInMemory];
-      this.keyToArrayIndexMap = new HashMap<>();
+      this.recordsInMemory = new ArrayList<>(this.maxRecordsInMemory);
 
-      currentKeyIndex = 0;
       bytesLength.clear();
       noOfFileWritten++;
     }
@@ -283,19 +260,17 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       this.fileWriteLock.acquire(); // allow 1 parallel write to disk
 
       //create references to existing data
-      final List<Tuple>[] referenceToRecordsInMemory = this.recordsInMemory;
+      final List<Tuple> referenceToRecordsInMemory = this.recordsInMemory;
       final String fileName = getSaveFileName(noOfFileWritten);
       final long bytesInMemory = numOfBytesInMemory;
-      final int currentIndex = currentKeyIndex;
 
       ForkJoinPool.commonPool().execute(() -> {
         try {
           // do the sort
-          Arrays.sort(referenceToRecordsInMemory, 0,
-              currentIndex, listComparatorWrapper);
+          referenceToRecordsInMemory.sort(comparatorWrapper);
 
-          long largestTupleWritten = FileLoader.saveKeyValues(referenceToRecordsInMemory,
-              currentIndex, bytesInMemory, fileName, keyType);
+          long largestTupleWritten = FileLoader.saveKeyValues(
+              referenceToRecordsInMemory, bytesInMemory, fileName, keyType);
           //todo get inside set?
           largestTupleSizeRecorded.set(
               Math.max(largestTupleSizeRecorded.get(), largestTupleWritten)
