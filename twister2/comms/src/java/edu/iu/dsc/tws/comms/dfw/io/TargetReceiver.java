@@ -112,7 +112,7 @@ public abstract class TargetReceiver implements MessageReceiver {
       if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         addSyncMessage(source, target);
         return true;
-      }  else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
         addSyncMessageBarrier(source, target, (byte[]) object);
         return true;
       }
@@ -154,6 +154,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Add a sync message
+   *
    * @param source source
    * @param target target
    */
@@ -161,6 +162,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Add a sync message
+   *
    * @param source source
    * @param target target
    * @param barrier the barrier message
@@ -169,6 +171,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Check weather we can accept a message
+   *
    * @param source source
    * @param target target
    */
@@ -176,6 +179,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Swap the messages to the ready queue
+   *
    * @param dest the target
    * @param dests message queue to switch to ready
    */
@@ -187,6 +191,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
     lock.lock();
     try {
+      boolean allEmpty = true;
       for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
         if (e.getValue().size() > 0) {
           merge(e.getKey(), e.getValue());
@@ -201,9 +206,10 @@ public abstract class TargetReceiver implements MessageReceiver {
         if (!sendToTarget(representSource, e.getKey())) {
           needsFurtherProgress = true;
         }
+        allEmpty &= e.getValue().isEmpty();
       }
 
-      if (!isAllEmpty() || !sync()) {
+      if (!allEmpty || !sync()) {
         needsFurtherProgress = true;
       }
     } finally {
@@ -222,6 +228,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Check weather all the other information is flushed
+   *
    * @return true if there is nothing to process
    */
   protected boolean isAllEmpty() {
@@ -246,6 +253,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Send the values to a target
+   *
    * @param source the sources
    * @param target the target
    * @return true if all the values are sent successfully
@@ -257,7 +265,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    *
    * @return true if we are filled enough to send
    */
-  protected abstract boolean isFilledToSend(int target);
+  protected abstract boolean isFilledToSend(Integer target);
 
   @Override
   public void onFinish(int source) {
