@@ -71,6 +71,8 @@ public class SchedulerContext extends Context {
 
   public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
 
+  public static final String DOWNLOAD_METHOD = "twister2.uploader.download.method";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -148,6 +150,9 @@ public class SchedulerContext extends Context {
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
   }
 
+  public static String downloadMethod(Config cfg) {
+    return cfg.getStringValue(DOWNLOAD_METHOD);
+  }
   public static List<String> additionalPorts(Config cfg) {
     return cfg.getStringList(ADDITIONAL_PORTS);
   }

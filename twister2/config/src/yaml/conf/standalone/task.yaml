@@ -54,3 +54,9 @@ twister2.task.parallelism: 2
 
 #Default Task Type "streaming" or "batch"
 twister2.task.type: "streaming"
+
+# number of threads per worker
+twister2.exector.worker.threads: 2
+
+# name of the batch executor
+twister2.executor.batch.name: "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor"
