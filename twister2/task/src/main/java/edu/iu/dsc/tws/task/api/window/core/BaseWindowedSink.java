@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.WindowType;
+import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
@@ -32,6 +32,8 @@ import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
+import edu.iu.dsc.tws.task.api.window.util.WindowParameter;
+import edu.iu.dsc.tws.task.api.window.util.WindowUtils;
 
 public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T>
     implements IWindowCompute<T>, Closable {
@@ -44,11 +46,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private IWindowingPolicy<T> windowingPolicy;
 
-  private WindowConfig.Count count;
-
-  private WindowType windowType;
-
-  private WindowConfig.Duration duration;
+  private WindowParameter windowParameter;
 
   private WindowLifeCycleListener<T> windowLifeCycleListener;
 
@@ -63,15 +61,17 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public void prepare(Config cfg, TaskContext ctx) {
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
-    if (this.count != null || this.duration != null) {
-      this.evictionPolicy = getEvictionPolicy(this.count, this.duration);
-      this.windowingPolicy = getWindowingPolicy(this.count, this.duration, this.windowManager,
-          this.evictionPolicy);
-      this.windowManager.setEvictionPolicy(this.evictionPolicy);
-      this.windowManager.setWindowingPolicy(this.windowingPolicy);
-      start();
-      LOG.info(String.format("Windowing Policy : %s", this.windowingPolicy.toString()));
-    } else {
+    initialize();
+  }
+
+  public void initialize() {
+    try {
+      if (this.iWindow == null) {
+        this.iWindow = WindowUtils.getWindow(this.windowParameter.getWindowCountSize(),
+            this.windowParameter.getSlidingCountSize(),
+            this.windowParameter.getWindowDurationSize(),
+            this.windowParameter.getSldingDurationSize());
+      }
       IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
       this.evictionPolicy = windowStrategy.getEvictionPolicy();
       this.windowingPolicy = windowStrategy.getWindowingPolicy(this.windowManager,
@@ -79,8 +79,9 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       this.windowManager.setEvictionPolicy(this.evictionPolicy);
       this.windowManager.setWindowingPolicy(this.windowingPolicy);
       start();
+    } catch (InvalidWindow invalidWindow) {
+      invalidWindow.printStackTrace();
     }
-
   }
 
   @Override
@@ -89,21 +90,15 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return true;
   }
 
-  public BaseWindowedSink<T> withTumblingCountWindow(int tumblingCount) {
-    this.count = new WindowConfig.Count(tumblingCount);
-    this.windowType = WindowType.TUMBLING;
-    return this;
-  }
-
-  private BaseWindowedSink<T> withTumblingCountWindowInit(WindowConfig.Count cnt,
-                                                          WindowType winType) {
-    // TODO : if a logic has to be handled after calling withTumblingCountWindow use this method
+  public BaseWindowedSink<T> withTumblingCountWindow(long tumblingCount) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingCountWindow(tumblingCount);
     return this;
   }
 
   public BaseWindowedSink<T> withTumblingDurationWindow(int tumblingDuration, TimeUnit timeUnit) {
-    this.duration = new WindowConfig.Duration(tumblingDuration, timeUnit);
-    this.windowType = WindowType.TUMBLING;
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withTumblingDurationWindow(tumblingDuration, timeUnit);
     return this;
   }
 

@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.api.window.strategy.duration.TumblingDurationWindowSt
 
 public class TumblingDurationWindow extends BaseWindow {
 
-  public TumblingDurationWindow(int windowLength) {
+  public TumblingDurationWindow(long windowLength) {
     super(windowLength, windowLength);
   }
 

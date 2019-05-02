@@ -29,9 +29,9 @@ import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 
 public interface IWindow extends Serializable {
 
-  int getWindowLength();
+  long getWindowLength();
 
-  int getSlidingLength();
+  long getSlidingLength();
 
   <T> IWindowStrategy<T> getWindowStrategy();
 

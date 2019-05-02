@@ -35,10 +35,10 @@ public class CountEvictionPolicy<T> implements IEvictionPolicy<T> {
 
   private static final Logger LOG = Logger.getLogger(CountEvictionPolicy.class.getName());
 
-  protected final int threshold;
+  protected final long threshold;
   protected final AtomicLong currentCount;
 
-  public CountEvictionPolicy(int count) {
+  public CountEvictionPolicy(long count) {
     this.threshold = count;
     this.currentCount = new AtomicLong();
   }

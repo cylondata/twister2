@@ -26,12 +26,12 @@ public class DurationEvictionPolicy<T> implements IEvictionPolicy<T> {
 
   private long delta;
 
-  private final int windowLength;
+  private final long windowLength;
 
   private IEvictionContext evictionContext;
 
 
-  public DurationEvictionPolicy(int winLength) {
+  public DurationEvictionPolicy(long winLength) {
     this.windowLength = winLength;
   }
 

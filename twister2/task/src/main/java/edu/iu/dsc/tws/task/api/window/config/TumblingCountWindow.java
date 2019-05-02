@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.api.window.strategy.count.TumblingCountWindowStrategy
 
 public final class TumblingCountWindow extends BaseWindow {
 
-  public TumblingCountWindow(int windowLength) {
+  public TumblingCountWindow(long windowLength) {
     super(windowLength, windowLength);
   }
 
