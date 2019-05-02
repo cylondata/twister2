@@ -357,6 +357,8 @@ public class BatchSharingExecutor2 implements IExecutor {
 
     private BatchWorker mainWorker;
 
+    private CommunicationWorker worker;
+
     BatchExecution(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodeMap,
                    BatchWorker mainWorker) {
       this.nodeMap = nodeMap;
@@ -395,13 +397,15 @@ public class BatchSharingExecutor2 implements IExecutor {
         cleanUp(executionPlan, nodeMap);
         cleanUpCalled = false;
         // if we finish, lets schedule
-        scheduleWaitFor(nodeMap);
+        CommunicationWorker[] workers = scheduleWaitFor(nodeMap);
+        this.worker = workers[0];
         taskExecution = false;
       }
 
       // we progress until all the channel finish
       if (notStopped && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
+        worker.runChannelComplete();
         return true;
       }
 
