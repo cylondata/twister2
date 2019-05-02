@@ -18,10 +18,21 @@ java_library(
 java_tests(
     size = "small",
     test_classes = [
-        "edu.iu.dsc.tws.common.net.tcp.request.PingTest",
         "edu.iu.dsc.tws.common.net.tcp.request.TwoChannelTest",
+        "edu.iu.dsc.tws.common.util.IterativeLinkedListTest",
     ],
     runtime_deps = [
         ":common-tests",
     ],
 )
+
+#java_tests_debug(
+#    size = "enormous",
+#    test_classes = [
+#        "edu.iu.dsc.tws.common.net.tcp.request.TwoChannelTest",
+#        "edu.iu.dsc.tws.common.util.IterativeLinkedListTest",
+#    ],
+#    runtime_deps = [
+#        ":common-tests",
+#    ],
+#)

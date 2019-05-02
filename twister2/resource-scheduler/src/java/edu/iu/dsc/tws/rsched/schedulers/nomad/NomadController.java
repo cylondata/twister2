@@ -213,7 +213,20 @@ public class NomadController implements IController {
     NetworkResource networkResource = new NetworkResource();
     networkResource.addDynamicPorts(ports);
     resourceReqs.addNetworks(networkResource);
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
+    if (computeResource == null) {
+      LOG.log(Level.SEVERE, "Error: there is no compute resource");
+      return null;
+    }
+    int  cpu = (int) computeResource.getCpu();
+    int  disk = (int) computeResource.getDiskGigaBytes();
+    int memory = computeResource.getRamMegaBytes();
 
+    resourceReqs.setCpu(cpu * 200);
+    resourceReqs.setMemoryMb(memory);
+    resourceReqs.setDiskMb(disk * 1024);
+
+    LOG.log(Level.INFO, "Compute resources are " + cpu + " " + memory + " " + disk);
     Map<String, String> envVars = new HashMap<>();
     envVars.put(NomadContext.WORKING_DIRECTORY_ENV,
         NomadContext.workingDirectory(config));
