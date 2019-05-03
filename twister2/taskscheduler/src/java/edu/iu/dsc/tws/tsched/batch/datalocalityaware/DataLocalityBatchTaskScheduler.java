@@ -195,24 +195,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
         new HashSet<>(containerPlans.values()));
-
-    //TODO: Just for validation purpose and it will be removed finally
-    if (taskSchedulePlan != null) {
-      LOG.info("%%%%%%%%%%%% Final Global Id:" + gTaskId);
-      Map<Integer, ContainerPlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances
-            = containerPlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
-        }
-      }
-    }
     return taskSchedulePlan;
   }
 
@@ -269,52 +251,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
                                                                   DataFlowTaskGraph graph,
                                                                   WorkerPlan workerPlan) {
     List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
-    if (parallelTaskMap.size() == 1) {
-      dataLocalityAwareAllocation = getVertexAttributeBasedAllocation(parallelTaskMap, graph,
-          workerNodeList);
-    } else {
-      dataLocalityAwareAllocation = getVertexSetAttributeBasedAllocation(parallelTaskMap, graph,
-          workerNodeList);
-    }
-    return dataLocalityAwareAllocation;
-  }
-
-  private Map<Integer, List<InstanceId>> getVertexAttributeBasedAllocation(
-      Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph,
-      List<DataTransferTimeCalculator> workerNodeList) {
-
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
-      int taskIndex;
-      for (taskIndex = 0; taskIndex < taskParallelism; taskIndex++) {
-        if (taskIndex < instancesPerContainer) {
-          dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-              task, gTaskId, taskIndex));
-        } else {
-          dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-              task, gTaskId, taskIndex));
-          containerIndex++;
-        }
-      }
-      gTaskId++;
-    }
-    return dataLocalityAwareAllocation;
-  }
-
-  private Map<Integer, List<InstanceId>> getVertexSetAttributeBasedAllocation(
-      Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph,
-      List<DataTransferTimeCalculator> workerNodeList) {
-
-    int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
-    int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-    for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
-      String task = e.getKey();
-      int taskParallelism = e.getValue();
-      int taskIndex;
-      for (taskIndex = 0; taskIndex < taskParallelism; taskIndex++) {
+      for (int taskIndex = 0; taskIndex < taskParallelism; taskIndex++) {
         if (taskIndex < instancesPerContainer) {
           dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
               task, gTaskId, taskIndex));
@@ -349,7 +291,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
             task, gTaskId, taskIndex));
         ++containerIndex;
-        if (containerIndex >= dataLocalityAwareAllocation.size()) {
+        if (containerIndex >= workerNodeList.size()) {
           containerIndex = 0;
         }
       }
