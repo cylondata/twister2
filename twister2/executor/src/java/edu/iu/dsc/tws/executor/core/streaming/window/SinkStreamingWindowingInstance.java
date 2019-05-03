@@ -11,28 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming.window;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.IWindowInstance;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
-import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkStreamingWindowingInstance implements INodeInstance, IWindowInstance {
+public class SinkStreamingWindowingInstance extends SinkStreamingInstance implements
+    IWindowInstance {
 
   private static final Logger LOG = Logger
       .getLogger(SinkStreamingWindowingInstance.class.getName());
@@ -92,27 +88,18 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
    * The input edges
    */
   private Map<String, String> inEdges;
+
   private TaskSchedulePlan taskSchedulePlan;
-
-  private WindowingPolicy windowingPolicy;
-
-  private int windowSize = 0;
-
-  private boolean policyApplied = false;
-
-  private List<IMessage<?>> messageList = new ArrayList<>(windowSize);
-
-  private WindowManager<IMessage<?>> windowManager;
-
-  private ReentrantLock lock = new ReentrantLock();
 
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,
                                         String tName, int tId, int tIndex, int parallel, int wId,
                                         Map<String, Object> cfgs, Map<String, String> inEdges,
-                                        TaskSchedulePlan taskSchedulePlan,
-                                        WindowingPolicy winPolicy) {
+                                        TaskSchedulePlan taskSchedulePlan) {
+    super(streamingWindowTask, streamingInQueue, config, tName, tId, tIndex, parallel, wId, cfgs,
+        inEdges, taskSchedulePlan);
+
     this.streamingWindowTask = streamingWindowTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
@@ -124,10 +111,6 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     this.taskName = tName;
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
-    this.windowingPolicy = winPolicy;
-    this.windowManager = new WindowManager<>(this.windowingPolicy);
-    this.windowSize = this.windowingPolicy.getCount().value;
-    this.messageList = new ArrayList<>(this.windowSize);
   }
 
   @Override
@@ -136,15 +119,7 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
       if (m != null) {
-        this.windowManager.execute(m);
-      }
-
-      if (this.windowManager.isDone()) {
-        LOG.info(String.format("Windowing Completed : %d", this.windowManager.getWindow().size()));
-        streamingWindowTask.execute(this.windowManager.getWindow());
-        this.windowManager.clearWindow();
-      } else {
-        LOG.info(String.format("Window Manager : %d", this.windowManager.getWindow().size()));
+        this.streamingWindowTask.execute(m);
       }
     }
 
@@ -181,20 +156,4 @@ public class SinkStreamingWindowingInstance implements INodeInstance, IWindowIns
     return streamingInQueue;
   }
 
-  public WindowingPolicy getWindowingPolicy() {
-    return windowingPolicy;
-  }
-
-  public void setWindowingPolicy(WindowingPolicy windowingPolicy) {
-    this.windowingPolicy = windowingPolicy;
-  }
-
-  @Override
-  public void initializePolicy() {
-    if (this.windowingPolicy == null) {
-      throw new RuntimeException("Windowing Policy Not defined");
-    } else {
-      //
-    }
-  }
 }

@@ -11,11 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window;
 
-import java.util.List;
-
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
 
-public interface IWindowCompute<T> extends INode {
-  boolean execute(List<IMessage<T>> content);
+public interface IWindowCompute<T> extends ICompute<T> {
+  boolean execute(IMessage<T> message);
 }

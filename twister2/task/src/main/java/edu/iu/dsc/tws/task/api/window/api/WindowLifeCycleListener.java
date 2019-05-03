@@ -9,8 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.api;
+package edu.iu.dsc.tws.task.api.window.api;
 
-public interface IWindowInstance {
+import java.io.Serializable;
+
+public interface WindowLifeCycleListener<T> extends Serializable {
+
+  void onExpiry(IWindowMessage<T> events);
+
+  void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
+                    IWindowMessage<T> expired);
 
 }

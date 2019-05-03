@@ -33,8 +33,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   private OperationMode operationMode = OperationMode.STREAMING;
 
-  private WindowMode windowMode = WindowMode.NONE;
-
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
   }
@@ -188,23 +186,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
    */
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
-  }
-
-
-  /**
-   * Setting the window mode "ALL" or "NONE"
-   * @param windowMode
-   */
-  public void setWindowMode(WindowMode windowMode) {
-    this.windowMode = windowMode;
-  }
-
-  /**
-   * This is the getter method to get the property of windowing mode "ALL" or "NONE"
-   * @return
-   */
-  public WindowMode getWindowMode() {
-    return windowMode;
   }
 
 

@@ -21,11 +21,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.compute;
+package edu.iu.dsc.tws.task.api.window.policy.trigger;
 
-import java.util.List;
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.constant.WindowType;
 
-import edu.iu.dsc.tws.task.api.BaseCompute;
+public class WindowingGlobalPolicy extends WindowingPolicy {
+  public WindowingGlobalPolicy(WindowType windowType, WindowConfig.Count count) {
+    super(windowType, count);
+  }
 
-public abstract class AbstractListDataCompute<T> extends BaseCompute<List<T>> {
+  public WindowingGlobalPolicy(WindowType windowType, WindowConfig.Duration duration) {
+    super(windowType, duration);
+  }
 }

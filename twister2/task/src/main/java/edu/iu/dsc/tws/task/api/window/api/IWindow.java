@@ -21,9 +21,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.compute;
+package edu.iu.dsc.tws.task.api.window.api;
 
-import edu.iu.dsc.tws.task.api.window.BaseWindowCompute;
+import java.io.Serializable;
 
-public abstract class AbstractSingleWindowDataCompute<T> extends BaseWindowCompute<T> {
+import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
+
+public interface IWindow extends Serializable {
+
+  long getWindowLength();
+
+  long getSlidingLength();
+
+  <T> IWindowStrategy<T> getWindowStrategy();
+
+  void validate();
+
+  enum Type {
+    SLIDING_COUNT,
+    TUMBLING_COUNT,
+    SLIDING_DURATION,
+    TUMBLING_DURATION
+  }
+
 }
