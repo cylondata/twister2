@@ -250,7 +250,6 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
         parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet);
       }
       roundRobinAllocation = attributeBasedAllocation(parallelTaskMap, graph);
-
     } else {
       parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet);
       roundRobinAllocation = nonAttributeBasedAllocation(parallelTaskMap);
@@ -263,6 +262,44 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
                                                                   DataFlowTaskGraph graph) {
     int containerIndex = 0;
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+    int maxTaskSize = 0;
+    if (parallelTaskMap.size() == 1) {
+      for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
+        String task = e.getKey();
+        int taskParallelism = e.getValue();
+        int numberOfInstances;
+        if (instancesPerContainer < taskParallelism) {
+          numberOfInstances = taskParallelism;
+        } else {
+          numberOfInstances = instancesPerContainer;
+        }
+        LOG.info("Task Parallelism Value:" + taskParallelism);
+        int taskIndex;
+        for (taskIndex = 0; taskIndex < taskParallelism; taskIndex++) {
+          if (taskIndex == instancesPerContainer) {
+            containerIndex++;
+          } else {
+            roundRobinAllocation.get(containerIndex).add(new InstanceId(task, gTaskId, taskIndex));
+          }
+          //if (containerIndex >= roundRobinAllocation.size()) {
+          //  containerIndex = 0;
+          //}
+        }
+        gTaskId++;
+      }
+    } else {
+      LOG.info("I am getting called" + parallelTaskMap.entrySet());
+      getRoundRobinAllocation(parallelTaskMap, graph);
+    }
+    return roundRobinAllocation;
+  }
+
+  private Map<Integer, List<InstanceId>>  getRoundRobinAllocation(Map<String, Integer>
+                                                                      parallelTaskMap,
+                                                                  DataFlowTaskGraph graph) {
+    int containerIndex = 0;
+    int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
