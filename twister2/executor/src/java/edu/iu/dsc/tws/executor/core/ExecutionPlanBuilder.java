@@ -42,15 +42,14 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.Vertex;
-import edu.iu.dsc.tws.task.graph.WindowMode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
@@ -175,7 +174,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the instance
       INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          taskGraph.getWindowMode(), inEdges, outEdges,
+          inEdges, outEdges,
           taskSchedule);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
@@ -289,7 +288,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    */
   private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
-                                        WindowMode windowMode,
                                         Map<String, String> inEdges,
                                         Map<String, String> outEdges,
                                         TaskSchedulePlan taskSchedule) {
@@ -353,7 +351,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
                   new LinkedBlockingQueue<>(), cfg, vertex.getName(),
                   taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                  vertex.getConfig().toMap(), inEdges, taskSchedule, vertex.getWindowingPolicy());
+                  vertex.getConfig().toMap(), inEdges, taskSchedule);
           streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {

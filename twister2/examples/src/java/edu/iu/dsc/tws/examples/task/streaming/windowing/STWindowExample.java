@@ -25,60 +25,51 @@ package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.IWindowedSink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.compute.WindowedCompute;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Window;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
+import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 
 public class STWindowExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STWindowExample.class.getName());
-
-  private Window window;
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    initPolicy();
+
     String edge = "edge";
     BaseWindowSource g = new SourceWindowTask(edge);
-    ISink d = new DirectReceiveTask();
 
-    IWindowedSink dw = new DirectWindowedReceivingTask(windowingPolicy);
+    BaseWindowSink dw = new DirectWindowedReceivingTask()
+        .withTumblingCountWindow(5);
+    BaseWindowSink dwDuration = new DirectWindowedReceivingTask()
+        .withTumblingDurationWindow(2, TimeUnit.MILLISECONDS);
+
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism, windowingPolicy);
+    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;
-  }
-
-  public void initPolicy() {
-    WindowConfig.Count count = new WindowConfig.Count(5);
-    this.window = Window.TUMBLING;
-    windowingPolicy = new WindowingPolicy(this.window, count);
   }
 
   protected static class DirectReceiveTask extends DirectCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
-
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
@@ -92,39 +83,22 @@ public class STWindowExample extends BenchTaskWorker {
     }
   }
 
-  protected static class DirectWindowedReceivingTask extends WindowedCompute<int[]>
-      implements IWindowedSink, ReduceWindowedFunction<int[]> {
+  protected static class DirectWindowedReceivingTask extends BaseWindowedSink<int[]> {
 
-    private WindowingPolicy windowingPolicy;
-
-    public DirectWindowedReceivingTask(WindowingPolicy windowingPolicy) {
-      this.windowingPolicy = windowingPolicy;
+    public DirectWindowedReceivingTask() {
     }
 
+    /**
+     * This method returns the final windowing message
+     * @param windowMessage Aggregated IWindowMessage is obtained here
+     * windowMessage contains [expired-tuples, current-tuples]
+     * @return
+     */
     @Override
-    public List<IMessage<int[]>> window(List<IMessage<int[]>> content) {
-      if (content.size() > 0) {
-        int[][] data = new int[content.size()][];
-        int i = 0;
-        String s = "";
-        for (IMessage<int[]> message : content) {
-          data[i++] = (int[]) message.getContent();
-          s += Arrays.toString(data[i - 1]) + " ";
-        }
-        LOG.info(String.format("Window Size : %d, Data : { %s }", content.size(), s));
-      } else {
-        LOG.info(String.format("Something Went Wrong!!!"));
-      }
-      return content;
+    public IWindowMessage<int[]> execute(IWindowMessage<int[]> windowMessage) {
+      LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
+      return windowMessage;
     }
 
-
-    @Override
-    public int[] reduce(int[] t0, int[] t1) {
-      for (int i = 0; i < t0.length; i++) {
-        t0[i] += t1[i];
-      }
-      return t0;
-    }
   }
 }

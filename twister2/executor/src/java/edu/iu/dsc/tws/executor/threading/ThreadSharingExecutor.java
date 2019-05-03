@@ -87,7 +87,7 @@ public abstract class ThreadSharingExecutor implements  IExecutor {
     long start = System.currentTimeMillis();
     // wait for 5 seconds until channel completes
     while (!channel.isComplete()) {
-      if (System.currentTimeMillis() - start > 5000) {
+      if (System.currentTimeMillis() - start > 1000) {
         break;
       }
     }

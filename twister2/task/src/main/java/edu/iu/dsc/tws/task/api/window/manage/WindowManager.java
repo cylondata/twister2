@@ -12,12 +12,21 @@
 package edu.iu.dsc.tws.task.api.window.manage;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Window;
-import edu.iu.dsc.tws.task.api.window.policy.WindowingPolicy;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.window.api.Event;
+import edu.iu.dsc.tws.task.api.window.api.EventImpl;
+import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
+import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
+import edu.iu.dsc.tws.task.api.window.constant.Action;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
 public class WindowManager<T> implements IManager<T> {
 
@@ -25,143 +34,137 @@ public class WindowManager<T> implements IManager<T> {
 
   private static final long serialVersionUID = -15452808832480739L;
 
-  private WindowingPolicy windowingPolicy;
+  private IWindowingPolicy<T> windowingPolicy;
 
-  private List<T> windowedObjects;
+  private IEvictionPolicy<T> evictionPolicy;
 
-  private int windowCountSize = 0;
+  private WindowLifeCycleListener<T> windowLifeCycleListener;
 
-  private WindowConfig.Duration windowDurationSize;
+  private List<IMessage<T>> expiredEvents;
 
-  private boolean windowingCompleted = false;
+  private ReentrantLock lock;
 
-  public WindowManager(WindowingPolicy windowingPolicy) {
+  private final ConcurrentLinkedQueue<Event<T>> queue;
+
+  public WindowManager(WindowLifeCycleListener<T> windowLifeCycleListener) {
+    this.windowLifeCycleListener = windowLifeCycleListener;
+    this.queue = new ConcurrentLinkedQueue<>();
+    this.expiredEvents = new ArrayList<>();
+    this.lock = new ReentrantLock();
+  }
+
+  public WindowManager() {
+    this.queue = new ConcurrentLinkedQueue<>();
+    this.expiredEvents = new ArrayList<>();
+    this.lock = new ReentrantLock();
+  }
+
+  public IWindowingPolicy<T> getWindowingPolicy() {
+    return windowingPolicy;
+  }
+
+  public void setWindowingPolicy(IWindowingPolicy<T> windowingPolicy) {
     this.windowingPolicy = windowingPolicy;
-    this.windowingPolicy = initializeWindowingPolicy();
   }
 
-  /**
-   * TODO : Windowing Graph must be considered and policy has to be arranged
-   * When multiple windowing policies are applied, they need to be handled sequentially
-   */
-  @Override
-  public WindowingPolicy initializeWindowingPolicy() {
+  public IEvictionPolicy<T> getEvictionPolicy() {
+    return evictionPolicy;
+  }
 
-    if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
-      if (this.windowingPolicy.getCount().value > 0) {
-        this.windowedObjects = new ArrayList<T>(this.windowingPolicy.getCount().value);
-      }
-      //TODO : implement the timing based one
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.SLIDING)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.SESSION)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.GLOBAL)) {
-      // TODO : implement the logic
-    }
-
-    return this.windowingPolicy;
+  public void setEvictionPolicy(IEvictionPolicy<T> evictionPolicy) {
+    this.evictionPolicy = evictionPolicy;
   }
 
   @Override
-  public List<T> getWindow() {
-    return this.windowedObjects;
+  public void add(IMessage<T> message) {
+    add(message, System.currentTimeMillis());
   }
 
-  @Override
-  public boolean execute(T message) {
 
-    boolean status = false;
-    if (progress(this.windowedObjects)) {
-      if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
-        windowCountSize = this.windowingPolicy.getCount().value;
-        windowDurationSize = this.windowingPolicy.getDuration();
-        if (windowCountSize > 0 && this.windowedObjects.size() < windowCountSize) {
-          this.windowedObjects.add(message);
-          status = true;
+  public void add(IMessage<T> message, long ts) {
+    add(new EventImpl<T>(message, ts));
+  }
+
+  public void add(Event<T> windowEvent) {
+    if (!windowEvent.isWatermark()) {
+      queue.add(windowEvent);
+    } else {
+      LOG.info(String.format("Event With WaterMark ts %f ", (double) windowEvent.getTimeStamp()));
+    }
+    track(windowEvent);
+  }
+
+
+  @Override
+  public void onEvent() {
+    List<Event<T>> windowEvents = null;
+    List<IMessage<T>> expired = null;
+    try {
+      lock.lock();
+      windowEvents = scanEvents(true);
+      expired = new ArrayList<>(expiredEvents);
+      expiredEvents.clear();
+    } finally {
+      lock.unlock();
+    }
+    if (!windowEvents.isEmpty()) {
+      IWindowMessage<T> iWindowMessage = bundleWindowMessage(windowEvents);
+      this.windowLifeCycleListener.onActivation(iWindowMessage, null, null);
+    }
+    this.windowingPolicy.reset();
+  }
+
+  public List<Event<T>> scanEvents(boolean fullScan) {
+    List<IMessage<T>> eventsToExpire = new ArrayList<>();
+    List<Event<T>> eventsToProcess = new ArrayList<>();
+    try {
+      lock.lock();
+      Iterator<Event<T>> it = queue.iterator();
+      while (it.hasNext()) {
+        Event<T> windowEvent = it.next();
+        Action action = evictionPolicy.evict(windowEvent);
+        if (action == Action.EXPIRE) {
+          eventsToExpire.add(windowEvent.get());
+          it.remove();
+        } else if (!fullScan || action == Action.STOP) {
+          break;
+        } else if (action == Action.PROCESS) {
+          eventsToProcess.add(windowEvent);
         }
-        //TODO : implement the duration logic
       }
-
-      if (this.windowingPolicy.getWindow().equals(Window.SLIDING)) {
-        // TODO : implement the logic
-      }
-
-      if (this.windowingPolicy.getWindow().equals(Window.SESSION)) {
-        // TODO : implement the logic
-      }
-
-      if (this.windowingPolicy.getWindow().equals(Window.GLOBAL)) {
-        // TODO : implement the logic
-      }
-
+      expiredEvents.addAll(eventsToExpire);
+    } finally {
+      lock.unlock();
     }
-    return status;
+
+    return eventsToProcess;
   }
 
-  @Override
-  public void clearWindow() {
-    this.windowingCompleted = false;
-    this.windowedObjects.clear();
+  public IWindowMessage<T> bundleWindowMessage(List<Event<T>> events) {
+    WindowMessageImpl winMessage = null;
+    List<IMessage<T>> messages = new ArrayList<>();
+    for (Event<T> event : events) {
+      IMessage<T> m = event.get();
+      messages.add(m);
+    }
+    winMessage = new WindowMessageImpl(messages);
+    return winMessage;
   }
 
-  @Override
-  public boolean progress(List<T> window) {
-    boolean progress = true;
-    if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
-      windowCountSize = this.windowingPolicy.getCount().value;
-      windowDurationSize = this.windowingPolicy.getDuration();
-      if (window.size() == windowCountSize && windowCountSize > 0) {
-        progress = false;
-      }
-      // TODO : implement duration logic
-    }
 
-    if (this.windowingPolicy.getWindow().equals(Window.SLIDING)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.SESSION)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.GLOBAL)) {
-      // TODO : implement the logic
-    }
-
-    return progress;
+  public void track(Event<T> windowEvent) {
+    this.evictionPolicy.track(windowEvent);
+    this.windowingPolicy.track(windowEvent);
   }
 
-  @Override
-  public boolean isDone() {
-    if (this.windowingPolicy.getWindow().equals(Window.TUMBLING)) {
-      windowCountSize = this.windowingPolicy.getCount().value;
-      windowDurationSize = this.windowingPolicy.getDuration();
-      if (this.windowedObjects.size() == windowCountSize && windowCountSize > 0) {
-        this.windowingCompleted = true;
-      } else {
-        this.windowingCompleted = false;
-      }
-      // TODO : implement duration logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.SLIDING)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.SESSION)) {
-      // TODO : implement the logic
-    }
-
-    if (this.windowingPolicy.getWindow().equals(Window.GLOBAL)) {
-      // TODO : implement the logic
-    }
-    return this.windowingCompleted;
+  public void compactWindow() {
+    //TODO : handle the expired window accumilation with caution
   }
+
+  public void shutdown() {
+    if (windowingPolicy != null) {
+      windowingPolicy.shutdown();
+    }
+  }
+
 }

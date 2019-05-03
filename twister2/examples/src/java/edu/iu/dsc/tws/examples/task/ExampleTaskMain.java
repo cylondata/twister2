@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
@@ -65,7 +66,7 @@ public class ExampleTaskMain {
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
-    options.addOption(Constants.ARGS_WINDOW, false, "Window");
+    options.addOption(Constants.ARGS_WINDOW, false, "WindowType");
     options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true,
         "Number of parallel instances of tasks", true));
     options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
@@ -175,6 +176,9 @@ public class ExampleTaskMain {
       switch (operation) {
         case "direct":
           submitJob(config, workers, jobConfig, STWindowExample.class.getName());
+          break;
+        case "cdirect":
+          submitJob(config, workers, jobConfig, STWindowCustomExample.class.getName());
           break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName());
