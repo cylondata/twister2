@@ -151,7 +151,7 @@ public final class FileLoader {
   /**
    * This method accepts a Array of lists instead of a list of tuples
    */
-  public static long saveKeyValues(List[] records, int recordsArrayLength,
+  public static long saveKeyValues(List<Tuple> records,
                                    long size, String outFileName, MessageType keyType) {
     try {
       long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file
@@ -160,54 +160,51 @@ public final class FileLoader {
       long totalSize = 0;
       List<byte[]> byteKeys = new ArrayList<>();
       if (keyType.isPrimitive() && !keyType.isArray()) {
-        totalSize += recordsArrayLength * keyType.getUnitSizeInBytes();
+        totalSize += records.size() * keyType.getUnitSizeInBytes();
       } else {
-        for (int i = 0; i < recordsArrayLength; i++) {
-          for (Object obj : records[i]) {
-            Tuple record = Tuple.class.cast(obj);
-            byte[] data = keyType.getDataPacker().packToByteArray(record.getKey());
-            totalSize += data.length; // data + length of key
-            if (keyType.getDataPacker().isHeaderRequired()) {
-              totalSize += Integer.BYTES;
-            }
-            byteKeys.add(data);
+        for (int i = 0; i < records.size(); i++) {
+          Tuple record = records.get(i);
+          byte[] data = keyType.getDataPacker().packToByteArray(record.getKey());
+          totalSize += data.length; // data + length of key
+          if (keyType.getDataPacker().isHeaderRequired()) {
+            totalSize += Integer.BYTES;
           }
+          byteKeys.add(data);
         }
       }
 
       long sizeSum = 0; //just to check whether sizes match
 
       // we need to write the data lengths and key lengths
-      int dataLengthSize = Integer.BYTES * recordsArrayLength;
+      int dataLengthSize = Integer.BYTES * records.size();
       totalSize += size + dataLengthSize;
 
       Files.createDirectories(Paths.get(outFileName).getParent());
       RandomAccessFile randomAccessFile = new RandomAccessFile(outFileName, "rw");
       FileChannel rwChannel = randomAccessFile.getChannel();
       MappedByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
-      for (int i = 0; i < recordsArrayLength; i++) {
-        for (Object o : records[i]) {
-          long positionBefore = os.position(); //position of os before writing this tuple
+      for (int i = 0; i < records.size(); i++) {
+        Tuple keyValue = records.get(i);
+        long positionBefore = os.position(); //position of os before writing this tuple
 
-          Tuple keyValue = Tuple.class.cast(o);
-          byte[] r = (byte[]) keyValue.getValue(); //this has been already serialized
-          if (keyType.isPrimitive() && !keyType.isArray()) {
-            keyType.getDataPacker().packToByteBuffer(os, keyValue.getKey());
-          } else {
-            byte[] key = byteKeys.get(i);
-            if (keyType.getDataPacker().isHeaderRequired()) {
-              os.putInt(key.length);
-            }
-            os.put(key);
+        byte[] r = (byte[]) keyValue.getValue(); //this has been already serialized
+        if (keyType.isPrimitive() && !keyType.isArray()) {
+          keyType.getDataPacker().packToByteBuffer(os, keyValue.getKey());
+        } else {
+          byte[] key = byteKeys.get(i);
+          if (keyType.getDataPacker().isHeaderRequired()) {
+            os.putInt(key.length);
           }
-
-          sizeSum += r.length;
-          os.putInt(r.length);
-          os.put(r, 0, r.length);
-
-          long tupleSize = os.position() - positionBefore;
-          maxRecord = Math.max(maxRecord, tupleSize);
+          os.put(key);
         }
+
+        sizeSum += r.length;
+        os.putInt(r.length);
+        os.put(r, 0, r.length);
+
+        long tupleSize = os.position() - positionBefore;
+        maxRecord = Math.max(maxRecord, tupleSize);
+
       }
       if (sizeSum != size) {
         LOG.log(Level.WARNING, "Sum doesn't equal size: " + sizeSum + " != " + size);

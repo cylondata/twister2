@@ -276,10 +276,17 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     List<DataTransferTimeCalculator> workerNodeList = findBestWorkerNode(workerPlanMap);
 
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-    int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
+    int globalTaskIndex = 0;
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
+      int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
             task, gTaskId, taskIndex));
@@ -292,7 +299,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     }
     return dataLocalityAwareAllocation;
   }
-
 
   private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(Map<String, Integer>
                                                                          parallelTaskMap,
@@ -308,7 +314,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
-      int numberOfInstances = e.getValue();
+      int taskParallelism = e.getValue();
+      int numberOfInstances;
+      if (instancesPerContainer < taskParallelism) {
+        numberOfInstances = taskParallelism;
+      } else {
+        numberOfInstances = instancesPerContainer;
+      }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
             task, gTaskId, taskIndex));
@@ -318,95 +330,6 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         }
       }
       gTaskId++;
-    }
-    return dataLocalityAwareAllocation;
-  }
-
-
-  //TODO: This method will be removed once the final testing is done.
-  /**
-   * This method is primarily responsible for generating the container and task instance map which
-   * is based on the task graph, its configuration, and the allocated worker plan.
-   */
-  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      Vertex vertex, WorkerPlan workerPlan) {
-    int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-    int cIdx = 0;
-    int containerIndex;
-
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(vertex);
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-
-    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
-      Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
-      String taskName = aTaskEntrySet.getKey();
-
-      if (vertex.getName().equals(taskName)) {
-        int totalTaskInstances = vertex.getParallelism();
-
-        List<String> inputDataList = getInputFilesList();
-        List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-
-        workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx);
-        List<DataTransferTimeCalculator> cal = findBestWorkerNode(workerPlanMap);
-
-        /* This loop allocate the task instances to the respective container but, before allocation
-        it will check whether the container has reached maximum task instance size which is
-        able to hold. */
-        for (int i = 0; i < totalTaskInstances; i++) {
-          int maxContainerTaskObjectSize = 0;
-          if (maxContainerTaskObjectSize < instancesPerContainer) {
-            containerIndex = Integer.parseInt(cal.get(i).getNodeName());
-            dataLocalityAwareAllocation.get(containerIndex).add(
-                new InstanceId(vertex.getName(), gTaskId, i));
-            ++maxContainerTaskObjectSize;
-          }
-        }
-        gTaskId++;
-      }
-    }
-    return dataLocalityAwareAllocation;
-  }
-
-  //TODO: This method will be removed once the final testing is done.
-  /**
-   * This method generates the container and task instance map which is based on the task graph,
-   * its configuration, and the allocated worker plan.
-   *
-   * @return Map
-   */
-  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      Set<Vertex> vertexSet, WorkerPlan workerPlan) {
-    int cIdx = 0;
-    int containerIndex;
-
-    Map<String, Integer> parallelTaskMap = taskAttributes.getParallelTaskMap(vertexSet);
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-
-    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
-      Map<String, List<DataTransferTimeCalculator>> workerPlanMap;
-      String taskName = aTaskEntrySet.getKey();
-
-      /*If the vertex has the input data set list, get the status and path of the file in HDFS.*/
-      for (Vertex vertex : vertexSet) {
-        if (vertex.getName().equals(taskName)) {
-
-          int totalNumberOfInstances = vertex.getParallelism();
-
-          List<String> inputDataList = getInputFilesList();
-          List<String> datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
-
-          workerPlanMap = calculateDistance(datanodesList, workerPlan, cIdx);
-          List<DataTransferTimeCalculator> cal = findBestWorkerNode(workerPlanMap);
-
-          for (int i = 0; i < totalNumberOfInstances; i++) {
-            containerIndex = Integer.parseInt(cal.get(i).getNodeName().trim());
-            dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-                vertex.getName(), gTaskId, i));
-          }
-          gTaskId++;
-        }
-      }
     }
     return dataLocalityAwareAllocation;
   }

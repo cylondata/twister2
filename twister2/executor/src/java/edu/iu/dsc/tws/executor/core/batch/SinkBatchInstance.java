@@ -147,7 +147,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       boolean needsFurther = progressCommunication();
 
       // we don't have incoming and our inqueue in empty
-      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty() && !needsFurther) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
