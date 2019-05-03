@@ -28,9 +28,6 @@ twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
 # in milli seconds
 twister2.worker.controller.max.wait.time.on.barrier: 100000
 
-# No of executor threads to use
-twister2.exector.worker.threads: 2
-
 ###################################################################
 # Dashboard related settings
 ###################################################################

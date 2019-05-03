@@ -333,16 +333,19 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       if (isKeyed) {
         currentMessage.setKeyType(receiveKeyType);
       }
-      currentMessages.put(source, currentMessage);
+      if (!currentMessage.addBufferAndCalculate(buffer)) {
+        currentMessages.put(source, currentMessage);
+      }
       // we add the message immediately to the deserialization as we can deserialize partially
       Queue<InMessage> deserializeQueue = pendingReceiveDeSerializations.get(source);
       if (!deserializeQueue.offer(currentMessage)) {
         throw new RuntimeException(executor + " We should have enough space: "
             + deserializeQueue.size());
       }
-    }
-    if (currentMessage.addBufferAndCalculate(buffer)) {
-      currentMessages.remove(source);
+    } else {
+      if (currentMessage.addBufferAndCalculate(buffer)) {
+        currentMessages.remove(source);
+      }
     }
   }
 
