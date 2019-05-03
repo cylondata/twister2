@@ -21,9 +21,9 @@ public class WindowConfig implements Serializable {
   public static class Count implements Serializable {
 
     private static final long serialVersionUID = 8272120867802383759L;
-    public final int value;
+    public final long value;
 
-    public Count(int value) {
+    public Count(long value) {
       this.value = value;
     }
 
@@ -38,29 +38,29 @@ public class WindowConfig implements Serializable {
   public static class Duration implements Serializable {
 
     private static final long serialVersionUID = -8082429717934376825L;
-    private final int value;
+    public final long value;
 
-    public Duration(int value, TimeUnit timeUnit) {
-      this.value = (int) timeUnit.toMillis(value);
+    public Duration(long value, TimeUnit timeUnit) {
+      this.value = timeUnit.toMillis(value);
     }
 
-    public static Duration of(int milliseconds) {
+    public static Duration of(long milliseconds) {
       return new Duration(milliseconds, TimeUnit.MILLISECONDS);
     }
 
-    public static Duration days(int days) {
+    public static Duration days(long days) {
       return new Duration(days, TimeUnit.DAYS);
     }
 
-    public static Duration hours(int hours) {
+    public static Duration hours(long hours) {
       return new Duration(hours, TimeUnit.HOURS);
     }
 
-    public static Duration minutes(int minutes) {
+    public static Duration minutes(long minutes) {
       return new Duration(minutes, TimeUnit.MINUTES);
     }
 
-    public static Duration seconds(int seconds) {
+    public static Duration seconds(long seconds) {
       return new Duration(seconds, TimeUnit.SECONDS);
     }
 
@@ -71,7 +71,5 @@ public class WindowConfig implements Serializable {
           + '}';
     }
   }
-
-
 
 }

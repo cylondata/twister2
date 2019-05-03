@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.constant;
 
-public enum Window {
+public enum WindowType {
   TUMBLING,
   SLIDING,
   SESSION,

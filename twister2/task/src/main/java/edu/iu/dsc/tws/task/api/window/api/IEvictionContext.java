@@ -9,8 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.api;
+package edu.iu.dsc.tws.task.api.window.api;
 
-public interface IWindowInstance {
+public interface IEvictionContext {
+
+  Long getReferenceTime();
+
+  Long getSlidingCount();
+
+  Long getSlidingInterval();
+
+  Long getCurrentCount();
 
 }
