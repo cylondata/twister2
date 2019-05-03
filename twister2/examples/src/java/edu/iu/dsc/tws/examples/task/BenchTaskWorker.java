@@ -93,19 +93,22 @@ public abstract class BenchTaskWorker extends TaskWorker {
     executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
 
-    while (execution.progress()
-        && (sendersInProgress.get() != 0 || receiversInProgress.get() != 0)) {
-      //do nothing
-      //LOG.info(sendersInProgress.get() + "," + receiversInProgress.get());
-    }
-
-    //now just spin for several iterations to progress the remaining communication.
-    //todo fix streaming to return false, when comm is done
-    long timeNow = System.currentTimeMillis();
     if (jobParameters.isStream()) {
+      while (execution.progress()
+          && (sendersInProgress.get() != 0 || receiversInProgress.get() != 0)) {
+        //do nothing
+      }
+
+      //now just spin for several iterations to progress the remaining communication.
+      //todo fix streaming to return false, when comm is done
+      long timeNow = System.currentTimeMillis();
       LOG.info("Streaming Example task will wait 10secs to finish communication...");
       while (System.currentTimeMillis() - timeNow < 10000) {
         execution.progress();
+      }
+    } else {
+      while (execution.progress()) {
+        //do nothing
       }
     }
     execution.stop();
