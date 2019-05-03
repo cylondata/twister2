@@ -153,7 +153,12 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     if (!thisSources.contains(source)) {
       throw new RuntimeException("Invalid source completion: " + source);
     }
-    pendingFinishSources.add(source);
+    lock.lock();
+    try {
+      pendingFinishSources.add(source);
+    } finally {
+      lock.unlock();
+    }
   }
 
   @Override
@@ -318,7 +323,6 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   private void calculateRoutingParameters() {
-    Set<Integer> workerTasks = instancePlan.getTasksOfThisExecutor();
     RoutingParameters parameters = sendRoutingParameters(source, 0);
     routingParametersCache.put(source, parameters);
 
@@ -350,14 +354,12 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
         delegate.progress();
         done = delegate.isComplete();
-        try {
-          partialNeedsProgress = finalReceiver.progress();
-        } finally {
-          lock.unlock();
-        }
+        partialNeedsProgress = finalReceiver.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "un-expected error", t);
         throw new RuntimeException(String.format("%d exception", executor), t);
+      } finally {
+        lock.unlock();
       }
       return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
     }
@@ -383,6 +385,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     return delegate.isComplete();
   }
 
+  @Override
   public boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
         DataFlowContext.DEFAULT_DESTINATION);
