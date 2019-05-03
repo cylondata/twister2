@@ -18,14 +18,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
@@ -217,11 +218,44 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   private void deserializeObjects() {
-    this.objectsInMemory = this.recordsInMemory.stream()
-        .map(tuple -> {
+    int threads = CommonThreadPool.getThreadCount() + 1; //this thread is also counted
+    List<Future<Boolean>> deserializeFutures = new ArrayList<>();
+
+    int chunkSize = this.recordsInMemory.size() / threads;
+
+    if (this.recordsInMemory.size() % threads != 0) {
+      chunkSize++;
+    }
+
+    for (int i = 0; i < this.recordsInMemory.size(); i += chunkSize) {
+      final int start = i;
+      final int end = Math.min(this.recordsInMemory.size(), i + chunkSize);
+      //last chunk will be processed in this thread
+      if (end == this.recordsInMemory.size()) {
+        for (int j = start; j < end; j++) {
+          Tuple tuple = recordsInMemory.get(j);
           Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
-          return new Tuple(tuple.getKey(), o);
-        }).collect(Collectors.toList());
+          tuple.setValue(o);
+        }
+      } else {
+        deserializeFutures.add(CommonThreadPool.getExecutor().submit(() -> {
+          for (int j = start; j < end; j++) {
+            Tuple tuple = recordsInMemory.get(j);
+            Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
+            tuple.setValue(o);
+          }
+          return true;
+        }));
+      }
+    }
+
+    for (int i = 0; i < deserializeFutures.size(); i++) {
+      try {
+        deserializeFutures.get(i).get();
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException("Error in deserializing records in memory", e);
+      }
+    }
   }
 
   /**
@@ -264,7 +298,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       final String fileName = getSaveFileName(noOfFileWritten);
       final long bytesInMemory = numOfBytesInMemory;
 
-      ForkJoinPool.commonPool().execute(() -> {
+      CommonThreadPool.getExecutor().execute(() -> {
         try {
           // do the sort
           referenceToRecordsInMemory.sort(comparatorWrapper);
@@ -284,6 +318,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       fileWriteLock.release();
     } catch (InterruptedException e) {
       LOG.log(Level.SEVERE, "Couldn't write to the file", e);
+      fileWriteLock.release();
     }
   }
 
