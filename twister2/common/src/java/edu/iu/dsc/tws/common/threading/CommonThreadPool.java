@@ -24,7 +24,7 @@
 package edu.iu.dsc.tws.common.threading;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,7 +57,7 @@ public final class CommonThreadPool {
     this.threads = thread;
     final AtomicInteger threadCount = new AtomicInteger(0);
     this.executorService = new ThreadPoolExecutor(0, thread, keepAlive,
-        TimeUnit.SECONDS, new SynchronousQueue<>(),
+        TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
         r -> new Thread(r, "twister2-common-thread-pool-" + threadCount.getAndIncrement()));
   }
 

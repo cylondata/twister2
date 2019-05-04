@@ -159,6 +159,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   public synchronized void switchToReading() {
+    LOG.info("Switching to read...");
     try {
       fileWriteLock.acquire();
     } catch (InterruptedException iex) {
@@ -258,18 +259,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     if (numOfBytesInMemory >= maxBytesToKeepInMemory
         || this.recordsInMemory.size() >= maxRecordsInMemory) {
 
-      // first sort the values
-
-
-//      Arrays.parallelSort(this.recordsInMemory, 0,
-//          this.currentKeyIndex, listComparatorWrapper);
 
       // save the bytes to disk
       this.writeToFile();
-//      long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory,
-//          this.currentKeyIndex,
-//          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
-//      largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
 
       numOfBytesInMemory = 0;
 
@@ -282,7 +274,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void writeToFile() {
     try {
       if (this.fileWriteLock.availablePermits() == 0) {
-        System.out.println("Blocking");
+        LOG.warning("Communication thread blocks on disk IO thread!");
       }
       this.fileWriteLock.acquire(); // allow 1 parallel write to disk
 
@@ -461,10 +453,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       }
     }
     File rootFolder = new File(this.getSaveFolderName());
-    boolean deleted = rootFolder.delete();
-    if (!deleted) {
-      LOG.warning("Failed to delete the directory");
-    }
+    rootFolder.deleteOnExit();
     status = FSStatus.DONE;
   }
 
