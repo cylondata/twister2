@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
@@ -65,14 +66,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private int noOfFileWritten = 0;
 
   /**
-   * The size of the records in memory
-   */
-  private List<Integer> bytesLength = new ArrayList<>();
-
-  /**
    * List of bytes in the memory so far
    */
-  private List<Tuple> recordsInMemory;
+  private LinkedList<Tuple> recordsInMemory;
 
   /**
    * The deserialized objects in memory
@@ -132,7 +128,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.maxRecordsInMemory = maxRecsInMemory;
 
     //we can expect atmost this much of unique keys
-    this.recordsInMemory = new ArrayList<>(this.maxRecordsInMemory);
+    this.recordsInMemory = new LinkedList<>();
 
     this.folder = dir;
     this.operationName = opName;
@@ -155,15 +151,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
-    if (this.recordsInMemory.size() >= this.maxRecordsInMemory) {
-      this.run();
-    }
-
     this.recordsInMemory.add(new Tuple(key, data));
 
     // todo ignoring length for now
     // this.bytesLength.add(length);
-    this.numOfBytesInMemory += length;
+    this.numOfBytesInMemory += data.length;
   }
 
   public synchronized void switchToReading() {
@@ -282,19 +274,20 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       numOfBytesInMemory = 0;
 
       //making previous things garbage collectible
-      this.recordsInMemory = new ArrayList<>(this.maxRecordsInMemory);
-
-      bytesLength.clear();
+      this.recordsInMemory = new LinkedList<>();
       noOfFileWritten++;
     }
   }
 
   private void writeToFile() {
     try {
+      if (this.fileWriteLock.availablePermits() == 0) {
+        System.out.println("Blocking");
+      }
       this.fileWriteLock.acquire(); // allow 1 parallel write to disk
 
       //create references to existing data
-      final List<Tuple> referenceToRecordsInMemory = this.recordsInMemory;
+      final LinkedList<Tuple> referenceToRecordsInMemory = this.recordsInMemory;
       final String fileName = getSaveFileName(noOfFileWritten);
       final long bytesInMemory = numOfBytesInMemory;
 
