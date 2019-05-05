@@ -49,7 +49,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     int sourceParallelsim = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.INTEGER_ARRAY;
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);

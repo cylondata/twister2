@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.api.IExecution;
@@ -33,6 +34,9 @@ public class Executor {
   public Executor(Config cfg, int wId, TWSChannel channel, OperationMode operationMode) {
     this.config = cfg;
     this.workerId = wId;
+
+    //initialize common thread pool
+    CommonThreadPool.init(config);
 
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {

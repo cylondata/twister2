@@ -19,6 +19,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -151,19 +152,19 @@ public final class FileLoader {
   /**
    * This method accepts a Array of lists instead of a list of tuples
    */
-  public static long saveKeyValues(List<Tuple> records,
+  public static long saveKeyValues(LinkedList<Tuple> records,
                                    long size, String outFileName, MessageType keyType) {
     try {
       long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file
 
       // first serialize keys
       long totalSize = 0;
-      List<byte[]> byteKeys = new ArrayList<>();
+      List<byte[]> byteKeys = null;
       if (keyType.isPrimitive() && !keyType.isArray()) {
         totalSize += records.size() * keyType.getUnitSizeInBytes();
       } else {
-        for (int i = 0; i < records.size(); i++) {
-          Tuple record = records.get(i);
+        byteKeys = new ArrayList<>(records.size()); //only initialize if required
+        for (Tuple record : records) {
           byte[] data = keyType.getDataPacker().packToByteArray(record.getKey());
           totalSize += data.length; // data + length of key
           if (keyType.getDataPacker().isHeaderRequired()) {
@@ -183,8 +184,8 @@ public final class FileLoader {
       RandomAccessFile randomAccessFile = new RandomAccessFile(outFileName, "rw");
       FileChannel rwChannel = randomAccessFile.getChannel();
       MappedByteBuffer os = rwChannel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
-      for (int i = 0; i < records.size(); i++) {
-        Tuple keyValue = records.get(i);
+      int i = 0;
+      for (Tuple keyValue : records) {
         long positionBefore = os.position(); //position of os before writing this tuple
 
         byte[] r = (byte[]) keyValue.getValue(); //this has been already serialized
@@ -204,7 +205,7 @@ public final class FileLoader {
 
         long tupleSize = os.position() - positionBefore;
         maxRecord = Math.max(maxRecord, tupleSize);
-
+        i++;
       }
       if (sizeSum != size) {
         LOG.log(Level.WARNING, "Sum doesn't equal size: " + sizeSum + " != " + size);
