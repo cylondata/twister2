@@ -259,8 +259,9 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     return roundRobinAllocation;
   }
 
-  private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(Map<String, Integer>
-                                                                         parallelTaskMap) {
+  private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(
+      Map<String, Integer> parallelTaskMap) {
+
     int containerIndex = 0;
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
