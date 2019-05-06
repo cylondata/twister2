@@ -162,18 +162,19 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph kmeansTaskGraph = kmeansTaskGraphBuilder.build();
 
     //Perform the iterations from 0 to 'n' number of iterations
+    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
-      ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
       //add the datapoints and centroids as input to the kmeanssource task.
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
       //actual execution of the third task graph
-      taskExecutor.execute(kmeansTaskGraph, plan);
+      taskExecutor.itrExecute(kmeansTaskGraph, plan);
       //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
+    taskExecutor.waitFor(kmeansTaskGraph, plan);
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();

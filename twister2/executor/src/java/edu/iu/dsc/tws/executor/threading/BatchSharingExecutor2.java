@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.ExecutionState;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -92,6 +93,11 @@ public class BatchSharingExecutor2 implements IExecutor {
     // updated config
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
+
+    // if this is a previously executed plan we have to reset the nodes
+    if (plan.getExecutionState() == ExecutionState.EXECUTED) {
+      resetNodes(plan.getNodes(), plan.getParallelOperations());
+    }
 
     // go through the instances
     return runIExecution(plan);
@@ -162,16 +168,8 @@ public class BatchSharingExecutor2 implements IExecutor {
       throw new RuntimeException("Interrupted", e);
     }
 
-    // clean up the instances
-    for (INodeInstance node : nodes.values()) {
-      node.reset();
-    }
-
-    // lets close the operations
-    List<IParallelOperation> ops = executionPlan.getParallelOperations();
-    for (IParallelOperation op : ops) {
-      op.reset();
-    }
+    // we set the execution state here
+    executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
     // clear the finished instances
     finishedInstances.set(0);
@@ -209,6 +207,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       worker.runChannelComplete();
     }
 
+    // at this point we are going to reset and close the operations
     close(plan, nodes);
 
     return true;
@@ -239,13 +238,15 @@ public class BatchSharingExecutor2 implements IExecutor {
       throw new RuntimeException("Interrupted", e);
     }
 
+    List<IParallelOperation> ops = executionPlan.getParallelOperations();
+    resetNodes(nodes, ops);
+
     // clean up the instances
     for (INodeInstance node : nodes.values()) {
       node.close();
     }
 
     // lets close the operations
-    List<IParallelOperation> ops = executionPlan.getParallelOperations();
     for (IParallelOperation op : ops) {
       op.close();
     }
@@ -253,6 +254,18 @@ public class BatchSharingExecutor2 implements IExecutor {
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
+  }
+
+  private void resetNodes(Map<Integer, INodeInstance> nodes, List<IParallelOperation> ops) {
+    // clean up the instances
+    for (INodeInstance node : nodes.values()) {
+      node.reset();
+    }
+
+    // lets close the operations
+    for (IParallelOperation op : ops) {
+      op.reset();
+    }
   }
 
   protected class CommunicationWorker implements Runnable {
@@ -376,6 +389,8 @@ public class BatchSharingExecutor2 implements IExecutor {
         channel.progress();
         mainWorker.runExecution();
       }
+      // we are going to set to executed
+      executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
       cleanUp(executionPlan, nodeMap);
 
@@ -393,6 +408,8 @@ public class BatchSharingExecutor2 implements IExecutor {
           mainWorker.runExecution();
           return true;
         }
+        // lets set the execution state here
+        executionPlan.setExecutionState(ExecutionState.EXECUTED);
         // clean up
         cleanUp(executionPlan, nodeMap);
         cleanUpCalled = false;
