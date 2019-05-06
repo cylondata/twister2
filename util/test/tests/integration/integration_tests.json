@@ -1,11 +1,10 @@
 {
-  "id": "communication_base",
+  "id": "integration_tests",
   "directory": {
     "relativeToRoot": true,
     "path": ""
   },
   "jar": "libexamples-java.jar",
-  "className": "edu.iu.dsc.tws.examples.comms.ExampleMain",
   "args": [
     {
       "id": "itr",
@@ -13,7 +12,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 50000
+        "value": 10
       }
     },
     {
@@ -21,13 +20,8 @@
       "name": "Workers",
       "optional": false,
       "values": {
-        "type": "array",
-        "array": [
-          32,
-          64,
-          128,
-          256
-        ]
+        "type": "fixed",
+        "value": 4
       }
     },
     {
@@ -35,24 +29,21 @@
       "name": "Data Size",
       "optional": false,
       "values": {
-        "type": "steps",
-        "from": 256,
-        "to": 8192,
-        "step": 256
-      }
-    },
-    {
-      "id": "warmupitr",
-      "name": "Warmup Iterations",
-      "optional": false,
-      "values": {
         "type": "fixed",
-        "value": 10000
+        "value": 1024
       }
     },
     {
       "id": "stream",
       "name": "Stream",
+      "optional": true,
+      "values": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "verify",
+      "name": "Verification",
       "optional": false,
       "values": {
         "type": "none"

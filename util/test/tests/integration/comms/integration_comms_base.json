@@ -1,0 +1,12 @@
+{
+  "id": "integration_base_comm",
+  "parent": "integration_tests",
+  "directory": {
+    "relativeToRoot": true,
+    "path": ""
+  },
+  "className": "edu.iu.dsc.tws.examples.comms.ExampleMain",
+  "resultsFile": "/tmp/integration_test_results_tasks.csv",
+  "args": [
+  ]
+}
