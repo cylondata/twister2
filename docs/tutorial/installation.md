@@ -26,7 +26,7 @@ Then you need to run the container;
 
 * docker run -it twister2tutorial/twister2:standalone bash
 
-Now you should be in the docker container. Go into twister2-0.2.0 directory.
+Now you should be in the docker container. Go into twister2-0.2.1 directory.
 
 Run the following commands for related examples;
 

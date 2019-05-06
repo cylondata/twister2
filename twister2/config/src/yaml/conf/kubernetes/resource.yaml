@@ -1,9 +1,9 @@
 # Twister2 Docker image for Kubernetes
-twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.2.0"
-# twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.2.0-au"
+twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.2.1"
+# twister2.docker.image.for.kubernetes: "twister2/twister2-k8s:0.2.1-au"
 
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"
 
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 

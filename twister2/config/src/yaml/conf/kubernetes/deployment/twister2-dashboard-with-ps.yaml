@@ -86,7 +86,7 @@ spec:
 
       containers:
         - name: twister2-dashboard
-          image: twister2/twister2-k8s:0.2.0
+          image: twister2/twister2-k8s:0.2.1
           imagePullPolicy: IfNotPresent
           command: ["/twister2/bin/twister2"]
           args: ["dash"]

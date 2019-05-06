@@ -101,7 +101,7 @@ public class TaskSchedulerTest {
 
   private Config getConfig() {
 
-    String twister2Home = "/home/username/twister2/bazel-bin/scripts/package/twister2-0.2.0";
+    String twister2Home = "/home/username/twister2/bazel-bin/scripts/package/twister2-0.2.1";
     String configDir = "/home/username/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 

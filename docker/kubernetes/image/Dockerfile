@@ -111,8 +111,8 @@ RUN apt-get update && \
 ENV CLASSPATH="/twister2/lib/*"
 
 COPY docker/kubernetes/image/rootfs /
-COPY twister2-0.2.0/lib /twister2/lib
-COPY twister2-0.2.0/bin /twister2/bin
+COPY twister2-0.2.1/lib /twister2/lib
+COPY twister2-0.2.1/bin /twister2/bin
 
 # expose 2022 for ssh server (password free ssh support)
 # expose 8080 for dashboard server if it runs

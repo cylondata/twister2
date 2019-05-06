@@ -15,7 +15,7 @@ You can submit HelloWorld job in examples package with 8 workers as;
 
 If you are using our testbed cluster “Echo”, 
 * login to your account 
-* change you directory to  twister2/twister2/bazel-bin/scripts/package/twister2-0.2.0/ 
+* change you directory to  twister2/twister2/bazel-bin/scripts/package/twister2-0.2.1/ 
 * then run the command above. 
 
 You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the addresses are;

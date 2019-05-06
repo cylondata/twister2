@@ -30,10 +30,10 @@ sudo docker run -it twister2tutorial/twister2:standalone bash
 
 Docker image has Twister2 installed and you can run examples.
 
-You should go into twister2-0.2.0 directory first.
+You should go into twister2-0.2.1 directory first.
 
 ```bash
-cd twister2-0.2.0/
+cd twister2-0.2.1/
 
 ls
 ```
@@ -108,7 +108,7 @@ Twister2 is installed under twister2 directory.
 Go to the directory:
 
 ```bash
-cd twister2-0.2.0
+cd twister2-0.2.1
 ```
 
 Then, to run an example you can use the ```twister2 submit``` command.
@@ -174,7 +174,7 @@ You can submit HelloWorld job in examples package with 8 workers as;
 If you are using our testbed cluster “Echo”,
 
 1. Login to your account in Echo
-2. Change you directory to  ```twister2-0.2.0```
+2. Change you directory to  ```twister2-0.2.1```
 3. Run the command above.
 
 You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;
@@ -291,7 +291,7 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
 
 In order to run the example go to the following directory
 ```bash
-cd twister2-0.2.0
+cd twister2-0.2.1
 ```
 
 
@@ -358,7 +358,7 @@ twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
 In order to run the example go to the following directory
 
 ```bash
-cd twister2-0.2.0
+cd twister2-0.2.1
 ```
 
 

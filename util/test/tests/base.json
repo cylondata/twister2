@@ -1,5 +1,5 @@
 {
-  "jarRootDir": "/N/u/cwidanage/Code/twister2/bazel-bin/scripts/package/twister2-0.2.0/examples",
-  "t2Bin": "/N/u/cwidanage/Code/twister2/bazel-bin/scripts/package/twister2-0.2.0/bin/twister2",
+  "jarRootDir": "/N/u/cwidanage/Code/twister2/bazel-bin/scripts/package/twister2-0.2.1/examples",
+  "t2Bin": "/N/u/cwidanage/Code/twister2/bazel-bin/scripts/package/twister2-0.2.1/bin/twister2",
   "jdk": "/N/u/cwidanage/jdk1.8.0_181"
 }

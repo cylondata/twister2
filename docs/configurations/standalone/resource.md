@@ -21,7 +21,7 @@
 <table><tr><td>default</td><td>""</td><tr><td>description</td><td>the mpirun command location</td></table>
 
 **twister2.system.package.uri**
-<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"</td><tr><td>description</td><td>the package uri</td></table>
+<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"</td><tr><td>description</td><td>the package uri</td></table>
 
 **twister2.class.launcher**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"</td><tr><td>description</td><td>the launcher class</td></table>

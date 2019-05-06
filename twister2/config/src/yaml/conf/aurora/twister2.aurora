@@ -1,7 +1,7 @@
 # Path of the twister2 core and job package to be uploaded to Mesos container excluding filename
 path = '{{TWISTER2_PACKAGES_PATH}}'
 # filename of the twister2 core package to be uploaded to Mesos container
-# coreFN='twister2-core-0.2.0.tar.gz'
+# coreFN='twister2-core-0.2.1.tar.gz'
 coreFN='{{CORE_PACKAGE_FILENAME}}'
 # twister2 job package filename
 jobFN = '{{JOB_PACKAGE_FILENAME}}'
