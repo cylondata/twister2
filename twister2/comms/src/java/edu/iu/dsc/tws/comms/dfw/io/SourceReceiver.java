@@ -130,7 +130,6 @@ public abstract class SourceReceiver implements MessageReceiver {
     }
 
     if (targetStates.get(target) == ReceiverState.INIT) {
-      LOG.info("Receiving " + this.getClass().getName());
       targetStates.put(target, ReceiverState.RECEIVING);
     }
 
