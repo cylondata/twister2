@@ -76,7 +76,7 @@ public abstract class FixedInputPartitioner<OT>
    * @param minNumSplits Number of minimal input splits, as a hint.
    */
   @Override
-  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
 
     // take the desired number of splits into account
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);

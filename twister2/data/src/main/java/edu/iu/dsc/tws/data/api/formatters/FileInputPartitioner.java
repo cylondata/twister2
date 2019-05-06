@@ -97,7 +97,7 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
    * @return The computed file splits.
    */
   @Override
-  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
