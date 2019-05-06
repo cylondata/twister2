@@ -100,8 +100,8 @@ public class LocalFileSystem extends FileSystem {
     if (path.exists()) {
       return new LocalFileStatus(pathToFile(f), this);
     } else {
-      throw new FileNotFoundException("File " + f + " does not exist or the user running "
-          + "Twister2 ('" + System.getProperty("user.name")
+      throw new FileNotFoundException("input file does not exist in the user specified directory "
+          + f + " or the user running Twister2 ('" + System.getProperty("user.name")
           + "') has insufficient permissions to access it.");
     }
   }
