@@ -73,14 +73,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-//    TSetBuilder builder = TSetBuilder.newBuilder(config);
     TSet<double[][]> points = tc.createSource(new PointsSource(), parallelismValue).cache();
-//    TSet<double[][]> centers = tc.createBatchSource(new CenterSource()).cache();
-
-
-//    for (int i = 0; i < iterations; i++) {
-////      TSet<double[][]> KmeansTSet = points.map( )
-//    }
   }
 
   public class PointsSource implements Source<double[][]> {
