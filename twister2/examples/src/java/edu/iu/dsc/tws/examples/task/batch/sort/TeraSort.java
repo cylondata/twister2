@@ -194,7 +194,7 @@ public class TeraSort extends TaskWorker {
 
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
-      this.random = new Random();
+      this.random = new Random(1000);
 
       //time only in the worker0's lowest task
       int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
