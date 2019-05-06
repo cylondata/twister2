@@ -246,23 +246,23 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
 
-  private Map<Integer, List<InstanceId>> attributeBasedAllocation(Map<String, Integer>
-                                                                      parallelTaskMap,
-                                                                  DataFlowTaskGraph graph,
-                                                                  WorkerPlan workerPlan) {
+  private Map<Integer, List<InstanceId>> attributeBasedAllocation(
+      Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+
     List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
       for (int taskIndex = 0; taskIndex < taskParallelism; taskIndex++) {
         if (taskIndex < instancesPerContainer) {
-          dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-              task, gTaskId, taskIndex));
+          dataLocalityAwareAllocation.get(containerIndex).add(
+              new InstanceId(task, gTaskId, taskIndex));
         } else {
-          dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-              task, gTaskId, taskIndex));
+          dataLocalityAwareAllocation.get(containerIndex).add(
+              new InstanceId(task, gTaskId, taskIndex));
           containerIndex++;
         }
       }
@@ -278,6 +278,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
     int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
+
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
@@ -288,8 +289,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         numberOfInstances = instancesPerContainer;
       }
       for (int taskIndex = 0; taskIndex < numberOfInstances; taskIndex++) {
-        dataLocalityAwareAllocation.get(containerIndex).add(new InstanceId(
-            task, gTaskId, taskIndex));
+        dataLocalityAwareAllocation.get(containerIndex).add(
+            new InstanceId(task, gTaskId, taskIndex));
         ++containerIndex;
         if (containerIndex >= workerNodeList.size()) {
           containerIndex = 0;
