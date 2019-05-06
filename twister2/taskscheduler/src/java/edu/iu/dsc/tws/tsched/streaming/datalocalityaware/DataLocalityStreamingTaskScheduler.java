@@ -92,11 +92,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
   @Override
   public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
     this.workerId = workerid;
-    this.config = cfg;
-    this.instanceRAM = TaskSchedulerContext.taskInstanceRam(this.config);
-    this.instanceDisk = TaskSchedulerContext.taskInstanceDisk(this.config);
-    this.instanceCPU = TaskSchedulerContext.taskInstanceCpu(this.config);
   }
 
   /**
@@ -192,29 +189,29 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     int containerCapacity = instancesPerContainer * numberOfContainers;
     int localIndex = 0;
     int containerIndex = 0;
-    int totalTask;
+    int totalInstances;
 
     //Total task instances in the taskgraph
     if (!graph.getNodeConstraints().isEmpty()) {
-      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
+      totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet,
           graph.getNodeConstraints());
     } else {
-      totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+      totalInstances = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
     }
 
     //Map to hold the allocation of task instances into the containers/workers
     Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
 
     //To check the containers can hold all the parallel task instances.
-    if (containerCapacity >= totalTask) {
+    if (containerCapacity >= totalInstances) {
       LOG.info("Task scheduling could be performed for the container capacity of "
-          + containerCapacity + " and " + totalTask + " task instances");
+          + containerCapacity + " and " + totalInstances + " task instances");
       for (int i = 0; i < numberOfContainers; i++) {
         dataAwareAllocationMap.put(i, new ArrayList<>());
       }
     } else {
       throw new ScheduleException("Task scheduling couldn't be performed for the container "
-          + "capacity of " + containerCapacity + " and " + totalTask + " task instances");
+          + "capacity of " + containerCapacity + " and " + totalInstances + " task instances");
     }
 
     //Parallel Task Map for the complete task graph
@@ -229,18 +226,21 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       parallelTaskMap = taskAttributes.getParallelTaskMap(taskVertexSet);
     }
 
-    Set<Map.Entry<String, Integer>> taskEntrySet = parallelTaskMap.entrySet();
-    for (Map.Entry<String, Integer> aTaskEntrySet : taskEntrySet) {
+    /*This loop allocate the task instances to the respective container, before allocation
+    it will check whether the container has reached maximum task instance size */
+    for (Map.Entry<String, Integer> aTaskEntrySet : parallelTaskMap.entrySet()) {
       for (Vertex vertex : taskVertexSet) {
         if (aTaskEntrySet.getKey().equals(vertex.getName())) {
+
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
+
           List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
-          /*This loop allocate the task instances to the respective container, before allocation
-          it will check whether the container has reached maximum task instance size */
+
           for (int i = 0; i < totalTaskInstances; i++) {
             containerIndex = Integer.parseInt(Collections.min(calList).getNodeName().trim());
+
             if (maxContainerTaskObjectSize < instancesPerContainer) {
               dataAwareAllocationMap.get(containerIndex).add(
                   new InstanceId(vertex.getName(), globalTaskIndex, i));
@@ -281,6 +281,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     datanodes. Else, if the index values is greater than 0, check the container has reached
     the maximum task instances per container. If it is yes, then calculationList the container to
     the allocatedWorkers list which will not be considered for the next scheduling cycle.*/
+
     DataNodeLocatorUtils dataNodeLocatorUtils = new DataNodeLocatorUtils(config);
     if (inputDataList.size() > 0) {
       if (index == 0) {
@@ -288,9 +289,11 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         workerDatanodeDistanceMap = distanceCalculator(datanodesList, workerPlan, index,
             allocatedWorkers);
         dataTransferTimeCalculatorList = findBestWorkerNode(workerDatanodeDistanceMap);
+
       } else {
         datanodesList = dataNodeLocatorUtils.findDataNodesLocation(inputDataList);
         Worker worker = workerPlan.getWorker(containerIndex);
+
         if (map.get(containerIndex).size() >= maxTaskPerContainer) {
           allocatedWorkers.add(worker.getId());
         }
@@ -303,12 +306,19 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
   }
 
   private List<String> getInputFilesList() {
+
     List<String> inputDataList = new ArrayList<>();
-    String directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+    String directory = null;
+
+    if (config.get(DataObjectConstants.DINPUT_DIRECTORY) != null) {
+      directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
+    }
+
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
       fileSystem = path.getFileSystem(config);
+
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
         final FileStatus pathFile = fileSystem.getFileStatus(path);
         inputDataList.add(String.valueOf(pathFile.getPath()));
@@ -336,7 +346,6 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       List<String> datanodesList, WorkerPlan workers, int index, List<Integer> assignedWorkers) {
 
     Map<String, List<DataTransferTimeCalculator>> workerDistanceMap = new HashMap<>();
-    //distance between datanode and worker node
     double calculateDistance = 0.0;
     for (String nodesList : datanodesList) {
       GetDistanceCalculation getAllocation = new GetDistanceCalculation(

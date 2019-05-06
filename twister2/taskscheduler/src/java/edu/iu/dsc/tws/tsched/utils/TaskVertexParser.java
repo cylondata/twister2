@@ -28,48 +28,58 @@ public final class TaskVertexParser {
 
   private static final Logger LOG = Logger.getLogger(TaskVertexParser.class.getName());
 
-  private static List<Set<Vertex>> taskVertexList = new LinkedList<>();
+  private List<Set<Vertex>> taskVertexList = new LinkedList<>();
 
-  protected TaskVertexParser() {
-  }
+  private Set<Vertex> targetVertexSet = new LinkedHashSet<>();
 
-  /**
-   * This method is mainly used to parse the task vertex set and the taskgraph and identify the
-   * source, parent, child, and sink tasks. Finally, the identified tasks will be stored in a
-   * separate Set.
-   */
-  @SuppressWarnings("unchecked")
-  public static List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
-
+  public List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
     Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
-
     for (Vertex vertex : taskVertexSet) {
-
       if (dataFlowTaskGraph.inDegreeOfTask(vertex) == 0) {
         add(vertex);
-        if (!dataFlowTaskGraph.childrenOfTask(vertex).isEmpty()) {
-          add(dataFlowTaskGraph.childrenOfTask(vertex));
+        targetVertexSet.add(vertex);
+        if (dataFlowTaskGraph.childrenOfTask(vertex).size() >= 1) {
+          checkChildTasks(dataFlowTaskGraph, vertex);
         }
-      } else if (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() > 1) {
-        add(dataFlowTaskGraph.childrenOfTask(vertex));
-      } else if (dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() > 1) {
-        add(vertex);
-      } else if ((dataFlowTaskGraph.incomingTaskEdgesOf(vertex).size() == 1)
-              && (dataFlowTaskGraph.outgoingTaskEdgesOf(vertex).size() == 0)) {
-        add(vertex);
+      } else {
+        if (checkChildTasks(dataFlowTaskGraph, vertex)) {
+          if (!targetVertexSet.contains(vertex)) {
+            add(vertex);
+            targetVertexSet.add(vertex);
+          }
+        }
       }
     }
-    LOG.fine("%%%%% Batch Task Vertex List:%%%%%%%" + taskVertexList);
+
+    for (Set<Vertex> aTaskVertexSet : taskVertexList) {
+      for (Vertex vertex : aTaskVertexSet) {
+        LOG.fine("%%% Vertex Details:" + vertex.getName() + "\t" + aTaskVertexSet.size());
+      }
+    }
     return taskVertexList;
   }
 
-  private static void add(Vertex vertex) {
-    Set<Vertex> vSet = new LinkedHashSet<>();
-    vSet.add(vertex);
-    taskVertexList.add(vSet);
+  private boolean checkChildTasks(DataFlowTaskGraph dataFlowTaskGraph, Vertex vertex) {
+    boolean flag = false;
+    if (dataFlowTaskGraph.outDegreeOfTask(vertex) >= 1) {
+      Set<Vertex> childTask = dataFlowTaskGraph.childrenOfTask(vertex);
+      if (!targetVertexSet.containsAll(childTask)) {
+        add(childTask);
+        targetVertexSet.addAll(childTask);
+      }
+    } else {
+      flag = true;
+    }
+    return flag;
   }
 
-  private static void add(Set<Vertex> taskVertexSet) {
-    taskVertexList.add(taskVertexSet);
+  private void add(Vertex vertex) {
+    Set<Vertex> vertexSet = new LinkedHashSet<>();
+    vertexSet.add(vertex);
+    taskVertexList.add(vertexSet);
+  }
+
+  private void add(Set<Vertex> vertexSet) {
+    taskVertexList.add(vertexSet);
   }
 }
