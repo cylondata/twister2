@@ -202,7 +202,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     // lets progress the communication
     boolean needsFurther = progressCommunication();
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
+    if (state.isSet(InstanceState.OUT_COMPLETE)) {
       state.addState(InstanceState.SENDING_DONE);
     }
 

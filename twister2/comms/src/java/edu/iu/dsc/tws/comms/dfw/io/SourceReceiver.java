@@ -130,6 +130,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     }
 
     if (targetStates.get(target) == ReceiverState.INIT) {
+      LOG.info("Receiving " + this.getClass().getName());
       targetStates.put(target, ReceiverState.RECEIVING);
     }
 
@@ -163,7 +164,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     for (int target : messages.keySet()) {
       // if we are at init state nothing to do
-      if (targetStates.get(target) == ReceiverState.INIT) {
+      if (targetStates.get(target) == ReceiverState.SYNCED) {
         continue;
       }
       // now check weather we have the messages for this source

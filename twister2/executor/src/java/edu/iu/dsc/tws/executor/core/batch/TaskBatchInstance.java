@@ -195,7 +195,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // progress in communication
       boolean needsFurther = progressCommunication(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
+      if (state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty()) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
@@ -230,7 +230,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     // lets progress the communication
     boolean needsFurther = progressCommunication(outParOps);
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
+    if (state.isSet(InstanceState.OUT_COMPLETE)) {
       state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);

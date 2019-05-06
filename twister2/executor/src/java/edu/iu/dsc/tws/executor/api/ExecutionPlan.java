@@ -34,8 +34,14 @@ public class ExecutionPlan {
 
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
 
+  /**
+   * Keep track of the execution state of this plan
+   */
+  private ExecutionState executionState;
+
   public ExecutionPlan() {
     this.id = UUID.randomUUID().toString();
+    this.executionState = ExecutionState.INIT;
   }
 
   /**
@@ -73,6 +79,14 @@ public class ExecutionPlan {
 
   public Set<String> getNodeNames() {
     return nodesByName.keySet();
+  }
+
+  public ExecutionState getExecutionState() {
+    return executionState;
+  }
+
+  public void setExecutionState(ExecutionState executionState) {
+    this.executionState = executionState;
   }
 
   @Override
