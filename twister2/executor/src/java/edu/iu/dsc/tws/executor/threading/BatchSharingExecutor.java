@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.ExecutionState;
 import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -116,17 +117,6 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       throw new RuntimeException("Interrupted", e);
     }
 
-    // clean up the instances
-    for (INodeInstance node : nodes.values()) {
-      node.reset();
-    }
-
-    // lets close the operations
-    List<IParallelOperation> ops = executionPlan.getParallelOperations();
-    for (IParallelOperation op : ops) {
-      op.reset();
-    }
-
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
@@ -140,6 +130,11 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
           + "have more workers than tasks", workerId));
       return null;
+    }
+
+    // if this is a previously executed plan we have to reset the nodes
+    if (executionPlan.getExecutionState() == ExecutionState.EXECUTED) {
+      resetNodes(executionPlan.getNodes(), executionPlan.getParallelOperations());
     }
 
     scheduleExecution(nodes);
@@ -184,6 +179,18 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
+  private void resetNodes(Map<Integer, INodeInstance> nodes, List<IParallelOperation> ops) {
+    // clean up the instances
+    for (INodeInstance node : nodes.values()) {
+      node.reset();
+    }
+
+    // lets close the operations
+    for (IParallelOperation op : ops) {
+      op.reset();
+    }
+  }
+
   private void close(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
@@ -192,13 +199,15 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       throw new RuntimeException("Interrupted", e);
     }
 
+    List<IParallelOperation> ops = executionPlan.getParallelOperations();
+    resetNodes(nodes, ops);
+
     // clean up the instances
     for (INodeInstance node : nodes.values()) {
       node.close();
     }
 
     // lets close the operations
-    List<IParallelOperation> ops = executionPlan.getParallelOperations();
     for (IParallelOperation op : ops) {
       op.close();
     }
@@ -330,6 +339,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       while (notStopped && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
       }
+      // we are going to set to executed
+      executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
       cleanUp(executionPlan, nodeMap);
 
@@ -346,6 +357,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
           channel.progress();
           return true;
         }
+        // we are going to set to executed
+        executionPlan.setExecutionState(ExecutionState.EXECUTED);
         // clean up
         cleanUp(executionPlan, nodeMap);
         cleanUpCalled = false;
