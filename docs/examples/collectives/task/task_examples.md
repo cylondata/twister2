@@ -20,7 +20,7 @@ communication usage with Twister2.
 9. KeyedPartition
 
 After building the project, you can run the batch mode examples as follows. First you need to extract 
-the twister2-0.2.0.tar.gz located within the bazel-bin/scripts/package, if you have already installed 
+the twister2-0.2.1.tar.gz located within the bazel-bin/scripts/package, if you have already installed 
 Open MPI separately and not using the project built Open MPI version. 
 
 ```bash

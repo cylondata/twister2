@@ -67,7 +67,7 @@ spec:
         # container-index is added automatically inside the code
         # it starts from 0 and increases sequentially
         name: twister2-container-<container-index>
-        image: twister2/twister2-k8s:0.2.0
+        image: twister2/twister2-k8s:0.2.1
         imagePullPolicy: <kubernetes.image.pull.policy>
         ports:
           name: port11

@@ -6,7 +6,7 @@
 <table><tr><td>default</td><td>"twister2/twister2-k8s:0.1.1"</td><tr><td>description</td><td>Twister2 Docker image for Kubernetes</td></table>
 
 **twister2.system.package.uri**
-<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"</td><tr><td>description</td><td>the package uri</td></table>
+<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"</td><tr><td>description</td><td>the package uri</td></table>
 
 **twister2.class.launcher**
 <table><tr><td>default</td><td>edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher</td><tr><td>description</td><td></td></table>

@@ -8,6 +8,7 @@ from tree.node import Node
 from util.config_parser import parse_configs
 from util.file_iterator import process_directory
 from util.variable_resolver import resolve_variables
+from util.should_run import should_run
 from values.array import handle_array_arg
 from values.fixed import handle_fixed_arg
 from values.none import handle_none_arg
@@ -36,7 +37,9 @@ if partial_run:
 
 for test in configs['tests']:
     test_id = test['id']
-    if partial_run and test_id not in tests_to_run:
+    if partial_run and not should_run(test_id, configs['tests_map'], configs['parents_map'],
+                                      tests_to_run):
+        print("skipping.." + test_id)
         continue
 
     jar_dir = jar_root_dir
@@ -81,7 +84,7 @@ for test in configs['tests']:
         args = [t2_bin, "submit", "standalone", "jar", jar, class_name]
         args.extend(command.strip().split(" "))
         args.extend(["-bmeta", base64.b64encode(json.dumps(meta).encode("utf-8"))])
-        print("Running twister2 job with following args...")
+        print("\nRunning twister2 job with following args...")
         print(args)
         # subprocess.run(args, env=existing_env)
         p = subprocess.Popen(args, stdout=subprocess.PIPE, bufsize=1, env=existing_env)

@@ -34,6 +34,7 @@ def build_test(test, tests):
 def parse_configs(config_files):
     all_tests = {}  # all tests including parents
     runnable_tests = []
+    runnable_tests_map = {}
     base = {}
 
     for file in config_files:
@@ -47,17 +48,26 @@ def parse_configs(config_files):
     for test_id in all_tests:
         build_test(all_tests[test_id], all_tests)
 
-    parent_tests = {}
+    parent_tests_ids = {}
+    parent_tests = []
+    parent_tests_map = {}
 
     for test_id in all_tests:
         if "parent" in all_tests[test_id]:
-            parent_tests[all_tests[test_id]["parent"]] = True
+            parent_tests_ids[all_tests[test_id]["parent"]] = True
 
     for test_id in all_tests:
-        if test_id not in parent_tests:
+        if test_id not in parent_tests_ids:
             runnable_tests.append(all_tests[test_id])
+            runnable_tests_map[test_id] = all_tests[test_id]
+        else:
+            parent_tests.append(all_tests[test_id])
+            parent_tests_map[test_id] = all_tests[test_id]
 
     return {
         "tests": runnable_tests,
-        "base": base
+        "base": base,
+        "parents": parent_tests,
+        "tests_map": runnable_tests_map,
+        "parents_map": parent_tests_map
     }

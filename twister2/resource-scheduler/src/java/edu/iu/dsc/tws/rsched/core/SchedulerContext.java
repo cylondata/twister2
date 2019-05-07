@@ -46,7 +46,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.0.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.1.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -99,7 +99,7 @@ public class SchedulerContext extends Context {
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {

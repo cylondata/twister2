@@ -62,7 +62,7 @@ bazel build --config=darwin scripts/package:tarpkgs
 This will build twister2 distribution in the file
 
 ```bash
-bazel-bin/scripts/package/twister2-0.2.0.tar.gz
+bazel-bin/scripts/package/twister2-0.2.1.tar.gz
 ```
 
 If you would like to compile the twister2 without building the distribution packages use the command
@@ -83,5 +83,5 @@ After you've build the Twister2 distribution, you can extract it and use it to s
 
 ```bash
 cd bazel-bin/scripts/package/
-tar -xvf twister2-0.2.0.tar.gz
+tar -xvf twister2-0.2.1.tar.gz
 ```

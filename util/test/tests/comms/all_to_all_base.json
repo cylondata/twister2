@@ -7,10 +7,8 @@
       "name": "Stages",
       "optional": false,
       "values": {
-        "type": "array",
-        "array": [
-          "${workers},${workers}"
-        ]
+        "type": "fixed",
+        "value": "${workers},${workers}"
       }
     }
   ]
