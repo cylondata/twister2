@@ -298,6 +298,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean isComplete() {
     if (lock.tryLock()) {
+      delegate.progress();
       boolean done = delegate.isComplete();
       try {
         boolean needsFurtherProgress = finalReceiver.progress();

@@ -54,9 +54,8 @@ public class BAllReduce {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    reduce = new AllReduce(comm.getChannel(), sources, targets, middleTask, fnc,
-        rcvr, comm.nextEdge(), comm.nextEdge(), false);
-    reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    reduce = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources,
+        targets, middleTask, fnc, rcvr, dataType, comm.nextEdge(), comm.nextEdge(), false);
   }
 
   /**
