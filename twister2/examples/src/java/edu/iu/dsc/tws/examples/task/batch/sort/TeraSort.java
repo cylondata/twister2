@@ -11,6 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch.sort;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -57,9 +61,12 @@ public class TeraSort extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(TeraSort.class.getName());
 
+  private static final String ARG_INPUT_FILE = "inputFile";
+
   private static final String ARG_SIZE = "size";
   private static final String ARG_KEY_SIZE = "keySize";
   private static final String ARG_VALUE_SIZE = "valueSize";
+  private static final String ARG_KEY_SEED = "keySeed";
 
   private static final String ARG_RESOURCE_CPU = "instanceCPUs";
   private static final String ARG_RESOURCE_MEMORY = "instanceMemory";
@@ -86,8 +93,14 @@ public class TeraSort extends TaskWorker {
     TaskGraphBuilder tgb = TaskGraphBuilder.newBuilder(config);
     tgb.setMode(OperationMode.BATCH);
 
-    IntegerSource integerSource = new IntegerSource();
-    tgb.addSource(TASK_SOURCE, integerSource, config.getIntegerValue(ARG_TASKS_SOURCES, 4));
+    BaseSource dataSource;
+    String filePath = config.getStringValue(ARG_INPUT_FILE, null);
+    if (filePath == null) {
+      dataSource = new RandomDataSource();
+    } else {
+      dataSource = new FileDataSource();
+    }
+    tgb.addSource(TASK_SOURCE, dataSource, config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
     tgb.addSink(TASK_RECV, receiver, config.getIntegerValue(ARG_TASKS_SINKS, 4))
@@ -168,7 +181,71 @@ public class TeraSort extends TaskWorker {
     }
   }
 
-  public static class IntegerSource extends BaseSource {
+  public static class FileDataSource extends BaseSource {
+
+    private FileChannel fileChannel;
+    private ByteBuffer[] tupleBuffers;
+    private long sent = 0;
+    private boolean timingCondition;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      String inputFile = cfg.getStringValue(ARG_INPUT_FILE);
+
+      try {
+        this.fileChannel = FileChannel.open(Paths.get(String.format(inputFile, ctx.taskIndex())));
+      } catch (IOException e) {
+        throw new RuntimeException("Error in opening file data source", e);
+      }
+      int keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
+      int valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
+      this.tupleBuffers = new ByteBuffer[]{ByteBuffer.allocate(keySize),
+          ByteBuffer.allocate(valueSize)};
+
+      //time only in the worker0's lowest task
+      int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
+          .map(TaskInstancePlan::getTaskIndex)
+          .min(Comparator.comparingInt(o -> (Integer) o)).get();
+
+      timingCondition = ctx.getWorkerId() == 0 && ctx.taskIndex() == lowestTaskIndex;
+    }
+
+    @Override
+    public void execute() {
+      if (sent == 0) {
+        LOG.info("Sending messages from file...");
+        Timing.mark(BenchmarkConstants.TIMING_ALL_SEND, this.timingCondition);
+      }
+      try {
+        if (this.fileChannel.read(this.tupleBuffers) != -1) {
+          byte[] key = new byte[10];
+          byte[] value = new byte[90];
+
+          this.tupleBuffers[0].flip();
+          this.tupleBuffers[1].flip();
+
+          this.tupleBuffers[0].get(key);
+          this.tupleBuffers[1].get(value);
+
+          context.write(EDGE, key, value);
+
+          this.tupleBuffers[0].rewind();
+          this.tupleBuffers[1].rewind();
+        } else {
+          context.end(EDGE);
+          LOG.info("Done Sending");
+          tasksCount.decrementAndGet();
+        }
+      } catch (IOException e) {
+        throw new RuntimeException("Error in reading file data source", e);
+      } finally {
+        sent++;
+      }
+    }
+  }
+
+  public static class RandomDataSource extends BaseSource {
 
     private long toSend;
     private long sent;
@@ -189,8 +266,8 @@ public class TeraSort extends TaskWorker {
 
       int totalSize = valueSize + keySize;
       this.toSend = (long) (cfg.getDoubleValue(
-                ARG_SIZE, 1.0
-            ) * 1024 * 1024 * 1024 / totalSize / noOfSources);
+          ARG_SIZE, 1.0
+      ) * 1024 * 1024 * 1024 / totalSize / noOfSources);
 
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
@@ -220,7 +297,7 @@ public class TeraSort extends TaskWorker {
       context.write(EDGE, randomKey, this.value);
       sent++;
 
-      if (sent == toSend) {
+      if (sent == this.toSend) {
         context.end(EDGE);
         LOG.info("Done Sending");
         tasksCount.decrementAndGet();
@@ -240,14 +317,24 @@ public class TeraSort extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
 
     Options options = new Options();
-    //mandatory configurations
+
+    //file based mode configuration
+    options.addOption(createOption(ARG_INPUT_FILE, true,
+        "Path to the file containing input tuples. "
+            + "Path can be specified with %d, where it will be replaced by task index. For example,"
+            + "input-%d, will be considered as input-0 in source task having index 0.",
+        false));
+
+    //non-file based mode configurations
     options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
             + "A source will generate this much of data. Including size of both key and value.",
-        true));
+        false));
     options.addOption(createOption(ARG_KEY_SIZE, true,
-        "Size of the key in bytes of a single Tuple", true));
+        "Size of the key in bytes of a single Tuple", false));
+    options.addOption(createOption(ARG_KEY_SEED, true,
+        "Size of the key in bytes of a single Tuple", false));
     options.addOption(createOption(ARG_VALUE_SIZE, true,
-        "Size of the value in bytes of a single Tuple", true));
+        "Size of the value in bytes of a single Tuple", false));
 
     //resources
     options.addOption(createOption(ARG_RESOURCE_CPU, true,
@@ -282,10 +369,13 @@ public class TeraSort extends TaskWorker {
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
-
-    jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
-    jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
-    jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
+    if (cmd.hasOption(ARG_INPUT_FILE)) {
+      jobConfig.put(ARG_INPUT_FILE, cmd.getOptionValue(ARG_INPUT_FILE));
+    } else {
+      jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
+      jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
+      jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
+    }
 
     jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
     jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));

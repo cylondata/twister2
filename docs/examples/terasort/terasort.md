@@ -4,7 +4,7 @@
 
 Tera Sort is a common benchmark to measure and compare high performance big data frameworks such as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.
 
-In twister2, we generate a batch of tuples, each having a random integer as the key and a byte array of configurable length as the value. These tuples will be sent from multiple sources to a single sinks with keyed gather operation applied as the connection. Keyed Gather operation is configured with a comparator to sort by key. 
+In twister2, when terasort is running in non file based mode, we generate a batch of tuples, each having a random byte array as the key and a byte array of configurable length as the value. These tuples will be sent from multiple sources to a single sinks with keyed gather operation applied as the connection. Keyed Gather operation is configured with a comparator to sort by key. 
 
 Tera sort benchmark can be spawned as follows.
 
@@ -12,7 +12,15 @@ Tera sort benchmark can be spawned as follows.
 
 ### Tera Sort parameters
 
-#### Data Configuration
+#### Data Configuration - File Based mode
+
+| Parameter  | Description | Default Value |
+| ------------- | ------------- | ------------- |
+| filePath  | Path to the input file. This path can contain, %d which will be replaced with the task index at runtime. For example, if file is specified as input-%d, when executing task with index 0, it will search for file input-0.  | Mandatory |
+
+
+#### Data Configuration - Non File Based mode
+Terasort will switch to non file based mode, if filePath is not specified.
 
 | Parameter  | Description | Default Value |
 | ------------- | ------------- | ------------- |
