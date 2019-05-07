@@ -11,94 +11,96 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.streaming.datalocality;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 
 public class DataLocalityTaskSchedulerTest {
-  @Test
-  public void testUniqueSchedules() {
-    int parallel = 10;
 
+  private static final Logger LOG = Logger.getLogger(DataLocalityTaskSchedulerTest.class.getName());
+
+  @Test
+  public void testUniqueSchedules1() {
+    int parallel = 1000;
+    int workers = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
-    scheduler.initialize(config);
-    WorkerPlan workerPlan = createWorkPlan(parallel);
+    scheduler.initialize(config, 1);
 
-    for (int i = 0; i < 1; i++) {
-      TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+
+    WorkerPlan workerPlan2 = createWorkPlan2(workers);
+    for (int i = 0; i < 1000; i++) {
+      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> map2 = plan2.getContainersMap();
-      for (ContainerPlan containerPlan : plan1.getContainers()) {
-        ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-
-        Assert.assertTrue(containerEquals(containerPlan, p2));
+      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+        Assert.assertEquals(containerPlanTaskInstances.size(),
+            TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
       }
     }
   }
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 10;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    int parallel = 1000;
+    int workers = 2;
+
+    DataFlowTaskGraph graph = createGraphWithConstraints(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
-    scheduler.initialize(config);
-    WorkerPlan workerPlan = createWorkPlan(parallel);
+
+    scheduler.initialize(config, 1);
+    WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+    Assert.assertNotNull(plan1);
 
-    WorkerPlan workerPlan2 = createWorkPlan2(parallel);
-    for (int i = 0; i < 1; i++) {
-      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
 
-      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
+    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+
+      ContainerPlan containerPlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+
+      Assert.assertEquals(containerPlanTaskInstances.size(),
+          Integer.parseInt(graph.getGraphConstraints().get(
+              Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
     }
-  }
-
-
-  private boolean containerEquals(ContainerPlan p1,
-                                  ContainerPlan p2) {
-    if (p1.getContainerId() != p2.getContainerId()) {
-      return false;
-    }
-
-    if (p1.getTaskInstances().size() != p2.getTaskInstances().size()) {
-      return false;
-    }
-
-    for (TaskInstancePlan instancePlan : p1.getTaskInstances()) {
-      if (!p2.getTaskInstances().contains(instancePlan)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private Config getConfig() {
-
     String twister2Home = "/home/" + System.getProperty("user.dir")
         + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
     String configDir = "/home/" + System.getProperty("user.dir")
@@ -106,7 +108,11 @@ public class DataLocalityTaskSchedulerTest {
     String clusterType = "standalone";
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
-    return Config.newBuilder().putAll(config).build();
+
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
+    jobConfig.put(DataObjectConstants.FILE_SYSTEM, "local");
+    return Config.newBuilder().putAll(config).putAll(jobConfig).build();
   }
 
   private WorkerPlan createWorkPlan(int workers) {
@@ -131,88 +137,116 @@ public class DataLocalityTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink1 testSink1 = new TestSink1();
-    TestSink2 testSink2 = new TestSink2();
-    TestMerge testMerge = new TestMerge();
-    TestFinal testFinal = new TestFinal();
+  private boolean containerEquals(ContainerPlan p1,
+                                  ContainerPlan p2) {
+    if (p1.getContainerId() != p2.getContainerId()) {
+      return false;
+    }
 
-    GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", ts);
-    builder.setParallelism("source", 2);
+    if (p1.getTaskInstances().size() != p2.getTaskInstances().size()) {
+      return false;
+    }
 
-    builder.addSink("sink1", testSink1);
-    builder.setParallelism("sink1", 2);
-
-    builder.addSink("sink2", testSink2);
-    builder.setParallelism("sink2", 2);
-
-    builder.addSink("merge", testMerge);
-    builder.setParallelism("merge", 2);
-    builder.addSink("final", testFinal);
-    builder.setParallelism("final", 2);
-
-    builder.connect("source", "sink1", "partition-edge1", OperationNames.PARTITION);
-    builder.connect("sink1", "sink2", "partition-edge2", OperationNames.PARTITION);
-    builder.connect("sink1", "merge", "partition-edge3", OperationNames.PARTITION);
-    builder.connect("sink2", "final", "partition-edge4", OperationNames.PARTITION);
-    builder.connect("merge", "final", "partition-edge5", OperationNames.PARTITION);
-
-    builder.operationMode(OperationMode.BATCH);
-
-    List<String> sourceInputDataset = new ArrayList<>();
-    sourceInputDataset.add("dataset1.txt");
-
-    builder.addConfiguration("source", "inputdataset", sourceInputDataset);
-    builder.addConfiguration("sink1", "inputdataset", sourceInputDataset);
-    builder.addConfiguration("sink2", "inputdataset", sourceInputDataset);
-    builder.addConfiguration("final", "inputdataset", sourceInputDataset);
-    builder.addConfiguration("merge", "inputdataset", sourceInputDataset);
-    return builder.build();
+    for (TaskInstancePlan instancePlan : p1.getTaskInstances()) {
+      if (!p2.getTaskInstances().contains(instancePlan)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  public static class TestSource extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
+  private DataFlowTaskGraph createGraphWithConstraints(int parallel) {
+    GeneratorTask dataObjectSource = new GeneratorTask();
+    ReceivingTask dataObjectSink = new ReceivingTask();
 
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallel);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("datapointsink", dataObjectSink,
+        parallel);
+    computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.STREAMING);
+
+    //Adding the user-defined constraints to the graph
+    Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
+    sourceTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    //sourceTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
+    sinkTaskConstraintsMap.put(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    //sinkTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
+
+    //Creating the communication edges between the tasks for the second task graph
+    //taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
+    //taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
+    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    return taskGraph;
+  }
+
+
+  private DataFlowTaskGraph createGraph(int parallel) {
+
+    GeneratorTask dataObjectSource = new GeneratorTask();
+    ReceivingTask dataObjectSink = new ReceivingTask();
+
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallel);
+    ComputeConnection computeConnection = taskGraphBuilder.addSink("datapointsink", dataObjectSink,
+        parallel);
+    computeConnection.partition("datapointsource", "partition-edge", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.STREAMING);
+
+    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    return taskGraph;
+  }
+
+  private static class GeneratorTask extends BaseSource {
+
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public void execute() {
+      boolean wrote = context.write("partition-edge", "Hello");
+      if (wrote) {
+        count++;
+        if (count % 100 == 0) {
+          LOG.info(String.format("%d %d Message sent count : %d", context.getWorkerId(),
+              context.globalTaskId(), count));
+        }
+      }
     }
   }
 
-  public static class TestSink1 extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
+  private static class ReceivingTask extends BaseSink {
 
+    private static final long serialVersionUID = -254264903510284798L;
+    private int count = 0;
+
+    @SuppressWarnings("unchecked")
     @Override
-    public boolean execute(IMessage message) {
-      return false;
+    public void prepare(Config cfg, TaskContext ctx) {
+      this.context = ctx;
+      this.config = cfg;
     }
-  }
 
-  public static class TestSink2 extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
+    @SuppressWarnings("unchecked")
     @Override
     public boolean execute(IMessage message) {
-      return false;
-    }
-  }
-
-  public static class TestMerge extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
-  }
-
-  public static class TestFinal extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
+      if (message.getContent() instanceof String) {
+        count += ((String) message.getContent()).length();
+      }
+      LOG.info(String.format("%d %d Message Received count: %d", context.getWorkerId(),
+          context.globalTaskId(), count));
+      return true;
     }
   }
 }
