@@ -33,9 +33,16 @@ import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 public class AllReduce implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(AllReduce.class.getName());
 
+  /**
+   * The reduce operation
+   */
   private MToOneTree reduce;
 
+  /**
+   * The broadcast operation
+   */
   private TreeBroadcast broadcast;
+
   // the source tasks
   protected Set<Integer> sources;
 
@@ -48,28 +55,45 @@ public class AllReduce implements DataFlowOperation {
   // the final receiver
   private SingularReceiver finalReceiver;
 
+  /**
+   * The channel
+   */
   private TWSChannel channel;
 
-  private int executor;
-
+  /**
+   * THe middle task
+   */
   private int middleTask;
 
+  /**
+   * The reduce edge
+   */
   private int reduceEdge;
 
+  /**
+   * The broadcast edge
+   */
   private int broadCastEdge;
 
-  private MessageType type;
-
+  /**
+   * The task plan
+   */
   private TaskPlan taskPlan;
 
+  /**
+   * The reduce function
+   */
   private ReduceFunction reduceFunction;
 
+  /**
+   * Weather streaming mode
+   */
   private boolean streaming;
 
-  public AllReduce(TWSChannel chnl,
+  public AllReduce(Config config, TWSChannel chnl, TaskPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
                    ReduceFunction reduceFn,
-                   SingularReceiver finalRecv,
+                   SingularReceiver finalRecv, MessageType t,
                    int redEdge, int broadEdge,
                    boolean strm) {
     this.channel = chnl;
@@ -81,21 +105,11 @@ public class AllReduce implements DataFlowOperation {
     this.middleTask = middleTask;
     this.reduceFunction = reduceFn;
     this.streaming = strm;
+    init(config, t, instancePlan);
   }
 
-
-  /**
-   * Initialize
-   * @param config
-   * @param t
-   * @param instancePlan
-   * @param edge
-   */
-  public void init(Config config, MessageType t, TaskPlan instancePlan, int edge) {
-    this.type = t;
-    this.executor = instancePlan.getThisExecutor();
+  private void init(Config config, MessageType t, TaskPlan instancePlan) {
     this.taskPlan = instancePlan;
-    this.executor = taskPlan.getThisExecutor();
 
     MessageReceiver finalRcvr;
     if (streaming) {
