@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -71,10 +70,9 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-        int sinksCount = ctx.getTasksByName(SINK).size();
         Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
             .map(TaskInstancePlan::getTaskIndex)
-            .filter(i -> i % sinksCount == ctx.taskIndex())
+            .filter(i -> (Math.abs(i.hashCode())) == ctx.taskIndex())
             .collect(Collectors.toSet());
 
         List<int[]> dataFromEachTask = new ArrayList<>();
@@ -91,7 +89,8 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
         return finalOutput.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
-              IntComparator.getInstance(),
+              (d1, d2) -> true, //return true for any key, since we
+              // can't determine this due to hash based selector
               new IteratorComparator<>(
                   IntArrayComparator.getInstance()
               )
