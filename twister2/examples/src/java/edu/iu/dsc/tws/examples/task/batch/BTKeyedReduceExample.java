@@ -102,7 +102,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     public boolean keyedReduce(Iterator<Tuple<Integer, int[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       LOG.info(String.format("%d received keyed-reduce %d",
-          context.getWorkerId(), context.taskId()));
+          context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       this.verified = verifyResults(resultsVerifier, content, null, verified);

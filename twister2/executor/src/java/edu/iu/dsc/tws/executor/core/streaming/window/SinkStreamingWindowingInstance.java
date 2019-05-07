@@ -57,7 +57,12 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
   /**
    * The globally unique streamingTask id
    */
-  private int streamingTaskId;
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -94,16 +99,17 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,
-                                        String tName, int tId, int tIndex, int parallel, int wId,
+                                        String tName, int taskId, int globalTaskId,
+                                        int tIndex, int parallel, int wId,
                                         Map<String, Object> cfgs, Map<String, String> inEdges,
                                         TaskSchedulePlan taskSchedulePlan) {
-    super(streamingWindowTask, streamingInQueue, config, tName, tId, tIndex, parallel, wId, cfgs,
-        inEdges, taskSchedulePlan);
+    super(streamingWindowTask, streamingInQueue, config, tName, taskId,
+        globalTaskId, tIndex, parallel, wId, cfgs, inEdges, taskSchedulePlan);
 
     this.streamingWindowTask = streamingWindowTask;
     this.streamingInQueue = streamingInQueue;
     this.config = config;
-    this.streamingTaskId = tId;
+    this.globalTaskId = globalTaskId;
     this.streamingTaskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
@@ -132,7 +138,7 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
 
   @Override
   public void prepare(Config cfg) {
-    streamingWindowTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId,
+    streamingWindowTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId, globalTaskId,
         taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
   }
 

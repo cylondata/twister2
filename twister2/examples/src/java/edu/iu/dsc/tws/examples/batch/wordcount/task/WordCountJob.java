@@ -124,7 +124,7 @@ public class WordCountJob extends TaskWorker {
           if (next instanceof Tuple) {
             Tuple kc = (Tuple) next;
             LOG.log(Level.INFO, String.format("%d Word %s count %s",
-                context.taskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
+                context.globalTaskId(), kc.getKey(), ((int[]) kc.getValue())[0]));
           }
         }
       }

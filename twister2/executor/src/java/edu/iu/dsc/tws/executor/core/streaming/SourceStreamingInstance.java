@@ -57,7 +57,12 @@ public class SourceStreamingInstance implements INodeInstance {
   /**
    * The globally unique streamingTask id
    */
-  private int streamingTaskId;
+  private int globalTaskId;
+
+  /**
+   * The task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -101,13 +106,15 @@ public class SourceStreamingInstance implements INodeInstance {
   private TaskSchedulePlan taskSchedule;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
-                                 Config config, String tName, int tId, int tIndex, int parallel,
+                                 Config config, String tName, int taskId,
+                                 int globalTaskId, int tIndex, int parallel,
                                  int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
                                  TaskSchedulePlan taskSchedule) {
     this.streamingTask = streamingTask;
+    this.taskId = taskId;
     this.outStreamingQueue = outStreamingQueue;
     this.config = config;
-    this.streamingTaskId = tId;
+    this.globalTaskId = globalTaskId;
     this.streamingTaskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
@@ -122,8 +129,9 @@ public class SourceStreamingInstance implements INodeInstance {
   public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
 
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+        globalTaskId, taskName, parallelism, workerId,
+        outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
   }
 
   /**
@@ -141,7 +149,7 @@ public class SourceStreamingInstance implements INodeInstance {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
         // if we successfully send remove message
-        if (op.send(streamingTaskId, message, 0)) {
+        if (op.send(globalTaskId, message, 0)) {
           outStreamingQueue.poll();
         } else {
           // we need to break

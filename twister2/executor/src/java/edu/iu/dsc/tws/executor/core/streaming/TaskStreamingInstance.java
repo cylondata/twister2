@@ -61,6 +61,11 @@ public class TaskStreamingInstance implements INodeInstance {
   /**
    * The globally unique task id
    */
+  private int globalTaskId;
+
+  /**
+   * The task id
+   */
   private int taskId;
 
   /**
@@ -121,14 +126,16 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
-                               int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
+                               int taskId, int globalTaskId, int tIndex,
+                               int parallel, int wId, Map<String, Object> cfgs,
                                Map<String, String> inEdges, Map<String, String> outEdges,
                                TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.taskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
@@ -143,8 +150,8 @@ public class TaskStreamingInstance implements INodeInstance {
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
+    task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -174,7 +181,7 @@ public class TaskStreamingInstance implements INodeInstance {
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
         // if we successfully send remove
-        if (op.send(taskId, message, flags)) {
+        if (op.send(globalTaskId, message, flags)) {
           outQueue.poll();
         } else {
           break;

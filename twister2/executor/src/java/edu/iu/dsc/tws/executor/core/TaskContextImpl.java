@@ -29,9 +29,14 @@ public class TaskContextImpl implements TaskContext {
   private int taskIndex;
 
   /**
-   * Unique id of the task
+   * The task id for each task, each instance of the same task will have the same id
    */
   private int taskId;
+
+  /**
+   * Unique id of the task
+   */
+  private int globalTaskId;
 
   /**
    * Name of the task
@@ -80,11 +85,12 @@ public class TaskContextImpl implements TaskContext {
    */
   private Set<String> outEdgeNames = new HashSet<>();
 
-  private TaskContextImpl(int taskIndex, int taskId, String taskName,
+  private TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                           int parallelism, int wId,
                           Map<String, Object> configs,
                           TaskSchedulePlan taskSchedulePlan) {
     this.taskIndex = taskIndex;
+    this.globalTaskId = globalTaskId;
     this.taskId = taskId;
     this.taskName = taskName;
     this.parallelism = parallelism;
@@ -94,27 +100,29 @@ public class TaskContextImpl implements TaskContext {
   }
 
 
-  public TaskContextImpl(int taskIndex, int taskId, String taskName,
+  public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId, Map<String, Object> configs,
                          Map<String, String> inputs, TaskSchedulePlan taskSchedulePlan) {
-    this(taskIndex, taskId, taskName, parallelism, wId, configs, taskSchedulePlan);
+    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.inputs = inputs;
   }
 
-  public TaskContextImpl(int taskIndex, int taskId, String taskName, int parallelism, int wId,
+  public TaskContextImpl(int taskIndex, int taskId, int globalTaskId,
+                         String taskName, int parallelism, int wId,
                          OutputCollection collection, Map<String, Object> configs,
                          Map<String, String> outEdges, TaskSchedulePlan taskSchedulePlan) {
-    this(taskIndex, taskId, taskName, parallelism, wId, configs, taskSchedulePlan);
+    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.collection = collection;
     this.outEdges = outEdges;
     outEdgeNames.addAll(outEdges.keySet());
   }
 
-  public TaskContextImpl(int taskIndex, int taskId, String taskName, int parallelism, int wId,
+  public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
+                         int parallelism, int wId,
                          OutputCollection collection, Map<String, Object> configs,
                          Map<String, String> inputs, Map<String, String> outEdges,
                          TaskSchedulePlan taskSchedulePlan) {
-    this(taskIndex, taskId, taskName, parallelism, wId, collection,
+    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, collection,
         configs, outEdges, taskSchedulePlan);
     this.inputs = inputs;
   }
@@ -146,9 +154,18 @@ public class TaskContextImpl implements TaskContext {
   }
 
   /**
-   * Task id
+   * Globally unique id
    *
    * @return the task id
+   */
+  public int globalTaskId() {
+    return globalTaskId;
+  }
+
+  /**
+   * Get the task id for this task
+   *
+   * @return task id
    */
   public int taskId() {
     return taskId;
@@ -236,7 +253,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public boolean write(String edge, Object key, Object message) {
     this.validateEdge(edge);
-    return collection.collect(edge, new TaskMessage(key, message, edge, taskId));
+    return collection.collect(edge, new TaskMessage(key, message, edge, globalTaskId));
   }
 
   /**
@@ -268,7 +285,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public boolean writeEnd(String edge, Object key, Object message) {
     this.validateEdge(edge);
-    boolean collect = collection.collect(edge, new TaskMessage(key, message, edge, taskId));
+    boolean collect = collection.collect(edge, new TaskMessage(key, message, edge, globalTaskId));
     isDone.put(edge, true);
     return collect;
   }

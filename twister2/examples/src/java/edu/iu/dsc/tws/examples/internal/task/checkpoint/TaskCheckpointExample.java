@@ -163,14 +163,14 @@ public class TaskCheckpointExample implements IWorker {
     public boolean execute(IMessage message) {
 
       CheckpointBarrier cb = (CheckpointBarrier) message.getContent();
-      System.out.println(cb.getId() + " from taskId : " + taskId);
+      System.out.println(cb.getId() + " from globalTaskId : " + taskId);
 //      channel.direct(newCfg, MessageTypes.OBJECT, 0, )
       return true;
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      this.taskId = context.taskId();
+      this.taskId = context.globalTaskId();
     }
   }
 

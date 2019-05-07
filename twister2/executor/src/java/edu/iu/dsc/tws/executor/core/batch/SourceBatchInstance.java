@@ -60,7 +60,12 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   /**
    * The globally unique task id
    */
-  private int batchTaskId;
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -118,13 +123,15 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   private TaskSchedulePlan taskSchedule;
 
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
-                             Config config, String tName, int tId, int tIndex, int parallel,
+                             Config config, String tName, int taskId,
+                             int globalTaskId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
                              TaskSchedulePlan taskSchedule) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
-    this.batchTaskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.batchTaskIndex = tIndex;
     this.parallelism = parallel;
     this.batchTaskName = tName;
@@ -139,7 +146,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   public void prepare(Config cfg) {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
-    taskContext = new TaskContextImpl(batchTaskIndex, batchTaskId, batchTaskName,
+    taskContext = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, batchTaskName,
         parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
     batchTask.prepare(cfg, taskContext);
   }
@@ -180,7 +187,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          if (op.send(batchTaskId, message, 0)) {
+          if (op.send(globalTaskId, message, 0)) {
             outBatchQueue.poll();
           } else {
             // no point in progressing further
@@ -193,7 +200,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
       if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
           && state.isNotSet(InstanceState.OUT_COMPLETE)) {
         for (IParallelOperation op : outBatchParOps.values()) {
-          op.finish(batchTaskId);
+          op.finish(globalTaskId);
         }
         state.addState(InstanceState.OUT_COMPLETE);
       }
@@ -216,7 +223,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
 
   @Override
   public int getId() {
-    return batchTaskId;
+    return globalTaskId;
   }
 
   @Override

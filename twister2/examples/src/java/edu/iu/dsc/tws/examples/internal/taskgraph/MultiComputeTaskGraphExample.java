@@ -189,7 +189,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "First Compute Received Data: " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           Object ret = ((Iterator) message.getContent()).next();
@@ -218,7 +218,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Second Compute Received Data: " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           Object ret = ((Iterator) message.getContent()).next();
@@ -242,7 +242,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received Data from workerId: " + context.getWorkerId()
-          + ":" + context.taskId() + ":" + message.getContent());
+          + ":" + context.globalTaskId() + ":" + message.getContent());
       newValues = (double[]) message.getContent();
       return true;
     }

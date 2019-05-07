@@ -85,8 +85,8 @@ public class FlatMapOp<T, R> implements ICompute, Receptor {
     this.context = ctx;
     this.collector = new CollectorImpl<>(context, Constants.DEFAULT_EDGE);
 
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
-        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
+        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     mapFn.prepare(tSetContext);
   }

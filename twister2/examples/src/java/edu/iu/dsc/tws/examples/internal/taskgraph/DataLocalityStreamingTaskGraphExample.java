@@ -117,7 +117,7 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
         count++;
         if (count % 100 == 0) {
           LOG.info(String.format("%d %d Message sent count : %d", context.getWorkerId(),
-              context.taskId(), count));
+              context.globalTaskId(), count));
         }
       }
     }
@@ -142,7 +142,7 @@ public class DataLocalityStreamingTaskGraphExample extends TaskWorker {
         count += ((String) message.getContent()).length();
       }
       LOG.info(String.format("%d %d Message Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
   }

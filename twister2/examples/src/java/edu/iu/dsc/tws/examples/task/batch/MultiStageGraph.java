@@ -88,7 +88,7 @@ public class MultiStageGraph extends TaskWorker {
     public boolean execute(IMessage message) {
       count++;
       LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
   }
@@ -109,7 +109,7 @@ public class MultiStageGraph extends TaskWorker {
         }
       }
       LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
   }

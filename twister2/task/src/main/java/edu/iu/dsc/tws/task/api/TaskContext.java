@@ -39,6 +39,13 @@ public interface TaskContext {
    *
    * @return the task id
    */
+  int globalTaskId();
+
+  /**
+   * Get the task id for this task
+   *
+   * @return task id
+   */
   int taskId();
 
   /**

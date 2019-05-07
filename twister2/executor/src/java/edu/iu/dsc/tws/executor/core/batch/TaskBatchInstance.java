@@ -66,6 +66,11 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * The globally unique task id
    */
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
   private int taskId;
 
   /**
@@ -145,14 +150,16 @@ public class TaskBatchInstance implements INodeInstance, ISync {
 
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
-                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
+                           int taskId, int globalTaskId, int tIndex, int parallel,
+                           int wId, Map<String, Object> cfgs,
                            Map<String, String> inEdges, Map<String, String> outEdges,
                            TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.taskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
@@ -167,8 +174,8 @@ public class TaskBatchInstance implements INodeInstance, ISync {
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    taskContext = new TaskContextImpl(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
+    taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
     task.prepare(cfg, taskContext);
   }
 
@@ -209,7 +216,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
-        if (op.send(taskId, message, flags)) {
+        if (op.send(globalTaskId, message, flags)) {
           outQueue.poll();
         } else {
           // no point progressing further
@@ -222,7 +229,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()
         && state.isNotSet(InstanceState.OUT_COMPLETE)) {
       for (IParallelOperation op : outParOps.values()) {
-        op.finish(taskId);
+        op.finish(globalTaskId);
       }
       state.addState(InstanceState.OUT_COMPLETE);
     }
@@ -280,7 +287,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
 
   @Override
   public int getId() {
-    return taskId;
+    return globalTaskId;
   }
 
   @Override

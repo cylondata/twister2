@@ -67,8 +67,8 @@ public class KIterableMapOp<K, V, O> implements ICompute, Receptor {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
-        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
+        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     mapFn.prepare(tSetContext);
   }

@@ -97,7 +97,7 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     public boolean keyedPartition(Iterator<Tuple<Integer, int[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       LOG.info(String.format("%d received keyed-partition %d",
-          context.getWorkerId(), context.taskId()));
+          context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       this.verified = verifyResults(resultsVerifier, content, null, verified);
