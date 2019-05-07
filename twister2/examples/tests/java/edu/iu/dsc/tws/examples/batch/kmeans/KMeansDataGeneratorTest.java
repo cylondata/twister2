@@ -79,8 +79,8 @@ public class KMeansDataGeneratorTest {
   @Test
   public void testUniqueSchedules2() throws IOException {
     Config config = getConfig();
-
-    String dinputDirectory = "hdfs://namenode:9000/tmp/testdinput";
+    String hostname = String.valueOf(config.get("twister2.hdfs.namenode"));
+    String dinputDirectory = "hdfs://" + hostname + ":9000/tmp/testdinput";
     int numFiles = 1;
     int dsize = 20;
     int dimension = 2;
@@ -99,10 +99,8 @@ public class KMeansDataGeneratorTest {
 
     LocalFixedInputPartitioner localFixedInputPartitioner = new
         LocalFixedInputPartitioner(new Path(dinputDirectory), parallelismValue, config, dsize);
-
     DataSource<String, ?> source
         = new DataSource<>(config, localFixedInputPartitioner, parallelismValue);
-
     InputSplit<String> inputSplit;
     for (int i = 0; i < parallelismValue; i++) {
       inputSplit = source.getNextSplit(i);
@@ -145,7 +143,8 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules4() throws IOException {
     Config config = getConfig();
 
-    String cinputDirectory = "hdfs://namenode:9000/tmp/testcinput";
+    String hostname = String.valueOf(config.get("twister2.hdfs.namenode"));
+    String cinputDirectory = "hdfs://" + hostname + ":9000/tmp/testcinput";
 
     int numFiles = 1;
     int csize = 4;
@@ -175,8 +174,10 @@ public class KMeansDataGeneratorTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/username/twister2/bazel-bin/scripts/package/twister2-0.2.1";
-    String configDir = "/home/username/twister2/twister2/taskscheduler/tests/conf/";
+    String twister2Home = "/home/" + System.getProperty("user.dir")
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+    String configDir = "/home/" + System.getProperty("user.dir")
+        + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).build();
