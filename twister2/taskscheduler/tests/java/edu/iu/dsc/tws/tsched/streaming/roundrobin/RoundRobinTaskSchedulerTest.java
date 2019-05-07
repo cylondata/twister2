@@ -99,8 +99,10 @@ public class RoundRobinTaskSchedulerTest {
 
     Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
     for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+
       ContainerPlan containerPlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+
       Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
           graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
     }

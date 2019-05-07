@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.taskscheduler;
 
-import java.util.Map;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,8 +19,6 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -79,18 +75,18 @@ public class TaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createStreamingGraph(int parallel) {
-      TestSource ts = new TestSource();
-      TestSink testSink = new TestSink();
+    TestSource ts = new TestSource();
+    TestSink testSink = new TestSink();
 
-      GraphBuilder builder = GraphBuilder.newBuilder();
-      builder.addSource("source", ts);
-      builder.setParallelism("source", parallel);
+    GraphBuilder builder = GraphBuilder.newBuilder();
+    builder.addSource("source", ts);
+    builder.setParallelism("source", parallel);
 
-      builder.addSink("sink1", testSink);
-      builder.setParallelism("sink1", parallel);
+    builder.addSink("sink1", testSink);
+    builder.setParallelism("sink1", parallel);
 
-      builder.operationMode(OperationMode.STREAMING);
-      return builder.build();
+    builder.operationMode(OperationMode.STREAMING);
+    return builder.build();
   }
 
   private DataFlowTaskGraph createBatchGraph(int parallel) {
@@ -113,7 +109,7 @@ public class TaskSchedulerTest {
     String twister2Home = "/home/" + System.getProperty("user.dir")
         + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
     String configDir = "/home/" + System.getProperty("user.dir")
-    + "/twister2/twister2/taskscheduler/tests/conf/";
+        + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
