@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -92,7 +91,8 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
         return finalOutput.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
-              IntComparator.getInstance(),
+              (d1, d2) -> true, //return true for any key, since we
+              // can't determine this due to hash based selector,
               IntArrayComparator.getInstance()
           )
       ));
