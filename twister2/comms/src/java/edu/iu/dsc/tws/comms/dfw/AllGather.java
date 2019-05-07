@@ -34,9 +34,16 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 public class AllGather implements DataFlowOperation {
   private static final Logger LOG = Logger.getLogger(AllGather.class.getName());
 
+  /**
+   * Gather operation
+   */
   private MToOneTree gather;
 
+  /**
+   * Broadcast operation
+   */
   private TreeBroadcast broadcast;
+
   // the source tasks
   protected Set<Integer> sources;
 
@@ -46,23 +53,44 @@ public class AllGather implements DataFlowOperation {
   // the final receiver
   private BulkReceiver finalReceiver;
 
+  /**
+   * The channel
+   */
   private TWSChannel channel;
 
-  private int executor;
-
+  /**
+   * The middle task
+   */
   private int middleTask;
 
+  /**
+   * The edge used for gather
+   */
   private int gatherEdge;
 
+  /**
+   * The edge used for broadcast
+   */
   private int broadCastEdge;
 
+  /**
+   * Weather it is streaming
+   */
   private boolean streaming;
 
+  /**
+   * Data type
+   */
   private MessageType dataType;
 
-  public AllGather(TWSChannel chnl,
+  /**
+   * Task plan
+   */
+  private TaskPlan taskPlan;
+
+  public AllGather(Config config, TWSChannel chnl, TaskPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
-                   BulkReceiver finalRecv,
+                   BulkReceiver finalRecv, MessageType type,
                    int redEdge, int broadEdge, boolean stream) {
     this.channel = chnl;
     this.sources = sources;
@@ -72,15 +100,12 @@ public class AllGather implements DataFlowOperation {
     this.broadCastEdge = broadEdge;
     this.middleTask = middleTask;
     this.streaming = stream;
+    this.dataType = type;
+    this.taskPlan = instancePlan;
+    init(config, type, instancePlan);
   }
 
-
-  /**
-   * Initialize
-   */
-  public void init(Config config, MessageType type, TaskPlan instancePlan, int edge) {
-    this.executor = instancePlan.getThisExecutor();
-    this.dataType = type;
+  private void init(Config config, MessageType type, TaskPlan instancePlan) {
     MessageReceiver finalRcvr;
     if (streaming) {
       finalRcvr = new BcastGatheStreamingReceiver(finalReceiver);
@@ -114,7 +139,7 @@ public class AllGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
+    Tuple tuple = new Tuple<>(source, message, MessageTypes.INTEGER, dataType);
     return gather.send(source, tuple, flags);
   }
 
@@ -170,7 +195,7 @@ public class AllGather implements DataFlowOperation {
 
   @Override
   public TaskPlan getTaskPlan() {
-    return null;
+    return taskPlan;
   }
 
   @Override

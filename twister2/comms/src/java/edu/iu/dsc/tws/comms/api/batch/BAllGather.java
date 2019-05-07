@@ -52,9 +52,8 @@ public class BAllGather {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    gather = new AllGather(comm.getChannel(), sources, targets, middleTask, rcvr,
-        comm.nextEdge(), comm.nextEdge(), false);
-    gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    gather = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets, middleTask,
+        rcvr, dataType, comm.nextEdge(), comm.nextEdge(), false);
   }
 
   /**
