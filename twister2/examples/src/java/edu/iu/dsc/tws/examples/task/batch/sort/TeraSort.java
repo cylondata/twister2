@@ -271,7 +271,7 @@ public class TeraSort extends TaskWorker {
 
       this.value = new byte[valueSize];
       Arrays.fill(this.value, (byte) 1);
-      this.random = new Random(1000);
+      this.random = new Random(cfg.getIntegerValue(ARG_KEY_SEED, 1000));
 
       //time only in the worker0's lowest task
       int lowestTaskIndex = ctx.getTasksByName(TASK_SOURCE).stream()
@@ -330,11 +330,11 @@ public class TeraSort extends TaskWorker {
             + "A source will generate this much of data. Including size of both key and value.",
         false));
     options.addOption(createOption(ARG_KEY_SIZE, true,
-        "Size of the key in bytes of a single Tuple", false));
+        "Size of the key in bytes of a single Tuple", true));
     options.addOption(createOption(ARG_KEY_SEED, true,
         "Size of the key in bytes of a single Tuple", false));
     options.addOption(createOption(ARG_VALUE_SIZE, true,
-        "Size of the value in bytes of a single Tuple", false));
+        "Size of the value in bytes of a single Tuple", true));
 
     //resources
     options.addOption(createOption(ARG_RESOURCE_CPU, true,
