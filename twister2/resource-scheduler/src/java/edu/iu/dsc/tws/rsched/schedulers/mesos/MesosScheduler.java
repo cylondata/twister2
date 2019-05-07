@@ -142,13 +142,13 @@ public class MesosScheduler implements Scheduler {
             // int end = begin + 30;
 
  /*           Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
-                .setTaskId(taskId)
+                .setTaskId(globalTaskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
                 .addResources(buildResource("disk", MesosContext.diskPerContainer(config)))
                 //.addResources(buildRangeResource("ports", begin, end))
-                .setData(ByteString.copyFromUtf8("" + taskId.getValue()));*/
+                .setData(ByteString.copyFromUtf8("" + globalTaskId.getValue()));*/
 
             Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
                 .setTaskId(taskId)

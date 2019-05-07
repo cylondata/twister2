@@ -50,7 +50,12 @@ public class SinkStreamingInstance implements INodeInstance {
   /**
    * The globally unique streamingTask id
    */
-  private int streamingTaskId;
+  private int globalTaskId;
+
+  /**
+   * The task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -84,13 +89,15 @@ public class SinkStreamingInstance implements INodeInstance {
   private TaskSchedulePlan taskSchedulePlan;
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
-                               Config config, String tName, int tId, int tIndex, int parallel,
+                               Config config, String tName, int taskId,
+                               int globalTaskID, int tIndex, int parallel,
                                int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
                                TaskSchedulePlan taskSchedulePlan) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
+    this.taskId = taskId;
     this.config = config;
-    this.streamingTaskId = tId;
+    this.globalTaskId = globalTaskID;
     this.streamingTaskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
@@ -101,8 +108,8 @@ public class SinkStreamingInstance implements INodeInstance {
   }
 
   public void prepare(Config cfg) {
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
   }
 
   public boolean execute() {

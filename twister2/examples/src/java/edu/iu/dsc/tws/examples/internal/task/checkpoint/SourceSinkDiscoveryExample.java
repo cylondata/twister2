@@ -130,7 +130,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
       this.ctx = context;
 
       client = new RRClient("localhost", 6789, cfg, looper,
-          context.taskId(), new ClientConnectHandler());
+          context.globalTaskId(), new ClientConnectHandler());
 
       client.registerResponseHandler(Checkpoint.TaskDiscovery.newBuilder(),
           new ClientMessageHandler());
@@ -146,7 +146,7 @@ public class SourceSinkDiscoveryExample implements IWorker {
       @Override
       public void onConnect(SocketChannel channel, StatusCode status) {
         Checkpoint.TaskDiscovery message = Checkpoint.TaskDiscovery.newBuilder()
-            .setTaskID(ctx.taskId())
+            .setTaskID(ctx.globalTaskId())
             .setTaskType(Checkpoint.TaskDiscovery.TaskType.SOURCE)
             .build();
 

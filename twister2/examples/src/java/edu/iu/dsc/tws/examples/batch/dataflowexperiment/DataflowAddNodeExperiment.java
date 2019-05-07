@@ -110,7 +110,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.FINE, "Received Points (First Compute Task): " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {
@@ -131,7 +131,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.FINE, "Received Points (Second Compute Task): " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {

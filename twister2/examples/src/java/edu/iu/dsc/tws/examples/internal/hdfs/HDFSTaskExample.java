@@ -208,7 +208,7 @@ public class HDFSTaskExample implements IWorker {
         count++;
         if (count % 100 == 0) {
           LOG.info(String.format("%d %d Message Partition sent count : %d", context.getWorkerId(),
-              context.taskId(), count));
+              context.globalTaskId(), count));
         }
       }
     }
@@ -255,7 +255,7 @@ public class HDFSTaskExample implements IWorker {
         count += ((List) message.getContent()).size();
       }
       LOG.info(String.format("%d %d Message Partition Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
   }

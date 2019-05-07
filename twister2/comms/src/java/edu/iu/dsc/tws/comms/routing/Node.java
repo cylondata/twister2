@@ -138,7 +138,7 @@ public class Node {
         + "children=" + children
         + ", directChildren=" + directChildren
         + ", parent=" + (parent != null ? parent.getTaskId() + "" : "NULL")
-        + ", taskId=" + taskId
+        + ", globalTaskId=" + taskId
         + ", groupId=" + groupId
         + '}';
   }

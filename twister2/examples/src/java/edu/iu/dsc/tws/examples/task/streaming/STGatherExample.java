@@ -76,7 +76,7 @@ public class STGatherExample extends BenchTaskWorker {
 
       if (count == jobParameters.getTotalIterations()) {
         LOG.info(String.format("%d received gather %d",
-            context.getWorkerId(), context.taskId()));
+            context.getWorkerId(), context.globalTaskId()));
         Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, this.timingCondition);
         resultsRecorder.writeToCSV();

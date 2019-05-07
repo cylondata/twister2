@@ -55,8 +55,8 @@ public class SourceOp<T> implements ISource, Receptor {
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
-        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
+        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
     dataSet.prepare(tSetContext);
   }
 

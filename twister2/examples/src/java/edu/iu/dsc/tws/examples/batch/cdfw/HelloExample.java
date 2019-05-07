@@ -89,7 +89,7 @@ public final class HelloExample {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-          + ":" + context.taskId() + message.getContent());
+          + ":" + context.globalTaskId() + message.getContent());
       return true;
     }
 
