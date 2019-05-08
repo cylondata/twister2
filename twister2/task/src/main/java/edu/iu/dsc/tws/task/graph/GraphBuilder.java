@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 /**
@@ -141,7 +140,7 @@ public final class GraphBuilder {
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
                               IFunction function, DataType dataType, DataType keyType,
-                              TaskKeySelector keySelector, TaskPartitioner partitioner) {
+                              TaskPartitioner partitioner) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -152,7 +151,7 @@ public final class GraphBuilder {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
     graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType, keyType,
-        function, partitioner, keySelector));
+        function, partitioner));
     return this;
   }
 
@@ -179,8 +178,6 @@ public final class GraphBuilder {
 
   /**
    * Set the operation mode of the graph, default is set to stream
-   * @param mode
-   * @return
    */
   public DataFlowTaskGraph operationMode(OperationMode mode) {
     graph.setOperationMode(mode);

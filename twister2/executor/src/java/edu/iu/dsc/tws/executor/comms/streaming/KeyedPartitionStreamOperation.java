@@ -28,14 +28,11 @@ import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
   private SKeyedPartition op;
-
-  private TaskKeySelector selector;
 
   public KeyedPartitionStreamOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
@@ -43,7 +40,6 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     super(config, network, tPlan, edge.getName());
     MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
     MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
-    this.selector = edge.getSelector();
 
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -54,7 +50,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     }
 
     DestinationSelector destSelector;
-    if (selector != null) {
+    if (edge.getPartitioner() != null) {
       destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
@@ -68,9 +64,9 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    TaskMessage taskMessage = (TaskMessage) message;
-    Object key = extractKey(taskMessage, selector);
-    return op.partition(source, key, taskMessage.getContent(), flags);
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.partition(source,
+        taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
   @Override
@@ -87,7 +83,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
     @Override
     public boolean receive(int target, Object data) {
       if (data instanceof Tuple) {
-        TaskMessage msg = new TaskMessage<>(((Tuple) data).getKey(), data,
+        TaskMessage msg = new TaskMessage<>(data,
             edgeGenerator.getStringMapping(communicationEdge), target);
         BlockingQueue<IMessage> messages = outMessages.get(target);
         if (messages != null) {

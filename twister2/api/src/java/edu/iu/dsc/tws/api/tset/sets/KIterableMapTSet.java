@@ -79,7 +79,7 @@ public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
     int p = calculateParallelism(parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("i-map",
-            parent), new KIterableMapOp<>(mapFn, isIterable, keyed), p);
+            parent), new KIterableMapOp<>(mapFn, isIterable, keyed, parent.getSelector()), p);
     parent.buildConnection(connection);
     return true;
   }

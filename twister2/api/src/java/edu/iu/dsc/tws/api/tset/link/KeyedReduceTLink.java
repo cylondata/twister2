@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
-import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
@@ -97,12 +96,17 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
     DataType dataType = TSetUtils.getDataType(getClassV());
     connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
         new ReduceOpFunction<>(reduceFn), keyType, dataType,
-        new TaskPartitionFunction<K>(partitionFunction), new TaskKeySelectorImpl<>(selector));
+        new TaskPartitionFunction<K>(partitionFunction));
   }
 
   @Override
   public KeyedReduceTLink<K, V> setName(String n) {
     super.setName(n);
     return this;
+  }
+
+  @Override
+  public Selector getSelector() {
+    return this.selector;
   }
 }

@@ -70,7 +70,7 @@ public class KIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
     int p = calculateParallelism(parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(generateName("i-flat-map", parent),
-            new KIterableFlatMapOp<>(mapFn, isIterable, keyed), p);
+            new KIterableFlatMapOp<>(mapFn, isIterable, keyed, parent.getSelector()), p);
     parent.buildConnection(connection);
     return true;
   }

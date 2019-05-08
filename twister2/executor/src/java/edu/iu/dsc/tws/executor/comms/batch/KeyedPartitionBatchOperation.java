@@ -21,29 +21,26 @@ import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   private BKeyedPartition op;
 
-  private TaskKeySelector selector;
-
   public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                       Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
                                       Edge edge) {
     super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
-    this.selector = edge.getSelector();
 
     DestinationSelector destSelector;
-    if (selector != null) {
+    if (edge.getPartitioner() != null) {
       destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
@@ -59,9 +56,9 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    TaskMessage taskMessage = (TaskMessage) message;
-    Object key = extractKey(taskMessage, selector);
-    return op.partition(source, key, taskMessage.getContent(), flags);
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.partition(source,
+        taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
   @Override
