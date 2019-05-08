@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
-//import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
+import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
@@ -57,33 +57,33 @@ public class DataLocalityBatchTaskSchedulerTest {
   private static final Logger LOG = Logger.getLogger(
       DataLocalityBatchTaskSchedulerTest.class.getName());
 
-//  @Test
-//  public void testUniqueSchedules1() {
-//    int parallel = 1000;
-//    int workers = 2;
-//    DataFlowTaskGraph graph = createGraph(parallel);
-//    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
-//    Config config = getConfig();
-//    scheduler.initialize(config, 1);
-//
-//    WorkerPlan workerPlan = createWorkPlan(workers);
-//    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-//
-//    WorkerPlan workerPlan2 = createWorkPlan2(workers);
-//    for (int i = 0; i < 1000; i++) {
-//      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
-//
-//      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
-//
-//      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
-//      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-//        ContainerPlan containerPlan = entry.getValue();
-//        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
-//        Assert.assertEquals(containerPlanTaskInstances.size(),
-//            TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
-//      }
-//    }
-//  }
+  @Test
+  public void testUniqueSchedules1() {
+    int parallel = 1000;
+    int workers = 2;
+    DataFlowTaskGraph graph = createGraph(parallel);
+    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
+    Config config = getConfig();
+    scheduler.initialize(config, 1);
+
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+
+    WorkerPlan workerPlan2 = createWorkPlan2(workers);
+    for (int i = 0; i < 1000; i++) {
+      TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
+
+      Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
+
+      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+        Assert.assertEquals(containerPlanTaskInstances.size(),
+            TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
+      }
+    }
+  }
 
   @Test
   public void testUniqueSchedules2() {
@@ -108,29 +108,29 @@ public class DataLocalityBatchTaskSchedulerTest {
     }
   }
 
-//  @Test
-//  public void testUniqueSchedules3() {
-//    int parallel = 1000;
-//    int workers = 3;
-//
-//    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
-//    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
-//    Config config = getConfig();
-//
-//    scheduler.initialize(config, 1);
-//    WorkerPlan workerPlan = createWorkPlan(workers);
-//    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-//    Assert.assertNotNull(plan1);
-//
-//    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-//    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-//      ContainerPlan containerPlan = entry.getValue();
-//      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
-//      LOG.info("Container Size::::" + containerPlanTaskInstances.size());
-//      Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
-//          graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
-//    }
-//  }
+  @Test
+  public void testUniqueSchedules3() {
+    int parallel = 1000;
+    int workers = 3;
+
+    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
+    Config config = getConfig();
+
+    scheduler.initialize(config, 1);
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+    Assert.assertNotNull(plan1);
+
+    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+      ContainerPlan containerPlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      LOG.info("Container Size::::" + containerPlanTaskInstances.size());
+      Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
+          graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
+    }
+  }
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
