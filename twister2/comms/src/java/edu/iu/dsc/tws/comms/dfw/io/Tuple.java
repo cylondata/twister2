@@ -41,6 +41,16 @@ public class Tuple<K, V> {
     this.contentType = dataType;
   }
 
+  public static <K, V> Tuple of(K key, V value,
+                                MessageType<K, ?> keyType,
+                                MessageType<V, ?> valueType) {
+    return new Tuple<>(key, value, keyType, valueType);
+  }
+
+  public static <K, V> Tuple of(K key, V value) {
+    return new Tuple<>(key, value);
+  }
+
   public MessageType getKeyType() {
     return keyType;
   }

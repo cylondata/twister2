@@ -95,8 +95,9 @@ public interface PrimitiveArrayPacker<A> extends DataPacker<A, A> {
     int noOfElements = totalDataLength / unitSize;
     int bufferPosition = currentBufferLocation;
     int bytesRead = 0;
+
+    final ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
     for (int i = startIndex; i < noOfElements; i++) {
-      ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
       int remaining = dataBuffer.getSize() - bufferPosition;
       if (remaining >= unitSize) {
         this.readFromBufferAndSet(byteBuffer, bufferPosition, val, i);

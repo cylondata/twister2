@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -265,9 +264,9 @@ public class ComputeConnection {
    */
   public ComputeConnection keyedReduce(String parent, String name,
                                        IFunction function, DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector) {
+                                       TaskPartitioner partitioner) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
-        function, partitioner, selector);
+        function, partitioner);
     inputs.put(parent, edge);
 
     return this;
@@ -295,10 +294,10 @@ public class ComputeConnection {
    */
   public ComputeConnection keyedReduce(String parent, String name,
                                        IFunction function, DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       TaskPartitioner partitioner,
                                        Map<String, Object> properties) {
     Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
-        function, partitioner, selector);
+        function, partitioner);
     edge.setProperties(properties);
     inputs.put(parent, edge);
 
@@ -392,11 +391,11 @@ public class ComputeConnection {
    */
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       TaskPartitioner partitioner,
                                        Map<String, Object> properties,
                                        boolean useDisk, Comparator keyComparator) {
     Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
-        null, partitioner, selector);
+        null, partitioner);
     edge.setProperties(properties);
 
     //todo move these hard coded properties to a proper place in API package,
@@ -422,7 +421,7 @@ public class ComputeConnection {
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType,
                                        boolean useDisk, Comparator keyComparator) {
-    return this.keyedGather(parent, name, keyTpe, dataType, null,
+    return this.keyedGather(parent, name, keyTpe, dataType,
         null, new HashMap<>(), useDisk, keyComparator);
   }
 
@@ -437,7 +436,7 @@ public class ComputeConnection {
    */
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType) {
-    return this.keyedGather(parent, name, keyTpe, dataType, null,
+    return this.keyedGather(parent, name, keyTpe, dataType,
         null, new HashMap<>(), false, null);
   }
 
@@ -449,14 +448,13 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param selector selector
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector) {
+                                       TaskPartitioner partitioner) {
     return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        selector, Collections.emptyMap(), false, null);
+        Collections.emptyMap(), false, null);
   }
 
   /**
@@ -467,16 +465,15 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param selector selector
    * @param properties properties of the connection
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner, TaskKeySelector selector,
+                                       TaskPartitioner partitioner,
                                        Map<String, Object> properties) {
     return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        selector, properties, false, null);
+        properties, false, null);
   }
 
   /**
@@ -551,14 +548,13 @@ public class ComputeConnection {
    * @param keyTpe the key data type
    * @param dataType the data type
    * @param partitioner the partitioner
-   * @param selector selector
    * @return compute connection
    */
   public ComputeConnection keyedPartition(String parent, String edgeName,
                                           DataType keyTpe, DataType dataType,
-                                          TaskPartitioner partitioner, TaskKeySelector selector) {
+                                          TaskPartitioner partitioner) {
     Edge edge = new Edge(edgeName, OperationNames.KEYED_PARTITION, dataType, keyTpe,
-        null, partitioner, selector);
+        null, partitioner);
     inputs.put(parent, edge);
 
     return this;

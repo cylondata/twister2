@@ -22,8 +22,6 @@ import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
-import edu.iu.dsc.tws.task.api.TaskMessage;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;
@@ -65,17 +63,5 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   @Override
   public boolean progress() {
     return true;
-  }
-
-  public static Object extractKey(TaskMessage taskMessage, TaskKeySelector selector) {
-    Object key = null;
-    if (taskMessage.getKey() == null && selector != null) {
-      key = selector.select(taskMessage.getContent());
-    } else if (taskMessage.getKey() != null) {
-      key = taskMessage.getKey();
-    } else if (taskMessage.getKey() == null && selector == null) {
-      throw new RuntimeException("Use should specify the key or use a selector");
-    }
-    return key;
   }
 }

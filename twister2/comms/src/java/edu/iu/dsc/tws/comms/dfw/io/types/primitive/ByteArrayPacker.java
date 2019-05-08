@@ -27,6 +27,8 @@ import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.comms.api.ObjectBuilder;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 
 public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
 
@@ -65,6 +67,27 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, byte[] array, int index) {
     array[index] = byteBuffer.get();
+  }
+
+  @Override
+  public int readDataFromBuffer(ObjectBuilder objectBuilder, int currentBufferLocation,
+                                DataBuffer dataBuffer) {
+    int totalDataLength = objectBuilder.getTotalSize();
+    int startIndex = objectBuilder.getCompletedSize();
+    byte[] val = (byte[]) objectBuilder.getPartialDataHolder();
+
+    ByteBuffer byteBuffer = dataBuffer.getByteBuffer();
+    int remainingInBuffer = dataBuffer.getSize() - currentBufferLocation;
+    int leftToRead = totalDataLength - startIndex;
+
+    int elementsToRead = Math.min(leftToRead, remainingInBuffer);
+
+    byteBuffer.get(val, startIndex, elementsToRead);
+
+    if (totalDataLength == elementsToRead + startIndex) {
+      objectBuilder.setFinalObject(val);
+    }
+    return elementsToRead;
   }
 
   @Override

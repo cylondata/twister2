@@ -71,11 +71,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private LinkedList<Tuple> recordsInMemory;
 
   /**
-   * The deserialized objects in memory
-   */
-  private List<Tuple> objectsInMemory = new ArrayList<>();
-
-  /**
    * Maximum size of a tuple written to disk in each file
    */
   private AtomicLong largestTupleSizeRecorded = new AtomicLong(Long.MIN_VALUE);
@@ -172,7 +167,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       deserializeObjects();
       // lets sort the in-memory objects
       //todo can be improved
-      objectsInMemory.sort(this.comparatorWrapper);
+      recordsInMemory.sort(this.comparatorWrapper);
     } finally {
       fileWriteLock.release();
     }
@@ -386,9 +381,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           Math.max(numOfBytesInMemory, largestTupleSizeRecorded.get()),
           keyComparator
       );
-      if (!objectsInMemory.isEmpty()) {
+      if (!recordsInMemory.isEmpty()) {
         ControlledFileReader inMemoryReader = ControlledFileReader.loadInMemory(
-            meta, objectsInMemory, keyComparator);
+            meta, recordsInMemory, keyComparator);
         if (inMemoryReader.hasNext()) {
           this.controlledFileReaders.add(inMemoryReader);
         }
