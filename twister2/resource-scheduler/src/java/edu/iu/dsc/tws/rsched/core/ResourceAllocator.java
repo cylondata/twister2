@@ -144,7 +144,12 @@ public class ResourceAllocator {
     Path tempDirPath = null;
     String tempDirPrefix = "twister2-" + job.getJobName() + "-";
     try {
-      tempDirPath = Files.createTempDirectory(tempDirPrefix);
+      String jobArchiveTemp = SchedulerContext.jobArchiveTempDirectory(config);
+      if (jobArchiveTemp != null) {
+        tempDirPath = Files.createTempDirectory(Paths.get(jobArchiveTemp), tempDirPrefix);
+      } else {
+        tempDirPath = Files.createTempDirectory(tempDirPrefix);
+      }
     } catch (IOException e) {
       throw new RuntimeException("Failed to create temp directory with the prefix: "
           + tempDirPrefix, e);
