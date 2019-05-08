@@ -24,9 +24,11 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -48,7 +50,7 @@ public class RoundRobinTaskSchedulerTest {
 
     WorkerPlan workerPlan = createWorkPlan(parallel);
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
 
@@ -109,6 +111,28 @@ public class RoundRobinTaskSchedulerTest {
     }
   }
 
+  @Test
+  public void testUniqueSchedules4() {
+    int parallel = 16;
+    int workers = 2;
+    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
+    scheduler.initialize(Config.newBuilder().build());
+
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
+
+    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+
+      ContainerPlan containerPlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+
+      Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
+          graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
+    }
+  }
+
   private boolean containerEquals(ContainerPlan p1,
                                   ContainerPlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
@@ -149,7 +173,7 @@ public class RoundRobinTaskSchedulerTest {
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", ts, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, 1);
+    ComputeConnection c = builder.addSink("sink", testSink, parallel);
     c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
     return builder.build();
@@ -170,12 +194,50 @@ public class RoundRobinTaskSchedulerTest {
     return graph;
   }
 
+  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+
+    TestSource testSource = new TestSource();
+    TestCompute testCompute = new TestCompute();
+    TestSink testSink = new TestSink();
+
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    taskGraphBuilder.addSource("source", testSource, parallel);
+
+    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+        "compute", testCompute, parallel);
+    ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
+        "sink", testSink, parallel);
+
+    computeConnection.direct("source", "cdirect-edge", DataType.OBJECT);
+    sinkComputeConnection.direct("compute", "sdirect-edge", DataType.OBJECT);
+    taskGraphBuilder.setMode(OperationMode.STREAMING);
+
+    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "24");
+    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    return taskGraph;
+  }
 
   public static class TestSource extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     @Override
     public void execute() {
+    }
+  }
+
+  private static class TestCompute extends BaseCompute {
+
+    private static final long serialVersionUID = -254264903510284748L;
+    private int count = 0;
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+    }
+
+    @Override
+    public boolean execute(IMessage content) {
+      return false;
     }
   }
 
