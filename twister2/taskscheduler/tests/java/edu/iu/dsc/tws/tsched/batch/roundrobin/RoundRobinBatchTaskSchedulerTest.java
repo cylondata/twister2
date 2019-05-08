@@ -50,7 +50,7 @@ public class RoundRobinBatchTaskSchedulerTest {
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
@@ -87,7 +87,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraphWithGraphConstraints(parallel);
+    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -136,7 +136,7 @@ public class RoundRobinBatchTaskSchedulerTest {
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithGraphConstraints(int parallel) {
+  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
     TestSource testSource = new TestSource();
     TestCompute testCompute = new TestCompute();
