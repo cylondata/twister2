@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.streaming.datalocality;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -27,11 +26,6 @@ import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -41,6 +35,7 @@ import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
+import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class DataLocalityTaskSchedulerTest {
 
@@ -48,7 +43,7 @@ public class DataLocalityTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules1() {
-    int parallel = 1000;
+    int parallel = 8;
     int workers = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
@@ -59,7 +54,7 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
     WorkerPlan workerPlan2 = createWorkPlan2(workers);
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 100; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
@@ -165,8 +160,8 @@ public class DataLocalityTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraph(int parallel) {
 
-    TestSource testSource = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     taskGraphBuilder.addSource("source", testSource, parallel);
@@ -180,8 +175,8 @@ public class DataLocalityTaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createGraphWithConstraints(int parallel) {
-    TestSource testSource = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     taskGraphBuilder.addSource("source", testSource, parallel);
@@ -189,17 +184,6 @@ public class DataLocalityTaskSchedulerTest {
         parallel);
     computeConnection.direct("source", "direct-edge", DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
-
-    //Adding the user-defined constraints to the graph
-    Map<String, String> sourceTaskConstraintsMap = new HashMap<>();
-    //sourceTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
-
-    Map<String, String> sinkTaskConstraintsMap = new HashMap<>();
-    //sinkTaskConstraintsMap.put(Context.TWISTER2_TASK_INSTANCE_ODD_PARALLELISM, "1");
-
-    //Creating the communication edges between the tasks for the second task graph
-    //taskGraphBuilder.addNodeConstraints("datapointsource", sourceTaskConstraintsMap);
-    //taskGraphBuilder.addNodeConstraints("datapointsink", sinkTaskConstraintsMap);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
     return taskGraph;
@@ -208,9 +192,9 @@ public class DataLocalityTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    TestSource testSource = new TestSource();
-    TestCompute testCompute = new TestCompute();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     taskGraphBuilder.addSource("source", testSource, parallel);
@@ -227,53 +211,5 @@ public class DataLocalityTaskSchedulerTest {
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
     return taskGraph;
-  }
-
-  private static class TestSource extends BaseSource {
-
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void execute() {
-    }
-  }
-
-  private static class TestCompute extends BaseCompute {
-
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      return false;
-    }
-  }
-
-  private static class TestSink extends BaseSink {
-
-    private static final long serialVersionUID = -254264903510284798L;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
   }
 }

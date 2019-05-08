@@ -16,9 +16,6 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -26,6 +23,7 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class TaskSchedulerTest {
 
@@ -75,11 +73,11 @@ public class TaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createStreamingGraph(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", ts);
+    builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
 
     builder.addSink("sink1", testSink);
@@ -90,11 +88,11 @@ public class TaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createBatchGraph(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     GraphBuilder builder = GraphBuilder.newBuilder();
-    builder.addSource("source", ts);
+    builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
 
     builder.addSink("sink1", testSink);
@@ -114,22 +112,5 @@ public class TaskSchedulerTest {
 
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
     return Config.newBuilder().putAll(config).build();
-  }
-
-  public static class TestSource extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public void execute() {
-    }
-  }
-
-  public static class TestSink extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
   }
 }

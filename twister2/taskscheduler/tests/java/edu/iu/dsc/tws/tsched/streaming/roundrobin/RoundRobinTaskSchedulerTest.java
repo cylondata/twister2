@@ -24,11 +24,6 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -36,6 +31,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class RoundRobinTaskSchedulerTest {
 
@@ -168,11 +164,11 @@ public class RoundRobinTaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createGraph(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, parallel);
+    builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
     c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
@@ -180,11 +176,11 @@ public class RoundRobinTaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createGraphWithGraphConstraints(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, parallel);
+    builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
     c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
@@ -196,9 +192,9 @@ public class RoundRobinTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    TestSource testSource = new TestSource();
-    TestCompute testCompute = new TestCompute();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     taskGraphBuilder.addSource("source", testSource, parallel);
@@ -215,38 +211,5 @@ public class RoundRobinTaskSchedulerTest {
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "24");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
     return taskGraph;
-  }
-
-  public static class TestSource extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public void execute() {
-    }
-  }
-
-  private static class TestCompute extends BaseCompute {
-
-    private static final long serialVersionUID = -254264903510284748L;
-    private int count = 0;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Config cfg, TaskContext ctx) {
-    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      return false;
-    }
-  }
-
-  public static class TestSink extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
   }
 }

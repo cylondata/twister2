@@ -23,10 +23,6 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -34,6 +30,7 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class RoundRobinBatchTaskSchedulerTest {
 
@@ -122,8 +119,8 @@ public class RoundRobinBatchTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraph(int parallel) {
 
-    TestSource testSource = new TestSource();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
@@ -138,9 +135,9 @@ public class RoundRobinBatchTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    TestSource testSource = new TestSource();
-    TestCompute testCompute = new TestCompute();
-    TestSink testSink = new TestSink();
+    TaskSchedulerClassTest.TestSource testSource = new  TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
@@ -154,31 +151,5 @@ public class RoundRobinBatchTaskSchedulerTest {
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");
     DataFlowTaskGraph graph = builder.build();
     return graph;
-  }
-
-  public static class TestSource extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public void execute() {
-    }
-  }
-
-  public static class TestCompute extends BaseCompute {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage content) {
-      return false;
-    }
-  }
-
-  public static class TestSink extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
   }
 }
