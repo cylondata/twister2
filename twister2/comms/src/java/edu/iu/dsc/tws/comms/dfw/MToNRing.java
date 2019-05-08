@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -161,16 +160,6 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   private Lock swapLock = new ReentrantLock();
 
   /**
-   * we have sent to these destinations
-   */
-  private Map<Integer, Set<Integer>> finishedDestinations = new HashMap<>();
-
-  /**
-   * These sources called onFinished
-   */
-  private Set<Integer> onFinishedSources = new HashSet<>();
-
-  /**
    * Sources of this worker
    */
   private Set<Integer> thisWorkerSources;
@@ -184,6 +173,11 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
    * Keep track of receive key type for later return
    */
   private MessageType receiveKeyType;
+
+  /**
+   * The grouping
+   */
+  private int groupingSize = 100;
 
   /**
    * Create a ring partition communication
@@ -213,6 +207,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     this.keyType = kType;
     this.sources = sources;
     this.targets = targets;
+    this.receiveDataType = rcvType;
+    this.receiveKeyType = rcvKType;
+    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
 
@@ -263,9 +261,6 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     }
 
     thisWorkerSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
-    for (int s : thisWorkerSources) {
-      finishedDestinations.put(s, new HashSet<>());
-    }
 
     // calculate the workers from we are receiving
     Set<Integer> receiveWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, sources);
@@ -348,31 +343,16 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean sendPartial(int source, Object message, int flags) {
-    return false;
+    throw new UnsupportedOperationException("Operation is not supported");
   }
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    return false;
+    throw new UnsupportedOperationException("Operation is not supported");
   }
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-      swapLock.lock();
-      try {
-        for (Map.Entry<Integer, List<Object>> e : merged.entrySet()) {
-          swapToReady(e.getKey(), e.getValue());
-        }
-      } finally {
-        swapLock.unlock();
-      }
-
-      onFinishedSources.add(source);
-    } else if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
-      onFinishedSources.add(source);
-    }
-
     partialLock.lock();
     try {
       return merger.onMessage(source, 0, target, flags, message);
@@ -386,16 +366,27 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     try {
       if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-        onFinishedSources.add(source);
-        return true;
+        List<Object> mTarget = merged.get(target);
+        if ((mTarget == null || mTarget.isEmpty())
+            && (readyToSend.get(target) == null || readyToSend.get(target).isEmpty())) {
+          return delegate.sendMessage(source, new byte[1], target,
+              MessageFlags.SYNC_EMPTY, targetRoutes.get(target));
+        } else {
+          return false;
+        }
       }
 
+      // we add to the merged
       List<Object> messages = merged.computeIfAbsent(target, k -> new AggregatedObjects<>());
 
-      if (message instanceof List) {
-        messages.addAll((Collection<?>) message);
+      if (messages.size() < groupingSize) {
+        if (message instanceof AggregatedObjects) {
+          messages.addAll((Collection<?>) message);
+        } else {
+          messages.add(message);
+        }
       } else {
-        messages.add(message);
+        return false;
       }
     } finally {
       swapLock.unlock();
@@ -443,39 +434,12 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
     lock.lock();
     try {
-      if (onFinishedSources.equals(thisWorkerSources) && delegate.isComplete()
-          && readyToSend.isEmpty() && isMergedEmpty()) {
-        for (int source : thisWorkerSources) {
-          Set<Integer> finishedDestPerSource = finishedDestinations.get(source);
-          for (int dest : targets) {
-            if (!finishedDestPerSource.contains(dest)) {
-              if (delegate.sendMessage(source, new byte[1], dest,
-                  MessageFlags.SYNC_EMPTY, targetRoutes.get(dest))) {
-                finishedDestPerSource.add(dest);
-              } else {
-                // no point in going further
-                break;
-              }
-            }
-          }
-        }
-      }
       // now set the things
       return OperationUtils.progressReceivers(delegate, lock,
           finalReceiver, partialLock, merger);
-
     } finally {
       lock.unlock();
     }
-  }
-
-  private boolean isMergedEmpty() {
-    for (List<Object> t : merged.values()) {
-      if (!t.isEmpty()) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private void incrementWorkerIndex() {
@@ -552,7 +516,6 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean receiveSendInternally(int source, int target, int path,
-
                                        int flags, Object message) {
     lock.lock();
     try {
