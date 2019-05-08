@@ -16,7 +16,6 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
 /**
@@ -32,11 +31,6 @@ public class Edge {
    * Optional function to apply for messages going through the edge
    */
   private IFunction function;
-
-  /**
-   * The selector
-   */
-  private TaskKeySelector selector;
 
   /**
    * Partitioner
@@ -123,7 +117,7 @@ public class Edge {
   }
 
   public Edge(String name, String operation, DataType dataType,
-              DataType keyType, IFunction function, TaskPartitioner part, TaskKeySelector sel) {
+              DataType keyType, IFunction function, TaskPartitioner part) {
     this.name = name;
     this.function = function;
     this.operation = operation;
@@ -131,7 +125,6 @@ public class Edge {
     this.keyType = keyType;
     this.keyed = true;
     this.partitioner = part;
-    this.selector = sel;
   }
 
   /**
@@ -200,14 +193,6 @@ public class Edge {
   }
 
   /**
-   * Get selector
-   * @return the selector
-   */
-  public TaskKeySelector getSelector() {
-    return selector;
-  }
-
-  /**
    * Get the partitioner
    * @return partitioner
    */
@@ -221,10 +206,6 @@ public class Edge {
 
   public void setFunction(IFunction function) {
     this.function = function;
-  }
-
-  public void setSelector(TaskKeySelector selector) {
-    this.selector = selector;
   }
 
   public void setPartitioner(TaskPartitioner partitioner) {

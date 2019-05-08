@@ -18,6 +18,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -40,14 +41,18 @@ public class KIterableFlatMapOp<K, V, O> implements ICompute, Receptor {
 
   private boolean keyed;
 
+  private Selector<K, O> keySelector;
+
   public KIterableFlatMapOp() {
   }
 
   public KIterableFlatMapOp(KIterableFlatMapFunction<K, V, O> mapFn,
-                            boolean inputItr, boolean kyd) {
+                            boolean inputItr,
+                            boolean kyd, Selector<K, O> keySelector) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
     this.keyed = kyd;
+    this.keySelector = keySelector;
   }
 
   @SuppressWarnings("unchecked")

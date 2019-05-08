@@ -13,12 +13,21 @@ package edu.iu.dsc.tws.task.api;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 /**
  * Given a object, select the key to be used
  */
-public interface TaskKeySelector extends INode, Serializable {
+public interface TaskKeySelector extends Serializable {
+
+  /**
+   * Prepare the key selector
+   */
+  void prepare(Config cfg, TaskContext context);
+
   /**
    * Given a object select the key to be used
+   *
    * @param data data
    * @return key object
    */

@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.NestedIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.NestedIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.ops.TaskKeySelectorImpl;
 import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.NestedIterableFlatMapTSet;
@@ -96,7 +95,7 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
     DataType keyType = TSetUtils.getDataType(getClassK());
     DataType dataType = TSetUtils.getDataType(getClassV());
     connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<>(partitionFunction), new TaskKeySelectorImpl<>(selector));
+        new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override
