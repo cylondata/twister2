@@ -369,7 +369,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
         List<Object> mTarget = merged.get(target);
         if ((mTarget == null || mTarget.isEmpty())
             && (readyToSend.get(target) == null || readyToSend.get(target).isEmpty())) {
-          return delegate.sendMessage(source, new byte[1], target,
+          return delegate.sendMessage(source, message, target,
               MessageFlags.SYNC_EMPTY, targetRoutes.get(target));
         } else {
           return false;
@@ -432,14 +432,9 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       swapLock.unlock();
     }
 
-    lock.lock();
-    try {
-      // now set the things
-      return OperationUtils.progressReceivers(delegate, lock,
-          finalReceiver, partialLock, merger);
-    } finally {
-      lock.unlock();
-    }
+    // now set the things
+    return OperationUtils.progressReceivers(delegate, lock,
+        finalReceiver, partialLock, merger);
   }
 
   private void incrementWorkerIndex() {
