@@ -1,5 +1,4 @@
-
-### Publications List
+# Publications List
 
 1. Pulasthi Wickramasinghe, Supun Kamburugamuve, Kannan Govindarajan, Vibhatha Abeykoon, Chathura Widanage, Niranda Perera, Ahmet Uyar, Gurhan Gunduz, Selahattin Akkas, Geoffrey Fox, "Twister2:TSet High-Performance Iterative Dataflow", in International Conference on High Performance Big Data and Intelligent Systems (HPBD&IS 2019), Shenzhen, China May 9 - 11, 2019.
 
