@@ -11,16 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch.sort;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,11 +39,15 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -46,9 +56,12 @@ import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.typed.AllReduceCompute;
 import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -62,6 +75,7 @@ public class TeraSort extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(TeraSort.class.getName());
 
   private static final String ARG_INPUT_FILE = "inputFile";
+  private static final String ARG_OUTPUT_FOLDER = "outputFolder";
 
   private static final String ARG_SIZE = "size";
   private static final String ARG_KEY_SIZE = "keySize";
@@ -78,8 +92,10 @@ public class TeraSort extends TaskWorker {
   private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
   private static final String ARG_TUNE_MAX_RECORDS_IN_MEMORY = "memoryRecordsLimit";
 
-  private static final String TASK_SOURCE = "int-source";
-  private static final String TASK_RECV = "int-recv";
+  private static final String TASK_SOURCE = "sort-source";
+  private static final String TASK_RECV = "sort-recv";
+  private static final String TASK_SAMPLER = "sample-source";
+  private static final String TASK_SAMPLER_REDUCE = "sample-recv";
   private static final String EDGE = "edge";
 
   private static BenchmarkResultsRecorder resultsRecorder;
@@ -90,26 +106,89 @@ public class TeraSort extends TaskWorker {
   public void execute() {
     resultsRecorder = new BenchmarkResultsRecorder(config, workerId == 0);
     Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
-    TaskGraphBuilder tgb = TaskGraphBuilder.newBuilder(config);
-    tgb.setMode(OperationMode.BATCH);
 
-    BaseSource dataSource;
     String filePath = config.getStringValue(ARG_INPUT_FILE, null);
+
+    //Sampling Graph : if file based only
+    TaskPartitioner taskPartitioner;
+    if (filePath != null) {
+      TaskGraphBuilder samplingGraph = TaskGraphBuilder.newBuilder(config);
+      samplingGraph.setMode(OperationMode.BATCH);
+
+      Sampler samplerTask = new Sampler();
+      samplingGraph.addSource(TASK_SAMPLER, samplerTask,
+          config.getIntegerValue(ARG_TASKS_SOURCES, 4));
+
+      final int keySize = config.getIntegerValue(ARG_KEY_SIZE, 10);
+
+      SamplerReduce samplerReduce = new SamplerReduce();
+      samplingGraph.addCompute(TASK_SAMPLER_REDUCE, samplerReduce,
+          config.getIntegerValue(ARG_RESOURCE_INSTANCES, 4))
+          .allreduce(TASK_SAMPLER, EDGE, (IFunction) (object1, object2) -> {
+            byte[] minMax1 = (byte[]) object1;
+            byte[] minMax2 = (byte[]) object2;
+
+            byte[] min1 = Arrays.copyOfRange(minMax1, 0, keySize);
+            byte[] max1 = Arrays.copyOfRange(minMax1, keySize, minMax1.length);
+
+            byte[] min2 = Arrays.copyOfRange(minMax2, 0, keySize);
+            byte[] max2 = Arrays.copyOfRange(minMax2, keySize, minMax2.length);
+
+            byte[] newMinMax = new byte[keySize * 2];
+            byte[] min = min1;
+            byte[] max = max1;
+            if (ByteArrayComparator.getInstance().compare(min1, min2) > 0) {
+              min = min2;
+            }
+
+            if (ByteArrayComparator.getInstance().compare(max1, max2) < 0) {
+              max = max2;
+            }
+
+            System.arraycopy(min, 0, newMinMax, 0, keySize);
+            System.arraycopy(max, 0, newMinMax, keySize, keySize);
+
+            return newMinMax;
+          });
+      DataFlowTaskGraph sampleGraphBuild = samplingGraph.build();
+      ExecutionPlan sampleTaskPlan = taskExecutor.plan(sampleGraphBuild);
+      taskExecutor.execute(sampleGraphBuild, sampleTaskPlan);
+      DataObject<byte[]> output = taskExecutor.getOutput(sampleGraphBuild,
+          sampleTaskPlan, TASK_SAMPLER_REDUCE);
+      LOG.info("Sample output received");
+      taskPartitioner = new TaskPartitionerForSampledData(
+          output.getPartitions()[0].getConsumer().next(),
+          keySize
+      );
+    } else {
+      taskPartitioner = new TaskPartitionerForRandom();
+    }
+
+
+    // Sort Graph
+    TaskGraphBuilder teraSortTaskGraph = TaskGraphBuilder.newBuilder(config);
+    teraSortTaskGraph.setMode(OperationMode.BATCH);
+    BaseSource dataSource;
     if (filePath == null) {
       dataSource = new RandomDataSource();
     } else {
       dataSource = new FileDataSource();
     }
-    tgb.addSource(TASK_SOURCE, dataSource, config.getIntegerValue(ARG_TASKS_SOURCES, 4));
+    teraSortTaskGraph.addSource(TASK_SOURCE, dataSource,
+        config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    tgb.addSink(TASK_RECV, receiver, config.getIntegerValue(ARG_TASKS_SINKS, 4))
+    teraSortTaskGraph.addSink(TASK_RECV, receiver,
+        config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE, EDGE,
-            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY, true,
+            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY,
+            taskPartitioner,
+            new HashMap<>(),
+            true,
             ByteArrayComparator.getInstance());
 
 
-    DataFlowTaskGraph dataFlowTaskGraph = tgb.build();
+    DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
     ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
     taskExecutor.execute(dataFlowTaskGraph, executionPlan);
     LOG.info("Stopping execution...");
@@ -142,9 +221,88 @@ public class TeraSort extends TaskWorker {
     }
   }
 
-  public static class Receiver extends KeyedGatherCompute<byte[], byte[]> implements ISink {
+  public static class SamplerReduce extends AllReduceCompute<byte[]> implements Collector {
+
+    private DataPartition<byte[]> minMax;
+
+
+    @Override
+    public DataPartition<?> get() {
+      return minMax;
+    }
+
+    @Override
+    public boolean allReduce(byte[] content) {
+      this.minMax = new EntityPartition<>(0, content);
+      return true;
+    }
+  }
+
+  public static class Sampler extends BaseSource {
+
+    private FileChannel fileChannel;
+    private int keySize;
+    private int valueSize;
+    private int sampleSize;
+    private ByteBuffer[] tupleBuffers;
+
+    @Override
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      super.prepare(cfg, ctx);
+      String inputFile = cfg.getStringValue(ARG_INPUT_FILE);
+
+      try {
+        this.fileChannel = FileChannel.open(Paths.get(String.format(inputFile, ctx.taskIndex())));
+      } catch (IOException e) {
+        throw new RuntimeException("Error in opening file data source", e);
+      }
+      this.keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
+      this.valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
+      this.tupleBuffers = new ByteBuffer[]{ByteBuffer.allocate(keySize),
+          ByteBuffer.allocate(valueSize)};
+      this.sampleSize = 100;
+    }
+
+    @Override
+    public void execute() {
+      try {
+        List<byte[]> keys = new ArrayList<>();
+        while (this.fileChannel.read(this.tupleBuffers) != -1 && keys.size() < this.sampleSize) {
+          byte[] key = new byte[this.keySize];
+          byte[] value = new byte[this.valueSize];
+
+          this.tupleBuffers[0].flip();
+          this.tupleBuffers[1].flip();
+
+          this.tupleBuffers[0].get(key);
+          this.tupleBuffers[1].get(value);
+
+          keys.add(key);
+
+          this.tupleBuffers[0].rewind();
+          this.tupleBuffers[1].rewind();
+        }
+        keys.sort(ByteArrayComparator.getInstance());
+
+        byte[] minMax = new byte[this.keySize * 2];
+
+        System.arraycopy(keys.get(0), 0, minMax, 0, this.keySize);
+        System.arraycopy(keys.get(keys.size() - 1), 0, minMax, this.keySize, this.keySize);
+
+        context.writeEnd(EDGE, minMax);
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Error in reading file channel");
+      }
+    }
+  }
+
+  public static class Receiver extends KeyedGatherCompute<byte[], Iterator<byte[]>>
+      implements ISink {
 
     private boolean timingCondition = false;
+    private BufferedOutputStream resultsWriter;
+    private int taskIndex = -1;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
@@ -154,10 +312,23 @@ public class TeraSort extends TaskWorker {
           .map(TaskInstancePlan::getTaskIndex)
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
       this.timingCondition = ctx.getWorkerId() == 0 && ctx.taskIndex() == lowestTaskIndex;
+      String outFolder = cfg.getStringValue(ARG_OUTPUT_FOLDER);
+      this.taskIndex = ctx.taskIndex();
+      if (outFolder != null) {
+        try {
+          File outFile = new File(outFolder, String.valueOf(ctx.taskIndex()));
+          outFile.createNewFile();
+          resultsWriter = new BufferedOutputStream(
+              new FileOutputStream(outFile)
+          );
+        } catch (IOException e) {
+          LOG.log(Level.WARNING, "Failed to create output file", e);
+        }
+      }
     }
 
     @Override
-    public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
+    public boolean keyedGather(Iterator<Tuple<byte[], Iterator<byte[]>>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
@@ -166,7 +337,7 @@ public class TeraSort extends TaskWorker {
       boolean allOrdered = true;
       long tupleCount = 0;
       while (content.hasNext()) {
-        Tuple<byte[], byte[]> nextTuple = content.next();
+        Tuple<byte[], Iterator<byte[]>> nextTuple = content.next();
         if (previousKey != null
             && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
@@ -174,9 +345,27 @@ public class TeraSort extends TaskWorker {
         }
         tupleCount++;
         previousKey = nextTuple.getKey();
+
+        if (this.resultsWriter != null) {
+          try {
+            Iterator<byte[]> values = nextTuple.getValue();
+            while (values.hasNext()) {
+              resultsWriter.write(nextTuple.getKey());
+              byte[] val = values.next();
+              resultsWriter.write(val);
+            }
+          } catch (IOException e) {
+            LOG.log(Level.WARNING, "Failed to write results to file.", e);
+          }
+        }
       }
       LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
       tasksCount.decrementAndGet();
+      try {
+        resultsWriter.close();
+      } catch (IOException e) {
+        LOG.log(Level.WARNING, "Failed to close file channel of results writer", e);
+      }
       return true;
     }
   }
@@ -187,6 +376,8 @@ public class TeraSort extends TaskWorker {
     private ByteBuffer[] tupleBuffers;
     private long sent = 0;
     private boolean timingCondition;
+    private int keySize;
+    private int valueSize;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
@@ -198,8 +389,8 @@ public class TeraSort extends TaskWorker {
       } catch (IOException e) {
         throw new RuntimeException("Error in opening file data source", e);
       }
-      int keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
-      int valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
+      this.keySize = cfg.getIntegerValue(ARG_KEY_SIZE, 10);
+      this.valueSize = cfg.getIntegerValue(ARG_VALUE_SIZE, 90);
       this.tupleBuffers = new ByteBuffer[]{ByteBuffer.allocate(keySize),
           ByteBuffer.allocate(valueSize)};
 
@@ -214,13 +405,13 @@ public class TeraSort extends TaskWorker {
     @Override
     public void execute() {
       if (sent == 0) {
-        LOG.info("Sending messages from file...");
+        LOG.info("Sending messages from a file data source...");
         Timing.mark(BenchmarkConstants.TIMING_ALL_SEND, this.timingCondition);
       }
       try {
         if (this.fileChannel.read(this.tupleBuffers) != -1) {
-          byte[] key = new byte[10];
-          byte[] value = new byte[90];
+          byte[] key = new byte[this.keySize];
+          byte[] value = new byte[this.valueSize];
 
           this.tupleBuffers[0].flip();
           this.tupleBuffers[1].flip();
@@ -366,6 +557,13 @@ public class TeraSort extends TaskWorker {
         false
     ));
 
+    //output folder
+    options.addOption(createOption(
+        ARG_OUTPUT_FOLDER, true,
+        "Folder to save output files",
+        false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -397,6 +595,10 @@ public class TeraSort extends TaskWorker {
       jobConfig.put(ARG_BENCHMARK_METADATA,
           cmd.getOptionValue(ARG_BENCHMARK_METADATA));
       jobConfig.put(ARG_RUN_BENCHMARK, true);
+    }
+
+    if (cmd.hasOption(ARG_OUTPUT_FOLDER)) {
+      jobConfig.put(ARG_OUTPUT_FOLDER, cmd.getOptionValue(ARG_OUTPUT_FOLDER));
     }
 
     Twister2Job twister2Job;
