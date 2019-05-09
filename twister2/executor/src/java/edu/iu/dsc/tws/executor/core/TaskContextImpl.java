@@ -264,7 +264,8 @@ public class TaskContextImpl implements TaskContext {
    * @param message message
    */
   public boolean write(String edge, Object message) {
-    return write(edge, null, message);
+    this.validateEdge(edge);
+    return collection.collect(edge, new TaskMessage<>(message, edge, globalTaskId));
   }
 
   /**
@@ -274,7 +275,9 @@ public class TaskContextImpl implements TaskContext {
    * @param message message
    */
   public boolean writeEnd(String edge, Object message) {
-    return this.writeEnd(edge, null, message);
+    boolean writeSuccess = this.write(edge, message);
+    isDone.put(edge, true);
+    return writeSuccess;
   }
 
   /**
