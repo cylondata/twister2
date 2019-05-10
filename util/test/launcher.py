@@ -75,7 +75,9 @@ for test in configs['tests']:
     root_node.collect_leaf_nodes(leaf_nodes)
 
     existing_env = os.environ.copy()
-    existing_env["JAVA_HOME"] = jdk_dir
+
+    if jdk_dir:
+        existing_env["JAVA_HOME"] = jdk_dir
 
     command = ""
     for leaf_node in leaf_nodes:
