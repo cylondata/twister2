@@ -142,8 +142,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     // The init method is called twice TODO: would be better to do a complete new data flow
     // operation
 
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     if (operationLeft != null) {
       this.operationRight = op;
     } else {

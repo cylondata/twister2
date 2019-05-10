@@ -40,12 +40,12 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * Maximum bytes to keep in memory
    */
-  private int maxBytesToKeepInMemory;
+  private long maxBytesToKeepInMemory;
 
   /**
    * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
 
   /**
    * The base folder to work on
@@ -112,7 +112,7 @@ public class FSKeyedMerger implements Shuffle {
 
   private FSStatus status = FSStatus.WRITING;
 
-  public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
+  public FSKeyedMerger(long maxBytesInMemory, long maxRecsInMemory,
                        String dir, String opName, MessageType kType,
                        MessageType dType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;

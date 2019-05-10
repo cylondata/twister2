@@ -13,10 +13,8 @@
       "name": "Total Data Size",
       "optional": false,
       "values": {
-        "type": "steps",
-        "from": 1,
-        "to": 1024,
-        "step": 10
+        "type": "fixed",
+        "value": 1000
       }
     },
     {
@@ -42,8 +40,12 @@
       "name": "No of Sources",
       "optional": false,
       "values": {
-        "type": "fixed",
-        "value": 64
+        "type": "array",
+        "array": [
+          16,
+          32,
+          64
+        ]
       }
     },
     {
@@ -52,7 +54,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 64
+        "value": "${sources}"
       }
     },
     {
@@ -61,7 +63,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 64
+        "value": "${sources}"
       }
     },
     {
@@ -82,6 +84,24 @@
       "values": {
         "type": "fixed",
         "value": 10240
+      }
+    },
+    {
+      "id": "memoryBytesLimit",
+      "name": "Memory Limit",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "10000000"
+      }
+    },
+    {
+      "id": "memoryRecordsLimit",
+      "name": "Records Limit",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "999999999"
       }
     }
   ]

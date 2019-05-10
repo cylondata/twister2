@@ -582,13 +582,15 @@ public class TeraSort extends TaskWorker {
         Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)));
 
     if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
-      jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY,
-          Integer.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY)));
+      long maxBytesInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY));
+      jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY, maxBytesInMemory);
+      jobConfig.put(ARG_TUNE_MAX_BYTES_IN_MEMORY, maxBytesInMemory); //for benchmark service
     }
 
     if (cmd.hasOption(ARG_TUNE_MAX_RECORDS_IN_MEMORY)) {
-      jobConfig.put(SHUFFLE_MAX_RECORDS_IN_MEMORY,
-          Integer.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_RECORDS_IN_MEMORY)));
+      long maxRecordsInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_RECORDS_IN_MEMORY));
+      jobConfig.put(SHUFFLE_MAX_RECORDS_IN_MEMORY, maxRecordsInMemory);
+      jobConfig.put(ARG_TUNE_MAX_RECORDS_IN_MEMORY, maxRecordsInMemory);
     }
 
     if (cmd.hasOption(ARG_BENCHMARK_METADATA)) {

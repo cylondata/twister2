@@ -83,8 +83,8 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
 
     for (Integer target : expectedIds.keySet()) {
 
