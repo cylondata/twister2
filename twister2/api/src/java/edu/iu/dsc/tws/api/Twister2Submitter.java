@@ -38,6 +38,10 @@ public final class Twister2Submitter {
     // if it does not conform to Kubernetes rules, change it
     if (Context.clusterType(config).equals(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)) {
       processJobNameForK8s(twister2Job);
+    } else if (Context.clusterType(config).equals("mesos")) {
+      twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
+    } else if (Context.clusterType(config).equals("nomad")) {
+      twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
     }
 
     // save the job to transfer to workers
