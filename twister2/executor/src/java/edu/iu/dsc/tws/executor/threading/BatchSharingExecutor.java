@@ -122,6 +122,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       throw new RuntimeException("Interrupted", e);
     }
 
+    executionPlan.setExecutionState(ExecutionState.EXECUTED);
+
     // clear the finished instances
     finishedInstances.set(0);
     cleanUpCalled = true;
