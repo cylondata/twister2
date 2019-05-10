@@ -326,6 +326,10 @@ You can find the code to our SVM Implementation
  
  Sample Execution
  
+ Note: Make sure your data in the file has same line length in all lines. 
+ Our inbuilt splitter currently assumes this. And we will release a more dyanmic
+ Data API to handle this in a near future release. 
+ 
  ### Data Format :
  
  ```csv
