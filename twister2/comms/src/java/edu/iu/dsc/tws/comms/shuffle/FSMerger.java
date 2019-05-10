@@ -37,12 +37,12 @@ public class FSMerger implements Shuffle {
   /**
    * Maximum bytes to keep in memory
    */
-  private int maxBytesToKeepInMemory;
+  private long maxBytesToKeepInMemory;
 
   /**
    * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
 
   /**
    * The base folder to work on
@@ -105,7 +105,7 @@ public class FSMerger implements Shuffle {
 
   private FSStatus status = FSStatus.WRITING;
 
-  public FSMerger(int maxBytesInMemory, int maxRecsInMemory,
+  public FSMerger(long maxBytesInMemory, long maxRecsInMemory,
                   String dir, String opName, MessageType vType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;

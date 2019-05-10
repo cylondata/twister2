@@ -115,12 +115,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * The max amount of bytes
    */
-  private int maxBytesInMemory;
+  private long maxBytesInMemory;
 
   /**
    * The max amount of records
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
 
   /**
    * Keep state about the targets

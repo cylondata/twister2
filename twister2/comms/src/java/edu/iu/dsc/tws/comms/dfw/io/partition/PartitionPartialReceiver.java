@@ -33,7 +33,7 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
 
   private Set<Integer> sourcesWithSyncsSent = new HashSet<>();
-  private int groupingSize = 100;
+  private long groupingSize = 100;
   private boolean allSyncsReceived = false;
 
   @Override

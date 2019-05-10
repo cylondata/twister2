@@ -84,8 +84,8 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
 
     gather = op;
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
