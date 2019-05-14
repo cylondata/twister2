@@ -184,7 +184,7 @@ public class KMeansWorker extends TaskWorker {
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
     }
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
         + Arrays.deepToString(centroid));
   }
 
