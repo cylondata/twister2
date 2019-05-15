@@ -1,0 +1,108 @@
+{
+  "id": "terasort_bench_base",
+  "directory": {
+    "relativeToRoot": true,
+    "path": ""
+  },
+  "jar": "libexamples-java.jar",
+  "className": "edu.iu.dsc.tws.examples.task.batch.sort.TeraSort",
+  "resultsFile": "tera_sort.csv",
+  "args": [
+    {
+      "id": "size",
+      "name": "Total Data Size",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 1000
+      }
+    },
+    {
+      "id": "keySize",
+      "name": "Size of Key",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 10
+      }
+    },
+    {
+      "id": "valueSize",
+      "name": "Size of Value",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 90
+      }
+    },
+    {
+      "id": "sources",
+      "name": "No of Sources",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          16,
+          32,
+          64
+        ]
+      }
+    },
+    {
+      "id": "sinks",
+      "name": "No of Sinks",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "${sources}"
+      }
+    },
+    {
+      "id": "instances",
+      "name": "Workers",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "${sources}"
+      }
+    },
+    {
+      "id": "instanceCPUs",
+      "name": "cpus",
+      "optional": false,
+      "omitInCSV": true,
+      "values": {
+        "type": "fixed",
+        "value": 1
+      }
+    },
+    {
+      "id": "instanceMemory",
+      "name": "Memory",
+      "optional": false,
+      "omitInCSV": true,
+      "values": {
+        "type": "fixed",
+        "value": 10240
+      }
+    },
+    {
+      "id": "memoryBytesLimit",
+      "name": "Memory Limit",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "10000000"
+      }
+    },
+    {
+      "id": "memoryRecordsLimit",
+      "name": "Records Limit",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "999999999"
+      }
+    }
+  ]
+}

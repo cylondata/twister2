@@ -11,29 +11,28 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.dfw.DataFlowBroadcast;
+import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
+import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingReceiver;
 
 public class AllReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
-  private static final Logger LOG = Logger.getLogger(
-      AllReduceStreamingFinalReceiver.class.getName());
-
-  private DataFlowBroadcast bcast;
-  private int task;
-  private int count = 0;
+  private TreeBroadcast bcast;
 
   public AllReduceStreamingFinalReceiver(ReduceFunction reduceFunction,
-                                         DataFlowBroadcast bcast, int t) {
+                                         TreeBroadcast bcast) {
     super(reduceFunction);
     this.bcast = bcast;
-    this.task = t;
   }
 
   @Override
   public boolean handleMessage(int source, Object message, int flags, int dest) {
     return bcast.send(source, message, 0);
+  }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+        barriers, bcast, isSyncSent);
   }
 }

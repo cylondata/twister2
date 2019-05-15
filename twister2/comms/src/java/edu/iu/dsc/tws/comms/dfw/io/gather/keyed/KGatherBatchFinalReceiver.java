@@ -9,76 +9,108 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Final receiver for keyed gather
  */
-public class KGatherBatchFinalReceiver extends KeyedReceiver {
-  private static final Logger LOG = Logger.getLogger(KGatherBatchFinalReceiver.class.getName());
-
+public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   /**
    * Final receiver that get the reduced values for the operation
    */
   private BulkReceiver bulkReceiver;
 
+  /**
+   * The reduced values for each target and key
+   */
+  protected Map<Integer, Map<Object, List<Object>>> gathered = new HashMap<>();
+
   public KGatherBatchFinalReceiver(BulkReceiver receiver,
                                    int limitPerKey) {
     this.bulkReceiver = receiver;
-    this.limitPerKey = limitPerKey;
-    this.isFinalBatchReceiver = true;
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
-    for (int target : messages.keySet()) {
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+    for (int t : expectedIds.keySet()) {
+      gathered.put(t, new HashMap<>());
+    }
+  }
 
-      if (batchDone.get(target)) {
-        continue;
+  @Override
+  protected void merge(int dest, Queue<Object> dests) {
+    Map<Object, List<Object>> targetValues = gathered.get(dest);
+
+    while (dests.size() > 0) {
+      Object val = dests.poll();
+      Tuple t;
+
+      if (val instanceof Tuple) {
+        t = (Tuple) val;
+      } else {
+        throw new RuntimeException("Un-expected type: " + val.getClass());
       }
 
-      sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
-          && messages.get(target).isEmpty())) {
-        needsFurtherProgress = true;
+      List<Object> currentVal = targetValues.get(t.getKey());
+      if (currentVal == null) {
+        currentVal = new AggregatedObjects<>();
+        targetValues.put(t.getKey(), currentVal);
       }
+      currentVal.add(t.getValue());
+    }
+  }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
-        batchDone.put(target, true);
-        //TODO: check if we can simply remove the data, that is use messages.remove()
-        bulkReceiver.receive(target, new GatherIterator(messages.get(target)));
-      }
+  @Override
+  protected boolean sendToTarget(int source, int target) {
+    Map<Object, List<Object>> values = gathered.get(target);
 
-
+    if (values == null || values.isEmpty()) {
+      return true;
     }
 
-    return needsFurtherProgress;
+    boolean send = bulkReceiver.receive(target, new GatherIterator(values));
+    if (send) {
+      gathered.remove(target);
+    }
+    return send;
+  }
+
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    return b && gathered.isEmpty();
+  }
+
+  @Override
+  protected boolean isFilledToSend(Integer target) {
+    return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && messages.get(target).isEmpty();
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class GatherIterator<T extends Pair<Object, Object[]>>
-      implements Iterator<Pair<Object, Object[]>> {
+  private class GatherIterator implements Iterator<Object> {
 
-    private Map<Object, Queue<Object>> messageMap;
+    private Map<Object, List<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
 
-    GatherIterator(Map<Object, Queue<Object>> messageMap) {
+    GatherIterator(Map<Object, List<Object>> messageMap) {
       this.messageMap = messageMap;
       keyList.addAll(messageMap.keySet());
     }
@@ -89,10 +121,16 @@ public class KGatherBatchFinalReceiver extends KeyedReceiver {
     }
 
     @Override
-    public ImmutablePair<Object, Object[]> next() {
+    public Object next() {
       Object key = keyList.poll();
-      Object value = messageMap.remove(key);
-      return new ImmutablePair(key, ((Queue) value).toArray());
+      List value = messageMap.remove(key);
+      return new Tuple(key, value.iterator(),
+          operation.getKeyType(), operation.getDataType());
     }
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 }

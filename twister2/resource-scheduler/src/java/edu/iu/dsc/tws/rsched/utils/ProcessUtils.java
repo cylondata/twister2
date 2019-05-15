@@ -67,7 +67,7 @@ public final class ProcessUtils {
       @Override
       public void run() {
         // do not buffer
-        LOG.log(Level.FINE, "Process output (stdout+stderr):");
+//        LOG.log(Level.FINER, "Process output (stdout+stderr):");
         BufferedReader reader = new BufferedReader(new InputStreamReader(input), 1);
         while (true) {
           String line = null;
@@ -105,7 +105,7 @@ public final class ProcessUtils {
     final StringBuilder builder = outputBuilder == null ? new StringBuilder() : outputBuilder;
 
     // Log the command for debugging
-    LOG.log(Level.FINE, "Running synced process: ``{0}''''", joinString(cmdline));
+    LOG.log(Level.FINER, "Running synced process: ``{0}''''", joinString(cmdline));
     ProcessBuilder pb = getProcessBuilder(isInheritIO, cmdline, workingDirectory, envs);
     /* combine input stream and error stream into stderr because
        1. this preserves order of process's stdout/stderr message

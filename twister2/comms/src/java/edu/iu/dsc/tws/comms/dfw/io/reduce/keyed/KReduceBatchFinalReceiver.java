@@ -11,86 +11,124 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
-/**
- * Created by pulasthi on 9/20/18.
- */
-public class KReduceBatchFinalReceiver extends KReduceBatchReceiver {
-  private static final Logger LOG = Logger.getLogger(KReduceBatchFinalReceiver.class.getName());
-
+public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
   /**
    * Final receiver that get the reduced values for the operation
    */
   private BulkReceiver bulkReceiver;
 
+  /**
+   * Reduce function
+   */
+  protected ReduceFunction reduceFunction;
+
+  /**
+   * The reduced values for each target and key
+   */
+  protected Map<Integer, Map<Object, Object>> reduced = new HashMap<>();
+
   public KReduceBatchFinalReceiver(ReduceFunction reduce, BulkReceiver receiver) {
     this.reduceFunction = reduce;
     this.bulkReceiver = receiver;
-    this.limitPerKey = 1;
-    this.isFinalBatchReceiver = true;
   }
 
   @Override
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
-    for (int target : messages.keySet()) {
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+    for (int t : expectedIds.keySet()) {
+      reduced.put(t, new HashMap<>());
+    }
+  }
 
-      if (batchDone.get(target)) {
-        continue;
+  @Override
+  protected void merge(int dest, Queue<Object> dests) {
+    Map<Object, Object> targetValues = reduced.get(dest);
+
+    while (dests.size() > 0) {
+      Object val = dests.poll();
+      Tuple t;
+
+      if (val instanceof Tuple) {
+        t = (Tuple) val;
+      } else {
+        throw new RuntimeException("Un-expected type: " + val.getClass());
       }
 
-      sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
-          && messages.get(target).isEmpty())) {
-        needsFurtherProgress = true;
+      Object currentVal = targetValues.get(t.getKey());
+      if (currentVal != null) {
+        Object newVal = reduceFunction.reduce(currentVal, t.getValue());
+        targetValues.put(t.getKey(), newVal);
+      } else {
+        targetValues.put(t.getKey(), t.getValue());
       }
+    }
+  }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()) {
-        batchDone.put(target, true);
-        //TODO: check if we can simply remove the data, that is use messages.remove()
-        bulkReceiver.receive(target, new ReduceIterator(messages.get(target)));
-      }
+  @Override
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    return b && reduced.isEmpty();
+  }
 
+  @Override
+  protected boolean sendToTarget(int source, int target) {
+    Map<Object, Object> values = reduced.get(target);
 
+    if (values == null || values.isEmpty()) {
+      return true;
     }
 
-    return needsFurtherProgress;
+    boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
+    if (send) {
+      reduced.remove(target);
+    }
+    return send;
+  }
+
+  @Override
+  protected boolean isFilledToSend(Integer target) {
+    return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && messages.get(target).isEmpty();
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class ReduceIterator<T extends Pair> implements Iterator<Pair> {
+  private class ReduceIterator implements Iterator<Object> {
+    private Iterator<Map.Entry<Object, Object>> it;
 
-    private Map<Object, Queue<Object>> messageMap;
-    private Queue<Object> keyList = new LinkedList<>();
-
-    ReduceIterator(Map<Object, Queue<Object>> messageMap) {
-      this.messageMap = messageMap;
-      keyList.addAll(messageMap.keySet());
+    ReduceIterator(Map<Object, Object> messageMap) {
+      it = messageMap.entrySet().iterator();
     }
 
     @Override
     public boolean hasNext() {
-      return !keyList.isEmpty();
+      return it.hasNext();
     }
 
     @Override
-    public ImmutablePair next() {
-      Object key = keyList.poll();
-      Queue<Object> value = messageMap.remove(key);
-      return new ImmutablePair(key, value.poll());
+    public Tuple next() {
+      Map.Entry<Object, Object> entry = it.next();
+      return new Tuple(entry.getKey(), entry.getValue(),
+          operation.getKeyType(), operation.getDataType());
     }
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 }

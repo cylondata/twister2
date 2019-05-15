@@ -17,18 +17,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class WorkerResourceUtils {
   public static final Logger LOG = Logger.getLogger(WorkerResourceUtils.class.getName());
 
   private WorkerResourceUtils() { }
 
-  public static Map<String, List<WorkerComputeResource>> getWorkersPerNode(
-      AllocatedResources allocatedResources,
-      List<WorkerNetworkInfo> workerList) {
-
-    List<WorkerComputeResource> computeResources = allocatedResources.getWorkerComputeResources();
+  public static Map<String, List<JobMasterAPI.WorkerInfo>> getWorkersPerNode(
+      List<JobMasterAPI.WorkerInfo> workerList) {
 
     // get distinct NodeIPs
     List<String> distinctNodes = getDistinctNodeIPs(workerList);
@@ -37,30 +34,23 @@ public final class WorkerResourceUtils {
     }
 
     // build the list for each nodeIP
-    Map<String, List<WorkerComputeResource>> workersPerNode = new HashMap<>();
+    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode = new HashMap<>();
     for (String nodeIP: distinctNodes) {
-      List<Integer> workerIDList = getWorkerIDsForANode(nodeIP, workerList);
-      ArrayList<WorkerComputeResource> resourceList = new ArrayList<>();
-      for (Integer workerID: workerIDList) {
-        WorkerComputeResource resource = computeResources.get(
-            computeResources.indexOf(new WorkerComputeResource(workerID)));
-        resourceList.add(resource);
-      }
-
-      workersPerNode.put(nodeIP, resourceList);
+      List<JobMasterAPI.WorkerInfo> workersOnANode = getWorkersOnANode(nodeIP, workerList);
+      workersPerNode.put(nodeIP, workersOnANode);
     }
 
     return workersPerNode;
   }
 
-  public static List<String> getDistinctNodeIPs(List<WorkerNetworkInfo> workerList) {
+  public static List<String> getDistinctNodeIPs(List<JobMasterAPI.WorkerInfo> workerList) {
 
     ArrayList<String> distinctNodes = new ArrayList<>();
 
-    for (WorkerNetworkInfo workerNetworkInfo: workerList) {
-      String nodeIP = workerNetworkInfo.getNodeInfo().getNodeIP();
-      if (nodeIP == null) {
-        LOG.severe("NodeIP is null");
+    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
+      String nodeIP = workerInfo.getNodeInfo().getNodeIP();
+      if (nodeIP.isEmpty()) {
+        LOG.severe("NodeIP is not set.");
         return null;
       } else if (!distinctNodes.contains(nodeIP)) {
         distinctNodes.add(nodeIP);
@@ -70,14 +60,20 @@ public final class WorkerResourceUtils {
     return distinctNodes;
   }
 
-  public static List<Integer> getWorkerIDsForANode(String nodeIP,
-                                                   List<WorkerNetworkInfo> workerList) {
+  /**
+   * get the list of WorkerInfo objects on the given node
+   * @param nodeIP
+   * @param workerList
+   * @return
+   */
+  public static List<JobMasterAPI.WorkerInfo> getWorkersOnANode(String nodeIP,
+                                                         List<JobMasterAPI.WorkerInfo> workerList) {
 
-    ArrayList<Integer> workerIDs = new ArrayList<>();
+    ArrayList<JobMasterAPI.WorkerInfo> workerIDs = new ArrayList<>();
 
-    for (WorkerNetworkInfo workerNetworkInfo: workerList) {
-      if (nodeIP.equals(workerNetworkInfo.getNodeInfo().getNodeIP())) {
-        workerIDs.add(workerNetworkInfo.getWorkerID());
+    for (JobMasterAPI.WorkerInfo workerInfo: workerList) {
+      if (nodeIP.equals(workerInfo.getNodeInfo().getNodeIP())) {
+        workerIDs.add(workerInfo);
       }
     }
 

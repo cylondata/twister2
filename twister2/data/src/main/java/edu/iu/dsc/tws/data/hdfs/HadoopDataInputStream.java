@@ -12,12 +12,15 @@
 package edu.iu.dsc.tws.data.hdfs;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 
 import edu.iu.dsc.tws.data.fs.FSDataInputStream;
 
 public final class HadoopDataInputStream extends FSDataInputStream {
+
+  private static final Logger LOG = Logger.getLogger(HadoopDataInputStream.class.getName());
 
   public static final int MIN_SKIP_BYTES = 1024 * 1024;
 
@@ -78,7 +81,7 @@ public final class HadoopDataInputStream extends FSDataInputStream {
 
   public void skipFully(long bytes) throws IOException {
     /*while (bytes > 0) {
-      bytes -= fsDataInputStream.skip(bytes);
+      bytes -= fosInputStream.skip(bytes);
     }*/
   }
 }

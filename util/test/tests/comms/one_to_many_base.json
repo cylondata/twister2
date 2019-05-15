@@ -1,0 +1,15 @@
+{
+  "id": "one_to_many_base",
+  "parent": "communication_base",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "1,${workers}"
+      }
+    }
+  ]
+}

@@ -15,15 +15,18 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 
 public class MesosWorkerController implements IWorkerController {
@@ -33,11 +36,12 @@ public class MesosWorkerController implements IWorkerController {
   private String jobName;
   private JobAPI.Job job;
   private String workerIp;
+  private int workerIdd;
   private int workerPort;
   private int numberOfWorkers;
   private int containerPerWorker;
-  private List<WorkerNetworkInfo> workerList;
-  private WorkerNetworkInfo thisWorker;
+  private List<JobMasterAPI.WorkerInfo> workerList;
+  private JobMasterAPI.WorkerInfo thisWorker;
   private ZKWorkerController zkWorkerController;
 
   public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID) {
@@ -46,13 +50,29 @@ public class MesosWorkerController implements IWorkerController {
     this.job = job;
     this.workerIp = ip;
     this.workerPort = port;
+    workerIdd = workerID;
     numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
     containerPerWorker = MesosContext.containerPerWorker(config);
     workerList = new ArrayList<>();
-    thisWorker = new WorkerNetworkInfo(convertStringToIP(ip), port, workerID,
-        new NodeInfo(ip, "rack1", "dc1"));
+    thisWorker = WorkerInfoUtils.createWorkerInfo(workerID, ip, port,
+        SchedulerContext.getNodeInfo(config, ip));
   }
 
+  public MesosWorkerController(Config cfg, JobAPI.Job job, String ip, int port, int workerID,
+                               JobAPI.ComputeResource computeResource,
+                               Map<String, Integer> additionalPorts) {
+    config = cfg;
+    this.jobName = job.getJobName();
+    this.job = job;
+    this.workerIp = ip;
+    this.workerPort = port;
+    workerIdd = workerID;
+    numberOfWorkers = MesosContext.numberOfContainers(config) - 1;
+    containerPerWorker = MesosContext.containerPerWorker(config);
+    workerList = new ArrayList<>();
+    thisWorker = WorkerInfoUtils.createWorkerInfo(workerID, ip, port,
+        SchedulerContext.getNodeInfo(config, ip), computeResource, additionalPorts);
+  }
   /**
    * covert the given string to ip address object
    */
@@ -66,23 +86,26 @@ public class MesosWorkerController implements IWorkerController {
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return thisWorker;
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
     return null;
   }
 
   @Override
   public int getNumberOfWorkers() {
-    return zkWorkerController.getNumberOfWorkers();
+    return job.getNumberOfWorkers();
   }
+//  public int getNumberOfWorkers() {
+//    return zkWorkerController.getNumberOfWorkers();
+//  }
 
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
-    return zkWorkerController.getWorkerList();
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
+    return zkWorkerController.getJoinedWorkers();
   }
 
 
@@ -92,46 +115,51 @@ public class MesosWorkerController implements IWorkerController {
     String workerHostPort = workerIp + ":" + workerPort;
 
     // temporary value
-    NodeInfo nodeInfo = new NodeInfo(workerIp, null, null);
+//    NodeInfoUtils nodeInfo = new NodeInfoUtils(workerIp, null, null);
+    JobMasterAPI.NodeInfo nodeInfo = MesosContext.getNodeInfo(config, workerIp);
+
+    //TODO: need to provide real ComputeResource object
+    JobAPI.ComputeResource computeResource = null;
     zkWorkerController =
-        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers, nodeInfo);
-    zkWorkerController.initialize();
+        new ZKWorkerController(config, job.getJobName(), workerHostPort, numberOfWorkers,
+            nodeInfo, computeResource);
+
+    zkWorkerController.initialize(workerIdd);
     long duration = System.currentTimeMillis() - startTime;
-    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerNetworkInfo()
+    LOG.info("Initialization for the worker: " + zkWorkerController.getWorkerInfo()
         + " took: " + duration + "ms");
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
 
     LOG.info("Waiting for " + numberOfWorkers + " workers to join .........");
 
     // the amount of time to wait for all workers to join a job
     //int timeLimit =  ZKContext.maxWaitTimeForAllWorkersToJoin(config);
     long startTime = System.currentTimeMillis();
-    workerList = zkWorkerController.waitForAllWorkersToJoin(timeLimitMilliSec);
+    workerList = zkWorkerController.getAllWorkers();
     long duration = System.currentTimeMillis() - startTime;
 
     if (workerList == null) {
-      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!"
-          + "Waited " + timeLimitMilliSec + " ms.");
+      LOG.log(Level.SEVERE, "Could not get full worker list. timeout limit has been reached !!!!");
     } else {
       LOG.log(Level.INFO, "Waited " + duration + " ms for all workers to join.");
 
-      workerList = zkWorkerController.getWorkerList();
+      workerList = zkWorkerController.getJoinedWorkers();
       LOG.info("list of current workers in the job: ");
       zkWorkerController.printWorkers(workerList);
 
       LOG.info("list of all joined workers to the job: ");
-      zkWorkerController.printWorkers(zkWorkerController.getWorkerList());
+      zkWorkerController.printWorkers(zkWorkerController.getJoinedWorkers());
 
     }
     return workerList;
   }
 
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
-    return zkWorkerController.waitOnBarrier(timeLimitMilliSec);
+  public void waitOnBarrier() throws TimeoutException {
+    zkWorkerController.waitOnBarrier();
   }
 
   /**

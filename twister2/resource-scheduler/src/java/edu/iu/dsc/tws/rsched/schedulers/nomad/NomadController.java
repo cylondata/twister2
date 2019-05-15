@@ -39,7 +39,6 @@ import com.hashicorp.nomad.javasdk.NomadException;
 import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
@@ -62,12 +61,12 @@ public class NomadController implements IController {
   }
 
   @Override
-  public boolean start(RequestedResources requestedResources, JobAPI.Job job) {
+  public boolean start(JobAPI.Job job) {
     String uri = NomadContext.nomadSchedulerUri(config);
     NomadApiClient nomadApiClient = new NomadApiClient(
         new NomadApiConfiguration.Builder().setAddress(uri).build());
 
-    Job nomadJob = getJob(job, requestedResources);
+    Job nomadJob = getJob(job);
     try {
       EvaluationResponse response = nomadApiClient.getJobsApi().register(nomadJob);
       LOG.log(Level.INFO, "Submitted job to nomad: " + response);
@@ -118,13 +117,13 @@ public class NomadController implements IController {
     }
   }
 
-  private Job getJob(JobAPI.Job job, RequestedResources resources) {
+  private Job getJob(JobAPI.Job job) {
     String jobName = job.getJobName();
     Job nomadJob = new Job();
     nomadJob.setId(jobName);
     nomadJob.setName(jobName);
     nomadJob.setType("batch");
-    nomadJob.addTaskGroups(getTaskGroup(job, resources));
+    nomadJob.addTaskGroups(getTaskGroup(job));
     nomadJob.setDatacenters(Arrays.asList(NomadContext.NOMAD_DEFAULT_DATACENTER));
     nomadJob.setMeta(getMetaData(job));
     return nomadJob;
@@ -160,11 +159,11 @@ public class NomadController implements IController {
     return null;
   }
 
-  private TaskGroup getTaskGroup(JobAPI.Job job, RequestedResources resources) {
+  private TaskGroup getTaskGroup(JobAPI.Job job) {
     TaskGroup taskGroup = new TaskGroup();
-    taskGroup.setCount(resources.getNumberOfWorkers());
+    taskGroup.setCount(job.getNumberOfWorkers());
     taskGroup.setName(job.getJobName());
-    taskGroup.addTasks(getShellDriver(job, resources));
+    taskGroup.addTasks(getShellDriver(job));
     return taskGroup;
   }
 
@@ -175,7 +174,7 @@ public class NomadController implements IController {
     return metaData;
   }
 
-  private Task getShellDriver(JobAPI.Job job, RequestedResources resources) {
+  private Task getShellDriver(JobAPI.Job job) {
     String taskName = job.getJobName();
     Task task = new Task();
     // get the job working directory
@@ -194,11 +193,11 @@ public class NomadController implements IController {
     task.setName(taskName);
     task.setDriver("raw_exec");
     task.addConfig(NomadContext.NOMAD_TASK_COMMAND, NomadContext.SHELL_CMD);
-    String[] args = workerProcessCommand(workingDirectory, resources, job);
+    String[] args = workerProcessCommand(workingDirectory, job);
     task.addConfig(NomadContext.NOMAD_TASK_COMMAND_ARGS, args);
     Template template = new Template();
     template.setEmbeddedTmpl(nomadScriptContent);
-    template.setDestPath(NomadContext.NOMAD_HERON_SCRIPT_NAME);
+    template.setDestPath(NomadContext.NOMAD_SCRIPT_NAME);
     task.addTemplates(template);
 
     Resources resourceReqs = new Resources();
@@ -214,7 +213,20 @@ public class NomadController implements IController {
     NetworkResource networkResource = new NetworkResource();
     networkResource.addDynamicPorts(ports);
     resourceReqs.addNetworks(networkResource);
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
+    if (computeResource == null) {
+      LOG.log(Level.SEVERE, "Error: there is no compute resource");
+      return null;
+    }
+    int  cpu = (int) computeResource.getCpu();
+    int  disk = (int) computeResource.getDiskGigaBytes();
+    int memory = computeResource.getRamMegaBytes();
 
+    resourceReqs.setCpu(cpu * 200);
+    resourceReqs.setMemoryMb(memory);
+    resourceReqs.setDiskMb(disk * 1024);
+
+    LOG.log(Level.INFO, "Compute resources are " + cpu + " " + memory + " " + disk);
     Map<String, String> envVars = new HashMap<>();
     envVars.put(NomadContext.WORKING_DIRECTORY_ENV,
         NomadContext.workingDirectory(config));
@@ -252,15 +264,14 @@ public class NomadController implements IController {
     }
   }
 
-  private String[] workerProcessCommand(String workingDirectory,
-                                        RequestedResources resourcePlan, JobAPI.Job job) {
+  private String[] workerProcessCommand(String workingDirectory, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
-    String configDirectoryName = Paths.get(workingDirectory,
-        job.getJobName(), SchedulerContext.clusterType(config)).toString();
-
+    //String configDirectoryName = Paths.get(workingDirectory,
+    //    job.getJobName(), SchedulerContext.clusterType(config)).toString();
+    String configDirectoryName = "";
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
-    Map<String, Object> map = workerCommandArguments(config, workingDirectory, resourcePlan, job);
+    Map<String, Object> map = workerCommandArguments(config, workingDirectory, job);
 
     mpiCommand.add(map.get("procs").toString());
     mpiCommand.add(map.get("java_props").toString());
@@ -279,11 +290,10 @@ public class NomadController implements IController {
   }
 
   private Map<String, Object> workerCommandArguments(Config cfg, String workingDirectory,
-                                                     RequestedResources requestedResources,
                                                      JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNumberOfWorkers());
+    commands.put("procs", job.getNumberOfWorkers());
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
@@ -300,5 +310,8 @@ public class NomadController implements IController {
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
     return slurmCmd;
+  }
+  public String createPersistentJobDirName(String jobName) {
+    return SchedulerContext.nfsServerPath(config) + "/" + jobName;
   }
 }

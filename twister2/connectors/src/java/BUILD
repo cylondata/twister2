@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("//tools:maven.bzl", "t2_java_lib")
+
 common_deps_files = [
     "//twister2/common/src/java:common-java",
     "//twister2/task/src/main/java:task-java",
@@ -10,9 +12,10 @@ common_deps_files = [
     "@org_apache_kafka_kafka_clients//jar",
 ]
 
-java_library(
+t2_java_lib(
     name = "connector-java",
     srcs = glob(["**/*.java"]),
+    artifact_name = "Twister2 Connectors",
     deps = common_deps_files,
 )
 

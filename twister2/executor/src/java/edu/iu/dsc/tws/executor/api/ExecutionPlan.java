@@ -15,21 +15,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Execution plan to keep track of the tasks
  */
 public class ExecutionPlan {
+  /**
+   * The unique id for execution plan
+   */
+  private String id;
+
   private Map<Integer, INodeInstance> nodes = new HashMap<>();
 
   private Map<String, Map<Integer, INodeInstance>> nodesByName = new HashMap<>();
 
-  private Map<Integer, IParallelOperation> inputMessages = new HashMap<>();
-
-  private Map<Integer, IParallelOperation> outputMessages = new HashMap<>();
-
   private List<IParallelOperation> parallelOperations = new ArrayList<>();
+
+  /**
+   * Keep track of the execution state of this plan
+   */
+  private ExecutionState executionState;
+
+  public ExecutionPlan() {
+    this.id = UUID.randomUUID().toString();
+    this.executionState = ExecutionState.INIT;
+  }
 
   /**
    * Add a node instance of this execution
@@ -66,5 +79,30 @@ public class ExecutionPlan {
 
   public Set<String> getNodeNames() {
     return nodesByName.keySet();
+  }
+
+  public ExecutionState getExecutionState() {
+    return executionState;
+  }
+
+  public void setExecutionState(ExecutionState executionState) {
+    this.executionState = executionState;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ExecutionPlan plan = (ExecutionPlan) o;
+    return Objects.equals(id, plan.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

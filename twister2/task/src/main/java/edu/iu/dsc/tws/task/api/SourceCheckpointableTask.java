@@ -24,10 +24,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
-//import static java.lang.Math.max;
 
-public abstract class SourceCheckpointableTask extends BaseStreamSource {
+public abstract class SourceCheckpointableTask extends BaseSource {
   private static final long serialVersionUID = -254264903510214728L;
 
   private static final Logger LOG = Logger.getLogger(SourceCheckpointableTask.class.getName());
@@ -79,7 +77,7 @@ public abstract class SourceCheckpointableTask extends BaseStreamSource {
     this.overallMessageCount += messageCount;
     if (intermediateMessageCount >= currentCheckpointInterval) {
       LOG.info(
-          "intermediateMessageCount: "  + intermediateMessageCount
+          "intermediateMessageCount: " + intermediateMessageCount
               +
               " overallMessageCount: " + overallMessageCount
               +

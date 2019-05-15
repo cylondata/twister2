@@ -19,10 +19,11 @@ public final class KubernetesConstants {
   public static final String POD_VOLATILE_VOLUME_NAME = "twister2-volatile-dir";
   public static final String POD_VOLATILE_VOLUME = "/twister2-volatile";
   public static final String CONTAINER_NAME_PREFIX = "twister2-container-";
-  public static final String TWISTER2_SERVICE_PREFIX = "twister2-service-";
-  public static final String SERVICE_LABEL_PREFIX = "twister2-service-label-";
+  public static final String TWISTER2_SERVICE_PREFIX = "t2-srv-";
+  public static final String SERVICE_LABEL_PREFIX = "t2-srv-lb-";
   public static final String SERVICE_LABEL_KEY = "app";
   public static final String TWISTER2_JOB_PODS_KEY = "twister2-job-pods";
+  public static final String TWISTER2_PODS_ROLE_KEY = "twister2-role";
   public static final String TWISTER2_JOB_PODS_PREFIX = "twister2-";
   public static final String TWISTER2_STORAGE_CLAIM_PREFIX = "twister2-storage-";
   public static final String PERSISTENT_VOLUME_NAME = "persistent-volume";

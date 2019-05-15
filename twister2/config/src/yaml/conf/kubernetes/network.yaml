@@ -1,9 +1,13 @@
-#twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
-
 #############################################################################
 # OpenMPI settings
 #############################################################################
+# If the channel is set as TWSMPIChannel,
+# the job is started as OpenMPI job
+# Otherwise, it is a regular twister2 job. OpenMPI is not started in this case.
+
+# twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.tcp.TWSTCPChannel"
+
 # A Secret object must be present in Kubernetes master
 # Its name must be specified here
 kubernetes.secret.name: "twister2-openmpi-ssh-key"
@@ -11,11 +15,12 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 #############################################################################
 # Worker port settings
 #############################################################################
+
 # the base port number workers will use internally to communicate with each other
 # when there are multiple workers in a pod, first worker will get this port number,
 # second worker will get the next port, and so on.
-# default value is 9999,
-# kubernetes.worker.base.port: 9999
+# default value is 9000,
+# kubernetes.worker.base.port: 9000
 
 # transport protocol for the worker. TCP or UDP
 # by default, it is TCP
@@ -39,22 +44,45 @@ kubernetes.secret.name: "twister2-openmpi-ssh-key"
 
 # the buffer size to be used
 network.buffer.size: 1024000
+
 # number of send buffers to be used
 network.sendBuffer.count: 4
+
 # number of receive buffers to be used
 network.receiveBuffer.count: 4
+
 # channel pending messages
 network.channel.pending.size: 2048
+
 # the send pending messages
 network.send.pending.max: 4
 
 # group up to 8 ~ 16 messages
 network.partition.message.group.low_water_mark: 8
+
 # this is the max number of messages to group
 network.partition.message.group.high_water_mark: 16
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
 shuffle.memory.bytes.max: 1024000
+
 # the maximum number of records kept in memory for operations that goes to dist
 shuffle.memory.records.max: 10240
 
+# the keyed reduce algorithm
+twister2.stream.keyed.reduce.op: "partition"
+
+# the algorithm for gathering data
+twister2.stream.keyed.gather.op: "partition"
+
+# the partitioning algorithm
+twister2.stream.partition.algorithm: "simple"
+
+# the keyed reduce algorithm
+twister2.batch.keyed.reduce.op: "partition"
+
+# the algorithm for gathering data
+twister2.batch.keyed.gather.op: "partition"
+
+# the partitioning algorithm
+twister2.batch.partition.algorithm: "simple"

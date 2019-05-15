@@ -23,7 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -67,12 +67,15 @@ public abstract class MPICommand {
 
   protected abstract String[] killCommand();
 
-  protected Map<String, Object> mpiCommandArguments(Config cfg,
-                                                    RequestedResources requestedResources,
-                                                    JobAPI.Job job) {
+  protected Map<String, Object> mpiCommandArguments(Config cfg, JobAPI.Job job) {
     Map<String, Object> commands = new HashMap<>();
     // lets get the configurations
-    commands.put("procs", requestedResources.getNumberOfWorkers());
+    int numberOfWorkers = job.getNumberOfWorkers();
+    if (JobMasterContext.isJobMasterUsed(config)
+        && !JobMasterContext.jobMasterRunsInClient(config)) {
+      numberOfWorkers++;
+    }
+    commands.put("procs", numberOfWorkers);
 
     String jobClassPath = JobUtils.jobClassPath(cfg, job, workingDirectory);
     LOG.log(Level.INFO, "Job class path: " + jobClassPath);
@@ -87,16 +90,12 @@ public abstract class MPICommand {
 
   int getMemory(JobAPI.Job job) {
     int memory = 256;
-    List<JobAPI.JobResources.ResourceType> resources = job.getJobResources().getResourcesList();
-    if (resources != null && resources.size() >= 1) {
-      int mem = resources.get(0).getWorkerComputeResource().getRam();
-      if (mem > 0) {
-        memory = mem;
-      }
+    int mem = job.getComputeResource(0).getRamMegaBytes();
+    if (mem > 0) {
+      memory = mem;
     }
     return memory;
   }
 
-  protected abstract List<String> mpiCommand(String wd,
-                                             RequestedResources resourcePlan, JobAPI.Job job);
+  protected abstract List<String> mpiCommand(String wd, JobAPI.Job job);
 }

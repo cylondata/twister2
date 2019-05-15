@@ -11,10 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -24,21 +22,17 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseCompute;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.task.streaming.BaseStreamCompute;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 
 public class MultiStageGraph extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
@@ -67,7 +61,7 @@ public class MultiStageGraph extends TaskWorker {
     taskExecutor.execute(graph, plan);
   }
 
-  private static class GeneratorTask extends BaseStreamSource {
+  private static class GeneratorTask extends BaseSource {
     private static final long serialVersionUID = -254264903510284748L;
 
     private int count = 0;
@@ -86,7 +80,7 @@ public class MultiStageGraph extends TaskWorker {
     }
   }
 
-  private static class ReduceTask extends BaseStreamSink {
+  private static class ReduceTask extends BaseSink {
     private static final long serialVersionUID = -254264903510284791L;
     private int count = 0;
 
@@ -94,13 +88,13 @@ public class MultiStageGraph extends TaskWorker {
     public boolean execute(IMessage message) {
       count++;
       LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
   }
 
   @SuppressWarnings("rawtypes")
-  private static class PartitionTask extends BaseStreamCompute {
+  private static class PartitionTask extends BaseCompute {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;
@@ -115,19 +109,9 @@ public class MultiStageGraph extends TaskWorker {
         }
       }
       LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
-          context.taskId(), count));
+          context.globalTaskId(), count));
       return true;
     }
-  }
-
-  public WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
-    List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
-      workers.add(w);
-    }
-
-    return new WorkerPlan(workers);
   }
 
   public static void main(String[] args) {
@@ -142,10 +126,10 @@ public class MultiStageGraph extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName(MultiStageGraph.class.getName());
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName(MultiStageGraph.class.getName());
     jobBuilder.setWorkerClass(MultiStageGraph.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), 4);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

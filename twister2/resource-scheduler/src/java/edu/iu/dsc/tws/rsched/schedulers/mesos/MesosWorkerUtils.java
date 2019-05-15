@@ -11,11 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class MesosWorkerUtils {
   private static final Logger LOG = Logger.getLogger(MesosWorkerUtils.class.getName());
@@ -23,19 +25,24 @@ public final class MesosWorkerUtils {
   private MesosWorkerUtils() {
 
   }
-
-  public static AllocatedResources createAllocatedResources(String cluster,
-                                                            int workerID,
-                                                            JobAPI.Job job) {
-    JobAPI.WorkerComputeResource computeResource =
-        job.getJobResources().getResources(0).getWorkerComputeResource();
-
-    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
-    LOG.info("job get number of workers....:" + job.getNumberOfWorkers());
-    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
-      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
     }
-    return allocatedResources;
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+    return ports;
   }
+
 }

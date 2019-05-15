@@ -60,6 +60,11 @@ public interface TWSChannel {
   void progress();
 
   /**
+   * Check weather we have any pending sends
+   */
+  boolean isComplete();
+
+  /**
    * Create a buffer
    * @param capacity capacity
    * @return the byte buffer
@@ -70,4 +75,11 @@ public interface TWSChannel {
    * Close the channel
    */
   void close();
+
+  /**
+   * Release the buffers for worker and edge
+   * @param wId worker
+   * @param e edge
+   */
+  void releaseBuffers(int wId, int e);
 }

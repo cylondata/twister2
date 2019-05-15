@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class InvertedBinaryTreeRouter {
@@ -34,15 +34,16 @@ public class InvertedBinaryTreeRouter {
   private int mainTask;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
-  private int executor = 0;
+  private int executor;
+  private Set<Integer> receiveSources = new HashSet<>();
 
   /**
    * Initialize the data structure
    *
-   * @param cfg
-   * @param plan
-   * @param root
-   * @param dests
+   * @param cfg configuration
+   * @param plan task plan
+   * @param root root id
+   * @param dests destinations
    */
   public InvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
                                   int root, Set<Integer> dests, int index) {
@@ -78,7 +79,6 @@ public class InvertedBinaryTreeRouter {
     // now lets construct the receive tasks tasks
     receiveExecutors = new HashSet<>();
     for (int t : thisExecutorTasksOfOperation) {
-      List<Integer> recv = new ArrayList<>();
 
       Node search = BinaryTree.search(treeRoot, t);
       // okay this is the main task of this executor
@@ -89,8 +89,9 @@ public class InvertedBinaryTreeRouter {
         for (int k : search.getRemoteChildrenIds()) {
           receiveExecutors.add(plan.getExecutorForChannel(k));
         }
-        recv.addAll(search.getAllChildrenIds());
+        List<Integer> recv = new ArrayList<>(search.getAllChildrenIds());
         receiveTasks.put(t, new ArrayList<>(recv));
+        receiveSources.addAll(recv);
 
         // this task is connected to others and they send the message to this task
         List<Integer> directChildren = search.getDirectChildren();
@@ -115,23 +116,14 @@ public class InvertedBinaryTreeRouter {
         LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
       }
     }
-//    LOG.info(String.format("%d Index %d Destination identifiers %s receiveExecs %s receiveTasks "
-//            + "%s sendInternal %s sendExternal %s", executor, index, receiveExecutors,
-//        receiveTasks, sendInternalTasks, sendExternalTasks, destinationIdentifiers));
-//    LOG.info(String.format("****** %d internal tasks: %s",
-//        plan.getThisExecutor(), sendInternalTasks));
-//    LOG.info(String.format("****** %d external tasks: %s",
-//        plan.getThisExecutor(), sendExternalTasks));
-//    LOG.info(String.format("****** %d externalPartial tasks: %s", plan.getThisExecutor(),
-//        sendExternalTasksPartial));
-//    LOG.info(String.format("****** %d receive executor: %s",
-//        plan.getThisExecutor(), receiveExecutors));
-//    LOG.info(String.format("****** %d receive tasks: %s",
-//        plan.getThisExecutor(), receiveTasks));
   }
 
   public Set<Integer> receivingExecutors() {
     return receiveExecutors;
+  }
+
+  public Set<Integer> getReceiveSources() {
+    return receiveSources;
   }
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
@@ -167,26 +159,6 @@ public class InvertedBinaryTreeRouter {
       throw new RuntimeException(String.format("%d Unexpected source - "
               + "%s requesting destination %s", executor, source, destinationIdentifiers));
     }
-  }
-
-  public Map<Integer, Integer> getPathAssignedToTasks() {
-    return null;
-  }
-
-  public Set<Integer> allSendTasks() {
-    Set<Integer> allSends = new HashSet<>();
-    for (Map.Entry<Integer, Set<Integer>> e : sendExternalTasks.entrySet()) {
-      allSends.addAll(e.getValue());
-    }
-
-    for (Map.Entry<Integer, Set<Integer>> e : sendInternalTasks.entrySet()) {
-      allSends.addAll(e.getValue());
-    }
-
-    for (Map.Entry<Integer, Set<Integer>> e : sendExternalTasksPartial.entrySet()) {
-      allSends.addAll(e.getValue());
-    }
-    return allSends;
   }
 
   public Set<Integer> sendQueueIds() {

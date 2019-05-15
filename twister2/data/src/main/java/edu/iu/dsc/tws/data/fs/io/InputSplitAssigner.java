@@ -12,11 +12,13 @@
 
 package edu.iu.dsc.tws.data.fs.io;
 
+import java.io.Serializable;
+
 /**
  * An input split assigner distributes the {@link InputSplit}s among the instances on which a
  * data source exists.
  */
-public interface InputSplitAssigner {
+public interface InputSplitAssigner<T> extends Serializable {
 
   /**
    * Returns the next input split that shall be consumed.
@@ -26,6 +28,5 @@ public interface InputSplitAssigner {
    * @param taskId The id of the split requesting task.
    * @return the next input split to be consumed, or <code>null</code> if no more splits remain.
    */
-  InputSplit getNextInputSplit(String host, int taskId);
-
+  InputSplit<T> getNextInputSplit(String host, int taskId);
 }

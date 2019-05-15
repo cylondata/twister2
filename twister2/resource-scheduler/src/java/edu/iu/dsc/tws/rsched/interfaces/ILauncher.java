@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.rsched.interfaces;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -50,10 +49,9 @@ public interface ILauncher extends AutoCloseable {
   boolean terminateJob(String jobName);
 
   /**
-   * Launch the processes according to the resource plan. An implementation fo this class will
+   * Launch the processes according to the requested resources.
    *
-   * @param resourceRequest requested resources
    * @return true if the request is granted
    */
-  boolean launch(RequestedResources resourceRequest, JobAPI.Job job);
+  boolean launch(JobAPI.Job job);
 }

@@ -6,13 +6,10 @@ will be Mesos agents. In order to run Mesos in your cluster, you need to
 have Zookeeper running somewhere. Please refer to Mesos and Zookeeper
 webpages for more information on installing them.
 
-To install Twister2 on a machine, please follow the steps
-in [installation
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/deployment/installation.md).
-To compile the project follow the instructions to the [compilation
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/deployment/compiling.md).
+To compile  and install Twister2 on a machine, please follow the steps
+in [compiling document](../../compiling/compiling.md).
 You may also check [developer
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/developers/developer-environment.md) for
+document](../../developers/developer-environment.md) for
 setting up IDEs.
 
 Here are the few things you need to do to run Twister2 jobs on Mesos
@@ -24,14 +21,6 @@ Twister2 expects that either a Persistent Storage Provisioner or
 statically configured PersistentVolume exists in the cluster.  Our Mesos
 system uses NFS for persistent storage to store logs and outputs of
 twister2 jobs.
-
-We tested with NFS-Client provisioner
-from: [\[https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client\]{.underline}](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client)
-
-NFS-Client provisioner is used if you already have an NFS server.
-Otherwise you may use the NFS provisioner that does not require to have
-an NFS
-server: [\[https://github.com/kubernetes-incubator/external-storage/tree/master/nfs\]{.underline}](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs)
 
 You have to set the following parameters in client.yaml config file in
 order to use NFS.

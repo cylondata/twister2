@@ -16,6 +16,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.List;
 
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+
 /**
  * Represent an open file containing the channel and the buffer
  */
@@ -23,7 +25,7 @@ import java.util.List;
 public class OpenFile {
   private FileChannel rwChannel;
   private ByteBuffer byteBuffer;
-  private List<KeyValue> keyValues;
+  private List<Tuple> keyValues;
   private int totalBytes;
 
   public OpenFile(FileChannel rwChannel, ByteBuffer buffer) {
@@ -32,7 +34,7 @@ public class OpenFile {
   }
 
   public OpenFile(FileChannel rwChannel, ByteBuffer byteBuffer,
-                  List<KeyValue> kValues, int total) {
+                  List<Tuple> kValues, int total) {
     this.rwChannel = rwChannel;
     this.byteBuffer = byteBuffer;
     this.keyValues = kValues;
@@ -51,7 +53,7 @@ public class OpenFile {
     rwChannel.close();
   }
 
-  public List<KeyValue> getKeyValues() {
+  public List<Tuple> getKeyValues() {
     return keyValues;
   }
 

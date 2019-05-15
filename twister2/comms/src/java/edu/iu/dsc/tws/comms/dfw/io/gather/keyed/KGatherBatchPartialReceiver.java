@@ -12,26 +12,23 @@
 
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 
 /**
  * Abstract class that is extended by keyed reduce batch receivers
  */
 public class KGatherBatchPartialReceiver extends KeyedReceiver {
-  private static final Logger LOG = Logger.getLogger(KGatherBatchPartialReceiver.class.getName());
-
   /**
    * List used to send data from the partial receiver. This is used because once we take elements
    * from the send queue we cannot put them back in if the send fails. So the send messages are
    * kept in the variable until the send method returns true.
    */
-  private List<Object> sendList = new ArrayList<>();
+  private List<Object> sendList = new AggregatedObjects<>();
 
   /**
    * Flags associated with the current sendList
@@ -75,16 +72,16 @@ public class KGatherBatchPartialReceiver extends KeyedReceiver {
     if (sendList.isEmpty()) {
       while (!targetSendQueue.isEmpty()) {
         if (sourcesFinished && targetSendQueue.size() == 1) {
-          flags = MessageFlags.LAST;
+          flags = MessageFlags.SYNC_MESSAGE;
         }
         sendList.add(targetSendQueue.poll());
       }
     }
 
     if (!sendList.isEmpty()) {
-      if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
-        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
-        sendList = new ArrayList<>();
+      if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
+//        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
+        sendList = new AggregatedObjects<>();
         flags = 0;
       } else {
         needsProgress = true;

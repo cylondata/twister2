@@ -127,6 +127,19 @@ public class Server implements SelectHandler {
   /**
    * Stop the server while trying to process any queued responses
    */
+  public boolean hasPending() {
+    // now lets wait if there are messages pending
+    for (BaseNetworkChannel channel : connectedChannels.values()) {
+      if (channel.isPending()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Stop the server while trying to process any queued responses
+   */
   public void stopGraceFully(long waitTime) {
     // now lets wait if there are messages pending
     long start = System.currentTimeMillis();
@@ -161,6 +174,8 @@ public class Server implements SelectHandler {
     TCPMessage request = new TCPMessage(buffer.duplicate(), edge, size);
     // we need to handle the false
     channel.addWriteRequest(request);
+
+    progress.wakeup();
 
     return request;
   }
@@ -201,7 +216,7 @@ public class Server implements SelectHandler {
   public void handleAccept(SelectableChannel ch) {
     try {
       SocketChannel socketChannel = serverSocketChannel.accept();
-      LOG.log(Level.INFO, "Accepted connection: " + socketChannel);
+      LOG.log(Level.FINE, "Accepted connection: " + socketChannel);
       if (socketChannel != null) {
         socketChannel.configureBlocking(false);
         socketChannel.socket().setTcpNoDelay(true);
@@ -233,7 +248,7 @@ public class Server implements SelectHandler {
   @Override
   public void handleError(SelectableChannel ch) {
     SocketAddress channelAddress = ((SocketChannel) ch).socket().getRemoteSocketAddress();
-    LOG.info("Connection is closed: " + channelAddress);
+    LOG.log(Level.FINE, "Connection is closed: " + channelAddress);
 
     BaseNetworkChannel channel = connectedChannels.get(ch);
     if (channel == null) {
@@ -248,5 +263,6 @@ public class Server implements SelectHandler {
       LOG.warning("Error closing conection in error handler");
     }
     connectedChannels.remove(ch);
+    channelHandler.onClose((SocketChannel) ch);
   }
 }

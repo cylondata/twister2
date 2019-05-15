@@ -6,7 +6,11 @@ kind: Service
 metadata:
   name: twister2-service-<jobname>-<job-master>
 spec:
-  clusterIP: None
   selector:
     app: twister2-service-label-<jobname>-<job-master>
+  ports:
+  - name: job-master-port
+    port: <twister2.job.master.port>
+    targetPort: <twister2.job.master.port>
+    protocol: TCP
 

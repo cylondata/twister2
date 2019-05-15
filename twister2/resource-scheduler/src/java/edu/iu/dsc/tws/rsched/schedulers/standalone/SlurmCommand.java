@@ -21,7 +21,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -51,16 +50,15 @@ public class SlurmCommand extends MPICommand {
   }
 
   @Override
-  protected List<String> mpiCommand(String workingDirectory,
-                                    RequestedResources resourcePlan, JobAPI.Job job) {
+  protected List<String> mpiCommand(String workingDirectory, JobAPI.Job job) {
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     String configDirectoryName = Paths.get(workingDirectory,
         job.getJobName(), SchedulerContext.clusterType(config)).toString();
     String nodesFileName = MPIContext.nodeFiles(config);
 
     // lets construct the mpi command to launch
-    List<String> mpiCommand = mpiCommand(getScriptPath(), 1);
-    Map<String, Object> map = mpiCommandArguments(config, resourcePlan, job);
+    List<String> mpiCommand = mpiCommand(getScriptPath(), 1, MPIContext.partition(config));
+    Map<String, Object> map = mpiCommandArguments(config, job);
 
     mpiCommand.add(map.get("procs").toString());
     mpiCommand.add(map.get("java_props").toString());
@@ -72,7 +70,6 @@ public class SlurmCommand extends MPICommand {
     mpiCommand.add(MPIContext.mpiRunFile(config));
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
-
     return mpiCommand;
   }
 
@@ -84,14 +81,17 @@ public class SlurmCommand extends MPICommand {
    * Construct the SLURM Command
    * @param slurmScript slurm script name
    * @param containers number of containers
+   * @param slurm partition name
    * @return list with the command
    */
   private List<String> mpiCommand(String slurmScript,
-                                  long containers) {
+                                  long containers, String partitionName) {
+
     String nTasks = String.format("--ntasks=%d", containers);
+    String pName = String.format("--partition=%s", partitionName);
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Arrays.asList("sbatch", "-N",
-        Long.toString(containers), nTasks, slurmScript));
+        Long.toString(containers), nTasks, pName, slurmScript));
     return slurmCmd;
   }
 }

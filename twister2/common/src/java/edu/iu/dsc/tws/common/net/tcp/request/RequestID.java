@@ -22,6 +22,9 @@ public final class RequestID {
 
   public static final int ID_SIZE = 32;
 
+  // a RequestID with all bytes zero
+  public static final RequestID DUMMY_REQUEST_ID = new RequestID(new byte[ID_SIZE]);
+
   private byte[] id;
 
   private RequestID(byte[] id) {

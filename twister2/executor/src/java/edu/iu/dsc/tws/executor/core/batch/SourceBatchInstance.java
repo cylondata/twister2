@@ -13,21 +13,24 @@ package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SourceBatchInstance implements INodeInstance {
+public class SourceBatchInstance implements INodeInstance, ISync {
 
   /**
    * The actual task executing
@@ -57,7 +60,12 @@ public class SourceBatchInstance implements INodeInstance {
   /**
    * The globally unique task id
    */
-  private int batchTaskId;
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -97,7 +105,7 @@ public class SourceBatchInstance implements INodeInstance {
   /**
    * The output edges
    */
-  private Set<String> outputEdges;
+  private Map<String, String> outputEdges;
 
   /**
    * The low watermark for queued messages
@@ -109,13 +117,21 @@ public class SourceBatchInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * The task schedule
+   */
+  private TaskSchedulePlan taskSchedule;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
-                             Config config, String tName, int tId, int tIndex, int parallel,
-                             int wId, Map<String, Object> cfgs, Set<String> outEdges) {
+                             Config config, String tName, int taskId,
+                             int globalTaskId, int tIndex, int parallel,
+                             int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
+                             TaskSchedulePlan taskSchedule) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
-    this.batchTaskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.batchTaskIndex = tIndex;
     this.parallelism = parallel;
     this.batchTaskName = tName;
@@ -124,14 +140,15 @@ public class SourceBatchInstance implements INodeInstance {
     this.outputEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.taskSchedule = taskSchedule;
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
-    taskContext = new TaskContext(batchTaskIndex, batchTaskId, batchTaskName,
-        parallelism, workerId, outputBatchCollection, nodeConfigs);
-    batchTask.prepare(config, taskContext);
+    taskContext = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, batchTaskName,
+        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
+    batchTask.prepare(cfg, taskContext);
   }
 
   /**
@@ -140,7 +157,7 @@ public class SourceBatchInstance implements INodeInstance {
   public boolean execute() {
     // we started the execution
     if (state.isEqual(InstanceState.INIT)) {
-      state.set(InstanceState.EXECUTING);
+      state.addState(InstanceState.EXECUTING);
     }
 
     if (batchTask != null) {
@@ -152,7 +169,7 @@ public class SourceBatchInstance implements INodeInstance {
 
       // now check the context
       boolean isDone = true;
-      for (String e : outputEdges) {
+      for (String e : outputEdges.keySet()) {
         if (!taskContext.isDone(e)) {
           // we are done with execution
           isDone = false;
@@ -161,7 +178,7 @@ public class SourceBatchInstance implements INodeInstance {
       }
       // if all the edges are done
       if (isDone) {
-        state.set(InstanceState.EXECUTION_DONE);
+        state.addState(InstanceState.EXECUTION_DONE);
       }
 
       // now check the output queue
@@ -170,7 +187,7 @@ public class SourceBatchInstance implements INodeInstance {
         if (message != null) {
           String edge = message.edge();
           IParallelOperation op = outBatchParOps.get(edge);
-          if (op.send(batchTaskId, message, 0)) {
+          if (op.send(globalTaskId, message, 0)) {
             outBatchQueue.poll();
           } else {
             // no point in progressing further
@@ -183,25 +200,30 @@ public class SourceBatchInstance implements INodeInstance {
       if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
           && state.isNotSet(InstanceState.OUT_COMPLETE)) {
         for (IParallelOperation op : outBatchParOps.values()) {
-          op.finish(batchTaskId);
+          op.finish(globalTaskId);
         }
-        state.set(InstanceState.OUT_COMPLETE);
+        state.addState(InstanceState.OUT_COMPLETE);
       }
     }
 
     // lets progress the communication
-    boolean needsFurther = communicationProgress();
+    boolean needsFurther = progressCommunication();
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
-      state.set(InstanceState.SENDING_DONE);
+    if (state.isSet(InstanceState.OUT_COMPLETE)) {
+      state.addState(InstanceState.SENDING_DONE);
     }
 
     return !state.isEqual(InstanceState.FINISH);
   }
 
+  public boolean sync(String edge, byte[] value) {
+    state.addState(InstanceState.SYNCED);
+    return true;
+  }
+
   @Override
   public int getId() {
-    return batchTaskId;
+    return globalTaskId;
   }
 
   @Override
@@ -209,11 +231,28 @@ public class SourceBatchInstance implements INodeInstance {
     return batchTask;
   }
 
+  @Override
+  public void reset() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).refresh();
+    }
+    taskContext.reset();
+    state = new InstanceState(InstanceState.INIT);
+  }
+
+  @Override
+  public void close() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).close();
+    }
+  }
+
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
-  public boolean communicationProgress() {
+  public boolean progressCommunication() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
       if (e.getValue().progress()) {
@@ -221,6 +260,17 @@ public class SourceBatchInstance implements INodeInstance {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+    return complete;
   }
 
 

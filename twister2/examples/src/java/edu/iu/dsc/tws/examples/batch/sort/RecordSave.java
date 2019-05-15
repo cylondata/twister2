@@ -11,12 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.sort;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.google.common.collect.Ordering;
+
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class RecordSave implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(RecordSave.class.getName());
@@ -26,14 +31,20 @@ public class RecordSave implements BulkReceiver {
     LOG.fine(String.format("Final expected task ids %s", expectedIds));
   }
 
+  @SuppressWarnings("Unchecked")
   @Override
   public boolean receive(int target, Iterator<Object> it) {
     int count = 0;
+    List<Integer> received = new ArrayList<>();
     while (it.hasNext()) {
       Object next = it.next();
-      count++;
+      if (next instanceof Tuple) {
+        received.add((Integer) ((Tuple) next).getKey());
+        count++;
+      }
     }
-    LOG.info(String.format("Received message for target: %d", count));
+    boolean sorted = Ordering.natural().isOrdered(received);
+    LOG.info(String.format("Received message for target: %d %s", count, sorted));
     return true;
   }
 }

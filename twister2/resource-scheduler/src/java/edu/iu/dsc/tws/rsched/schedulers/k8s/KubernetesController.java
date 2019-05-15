@@ -19,9 +19,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.squareup.okhttp.Response;
 
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 import io.kubernetes.client.ApiClient;
@@ -51,11 +54,13 @@ import io.kubernetes.client.models.V1beta2StatefulSetList;
 public class KubernetesController {
   private static final Logger LOG = Logger.getLogger(KubernetesController.class.getName());
 
+  private String namespace;
   private ApiClient client = null;
   private CoreV1Api coreApi;
-  private AppsV1beta2Api beta2Api;
+  private AppsV1beta2Api appsApi;
 
-  public void init() {
+  public void init(String nspace) {
+    this.namespace = nspace;
     createApiInstances();
   }
 
@@ -69,17 +74,17 @@ public class KubernetesController {
     Configuration.setDefaultApiClient(client);
 
     coreApi = new CoreV1Api();
-    beta2Api = new AppsV1beta2Api(client);
+    appsApi = new AppsV1beta2Api(client);
   }
 
   /**
    * return the StatefulSet object if it exists in the Kubernetes master,
    * otherwise return null
    */
-  public boolean statefulSetsExist(String namespace, List<String> statefulSetNames) {
+  public boolean existStatefulSets(List<String> statefulSetNames) {
     V1beta2StatefulSetList setList = null;
     try {
-      setList = beta2Api.listNamespacedStatefulSet(
+      setList = appsApi.listNamespacedStatefulSet(
           namespace, null, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
@@ -98,18 +103,44 @@ public class KubernetesController {
   }
 
   /**
-   * create the given service on Kubernetes master
+   * return the list of StatefulSet names that matches this jobs StatefulSet names for workers
+   * they must be in the form of "jobName-index"
+   * otherwise return an empty ArrayList
    */
-  public boolean createStatefulSetJob(String namespace, V1beta2StatefulSet statefulSet) {
+  public ArrayList<String> getStatefulSetsForJobWorkers(String jobName) {
+    V1beta2StatefulSetList setList = null;
+    try {
+      setList = appsApi.listNamespacedStatefulSet(
+          namespace, null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
+      throw new RuntimeException(e);
+    }
+
+    ArrayList<String> ssNameList = new ArrayList<>();
+
+    for (V1beta2StatefulSet statefulSet : setList.getItems()) {
+      String ssName = statefulSet.getMetadata().getName();
+      if (ssName.matches(jobName + "-" + "[0-9]+")) {
+        ssNameList.add(ssName);
+      }
+    }
+
+    return ssNameList;
+  }
+
+  /**
+   * create the given StatefulSet on Kubernetes master
+   */
+  public boolean createStatefulSet(V1beta2StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
     try {
-      Response response = beta2Api.createNamespacedStatefulSetCall(
+      Response response = appsApi.createNamespacedStatefulSetCall(
           namespace, statefulSet, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName
-            + "] is created for the same named job.");
+        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
         return true;
 
       } else {
@@ -130,49 +161,79 @@ public class KubernetesController {
   /**
    * delete the given StatefulSet from Kubernetes master
    */
-  public boolean deleteStatefulSetJob(String namespace, String statefulSetName) {
+  public boolean deleteStatefulSet(String statefulSetName) {
 
     try {
       V1DeleteOptions deleteOptions = new V1DeleteOptions();
       deleteOptions.setGracePeriodSeconds(0L);
       deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
 
-      Response response = beta2Api.deleteNamespacedStatefulSetCall(
+      Response response = appsApi.deleteNamespacedStatefulSetCall(
           statefulSetName, namespace, deleteOptions, null, null, null, null, null, null).execute();
 
       if (response.isSuccessful()) {
-        LOG.log(Level.INFO, "StatefulSet for the Job [" + statefulSetName + "] is deleted.");
+        LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is deleted.");
         return true;
 
       } else {
 
         if (response.code() == 404 && response.message().equals("Not Found")) {
-          LOG.log(Level.SEVERE, "There is no StatefulSet for the Job [" + statefulSetName
+          LOG.log(Level.SEVERE, "There is no StatefulSet [" + statefulSetName
               + "] to delete on Kubernetes master. It may have already terminated.");
           return true;
         }
 
-        LOG.log(Level.SEVERE, "Error when deleting the StatefulSet of the job ["
+        LOG.log(Level.SEVERE, "Error when deleting the StatefulSet ["
             + statefulSetName + "]: " + response);
         return false;
       }
 
     } catch (ApiException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the StatefulSet of the job: "
-          + statefulSetName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the StatefulSet: " + statefulSetName, e);
       return false;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the StatefulSet of the job: "
-          + statefulSetName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the StatefulSet: " + statefulSetName, e);
       return false;
     }
   }
 
+  /**
+   * scale up or down the given StatefulSet
+   */
+  public boolean patchStatefulSet(String ssName, int replicas) {
+
+    String jsonPatchStr =
+        "{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}";
+    Object obj = (new Gson()).fromJson(jsonPatchStr, JsonElement.class);
+    ArrayList<Object> objectList = new ArrayList<>();
+    objectList.add(obj);
+
+    try {
+      Response response = appsApi.patchNamespacedStatefulSetCall(
+          ssName, namespace, objectList, null, null, null).execute();
+
+      if (response.isSuccessful()) {
+        LOG.log(Level.INFO, "StatefulSet [" + ssName + "] is patched.");
+        return true;
+
+      } else {
+        LOG.log(Level.SEVERE, "Error when patching the StatefulSet [" + ssName + "]: "
+            + response);
+        return false;
+      }
+
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + ssName, e);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when patching the StatefulSet: " + ssName, e);
+    }
+    return false;
+  }
 
   /**
    * create the given service on Kubernetes master
    */
-  public boolean createService(String namespace, V1Service service) {
+  public boolean createService(V1Service service) {
 
     String serviceName = service.getMetadata().getName();
     try {
@@ -199,7 +260,7 @@ public class KubernetesController {
    * return true if one of the services exist in Kubernetes master,
    * otherwise return false
    */
-  public boolean servicesExist(String namespace, List<String> serviceNames) {
+  public boolean existServices(List<String> serviceNames) {
 // sending the request with label does not work for list services call
 //    String label = "app=" + serviceLabel;
     V1ServiceList serviceList = null;
@@ -224,11 +285,15 @@ public class KubernetesController {
   /**
    * delete the given service from Kubernetes master
    */
-  public boolean deleteService(String namespace, String serviceName) {
+  public boolean deleteService(String serviceName) {
+
+    V1DeleteOptions deleteOptions = new V1DeleteOptions();
+    deleteOptions.setGracePeriodSeconds(0L);
+    deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
 
     try {
       Response response = coreApi.deleteNamespacedServiceCall(
-          serviceName, namespace, null, null, null).execute();
+          serviceName, namespace, deleteOptions, null, null, null, null, null, null).execute();
 
       if (response.isSuccessful()) {
         LOG.info("Service [" + serviceName + "] is deleted.");
@@ -249,90 +314,32 @@ public class KubernetesController {
       LOG.log(Level.SEVERE, "Exception when deleting the service: " + serviceName, e);
       return false;
     } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Exception when deleting the the service: " + serviceName, e);
+      LOG.log(Level.SEVERE, "Exception when deleting the service: " + serviceName, e);
       return false;
     }
   }
 
   /**
-   * transfer the job package to the first pod
-   * this is used when persistent storage is used
-   * @param namespace
-   * @param jobName
-   * @param jobPackageFile
-   * @return
+   * get the IP address of the given service
+   * otherwise return null
    */
-  public boolean transferJobPackage(String namespace, String jobName, String jobPackageFile) {
-
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, 1);
-    podWatcher.start();
-
-    JobPackageTransferThread transferThread =
-        new JobPackageTransferThread(namespace, jobName, 0, jobPackageFile, podWatcher);
-    transferThread.start();
-
-    // wait all transfer threads to finish up
+  public String getServiceIP(String serviceName) {
+    V1ServiceList serviceList = null;
     try {
-      transferThread.join();
-      if (!transferThread.packageTransferred()) {
-        LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
-            + transferThread.getPodName());
-        return false;
-      }
-    } catch (InterruptedException e) {
-      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
-      return false;
+      serviceList = coreApi.listNamespacedService(namespace,
+          null, null, null, null, null, null, null, null, null);
+    } catch (ApiException e) {
+      LOG.log(Level.SEVERE, "Exception when getting service list.", e);
+      throw new RuntimeException(e);
     }
 
-    return true;
-  }
-
-  /**
-   * transfer the job package to pods in parallel by many threads
-   * @param namespace
-   * @param jobName
-   * @param numberOfPods
-   * @param jobPackageFile
-   * @return
-   */
-  public boolean transferJobPackageInParallel(String namespace, String jobName, int numberOfPods,
-                                              String jobPackageFile) {
-
-    PodWatcher podWatcher = new PodWatcher(namespace, jobName, numberOfPods);
-    podWatcher.start();
-
-    JobPackageTransferThread[] transferThreads = new JobPackageTransferThread[numberOfPods];
-    for (int i = 0; i < numberOfPods; i++) {
-      transferThreads[i] =
-          new JobPackageTransferThread(namespace, jobName, i, jobPackageFile, podWatcher);
-
-      transferThreads[i].start();
-    }
-
-    // wait all transfer threads to finish up
-    boolean allTransferred = true;
-    for (int i = 0; i < transferThreads.length; i++) {
-      try {
-        transferThreads[i].join();
-        if (!transferThreads[i].packageTransferred()) {
-          LOG.log(Level.SEVERE, "Job Package is not transferred to the pod: "
-              + transferThreads[i].getPodName());
-          allTransferred = false;
-          break;
-        }
-      } catch (InterruptedException e) {
-        LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+    for (V1Service service : serviceList.getItems()) {
+      if (serviceName.equals(service.getMetadata().getName())) {
+        return service.getSpec().getClusterIP();
       }
     }
 
-    // if one transfer fails, stop all transfer threads and return false
-    if (!allTransferred) {
-      for (int i = 0; i < transferThreads.length; i++) {
-        transferThreads[i].setStopExecution();
-      }
-    }
-
-    return allTransferred;
+    return null;
   }
 
   /**
@@ -351,12 +358,11 @@ public class KubernetesController {
   }
 
   /**
-   * get the PersistentVolumeClaim with the given name
-   * @param namespace
+   * check whether the given PersistentVolumeClaim exist on Kubernetes master
    * @param pvcName
    * @return
    */
-  public V1PersistentVolumeClaim getPersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean existPersistentVolumeClaim(String pvcName) {
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
@@ -368,17 +374,18 @@ public class KubernetesController {
 
     for (V1PersistentVolumeClaim pvc : pvcList.getItems()) {
       if (pvcName.equals(pvc.getMetadata().getName())) {
-        return pvc;
+        LOG.severe("There is already a PersistentVolumeClaim with the name: " + pvcName);
+        return true;
       }
     }
 
-    return null;
+    return false;
   }
 
   /**
    * create the given PersistentVolumeClaim on Kubernetes master
    */
-  public boolean createPersistentVolumeClaim(String namespace, V1PersistentVolumeClaim pvc) {
+  public boolean createPersistentVolumeClaim(V1PersistentVolumeClaim pvc) {
 
     String pvcName = pvc.getMetadata().getName();
     try {
@@ -403,7 +410,7 @@ public class KubernetesController {
     return false;
   }
 
-  public boolean deletePersistentVolumeClaim(String namespace, String pvcName) {
+  public boolean deletePersistentVolumeClaim(String pvcName) {
 
     try {
       Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
@@ -516,7 +523,7 @@ public class KubernetesController {
    * return true if the Secret object with that name exists in Kubernetes master,
    * otherwise return false
    */
-  public boolean secretExist(String namespace, String secretName) {
+  public boolean existSecret(String secretName) {
     V1SecretList secretList = null;
     try {
       secretList = coreApi.listNamespacedSecret(namespace,
@@ -536,10 +543,11 @@ public class KubernetesController {
   }
 
   /**
-   * get NodeInfo objects for the nodes on this cluster
-   * @return the NodeInfo object list. If it can not get the list from K8s master, return null.
+   * get NodeInfoUtils objects for the nodes on this cluster
+   * @return the NodeInfoUtils object list. If it can not get the list from K8s master, return null.
    */
-  public ArrayList<NodeInfo> getNodeInfo(String rackLabelKey, String datacenterLabelKey) {
+  public ArrayList<JobMasterAPI.NodeInfo> getNodeInfo(String rackLabelKey,
+                                                      String datacenterLabelKey) {
 
     V1NodeList nodeList = null;
     try {
@@ -549,7 +557,7 @@ public class KubernetesController {
       return null;
     }
 
-    ArrayList<NodeInfo> nodeInfoList = new ArrayList<>();
+    ArrayList<JobMasterAPI.NodeInfo> nodeInfoList = new ArrayList<>();
     for (V1Node node : nodeList.getItems()) {
       List<V1NodeAddress> addressList = node.getStatus().getAddresses();
       for (V1NodeAddress nodeAddress: addressList) {
@@ -569,7 +577,8 @@ public class KubernetesController {
             }
           }
 
-          NodeInfo nodeInfo = new NodeInfo(nodeIP, rackName, datacenterName);
+          JobMasterAPI.NodeInfo nodeInfo =
+              NodeInfoUtils.createNodeInfo(nodeIP, rackName, datacenterName);
           nodeInfoList.add(nodeInfo);
           break;
         }

@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 /**
@@ -26,7 +27,7 @@ public final class MemoryDeserializer {
   }
 
   public static Object deserializeKey(ByteBuffer key, DataMessageType keyType,
-                                      KryoMemorySerializer serializer) {
+                                      KryoSerializer serializer) {
     switch (keyType) {
       case INTEGER:
         return key.getInt();
@@ -53,7 +54,7 @@ public final class MemoryDeserializer {
   }
 
   public static Object deserializeValue(ByteBuffer value, DataMessageType valueType,
-                                        KryoMemorySerializer serializer) {
+                                        KryoSerializer serializer) {
     switch (valueType) {
       case INTEGER:
         return deserializeInteger(value);
@@ -112,7 +113,7 @@ public final class MemoryDeserializer {
     return result;
   }
 
-  public static Object deserializeObject(ByteBuffer data, KryoMemorySerializer serializer) {
+  public static Object deserializeObject(ByteBuffer data, KryoSerializer serializer) {
     int length = data.getInt();
     List<Object> dataList = new ArrayList<>();
     while (data.remaining() > 4) {
@@ -128,7 +129,7 @@ public final class MemoryDeserializer {
     return dataList;
   }
 
-  private static Object deserializeBytes(ByteBuffer value, KryoMemorySerializer serializer) {
+  private static Object deserializeBytes(ByteBuffer value, KryoSerializer serializer) {
     int tempLength;
     List<byte[]> byteList = new ArrayList<>();
     while (value.remaining() > 4) {

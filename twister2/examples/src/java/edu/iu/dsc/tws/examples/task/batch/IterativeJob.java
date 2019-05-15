@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,16 +27,17 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataSet;
-import edu.iu.dsc.tws.dataset.Partition;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.task.api.BaseSink;
+import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -58,22 +58,23 @@ public class IterativeJob extends TaskWorker {
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(graph);
     for (int i = 0; i < 10; i++) {
-      ExecutionPlan plan = taskExecutor.plan(graph);
-      taskExecutor.addInput(graph, plan, "source", "input", new DataSet<>(0));
+      LOG.info("Starting iteration: " + i);
+      taskExecutor.addInput(graph, plan, "source", "input", new DataObjectImpl<>(config));
 
       // this is a blocking call
-      taskExecutor.execute(graph, plan);
-      DataSet<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      Set<Object> values = dataSet.getData();
-      LOG.log(Level.INFO, "Values: " + values);
+      taskExecutor.itrExecute(graph, plan);
+      DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
+      DataPartition<Object>[] values = dataSet.getPartitions();
     }
+    taskExecutor.waitFor(graph, plan);
   }
 
-  private static class IterativeSourceTask extends BaseBatchSource implements Receptor {
+  private static class IterativeSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private DataSet<Object> input;
+    private DataObjectImpl<Object> input;
 
     private int count = 0;
 
@@ -91,13 +92,18 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void add(String name, DataSet<Object> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
-      input = data;
+    @SuppressWarnings("rawtypes")
+    public void add(String name, DataObject<?> data) {
+      input = (DataObjectImpl<Object>) data;
+    }
+
+    @Override
+    public void refresh() {
+      count = 0;
     }
   }
 
-  private static class PartitionTask extends BaseBatchSink implements Collector<Object> {
+  private static class PartitionTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private List<String> list = new ArrayList<>();
@@ -106,23 +112,25 @@ public class IterativeJob extends TaskWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received message: " + message.getContent());
-
       if (message.getContent() instanceof Iterator) {
         while (((Iterator) message.getContent()).hasNext()) {
           Object ret = ((Iterator) message.getContent()).next();
           count++;
           list.add(ret.toString());
         }
-        LOG.info("Message Partition Received : " + message.getContent() + ", Count : " + count);
       }
-      count++;
+      LOG.info("RECEIVE Count: " + count);
       return true;
     }
 
     @Override
-    public Partition<Object> get() {
-      return new Partition<>(context.taskIndex(), list);
+    public void refresh() {
+      count = 0;
+    }
+
+    @Override
+    public DataPartition<Object> get() {
+      return new EntityPartition<>(context.taskIndex(), list);
     }
   }
 
@@ -139,10 +147,10 @@ public class IterativeJob extends TaskWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("iterative-job");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("iterative-job");
     jobBuilder.setWorkerClass(IterativeJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(4, 1024), 4);
+    jobBuilder.addComputeResource(4, 1024, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

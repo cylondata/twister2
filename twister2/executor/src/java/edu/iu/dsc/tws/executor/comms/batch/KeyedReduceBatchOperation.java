@@ -20,41 +20,54 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.op.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
 
-  protected BKeyedReduce op;
+  private BKeyedReduce op;
 
   public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   DataType dataType, DataType keyType,
-                                   String edgeName, IFunction function) {
-    super(config, network, tPlan);
+                                   Edge edge) {
+    super(config, network, tPlan, edge.getName());
     this.edgeGenerator = e;
-    op = new BKeyedReduce(channel, taskPlan, sources, dests, new ReduceFunctionImpl(function),
-        new BulkReceiverImpl(), Utils.dataTypeToMessageType(keyType),
-        Utils.dataTypeToMessageType(dataType), new LoadBalanceSelector());
-    communicationEdge = e.generate(edgeName);
+
+    DestinationSelector destSelector;
+    if (edge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+    } else {
+      destSelector = new HashingSelector();
+    }
+
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BKeyedReduce(newComm, taskPlan, sources, dests,
+        new ReduceFunctionImpl(edge.getFunction()),
+        new BulkReceiverImpl(), Utils.dataTypeToMessageType(edge.getKeyType()),
+        Utils.dataTypeToMessageType(edge.getDataType()), destSelector);
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    TaskMessage taskMessage = (TaskMessage) message;
-    return op.reduce(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.reduce(source,
+        taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
   @Override
@@ -87,13 +100,13 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       return outMessages.get(target).offer(msg);
     }
 
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
@@ -103,10 +116,30 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
       }
       return true;
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
   }
 
   @Override
   public void finish(int source) {
     op.finish(source);
+  }
+
+  @Override
+  public void close() {
+    op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

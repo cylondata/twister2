@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.executor.core.streaming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,13 +23,15 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.Snapshot;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkStreamingInstance implements INodeInstance {
 
@@ -39,7 +40,7 @@ public class SinkStreamingInstance implements INodeInstance {
   /**
    * The actual streamingTask executing
    */
-  private ISink streamingTask;
+  private ICompute streamingTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -60,7 +61,12 @@ public class SinkStreamingInstance implements INodeInstance {
   /**
    * The globally unique streamingTask id
    */
-  private int streamingTaskId;
+  private int globalTaskId;
+
+  /**
+   * The task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -87,23 +93,34 @@ public class SinkStreamingInstance implements INodeInstance {
    */
   private int workerId;
 
-  public SinkStreamingInstance(ISink streamingTask, BlockingQueue<IMessage> streamingInQueue,
-                               Config config, String tName, int tId, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Set<String> inEdges) {
+  /**
+   * The input edges
+   */
+  private Map<String, String> inEdges;
+  private TaskSchedulePlan taskSchedulePlan;
+
+  public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
+                               Config config, String tName, int taskId,
+                               int globalTaskID, int tIndex, int parallel,
+                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
+                               TaskSchedulePlan taskSchedulePlan) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
+    this.taskId = taskId;
     this.config = config;
-    this.streamingTaskId = tId;
+    this.globalTaskId = globalTaskID;
     this.streamingTaskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.taskName = tName;
+    this.inEdges = inEdges;
+    this.taskSchedulePlan = taskSchedulePlan;
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
         Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
-            streamingTaskId, workerId);
+            globalTaskID, workerId);
         ((ICheckPointable) this.streamingTask).restoreSnapshot(snapshot);
       } catch (Exception e) {
         LOG.log(Level.WARNING, "Could not read checkpoint", e);
@@ -111,13 +128,10 @@ public class SinkStreamingInstance implements INodeInstance {
     }
   }
 
-  public void prepare() {
-
-    TaskContext taskContext = new TaskContext(streamingTaskIndex, streamingTaskId, taskName,
-        parallelism, workerId, nodeConfigs);
-
-    streamingTask.prepare(config, taskContext);
-
+  public void prepare(Config cfg) {
+    TaskContextImpl taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
+        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan);
+    streamingTask.prepare(cfg, taskContext);
     if (streamingTask instanceof SinkCheckpointableTask) {
       ((SinkCheckpointableTask) streamingTask).connect(config, taskContext);
     }
@@ -127,11 +141,11 @@ public class SinkStreamingInstance implements INodeInstance {
     while (!streamingInQueue.isEmpty()) {
       IMessage message = streamingInQueue.poll();
       if (message != null) {
-        if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
+        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) != MessageFlags.SYNC_BARRIER) {
           streamingTask.execute(message);
         } else {
           //Send acknowledge message to jobmaster
-          LOG.info("Barrier message received in Sink " + streamingTaskId
+          LOG.info("Barrier message received in Sink " + globalTaskId
               + " from source " + message.sourceTask());
 
           Object messageContent = message.getContent();
@@ -160,6 +174,13 @@ public class SinkStreamingInstance implements INodeInstance {
     return streamingTask;
   }
 
+  @Override
+  public void close() {
+    if (streamingTask instanceof Closable) {
+      ((Closable) streamingTask).close();
+    }
+  }
+
   public void registerInParallelOperation(String edge, IParallelOperation op) {
     streamingInParOps.put(edge, op);
   }
@@ -171,7 +192,7 @@ public class SinkStreamingInstance implements INodeInstance {
   public boolean storeSnapshot(int checkpointID) {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, streamingTaskId, workerId,
+      fsStateBackend.writeToStateBackend(config, globalTaskId, workerId,
           (ICheckPointable) streamingTask, checkpointID);
       return true;
     } catch (Exception e) {

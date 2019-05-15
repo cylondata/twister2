@@ -16,26 +16,29 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import edu.iu.dsc.tws.task.api.ICompute;
+import java.util.logging.Logger;
 
 /**
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
  */
 public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
+
+  private static final Logger LOG = Logger.getLogger(DataFlowTaskGraph.class.getName());
+
   private Map<String, Vertex> taskMap = new HashMap<>();
+
+  private Map<String, String> graphConstraintsMap = new HashMap<>();
+  private Map<String, Map<String, String>> nodeConstraintsMap = new HashMap<>();
 
   private OperationMode operationMode = OperationMode.STREAMING;
 
   public DataFlowTaskGraph() {
-    //super(new VertexComparator(), new EdgeComparator());
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
-    //super(new VertexComparator(), new EdgeComparator());
-    super(Comparator.comparing(Vertex::getName), Comparator.comparing(Edge::getName));
+    super(new VertexComparator(), new EdgeComparator());
     this.operationMode = mode;
   }
 
@@ -46,19 +49,14 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   @Override
   public void build() {
     validate();
-
-    Set<ICompute> ret = new HashSet<>();
-    for (DirectedEdge<Vertex, Edge> de : directedEdges) {
-      taskMap.put(de.sourceTaskVertex.getName(), de.sourceTaskVertex);
-      taskMap.put(de.targetTaskVertex.getName(), de.targetTaskVertex);
+    for (DirectedEdge<Vertex, Edge> de : getDirectedEdgesSet()) {
+      taskMap.put(de.getSourceVertex().getName(), de.getSourceVertex());
+      taskMap.put(de.getTargetVertex().getName(), de.getTargetVertex());
     }
   }
 
   /**
    * This method is responsible for adding the task vertex to the task map.
-   * @param name
-   * @param taskVertex
-   * @return
    */
   public boolean addTaskVertex(String name, Vertex taskVertex) {
     if (!validateTaskVertex(name)) {
@@ -68,10 +66,25 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
     return true;
   }
 
+
+  public void addNodeConstraints(Map<String, Map<String, String>> nodeConstraintsmap) {
+    this.nodeConstraintsMap = nodeConstraintsmap;
+  }
+
+  public void addGraphConstraints(Map<String, String> graphConstraintsmap) {
+    this.graphConstraintsMap = graphConstraintsmap;
+  }
+
+  public Map<String, String> getGraphConstraints() {
+    return graphConstraintsMap;
+  }
+
+  public Map<String, Map<String, String>> getNodeConstraints() {
+    return nodeConstraintsMap;
+  }
+
   /**
    * This method is to identify the duplicate names for the tasks in the taskgraph.
-   * @param taskName
-   * @return
    */
   private boolean validateTaskVertex(String taskName) {
     boolean flag = false;
@@ -161,20 +174,20 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   /**
    * This is the getter method to get the property of operation mode "STREAMING" or "BATCH".
-   * @return
    */
   public OperationMode getOperationMode() {
     return operationMode;
   }
 
+
   /**
    * This is the setter method to set the property of the operation mode which is either
    * "STREAMING" or "BATCH"
-   * @param operationMode
    */
   public void setOperationMode(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
+
 
   private static class VertexComparator implements Comparator<Vertex> {
 
@@ -193,12 +206,6 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
   }
 
   public static class StringComparator implements Comparator<String> {
-
-    public Comparator<String> comp(String obj1, String obj2) {
-      Comparator<String> stringComparator = Comparator.comparing(String::toString);
-      return stringComparator;
-    }
-
     public int compare(String obj1, String obj2) {
       if (obj1 == null) {
         return -1;

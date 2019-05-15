@@ -11,62 +11,110 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
- * Keep track of a message while it is transisitioning through the send phases
+ * Keep track of a message while it is transitioning through the send phases
  */
 public class OutMessage {
-  // keep track of the serialized bytes in case we don't
-  // have enough space in the send buffers
-  protected SerializeState serializationState;
-
-  //number of bytes copied to the network buffers so far
-  private int byteCopied = 0;
-
-  private int writtenHeaderSize = 0;
-
-  private ChannelMessage ref;
-
-  private boolean complete = false;
-
-  private int source;
-
-  private int edge;
-
-  private int path;
-
-  private int target;
-
-  private Set<Integer> internalSends;
-
-  private Set<Integer> externalSends;
-
-  private int acceptedExternalSends = 0;
-  private int acceptedInternalSends = 0;
-
-  private int flags;
-
-  private boolean outCountUpdated = false;
-
   public enum SendState {
     INIT,
     SENT_INTERNALLY,
     HEADER_BUILT,
-    BODY_BUILT,
     PARTIALLY_SERIALIZED,
     SERIALIZED,
-    FINISHED,
   }
 
+  /**
+   * keep track of the serialized bytes in case we don't have enough space in the send buffers
+   */
+  private SerializeState serializationState;
+
+  /**
+   * Weather message is complete
+   */
+  private boolean complete = false;
+
+  /**
+   * Originating source
+   */
+  private int source;
+
+  /**
+   * Edge to be used
+   */
+  private int edge;
+
+  /**
+   * Path
+   */
+  private int path;
+
+  /**
+   * Target task
+   */
+  private int target;
+
+  /**
+   * The internal send ids
+   */
+  private Set<Integer> internalSends;
+
+  /**
+   * The external send ids
+   */
+  private Set<Integer> externalSends;
+
+  /**
+   * Message flags
+   */
+  private int flags;
+
+  /**
+   * Accepted internal sends of this message
+   */
+  private int acceptedInternalSends = 0;
+
+  /**
+   * Channel messages created for sending this message through network
+   */
+  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
+
+  /**
+   * Keep track of the send state
+   */
   private SendState sendState = SendState.INIT;
 
+  /**
+   * The data type of the message
+   */
+  private MessageType dataType;
 
-  public OutMessage(int src, ChannelMessage message, int edge, int path, int target, int flags,
-                    Set<Integer> intSends, Set<Integer> extSends) {
-    this.ref = message;
+  /**
+   * Key type of the message
+   */
+  private MessageType keyType;
+
+  /**
+   * The release callback
+   */
+  private ChannelMessageReleaseCallback releaseCallback;
+
+  /**
+   * The header for this out message
+   */
+  private MessageHeader header;
+
+  public OutMessage(int src, int edge, int path, int target, int flags,
+                    Set<Integer> intSends, Set<Integer> extSends,
+                    MessageType dataType, MessageType keyType,
+                    ChannelMessageReleaseCallback releaseCallback) {
     this.source = src;
     this.edge = edge;
     this.path = path;
@@ -74,34 +122,18 @@ public class OutMessage {
     this.internalSends = intSends;
     this.externalSends = extSends;
     this.flags = flags;
+    this.serializationState = new SerializeState();
+    this.dataType = dataType;
+    this.keyType = keyType;
+    this.releaseCallback = releaseCallback;
   }
 
-  public SendState serializedState() {
+  public SendState getSendState() {
     return sendState;
-  }
-
-  public int getByteCopied() {
-    return byteCopied;
-  }
-
-  public void setByteCopied(int byteCopied) {
-    this.byteCopied = byteCopied;
   }
 
   public void setSendState(SendState sendState) {
     this.sendState = sendState;
-  }
-
-  public int getWrittenHeaderSize() {
-    return writtenHeaderSize;
-  }
-
-  public void setWrittenHeaderSize(int writtenHeaderSize) {
-    this.writtenHeaderSize = writtenHeaderSize;
-  }
-
-  public ChannelMessage getChannelMessage() {
-    return ref;
   }
 
   public void setSerializationState(SerializeState serializationState) {
@@ -144,14 +176,6 @@ public class OutMessage {
     return externalSends;
   }
 
-  public int getAcceptedExternalSends() {
-    return acceptedExternalSends;
-  }
-
-  public int incrementAcceptedExternalSends() {
-    return ++acceptedExternalSends;
-  }
-
   public int getAcceptedInternalSends() {
     return acceptedInternalSends;
   }
@@ -164,11 +188,27 @@ public class OutMessage {
     return flags;
   }
 
-  public void setOutCountUpdated(boolean outCountUpdated) {
-    this.outCountUpdated = outCountUpdated;
+  public Queue<ChannelMessage> getChannelMessages() {
+    return channelMessages;
   }
 
-  public boolean isOutCountUpdated() {
-    return outCountUpdated;
+  public MessageType getDataType() {
+    return dataType;
+  }
+
+  public MessageType getKeyType() {
+    return keyType;
+  }
+
+  public ChannelMessageReleaseCallback getReleaseCallback() {
+    return releaseCallback;
+  }
+
+  public MessageHeader getHeader() {
+    return header;
+  }
+
+  public void setHeader(MessageHeader header) {
+    this.header = header;
   }
 }

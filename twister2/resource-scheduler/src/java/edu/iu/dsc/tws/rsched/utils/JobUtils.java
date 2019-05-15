@@ -9,6 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.rsched.utils;
 
 import java.io.File;
@@ -22,7 +34,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -74,7 +87,7 @@ public final class JobUtils {
     StringBuilder classPathBuilder = new StringBuilder();
 //    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
 //    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
-      // Bundled jar
+    // Bundled jar
     classPathBuilder.append(
         Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
 //    }
@@ -109,7 +122,7 @@ public final class JobUtils {
 
   /**
    * [Deprecated Function]
-   * **/
+   **/
  /* public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
@@ -118,7 +131,6 @@ public final class JobUtils {
     }
     return builder.build();
   }*/
-
   public static Config overrideConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
     JobAPI.Config conf = job.getConfig();
@@ -144,48 +156,41 @@ public final class JobUtils {
 
   /**
    * write the values from Job object to config object
-   * only write the values that are initialized
-   * @param job
-   * @param config
-   * @return
    */
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
-    String jobName = job.getJobName();
-    if (jobName != null) {
-      builder.put(Context.JOB_NAME, jobName);
-    }
-
-    String workerClass = job.getWorkerClassName();
-    if (workerClass != null) {
-      builder.put(SchedulerContext.WORKER_CLASS, workerClass);
-    }
-
-    int workerInstances = job.getNumberOfWorkers();
-    if (workerInstances > 0) {
-      builder.put(Context.TWISTER2_WORKER_INSTANCES, workerInstances);
-    }
-
-    double cpuPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getCpu();
-    if (cpuPerWorker > 0) {
-      builder.put(Context.TWISTER2_WORKER_CPU, cpuPerWorker);
-    }
-
-    int ramPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getRam();
-    if (ramPerWorker > 0) {
-      builder.put(Context.TWISTER2_WORKER_RAM, ramPerWorker);
-    }
-
-    double diskPerWorker =
-        job.getJobResources().getResourcesList().get(0).getWorkerComputeResource().getDisk();
-    if (diskPerWorker > 0) {
-      builder.put(Context.WORKER_VOLATILE_DISK, diskPerWorker);
-    }
+    builder.put(Context.JOB_NAME, job.getJobName());
+    builder.put(SchedulerContext.WORKER_CLASS, job.getWorkerClassName());
+    builder.put(Context.TWISTER2_WORKER_INSTANCES, job.getNumberOfWorkers());
 
     return builder.build();
+  }
+
+  /**
+   * return the ComputeResource with the given index
+   * if not found, return null
+   */
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, int index) {
+    for (JobAPI.ComputeResource computeResource : job.getComputeResourceList()) {
+      if (computeResource.getIndex() == index) {
+        return computeResource;
+      }
+    }
+
+    return null;
+  }
+
+  public static String toString(JobAPI.Job job) {
+    String jobStr = "[jobName=" + job.getJobName() + "], "
+        + "[numberOfWorkers=" + job.getNumberOfWorkers() + "]"
+        + "\n[workerClass=" + job.getWorkerClassName() + "]";
+
+    for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
+      jobStr += "\n" + ComputeResourceUtils.toString(cr);
+    }
+
+    return jobStr;
   }
 
 }

@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
@@ -39,12 +38,15 @@ import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.task.streaming.STReduceExample;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -65,7 +67,9 @@ public class ExampleTaskMain {
     options.addOption(Constants.ARGS_ITR, true, "Iteration");
     options.addOption(Utils.createOption(Constants.ARGS_OPERATION, true, "Operation", true));
     options.addOption(Constants.ARGS_STREAM, false, "Stream");
-    options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true, "Throughput mode", true));
+    options.addOption(Constants.ARGS_WINDOW, false, "WindowType");
+    options.addOption(Utils.createOption(Constants.ARGS_TASK_STAGES, true,
+        "Number of parallel instances of tasks", true));
     options.addOption(Utils.createOption(Constants.ARGS_GAP, true, "Gap", false));
     options.addOption(Utils.createOption(Constants.ARGS_FNAME, true, "File name", false));
     options.addOption(Utils.createOption(Constants.ARGS_OUTSTANDING, true, "Throughput no of messages", false));
@@ -74,6 +78,7 @@ public class ExampleTaskMain {
     options.addOption(Utils.createOption(Constants.ARGS_DATA_TYPE, true, "Data", false));
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
+    options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -82,6 +87,7 @@ public class ExampleTaskMain {
     int itr = Integer.parseInt(cmd.getOptionValue(Constants.ARGS_ITR));
     String operation = cmd.getOptionValue(Constants.ARGS_OPERATION);
     boolean stream = cmd.hasOption(Constants.ARGS_STREAM);
+    boolean window = cmd.hasOption(Constants.ARGS_WINDOW);
     boolean verify = cmd.hasOption(Constants.ARGS_VERIFY);
 
     String threads = "true";
@@ -119,6 +125,12 @@ public class ExampleTaskMain {
       intItr = cmd.getOptionValue(Constants.ARGS_INIT_ITERATIONS);
     }
 
+    boolean runBenchmark = cmd.hasOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    String benchmarkMetadata = null;
+    if (runBenchmark) {
+      benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
+    }
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
@@ -135,9 +147,13 @@ public class ExampleTaskMain {
     jobConfig.put(Constants.ARGS_INIT_ITERATIONS, intItr);
     jobConfig.put(Constants.ARGS_VERIFY, verify);
     jobConfig.put(Constants.ARGS_STREAM, stream);
+    jobConfig.put(Constants.ARGS_WINDOW, window);
+    jobConfig.put(BenchmarkMetadata.ARG_RUN_BENCHMARK, runBenchmark);
+    if (runBenchmark) {
+      jobConfig.put(BenchmarkMetadata.ARG_BENCHMARK_METADATA, benchmarkMetadata);
+    }
 
     // build the job
-    Twister2Job twister2Job;
     if (!stream) {
       switch (operation) {
         case "reduce":
@@ -170,6 +186,12 @@ public class ExampleTaskMain {
       }
     } else {
       switch (operation) {
+        case "direct":
+          submitJob(config, workers, jobConfig, STWindowExample.class.getName());
+          break;
+        case "cdirect":
+          submitJob(config, workers, jobConfig, STWindowCustomExample.class.getName());
+          break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName());
           break;
@@ -207,9 +229,9 @@ public class ExampleTaskMain {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setName(clazz)
+        .setJobName(clazz)
         .setWorkerClass(clazz)
-        .setRequestResource(new WorkerComputeResource(1, 512), containers)
+        .addComputeResource(1, 512, containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

@@ -1,0 +1,26 @@
+{
+  "id": "int_comm_one_to_many",
+  "parent": "integration_base_comm",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "1,${workers}"
+      }
+    },
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          "\"bcast\""
+        ]
+      }
+    }
+  ]
+}

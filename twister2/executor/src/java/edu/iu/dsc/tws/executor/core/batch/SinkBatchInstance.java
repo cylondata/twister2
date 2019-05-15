@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.core.batch;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -19,16 +20,19 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
+import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkBatchInstance implements INodeInstance {
+public class SinkBatchInstance implements INodeInstance, ISync {
   /**
    * The actual batchTask executing
    */
-  private ISink batchTask;
+  private ICompute batchTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
@@ -49,7 +53,12 @@ public class SinkBatchInstance implements INodeInstance {
   /**
    * The globally unique batchTask id
    */
-  private int batchTaskId;
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -84,30 +93,51 @@ public class SinkBatchInstance implements INodeInstance {
   /**
    * the incoming edges
    */
-  private Set<String> inputEdges;
+  private Map<String, String> inputEdges;
 
-  public SinkBatchInstance(ISink batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
-                           String tName, int tId, int tIndex, int parallel, int wId,
-                           Map<String, Object> cfgs, Set<String> inEdges) {
+  /**
+   * Task schedule plan contains information about whole topology. This will be passed to
+   * {@link edu.iu.dsc.tws.task.api.TaskContext} to expose necessary information
+   */
+  private TaskSchedulePlan taskSchedule;
+
+  /**
+   * Keep track of syncs received
+   */
+  private Set<String> syncReceived = new HashSet<>();
+  private TaskContextImpl context;
+
+  public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
+                           String tName, int taskId, int globalTaskId,
+                           int tIndex, int parallel, int wId,
+                           Map<String, Object> cfgs, Map<String, String> inEdges,
+                           TaskSchedulePlan taskSchedule) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
-    this.batchTaskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.batchTaskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
     this.workerId = wId;
     this.taskName = tName;
     this.inputEdges = inEdges;
+    this.taskSchedule = taskSchedule;
   }
 
   public void reset() {
+    this.context.reset();
     state = new InstanceState(InstanceState.INIT);
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).refresh();
+    }
   }
 
-  public void prepare() {
-    batchTask.prepare(config, new TaskContext(batchTaskIndex, batchTaskId, taskName,
-        parallelism, workerId, nodeConfigs));
+  public void prepare(Config cfg) {
+    context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
+    batchTask.prepare(cfg, context);
   }
 
   public boolean execute() {
@@ -117,25 +147,34 @@ public class SinkBatchInstance implements INodeInstance {
       while (!batchInQueue.isEmpty()) {
         IMessage m = batchInQueue.poll();
         batchTask.execute(m);
-        state.set(InstanceState.EXECUTING);
+        state.addState(InstanceState.EXECUTING);
       }
 
       // lets progress the communication
-      boolean needsFurther = communicationProgress();
+      boolean needsFurther = progressCommunication();
 
       // we don't have incoming and our inqueue in empty
-      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty() && !needsFurther) {
-        state.set(InstanceState.EXECUTION_DONE);
+      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
+        state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 
     // we only need the execution done for now
-    return !state.isSet(InstanceState.EXECUTION_DONE);
+    return !state.isSet(InstanceState.EXECUTION_DONE | InstanceState.SYNCED);
+  }
+
+  public boolean sync(String edge, byte[] value) {
+    syncReceived.add(edge);
+    if (syncReceived.equals(batchInParOps.keySet())) {
+      state.addState(InstanceState.SYNCED);
+      syncReceived.clear();
+    }
+    return true;
   }
 
   @Override
   public int getId() {
-    return batchTaskId;
+    return globalTaskId;
   }
 
   @Override
@@ -143,11 +182,19 @@ public class SinkBatchInstance implements INodeInstance {
     return batchTask;
   }
 
+  @Override
+  public void close() {
+    if (batchTask instanceof Closable) {
+      ((Closable) batchTask).close();
+    }
+  }
+
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
-  private boolean communicationProgress() {
+  public boolean progressCommunication() {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
       if (e.getValue().progress()) {
@@ -155,6 +202,17 @@ public class SinkBatchInstance implements INodeInstance {
       }
     }
     return !allDone;
+  }
+
+  @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+    return complete;
   }
 
   public void registerInParallelOperation(String edge, IParallelOperation op) {
@@ -165,8 +223,8 @@ public class SinkBatchInstance implements INodeInstance {
     return batchInQueue;
   }
 
-  public int getBatchTaskId() {
-    return batchTaskId;
+  public int getGlobalTaskId() {
+    return globalTaskId;
   }
 
   public int getBatchTaskIndex() {

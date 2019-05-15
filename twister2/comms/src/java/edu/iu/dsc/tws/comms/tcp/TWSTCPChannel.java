@@ -18,14 +18,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
+import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.dfw.ChannelListener;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -33,9 +35,6 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
-
-  // a lock object to be used
-  private Lock lock = new ReentrantLock();
 
   private int executor;
 
@@ -56,7 +55,7 @@ public class TWSTCPChannel implements TWSChannel {
 
   @SuppressWarnings("VisibilityModifier")
   private class TCPReceiveRequests {
-    List<Request> pendingRequests;
+    IterativeLinkedList<Request> pendingRequests;
     int rank;
     int edge;
     ChannelListener callback;
@@ -68,13 +67,13 @@ public class TWSTCPChannel implements TWSChannel {
       this.edge = e;
       this.callback = callback;
       this.availableBuffers = buffers;
-      this.pendingRequests = new ArrayList<>();
+      this.pendingRequests = new IterativeLinkedList<>();
     }
   }
 
   @SuppressWarnings("VisibilityModifier")
   private class TCPSendRequests {
-    List<Request> pendingSends;
+    IterativeLinkedList<Request> pendingSends;
     int rank;
     int edge;
     ChannelMessage message;
@@ -85,10 +84,12 @@ public class TWSTCPChannel implements TWSChannel {
       this.rank = rank;
       this.edge = e;
       this.message = message;
-      pendingSends = new ArrayList<>();
+      pendingSends = new IterativeLinkedList<>();
       this.callback = callback;
     }
   }
+
+  private int completedReceives = 0;
 
   /**
    * Pending sends waiting to be posted
@@ -103,14 +104,22 @@ public class TWSTCPChannel implements TWSChannel {
   /**
    * Wait for completion sends
    */
-  private List<TCPSendRequests> waitForCompletionSends;
+  private IterativeLinkedList<TCPSendRequests> waitForCompletionSends;
 
+  /**
+   * The tcp channel
+   */
   private TCPChannel comm;
+
+  /**
+   * Holds requests that are pending for close
+   */
+  private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
 
   public TWSTCPChannel(Config config, int exec, TCPChannel net) {
     this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
-    this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
+    this.waitForCompletionSends = new IterativeLinkedList<>();
     this.executor = exec;
     this.comm = net;
   }
@@ -147,7 +156,21 @@ public class TWSTCPChannel implements TWSChannel {
   @Override
   public void close() {
     // we will call the comm stop
+    while (!this.pendingCloseRequests.isEmpty()
+        || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
+      this.progress();
+    }
     comm.stop();
+  }
+
+  @Override
+  public boolean isComplete() {
+    // nothing to do here
+    if (!this.pendingCloseRequests.isEmpty()
+        || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -187,7 +210,6 @@ public class TWSTCPChannel implements TWSChannel {
     return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 
-  private int completedReceives = 0;
   /**
    * Progress the communications that are pending
    */
@@ -209,12 +231,14 @@ public class TWSTCPChannel implements TWSChannel {
       }
     }
 
-    Iterator<TCPSendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
+    IterativeLinkedList.ILLIterator sendRequestsIterator
+        = waitForCompletionSends.iterator();
     while (sendRequestsIterator.hasNext()) {
-      TCPSendRequests sendRequests = sendRequestsIterator.next();
-      Iterator<Request> requestIterator = sendRequests.pendingSends.iterator();
+      TCPSendRequests sendRequests = (TCPSendRequests) sendRequestsIterator.next();
+      IterativeLinkedList.ILLIterator requestIterator
+          = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
-        Request r = requestIterator.next();
+        Request r = (Request) requestIterator.next();
         TCPStatus status = r.request.testStatus();
         // this request has finished
         if (status == TCPStatus.COMPLETE) {
@@ -234,9 +258,9 @@ public class TWSTCPChannel implements TWSChannel {
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       TCPReceiveRequests receiveRequests = registeredReceives.get(i);
-      Iterator<Request> requestIterator = receiveRequests.pendingRequests.iterator();
+      IterativeLinkedList.ILLIterator requestIterator = receiveRequests.pendingRequests.iterator();
       while (requestIterator.hasNext()) {
-        Request r = requestIterator.next();
+        Request r = (Request) requestIterator.next();
         if (r == null || r.request == null) {
           continue;
         }
@@ -244,24 +268,66 @@ public class TWSTCPChannel implements TWSChannel {
         if (status == TCPStatus.COMPLETE) {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
-          receiveRequests.callback.onReceiveComplete(
-              receiveRequests.rank, receiveRequests.edge, r.buffer);
-          requestIterator.remove();
+
           if (receiveRequests.pendingRequests.size() == 0
               && receiveRequests.availableBuffers.size() == 0) {
             //We do not have any buffers to receive messages so we need to free a buffer
-            receiveRequests.callback.freeReceiveBuffers(receiveRequests.rank,
-                receiveRequests.edge);
+            receiveRequests.callback.onReceiveComplete(
+                receiveRequests.rank, receiveRequests.edge, r.buffer, true);
+          } else {
+            receiveRequests.callback.onReceiveComplete(
+                receiveRequests.rank, receiveRequests.edge, r.buffer, false);
           }
+          requestIterator.remove();
         }
       }
     }
 
+    // handle the pending close requests
+    handlePendingCloseRequests();
+
     comm.progress();
+  }
+
+  /**
+   * Close all the pending requests
+   */
+  private void handlePendingCloseRequests() {
+    while (pendingCloseRequests.size() > 0) {
+      Pair<Integer, Integer> closeRequest = pendingCloseRequests.remove(0);
+
+      // clear up the receive requests
+      Iterator<TCPReceiveRequests> itr = registeredReceives.iterator();
+      while (itr.hasNext()) {
+        TCPReceiveRequests receiveRequests = itr.next();
+        if (receiveRequests.edge == closeRequest.getRight()
+            && receiveRequests.rank == closeRequest.getLeft()) {
+          IterativeLinkedList.ILLIterator pendItr
+              = receiveRequests.pendingRequests.iterator();
+          while (pendItr.hasNext()) {
+            Request r = (Request) pendItr.next();
+            r.request.isComplete();
+            pendItr.remove();
+          }
+          itr.remove();
+        }
+      }
+      // lets not handle any send requests as they will complete eventually
+    }
   }
 
   @Override
   public ByteBuffer createBuffer(int capacity) {
     return ByteBuffer.allocate(capacity);
+  }
+
+  /**
+   * Close a worker id with edge
+   *
+   * @param workerId worker id
+   * @param e edge
+   */
+  public void releaseBuffers(int workerId, int e) {
+    pendingCloseRequests.add(new ImmutablePair<>(workerId, e));
   }
 }

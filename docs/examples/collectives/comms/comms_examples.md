@@ -327,7 +327,7 @@ Running a reduce streaming example using 4 workers, with a single iteration, sou
 as 8 and sink parallelism as one. 
 
 ```bash
-./bin/twister2 submit nodesmpi jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,1 -verify -stream
 
 ```
 

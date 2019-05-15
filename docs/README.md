@@ -12,19 +12,41 @@ big data systems and evolve separately.
  
 We support the following components in Twister2
 
-1. Resource provisioning abstraction - Obtain cluster resources
-   1. Standalone
-   2. Kubernetes
-   3. Mesos
-   4. Slurm
-   5. Nomad
-2. Parallel and Distributed Communications
-   1. Twister2:Net - a dataflow communication library for streaming and large scale batch analysis
-   2. Harp - a BSP collective framework for parallel applications and machine learning
-3. Task Graph - Create dataflow graphs 
-4. Task Scheduler - Schedule the task graph in to cluster resources
-5. Executor - Execution of task graph       
-6. API for creating Task Graph and Communication
+1. Resource provisioning component to bring up and manage parallel workers in cluster environments
+    1. Standalone
+    2. Kubernetes
+    3. Mesos
+    4. Slurm 
+    5. Nomad
+2. Parallel and Distributed Operators in HPC and Cloud Environments
+    1. Twister2:Net - a data level dataflow operator library for streaming and large scale batch analysis
+    2. Harp - a BSP (Bulk Synchronous Processing) innovative collective framework for parallel applications and machine learning at message level
+    3. OpenMPI (HPC Environments only) at message level
+3. Task System
+    1. Task Graph 
+       * Create dataflow graphs for streaming and batch analysis including iterative computations 
+    2. Task Scheduler - Schedule the task graph into cluster resources supporting different scheduling algorithms
+       * Datalocality Scheduling
+       * Roundrobin scheduling
+       * First fit scheduling
+    3. Executor - Execution of task graph     
+       * Batch executor
+       * Streaming executor
+4. TSet for distributed data representation (Similar to Spark RDD, Flink DataSet and Heron Streamlet)
+    1. Iterative computations
+    2. Data caching
+5. APIs for streaming and batch applications
+    1. Operator API
+    2. Task Graph based API
+    3. TSet API
+6. Support for storage systems
+    1. HDFS
+    2. Local file systems
+    3. NFS for persistent storage
+7. Web UI for monitoring Twister2 Jobs
+8. Apache Storm Compatibility API
+9. Connected DataFlow (Experimental)
+    1. Supports creation of multiple dataflow graphs executing in a single job
 
 Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
 can use OpenMPI for its communications. It can be programmed at different levels depending on the 
@@ -41,23 +63,33 @@ Twister2 performs against Apache Spark and MPI. Please note that Spark KMeans ex
 while Twister2 and MPI implementations are communication level applications. However it is clear that Twister2 performs on the same
 level as OpenMPI which is an highly optimized communication library in the HPC world. And it out performs Spark by roughly a factor of x10.
 
-Notation : 
-`DFW` refers to Twister2
-`BSP` refers to MPI (OpenMPI)
+Notation :   
+`DFW` refers to Twister2  
+`BSP` refers to MPI (OpenMPI)  
 
-![Kmeans Performance Comparison](images/kmeans_comparison.png)
-## Things we are working on
+![Kmeans Performance Comparison](images/kmeans_comparison_low.png)
 
-These are things we are actively working on and planning to work on.
+## Road map
 
-1. Hierarchical task scheduling - Ability to run different types of jobs in a single dataflow
+We have started working on our next major release that will connect the core components we have developed 
+into a full data analytics environment. In particular it will focus on providing APIs around the core
+capabilities of Twister2 and integration of applications in a single dataflow. 
+
+### Next release (End of June 2019)
+
+1. Connected DataFlow
 2. Fault tolerance
-3. Data API including DataSet similar to Spark RDD, Flink DataSet and Heron Streamlet
-3. Supporting different API's including Storm, Spark, Beam  
-4. Heterogeneous resources allocations
-5. Web UI for monitoring Twister2 Jobs
+3. Supporting more API's including Beam  
+4. Python API
 6. More resource managers - Pilot Jobs, Yarn
 7. More example applications
+
+### Beyond next release
+
+1. Implementing core parts of Twister2 with C/C++ for high performance 
+3. Direct use of RDMA
+5. SQL interface 
+6. Native MPI support for cloud deployments
 
 ## Important Links
 
@@ -66,3 +98,12 @@ Harp is a separate project and its documentation can be found in [website](https
 We use OpenMPI for HP communications [OpenMPI](https://www.open-mpi.org/)
   
 Twister2 started as a research project at Indiana University [Digital Science Center](https://www.dsc.soic.indiana.edu/).
+
+## License
+
+Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+## Acknowledgements
+
+This work was partially supported by NSF CIF21 DIBBS 1443054 and the Indiana University Precision Health initiative.
+We thank Intel for their support of the Juliet and Victor systems and extend our gratitude to the FutureSystems team for their support with the infrastructure.

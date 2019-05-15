@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.core.CommunicationContext;
+import edu.iu.dsc.tws.comms.api.CommunicationContext;
 
 /**
  * Read the configuration options
@@ -32,8 +32,12 @@ public class DataFlowContext extends CommunicationContext {
   private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
       "network.partition.message.group.high_water_mark";
 
-  private static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
-  private static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+  public static final String NETWORK_PARTITION_BATCH_GROUPING_SIZE
+      = "network.partition.batch.grouping.size";
+
+  public static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
+  public static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+
 
   public static final int DEFAULT_DESTINATION = 0;
 
@@ -67,12 +71,16 @@ public class DataFlowContext extends CommunicationContext {
     return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
   }
 
-  public static int getShuffleMaxRecordsInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64);
+  public static long getShuffleMaxRecordsInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64L);
   }
 
-  public static int getShuffleMaxBytesInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400);
+  public static long getShuffleMaxBytesInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400L);
+  }
+
+  public static int getNetworkPartitionBatchGroupingSize(Config config) {
+    return config.getIntegerValue(NETWORK_PARTITION_BATCH_GROUPING_SIZE, 100);
   }
 }
 

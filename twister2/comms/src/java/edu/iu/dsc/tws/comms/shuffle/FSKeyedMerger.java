@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -24,23 +23,29 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
+/**
+ * Un sorted merger
+ *
+ * @deprecated This merger can't output data in the expected format Iterator<Tuple<Key,Iterator>>
+ */
 @SuppressWarnings({"unchecked", "rawtypes"})
+@Deprecated
 public class FSKeyedMerger implements Shuffle {
   private static final Logger LOG = Logger.getLogger(FSKeyedMerger.class.getName());
 
   /**
    * Maximum bytes to keep in memory
    */
-  private int maxBytesToKeepInMemory;
+  private long maxBytesToKeepInMemory;
 
   /**
    * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
 
   /**
    * The base folder to work on
@@ -66,17 +71,17 @@ public class FSKeyedMerger implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private List<KeyValue> recordsInMemory = new ArrayList<>();
+  private List<Tuple> recordsInMemory = new ArrayList<>();
 
   /**
    * The deserialized objects in memory
    */
-  private List<KeyValue> objectsInMemory = new ArrayList<>();
+  private List<Tuple> objectsInMemory = new ArrayList<>();
 
   /**
    * The number of total bytes in each file part written to disk
    */
-  private List<Integer> filePartBytes = new ArrayList<>();
+  private List<Long> filePartBytes = new ArrayList<>();
 
   /**
    * Amount of bytes in the memory
@@ -94,12 +99,11 @@ public class FSKeyedMerger implements Shuffle {
   private MessageType dataType;
 
   private Lock lock = new ReentrantLock();
-  private Condition notFull = lock.newCondition();
 
   /**
    * The kryo serializer
    */
-  private KryoMemorySerializer kryoSerializer;
+  private KryoSerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -108,7 +112,7 @@ public class FSKeyedMerger implements Shuffle {
 
   private FSStatus status = FSStatus.WRITING;
 
-  public FSKeyedMerger(int maxBytesInMemory, int maxRecsInMemory,
+  public FSKeyedMerger(long maxBytesInMemory, long maxRecsInMemory,
                        String dir, String opName, MessageType kType,
                        MessageType dType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
@@ -117,7 +121,7 @@ public class FSKeyedMerger implements Shuffle {
     this.operationName = opName;
     this.keyType = kType;
     this.dataType = dType;
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
   }
 
   /**
@@ -130,14 +134,10 @@ public class FSKeyedMerger implements Shuffle {
 
     lock.lock();
     try {
-      recordsInMemory.add(new KeyValue(key, data));
+      recordsInMemory.add(new Tuple(key, data));
       bytesLength.add(length);
 
       numOfBytesInMemory += length;
-      if (numOfBytesInMemory > maxBytesToKeepInMemory
-          || recordsInMemory.size() > maxRecordsInMemory) {
-        notFull.signal();
-      }
     } finally {
       lock.unlock();
     }
@@ -156,9 +156,9 @@ public class FSKeyedMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < recordsInMemory.size(); i++) {
-      KeyValue kv = recordsInMemory.get(i);
-      Object o = DataDeserializer.deserialize(dataType, kryoSerializer, (byte[]) kv.getValue());
-      objectsInMemory.add(new KeyValue(kv.getKey(), o));
+      Tuple kv = recordsInMemory.get(i);
+      Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) kv.getValue());
+      objectsInMemory.add(new Tuple(kv.getKey(), o));
     }
   }
 
@@ -172,8 +172,8 @@ public class FSKeyedMerger implements Shuffle {
       if (numOfBytesInMemory > maxBytesToKeepInMemory
           || recordsInMemory.size() > maxRecordsInMemory) {
         // save the bytes to disk
-        int totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
-            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType, kryoSerializer);
+        long totalSize = FileLoader.saveKeyValues(recordsInMemory, bytesLength,
+            numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
         filePartBytes.add(totalSize);
 
         recordsInMemory.clear();
@@ -200,9 +200,9 @@ public class FSKeyedMerger implements Shuffle {
     // Index of the current file
     private int currentIndex = 0;
     // the iterator for list of bytes in memory
-    private Iterator<KeyValue> it;
+    private Iterator<Tuple> it;
     // the current values
-    private List<KeyValue> openValue;
+    private List<Tuple> openValue;
 
     FSIterator() {
       it = objectsInMemory.iterator();
@@ -253,14 +253,14 @@ public class FSKeyedMerger implements Shuffle {
     }
 
     @Override
-    public KeyValue next() {
+    public Tuple next() {
       // we are reading from in memory
       if (currentFileIndex == -1) {
         return it.next();
       }
 
       if (currentFileIndex >= 0) {
-        KeyValue kv = openValue.get(currentIndex);
+        Tuple kv = openValue.get(currentIndex);
         currentIndex++;
         return kv;
       }

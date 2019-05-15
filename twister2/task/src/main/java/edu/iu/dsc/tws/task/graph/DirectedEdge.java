@@ -15,16 +15,14 @@ import java.util.Comparator;
 
 /**
  * This class is responsible for assigning the directed task edge between the task vertices.
- * @param <TV>
- * @param <TE>
  */
 
 public class DirectedEdge<TV, TE> {
-  protected TV sourceTaskVertex;
-  protected TV targetTaskVertex;
-  protected TE taskEdge;
+  private TV sourceTaskVertex;
+  private TV targetTaskVertex;
+  private TE taskEdge;
 
-  protected Comparator<TV> vertexComparator;
+  private Comparator<TV> vertexComparator;
 
   public DirectedEdge() {
   }
@@ -33,11 +31,35 @@ public class DirectedEdge<TV, TE> {
     this.vertexComparator = vertexComparator;
   }
 
+  public DirectedEdge(TV sourceTaskVertex, TV targetTaskVertex, TE taskEdge) {
+    this(sourceTaskVertex, targetTaskVertex, taskEdge, null);
+  }
+
   public DirectedEdge(TV sourceTaskVertex, TV targetTaskVertex,
                       TE taskEdge, Comparator<TV> vertexComparator) {
     this.sourceTaskVertex = sourceTaskVertex;
     this.targetTaskVertex = targetTaskVertex;
     this.taskEdge = taskEdge;
+    this.vertexComparator = vertexComparator;
+  }
+
+  public TV getSourceVertex() {
+    return sourceTaskVertex;
+  }
+
+  public TV getTargetVertex() {
+    return targetTaskVertex;
+  }
+
+  public TE getTaskEdge() {
+    return taskEdge;
+  }
+
+  public Comparator<TV> getVertexComparator() {
+    return vertexComparator;
+  }
+
+  public void setVertexComparator(Comparator<TV> vertexComparator) {
     this.vertexComparator = vertexComparator;
   }
 }

@@ -15,35 +15,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.api.DestinationSelector;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
+import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(KeyedReduceStreamingOperation.class.getName());
-
   private SKeyedReduce op;
 
   public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                       DataType dType, DataType kType,
-                                       String edgeName, IFunction fn) {
-    super(config, network, tPlan);
+                                       Edge edge) {
+    super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
       throw new RuntimeException("Sources should have more than 0 elements");
@@ -53,18 +52,27 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    MessageType dataType = Utils.dataTypeToMessageType(dType);
-    MessageType keyType = Utils.dataTypeToMessageType(kType);
+    DestinationSelector destSelector;
+    if (edge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+    } else {
+      destSelector = new HashingSelector();
+    }
+
+    MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
+    MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
 
     this.edgeGenerator = e;
-    op = new SKeyedReduce(channel, taskPlan, sources, dests, keyType, dataType,
-        new ReduceFunctionImpl(fn), new SingularRecvrImpl(), new HashingSelector());
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new SKeyedReduce(newComm, taskPlan, sources, dests, keyType, dataType,
+        new ReduceFunctionImpl(edge.getFunction()), new SingularRecvrImpl(), destSelector);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    TaskMessage taskMessage = (TaskMessage) message;
-    return op.reduce(source, taskMessage.getKey(), taskMessage.getContent(), flags);
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.reduce(source,
+        taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
   @Override
@@ -97,7 +105,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage(object,
+      TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
@@ -107,5 +115,20 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       }
       return true;
     }
+  }
+
+  @Override
+  public void close() {
+    op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
+  }
+
+  @Override
+  public boolean isComplete() {
+    return !op.hasPending();
   }
 }

@@ -32,14 +32,15 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.master.JobMaster;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.server.JobMaster;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerController;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
+import edu.iu.dsc.tws.rsched.schedulers.mesos.driver.MesosScaler;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
@@ -68,7 +69,8 @@ public final class MesosJobMasterStarter {
         "/persistent-volume/logs", "master");
     logger.initLogging();
 
-    MesosWorkerController workerController = null;
+    edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController controller;
+    controller = new edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController(config);
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
           + jobName + ".job");
 //    try {
@@ -77,7 +79,7 @@ public final class MesosJobMasterStarter {
 //      LOG.info("Initializing with zookeeper");
 //      workerController.initializeWithZooKeeper();
 //      LOG.info("Waiting for all workers to join");
-//      workerController.waitForAllWorkersToJoin(
+//      workerController.getAllWorkers(
 //          ZKContext.maxWaitTimeForAllWorkersToJoin(config));
 //      LOG.info("Everyone has joined");
 ////      //container.execute(worker.config, id, null, workerController, null);
@@ -91,8 +93,8 @@ public final class MesosJobMasterStarter {
     ZKJobMasterRegistrar registrar = null;
     try {
       registrar = new ZKJobMasterRegistrar(config,
-          Inet4Address.getLocalHost().getHostAddress(), 2023);
-      LOG.info("JobMaster REGISTERED:");
+          Inet4Address.getLocalHost().getHostAddress(), 11011);
+      LOG.info("JobMaster REGISTERED..:" + Inet4Address.getLocalHost().getHostAddress());
     } catch (UnknownHostException e) {
       LOG.info("JobMaster CAN NOT BE REGISTERED:");
       e.printStackTrace();
@@ -110,11 +112,15 @@ public final class MesosJobMasterStarter {
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
       JobMaster jobMaster;
       try {
+        String workerIp = Inet4Address.getLocalHost().getHostAddress();
+        JobMasterAPI.NodeInfo jobMasterNodeInfo = MesosContext.getNodeInfo(config, workerIp);
+        IScalerPerCluster clusterScaler = null;
+        MesosScaler mesosScaler = new MesosScaler(config, job, controller);
+        mesosScaler.setFrameWorkId(System.getenv("FRAMEWORK_ID"));
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                terminator, jobName, JobMasterContext.jobMasterPort(config),
-                MesosContext.numberOfContainers(config) - 1);
-        LOG.info("JobMaster host address:" + InetAddress.getLocalHost().getHostAddress());
+                terminator, job, jobMasterNodeInfo, clusterScaler);
+        LOG.info("JobMaster host address...:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
@@ -122,6 +128,7 @@ public final class MesosJobMasterStarter {
     }
 
     waitIndefinitely();
+    registrar.deleteJobMasterZNode();
     registrar.close();
   }
 

@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-import edu.iu.dsc.tws.comms.core.TaskPlan;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * The communication operation interface.
@@ -62,9 +63,14 @@ public interface DataFlowOperation {
   boolean progress();
 
   /**
-   * Clean up the resources
+   * Close the operation
    */
   void close();
+
+  /**
+   * Reset and get the operation to initial state
+   */
+  void clean();
 
   /**
    * Weather the operation doesn't have any pending sends or receives
@@ -75,7 +81,7 @@ public interface DataFlowOperation {
     return false;
   }
 
-  default boolean isDelegeteComplete() {
+  default boolean isDelegateComplete() {
     return false;
   }
 
@@ -95,11 +101,30 @@ public interface DataFlowOperation {
   }
 
   /**
+   * returns the key type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getReceiveKeyType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+
+  /**
    * returns the data type that is associated with the data flow operation
    *
    * @return the MessageType or an UnsupportedOperationException
    */
   default MessageType getDataType() {
+    throw new UnsupportedOperationException("method not supported");
+  }
+
+  /**
+   * returns the data type that is associated with the data flow operation
+   *
+   * @return the MessageType or an UnsupportedOperationException
+   */
+  default MessageType getReceiveDataType() {
     throw new UnsupportedOperationException("method not supported");
   }
 
@@ -117,4 +142,20 @@ public interface DataFlowOperation {
    * @return an unique id as a String
    */
   String getUniqueId();
+
+  /**
+   * Get the sources of the operation
+   * @return source set
+   */
+  default Set<Integer> getSources() {
+    return Collections.emptySet();
+  }
+
+  /**
+   * Get targets of operation
+   * @return target set
+   */
+  default Set<Integer> getTargets() {
+    return Collections.emptySet();
+  }
 }

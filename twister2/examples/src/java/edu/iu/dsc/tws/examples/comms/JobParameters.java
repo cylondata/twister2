@@ -24,6 +24,8 @@ public class JobParameters {
 
   private int iterations;
 
+  private int warmupIterations;
+
   private String operation;
 
   private int containers;
@@ -47,6 +49,8 @@ public class JobParameters {
   private boolean doVerify = false;
 
   private boolean stream = false;
+
+  private boolean window = false;
 
   public JobParameters(int size, int iterations, String col,
                        int containers, List<Integer> taskStages, int gap) {
@@ -78,24 +82,12 @@ public class JobParameters {
     return taskStages;
   }
 
-  public int getGap() {
-    return gap;
-  }
-
   public void setFileName(String fileName) {
     this.fileName = fileName;
   }
 
   public String getFileName() {
     return fileName;
-  }
-
-  public int getOutstanding() {
-    return outstanding;
-  }
-
-  public void setOutstanding(int outstanding) {
-    this.outstanding = outstanding;
   }
 
   public void setThreads(boolean threads) {
@@ -114,10 +106,6 @@ public class JobParameters {
     return dataType;
   }
 
-  public int getInitIterations() {
-    return initIterations;
-  }
-
   public boolean isDoVerify() {
     return doVerify;
   }
@@ -128,6 +116,22 @@ public class JobParameters {
 
   public void setStream(boolean stream) {
     this.stream = stream;
+  }
+
+  public int getWarmupIterations() {
+    return warmupIterations;
+  }
+
+  public int getTotalIterations() {
+    return this.getIterations() + this.getWarmupIterations();
+  }
+
+  public boolean isWindow() {
+    return window;
+  }
+
+  public void setWindow(boolean window) {
+    this.window = window;
   }
 
   public static JobParameters build(Config cfg) {
@@ -145,6 +149,8 @@ public class JobParameters {
     int intItr = Integer.parseInt(cfg.getStringValue(Constants.ARGS_INIT_ITERATIONS));
     boolean doVerify = cfg.getBooleanValue(Constants.ARGS_VERIFY);
     boolean stream = cfg.getBooleanValue(Constants.ARGS_STREAM);
+    boolean window = cfg.getBooleanValue(Constants.ARGS_WINDOW);
+    int warmupItr = cfg.getIntegerValue(Constants.ARGS_WARMPU_ITR, 0);
 
     String[] stages = taskStages.split(",");
     List<Integer> taskList = new ArrayList<>();
@@ -166,6 +172,8 @@ public class JobParameters {
     jobParameters.initIterations = intItr;
     jobParameters.doVerify = doVerify;
     jobParameters.stream = stream;
+    jobParameters.window = window;
+    jobParameters.warmupIterations = warmupItr;
     return jobParameters;
   }
 

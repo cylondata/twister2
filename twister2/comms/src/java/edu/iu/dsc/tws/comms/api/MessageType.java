@@ -11,18 +11,37 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
-//Note: is a new type is added make sure to update the MessageTypeUtils and
-// to update edu.iu.dsc.tws.data.memory.utils.DataMessageType
-public enum MessageType {
-  INTEGER,
-  CHAR,
-  BYTE,
-  MULTI_FIXED_BYTE,
-  STRING,
-  LONG,
-  DOUBLE,
-  OBJECT,
-  BUFFER,
-  EMPTY,
-  SHORT;
+import java.util.Comparator;
+
+public interface MessageType<T, W> {
+
+  /**
+   * All primitive data types should return true, including the boxed types of primitives
+   *
+   * @return true if this type is primitive, false otherwise
+   */
+  boolean isPrimitive();
+
+  /**
+   * For arrays this method should return the size of an element in bytes
+   *
+   * @return the size of an unit.
+   */
+  int getUnitSizeInBytes();
+
+  int getDataSizeInBytes(T data);
+
+  Class<T> getClazz();
+
+  DataPacker<T, W> getDataPacker();
+
+  boolean isArray();
+
+  default T cast(Object data) {
+    return this.getClazz().cast(data);
+  }
+
+  default Comparator<T> getDefaultComparator() {
+    throw new RuntimeException("Comparator is not defined for this type");
+  }
 }

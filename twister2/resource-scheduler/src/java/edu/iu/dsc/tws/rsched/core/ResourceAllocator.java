@@ -11,19 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.logging.LoggingContext;
+import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.exceptions.LauncherException;
@@ -35,6 +37,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 /**
@@ -89,9 +92,13 @@ public class ResourceAllocator {
       configDir = twister2Home + "/conf";
     }
 
-    LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
-        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
     Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+
+    // set log level
+    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(config));
+
+    LOG.log(Level.INFO, String.format("Loaded configuration with twister2_home: %s and "
+        + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));
 
     // if this is a Kubernetes cluster and Kubernetes upload method is set as client-to-pods
     // do not use a regular uploader
@@ -99,7 +106,7 @@ public class ResourceAllocator {
     String uploaderClass = SchedulerContext.uploaderClass(config);
     String nullUploader = "edu.iu.dsc.tws.rsched.uploaders.NullUploader";
     if (clusterType.equalsIgnoreCase(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)
-        && KubernetesContext.uploadMethod(config).equalsIgnoreCase("client-to-pods")
+        && KubernetesContext.clientToPodsUploading(config)
         && !uploaderClass.equalsIgnoreCase(nullUploader)) {
 
       uploaderClass = nullUploader;
@@ -119,28 +126,35 @@ public class ResourceAllocator {
   }
 
   /**
+   * Returns the default configuration
+   */
+  public static Config getDefaultConfig() {
+    return loadConfig(new HashMap<>());
+  }
+
+  /**
    * Create the job files to be uploaded into the cluster
    */
   private String prepareJobFiles(Config config, JobAPI.Job job) {
-    // lets first save the job file
-    // lets write the job into file, this will be used for job creation
-    String tempDirectory = SchedulerContext.jobClientTempDirectory(config) + "/" + job.getJobName();
-    try {
-      Files.createDirectories(Paths.get(tempDirectory));
-    } catch (IOException e) {
-      throw new RuntimeException("Failed to create the base temp directory for job", e);
-    }
 
     String jobJarFile = SchedulerContext.userJobJarFile(config);
     if (jobJarFile == null) {
       throw new RuntimeException("Job file cannot be null");
     }
 
+    // create a temp directory to save the job package
     Path tempDirPath = null;
+    String tempDirPrefix = "twister2-" + job.getJobName() + "-";
     try {
-      tempDirPath = Files.createTempDirectory(Paths.get(tempDirectory), job.getJobName());
+      String jobArchiveTemp = SchedulerContext.jobArchiveTempDirectory(config);
+      if (jobArchiveTemp != null) {
+        tempDirPath = Files.createTempDirectory(Paths.get(jobArchiveTemp), tempDirPrefix);
+      } else {
+        tempDirPath = Files.createTempDirectory(tempDirPrefix);
+      }
     } catch (IOException e) {
-      throw new RuntimeException("Failed to create temp directory: " + tempDirectory, e);
+      throw new RuntimeException("Failed to create temp directory with the prefix: "
+          + tempDirPrefix, e);
     }
 
     // temp directory to put archive files
@@ -155,7 +169,7 @@ public class ResourceAllocator {
     } else {
       String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
       if (twister2CorePackage == null) {
-        throw new RuntimeException("Core package is not specified in the confiuration");
+        throw new RuntimeException("Core package is not specified in the configuration");
       }
       LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
           twister2CorePackage, tempDirPathString));
@@ -263,6 +277,8 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
+    clearTemporaryFiles(jobDirectory);
+
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
@@ -275,9 +291,26 @@ public class ResourceAllocator {
     // make it more formal as such
     launcher.initialize(updatedConfig);
 
-    RequestedResources requestedResources = buildRequestedResources(updatedJob);
-    launcher.launch(requestedResources, updatedJob);
+    launcher.launch(updatedJob);
   }
+
+  /**
+   * clear temporary files
+   *
+   * @param jobDirectory the name of the folder to be cleaned
+   */
+  public void clearTemporaryFiles(String jobDirectory) {
+
+    String cleaningCommand = "rm -rf " + jobDirectory;
+    System.out.println("cleaning  command:" + cleaningCommand);
+    ProcessUtils.runSyncProcess(false,
+        cleaningCommand.split(" "), new StringBuilder(),
+        new File("."), true);
+
+    LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
+  }
+
+
 
   /**
    * Terminate a job
@@ -309,13 +342,4 @@ public class ResourceAllocator {
     }
   }
 
-  private RequestedResources buildRequestedResources(JobAPI.Job job) {
-    JobAPI.JobResources jobResources = job.getJobResources();
-    JobAPI.WorkerComputeResource resource =
-        jobResources.getResourcesList().get(0).getWorkerComputeResource();
-    WorkerComputeResource computeResource =
-        new WorkerComputeResource(resource.getCpu(), resource.getRam(), resource.getDisk());
-
-    return new RequestedResources(job.getNumberOfWorkers(), computeResource);
-  }
 }

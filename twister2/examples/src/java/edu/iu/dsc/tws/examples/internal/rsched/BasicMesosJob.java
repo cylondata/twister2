@@ -18,11 +18,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 
 public final class BasicMesosJob {
   private static final Logger LOG = Logger.getLogger(BasicMesosJob.class.getName());
@@ -34,16 +31,9 @@ public final class BasicMesosJob {
     System.out.println("read config values: " + config.size());
     System.out.println(config);
 
-    int cpus = MesosContext.cpusPerContainer(config);
-    int ramMegaBytes = MesosContext.ramPerContainer(config);
-    double diskGigaBytes = Context.workerVolatileDisk(config);
-    int containers = MesosContext.numberOfContainers(config);
-
     String jobName = SchedulerContext.jobName(config);
     jobName += "-" + System.currentTimeMillis();
     System.out.println("job name is " + jobName);
-    WorkerComputeResource workerComputeResource =
-        new WorkerComputeResource(cpus, ramMegaBytes, diskGigaBytes);
     // build JobConfig
     HashMap<String, Object> configurations = new HashMap<>();
     configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
@@ -51,22 +41,15 @@ public final class BasicMesosJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    String workerClass = SchedulerContext.workerClass(config);
-    System.out.println("Worker class: " + workerClass);
-
     // build the job
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(jobName)
-        .setWorkerClass(workerClass)
-        .setRequestResource(workerComputeResource, containers)
-        .setConfig(jobConfig)
-        .build();
+    Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
+    twister2Job.setJobName(jobName);
 
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
 
     System.out.println("now terminating...");
-    Twister2Submitter.terminateJob(twister2Job.getName(), config);
+    Twister2Submitter.terminateJob(twister2Job.getJobName(), config);
   }
 
 }

@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.collect.HashBiMap;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
@@ -30,9 +31,29 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.Server;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
- * Request response server.
+ * RRServer class is used by Job Master
+ * It works in request/response messaging
+ *
+ * Workers and the client always send a request message, and
+ * JobMaster sends a single response message to each request message
+ *
+ * However, sometimes job master may send messages to workers that are not response messages
+ * For example, the driver in Job Master may send messages to workers
+ * The messages that are initiated from Job Master are one-way messages
+ * They don't have response messages
+ *
+ * Message Format:
+ * RequestID (32 bytes), message type length, message type data, senderID (4 bytes), message data
+ * message type is the class name of the protocol buffer for that message
+ *
+ * RequestID is generated in request senders (workers or the client),
+ * and the same requestID is used in the response message.
+ *
+ * When job master sends a message that is not a response to a request,
+ * it uses the DUMMY_REQUEST_ID as the requestID.
  */
 public class RRServer {
   private static final Logger LOG = Logger.getLogger(RRServer.class.getName());
@@ -40,9 +61,19 @@ public class RRServer {
   private Server server;
 
   /**
-   * Client id to channel
+   * We keep track of connected channels here to make sure we close them
    */
-  private List<SocketChannel> socketChannels = new ArrayList<>();
+  private List<SocketChannel> connectedChannels = new ArrayList<>();
+
+  /**
+   * worker channels with workerIDs
+   */
+  private HashBiMap<SocketChannel, Integer> workerChannels = HashBiMap.create();
+
+  /**
+   * the client channel,
+   */
+  private SocketChannel clientChannel;
 
   /**
    * Keep track of the request handler using protocol buffer message types
@@ -60,27 +91,42 @@ public class RRServer {
   private Map<RequestID, SocketChannel> requestChannels = new HashMap<>();
 
   /**
-   * Keep track of request id to worker
+   * Job Master ID
    */
-  private Map<RequestID, Integer> requestToWorkers = new HashMap<>();
+  private int serverID;
 
   /**
-   * The worker id
+   * The client id
    */
-  private int workerId;
+  public static final int CLIENT_ID = -100;
 
   /**
    * Connection handler
    */
   private ConnectHandler connectHandler;
 
+  /**
+   * when register message is received from a worker that will get its workerID from Job Master
+   * we keep its channel on this variable
+   * then WorkerMonitor calls setWorkerChannel method and set the id of that channel
+   */
+  private SocketChannel workerChannelToRegister;
+
+  /**
+   * The loop that executes the selector
+   */
   private Progress loop;
 
-  public RRServer(Config cfg, String host, int port, Progress looper,
-                  int wId, ConnectHandler cHandler) {
+  /**
+   * We keep track of pending send count to determine weather all the sends are completed
+   */
+  private int pendingSendCount = 0;
+
+  public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
+                  ConnectHandler cHandler) {
     this.connectHandler = cHandler;
-    this.workerId = wId;
     this.loop = looper;
+    this.serverID = serverID;
     server = new Server(cfg, host, port, loop, new Handler(), false);
   }
 
@@ -98,63 +144,120 @@ public class RRServer {
   }
 
   public void stopGraceFully(long waitTime) {
-    server.stopGraceFully(waitTime);
+    // now lets wait if there are messages pending
+    long start = System.currentTimeMillis();
+
+    boolean pending;
+    long elapsed;
+    do {
+      loop.loop();
+      pending = server.hasPending();
+      elapsed = System.currentTimeMillis() - start;
+    } while ((pending || pendingSendCount != 0 || connectedChannels.size() > 0)
+        && elapsed < waitTime);
+
+    // after sometime we need to stop
+    stop();
   }
 
   /**
    * Send a response to a request id
-   * @param id request id
+   * @param requestID request id
    * @param message message
    * @return true if response was accepted
    */
-  public boolean sendResponse(RequestID id, Message message) {
-    LOG.log(Level.FINEST, String.format("Using channel %s", new String(id.getId())));
+  public boolean sendResponse(RequestID requestID, Message message) {
 
-    if (!requestChannels.containsKey(id)) {
-      LOG.log(Level.SEVERE, "Trying to send response to non-existing request");
+    if (!requestChannels.containsKey(requestID)) {
+      LOG.log(Level.SEVERE, "Trying to send a response to non-existing request");
       return false;
     }
 
-    SocketChannel channel = requestChannels.get(id);
+    SocketChannel channel = requestChannels.get(requestID);
 
     if (channel == null) {
       LOG.log(Level.SEVERE, "Channel is NULL for response");
     }
 
-    if (!socketChannels.contains(channel)) {
+    if (!workerChannels.containsKey(channel) && !channel.equals(clientChannel)) {
       LOG.log(Level.WARNING, "Failed to send response on disconnected socket");
       return false;
     }
 
-    byte[] data = message.toByteArray();
-    String messageType = message.getDescriptorForType().getFullName();
+    TCPMessage tcpMessage = sendMessage(message, requestID, channel);
 
-    // lets serialize the message
-    int capacity = id.getId().length + data.length + 4 + messageType.getBytes().length + 4;
-    ByteBuffer buffer = ByteBuffer.allocate(capacity);
-    // we send message id, worker id and data
-    buffer.put(id.getId());
-    // pack the name of the message
-    ByteUtils.packString(messageType, buffer);
-    // pack the worker id
-    buffer.putInt(workerId);
-    // pack data
-    buffer.put(data);
-
-    TCPMessage request = server.send(channel, buffer, capacity, 0);
-
-    if (request != null) {
-      requestChannels.remove(id);
+    if (tcpMessage != null) {
+      requestChannels.remove(requestID);
       return true;
     } else {
       return false;
     }
   }
 
+  /**
+   * Send a non-response message to a worker or to the client
+   * @param message message
+   * @return true if response was accepted
+   */
+  public boolean sendMessage(Message message, int targetID) {
+
+    SocketChannel channel;
+    if (targetID == CLIENT_ID) {
+      if (clientChannel == null) {
+        LOG.severe("Trying to send a message to the client, but it has not connected yet.");
+        return false;
+      }
+      channel = clientChannel;
+    } else if (workerChannels.containsValue(targetID)) {
+      channel = workerChannels.inverse().get(targetID);
+    } else {
+      LOG.severe("Trying to send a message to a worker that has not connected yet. workerID: "
+          + targetID);
+      return false;
+    }
+
+    // this is most likely not needed, but just to make sure
+    if (channel == null) {
+      LOG.log(Level.SEVERE, "Channel is NULL for response");
+      return false;
+    }
+
+    // since this is not a request/response message, we put the dummy request id
+    RequestID dummyRequestID = RequestID.DUMMY_REQUEST_ID;
+
+    TCPMessage tcpMessage = sendMessage(message, dummyRequestID, channel);
+
+    return tcpMessage != null;
+  }
+
+  private TCPMessage sendMessage(Message message, RequestID requestID, SocketChannel channel) {
+    byte[] data = message.toByteArray();
+    String messageType = message.getDescriptorForType().getFullName();
+
+    // lets serialize the message
+    int capacity = requestID.getId().length + data.length + messageType.getBytes().length + 8;
+    ByteBuffer buffer = ByteBuffer.allocate(capacity);
+    // we send message id, worker id and data
+    buffer.put(requestID.getId());
+    // pack the name of the message
+    ByteUtils.packString(messageType, buffer);
+    // pack the worker id
+    buffer.putInt(serverID);
+    // pack data
+    buffer.put(data);
+
+    TCPMessage send = server.send(channel, buffer, capacity, 0);
+    if (send != null) {
+      pendingSendCount++;
+    }
+    return send;
+  }
+
   private class Handler implements ChannelHandler {
     @Override
     public void onError(SocketChannel channel) {
-      socketChannels.remove(channel);
+      workerChannels.remove(channel);
+      connectedChannels.remove(channel);
       connectHandler.onError(channel);
 
       loop.removeAllInterest(channel);
@@ -169,33 +272,42 @@ public class RRServer {
 
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
-      socketChannels.add(channel);
+      connectedChannels.add(channel);
       connectHandler.onConnect(channel, status);
     }
 
     @Override
     public void onClose(SocketChannel channel) {
-      socketChannels.remove(channel);
+      workerChannels.remove(channel);
+      connectedChannels.remove(channel);
       connectHandler.onClose(channel);
+
+      if (channel.equals(clientChannel)) {
+        clientChannel = null;
+      }
     }
 
     @Override
     public void onReceiveComplete(SocketChannel channel, TCPMessage readRequest) {
-      // read the request id and worker id
-      // read the id and message
+      if (channel == null) {
+        LOG.log(Level.SEVERE, "Chanel on receive is NULL");
+      }
+
+      // read headers amd the message
       ByteBuffer data = readRequest.getByteBuffer();
-      byte[] id = new byte[RequestID.ID_SIZE];
-      data.get(id);
+
+      // read requestID
+      byte[] requestIDBytes = new byte[RequestID.ID_SIZE];
+      data.get(requestIDBytes);
+      RequestID requestID = RequestID.fromBytes(requestIDBytes);
 
       // unpack the string
       String messageType = ByteUtils.unPackString(data);
 
-      // now get the worker id
-      int clientId = data.getInt();
+      // now get sender worker id
+      int senderID = data.getInt();
 
-      RequestID requestID = RequestID.fromBytes(id);
       Message.Builder builder = messageBuilders.get(messageType);
-
       if (builder == null) {
         throw new RuntimeException("Received response without a registered response");
       }
@@ -204,23 +316,23 @@ public class RRServer {
         builder.clear();
 
         // size of the header
-        int headerLength = 8 + id.length + messageType.getBytes().length;
+        int headerLength = 8 + requestIDBytes.length + messageType.getBytes().length;
         int dataLength = readRequest.getLength() - headerLength;
 
+        // reconstruct protocol buffer message
         byte[] d = new byte[dataLength];
         data.get(d);
-
         builder.mergeFrom(d);
-        Message m = builder.build();
+        Message message = builder.build();
 
-        if (channel == null) {
-          LOG.log(Level.SEVERE, "Chanel on receive is NULL");
-        }
-        LOG.log(Level.FINEST, String.format("Adding channel %s", new String(id)));
+        // save this channel
+        saveChannel(channel, senderID, message);
+
+        LOG.log(Level.FINEST, String.format("Adding channel %s", new String(requestIDBytes)));
         requestChannels.put(requestID, channel);
 
         MessageHandler handler = requestHandlers.get(messageType);
-        handler.onMessage(requestID, clientId, m);
+        handler.onMessage(requestID, senderID, message);
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Failed to build a message", e);
       }
@@ -228,7 +340,82 @@ public class RRServer {
 
     @Override
     public void onSendComplete(SocketChannel channel, TCPMessage writeRequest) {
-
+      pendingSendCount--;
     }
+  }
+
+  /**
+   * add the channel that newly got its register message and its workerID assigned
+   * @param workerID
+   */
+  public void setWorkerChannel(int workerID) {
+
+    // if there is another channel for this worker already, replace it with this one
+    if (workerChannels.inverse().containsKey(workerID)) {
+      LOG.warning(String.format("While the channel for workerID[%d] connected, "
+          + "another channel connected from the same worker. Replacing older one. ", workerID));
+    }
+
+    workerChannels.forcePut(workerChannelToRegister, workerID);
+    workerChannelToRegister = null;
+  }
+
+  /**
+   * remove the channel when the worker is removed
+   * @param workerID
+   */
+  public void removeWorkerChannel(int workerID) {
+    SocketChannel removedChannel = workerChannels.inverse().remove(workerID);
+    if (removedChannel == null) {
+      return;
+    }
+
+    try {
+      removedChannel.close();
+    } catch (IOException e) {
+      LOG.log(Level.WARNING, "Exception when closing the channel: ", e);
+    }
+  }
+
+  /**
+   * save if it is a new channel
+   * if it is a client channel, save it in that variable
+   * if it is a new worker channel that will get its id from the job master
+   * save it in the temporary variable
+   * otherwise add it to the channel list
+   */
+  private void saveChannel(SocketChannel channel, int senderID, Message message) {
+
+    // if the channel already exist, do nothing
+    if (workerChannels.containsKey(channel)) {
+      return;
+    }
+
+    // if it is the client
+    // set it, no need to check whether it is already set
+    // since it does not harm setting again
+    if (senderID == CLIENT_ID) {
+      clientChannel = channel;
+      LOG.info("Message received from submitting client. Channel set.");
+      return;
+    }
+
+    // if this is RegisterWorker message and JobMaster assigns workerIDs
+    // keep the channel in the variable
+    if (senderID == RRClient.WORKER_UNASSIGNED_ID
+        && message instanceof JobMasterAPI.RegisterWorker) {
+
+      this.workerChannelToRegister = channel;
+      return;
+    }
+
+    // if there is already a channel for this worker,
+    // replace it with this one
+    if (workerChannels.inverse().containsKey(senderID)) {
+      LOG.warning(String.format("While there is a channel for workerID[%d], "
+          + "another channel connected from the same worker. Replacing older one. ", senderID));
+    }
+
+    workerChannels.forcePut(channel, senderID);
   }
 }

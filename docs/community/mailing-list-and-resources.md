@@ -4,3 +4,4 @@
 
 **Source Code:** [GitHub](https://github.com/DSC-SPIDAL/twister2)
 
+**Slack Channel:** [Slack]()

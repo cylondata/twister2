@@ -1,0 +1,27 @@
+{
+  "id": "int_comm_many_to_one",
+  "parent": "integration_base_comm",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "${workers},1"
+      }
+    },
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          "\"gather\"",
+          "\"reduce\""
+        ]
+      }
+    }
+  ]
+}

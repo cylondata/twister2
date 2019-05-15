@@ -21,18 +21,22 @@ import java.util.concurrent.BlockingQueue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
  */
-public class TaskBatchInstance implements INodeInstance {
+public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * The actual task executing
    */
@@ -61,6 +65,11 @@ public class TaskBatchInstance implements INodeInstance {
 
   /**
    * The globally unique task id
+   */
+  private int globalTaskId;
+
+  /**
+   * Task id
    */
   private int taskId;
 
@@ -107,12 +116,12 @@ public class TaskBatchInstance implements INodeInstance {
   /**
    * Output edges
    */
-  private Set<String> outputEdges = new HashSet<>();
+  private Map<String, String> outputEdges;
 
   /**
    * Input edges
    */
-  private Set<String> inputEdges = new HashSet<>();
+  private Map<String, String> inputEdges;
 
   /**
    * Task context
@@ -129,16 +138,28 @@ public class TaskBatchInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * The task schedule
+   */
+  private TaskSchedulePlan taskSchedule;
+
+  /**
+   * Keep track of syncs received
+   */
+  private Set<String> syncReceived = new HashSet<>();
 
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
-                           int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                           Set<String> inEdges, Set<String> outEdges) {
+                           int taskId, int globalTaskId, int tIndex, int parallel,
+                           int wId, Map<String, Object> cfgs,
+                           Map<String, String> inEdges, Map<String, String> outEdges,
+                           TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.taskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
@@ -148,13 +169,14 @@ public class TaskBatchInstance implements INodeInstance {
     this.outputEdges = outEdges;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.taskSchedule = taskSchedule;
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    taskContext = new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs);
-    task.prepare(config, taskContext);
+    taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
+    task.prepare(cfg, taskContext);
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -172,16 +194,16 @@ public class TaskBatchInstance implements INodeInstance {
       while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
         IMessage m = inQueue.poll();
         task.execute(m);
-        state.set(InstanceState.EXECUTING);
+        state.addState(InstanceState.EXECUTING);
       }
 
       // for compute we don't have to have the context done as when the inputs finish and execution
       // is done, we are done executing
       // progress in communication
-      boolean needsFurther = communicationProgress(inParOps);
+      boolean needsFurther = progressCommunication(inParOps);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && !needsFurther && inQueue.isEmpty()) {
-        state.set(InstanceState.EXECUTION_DONE);
+      if (state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty()) {
+        state.addState(InstanceState.EXECUTION_DONE);
       }
     }
 
@@ -194,7 +216,7 @@ public class TaskBatchInstance implements INodeInstance {
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
-        if (op.send(taskId, message, flags)) {
+        if (op.send(globalTaskId, message, flags)) {
           outQueue.poll();
         } else {
           // no point progressing further
@@ -207,25 +229,35 @@ public class TaskBatchInstance implements INodeInstance {
     if (state.isSet(InstanceState.EXECUTION_DONE) && outQueue.isEmpty()
         && state.isNotSet(InstanceState.OUT_COMPLETE)) {
       for (IParallelOperation op : outParOps.values()) {
-        op.finish(taskId);
+        op.finish(globalTaskId);
       }
-      state.set(InstanceState.OUT_COMPLETE);
+      state.addState(InstanceState.OUT_COMPLETE);
     }
 
     // lets progress the communication
-    boolean needsFurther = communicationProgress(outParOps);
+    boolean needsFurther = progressCommunication(outParOps);
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE) && !needsFurther) {
-      state.set(InstanceState.SENDING_DONE);
+    if (state.isSet(InstanceState.OUT_COMPLETE)) {
+      state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);
   }
 
+  public boolean sync(String edge, byte[] value) {
+    syncReceived.add(edge);
+    if (syncReceived.equals(inParOps.keySet())) {
+      state.addState(InstanceState.SYNCED);
+      syncReceived.clear();
+    }
+    return true;
+  }
+
   /**
    * Progress the communication and return weather we need to further progress
+   *
    * @return true if further progress is needed
    */
-  public boolean communicationProgress(Map<String, IParallelOperation> ops) {
+  public boolean progressCommunication(Map<String, IParallelOperation> ops) {
     boolean allDone = true;
     for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
       if (e.getValue().progress()) {
@@ -236,13 +268,47 @@ public class TaskBatchInstance implements INodeInstance {
   }
 
   @Override
+  public boolean isComplete() {
+    boolean complete = true;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      if (!e.getValue().isComplete()) {
+        complete = false;
+      }
+    }
+
+    return complete;
+  }
+
+  @Override
   public int getId() {
-    return taskId;
+    return globalTaskId;
   }
 
   @Override
   public INode getNode() {
     return task;
+  }
+
+  @Override
+  public void close() {
+    if (task instanceof Closable) {
+      ((Closable) task).close();
+    }
+  }
+
+  @Override
+  public void reset() {
+    this.taskContext.reset();
+    if (task instanceof Closable) {
+      ((Closable) task).refresh();
+    }
+    state = new InstanceState(InstanceState.INIT);
   }
 
   public BlockingQueue<IMessage> getInQueue() {

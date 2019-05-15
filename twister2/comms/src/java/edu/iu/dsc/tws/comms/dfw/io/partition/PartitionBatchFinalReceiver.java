@@ -11,27 +11,20 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.DataFlowPartition;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
-public class PartitionBatchFinalReceiver implements MessageReceiver {
+public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionBatchFinalReceiver.class.getName());
 
   /**
@@ -40,36 +33,9 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
   private BulkReceiver receiver;
 
   /**
-   * The executor
+   * Keep the list of tuples for each target
    */
-  protected int executor;
-
-  /**
-   * Keep the destination messages
-   */
-  private Map<Integer, List<Object>> targetMessages = new HashMap<>();
-
-  /**
-   * The dataflow operation
-   */
-  private DataFlowOperation operation;
-
-  /**
-   * The lock for excluding onMessage and communicationProgress
-   */
-  private Lock lock = new ReentrantLock();
-
-  /**
-   * These sources called onFinished
-   */
-  private Map<Integer, Set<Integer>> onFinishedSources = new HashMap<>();
-
-  /**
-   * The worker id
-   */
-  private int thisWorker;
-
-  private Set<Integer> sources;
+  private Map<Integer, List<Object>> readyToSend = new HashMap<>();
 
   public PartitionBatchFinalReceiver(BulkReceiver receiver) {
     this.receiver = receiver;
@@ -77,87 +43,57 @@ public class PartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    executor = op.getTaskPlan().getThisExecutor();
-    thisWorker = op.getTaskPlan().getThisExecutor();
-    this.operation = op;
-    this.sources = ((DataFlowPartition) op).getSources();
-
-    // lists to keep track of messages for destinations
-    for (int d : expectedIds.keySet()) {
-      targetMessages.put(d, new ArrayList<>());
-      onFinishedSources.put(d, new HashSet<>());
-    }
+    super.init(cfg, op, expectedIds);
+    receiver.init(cfg, expectedIds.keySet());
   }
 
-  /**
-   * All message that come to the partial receiver are handled by this method. Since we currently
-   * do not have a need to know the exact source at the receiving end for the parition operation
-   * this method uses a representative source that is used when forwarding the message to its true
-   * target
-   *
-   * @param src the source of the message
-   * @param path the path that is taken by the message, that is intermediate targets
-   * @param target the target of this receiver
-   * @param flags the communication flags
-   * @param object the actual message
-   * @return true if the message was successfully forwarded or queued.
-   */
   @Override
-  public boolean onMessage(int src, int path, int target, int flags, Object object) {
-    lock.lock();
-    try {
-      Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(target);
-      if ((flags & MessageFlags.END) == MessageFlags.END) {
-        if (onFinishedSrcsTarget.contains(src)) {
-          LOG.log(Level.WARNING,
-              String.format("%d Duplicate finish from source id %d", this.thisWorker, src));
-        } else {
-          onFinishedSrcsTarget.add(src);
-        }
-        return true;
-      }
-
-      List<Object> targetMsgList = targetMessages.get(target);
-      if (targetMsgList == null) {
-        throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
-      }
-      if (object instanceof List) {
-        targetMsgList.addAll((Collection<?>) object);
-      } else {
-        targetMsgList.add(object);
-      }
-    } finally {
-      lock.unlock();
+  protected void merge(int dest, Queue<Object> dests) {
+    if (!readyToSend.containsKey(dest)) {
+      readyToSend.put(dest, new AggregatedObjects<>(dests));
+    } else {
+      List<Object> ready = readyToSend.get(dest);
+      ready.addAll(dests);
     }
+    dests.clear();
+  }
+
+  @Override
+  protected boolean sendToTarget(int source, int target) {
+    List<Object> values = readyToSend.get(target);
+
+    if (values == null || values.isEmpty()) {
+      return false;
+    }
+
+    if (receiver.receive(target, values.iterator())) {
+      readyToSend.remove(target);
+    } else {
+      return false;
+    }
+
     return true;
   }
 
   @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
-    lock.lock();
-    try {
-      for (Map.Entry<Integer, Set<Integer>> entry : onFinishedSources.entrySet()) {
-        Set<Integer> onFinishedSrcsTarget = onFinishedSources.get(entry.getKey());
-
-        if (operation.isDelegeteComplete()
-            && onFinishedSrcsTarget.equals(sources)) {
-          Iterator<Map.Entry<Integer, List<Object>>> it = targetMessages.entrySet().iterator();
-          while (it.hasNext()) {
-            Map.Entry<Integer, List<Object>> e = it.next();
-            if (receiver.receive(e.getKey(), e.getValue().iterator())) {
-              it.remove();
-            } else {
-              needsFurtherProgress = true;
-            }
-          }
-        } else {
-          needsFurtherProgress = true;
-        }
+  protected boolean isAllEmpty() {
+    boolean b = super.isAllEmpty();
+    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
+      if (e.getValue().size() > 0) {
+        return false;
       }
-    } finally {
-      lock.unlock();
     }
-    return needsFurtherProgress;
+    return b;
+  }
+
+  @Override
+  protected boolean isFilledToSend(Integer target) {
+    return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && messages.get(target).isEmpty();
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    receiver.sync(target, value);
   }
 }

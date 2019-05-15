@@ -17,6 +17,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
+
 /**
  * Used to name tha files in the FileSystem
  */
@@ -176,6 +178,10 @@ public class Path implements Serializable {
    */
   public FileSystem getFileSystem() throws IOException {
     return FileSystem.get(this.toUri());
+  }
+
+  public FileSystem getFileSystem(Config config) throws IOException {
+    return FileSystem.get(this.toUri(), config);
   }
 
   private void initialize(String scheme, String authority, String path) {

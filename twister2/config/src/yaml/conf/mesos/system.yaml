@@ -1,6 +1,5 @@
 ###################################################################
-# Logging related settings
-# for Twister2 workers
+# Logging related settings for Twister2 workers
 ###################################################################
 
 # logging level: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE
@@ -24,7 +23,6 @@ twister2.logging.max.file.size.mb: 100
 # The maximum number of log files for each worker
 twister2.logging.maximum.files: 5
 
-
 ###################################################################
 # Twister2 Job Master related settings
 ###################################################################
@@ -46,6 +44,7 @@ twister2.worker.ping.interval: 10000
 # twister2 job master port number
 # default value is 11111
 twister2.job.master.port: 11011
+#twister2.job.master.port: 2023
 
 # worker to job master response wait time in milliseconds
 # this is for messages that wait for a response from the job master
@@ -71,3 +70,23 @@ twister2.job.master.cpu: 0.2
 twister2.job.master.ram: 1000
 
 twister2.job.master.ip: "149.165.150.81"
+
+###################################################################################
+# WorkerController related config parameters
+###################################################################################
+
+# amount of timeout for all workers to join the job
+# in milli seconds
+twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
+
+# amount of timeout on barriers for all workers to arrive
+# in milli seconds
+twister2.worker.controller.max.wait.time.on.barrier: 100000
+
+###################################################################
+# Dashboard related settings
+###################################################################
+
+# Dashboard server host address and port
+# if this parameter is not specified, then job master will not try to connect to Dashboard
+# twister2.dashboard.host: "http://localhost:8080"

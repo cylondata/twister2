@@ -12,24 +12,29 @@
 package edu.iu.dsc.tws.rsched.core;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class SchedulerContext extends Context {
   public static final String LAUNCHER_CLASS = "twister2.class.launcher";
   public static final String UPLOADER_CLASS = "twister2.class.uploader";
   public static final String WORKER_CLASS = "twister2.job.worker.class";
+  public static final String DRIVER_CLASS = "twister2.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
+  public static final String JOB_ARCHIVE_TEMP_DIR = "twister2.job.archive.temp.dir";
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
 
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  // Temp directory where the files are placed before packing them for upload
-  public static final String JOB_TEMP_DIR = "twister2.client.job.temp.dir";
+  public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
 
   /**
    * These are specified as system properties when deploying a job
@@ -42,7 +47,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.1.0.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.1.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -59,7 +64,15 @@ public class SchedulerContext extends Context {
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
   public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
-  public static final String WORKER_END_SYNC_TIME = "twister2.worker.end.sync.wait.time.ms";
+
+  public static final String RACK_LABEL_KEY = "rack.labey.key";
+  public static final String DATACENTER_LABEL_KEY = "datacenter.labey.key";
+  public static final String RACKS_LIST = "racks.list";
+  public static final String DATACENTERS_LIST = "datacenters.list";
+
+  public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
+
+  public static final String DOWNLOAD_METHOD = "twister2.uploader.download.method";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
@@ -73,8 +86,16 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(WORKER_CLASS);
   }
 
+  public static String driverClass(Config cfg) {
+    return cfg.getStringValue(DRIVER_CLASS);
+  }
+
   public static String packagesPath(Config cfg) {
     return cfg.getStringValue(TWISTER2_PACKAGES_PATH);
+  }
+
+  public static String jobArchiveTempDirectory(Config cfg) {
+    return cfg.getStringValue(JOB_ARCHIVE_TEMP_DIR);
   }
 
   public static String temporaryPackagesPath(Config cfg) {
@@ -83,7 +104,7 @@ public class SchedulerContext extends Context {
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core-0.1.0.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -96,10 +117,6 @@ public class SchedulerContext extends Context {
 
   public static String jobPackageFileName(Config cfg) {
     return cfg.getStringValue(JOB_PACKAGE_FILENAME, JOB_PACKAGE_FILENAME_DEFAULT);
-  }
-
-  public static String jobClientTempDirectory(Config cfg) {
-    return cfg.getStringValue(JOB_TEMP_DIR, "/tmp");
   }
 
   public static String userJobJarFile(Config cfg) {
@@ -125,13 +142,6 @@ public class SchedulerContext extends Context {
     return persistentVolumePerWorker(cfg) > 0;
   }
 
-  /**
-   * if workerVolatileDisk is more than zero, return true, otherwise false
-   */
-  public static boolean volatileDiskRequested(Config cfg) {
-    return workerVolatileDisk(cfg) > 0;
-  }
-
   public static String createJobDescriptionFileName(String jobName) {
     return jobName + ".job";
   }
@@ -145,5 +155,54 @@ public class SchedulerContext extends Context {
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
   }
 
+  public static String downloadMethod(Config cfg) {
+    return cfg.getStringValue(DOWNLOAD_METHOD);
+  }
+  public static List<String> additionalPorts(Config cfg) {
+    return cfg.getStringList(ADDITIONAL_PORTS);
+  }
+
+  public static int numberOfAdditionalPorts(Config cfg) {
+    List<String> portNameList = additionalPorts(cfg);
+    return portNameList == null ? 0 : portNameList.size();
+  }
+
+  public static JobMasterAPI.NodeInfo getNodeInfo(Config cfg, String nodeIP) {
+
+    List<Map<String, List<String>>> rackList =
+        cfg.getListOfMapsWithListValues(RACKS_LIST);
+
+    String rack = findValue(rackList, nodeIP);
+    if (rack == null) {
+      return NodeInfoUtils.createNodeInfo(nodeIP, null, null);
+    }
+
+    List<Map<String, List<String>>> dcList =
+        cfg.getListOfMapsWithListValues(DATACENTERS_LIST);
+
+    String datacenter = findValue(dcList, rack);
+    return NodeInfoUtils.createNodeInfo(nodeIP, rack, datacenter);
+  }
+
+  /**
+   * find the given String value in the inner List
+   * return the key for that Map
+   * @return
+   */
+  private static String findValue(List<Map<String, List<String>>> outerList, String value) {
+
+    for (Map<String, List<String>> map: outerList) {
+      for (String mapKey: map.keySet()) {
+        List<String> innerList = map.get(mapKey);
+        for (String listItem: innerList) {
+          if (listItem.equals(value)) {
+            return mapKey;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
 
 }

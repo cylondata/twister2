@@ -13,17 +13,19 @@ package edu.iu.dsc.tws.examples.internal.task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.op.Communicator;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
@@ -32,49 +34,68 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 
 public final class TaskUtils {
+  private static final Logger LOG = Logger.getLogger(TaskUtils.class.getName());
+
   private TaskUtils() {
   }
 
-  public static void executeBatch(Config config, AllocatedResources resources,
+  public static void executeBatch(Config config, int workerID,
                                   DataFlowTaskGraph graph, IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    WorkerPlan workerPlan = null;
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network));
+    TWSChannel network = Network.initializeChannel(config, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, resources.getWorkerId(),
-        plan, network, OperationMode.BATCH);
-    executor.execute();
+    Executor executor = new Executor(config, workerID,
+        network, OperationMode.BATCH);
+    executor.execute(plan);
   }
 
-  public static void execute(Config config, AllocatedResources resources, DataFlowTaskGraph graph,
+  public static void execute(Config config, int workerID, DataFlowTaskGraph graph,
                              IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan(resources);
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    WorkerPlan workerPlan = createWorkerPlan(workerList);
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
-    TWSChannel network = Network.initializeChannel(config, workerController, resources);
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(resources,
-        new Communicator(config, network));
+    TWSChannel network = Network.initializeChannel(config, workerController);
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
+        workerList, new Communicator(config, network));
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
-    Executor executor = new Executor(config, resources.getWorkerId(), plan, network);
-    executor.execute();
+    Executor executor = new Executor(config, workerID, network);
+    executor.execute(plan);
   }
 
-  public static WorkerPlan createWorkerPlan(AllocatedResources resourcePlan) {
+  public static WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (WorkerComputeResource resource : resourcePlan.getWorkerComputeResources()) {
-      Worker w = new Worker(resource.getId());
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }
 
     return new WorkerPlan(workers);
   }
+
 }

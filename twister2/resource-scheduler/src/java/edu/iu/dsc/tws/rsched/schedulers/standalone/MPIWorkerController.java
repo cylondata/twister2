@@ -16,30 +16,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class MPIWorkerController implements IWorkerController {
   private int thisWorkerID;
 
-  private Map<Integer, WorkerNetworkInfo> networkInfoMap = new HashMap<>();
+  private Map<Integer, JobMasterAPI.WorkerInfo> networkInfoMap = new HashMap<>();
 
-  public MPIWorkerController(int thisWorkerID, Map<Integer, String> processNames) {
+  private Map<String, Object> runtimeObjects = new HashMap<>();
+
+  public MPIWorkerController(int thisWorkerID, Map<Integer, JobMasterAPI.WorkerInfo> processNames) {
     this.thisWorkerID = thisWorkerID;
-    for (Map.Entry<Integer, String> e : processNames.entrySet()) {
-      networkInfoMap.put(e.getKey(), new WorkerNetworkInfo(e.getValue(), 0, e.getKey(),
-          new NodeInfo(e.getValue(), null, null)));
-    }
+    this.networkInfoMap = processNames;
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfo() {
+  public JobMasterAPI.WorkerInfo getWorkerInfo() {
     return networkInfoMap.get(thisWorkerID);
   }
 
   @Override
-  public WorkerNetworkInfo getWorkerNetworkInfoForID(int id) {
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
     return networkInfoMap.get(id);
   }
 
@@ -49,17 +48,25 @@ public class MPIWorkerController implements IWorkerController {
   }
 
   @Override
-  public List<WorkerNetworkInfo> getWorkerList() {
+  public List<JobMasterAPI.WorkerInfo> getJoinedWorkers() {
     return new ArrayList<>(networkInfoMap.values());
   }
 
   @Override
-  public List<WorkerNetworkInfo> waitForAllWorkersToJoin(long timeLimitMilliSec) {
+  public List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException {
     return new ArrayList<>(networkInfoMap.values());
   }
 
   @Override
-  public boolean waitOnBarrier(long timeLimitMilliSec) {
-    return false;
+  public void waitOnBarrier() throws TimeoutException {
+  }
+
+  public void add(String name, Object obj) {
+    runtimeObjects.put(name, obj);
+  }
+
+  @Override
+  public Object getRuntimeObject(String name) {
+    return runtimeObjects.get(name);
   }
 }

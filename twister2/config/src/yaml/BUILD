@@ -15,7 +15,6 @@ filegroup(
     srcs = glob(["conf/slurm/*"]),
 )
 
-
 filegroup(
     name = "conf-standalone-yaml",
     srcs = glob(["conf/standalone/*"]),
@@ -32,6 +31,11 @@ filegroup(
 )
 
 filegroup(
+    name = "conf-kubernetes-deployment-yaml",
+    srcs = glob(["conf/kubernetes/deployment/*"]),
+)
+
+filegroup(
     name = "conf-mesos-yaml",
     srcs = glob(["conf/mesos/*"]),
 )
@@ -39,4 +43,9 @@ filegroup(
 filegroup(
     name = "conf-nomad-yaml",
     srcs = glob(["conf/nomad/*"]),
+)
+
+filegroup(
+    name = "conf-dashboard",
+    srcs = glob(["conf/dashboard/*"]),
 )

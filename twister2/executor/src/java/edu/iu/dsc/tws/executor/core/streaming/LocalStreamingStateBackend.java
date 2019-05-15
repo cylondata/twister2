@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.state_backend.FsCheckpointStreamFactory;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;

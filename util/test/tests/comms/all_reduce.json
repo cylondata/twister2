@@ -1,0 +1,16 @@
+{
+  "id": "comms_all_reduce",
+  "parent": "all_to_all_base",
+  "resultsFile": "comms_all_reduce.csv",
+  "args": [
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "\"allreduce\""
+      }
+    }
+  ]
+}

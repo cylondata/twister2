@@ -1,0 +1,26 @@
+{
+  "id": "int_task_all_to_all",
+  "parent": "integration_base_task",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "1,${workers}"
+      }
+    },
+    {
+      "id": "op",
+      "name": "Operation",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          "\"bcast\""
+        ]
+      }
+    }
+  ]
+}

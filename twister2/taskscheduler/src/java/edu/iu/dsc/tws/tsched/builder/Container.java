@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.HashSet;
 
+import edu.iu.dsc.tws.task.api.schedule.Resource;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.Resource;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * This class is for the logical representation of container and it has getter and setter
@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class Container {
 
   private int containerId;
-  private HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances;
+  private HashSet<TaskInstancePlan> taskInstances;
   private Resource resource;
   private int paddingPercentage;
 
@@ -46,12 +46,8 @@ public class Container {
     this.containerId = containerId;
   }
 
-  public HashSet<TaskSchedulePlan.TaskInstancePlan> getTaskInstances() {
+  public HashSet<TaskInstancePlan> getTaskInstances() {
     return taskInstances;
-  }
-
-  public void setTaskInstances(HashSet<TaskSchedulePlan.TaskInstancePlan> taskInstances) {
-    this.taskInstances = taskInstances;
   }
 
   public Resource getResource() {
@@ -62,23 +58,14 @@ public class Container {
     this.resource = resource;
   }
 
-  public int getPaddingPercentage() {
-    return paddingPercentage;
-  }
-
-  public void setPaddingPercentage(int paddingPercentage) {
-    this.paddingPercentage = paddingPercentage;
-  }
-
   /**
    * It will add the task instance plan to the container if the required and available resource
    * meets the requirements. It will call @assertHasSpace to validate that whether the resource
    * satisfies the required value.
-   *
    * @param taskInstancePlan
    * @throws TaskSchedulerException
    */
-  void add(TaskSchedulePlan.TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
+  void add(TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
       throw new ScheduleException(String.format(
           "Instance %s already exists in container %s", taskInstancePlan, toString()));
@@ -120,7 +107,7 @@ public class Container {
     double usedRam = 0.0;
     double usedCpuCores = 0.0;
     double usedDisk = 0.0;
-    for (TaskSchedulePlan.TaskInstancePlan instancePlan : this.taskInstances) {
+    for (TaskInstancePlan instancePlan : this.taskInstances) {
       Resource instancePlanResource = instancePlan.getResource();
       usedRam += instancePlanResource.getRam();
       usedCpuCores += instancePlanResource.getCpu();

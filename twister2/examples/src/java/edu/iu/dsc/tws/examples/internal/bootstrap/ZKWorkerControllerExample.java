@@ -24,12 +24,17 @@
 package edu.iu.dsc.tws.examples.internal.bootstrap;
 
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.resource.ComputeResourceUtils;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
@@ -118,47 +123,51 @@ public final class ZKWorkerControllerExample {
     int port = 1000 + (int) (Math.random() * 1000);
     String workerAddress = "localhost:" + port;
 
-    NodeInfo nodeInfo = new NodeInfo("node1.on.hostx", "rack1", "dc01");
-    ZKWorkerController zkWorkerController =
-        new ZKWorkerController(cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo);
+    JobMasterAPI.NodeInfo nodeInfo =
+        NodeInfoUtils.createNodeInfo("node1.on.hostx", "rack1", "dc01");
+    JobAPI.ComputeResource computeResource =
+        ComputeResourceUtils.createComputeResource(0, 1, 1024, 2);
+
+    ZKWorkerController zkWorkerController = new ZKWorkerController(
+        cnfg, jobName, workerAddress, numberOfWorkers, nodeInfo, computeResource);
+
     zkWorkerController.initialize();
 
-    List<WorkerNetworkInfo> workerList = zkWorkerController.getWorkerList();
-    LOG.info("Initial worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+    List<JobMasterAPI.WorkerInfo> workerList = zkWorkerController.getJoinedWorkers();
+    LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
-    workerList = zkWorkerController.waitForAllWorkersToJoin(100000);
-    LOG.info(WorkerNetworkInfo.workerListAsString(workerList));
+    try {
+      workerList = zkWorkerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the first barrier -------------------------- ");
     long timeLimit = 200000;
-    boolean allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
-    if (allWorkersReachedBarrier) {
+
+    try {
+      zkWorkerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
-    } else {
-      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
-          + " Exiting ....... ");
-      zkWorkerController.close();
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     workerList = zkWorkerController.getCurrentWorkers();
-    LOG.info("Current worker list: \n" + WorkerNetworkInfo.workerListAsString(workerList));
+    LOG.info("Current worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     sleeeep((long) (Math.random() * 10000));
 
     LOG.info("Waiting on the second barrier -------------------------- ");
-    allWorkersReachedBarrier = zkWorkerController.waitOnBarrier(timeLimit);
-    if (allWorkersReachedBarrier) {
+    try {
+      zkWorkerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
-    } else {
-      LOG.info("Not all workers reached the barrier on the given timelimit: " + timeLimit + "ms"
-          + " Exiting ....... ");
-      zkWorkerController.close();
-      return;
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     // sleep some random amount of time before closing

@@ -26,10 +26,6 @@ public final class ZKContext extends Context {
   // example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
   public static final String ZOOKEEPER_SERVER_ADDRESSES = "twister2.zookeeper.server.addresses";
 
-  public static final int MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN_DEFAULT = 100000;
-  public static final String MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN =
-      "twister2.zookeeper.max.wait.time.for.all.workers.to.join";
-
   private ZKContext() { }
 
   public static String rootNode(Config cfg) {
@@ -39,11 +35,5 @@ public final class ZKContext extends Context {
   public static String zooKeeperServerAddresses(Config cfg) {
     return cfg.getStringValue(ZOOKEEPER_SERVER_ADDRESSES);
   }
-
-  public static int maxWaitTimeForAllWorkersToJoin(Config cfg) {
-    return cfg.getIntegerValue(MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN,
-        MAX_WAIT_TIME_FOR_ALL_WORKERS_TO_JOIN_DEFAULT);
-  }
-
 
 }

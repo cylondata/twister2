@@ -25,9 +25,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
 
-public abstract class SinkCheckpointableTask extends BaseStreamSink {
+public abstract class SinkCheckpointableTask extends BaseSink {
   private static final long serialVersionUID = -254264903890214728L;
 
   private static final Logger LOG = Logger.getLogger(SinkCheckpointableTask.class.getName());

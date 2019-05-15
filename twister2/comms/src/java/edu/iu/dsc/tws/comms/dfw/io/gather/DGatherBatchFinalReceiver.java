@@ -21,15 +21,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
-import edu.iu.dsc.tws.comms.dfw.DataFlowGather;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
-import edu.iu.dsc.tws.comms.utils.KryoSerializer;
+import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 
 public class DGatherBatchFinalReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(
@@ -69,7 +69,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
   /**
    * The actual operation
    */
-  private DataFlowGather gather;
+  private DataFlowOperation gather;
 
   /**
    * Serializer used to convert between objects and byte streams
@@ -84,10 +84,10 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
 
-    gather = (DataFlowGather) op;
+    gather = op;
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
@@ -115,7 +115,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
     boolean canAdd = true;
     Queue<Object> m = messages.get(target).get(source);
     Map<Integer, Boolean> finishedMessages = finished.get(target);
-    if ((flags & MessageFlags.END) == MessageFlags.END) {
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       finishedMessages.put(source, true);
       return true;
     }
@@ -123,7 +123,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
       canAdd = false;
     } else {
       m.add(object);
-      if ((flags & MessageFlags.LAST) == MessageFlags.LAST) {
+      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
         finishedMessages.put(source, true);
       }
     }
@@ -167,7 +167,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
       }
 
       if (found) {
-        List<Object> out = new ArrayList<>();
+        List<Object> out = new AggregatedObjects<>();
         for (Map.Entry<Integer, Queue<Object>> e : map.entrySet()) {
           Queue<Object> valueList = e.getValue();
           if (valueList.size() > 0) {
@@ -181,7 +181,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
           }
         }
         for (Object o : out) {
-          byte[] d = DataSerializer.serialize(o, kryoSerializer);
+          byte[] d = gather.getDataType().getDataPacker().packToByteArray(o);
           fsMerger.add(d, d.length);
         }
       } else {
@@ -202,5 +202,17 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
   private String getOperationName(int target) {
     String uid = gather.getUniqueId();
     return "gather-" + uid + "-" + target + "-" + UUID.randomUUID().toString();
+  }
+
+  @Override
+  public void close() {
+    for (Shuffle s : sortedMergers.values()) {
+      s.clean();
+    }
+  }
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    bulkReceiver.sync(target, value);
   }
 }

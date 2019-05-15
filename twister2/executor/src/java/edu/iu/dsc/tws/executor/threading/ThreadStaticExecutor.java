@@ -54,7 +54,7 @@ public class ThreadStaticExecutor {
     tasks.addAll(nodes.values());
 
     for (INodeInstance node : tasks) {
-      node.prepare();
+      node.prepare(null);
     }
 
     List<IParallelOperation> parallelOperations = executionPlan.getParallelOperations();

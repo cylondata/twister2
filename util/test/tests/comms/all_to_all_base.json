@@ -1,0 +1,15 @@
+{
+  "id": "all_to_all_base",
+  "parent": "communication_base",
+  "args": [
+    {
+      "id": "stages",
+      "name": "Stages",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": "${workers},${workers}"
+      }
+    }
+  ]
+}

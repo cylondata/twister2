@@ -11,16 +11,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSink;
-import edu.iu.dsc.tws.task.streaming.BaseStreamSource;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
+import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 
+/**
+ * todo keyedgather for streaming is not applicable. This will be removed,
+ * or used only with windowing
+ */
 public class STKeyedGatherExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STKeyedGatherExample.class.getName());
@@ -30,30 +50,69 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
+    DataType keyType = DataType.INTEGER;
+    DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
-    BaseStreamSource g = new KeyedSourceStreamTask(edge);
-    BaseStreamSink r = new KeyedGatherSinkTask();
+    BaseSource g = new SourceTask(edge, true);
+    ISink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BaseStreamSink {
+  protected static class KeyedGatherSinkTask extends KeyedGatherCompute<Integer, int[]>
+      implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
+    private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
+
     private int count = 0;
 
     @Override
-    public boolean execute(IMessage message) {
-      LOG.info("Message Keyed-Gathered : " + message.getContent().getClass().getName());
-      Object object = message.getContent();
-      if (count % jobParameters.getPrintInterval() == 0) {
-        LOG.info("Message Keyed-Gather : " + object.getClass().getName()
-            + ", Count : " + count);
-      }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+        int sinksCount = ctx.getTasksByName(SINK).size();
+        Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
+            .map(TaskInstancePlan::getTaskIndex)
+            .filter(i -> i % sinksCount == ctx.taskIndex())
+            .collect(Collectors.toSet());
+
+        List<Tuple<Integer, int[]>> finalOutput = new ArrayList<>();
+
+        taskIds.forEach(key -> {
+          finalOutput.add(new Tuple<>(key, ints));
+        });
+
+        return finalOutput.iterator();
+      }, new IteratorComparator<>(
+          new TupleComparator<>(
+              IntComparator.getInstance(),
+              IntArrayComparator.getInstance()
+          )
+      ));
+      receiversInProgress.incrementAndGet();
+    }
+
+    @Override
+    public boolean keyedGather(Iterator<Tuple<Integer, int[]>> data) {
       count++;
+      if (count > jobParameters.getWarmupIterations()) {
+        Timing.mark(BenchmarkConstants.TIMING_MESSAGE_RECV, this.timingCondition);
+      }
+
+      if (count == jobParameters.getTotalIterations()) {
+        LOG.info(String.format("%d received keyed-gather %d",
+            context.getWorkerId(), context.globalTaskId()));
+        Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, this.timingCondition);
+        resultsRecorder.writeToCSV();
+        receiversInProgress.decrementAndGet();
+      }
+      this.verified = verifyResults(resultsVerifier, data, null, verified);
       return true;
     }
   }

@@ -1,0 +1,62 @@
+{
+  "id": "communication_base",
+  "directory": {
+    "relativeToRoot": true,
+    "path": ""
+  },
+  "jar": "libexamples-java.jar",
+  "className": "edu.iu.dsc.tws.examples.comms.ExampleMain",
+  "args": [
+    {
+      "id": "itr",
+      "name": "Iterations",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 50000
+      }
+    },
+    {
+      "id": "workers",
+      "name": "Workers",
+      "optional": false,
+      "values": {
+        "type": "array",
+        "array": [
+          32,
+          64,
+          128,
+          256
+        ]
+      }
+    },
+    {
+      "id": "size",
+      "name": "Data Size",
+      "optional": false,
+      "values": {
+        "type": "steps",
+        "from": 256,
+        "to": 8192,
+        "step": 256
+      }
+    },
+    {
+      "id": "warmupitr",
+      "name": "Warmup Iterations",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 10000
+      }
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "optional": false,
+      "values": {
+        "type": "none"
+      }
+    }
+  ]
+}

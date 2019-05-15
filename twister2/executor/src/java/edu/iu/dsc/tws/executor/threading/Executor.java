@@ -12,49 +12,68 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.executor.api.IExecution;
 import edu.iu.dsc.tws.executor.api.IExecutor;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class Executor {
-  private ExecutionPlan executionPlan;
-
-  private TWSChannel channel;
-
-  private OperationMode operationMode;
-
   private Config config;
 
   private int workerId;
 
-  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
-                  TWSChannel channel) {
-    this(cfg, wId, executionPlan, channel, OperationMode.STREAMING);
+  private IExecutor executor;
+
+  public Executor(Config cfg, int wId, TWSChannel channel) {
+    this(cfg, wId, channel, OperationMode.STREAMING);
   }
 
-  public Executor(Config cfg, int wId, ExecutionPlan executionPlan,
-                  TWSChannel channel, OperationMode operationMode) {
-    this.executionPlan = executionPlan;
-    this.channel = channel;
-    this.operationMode = operationMode;
+  public Executor(Config cfg, int wId, TWSChannel channel, OperationMode operationMode) {
     this.config = cfg;
     this.workerId = wId;
+
+    //initialize common thread pool
+    CommonThreadPool.init(config);
+
+    // lets start the execution
+    if (operationMode == OperationMode.STREAMING) {
+      executor = new StreamingSharingExecutor(config, workerId, channel);
+    } else {
+      String batchExecutor = ExecutorContext.getBatchExecutor(config);
+      if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
+        executor = new BatchSharingExecutor(config, workerId, channel);
+      } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
+        executor = new BatchSharingExecutor2(config, workerId, channel);
+      } else {
+        throw new RuntimeException("Un-known batch executor specified - " + batchExecutor);
+      }
+    }
   }
 
   /***
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
-  public boolean execute() {
-    // lets start the execution
-    IExecutor executor;
-    if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingShareingExecutor(workerId);
-    } else {
-      executor = new BatchSharingExecutor(workerId);
-    }
+  public boolean execute(ExecutionPlan executionPlan) {
+    return executor.execute(executionPlan);
+  }
 
-    return executor.execute(config, executionPlan, channel);
+  /***
+   * Communication Channel must be progressed after the task execution model
+   * is initialized. It must be progressed only after execution is instantiated.
+   * */
+  public IExecution iExecute(ExecutionPlan executionPlan) {
+    return executor.iExecute(executionPlan);
+  }
+
+  public boolean waitFor(ExecutionPlan executionPlan) {
+    return executor.waitFor(executionPlan);
+  }
+
+  public void close() {
+    executor.close();
   }
 }

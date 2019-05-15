@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.core.streaming;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,13 +24,15 @@ import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.Snapshot;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
@@ -67,6 +68,11 @@ public class TaskStreamingInstance implements INodeInstance {
 
   /**
    * The globally unique task id
+   */
+  private int globalTaskId;
+
+  /**
+   * The task id
    */
   private int taskId;
 
@@ -115,15 +121,29 @@ public class TaskStreamingInstance implements INodeInstance {
    */
   private int highWaterMark;
 
+  /**
+   * Output edges
+   */
+  private Map<String, String> outputEdges;
+  private TaskSchedulePlan taskSchedule;
+
+  /**
+   * Input edges
+   */
+  private Map<String, String> inputEdges;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
-                               int tId, int tIndex, int parallel, int wId, Map<String, Object> cfgs,
-                               Set<String> inEdges, Set<String> outEdges) {
+                               int taskId, int globalTaskId, int tIndex,
+                               int parallel, int wId, Map<String, Object> cfgs,
+                               Map<String, String> inEdges, Map<String, String> outEdges,
+                               TaskSchedulePlan taskSchedule) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
     this.config = config;
-    this.taskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.taskIndex = tIndex;
     this.parallelism = parallel;
     this.taskName = tName;
@@ -131,6 +151,9 @@ public class TaskStreamingInstance implements INodeInstance {
     this.workerId = wId;
     this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.inputEdges = inEdges;
+    this.outputEdges = outEdges;
+    this.taskSchedule = taskSchedule;
     if (CheckpointContext.getCheckpointRecovery(config)) {
       try {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
@@ -143,10 +166,10 @@ public class TaskStreamingInstance implements INodeInstance {
     }
   }
 
-  public void prepare() {
+  public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(config, new TaskContext(taskIndex, taskId, taskName, parallelism, workerId,
-        outputCollection, nodeConfigs));
+    task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -165,7 +188,7 @@ public class TaskStreamingInstance implements INodeInstance {
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
       IMessage message = inQueue.poll();
       if (message != null) {
-        if ((message.getFlag() & MessageFlags.SYNC) != MessageFlags.SYNC) {
+        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) != MessageFlags.SYNC_BARRIER) {
           task.execute(message);
         } else {
           if (storeSnapshot()) {
@@ -184,12 +207,12 @@ public class TaskStreamingInstance implements INodeInstance {
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         int flags = 0;
-        if ((message.getFlag() & MessageFlags.SYNC) == MessageFlags.SYNC) {
-          message.setFlag(MessageFlags.BARRIER);
-          flags = MessageFlags.BARRIER;
+        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+          message.setFlag(MessageFlags.SYNC_BARRIER);
+          flags = MessageFlags.SYNC_BARRIER;
         }
         // if we successfully send remove
-        if (op.send(taskId, message, flags)) {
+        if (op.send(globalTaskId, message, flags)) {
           outQueue.poll();
         } else {
           break;
@@ -211,6 +234,13 @@ public class TaskStreamingInstance implements INodeInstance {
   @Override
   public INode getNode() {
     return task;
+  }
+
+  @Override
+  public void close() {
+    if (task instanceof Closable) {
+      ((Closable) task).close();
+    }
   }
 
   public BlockingQueue<IMessage> getInQueue() {

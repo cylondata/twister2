@@ -16,13 +16,19 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.examples.task.batch.verifiers.GatherVerifier;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.ISource;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.typed.AllGatherCompute;
 
 public class BTAllGatherExample extends BenchTaskWorker {
 
@@ -33,10 +39,10 @@ public class BTAllGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER;
+    DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new AllGatherSinkTask();
+    ISource g = new SourceTask(edge);
+    ISink r = new AllGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
@@ -44,39 +50,28 @@ public class BTAllGatherExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class AllGatherSinkTask extends BaseBatchSink {
+  protected static class AllGatherSinkTask extends AllGatherCompute<int[]> implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
-    private static int count = 0;
+
+    private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Iterator) {
-        int numberOfElements = 0;
-        int totalValues = 0;
-        Iterator<Object> itr = (Iterator<Object>) message.getContent();
-        while (itr.hasNext()) {
-          Object data = itr.next();
-          numberOfElements++;
-          if (data instanceof int[]) {
-            totalValues += ((int[]) data).length;
-          }
-          if (count % jobParameters.getPrintInterval() == 0) {
-            Object object = message.getContent();
-            experimentData.setOutput(data);
-            try {
-              verify(OperationNames.ALLGATHER);
-            } catch (VerificationException e) {
-              LOG.info("Exception Message : " + e.getMessage());
-            }
-          }
-        }
-        /*if (count % jobParameters.getPrintInterval() == 0) {
-          LOG.info("AllGathered : " + message.getContent().getClass().getName()
-              + " numberOfElements: " + numberOfElements
-              + " total: " + totalValues);
-        }*/
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new GatherVerifier(inputDataArray, ctx, SOURCE, jobParameters);
+    }
 
-      }
+    @Override
+    public boolean allGather(Iterator<Tuple<Integer, int[]>> itr) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received gather %d", context.getWorkerId(),
+          context.globalTaskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, itr, null, verified);
       return true;
     }
   }

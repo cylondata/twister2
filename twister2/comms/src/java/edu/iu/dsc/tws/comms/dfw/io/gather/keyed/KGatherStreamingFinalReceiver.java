@@ -11,12 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 
 /**
  * Keyed reduce final receiver for streaming  mode
@@ -51,10 +54,16 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
   }
 
   @Override
+  public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
+    super.init(cfg, op, expectedIds);
+    this.bulkReceiver.init(cfg, expectedIds.keySet());
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public boolean progress() {
     boolean needsFurtherProgress = false;
-    boolean sourcesFinished = false;
+    boolean sourcesFinished;
     for (int target : messages.keySet()) {
 
       if (batchDone.get(target)) {
@@ -63,27 +72,24 @@ public class KGatherStreamingFinalReceiver extends KGatherStreamingReceiver {
 
       Queue<Object> targetSendQueue = sendQueue.get(target);
       sourcesFinished = isSourcesFinished(target);
-      if (!sourcesFinished && !(dataFlowOperation.isDelegeteComplete()
+      if (!sourcesFinished && !(dataFlowOperation.isDelegateComplete()
           && messages.get(target).isEmpty())) {
         needsFurtherProgress = true;
       }
 
       if (!targetSendQueue.isEmpty()) {
-        List<Object> results = new ArrayList<Object>();
+        List<Object> results = new AggregatedObjects<>();
         Object current;
         while ((current = targetSendQueue.poll()) != null) {
           results.add(current);
         }
         bulkReceiver.receive(target, results.iterator());
-
       }
 
-      if (sourcesFinished && dataFlowOperation.isDelegeteComplete()
+      if (sourcesFinished && dataFlowOperation.isDelegateComplete()
           && targetSendQueue.isEmpty()) {
         batchDone.put(target, true);
       }
-
-
     }
 
     return needsFurtherProgress;

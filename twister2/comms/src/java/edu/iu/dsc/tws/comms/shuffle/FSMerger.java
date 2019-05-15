@@ -24,9 +24,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.types.DataDeserializer;
-import edu.iu.dsc.tws.data.utils.KryoMemorySerializer;
 
 /**
  * Save the records to file system and retrieve them, this is just values, so no
@@ -38,12 +37,12 @@ public class FSMerger implements Shuffle {
   /**
    * Maximum bytes to keep in memory
    */
-  private int maxBytesToKeepInMemory;
+  private long maxBytesToKeepInMemory;
 
   /**
    * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
 
   /**
    * The base folder to work on
@@ -97,7 +96,7 @@ public class FSMerger implements Shuffle {
   /**
    * The kryo serializer
    */
-  private KryoMemorySerializer kryoSerializer;
+  private KryoSerializer kryoSerializer;
 
   private enum FSStatus {
     WRITING,
@@ -106,14 +105,14 @@ public class FSMerger implements Shuffle {
 
   private FSStatus status = FSStatus.WRITING;
 
-  public FSMerger(int maxBytesInMemory, int maxRecsInMemory,
+  public FSMerger(long maxBytesInMemory, long maxRecsInMemory,
                   String dir, String opName, MessageType vType) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxRecordsInMemory = maxRecsInMemory;
     this.folder = dir;
     this.operationName = opName;
     this.valueType = vType;
-    this.kryoSerializer = new KryoMemorySerializer();
+    this.kryoSerializer = new KryoSerializer();
   }
 
   /**
@@ -146,7 +145,7 @@ public class FSMerger implements Shuffle {
 
   private void deserializeObjects() {
     for (int i = 0; i < bytesInMemory.size(); i++) {
-      Object o = DataDeserializer.deserialize(valueType, kryoSerializer, bytesInMemory.get(i));
+      Object o = valueType.getDataPacker().unpackFromByteArray(bytesInMemory.get(i));
       objectsInMemory.add(o);
     }
   }

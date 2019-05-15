@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 public class FsContext extends SchedulerContext {
   public static final String UPLOAD_DIRECTORY = "twister2.uploader.directory";
 
-
   /**
    * Get the directory to upload the file
    * @return full path as a string

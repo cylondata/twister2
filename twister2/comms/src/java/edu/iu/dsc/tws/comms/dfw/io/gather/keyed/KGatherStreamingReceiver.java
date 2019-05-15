@@ -9,11 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +19,9 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
+import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Abstract class that is extended by keyed reduce batch receivers
@@ -36,7 +35,7 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
    * from the send queue we cannot put them back in if the send fails. So the send messages are
    * kept in the variable until the send method returns true.
    */
-  private List<Object> sendList = new ArrayList<>();
+  private List<Object> sendList = new AggregatedObjects<>();
 
   /**
    * Flags associated with the current sendList
@@ -69,16 +68,6 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
   }
 
   /**
-   * Called from the progress method to perform the communication calls to send the queued messages
-   *
-   * @param needsFurtherProgress current state of needsFurtherProgress value
-   * @param sourcesFinished specifies if the sources have completed
-   * @param target the target(which is a source in this instance) from which the messages are sent
-   * @param targetSendQueue the data structure that contains all the message data
-   * @return true if further progress is needed or false otherwise
-   */
-
-  /**
    * saves the given message (or messages if the object is a list) into the messages data structure
    * if possible and rejects the message if the whole message cannot be added to the messages
    * data structure.
@@ -106,22 +95,22 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
       List dataList = (List) object;
       Map<Object, List<Object>> tempList = new HashMap<>();
       for (Object dataEntry : dataList) {
-        KeyedContent keyedContent = (KeyedContent) dataEntry;
+        Tuple tuple = (Tuple) dataEntry;
         //If any of the keys are full the method returns false because partial objects cannot be
         //added to the messages data structure
-        Object key = keyedContent.getKey();
+        Object key = tuple.getKey();
         if (!isFinalBatchReceiver && messagesPerTarget.containsKey(key)
             && messagesPerTarget.get(key).size() >= limitPerKey) {
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
           return false;
         }
         if (tempList.containsKey(key)) {
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.get(key).add(tuple.getValue());
         } else {
-          tempList.put(key, new ArrayList<>());
-          tempList.get(key).add(keyedContent.getValue());
+          tempList.put(key, new AggregatedObjects<>());
+          tempList.get(key).add(tuple.getValue());
 
         }
 
@@ -152,26 +141,27 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
       }
 
     } else {
-      KeyedContent keyedContent = (KeyedContent) object;
-      if (messagesPerTarget.containsKey(keyedContent.getKey())) {
-        if (messagesPerTarget.get(keyedContent.getKey()).size() < limitPerKey
+      Tuple tuple = (Tuple) object;
+      if (messagesPerTarget.containsKey(tuple.getKey())) {
+        if (messagesPerTarget.get(tuple.getKey()).size() < limitPerKey
             || isFinalBatchReceiver) {
           localWindowCount++;
-          return messagesPerTarget.get(keyedContent.getKey()).offer(keyedContent.getValue());
+          return messagesPerTarget.get(tuple.getKey()).offer(tuple.getValue());
         } else {
           LOG.fine(String.format("Executor %d Partial cannot add any further values for key "
               + "needs flush ", executor));
-          moveMessageToSendQueue(target, messagesPerTarget, keyedContent.getKey());
+          moveMessageToSendQueue(target, messagesPerTarget, tuple.getKey());
           return false;
         }
       } else {
         ArrayDeque<Object> messagesPerKey = new ArrayDeque<>();
-        messagesPerKey.add(keyedContent.getValue());
-        messagesPerTarget.put(keyedContent.getKey(), messagesPerKey);
+        messagesPerKey.add(tuple.getValue());
+        messagesPerTarget.put(tuple.getKey(), messagesPerKey);
+        localWindowCount++;
       }
     }
-
     if (localWindowCount > windowSize) {
+
       if (moveMessagesToSendQueue(target, messagesPerTarget)) {
         //TODO: what if the move returns false, do we still set the localWindowCount to zero?
         localWindowCount = 0;
@@ -190,16 +180,15 @@ public abstract class KGatherStreamingReceiver extends KeyedReceiver {
     if (sendList.isEmpty()) {
       while (!targetSendQueue.isEmpty()) {
         if (sourcesFinished && targetSendQueue.size() == 1) {
-          flags = MessageFlags.LAST;
+          flags = MessageFlags.SYNC_MESSAGE;
         }
         sendList.add(targetSendQueue.poll());
       }
     }
 
     if (!sendList.isEmpty()) {
-      if (dataFlowOperation.sendPartial(target, sendList, flags, destination)) {
-        System.out.println("Sent Partial executor : " + executor + "size" + sendList.size());
-        sendList = new ArrayList<>();
+      if (dataFlowOperation.sendPartial(representSource, sendList, flags, target)) {
+        sendList = new AggregatedObjects<>();
         flags = 0;
       } else {
         needsProgress = true;

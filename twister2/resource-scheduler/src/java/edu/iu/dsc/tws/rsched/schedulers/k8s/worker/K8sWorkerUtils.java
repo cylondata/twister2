@@ -12,28 +12,30 @@
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.discovery.NodeInfo;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -63,6 +65,44 @@ public final class K8sWorkerUtils {
         build();
 
     return conf2;
+  }
+
+  /**
+   * In Kubernetes, worker id assignment by Job Master is not supported
+   * We assign worker ids based on statefulset indexes, pod indexes and container indexes
+   * In OpenMPI jobs, we assign workerIDs based on their MPI rank
+   * However, in OpenMPI jobs, scaling up/down of jobs is not supported.
+   *
+   * Assigning workerIDs by Kubernetes Twister2 utilities is a must
+   * when scaling down workers in a Twister2 job
+   *
+   * We always want to delete the last workers in a job with highest workerIDs,
+   * when scaling down jobs.
+   * Deleting pods in a statefulset is performed by scaling down the statefulset.
+   * When statefulsets are scaled down, the last pods with highest indexes are killed.
+   *
+   * if the worker in the last pod of a statefulset does not have the highest workerID,
+   * then when scaling down the statefulset, we may not kill the last worker in the job.
+   * This happens when JobMaster assigns workerIDs.
+   * Workers do not get ids based on their pod indexes,
+   * but rather based on their registration order with the JobMaster.
+   * Therefore, we can not support workerID assignment by JobMaster in Kubernetes.
+   * @param config
+   * @return
+   */
+  public static Config unsetWorkerIDAssigment(Config config) {
+    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
+
+      LOG.warning("In Kubernetes clusters, workerID assignment by JobMaster is not supported. "
+          + "Twister2 Kubernetes utilities assign workerIDs.");
+
+      return Config.newBuilder().
+          putAll(config).
+          put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, false).
+          build();
+    }
+
+    return config;
   }
 
   /**
@@ -134,100 +174,117 @@ public final class K8sWorkerUtils {
     }
   }
 
-  /**
-   * we assume jobName, Kubernetes namespace, exist in the incoming config object
-   * if jobMasterIP exists in the config object,
-   * it uses that IP.
-   * Otherwise, it tries to get the jobMasterIP from Kubernetes master
-   */
-  public static JobMasterClient startJobMasterClient(Config cnfg, WorkerNetworkInfo networkInfo) {
+  public static JobAPI.ComputeResource getComputeResource(JobAPI.Job job, String podName) {
 
-    String jobMasterIP = JobMasterContext.jobMasterIP(cnfg);
-    Config cnf = cnfg;
-
-    // if jobMaster does not run in client,
-    // job master runs as a separate pod
-    // get its IP address first
-    if (jobMasterIP == null || jobMasterIP.trim().length() == 0) {
-      String jobName = SchedulerContext.jobName(cnfg);
-      String jobMasterPodName = KubernetesUtils.createJobMasterPodName(jobName);
-
-      String namespace = KubernetesContext.namespace(cnfg);
-      jobMasterIP = PodWatchUtils.getJobMasterIP(jobMasterPodName, jobName, namespace, 100);
-      if (jobMasterIP == null) {
-        throw new RuntimeException("Can not get JobMaster IP address. Aborting ...........");
-      }
-
-      cnf = Config.newBuilder()
-          .putAll(cnfg)
-          .put(JobMasterContext.JOB_MASTER_IP, jobMasterIP)
-          .build();
-    }
-
-    LOG.info("JobMasterIP: " + jobMasterIP);
-
-    JobMasterClient jobMasterClient = new JobMasterClient(cnf, networkInfo);
-    Thread clientThread = jobMasterClient.startThreaded();
-    if (clientThread == null) {
-      return null;
-    }
-
-    return jobMasterClient;
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    return JobUtils.getComputeResource(job, currentStatefulSetIndex);
   }
+
 
   /**
    * calculate the workerID from the given parameters
    */
-  public static int calculateWorkerID(String podName, String containerName, int workersPerPod) {
-    int podIndex = KubernetesUtils.idFromName(podName);
-    int containerIndex = KubernetesUtils.idFromName(containerName);
+  public static int calculateWorkerID(JobAPI.Job job, String podName, String containerName) {
 
-    return calculateWorkerID(podIndex, containerIndex, workersPerPod);
+    String ssName = KubernetesUtils.removeIndexFromName(podName);
+    int currentStatefulSetIndex = KubernetesUtils.indexFromName(ssName);
+    int workersUpToSS = countWorkersUpToSS(job, currentStatefulSetIndex);
+
+    int podIndex = KubernetesUtils.indexFromName(podName);
+    int containerIndex = KubernetesUtils.indexFromName(containerName);
+    int workersPerPod =
+        JobUtils.getComputeResource(job, currentStatefulSetIndex).getWorkersPerPod();
+
+    int workerID = workersUpToSS + calculateWorkerIDInSS(podIndex, containerIndex, workersPerPod);
+    return workerID;
   }
 
   /**
-   * calculate the workerID from the given parameters
+   * calculate the number of workers in the earlier statefulsets
    */
-  public static int calculateWorkerID(int podIndex, int containerIndex, int workersPerPod) {
+  public static int countWorkersUpToSS(JobAPI.Job job, int currentStatefulSetIndex) {
+
+    int workerCount = 0;
+    for (int i = 0; i < currentStatefulSetIndex; i++) {
+      JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, i);
+      workerCount += computeResource.getInstances() * computeResource.getWorkersPerPod();
+    }
+
+    return workerCount;
+  }
+
+  /**
+   * calculate the workerID in the given StatefulSet
+   */
+  public static int calculateWorkerIDInSS(int podIndex, int containerIndex, int workersPerPod) {
     return podIndex * workersPerPod + containerIndex;
   }
 
-  public static NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList, String nodeIP) {
-    NodeInfo nodeInfo = new NodeInfo(nodeIP, null, null);
-    ArrayList<NodeInfo> nodeInfoList = NodeInfo.decodeNodeInfoList(encodedNodeInfoList);
+  public static JobMasterAPI.NodeInfo getNodeInfoFromEncodedStr(String encodedNodeInfoList,
+                                                                String nodeIP) {
+
+    // we will return this, in case we do not find it in the given list
+    JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(nodeIP, null, null);
+
+    ArrayList<JobMasterAPI.NodeInfo> nodeInfoList =
+        NodeInfoUtils.decodeNodeInfoList(encodedNodeInfoList);
 
     if (nodeInfoList == null || nodeInfoList.size() == 0) {
       LOG.warning("NodeInfo list is not constructed from the string: " + encodedNodeInfoList);
+      return nodeInfo;
     } else {
       LOG.fine("Decoded NodeInfo list, size: " + nodeInfoList.size()
-          + "\n" + NodeInfo.listToString(nodeInfoList));
+          + "\n" + NodeInfoUtils.listToString(nodeInfoList));
 
-      nodeInfo = nodeInfoList.get(nodeInfoList.indexOf(nodeInfo));
+      JobMasterAPI.NodeInfo nodeInfo1 = NodeInfoUtils.getNodeInfo(nodeInfoList, nodeIP);
+      if (nodeInfo1 == null) {
+        LOG.warning("nodeIP does not exist in received encodedNodeInfoList. Using local value.");
+        return nodeInfo;
+      }
+
+      return nodeInfo1;
     }
-
-    return nodeInfo;
   }
 
   /**
-   * we assume all resources are uniform
+   * get job master service IP from job master service name
+   * @param jobName
    * @return
    */
-  public static AllocatedResources createAllocatedResources(String cluster,
-                                                            int workerID,
-                                                            JobAPI.Job job) {
+  public static String getJobMasterServiceIP(String namespace, String jobName) {
+    String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
+    jobMasterServiceName = jobMasterServiceName + "." + namespace + ".svc.cluster.local";
+    try {
+      return InetAddress.getByName(jobMasterServiceName).getHostAddress();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("Cannot get Job master IP from service name.", e);
+    }
+  }
 
-    JobAPI.WorkerComputeResource computeResource =
-        job.getJobResources().getResources(0).getWorkerComputeResource();
+  /**
+   * generate the additional requested ports for this worker
+   * @param config
+   * @param workerPort
+   * @return
+   */
+  public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
-    AllocatedResources allocatedResources = new AllocatedResources(cluster, workerID);
-
-    for (int i = 0; i < job.getNumberOfWorkers(); i++) {
-      allocatedResources.addWorkerComputeResource(new WorkerComputeResource(
-          i, computeResource.getCpu(), computeResource.getRam(), computeResource.getDisk()));
+    // if no port is requested, return null
+    List<String> portNames = SchedulerContext.additionalPorts(config);
+    if (portNames == null) {
+      return null;
     }
 
-    return allocatedResources;
+    HashMap<String, Integer> ports = new HashMap<>();
+    int i = 1;
+    for (String portName: portNames) {
+      ports.put(portName, workerPort + i++);
+    }
+
+    return ports;
   }
+
 
 
   /**

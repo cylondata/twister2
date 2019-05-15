@@ -37,4 +37,16 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   public boolean handleMessage(int source, Object message, int flags, int dest) {
     return singularReceiver.receive(source, message);
   }
+
+  @Override
+  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+    onSyncEvent(target, barriers.get(target));
+    return needsFurtherProgress;
+  }
+
+
+  @Override
+  public void onSyncEvent(int target, byte[] value) {
+    singularReceiver.sync(target, value);
+  }
 }

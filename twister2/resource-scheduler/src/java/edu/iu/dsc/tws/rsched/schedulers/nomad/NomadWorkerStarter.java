@@ -12,7 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
-import java.nio.file.Paths;
+//import java.nio.file.Paths;
+//import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,27 +30,28 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.client.JobMasterClient;
+import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class NomadWorkerStarter {
   private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
-
+  private static int startingPort = 30000;
+  private NomadController controller;
   /**
    * The jobmaster client
    */
-  private JobMasterClient masterClient;
+  private JMWorkerAgent masterClient;
 
   /**
    * Configuration
@@ -75,6 +77,8 @@ public final class NomadWorkerStarter {
       // load the configuration
       // we are loading the configuration for all the components
       this.config = loadConfigurations(cmd, rank);
+      controller = new NomadController(true);
+      controller.initialize(config);
     } catch (ParseException e) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("SubmitterMain", cmdOptions);
@@ -189,16 +193,15 @@ public final class NomadWorkerStarter {
     LOG.log(Level.INFO, "A worker process is starting...");
     // lets create the resource plan
     this.workerController = createWorkerController();
-    WorkerNetworkInfo workerNetworkInfo = workerController.getWorkerNetworkInfo();
+    JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
     String workerClass = SchedulerContext.workerClass(config);
 
-    AllocatedResources resourcePlan = new AllocatedResources(SchedulerContext.clusterType(config),
-        workerNetworkInfo.getWorkerID());
-    List<WorkerNetworkInfo> networkInfos = workerController.waitForAllWorkersToJoin(30000);
-    for (WorkerNetworkInfo w : networkInfos) {
-      WorkerComputeResource workerComputeResource = new WorkerComputeResource(w.getWorkerID());
-      resourcePlan.addWorkerComputeResource(workerComputeResource);
+    try {
+      List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
     }
 
     try {
@@ -206,8 +209,7 @@ public final class NomadWorkerStarter {
       if (object instanceof IWorker) {
         IWorker container = (IWorker) object;
         // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), resourcePlan,
-            workerController, null, null);
+        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
       } else {
         throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
       }
@@ -243,13 +245,18 @@ public final class NomadWorkerStarter {
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
-
+    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
+    //Map<String, Integer> additionalPorts =
+    //    NomadContext.generateAdditionalPorts(config, startingPort);
     int port = ports.get("worker");
     String host = localIps.get("worker");
-    WorkerNetworkInfo networkInfo = new WorkerNetworkInfo(host, port, workerID);
+    JobMasterAPI.NodeInfo nodeInfo = NomadContext.getNodeInfo(config, host);
+    JobMasterAPI.WorkerInfo workerInfo =
+        WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
+            computeResource, ports);
 
-    this.masterClient = createMasterClient(config, jobMasterIP, jobMasterPort,
-        networkInfo, numberOfWorkers);
+    this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
+        workerInfo, numberOfWorkers);
 
     return masterClient.getJMWorkerController();
   }
@@ -257,21 +264,21 @@ public final class NomadWorkerStarter {
   /**
    * Create the job master client to get information about the workers
    */
-  private JobMasterClient createMasterClient(Config cfg, String masterHost, int masterPort,
-                                                    WorkerNetworkInfo networkInfo,
-                                                    int numberContainers) {
+  private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
+                                          JobMasterAPI.WorkerInfo workerInfo,
+                                          int numberContainers) {
     // we start the job master client
-    JobMasterClient jobMasterClient = new JobMasterClient(cfg,
-        networkInfo, masterHost, masterPort, numberContainers);
+    JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
+        workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
-    jobMasterClient.startThreaded();
-    // now lets send the starting message
-    jobMasterClient.sendWorkerStartingMessage();
+    jobMasterAgent.startThreaded();
+    // No need for sending workerStarting message anymore
+    // that is called in startThreaded method
 
     // now lets send the starting message
-    jobMasterClient.sendWorkerRunningMessage();
+    jobMasterAgent.sendWorkerRunningMessage();
 
-    return jobMasterClient;
+    return jobMasterAgent;
   }
 
   /**
@@ -305,19 +312,27 @@ public final class NomadWorkerStarter {
     // set logging level
     LoggingHelper.setLogLevel(LoggingContext.loggingLevel(cfg));
 
-    String persistentJobDir = getTaskDirectory();
+    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
+    String jobName = NomadContext.jobName(cfg);
+
+    NomadPersistentVolume pv =
+        new NomadPersistentVolume(controller.createPersistentJobDirName(jobName), workerID);
+    String persistentJobDir = pv.getJobDir().getAbsolutePath();
+    //LOG.log(Level.INFO, "PERSISTENT LOG DIR is ......: " + persistentJobDir);
+    //String persistentJobDir = getTaskDirectory();
     // if no persistent volume requested, return
     if (persistentJobDir == null) {
       return;
     }
 
-    String jobWorkingDirectory = NomadContext.workingDirectory(cfg);
-    String jobName = NomadContext.jobName(cfg);
-    if (NomadContext.getLoggingSandbox(cfg)) {
-      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
-    }
-
+//    if (NomadContext.getLoggingSandbox(cfg)) {
+//      persistentJobDir = Paths.get(jobWorkingDirectory, jobName).toString();
+//    }
+    //nfs/shared/twister2/
+    //String logDir = "/etc/nomad.d/"; //"/nfs/shared/twister2" + "/logs";
     String logDir = persistentJobDir + "/logs";
+
+    LOG.log(Level.INFO, "LOG DIR is ......: " + logDir);
     File directory = new File(logDir);
     if (!directory.exists()) {
       if (!directory.mkdirs()) {

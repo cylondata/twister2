@@ -11,20 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.batch.BaseBatchSink;
-import edu.iu.dsc.tws.task.batch.BaseBatchSource;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
+import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.task.api.ISink;
+import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
+import edu.iu.dsc.tws.task.api.typed.batch.BKeyedGatherCompute;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
 
@@ -35,60 +45,67 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType keyType = DataType.OBJECT;
-    DataType dataType = DataType.INTEGER;
+    DataType keyType = DataType.INTEGER;
+    DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
-    BaseBatchSource g = new SourceBatchTask(edge);
-    BaseBatchSink r = new KeyedGatherSinkTask();
+    BaseSource g = new SourceTask(edge, true);
+    ISink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BaseBatchSink {
+  protected static class KeyedGatherSinkTask extends BKeyedGatherCompute<Integer, int[]>
+      implements ISink {
+
     private static final long serialVersionUID = -254264903510284798L;
-    private int count = 0;
+
+    private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
+    private boolean verified = true;
+    private boolean timingCondition;
 
     @Override
-    public boolean execute(IMessage message) {
-      Object object = message.getContent();
-      LOG.info("Message Keyed-Gather : " + message.getContent()
-          + ", Count : " + count);
-      if (object instanceof Iterator) {
-        Iterator<?> it = (Iterator<?>) object;
-        while (it.hasNext()) {
-          Object value = it.next();
-          if (value instanceof ImmutablePair) {
-            ImmutablePair<?, ?> l = (ImmutablePair<?, ?>) value;
-            Object key = l.getKey();
-            Object val = l.getValue();
-            //LOG.info("Value : " + val.getClass().getName());
-            if (count % jobParameters.getPrintInterval() == 0) {
-              if (val instanceof Object[]) {
-                Object[] objects = (Object[]) val;
-                for (int i = 0; i < objects.length; i++) {
-                  int[] a = (int[]) objects[i];
-                  if (count % jobParameters.getPrintInterval() == 0) {
-                    experimentData.setOutput(a);
-                    try {
-                      verify(OperationNames.KEYED_GATHER);
-                    } catch (VerificationException e) {
-                      LOG.info("Exception Message : " + e.getMessage());
-                    }
-                  }
-                  /*LOG.info("Keyed-Gathered Message , Key : " + key + ", Value : "
-                      + Arrays.toString(a));*/
-                }
-              }
-            }
+    public void prepare(Config cfg, TaskContext ctx) {
+      super.prepare(cfg, ctx);
+      this.timingCondition = getTimingCondition(SINK, context);
+      resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+        Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
+            .map(TaskInstancePlan::getTaskIndex)
+            .filter(i -> (Math.abs(i.hashCode())) == ctx.taskIndex())
+            .collect(Collectors.toSet());
 
-
-          }
+        List<int[]> dataFromEachTask = new ArrayList<>();
+        for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+          dataFromEachTask.add(ints);
         }
-      }
-      count++;
 
+        List<Tuple<Integer, Iterator<int[]>>> finalOutput = new ArrayList<>();
+
+        taskIds.forEach(key -> {
+          finalOutput.add(new Tuple<>(key, dataFromEachTask.iterator()));
+        });
+
+        return finalOutput.iterator();
+      }, new IteratorComparator<>(
+          new TupleComparator<>(
+              (d1, d2) -> true, //return true for any key, since we
+              // can't determine this due to hash based selector
+              new IteratorComparator<>(
+                  IntArrayComparator.getInstance()
+              )
+          )
+      ));
+    }
+
+    @Override
+    public boolean keyedGather(Iterator<Tuple<Integer, Iterator<int[]>>> content) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      LOG.info(String.format("%d received keyed-gather %d",
+          context.getWorkerId(), context.globalTaskId()));
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }

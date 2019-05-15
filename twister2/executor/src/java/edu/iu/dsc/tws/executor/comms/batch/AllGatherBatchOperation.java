@@ -12,34 +12,29 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BAllGather;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.AbstractParallelOperation;
+import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BAllGather;
+import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.graph.Edge;
 
 public class AllGatherBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(AllGatherBatchOperation.class.getName());
 
   protected BAllGather op;
 
   public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                      Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     DataType dataType, String edgeName) {
-    super(config, network, tPlan);
+                                     Edge edge) {
+    super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -50,9 +45,10 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     }
 
     this.edgeGenerator = e;
-    op = new BAllGather(channel, taskPlan, sources, dest,
-        new FinalGatherReceive(), Utils.dataTypeToMessageType(dataType));
-    communicationEdge = e.generate(edgeName);
+    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    op = new BAllGather(newComm, taskPlan, sources, dest,
+        new FinalGatherReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
+    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -66,15 +62,16 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
+  public boolean isComplete() {
+    return !op.hasPending();
+  }
+
+  @Override
   public void finish(int source) {
     op.finish(source);
   }
 
   private class FinalGatherReceive implements BulkReceiver {
-    public void init(Config cfg, DataFlowOperation operation,
-                     Map<Integer, List<Integer>> expectedIds) {
-    }
-
     @Override
     public void init(Config cfg, Set<Integer> targets) {
 
@@ -82,7 +79,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
+      TaskMessage msg = new TaskMessage<>(it,
           edgeGenerator.getStringMapping(communicationEdge), target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
@@ -92,5 +89,20 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
       }
       return true;
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
+  }
+
+  @Override
+  public void close() {
+    op.close();
+  }
+
+  @Override
+  public void reset() {
+    op.refresh();
   }
 }

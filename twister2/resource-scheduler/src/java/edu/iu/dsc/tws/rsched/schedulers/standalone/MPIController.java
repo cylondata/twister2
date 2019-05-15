@@ -20,7 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
@@ -64,17 +63,17 @@ public class MPIController implements IController {
   }
 
   @Override
-  public boolean start(RequestedResources resourcePlan, JobAPI.Job job) {
-    if (resourcePlan == null || resourcePlan.getNumberOfWorkers() == 0) {
+  public boolean start(JobAPI.Job job) {
+    if (job == null || job.getNumberOfWorkers() == 0) {
       LOG.log(Level.SEVERE, "No container requested. Can't schedule");
       return false;
     }
-    long containers = resourcePlan.getNumberOfWorkers();
+    long containers = job.getNumberOfWorkers();
     LOG.log(Level.INFO, String.format("Launching job in %s scheduler with no of containers = %d",
         MPIContext.clusterType(config), containers));
 
     String jobDirectory = Paths.get(this.workingDirectory, job.getJobName()).toString();
-    boolean jobCreated = createJob(this.workingDirectory, jobDirectory, resourcePlan, job);
+    boolean jobCreated = createJob(this.workingDirectory, jobDirectory, job);
 
     if (!jobCreated) {
       LOG.log(Level.SEVERE, "Failed to create job");
@@ -105,10 +104,9 @@ public class MPIController implements IController {
    * @param jobWorkingDirectory working directory
    * @return true if the job creation is successful
    */
-  public boolean createJob(String jobWorkingDirectory, String twister2Home,
-                           RequestedResources resources, JobAPI.Job job) {
+  public boolean createJob(String jobWorkingDirectory, String twister2Home, JobAPI.Job job) {
     // get the command to run the job on Slurm cluster
-    List<String> cmds = command.mpiCommand(jobWorkingDirectory, resources, job);
+    List<String> cmds = command.mpiCommand(jobWorkingDirectory, job);
 
     // change the empty strings of command args to "", because batch
     // doesn't recognize space as an arguments

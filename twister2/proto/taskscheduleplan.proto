@@ -29,5 +29,4 @@ message TaskSchedulePlan {
 message TaskSchedulePlanList {
     int32 jobid = 1;
     repeated TaskSchedulePlan taskscheduleplan = 2;
-    //required int32 jobid = 1;
 }

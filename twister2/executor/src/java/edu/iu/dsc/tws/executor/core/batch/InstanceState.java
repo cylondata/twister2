@@ -22,9 +22,16 @@ public class InstanceState {
   public static final int SENDING_DONE = 1 << 4;
   // output is sent
   public static final int OUT_COMPLETE = 1 << 5;
+  // weather we have received a sync
+  public static final int SYNCED = 1 << 6;
+
   // finish value
   public static final int FINISH =
       EXECUTING | EXECUTION_DONE | SENDING_DONE | OUT_COMPLETE;
+
+  public static final int SINK_FINISH = EXECUTION_DONE | SYNCED;
+
+  public static final int TASK_FINISH = SENDING_DONE | SYNCED;
 
   private int value;
 
@@ -32,7 +39,7 @@ public class InstanceState {
     this.value = val;
   }
 
-  public void set(int state) {
+  public void addState(int state) {
     this.value = this.value | state;
   }
 

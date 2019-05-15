@@ -11,22 +11,31 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.batch.BAllGather;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BAllGather;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
-import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
+import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 
 public class BAllGatherExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(BAllGatherExample.class.getName());
@@ -35,9 +44,11 @@ public class BAllGatherExample extends BenchWorker {
 
   private boolean gatherDone;
 
+  private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
+
   @Override
   protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
+    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
 
     Set<Integer> sources = new HashSet<>();
@@ -52,7 +63,7 @@ public class BAllGatherExample extends BenchWorker {
     }
     // create the communication
     gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
-        MessageType.INTEGER);
+        MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -62,6 +73,21 @@ public class BAllGatherExample extends BenchWorker {
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
     }
+
+    this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
+      List<Tuple<Integer, int[]>> expectedOut = new ArrayList<>();
+      for (Integer source : sources) {
+        for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
+          expectedOut.add(new Tuple<>(source, ints));
+        }
+      }
+      return expectedOut.iterator();
+    }, new IteratorComparator<>(
+        new TupleComparator<>(
+            IntComparator.getInstance(),
+            IntArrayComparator.getInstance()
+        )
+    ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %s this %s",
         workerId, sources, targets, tasksOfExecutor));
@@ -74,8 +100,13 @@ public class BAllGatherExample extends BenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    gather.progress();
+  public void close() {
+    gather.close();
+  }
+
+  @Override
+  protected boolean progressCommunication() {
+    return gather.progress();
   }
 
   @Override
@@ -93,44 +124,28 @@ public class BAllGatherExample extends BenchWorker {
   }
 
   public class FinalSingularReceiver implements BulkReceiver {
+
+    private int lowestTarget = 0;
+
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-
+      if (targets.isEmpty()) {
+        gatherDone = true;
+        return;
+      }
+      this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Iterator<Object> itr) {
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
+          workerId == 0 && target == lowestTarget);
+      BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
+          && target == lowestTarget);
+      resultsRecorder.writeToCSV();
       gatherDone = true;
-      while (it.hasNext()) {
-        Object object = it.next();
-        experimentData.setOutput(object);
-        experimentData.setWorkerId(workerId);
-        experimentData.setNumOfWorkers(jobParameters.getContainers());
-        try {
-          if (workerId == 0) {
-            verify();
-          }
-        } catch (VerificationException e) {
-          LOG.info("Exception Message : " + e.getMessage());
-        }
-      }
+      verifyResults(resultsVerifier, itr, null);
       return true;
-    }
-  }
-
-  public void verify() throws VerificationException {
-    boolean doVerify = jobParameters.isDoVerify();
-    boolean isVerified = false;
-    if (doVerify) {
-      LOG.info("Verifying results ...");
-      ExperimentVerification experimentVerification
-          = new ExperimentVerification(experimentData, OperationNames.ALLGATHER);
-      isVerified = experimentVerification.isVerified();
-      if (isVerified) {
-        LOG.info("Results generated from the experiment are verified.");
-      } else {
-        throw new VerificationException("Results do not match");
-      }
     }
   }
 

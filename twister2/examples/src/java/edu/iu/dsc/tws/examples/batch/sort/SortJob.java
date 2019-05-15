@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -24,20 +25,19 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.discovery.WorkerNetworkInfo;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
+import edu.iu.dsc.tws.common.controller.IWorkerController;
+import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.op.Communicator;
-import edu.iu.dsc.tws.comms.op.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.op.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
@@ -61,7 +61,7 @@ public class SortJob implements IWorker {
   private Set<RecordSource> recordSources = new HashSet<>();
 
   @Override
-  public void execute(Config cfg, int workerID, AllocatedResources allocatedResources,
+  public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
@@ -70,17 +70,23 @@ public class SortJob implements IWorker {
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, allocatedResources, taskStages, workerList);
+    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID, taskStages, workerList);
 
     // setup the network
-    setupNetwork(workerController, allocatedResources);
+    setupNetwork(workerController);
     // set up the tasks
     setupTasks();
 
     partition = new BKeyedPartition(channel, taskPlan, sources, destinations,
-        MessageType.BYTE, MessageType.BYTE, MessageType.INTEGER, MessageType.INTEGER,
+        MessageTypes.INTEGER, MessageTypes.BYTE_ARRAY,
         new RecordSave(), new HashingSelector(), new IntegerComparator());
 
     // start the threads
@@ -114,8 +120,8 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(IWorkerController controller, AllocatedResources resources) {
-    TWSChannel twsChannel = Network.initializeChannel(config, controller, resources);
+  private void setupNetwork(IWorkerController controller) {
+    TWSChannel twsChannel = Network.initializeChannel(config, controller);
     this.channel = new Communicator(config, twsChannel);
   }
 
@@ -166,10 +172,10 @@ public class SortJob implements IWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    Twister2Job.BasicJobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setName("sort-job");
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("sort-job");
     jobBuilder.setWorkerClass(SortJob.class.getName());
-    jobBuilder.setRequestResource(new WorkerComputeResource(1, 512), NO_OF_TASKS);
+    jobBuilder.addComputeResource(1, 512, NO_OF_TASKS);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

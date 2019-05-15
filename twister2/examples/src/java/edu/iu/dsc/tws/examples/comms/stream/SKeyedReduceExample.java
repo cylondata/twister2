@@ -18,20 +18,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.core.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedContent;
-import edu.iu.dsc.tws.comms.op.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.op.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.op.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
+/**
+ * todo not applicable for streaming, without window
+ */
 public class SKeyedReduceExample extends KeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(SKeyedReduceExample.class.getName());
 
@@ -41,7 +44,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, resourcePlan,
+    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
         jobParameters.getTaskStages(), workerList);
 
     Set<Integer> sources = new HashSet<>();
@@ -56,8 +59,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
     }
 
     keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
-        MessageType.OBJECT, MessageType.OBJECT,
-        new ReduceOperationFunction(Op.SUM, MessageType.INTEGER),
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
+        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -81,8 +84,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   }
 
   @Override
-  protected void progressCommunication() {
-    keyedReduce.progress();
+  protected boolean progressCommunication() {
+    return keyedReduce.progress();
   }
 
   @Override
@@ -117,8 +120,8 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
       LOG.log(Level.INFO, String.format("Target %d received count %d", target, count));
       reduceDone = true;
 
-      KeyedContent keyedContent = (KeyedContent) object;
-      int[] data = (int[]) keyedContent.getValue();
+      Tuple tuple = (Tuple) object;
+      int[] data = (int[]) tuple.getValue();
       LOG.log(Level.INFO, String.format("%d Results : %s", workerId,
           Arrays.toString(Arrays.copyOfRange(data, 0, Math.min(data.length, 10)))));
       LOG.log(Level.INFO, String.format("%d Received final input", workerId));

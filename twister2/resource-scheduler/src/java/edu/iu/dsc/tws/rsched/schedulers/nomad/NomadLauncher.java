@@ -11,21 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.resource.RequestedResources;
-import edu.iu.dsc.tws.master.JobMaster;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+import edu.iu.dsc.tws.rsched.schedulers.nomad.master.NomadMasterStarter;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
@@ -66,65 +62,17 @@ public class NomadLauncher implements ILauncher {
   }
 
   @Override
-  public boolean launch(RequestedResources resourcePlan, JobAPI.Job job) {
+  public boolean launch(JobAPI.Job job) {
     LOG.log(Level.INFO, "Launching job for cluster {0}",
         NomadContext.clusterType(config));
 
-    // get the job working directory
-    String jobWorkingDirectory = NomadContext.workingDirectory(config);
-
-    if (NomadContext.sharedFileSystem(config)) {
-      if (!setupWorkingDirectory(job, jobWorkingDirectory)) {
-        throw new RuntimeException("Failed to setup the directory");
-      }
-    }
-
-    Config newConfig = Config.newBuilder().putAll(config).put(
-        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
-    // now start the controller, which will get the resources from
-    // slurm and start the job
-    IController controller = new NomadController(true);
-    controller.initialize(newConfig);
-
-    // start the Job Master locally
-    JobMaster jobMaster = null;
-    Thread jmThread = null;
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      try {
-        int port = JobMasterContext.jobMasterPort(config);
-        String hostAddress = JobMasterContext.jobMasterIP(config);
-        if (hostAddress == null) {
-          hostAddress = InetAddress.getLocalHost().getHostAddress();
-        }
-        LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
-        jobMaster =
-            new JobMaster(config, hostAddress,
-                new NomadTerminator(), job.getJobName(),
-                port,  job.getNumberOfWorkers());
-        jobMaster.addShutdownHook();
-        jmThread = jobMaster.startJobMasterThreaded();
-      } catch (UnknownHostException e) {
-        LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
-        throw new RuntimeException(e);
-      }
-    }
-
-    boolean start = controller.start(resourcePlan, job);
-    // now lets wait on client
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      try {
-        if (jmThread != null) {
-          jmThread.join();
-        }
-      } catch (InterruptedException ignore) {
-      }
-    }
-
-    // now we need to terminate the job
+    NomadMasterStarter master = new NomadMasterStarter();
+    master.initialize(job, config);
+    boolean start = master.launch();
+     // now we need to terminate the job
     if (!terminateJob(job.getJobName())) {
       LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobName());
     }
-
     return start;
   }
 
@@ -136,10 +84,12 @@ public class NomadLauncher implements ILauncher {
   private boolean setupWorkingDirectory(JobAPI.Job job, String jobWorkingDirectory) {
     // get the path of core release URI
     String corePackage = NomadContext.corePackageFileName(config);
-
+    String jobPackage = NomadContext.jobPackageFileName(config);
+    LOG.log(Level.INFO, "Core Package is ......: " + corePackage);
+    LOG.log(Level.INFO, "Job Package is ......: " + jobPackage);
     // Form the job package's URI
     String jobPackageURI = NomadContext.jobPackageUri(config).toString();
-
+    LOG.log(Level.INFO, "Job Package URI is ......: " + jobPackageURI);
     // copy the files to the working directory
     return ResourceSchedulerUtils.setupWorkingDirectory(
         job.getJobName(),
