@@ -67,6 +67,7 @@ public class DirectRouter {
       }
     }
 
+    receiveExecutors = new HashSet<>();
     // we are going to receive from one source
     this.upstream = new HashMap<>();
     for (int i = 0; i < srscs.size(); i++) {
@@ -76,16 +77,11 @@ public class DirectRouter {
         List<Integer> sources = new ArrayList<>();
         sources.add(src);
         this.upstream.put(tar, sources);
-      }
-    }
 
-    // lets calculate the executors we are receiving
-    receiveExecutors = new HashSet<>();
-    if (isLastReceiver()) {
-      for (int s : srscs) {
-        int e = taskPlan.getExecutorForChannel(s);
-        if (taskPlan.getThisExecutor() != e) {
-          receiveExecutors.add(e);
+        // get the executor of source
+        int executor = taskPlan.getExecutorForChannel(src);
+        if (executor != taskPlan.getThisExecutor()) {
+          receiveExecutors.add(executor);
         }
       }
     }
@@ -106,9 +102,9 @@ public class DirectRouter {
    * @return true
    */
   public boolean isLastReceiver() {
+    Set<Integer> tasksOfThisExecutor = taskPlan.getTasksOfThisExecutor();
     for (int t : destination) {
       // now check if destination is in this worker
-      Set<Integer> tasksOfThisExecutor = taskPlan.getTasksOfThisExecutor();
       if (tasksOfThisExecutor != null && tasksOfThisExecutor.contains(t)) {
         return true;
       }
