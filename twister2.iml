@@ -5,14 +5,15 @@
       <configuration sdkName="" />
     </facet>
   </component>
-  <component name="NewModuleRootManager" inherit-compiler-output="false">
+  <component name="NewModuleRootManager">
     <output url="file://$MODULE_DIR$/out" />
-    <content url="file://$MODULE_DIR$/bin" />
+    <content url="file://$MODULE_DIR$/benchmarks" />
+    <content url="file://$MODULE_DIR$/dashboard" />
     <content url="file://$MODULE_DIR$/docker" />
     <content url="file://$MODULE_DIR$/docs" />
     <content url="file://$MODULE_DIR$/scripts" />
+    <content url="file://$MODULE_DIR$/src" />
     <content url="file://$MODULE_DIR$/third_party" />
-    <content url="file://$MODULE_DIR$/tmp" />
     <content url="file://$MODULE_DIR$/tools" />
     <content url="file://$MODULE_DIR$/twister2">
       <sourceFolder url="file://$MODULE_DIR$/twister2/config/src" type="java-resource" />
@@ -22,15 +23,18 @@
       <sourceFolder url="file://$MODULE_DIR$/twister2/common/src/tests/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/comms/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/comms/tests/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/compatibility/storm/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/connectors/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/data/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/data/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/examples/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/examples/tests/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/executor/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/master/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/proto/Empty.java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/resource-scheduler/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/taskscheduler/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/taskscheduler/tests/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/task/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/tools/cli/src/python" isTestSource="false" />
     </content>
@@ -47,189 +51,63 @@
     </orderEntry>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module-library">
-      <library name="libproto_checkpoint_java-hjar.jar">
+      <library name="libproto-speed-hjar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_checkpoint_java-hjar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-speed-hjar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_checkpoint_java.jar">
+      <library name="libproto-speed.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_checkpoint_java.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-speed.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_common_java-hjar.jar">
+      <library name="libproto-speed-native-header.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_common_java-hjar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-speed-native-header.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_common_java.jar">
+      <library name="antlr-2.7.7-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_common_java.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/antlr_antlr/_ijar/antlr_antlr/external/antlr_antlr/antlr-2.7.7-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_job_java-hjar.jar">
+      <library name="logback-classic-1.2.3-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_job_java-hjar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/ch_qos_logback_logback_classic/_ijar/ch_qos_logback_logback_classic/external/ch_qos_logback_logback_classic/logback-classic-1.2.3-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_job_java.jar">
+      <library name="logback-core-1.2.3-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_job_java.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/ch_qos_logback_logback_core/_ijar/ch_qos_logback_logback_core/external/ch_qos_logback_logback_core/logback-core-1.2.3-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="libproto_jobmaster_java-hjar.jar">
+      <library name="kryo-4.0.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_jobmaster_java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_jobmaster_java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_jobmaster_java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_job_state_java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_job_state_java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_job_state_java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_job_state_java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_network_java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_network_java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_network_java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_network_java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_resource_scheduler_java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_resource_scheduler_java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto-resource-scheduler-java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-resource-scheduler-java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_resource_scheduler_java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_resource_scheduler_java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto-resource-scheduler-java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-resource-scheduler-java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_taskscheduleplan_java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_taskscheduleplan_java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto-taskscheduleplan-java-hjar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-taskscheduleplan-java-hjar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto_taskscheduleplan_java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto_taskscheduleplan_java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="libproto-taskscheduleplan-java.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-bin/twister2/proto/libproto-taskscheduleplan-java.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="kryo-3.0.3-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_kryo/jar/_ijar/jar/external/com_esotericsoftware_kryo/jar/kryo-3.0.3-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_kryo/_ijar/com_esotericsoftware_kryo/external/com_esotericsoftware_kryo/kryo-4.0.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -238,7 +116,7 @@
     <orderEntry type="module-library">
       <library name="minlog-1.3.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_minlog/jar/_ijar/jar/external/com_esotericsoftware_minlog/jar/minlog-1.3.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_minlog/_ijar/com_esotericsoftware_minlog/external/com_esotericsoftware_minlog/minlog-1.3.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -247,34 +125,70 @@
     <orderEntry type="module-library">
       <library name="reflectasm-1.10.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_reflectasm/jar/_ijar/jar/external/com_esotericsoftware_reflectasm/jar/reflectasm-1.10.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_esotericsoftware_reflectasm/_ijar/com_esotericsoftware_reflectasm/external/com_esotericsoftware_reflectasm/reflectasm-1.10.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="jackson-annotations-2.8.8-ijar.jar">
+      <library name="classmate-1.4.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_annotations/jar/_ijar/jar/external/com_fasterxml_jackson_core_jackson_annotations/jar/jackson-annotations-2.8.8-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_classmate/_ijar/com_fasterxml_classmate/external/com_fasterxml_classmate/classmate-1.4.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="jackson-core-2.8.8-ijar.jar">
+      <library name="jackson-annotations-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_core/jar/_ijar/jar/external/com_fasterxml_jackson_core_jackson_core/jar/jackson-core-2.8.8-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_annotations/_ijar/com_fasterxml_jackson_core_jackson_annotations/external/com_fasterxml_jackson_core_jackson_annotations/jackson-annotations-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="jackson-databind-2.8.8-ijar.jar">
+      <library name="jackson-core-2.9.7-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_databind/jar/_ijar/jar/external/com_fasterxml_jackson_core_jackson_databind/jar/jackson-databind-2.8.8-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_core/_ijar/com_fasterxml_jackson_core_jackson_core/external/com_fasterxml_jackson_core_jackson_core/jackson-core-2.9.7-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-databind-2.9.7-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_core_jackson_databind/_ijar/com_fasterxml_jackson_core_jackson_databind/external/com_fasterxml_jackson_core_jackson_databind/jackson-databind-2.9.7-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-datatype-jdk8-2.9.7-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_datatype_jackson_datatype_jdk8/_ijar/com_fasterxml_jackson_datatype_jackson_datatype_jdk8/external/com_fasterxml_jackson_datatype_jackson_datatype_jdk8/jackson-datatype-jdk8-2.9.7-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-datatype-jsr310-2.9.7-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_datatype_jackson_datatype_jsr310/_ijar/com_fasterxml_jackson_datatype_jackson_datatype_jsr310/external/com_fasterxml_jackson_datatype_jackson_datatype_jsr310/jackson-datatype-jsr310-2.9.7-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-module-parameter-names-2.9.7-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_jackson_module_jackson_module_parameter_names/_ijar/com_fasterxml_jackson_module_jackson_module_parameter_names/external/com_fasterxml_jackson_module_jackson_module_parameter_names/jackson-module-parameter-names-2.9.7-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -283,7 +197,7 @@
     <orderEntry type="module-library">
       <library name="woodstox-core-5.0.3-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_woodstox/jar/_ijar/jar/external/com_fasterxml_woodstox/jar/woodstox-core-5.0.3-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_fasterxml_woodstox_woodstox_core/_ijar/com_fasterxml_woodstox_woodstox_core/external/com_fasterxml_woodstox_woodstox_core/woodstox-core-5.0.3-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -292,7 +206,7 @@
     <orderEntry type="module-library">
       <library name="jnr-constants-0.9.9-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_github_jnr_constants/jar/_ijar/jar/external/com_github_jnr_constants/jar/jnr-constants-0.9.9-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_github_jnr_jnr_constants/_ijar/com_github_jnr_jnr_constants/external/com_github_jnr_jnr_constants/jnr-constants-0.9.9-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -301,16 +215,7 @@
     <orderEntry type="module-library">
       <library name="jnr-ffi-2.1.7-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_github_jnr_ffi/jar/_ijar/jar/external/com_github_jnr_ffi/jar/jnr-ffi-2.1.7-ijar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="jsr305-3.0.0-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_findbugs/jar/_ijar/jar/external/com_google_code_findbugs/jar/jsr305-3.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_github_jnr_jnr_ffi/_ijar/com_github_jnr_jnr_ffi/external/com_github_jnr_jnr_ffi/jnr-ffi-2.1.7-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -319,7 +224,7 @@
     <orderEntry type="module-library">
       <library name="jsr305-3.0.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_findbugs_jsr305/jar/_ijar/jar/external/com_google_code_findbugs_jsr305/jar/jsr305-3.0.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_findbugs_jsr305/_ijar/com_google_code_findbugs_jsr305/external/com_google_code_findbugs_jsr305/jsr305-3.0.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -328,25 +233,44 @@
     <orderEntry type="module-library">
       <library name="gson-2.6.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_gson_gson/jar/_ijar/jar/external/com_google_code_gson_gson/jar/gson-2.6.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_code_gson_gson/_ijar/com_google_code_gson_gson/external/com_google_code_gson_gson/gson-2.6.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="guava-18.0-ijar.jar">
+      <library name="guava-20.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-18.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_guava_guava/_ijar/com_google_guava_guava/external/com_google_guava_guava/guava-20.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="protobuf-java-3.4.0-ijar.jar">
+      <library name="protobuf-java-3.5.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_protobuf_protobuf_java/jar/_ijar/jar/external/com_google_protobuf_protobuf_java/jar/protobuf-java-3.4.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_google_protobuf_protobuf_java/_ijar/com_google_protobuf_protobuf_java/external/com_google_protobuf_protobuf_java/protobuf-java-3.5.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="wellknown.srcjar">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/bazel-genfiles/external/com_google_protobuf/wellknown.srcjar" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/bazel-genfiles/external/com_google_protobuf/wellknown.srcjar" recursive="false" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="h2-1.4.197-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_h2database_h2/_ijar/com_h2database_h2/external/com_h2database_h2/h2-1.4.197-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -355,7 +279,25 @@
     <orderEntry type="module-library">
       <library name="nomad-sdk-0.7.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_hashicorp_nomad/jar/_ijar/jar/external/com_hashicorp_nomad/jar/nomad-sdk-0.7.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_hashicorp_nomad_nomad_sdk/_ijar/com_hashicorp_nomad_nomad_sdk/external/com_hashicorp_nomad_nomad_sdk/nomad-sdk-0.7.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="json-path-2.4.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_jayway_jsonpath_json_path/_ijar/com_jayway_jsonpath_json_path/external/com_jayway_jsonpath_json_path/json-path-2.4.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-beanutils-1.9.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_beanutils_commons_beanutils/_ijar/commons_beanutils_commons_beanutils/external/commons_beanutils_commons_beanutils/commons-beanutils-1.9.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -364,7 +306,7 @@
     <orderEntry type="module-library">
       <library name="commons-cli-1.3.1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_cli_commons_cli/jar/_ijar/jar/external/commons_cli_commons_cli/jar/commons-cli-1.3.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_cli_commons_cli/_ijar/commons_cli_commons_cli/external/commons_cli_commons_cli/commons-cli-1.3.1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -373,7 +315,7 @@
     <orderEntry type="module-library">
       <library name="commons-codec-1.11-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_codec_commons_codec/jar/_ijar/jar/external/commons_codec_commons_codec/jar/commons-codec-1.11-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_codec_commons_codec/_ijar/commons_codec_commons_codec/external/commons_codec_commons_codec/commons-codec-1.11-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -382,7 +324,7 @@
     <orderEntry type="module-library">
       <library name="commons-collections-3.2.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_collections/jar/_ijar/jar/external/commons_collections/jar/commons-collections-3.2.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_collections_commons_collections/_ijar/commons_collections_commons_collections/external/commons_collections_commons_collections/commons-collections-3.2.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -391,16 +333,7 @@
     <orderEntry type="module-library">
       <library name="commons-configuration-1.6-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_configuration/jar/_ijar/jar/external/commons_configuration/jar/commons-configuration-1.6-ijar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="commons-io-2.5-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_io_commons_io/jar/_ijar/jar/external/commons_io_commons_io/jar/commons-io-2.5-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_configuration_commons_configuration/_ijar/commons_configuration_commons_configuration/external/commons_configuration_commons_configuration/commons-configuration-1.6-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -409,16 +342,7 @@
     <orderEntry type="module-library">
       <library name="commons-io-2.6-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_io/jar/_ijar/jar/external/commons_io/jar/commons-io-2.6-ijar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="commons-lang3-3.6-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_lang_commons_lang/jar/_ijar/jar/external/commons_lang_commons_lang/jar/commons-lang3-3.6-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_io_commons_io/_ijar/commons_io_commons_io/external/commons_io_commons_io/commons-io-2.6-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -427,7 +351,7 @@
     <orderEntry type="module-library">
       <library name="commons-lang-2.6-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_lang/jar/_ijar/jar/external/commons_lang/jar/commons-lang-2.6-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_lang_commons_lang/_ijar/commons_lang_commons_lang/external/commons_lang_commons_lang/commons-lang-2.6-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -436,7 +360,16 @@
     <orderEntry type="module-library">
       <library name="commons-logging-1.1.1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_logging_commons_logging/jar/_ijar/jar/external/commons_logging_commons_logging/jar/commons-logging-1.1.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/commons_logging_commons_logging/_ijar/commons_logging_commons_logging/external/commons_logging_commons_logging/commons-logging-1.1.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="checkstyle-6.17-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_puppycrawl_tools_checkstyle/_ijar/com_puppycrawl_tools_checkstyle/external/com_puppycrawl_tools_checkstyle/checkstyle-6.17-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -445,7 +378,7 @@
     <orderEntry type="module-library">
       <library name="logging-interceptor-2.7.5-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_logging_interceptor/jar/_ijar/jar/external/com_squareup_okhttp_logging_interceptor/jar/logging-interceptor-2.7.5-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_logging_interceptor/_ijar/com_squareup_okhttp_logging_interceptor/external/com_squareup_okhttp_logging_interceptor/logging-interceptor-2.7.5-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -454,7 +387,7 @@
     <orderEntry type="module-library">
       <library name="okhttp-2.7.5-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_okhttp/jar/_ijar/jar/external/com_squareup_okhttp_okhttp/jar/okhttp-2.7.5-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_okhttp/_ijar/com_squareup_okhttp_okhttp/external/com_squareup_okhttp_okhttp/okhttp-2.7.5-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -463,7 +396,7 @@
     <orderEntry type="module-library">
       <library name="okhttp-ws-2.7.5-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_okhttp_ws/jar/_ijar/jar/external/com_squareup_okhttp_okhttp_ws/jar/okhttp-ws-2.7.5-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okhttp_okhttp_ws/_ijar/com_squareup_okhttp_okhttp_ws/external/com_squareup_okhttp_okhttp_ws/okhttp-ws-2.7.5-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -472,79 +405,205 @@
     <orderEntry type="module-library">
       <library name="okio-1.6.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okio_okio/jar/_ijar/jar/external/com_squareup_okio_okio/jar/okio-1.6.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_squareup_okio_okio/_ijar/com_squareup_okio_okio/external/com_squareup_okio_okio/okio-1.6.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="client-java-api-1.0.0-ijar.jar">
+      <library name="android-json-0.0.20131108.vaadin1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java_api/jar/_ijar/jar/external/io_kubernetes_client_java_api/jar/client-java-api-1.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/com_vaadin_external_google_android_json/_ijar/com_vaadin_external_google_android_json/external/com_vaadin_external_google_android_json/android-json-0.0.20131108.vaadin1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="client-java-1.0.0-ijar.jar">
+      <library name="client-java-api-3.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java/jar/_ijar/jar/external/io_kubernetes_client_java/jar/client-java-1.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java_api/_ijar/io_kubernetes_client_java_api/external/io_kubernetes_client_java_api/client-java-api-3.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="client-java-proto-1.0.0-ijar.jar">
+      <library name="client-java-3.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java_proto/jar/_ijar/jar/external/io_kubernetes_client_java_proto/jar/client-java-proto-1.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java/_ijar/io_kubernetes_client_java/external/io_kubernetes_client_java/client-java-3.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="swagger-annotations-1.5.12-ijar.jar">
+      <library name="client-java-proto-3.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_swagger_swagger_annotations/jar/_ijar/jar/external/io_swagger_swagger_annotations/jar/swagger-annotations-1.5.12-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_kubernetes_client_java_proto/_ijar/io_kubernetes_client_java_proto/external/io_kubernetes_client_java_proto/client-java-proto-3.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="lmdbjava-0.6.0-ijar.jar">
+      <library name="springfox-core-2.9.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdb_java/jar/_ijar/jar/external/lmdb_java/jar/lmdbjava-0.6.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_core/_ijar/io_springfox_springfox_core/external/io_springfox_springfox_core/springfox-core-2.9.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="lmdbjava-native-linux-x86_64-0.9.21-1-ijar.jar">
+      <library name="springfox-schema-2.9.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdbjava_native_linux/jar/_ijar/jar/external/lmdbjava_native_linux/jar/lmdbjava-native-linux-x86_64-0.9.21-1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_schema/_ijar/io_springfox_springfox_schema/external/io_springfox_springfox_schema/springfox-schema-2.9.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="lmdbjava-native-osx-x86_64-0.9.21-1-ijar.jar">
+      <library name="springfox-spi-2.9.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdbjava_native_osx/jar/_ijar/jar/external/lmdbjava_native_osx/jar/lmdbjava-native-osx-x86_64-0.9.21-1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_spi/_ijar/io_springfox_springfox_spi/external/io_springfox_springfox_spi/springfox-spi-2.9.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar">
+      <library name="springfox-spring-web-2.9.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/lmdbjava_native_windows/jar/_ijar/jar/external/lmdbjava_native_windows/jar/lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_spring_web/_ijar/io_springfox_springfox_spring_web/external/io_springfox_springfox_spring_web/springfox-spring-web-2.9.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="springfox-swagger2-2.9.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_swagger2/_ijar/io_springfox_springfox_swagger2/external/io_springfox_springfox_swagger2/springfox-swagger2-2.9.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="springfox-swagger-common-2.9.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_swagger_common/_ijar/io_springfox_springfox_swagger_common/external/io_springfox_springfox_swagger_common/springfox-swagger-common-2.9.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="springfox-swagger-ui-2.9.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_springfox_springfox_swagger_ui/_ijar/io_springfox_springfox_swagger_ui/external/io_springfox_springfox_swagger_ui/springfox-swagger-ui-2.9.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="swagger-annotations-1.5.20-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_swagger_swagger_annotations/_ijar/io_swagger_swagger_annotations/external/io_swagger_swagger_annotations/swagger-annotations-1.5.20-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="swagger-models-1.5.20-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/io_swagger_swagger_models/_ijar/io_swagger_swagger_models/external/io_swagger_swagger_models/swagger-models-1.5.20-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="fastutil-7.0.13-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/it_unimi_dsi_fastutil/_ijar/it_unimi_dsi_fastutil/external/it_unimi_dsi_fastutil/fastutil-7.0.13-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.activation-api-1.2.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_activation_javax_activation_api/_ijar/javax_activation_javax_activation_api/external/javax_activation_javax_activation_api/javax.activation-api-1.2.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.annotation-api-1.3.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_annotation_javax_annotation_api/_ijar/javax_annotation_javax_annotation_api/external/javax_annotation_javax_annotation_api/javax.annotation-api-1.3.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.persistence-api-2.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_persistence_javax_persistence_api/_ijar/javax_persistence_javax_persistence_api/external/javax_persistence_javax_persistence_api/javax.persistence-api-2.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.transaction-api-1.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_transaction_javax_transaction_api/_ijar/javax_transaction_javax_transaction_api/external/javax_transaction_javax_transaction_api/javax.transaction-api-1.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.ws.rs-api-2.1.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_ws_rs_javax_ws_rs_api/_ijar/javax_ws_rs_javax_ws_rs_api/external/javax_ws_rs_javax_ws_rs_api/javax.ws.rs-api-2.1.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jaxb-api-2.3.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/javax_xml_bind_jaxb_api/_ijar/javax_xml_bind_jaxb_api/external/javax_xml_bind_jaxb_api/jaxb-api-2.3.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="joda-time-2.9.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/joda_time_joda_time/_ijar/joda_time_joda_time/external/joda_time_joda_time/joda-time-2.9.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="junit-4.12-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/junit_junit/_ijar/junit_junit/external/junit_junit/junit-4.12-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -553,7 +612,43 @@
     <orderEntry type="module-library">
       <library name="log4j-1.2.17-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/log4j/jar/_ijar/jar/external/log4j/jar/log4j-1.2.17-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/log4j_log4j/_ijar/log4j_log4j/external/log4j_log4j/log4j-1.2.17-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="byte-buddy-agent-1.9.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_bytebuddy_byte_buddy_agent/_ijar/net_bytebuddy_byte_buddy_agent/external/net_bytebuddy_byte_buddy_agent/byte-buddy-agent-1.9.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="byte-buddy-1.9.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_bytebuddy_byte_buddy/_ijar/net_bytebuddy_byte_buddy/external/net_bytebuddy_byte_buddy/byte-buddy-1.9.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="accessors-smart-1.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_minidev_accessors_smart/_ijar/net_minidev_accessors_smart/external/net_minidev_accessors_smart/accessors-smart-1.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="json-smart-2.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_minidev_json_smart/_ijar/net_minidev_json_smart/external/net_minidev_json_smart/json-smart-2.3-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -562,7 +657,16 @@
     <orderEntry type="module-library">
       <library name="chronicle-queue-4.6.55-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_openhft_chronicle_queue/jar/_ijar/jar/external/net_openhft_chronicle_queue/jar/chronicle-queue-4.6.55-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/net_openhft_chronicle_queue/_ijar/net_openhft_chronicle_queue/external/net_openhft_chronicle_queue/chronicle-queue-4.6.55-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="mpi.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/ompi3/lib/mpi.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -571,7 +675,16 @@
     <orderEntry type="module-library">
       <library name="commons-compress-1.15-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_commons_commons_compress/jar/_ijar/jar/external/org_apache_commons_commons_compress/jar/commons-compress-1.15-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_commons_commons_compress/_ijar/org_apache_commons_commons_compress/external/org_apache_commons_commons_compress/commons-compress-1.15-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-lang3-3.6-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_commons_commons_lang3/_ijar/org_apache_commons_commons_lang3/external/org_apache_commons_commons_lang3/commons-lang3-3.6-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -580,7 +693,7 @@
     <orderEntry type="module-library">
       <library name="curator-client-4.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_client/jar/_ijar/jar/external/org_apache_curator_curator_client/jar/curator-client-4.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_client/_ijar/org_apache_curator_curator_client/external/org_apache_curator_curator_client/curator-client-4.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -589,7 +702,7 @@
     <orderEntry type="module-library">
       <library name="curator-framework-4.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_framework/jar/_ijar/jar/external/org_apache_curator_curator_framework/jar/curator-framework-4.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_framework/_ijar/org_apache_curator_curator_framework/external/org_apache_curator_curator_framework/curator-framework-4.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -598,7 +711,7 @@
     <orderEntry type="module-library">
       <library name="curator-recipes-4.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_recipes/jar/_ijar/jar/external/org_apache_curator_curator_recipes/jar/curator-recipes-4.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_curator_curator_recipes/_ijar/org_apache_curator_curator_recipes/external/org_apache_curator_curator_recipes/curator-recipes-4.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -607,7 +720,7 @@
     <orderEntry type="module-library">
       <library name="hadoop-annotations-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_annotations/jar/_ijar/jar/external/org_apache_hadoop_annotations/jar/hadoop-annotations-2.9.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_annotations/_ijar/org_apache_hadoop_hadoop_annotations/external/org_apache_hadoop_hadoop_annotations/hadoop-annotations-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -616,7 +729,7 @@
     <orderEntry type="module-library">
       <library name="hadoop-auth-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_auth/jar/_ijar/jar/external/org_apache_hadoop_auth/jar/hadoop-auth-2.9.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_auth/_ijar/org_apache_hadoop_hadoop_auth/external/org_apache_hadoop_hadoop_auth/hadoop-auth-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -625,16 +738,7 @@
     <orderEntry type="module-library">
       <library name="hadoop-common-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_common/jar/_ijar/jar/external/org_apache_hadoop_common/jar/hadoop-common-2.9.0-ijar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="hadoop-hdfs-2.9.0-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hdfs/jar/_ijar/jar/external/org_apache_hadoop_hdfs/jar/hadoop-hdfs-2.9.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_common/_ijar/org_apache_hadoop_hadoop_common/external/org_apache_hadoop_hadoop_common/hadoop-common-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -643,7 +747,16 @@
     <orderEntry type="module-library">
       <library name="hadoop-hdfs-client-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop/jar/_ijar/jar/external/org_apache_hadoop/jar/hadoop-hdfs-client-2.9.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_hdfs_client/_ijar/org_apache_hadoop_hadoop_hdfs_client/external/org_apache_hadoop_hadoop_hdfs_client/hadoop-hdfs-client-2.9.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hadoop-hdfs-2.9.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_hdfs/_ijar/org_apache_hadoop_hadoop_hdfs/external/org_apache_hadoop_hadoop_hdfs/hadoop-hdfs-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -652,7 +765,7 @@
     <orderEntry type="module-library">
       <library name="hadoop-mapreduce-client-core-2.9.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_mapreduce/jar/_ijar/jar/external/org_apache_hadoop_mapreduce/jar/hadoop-mapreduce-client-core-2.9.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_hadoop_hadoop_mapreduce_client_core/_ijar/org_apache_hadoop_hadoop_mapreduce_client_core/external/org_apache_hadoop_hadoop_mapreduce_client_core/hadoop-mapreduce-client-core-2.9.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -661,7 +774,7 @@
     <orderEntry type="module-library">
       <library name="htrace-core4-4.2.0-incubating-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_htrace/jar/_ijar/jar/external/org_apache_htrace/jar/htrace-core4-4.2.0-incubating-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_htrace_htrace_core4/_ijar/org_apache_htrace_htrace_core4/external/org_apache_htrace_htrace_core4/htrace-core4-4.2.0-incubating-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -670,7 +783,7 @@
     <orderEntry type="module-library">
       <library name="httpclient-4.5.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_httpcomponents_http_client/jar/_ijar/jar/external/org_apache_httpcomponents_http_client/jar/httpclient-4.5.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_httpcomponents_httpclient/_ijar/org_apache_httpcomponents_httpclient/external/org_apache_httpcomponents_httpclient/httpclient-4.5.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -679,7 +792,7 @@
     <orderEntry type="module-library">
       <library name="httpcore-4.4.5-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_httpcomponents_http_core/jar/_ijar/jar/external/org_apache_httpcomponents_http_core/jar/httpcore-4.4.5-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_httpcomponents_httpcore/_ijar/org_apache_httpcomponents_httpcore/external/org_apache_httpcomponents_httpcore/httpcore-4.4.5-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -688,7 +801,43 @@
     <orderEntry type="module-library">
       <library name="kafka-clients-1.0.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_kafka_kafka_clients/jar/_ijar/jar/external/org_apache_kafka_kafka_clients/jar/kafka-clients-1.0.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_kafka_kafka_clients/_ijar/org_apache_kafka_kafka_clients/external/org_apache_kafka_kafka_clients/kafka-clients-1.0.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-api-2.11.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_logging_log4j_log4j_api/_ijar/org_apache_logging_log4j_log4j_api/external/org_apache_logging_log4j_log4j_api/log4j-api-2.11.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-core-2.11.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_logging_log4j_log4j_core/_ijar/org_apache_logging_log4j_log4j_core/external/org_apache_logging_log4j_log4j_core/log4j-core-2.11.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-slf4j-impl-2.11.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_logging_log4j_log4j_slf4j_impl/_ijar/org_apache_logging_log4j_log4j_slf4j_impl/external/org_apache_logging_log4j_log4j_slf4j_impl/log4j-slf4j-impl-2.11.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="log4j-to-slf4j-2.11.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_logging_log4j_log4j_to_slf4j/_ijar/org_apache_logging_log4j_log4j_to_slf4j/external/org_apache_logging_log4j_log4j_to_slf4j/log4j-to-slf4j-2.11.1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -697,7 +846,34 @@
     <orderEntry type="module-library">
       <library name="mesos-1.5.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_mesos_mesos/jar/_ijar/jar/external/org_apache_mesos_mesos/jar/mesos-1.5.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_mesos_mesos/_ijar/org_apache_mesos_mesos/external/org_apache_mesos_mesos/mesos-1.5.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="tomcat-embed-core-9.0.12-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_tomcat_embed_tomcat_embed_core/_ijar/org_apache_tomcat_embed_tomcat_embed_core/external/org_apache_tomcat_embed_tomcat_embed_core/tomcat-embed-core-9.0.12-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="tomcat-embed-el-9.0.12-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_tomcat_embed_tomcat_embed_el/_ijar/org_apache_tomcat_embed_tomcat_embed_el/external/org_apache_tomcat_embed_tomcat_embed_el/tomcat-embed-el-9.0.12-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="tomcat-embed-websocket-9.0.12-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_tomcat_embed_tomcat_embed_websocket/_ijar/org_apache_tomcat_embed_tomcat_embed_websocket/external/org_apache_tomcat_embed_tomcat_embed_websocket/tomcat-embed-websocket-9.0.12-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -706,7 +882,25 @@
     <orderEntry type="module-library">
       <library name="zookeeper-3.4.11-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_zookeeper_zookeeper/jar/_ijar/jar/external/org_apache_zookeeper_zookeeper/jar/zookeeper-3.4.11-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_apache_zookeeper_zookeeper/_ijar/org_apache_zookeeper_zookeeper/external/org_apache_zookeeper_zookeeper/zookeeper-3.4.11-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="aspectjweaver-1.9.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_aspectj_aspectjweaver/_ijar/org_aspectj_aspectjweaver/external/org_aspectj_aspectjweaver/aspectjweaver-1.9.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="assertj-core-3.11.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_assertj_assertj_core/_ijar/org_assertj_assertj_core/external/org_assertj_assertj_core/assertj-core-3.11.1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -715,7 +909,7 @@
     <orderEntry type="module-library">
       <library name="bcpkix-jdk15on-1.56-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_bouncycastle_bcpkix_jdk15on/jar/_ijar/jar/external/org_bouncycastle_bcpkix_jdk15on/jar/bcpkix-jdk15on-1.56-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_bouncycastle_bcpkix_jdk15on/_ijar/org_bouncycastle_bcpkix_jdk15on/external/org_bouncycastle_bcpkix_jdk15on/bcpkix-jdk15on-1.56-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -724,7 +918,7 @@
     <orderEntry type="module-library">
       <library name="bcprov-jdk15on-1.56-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_bouncycastle_bcprov_jdk15on/jar/_ijar/jar/external/org_bouncycastle_bcprov_jdk15on/jar/bcprov-jdk15on-1.56-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_bouncycastle_bcprov_jdk15on/_ijar/org_bouncycastle_bcprov_jdk15on/external/org_bouncycastle_bcprov_jdk15on/bcprov-jdk15on-1.56-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -733,7 +927,133 @@
     <orderEntry type="module-library">
       <library name="stax2-api-3.0.1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_codehaus_woodstox/jar/_ijar/jar/external/org_codehaus_woodstox/jar/stax2-api-3.0.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_codehaus_woodstox_stax2_api/_ijar/org_codehaus_woodstox_stax2_api/external/org_codehaus_woodstox_stax2_api/stax2-api-3.0.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="dom4j-2.1.1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_dom4j_dom4j/_ijar/org_dom4j_dom4j/external/org_dom4j_dom4j/dom4j-2.1.1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hamcrest-core-1.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_hamcrest_hamcrest_core/_ijar/org_hamcrest_hamcrest_core/external/org_hamcrest_hamcrest_core/hamcrest-core-1.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hamcrest-library-1.3-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_hamcrest_hamcrest_library/_ijar/org_hamcrest_hamcrest_library/external/org_hamcrest_hamcrest_library/hamcrest-library-1.3-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-commons-annotations-5.0.4.Final-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_hibernate_common_hibernate_commons_annotations/_ijar/org_hibernate_common_hibernate_commons_annotations/external/org_hibernate_common_hibernate_commons_annotations/hibernate-commons-annotations-5.0.4.Final-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-core-5.3.7.Final-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_hibernate_hibernate_core/_ijar/org_hibernate_hibernate_core/external/org_hibernate_hibernate_core/hibernate-core-5.3.7.Final-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-validator-6.0.13.Final-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_hibernate_validator_hibernate_validator/_ijar/org_hibernate_validator_hibernate_validator/external/org_hibernate_validator_hibernate_validator/hibernate-validator-6.0.13.Final-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javassist-3.18.1-GA-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_javassist_javassist/_ijar/org_javassist_javassist/external/org_javassist_javassist/javassist-3.18.1-GA-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javassist-3.24.0-GA-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_javassist_javassist/_ijar/org_javassist_javassist/external/org_javassist_javassist/javassist-3.24.0-GA-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jandex-2.0.5.Final-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_jboss_jandex/_ijar/org_jboss_jandex/external/org_jboss_jandex/jandex-2.0.5.Final-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jboss-logging-3.3.2.Final-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_jboss_logging_jboss_logging/_ijar/org_jboss_logging_jboss_logging/external/org_jboss_logging_jboss_logging/jboss-logging-3.3.2.Final-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="lmdbjava-0.6.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lmdbjava_lmdbjava/_ijar/org_lmdbjava_lmdbjava/external/org_lmdbjava_lmdbjava/lmdbjava-0.6.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="lmdbjava-native-linux-x86_64-0.9.21-1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lmdbjava_lmdbjava_native_linux_x86_64/_ijar/org_lmdbjava_lmdbjava_native_linux_x86_64/external/org_lmdbjava_lmdbjava_native_linux_x86_64/lmdbjava-native-linux-x86_64-0.9.21-1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="lmdbjava-native-osx-x86_64-0.9.21-1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lmdbjava_lmdbjava_native_osx_x86_64/_ijar/org_lmdbjava_lmdbjava_native_osx_x86_64/external/org_lmdbjava_lmdbjava_native_osx_x86_64/lmdbjava-native-osx-x86_64-0.9.21-1-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lmdbjava_lmdbjava_native_windows_x86_64/_ijar/org_lmdbjava_lmdbjava_native_windows_x86_64/external/org_lmdbjava_lmdbjava_native_windows_x86_64/lmdbjava-native-windows-x86_64-0.9.21-1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -742,34 +1062,412 @@
     <orderEntry type="module-library">
       <library name="lz4-java-1.4-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lz4_lz4_java/jar/_ijar/jar/external/org_lz4_lz4_java/jar/lz4-java-1.4-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_lz4_lz4_java/_ijar/org_lz4_lz4_java/external/org_lz4_lz4_java/lz4-java-1.4-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="objenesis-2.1-ijar.jar">
+      <library name="mapstruct-1.2.0.Final-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_objenesis_objenesis/jar/_ijar/jar/external/org_objenesis_objenesis/jar/objenesis-2.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_mapstruct_mapstruct/_ijar/org_mapstruct_mapstruct/external/org_mapstruct_mapstruct/mapstruct-1.2.0.Final-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="asm-4.2-ijar.jar">
+      <library name="mockito-all-1.10.19-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_ow2_asm_asm/jar/_ijar/jar/external/org_ow2_asm_asm/jar/asm-4.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_mockito_mockito_all/_ijar/org_mockito_mockito_all/external/org_mockito_mockito_all/mockito-all-1.10.19-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="slf4j-api-1.7.7-ijar.jar">
+      <library name="mockito-core-2.23.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_slf4j_slf4j_api/jar/_ijar/jar/external/org_slf4j_slf4j_api/jar/slf4j-api-1.7.7-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_mockito_mockito_core/_ijar/org_mockito_mockito_core/external/org_mockito_mockito_core/mockito-core-2.23.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="objenesis-2.6-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_objenesis_objenesis/_ijar/org_objenesis_objenesis/external/org_objenesis_objenesis/objenesis-2.6-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="asm-5.0.4-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_ow2_asm_asm/_ijar/org_ow2_asm_asm/external/org_ow2_asm_asm/asm-5.0.4-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-api-mockito-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_api_mockito/_ijar/org_powermock_powermock_api_mockito/external/org_powermock_powermock_api_mockito/powermock-api-mockito-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-api-support-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_api_support/_ijar/org_powermock_powermock_api_support/external/org_powermock_powermock_api_support/powermock-api-support-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-core-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_core/_ijar/org_powermock_powermock_core/external/org_powermock_powermock_core/powermock-core-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-module-junit4-common-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_module_junit4_common/_ijar/org_powermock_powermock_module_junit4_common/external/org_powermock_powermock_module_junit4_common/powermock-module-junit4-common-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-module-junit4-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_module_junit4/_ijar/org_powermock_powermock_module_junit4/external/org_powermock_powermock_module_junit4/powermock-module-junit4-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="powermock-reflect-1.6.2-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_powermock_powermock_reflect/_ijar/org_powermock_powermock_reflect/external/org_powermock_powermock_reflect/powermock-reflect-1.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jsonassert-1.5.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_skyscreamer_jsonassert/_ijar/org_skyscreamer_jsonassert/external/org_skyscreamer_jsonassert/jsonassert-1.5.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jul-to-slf4j-1.7.25-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_slf4j_jul_to_slf4j/_ijar/org_slf4j_jul_to_slf4j/external/org_slf4j_jul_to_slf4j/jul-to-slf4j-1.7.25-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="slf4j-api-1.7.25-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_slf4j_slf4j_api/_ijar/org_slf4j_slf4j_api/external/org_slf4j_slf4j_api/slf4j-api-1.7.25-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-autoconfigure-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_autoconfigure/_ijar/org_springframework_boot_spring_boot_autoconfigure/external/org_springframework_boot_spring_boot_autoconfigure/spring-boot-autoconfigure-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot/_ijar/org_springframework_boot_spring_boot/external/org_springframework_boot_spring_boot/spring-boot-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-loader-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_loader/_ijar/org_springframework_boot_spring_boot_loader/external/org_springframework_boot_spring_boot_loader/spring-boot-loader-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-aop-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_aop/_ijar/org_springframework_boot_spring_boot_starter_aop/external/org_springframework_boot_spring_boot_starter_aop/spring-boot-starter-aop-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-data-jpa-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_data_jpa/_ijar/org_springframework_boot_spring_boot_starter_data_jpa/external/org_springframework_boot_spring_boot_starter_data_jpa/spring-boot-starter-data-jpa-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter/_ijar/org_springframework_boot_spring_boot_starter/external/org_springframework_boot_spring_boot_starter/spring-boot-starter-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-jdbc-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_jdbc/_ijar/org_springframework_boot_spring_boot_starter_jdbc/external/org_springframework_boot_spring_boot_starter_jdbc/spring-boot-starter-jdbc-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-json-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_json/_ijar/org_springframework_boot_spring_boot_starter_json/external/org_springframework_boot_spring_boot_starter_json/spring-boot-starter-json-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-logging-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_logging/_ijar/org_springframework_boot_spring_boot_starter_logging/external/org_springframework_boot_spring_boot_starter_logging/spring-boot-starter-logging-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-test-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_test/_ijar/org_springframework_boot_spring_boot_starter_test/external/org_springframework_boot_spring_boot_starter_test/spring-boot-starter-test-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-tomcat-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_tomcat/_ijar/org_springframework_boot_spring_boot_starter_tomcat/external/org_springframework_boot_spring_boot_starter_tomcat/spring-boot-starter-tomcat-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-starter-web-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_starter_web/_ijar/org_springframework_boot_spring_boot_starter_web/external/org_springframework_boot_spring_boot_starter_web/spring-boot-starter-web-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-test-autoconfigure-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_test_autoconfigure/_ijar/org_springframework_boot_spring_boot_test_autoconfigure/external/org_springframework_boot_spring_boot_test_autoconfigure/spring-boot-test-autoconfigure-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-boot-test-2.1.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_boot_spring_boot_test/_ijar/org_springframework_boot_spring_boot_test/external/org_springframework_boot_spring_boot_test/spring-boot-test-2.1.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-data-commons-2.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_data_spring_data_commons/_ijar/org_springframework_data_spring_data_commons/external/org_springframework_data_spring_data_commons/spring-data-commons-2.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-data-jpa-2.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_data_spring_data_jpa/_ijar/org_springframework_data_spring_data_jpa/external/org_springframework_data_spring_data_jpa/spring-data-jpa-2.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-plugin-core-1.2.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_plugin_spring_plugin_core/_ijar/org_springframework_plugin_spring_plugin_core/external/org_springframework_plugin_spring_plugin_core/spring-plugin-core-1.2.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-plugin-metadata-1.2.0.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_plugin_spring_plugin_metadata/_ijar/org_springframework_plugin_spring_plugin_metadata/external/org_springframework_plugin_spring_plugin_metadata/spring-plugin-metadata-1.2.0.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-aop-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_aop/_ijar/org_springframework_spring_aop/external/org_springframework_spring_aop/spring-aop-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-aspects-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_aspects/_ijar/org_springframework_spring_aspects/external/org_springframework_spring_aspects/spring-aspects-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-beans-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_beans/_ijar/org_springframework_spring_beans/external/org_springframework_spring_beans/spring-beans-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-context-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_context/_ijar/org_springframework_spring_context/external/org_springframework_spring_context/spring-context-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-core-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_core/_ijar/org_springframework_spring_core/external/org_springframework_spring_core/spring-core-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-expression-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_expression/_ijar/org_springframework_spring_expression/external/org_springframework_spring_expression/spring-expression-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-jcl-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_jcl/_ijar/org_springframework_spring_jcl/external/org_springframework_spring_jcl/spring-jcl-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-jdbc-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_jdbc/_ijar/org_springframework_spring_jdbc/external/org_springframework_spring_jdbc/spring-jdbc-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-orm-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_orm/_ijar/org_springframework_spring_orm/external/org_springframework_spring_orm/spring-orm-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-test-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_test/_ijar/org_springframework_spring_test/external/org_springframework_spring_test/spring-test-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-tx-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_tx/_ijar/org_springframework_spring_tx/external/org_springframework_spring_tx/spring-tx-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-web-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_web/_ijar/org_springframework_spring_web/external/org_springframework_spring_web/spring-web-5.1.2.RELEASE-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="spring-webmvc-5.1.2.RELEASE-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_springframework_spring_webmvc/_ijar/org_springframework_spring_webmvc/external/org_springframework_spring_webmvc/spring-webmvc-5.1.2.RELEASE-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -778,16 +1476,25 @@
     <orderEntry type="module-library">
       <library name="snappy-java-1.1.4-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_xerial_snappy_snappy_java/jar/_ijar/jar/external/org_xerial_snappy_snappy_java/jar/snappy-java-1.1.4-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_xerial_snappy_snappy_java/_ijar/org_xerial_snappy_snappy_java/external/org_xerial_snappy_snappy_java/snappy-java-1.1.4-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="snakeyaml-1.15-ijar.jar">
+      <library name="xmlunit-core-2.6.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_yaml_snakeyaml/jar/_ijar/jar/external/org_yaml_snakeyaml/jar/snakeyaml-1.15-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_xmlunit_xmlunit_core/_ijar/org_xmlunit_xmlunit_core/external/org_xmlunit_xmlunit_core/xmlunit-core-2.6.2-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="snakeyaml-1.23-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/external/org_yaml_snakeyaml/_ijar/org_yaml_snakeyaml/external/org_yaml_snakeyaml/snakeyaml-1.23-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -803,12 +1510,31 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="harp-collective-0.1.0-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-genfiles/third_party/_ijar/harp_collective/third_party/harp/harp-collective-0.1.0-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="ompijavabinding-3.0.0-ijar.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-genfiles/third_party/_ijar/ompi_javabinding_java/third_party/ompi/ompijavabinding-3.0.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="extra_actions_proto_java_src.srcjar">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/bazel-genfiles/third_party/java/bazel/extra_actions_proto_java_src.srcjar" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/bazel-genfiles/third_party/java/bazel/extra_actions_proto_java_src.srcjar" recursive="false" />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
@@ -824,6 +1550,15 @@
       <library name="libextra_actions_proto_java.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/bin/third_party/java/bazel/libextra_actions_proto_java.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="libextra_actions_proto_java-native-header.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/bin/third_party/java/bazel/libextra_actions_proto_java-native-header.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -848,6 +1583,15 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="libproto_java-native-header.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/bin/third_party/java/bazel/libproto_java-native-header.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="libcheckstyle-hjar.jar">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/bin/third_party/java/libcheckstyle-hjar.jar!/" />
@@ -866,36 +1610,55 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
+      <library name="libcheckstyle-native-header.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/bin/third_party/java/libcheckstyle-native-header.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
       <library name="antlr-2.7.7-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/antlr_antlr/jar/_ijar/jar/external/antlr_antlr/jar/antlr-2.7.7-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/antlr_antlr/_ijar/antlr_antlr/external/antlr_antlr/antlr-2.7.7-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="guava-18.0-ijar.jar">
+      <library name="platformclasspath8.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_google_guava_guava/jar/_ijar/jar/external/com_google_guava_guava/jar/guava-18.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/bazel_tools/tools/jdk/platformclasspath8.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="protobuf-java-3.4.0-ijar.jar">
+      <library name="guava-20.0-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_google_protobuf_protobuf_java/jar/_ijar/jar/external/com_google_protobuf_protobuf_java/jar/protobuf-java-3.4.0-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_google_guava_guava/_ijar/com_google_guava_guava/external/com_google_guava_guava/guava-20.0-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="wellknown.srcjar">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_google_protobuf/wellknown.srcjar" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_google_protobuf/wellknown.srcjar" recursive="false" />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library name="commons-beanutils-1.9.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_beanutils_commons_beanutils/jar/_ijar/jar/external/commons_beanutils_commons_beanutils/jar/commons-beanutils-1.9.2-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_beanutils_commons_beanutils/_ijar/commons_beanutils_commons_beanutils/external/commons_beanutils_commons_beanutils/commons-beanutils-1.9.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -904,25 +1667,16 @@
     <orderEntry type="module-library">
       <library name="commons-cli-1.3.1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_cli_commons_cli/jar/_ijar/jar/external/commons_cli_commons_cli/jar/commons-cli-1.3.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_cli_commons_cli/_ijar/commons_cli_commons_cli/external/commons_cli_commons_cli/commons-cli-1.3.1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="commons-collections-3.2.1-ijar.jar">
+      <library name="commons-collections-3.2.2-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_collections_commons_collections/jar/_ijar/jar/external/commons_collections_commons_collections/jar/commons-collections-3.2.1-ijar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="commons-lang3-3.6-ijar.jar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_lang_commons_lang/jar/_ijar/jar/external/commons_lang_commons_lang/jar/commons-lang3-3.6-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_collections_commons_collections/_ijar/commons_collections_commons_collections/external/commons_collections_commons_collections/commons-collections-3.2.2-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -931,7 +1685,7 @@
     <orderEntry type="module-library">
       <library name="commons-logging-1.1.1-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_logging_commons_logging/jar/_ijar/jar/external/commons_logging_commons_logging/jar/commons-logging-1.1.1-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/commons_logging_commons_logging/_ijar/commons_logging_commons_logging/external/commons_logging_commons_logging/commons-logging-1.1.1-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -940,7 +1694,16 @@
     <orderEntry type="module-library">
       <library name="checkstyle-6.17-ijar.jar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_puppycrawl_tools_checkstyle/jar/_ijar/jar/external/com_puppycrawl_tools_checkstyle/jar/checkstyle-6.17-ijar.jar!/" />
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/com_puppycrawl_tools_checkstyle/_ijar/com_puppycrawl_tools_checkstyle/external/com_puppycrawl_tools_checkstyle/checkstyle-6.17-ijar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-lang3-3.6-ijar.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/bazel-twister2/bazel-out/host/genfiles/external/org_apache_commons_commons_lang3/_ijar/org_apache_commons_commons_lang3/external/org_apache_commons_commons_lang3/commons-lang3-3.6-ijar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

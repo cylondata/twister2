@@ -1,0 +1,33 @@
+.tw-node-card {
+  display: grid;
+  grid-template-columns: 60px auto;
+  .tw-node-icon {
+    color: #5c7080;
+  }
+
+  .tw-node-info-wrapper {
+    h4 {
+      margin: 0 0 5px 0;
+    }
+
+    table {
+      width: 100%;
+
+      td {
+        padding: 5px;
+      }
+    }
+  }
+
+  .tw-node-actions {
+    text-align: right;
+    margin-top: 10px;
+
+    button {
+      &:not(last-of-type) {
+        margin-right: 5px;
+      }
+      width: 100px;
+    }
+  }
+}

@@ -1,0 +1,22 @@
+.tw-table-row {
+  .tw-row-icon {
+    color: #5c7080;
+  }
+
+  border-radius: 0 !important;
+
+  .tw-table-row-right {
+    float: right;
+    text-align: right;
+  }
+
+  &:first-of-type {
+    border-top-left-radius: 3px !important;
+    border-top-right-radius: 3px !important;
+  }
+
+  &:last-of-type {
+    border-bottom-left-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+  }
+}
