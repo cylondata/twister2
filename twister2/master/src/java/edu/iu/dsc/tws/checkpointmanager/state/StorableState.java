@@ -11,7 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager.state;
 
-public interface ManagedInitializationContext {
-  boolean isRestored();
+public class StorableState {
 
+  private Class<?> className;
+  private Object state;
+
+  public StorableState(Object object) {
+    this.className = object.getClass();
+    this.state = object;
+  }
 }

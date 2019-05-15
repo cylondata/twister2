@@ -9,10 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.checkpointmanager.state;
 
-public interface ManagedSnapshotContext {
-  long getCheckpointId();
+package edu.iu.dsc.tws.task.api;
 
-  long getCheckpointTimestamp();
+import java.util.HashMap;
+import java.util.Map;
+
+public class Snapshot {
+
+  private final Map<String, Object> states = new HashMap<>();
+
+  public void addState(String key, Object value) {
+    this.states.put(key, value);
+
+  }
+
+  public Object getState(String key) {
+    return this.states.get(key);
+  }
+
+  public Map<String, Object> getAllStates() {
+    return this.states;
+  }
+
+
 }

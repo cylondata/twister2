@@ -11,21 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
+import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
+import edu.iu.dsc.tws.task.api.Snapshot;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkStreamingInstance implements INodeInstance {
+
+  private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
+
   /**
    * The actual streamingTask executing
    */
@@ -105,18 +116,49 @@ public class SinkStreamingInstance implements INodeInstance {
     this.taskName = tName;
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
+    if (CheckpointContext.getCheckpointRecovery(config)) {
+      try {
+        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
+            globalTaskID, workerId);
+        ((ICheckPointable) this.streamingTask).restoreSnapshot(snapshot);
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "Could not read checkpoint", e);
+      }
+    }
   }
 
   public void prepare(Config cfg) {
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
-        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+    TaskContextImpl taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
+        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan);
+    streamingTask.prepare(cfg, taskContext);
+    if (streamingTask instanceof SinkCheckpointableTask) {
+      ((SinkCheckpointableTask) streamingTask).connect(config, taskContext);
+    }
   }
 
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
-      IMessage m = streamingInQueue.poll();
-      if (m != null) {
-        streamingTask.execute(m);
+      IMessage message = streamingInQueue.poll();
+      if (message != null) {
+        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) != MessageFlags.SYNC_BARRIER) {
+          streamingTask.execute(message);
+        } else {
+          //Send acknowledge message to jobmaster
+          LOG.info("Barrier message received in Sink " + globalTaskId
+              + " from source " + message.sourceTask());
+
+          Object messageContent = message.getContent();
+
+          if (messageContent instanceof ArrayList) {
+            @SuppressWarnings("unchecked")
+            ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
+
+            if (storeSnapshot(messageArray.get(0))) {
+              ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
+            }
+          }
+        }
       }
     }
 
@@ -145,5 +187,17 @@ public class SinkStreamingInstance implements INodeInstance {
 
   public BlockingQueue<IMessage> getstreamingInQueue() {
     return streamingInQueue;
+  }
+
+  public boolean storeSnapshot(int checkpointID) {
+    try {
+      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
+      fsStateBackend.writeToStateBackend(config, globalTaskId, workerId,
+          (ICheckPointable) streamingTask, checkpointID);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "Could not store checkpoint ", e);
+      return false;
+    }
   }
 }

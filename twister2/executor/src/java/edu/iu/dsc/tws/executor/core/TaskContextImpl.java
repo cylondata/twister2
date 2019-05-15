@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -266,6 +267,12 @@ public class TaskContextImpl implements TaskContext {
   public boolean write(String edge, Object message) {
     this.validateEdge(edge);
     return collection.collect(edge, new TaskMessage<>(message, edge, globalTaskId));
+  }
+
+  @Override
+  public boolean writeBarrier(String edge, Object message) {
+    return collection.collect(edge, new TaskMessage(message,
+        MessageFlags.SYNC_BARRIER, edge, globalTaskId));
   }
 
   /**

@@ -21,13 +21,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.checkpointmanager;
+package edu.iu.dsc.tws.task.api;
 
-import edu.iu.dsc.tws.checkpointmanager.state.ManagedInitializationContext;
-import edu.iu.dsc.tws.checkpointmanager.state.ManagedSnapshotContext;
 
-public interface CheckpointedFunction {
-  void snapshotState(ManagedSnapshotContext context) throws Exception;
+public interface ICheckPointable {
 
-  void initializeState(ManagedInitializationContext context) throws Exception;
+  Snapshot getSnapshot();
+
+  void restoreSnapshot(Snapshot snapshot);
 }

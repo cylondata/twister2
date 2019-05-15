@@ -14,6 +14,7 @@ t2_java_lib(
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@com_google_protobuf_protobuf_java//jar",
         "@org_yaml_snakeyaml//jar",
     ],
 )
