@@ -47,7 +47,7 @@ public final class CommonThreadPool {
     int keepAlive = config.getIntegerValue(COMMON_POOL_KEEP_ALIVE, 10);
     if (commonThreadPool == null) {
       commonThreadPool = new CommonThreadPool(threads, keepAlive);
-      LOG.info("Initialized common thread pool with " + threads + " threads.");
+      LOG.fine("Initialized common thread pool with " + threads + " threads.");
     } else {
       LOG.warning("Thread pool has already initialized.");
     }

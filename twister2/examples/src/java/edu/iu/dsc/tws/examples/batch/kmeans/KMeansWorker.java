@@ -59,7 +59,7 @@ public class KMeansWorker extends TaskWorker {
   @SuppressWarnings("unchecked")
   @Override
   public void execute() {
-    LOG.log(Level.INFO, "Task worker starting: " + workerId);
+    LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
