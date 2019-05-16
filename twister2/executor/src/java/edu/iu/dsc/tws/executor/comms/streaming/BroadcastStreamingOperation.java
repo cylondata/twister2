@@ -89,7 +89,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override
