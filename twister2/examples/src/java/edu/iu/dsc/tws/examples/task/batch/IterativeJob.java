@@ -98,7 +98,7 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void refresh() {
+    public void reset() {
       count = 0;
     }
   }
@@ -124,7 +124,7 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void refresh() {
+    public void reset() {
       count = 0;
     }
 

@@ -312,7 +312,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (finalReceiver != null) {
       finalReceiver.clean();
     }

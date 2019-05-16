@@ -371,7 +371,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (partialReceiver != null) {
       partialReceiver.clean();
     }
