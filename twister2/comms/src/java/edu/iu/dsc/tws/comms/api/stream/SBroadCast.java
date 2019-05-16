@@ -79,7 +79,7 @@ public class SBroadCast {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    bCast.clean();
+  public void reset() {
+    bCast.reset();
   }
 }
