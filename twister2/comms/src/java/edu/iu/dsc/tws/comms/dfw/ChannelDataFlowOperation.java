@@ -33,6 +33,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -329,9 +330,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);
 
-      currentMessage = new InMessage(id, receiveDataType, this, header);
+      MessageType recvDType = receiveDataType;
+      MessageType recvKType = receiveKeyType;
+
+      if ((header.getFlags() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        recvDType = MessageTypes.BYTE_ARRAY;
+        recvKType = MessageTypes.EMPTY;
+      }
+
+      currentMessage = new InMessage(id, recvDType, this, header);
       if (isKeyed) {
-        currentMessage.setKeyType(receiveKeyType);
+        currentMessage.setKeyType(recvKType);
       }
       if (!currentMessage.addBufferAndCalculate(buffer)) {
         currentMessages.put(source, currentMessage);
@@ -427,9 +436,16 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         path = routingParameters.getDestinationId();
       }
 
+      MessageType dType = dataType;
+      MessageType kType = keyType;
+      if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        dType = MessageTypes.BYTE_ARRAY;
+        kType = MessageTypes.EMPTY;
+      }
+
       OutMessage sendMessage = new OutMessage(source, edge,
           path, target, flags, routingParameters.getInternalRoutes(),
-          routingParameters.getExternalRoutes(), dataType, keyType, this);
+          routingParameters.getExternalRoutes(), dType, kType, this);
 
       // now try to put this into pending
       return pendingSendMessages.offer(
