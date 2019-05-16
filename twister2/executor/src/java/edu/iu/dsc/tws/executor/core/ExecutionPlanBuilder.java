@@ -205,6 +205,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getSourceTask(), i);
             taskStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+            op.registerSync(i, taskStreamingInstance);
           } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
             SourceStreamingInstance sourceStreamingInstance
                 = streamingSourceInstances.get(c.getSourceTask(), i);
@@ -220,16 +221,19 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                 = streamingTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskStreamingInstance.getInQueue());
             taskStreamingInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            op.registerSync(i, taskStreamingInstance);
           } else if (streamingSinkInstances.contains(c.getTargetTask(), i)) {
             SinkStreamingInstance streamingSinkInstance
                 = streamingSinkInstances.get(c.getTargetTask(), i);
             streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, streamingSinkInstance.getstreamingInQueue());
+            op.registerSync(i, streamingSinkInstance);
           } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
             SinkStreamingWindowingInstance sinkStreamingWindowingInstance
                 = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
             sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
+            op.registerSync(i, sinkStreamingWindowingInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
