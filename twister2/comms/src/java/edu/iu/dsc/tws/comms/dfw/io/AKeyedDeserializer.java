@@ -14,26 +14,16 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
 public class AKeyedDeserializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(AKeyedDeserializer.class.getName());
-
-  private DataPacker dataPacker;
-
-  public AKeyedDeserializer(int exec, MessageType dataType) {
-    dataPacker = dataType.getDataPacker();
-    LOG.fine("Initializing serializer on worker: " + exec);
-  }
 
   @Override
   public void init(Config cfg, boolean k) {
@@ -50,6 +40,7 @@ public class AKeyedDeserializer implements MessageDeSerializer {
   @Override
   public Object build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
+    DataPacker dataPacker = currentMessage.getDataType().getDataPacker();
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
     MessageHeader header = currentMessage.getHeader();
 

@@ -28,7 +28,6 @@ import com.google.common.collect.Table;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -283,10 +282,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
-        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), workerId,
-            keyType, dataType));
+        serializerMap.put(s, new KeyedSerializer());
       } else {
-        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), workerId, dataType));
+        serializerMap.put(s, new AKeyedSerializer());
       }
     }
 
@@ -304,10 +302,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
-            workerId, keyType, dataType));
+        deSerializerMap.put(e, new KeyedDeSerializer());
       } else {
-        deSerializerMap.put(e, new AKeyedDeserializer(workerId, dataType));
+        deSerializerMap.put(e, new AKeyedDeserializer());
       }
     }
 

@@ -16,9 +16,7 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
@@ -27,19 +25,6 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
  */
 public class KeyedSerializer extends BaseSerializer {
   private static final Logger LOG = Logger.getLogger(KeyedSerializer.class.getName());
-
-  private DataPacker dataPacker;
-
-  private DataPacker keyPacker;
-
-  public KeyedSerializer(KryoSerializer serializer, int executor,
-                         MessageType keyType, MessageType dataType) {
-    super(serializer, executor);
-    this.serializer = serializer;
-    dataPacker = dataType.getDataPacker();
-    keyPacker = keyType.getDataPacker();
-    LOG.fine("Initializing serializer on worker: " + executor);
-  }
 
   @Override
   public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
@@ -58,6 +43,8 @@ public class KeyedSerializer extends BaseSerializer {
                                         OutMessage sendMessage, DataBuffer targetBuffer) {
     Tuple tuple = (Tuple) payload;
     return serializeKeyedData(tuple.getValue(), tuple.getKey(),
+        sendMessage.getDataType().getDataPacker(),
+        sendMessage.getKeyType().getDataPacker(),
         sendMessage.getSerializationState(), targetBuffer);
   }
 
@@ -70,7 +57,9 @@ public class KeyedSerializer extends BaseSerializer {
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeKeyedData(Object payload, Object key, SerializeState state,
+  private boolean serializeKeyedData(Object payload, Object key,
+                                     DataPacker keyPacker, DataPacker dataPacker,
+                                     SerializeState state,
                                      DataBuffer targetBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
@@ -94,7 +83,7 @@ public class KeyedSerializer extends BaseSerializer {
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
       if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength(),
-          state.getActive().getTotalToCopy())) {
+          state.getActive().getTotalToCopy(), keyPacker)) {
         // now set the size of the buffer
         targetBuffer.setSize(byteBuffer.position());
         return false;
@@ -144,7 +133,8 @@ public class KeyedSerializer extends BaseSerializer {
    * sub message. The structure of the sub message header is |length + (key length)|. The key length
    * is added for keyed messages
    */
-  private boolean buildSubMessageHeader(DataBuffer buffer, int length, int keyLength) {
+  private boolean buildSubMessageHeader(DataBuffer buffer, int length,
+                                        int keyLength, DataPacker keyPacker) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     int requiredSpace = keyPacker.isHeaderRequired()
         ? MAX_SUB_MESSAGE_HEADER_SPACE : NORMAL_SUB_MESSAGE_HEADER_SIZE;

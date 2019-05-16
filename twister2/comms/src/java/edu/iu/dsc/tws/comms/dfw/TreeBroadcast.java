@@ -28,7 +28,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -250,10 +249,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
               DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (keyType == null) {
-        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), executor, type));
+        serializerMap.put(s, new AKeyedSerializer());
       } else {
-        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(),
-            executor, keyType, type));
+        serializerMap.put(s, new KeyedSerializer());
       }
     }
 
@@ -271,10 +269,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
-        deSerializerMap.put(source, new AKeyedDeserializer(executor, type));
+        deSerializerMap.put(source, new AKeyedDeserializer());
       } else {
-        deSerializerMap.put(source, new KeyedDeSerializer(new KryoSerializer(),
-            executor, keyType, type));
+        deSerializerMap.put(source, new KeyedDeSerializer());
       }
     }
 

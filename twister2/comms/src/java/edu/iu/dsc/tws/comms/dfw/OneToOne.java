@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -188,8 +187,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(),
-          taskPlan.getThisExecutor(), type));
+      serializerMap.put(s, new AKeyedSerializer());
     }
 
     for (int tar : thisTargets) {
@@ -199,8 +197,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
 
-      MessageDeSerializer messageDeSerializer = new AKeyedDeserializer(
-          taskPlan.getThisExecutor(), type);
+      MessageDeSerializer messageDeSerializer = new AKeyedDeserializer();
       deSerializerMap.put(tar, messageDeSerializer);
     }
 
