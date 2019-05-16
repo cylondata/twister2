@@ -130,7 +130,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     this.context.reset();
     state = new InstanceState(InstanceState.INIT);
     if (batchTask instanceof Closable) {
-      ((Closable) batchTask).refresh();
+      ((Closable) batchTask).reset();
     }
   }
 
