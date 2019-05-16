@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.data.fs.local;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 
@@ -52,6 +53,11 @@ public class LocalDataOutputStream extends FSDataOutputStream {
   @Override
   public void close() throws IOException {
     fos.close();
+  }
+
+  @Override
+  public void write(ByteBuffer byteBuffer) throws IOException {
+    fos.getChannel().write(byteBuffer);
   }
 
 

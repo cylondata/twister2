@@ -140,16 +140,15 @@ public final class TwoDataFlowsExample {
   }
 
   private static void runFirstJob(Config config, CDFWEnv cdfwEnv,
-                                          int parallelismValue, DafaFlowJobConfig jobConfig) {
+                                          int parallelism, DafaFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
+    graphBuilderX.addSource("source1", firstSourceTask, parallelism);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
-        parallelismValue);
-    partitionConnection.partition("source1", "partition",
-        DataType.OBJECT);
+        parallelism);
+    partitionConnection.partition("source1", "partition", DataType.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
@@ -159,17 +158,16 @@ public final class TwoDataFlowsExample {
     cdfwEnv.executeDataFlowGraph(job);
   }
 
-  private static void runSecondJob(Config config, CDFWEnv cdfwEnv,
-                                          int parallelismValue, DafaFlowJobConfig jobConfig) {
+  private static void runSecondJob(Config config, CDFWEnv cdfwEnv, int parallelism,
+                                   DafaFlowJobConfig jobConfig) {
+
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", connectedSource, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
-        1);
-    reduceConn.reduce("source1", "reduce", new Aggregator(),
-        DataType.OBJECT);
+    graphBuilderX.addSource("source1", connectedSource, parallelism);
+    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
+    reduceConn.reduce("source1", "reduce", new Aggregator(), DataType.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();

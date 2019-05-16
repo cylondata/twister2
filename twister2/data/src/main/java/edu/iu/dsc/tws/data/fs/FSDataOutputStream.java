@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.data.fs;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * An output stream to a file that is created via a {@link FileSystem}.
@@ -103,4 +104,6 @@ public abstract class FSDataOutputStream extends OutputStream {
    * that the data is persistent.
    */
   public abstract void close() throws IOException;
+
+  public abstract void write(ByteBuffer byteBuffer) throws IOException;
 }
