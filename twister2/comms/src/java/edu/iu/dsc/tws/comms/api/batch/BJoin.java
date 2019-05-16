@@ -159,9 +159,9 @@ public class BJoin {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    partitionLeft.clean();
-    partitionRight.clean();
+  public void reset() {
+    partitionLeft.reset();
+    partitionRight.reset();
   }
 
   private class IntegerComparator implements Comparator<Object> {

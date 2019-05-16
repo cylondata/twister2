@@ -87,7 +87,7 @@ public class BKeyedPartition {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    partition.clean();
+  public void reset() {
+    partition.reset();
   }
 }
