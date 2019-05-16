@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.api;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class BaseNode implements INode, ICheckPointable {
+public abstract class BaseNode implements INode, ICheckPointable, Closable {
 
   protected TaskContext context;
 
@@ -49,4 +49,13 @@ public abstract class BaseNode implements INode, ICheckPointable {
     this.snapshot = newsnapshot;
   }
 
+  @Override
+  public void close() {
+
+  }
+
+  @Override
+  public void reset() {
+
+  }
 }
