@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
-import edu.iu.dsc.tws.task.api.SourceCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.checkpoint.SourceCheckpointableTask;
 
 public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private static final long serialVersionUID = -264264120110286748L;
@@ -35,9 +35,9 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
   private boolean restoreState = false;
   private volatile boolean consumerThreadStarted = false;
 
-  private  KafkaPartitionFinder partitionFinder;
-  private  KafkaTopicDescription topicDescription;
-  private  KafkaConsumerThread<T> kafkaConsumerThread;
+  private KafkaPartitionFinder partitionFinder;
+  private KafkaTopicDescription topicDescription;
+  private KafkaConsumerThread<T> kafkaConsumerThread;
 
   @Override
   public void execute() {
@@ -95,6 +95,7 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
     this.simpleKafkaConfig = createSimpleKafkaConfig(servers);
     this.edge = edge;
   }
+
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }

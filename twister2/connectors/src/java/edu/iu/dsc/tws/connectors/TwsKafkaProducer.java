@@ -26,8 +26,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.connectors.config.KafkaProducerConfig;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.checkpoint.SinkCheckpointableTask;
 
 public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
   private static final long serialVersionUID = -264264120110286749L;
@@ -40,7 +40,8 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
   private KafkaPartitionFinder kafkaPartitionFinder;
   private KafkaTopicDescription topicDescription;
   private List<TopicPartition> topicPartitions;
-  private Properties  simpleKafkaConfig;
+  private Properties simpleKafkaConfig;
+
   @Override
   public boolean execute(IMessage message) {
     log.info("Recieved message {}", message.getContent());
@@ -74,7 +75,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    connect(cfg, context);
+    super.prepare(cfg, context);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);
@@ -85,6 +86,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
     this.producer = new KafkaProducer<String, String>(this.kafkaConfigs);
 
   }
+
   public TwsKafkaProducer(
       List<String> topics,
       List<String> servers
@@ -113,6 +115,7 @@ public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
     this.kafkaConfigs = KafkaProducerConfig.setProps(kafkaConfigs, newProps);
     return kafkaConfigs;
   }
+
   public Properties getKafkaConfigs() {
     return kafkaConfigs;
   }
