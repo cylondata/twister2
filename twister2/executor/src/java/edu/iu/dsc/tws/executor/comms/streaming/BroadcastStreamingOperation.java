@@ -66,6 +66,11 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     }
 
     @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
+
+    @Override
     public boolean receive(int target, Object object) {
       TaskMessage msg = new TaskMessage<>(object,
           edgeGenerator.getStringMapping(communicationEdge), target);
