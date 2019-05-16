@@ -37,4 +37,4 @@ twister2.resource.scheduler.mpi.mapby: "node"
 twister2.resource.sharedfs: true
 
 # Directory for file system volume mount
-twister2.resource.fs.mount: "/tmp/twister2-fs/"
+twister2.resource.fs.mount: "${TWISTER2_HOME}/persistent/fs/"
