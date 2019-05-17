@@ -104,7 +104,8 @@ public class SnapshotImpl implements Snapshot {
       packedKeys.put(key, keyBytes);
       totalLength += dataBytes.length + keyBytes.length + (2 * Integer.BYTES);
     }
-    ByteBuffer byteBuffer = ByteBuffer.allocate(totalLength);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(totalLength + Long.BYTES);
+    byteBuffer.putLong(this.version);
     for (String key : values.keySet()) {
       byte[] keyBytes = packedKeys.get(key);
       byteBuffer.putInt(keyBytes.length);
@@ -119,6 +120,7 @@ public class SnapshotImpl implements Snapshot {
 
   public void unpack(byte[] bytes) {
     ByteBuffer wrapped = ByteBuffer.wrap(bytes);
+    this.setVersion(wrapped.getLong());
     while (wrapped.position() < bytes.length) {
       int keyLength = wrapped.getInt();
       byte[] keyBytes = new byte[keyLength];
