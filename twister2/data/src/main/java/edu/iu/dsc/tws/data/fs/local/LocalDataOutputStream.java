@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 
@@ -60,7 +61,6 @@ public class LocalDataOutputStream extends FSDataOutputStream {
     fos.getChannel().write(byteBuffer);
   }
 
-
   @Override
   public void flush() throws IOException {
     fos.flush();
@@ -76,5 +76,7 @@ public class LocalDataOutputStream extends FSDataOutputStream {
     return fos.getChannel().position();
   }
 
-
+  public FileChannel getChannel() {
+    return fos.getChannel();
+  }
 }
