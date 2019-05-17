@@ -226,13 +226,13 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             SinkStreamingInstance streamingSinkInstance
                 = streamingSinkInstances.get(c.getTargetTask(), i);
             streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            op.register(i, streamingSinkInstance.getstreamingInQueue());
+            op.register(i, streamingSinkInstance.getStreamingInQueue());
             op.registerSync(i, streamingSinkInstance);
           } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
             SinkStreamingWindowingInstance sinkStreamingWindowingInstance
                 = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
             sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
+            op.register(i, sinkStreamingWindowingInstance.getStreamingInQueue());
             op.registerSync(i, sinkStreamingWindowingInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());

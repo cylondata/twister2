@@ -158,7 +158,7 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
     streamingInParOps.put(edge, op);
   }
 
-  public BlockingQueue<IMessage> getstreamingInQueue() {
+  public BlockingQueue<IMessage> getStreamingInQueue() {
     return streamingInQueue;
   }
 
