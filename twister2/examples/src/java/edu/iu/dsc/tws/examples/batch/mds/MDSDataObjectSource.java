@@ -12,21 +12,15 @@
 package edu.iu.dsc.tws.examples.batch.mds;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
@@ -110,10 +104,6 @@ public class MDSDataObjectSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-
-    /*this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), config));*/
-
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), 2000 * Short.BYTES));
   }
