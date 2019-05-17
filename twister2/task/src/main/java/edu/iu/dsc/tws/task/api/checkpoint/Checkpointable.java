@@ -36,6 +36,8 @@
 package edu.iu.dsc.tws.task.api.checkpoint;
 
 
+import edu.iu.dsc.tws.common.checkpoint.Snapshot;
+
 public interface Checkpointable {
 
   /**
