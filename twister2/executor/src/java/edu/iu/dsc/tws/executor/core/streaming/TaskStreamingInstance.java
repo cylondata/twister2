@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
-import edu.iu.dsc.tws.task.api.checkpoint.Snapshot;
+import edu.iu.dsc.tws.common.checkpoint.Snapshot;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
