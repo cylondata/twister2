@@ -17,6 +17,7 @@
     <content url="file://$MODULE_DIR$/tools" />
     <content url="file://$MODULE_DIR$/twister2">
       <sourceFolder url="file://$MODULE_DIR$/twister2/config/src" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/java_paths" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/java/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/api/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/common/src/java" isTestSource="false" />
@@ -30,6 +31,7 @@
       <sourceFolder url="file://$MODULE_DIR$/twister2/examples/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/examples/tests/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/executor/src/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/twister2/fault-tolerance/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/master/src/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/proto/Empty.java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/twister2/resource-scheduler/src/java" isTestSource="false" />

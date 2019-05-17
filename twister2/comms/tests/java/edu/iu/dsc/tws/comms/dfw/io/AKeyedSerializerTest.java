@@ -21,7 +21,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -97,7 +96,7 @@ public class AKeyedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    AKeyedSerializer serializer = new AKeyedSerializer(new KryoSerializer(), 0, type);
+    AKeyedSerializer serializer = new AKeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -107,7 +106,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
+    AKeyedDeserializer deserializer = new AKeyedDeserializer();
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -233,7 +232,7 @@ public class AKeyedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    AKeyedSerializer serializer = new AKeyedSerializer(new KryoSerializer(), 0, type);
+    AKeyedSerializer serializer = new AKeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -244,7 +243,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
+    AKeyedDeserializer deserializer = new AKeyedDeserializer();
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(

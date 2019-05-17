@@ -18,7 +18,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -34,8 +33,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null);
 
-    KeyedSerializer serializer = new KeyedSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedSerializer serializer = new KeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -46,8 +44,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDeSerializer deserializer = new KeyedDeSerializer(new KryoSerializer(), 0,
-        keyType, type);
+    KeyedDeSerializer deserializer = new KeyedDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -71,8 +68,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, keyType, null);
 
-    KeyedSerializer serializer = new KeyedSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedSerializer serializer = new KeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -82,8 +78,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDeSerializer deserializer = new KeyedDeSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDeSerializer deserializer = new KeyedDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(

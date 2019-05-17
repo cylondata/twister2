@@ -10,6 +10,7 @@ t2_java_lib(
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
+        "//twister2/fault-tolerance/src/java:fault-tolerance-java",
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",

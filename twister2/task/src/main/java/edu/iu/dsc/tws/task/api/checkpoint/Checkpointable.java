@@ -36,7 +36,7 @@
 package edu.iu.dsc.tws.task.api.checkpoint;
 
 
-import edu.iu.dsc.tws.common.checkpoint.Snapshot;
+import edu.iu.dsc.tws.ftolerance.api.Snapshot;
 
 public interface Checkpointable {
 

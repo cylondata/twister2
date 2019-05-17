@@ -46,31 +46,40 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.common.checkpoint;
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.ftolerance.api;
 
-public interface Snapshot {
+import java.io.IOException;
 
-  /**
-   * This method can be used to define packers. Packers will be used when deserializing
-   * values. If packer is not defined for a particular value, that value will be treated
-   * as an {@link Object} and serialized with {@link edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker}
-   */
-  void setPacker(String key, DataPacker dataPacker);
+import edu.iu.dsc.tws.common.config.Config;
 
-  /**
-   * This method can be used to set/update values into the snapshot
-   */
-  void setState(String key, Object value);
+public interface StateStore {
 
-  default void setState(String key, Object value, DataPacker packer) {
-    this.setPacker(key, packer);
-    this.setState(key, value);
-  }
+  void init(Config config, String... path);
 
-  /**
-   * Returns the current version of the snapshot
-   */
-  Long getVersion();
+  void put(String key, byte[] data) throws IOException;
+
+  byte[] get(String key) throws IOException;
 }
