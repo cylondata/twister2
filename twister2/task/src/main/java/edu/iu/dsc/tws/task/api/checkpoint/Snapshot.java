@@ -21,12 +21,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api;
 
+package edu.iu.dsc.tws.task.api.checkpoint;
 
-public interface ICheckPointable {
+import edu.iu.dsc.tws.comms.api.DataPacker;
 
-  Snapshot getSnapshot();
+public interface Snapshot {
 
-  void restoreSnapshot(Snapshot snapshot);
+  /**
+   * This method can be used to define packers. Packers will be used when deserializing
+   * values. If packer is not defined for a particular value, that value will be treated
+   * as an {@link Object} and serialized with {@link edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker}
+   */
+  void setPacker(String key, DataPacker dataPacker);
+
+  /**
+   * This method can be used to set/update values into the snapshot
+   */
+  void setState(String key, Object value);
+
+  default void setState(String key, Object value, DataPacker packer) {
+    this.setPacker(key, packer);
+    this.setState(key, value);
+  }
+
+  /**
+   * Returns the current version of the snapshot
+   */
+  Long getVersion();
 }
