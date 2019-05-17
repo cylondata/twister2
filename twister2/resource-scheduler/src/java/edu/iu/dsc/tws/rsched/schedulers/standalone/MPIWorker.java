@@ -47,6 +47,8 @@ import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.FSPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -404,6 +406,8 @@ public final class MPIWorker {
       // now create the worker
       IWorkerController wc = createWorkerController(job);
       MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
+      IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
+
       mpiWorkerContorller.add("comm", intracomm);
       String workerClass = MPIContext.workerClass(cfg);
       try {
@@ -411,7 +415,8 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, null, null);
+          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, persistentVolume,
+              null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -444,6 +449,8 @@ public final class MPIWorker {
 
       Map<Integer, JobMasterAPI.WorkerInfo> infos = createResourcePlan(cfg, intracomm, job);
       MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
+      IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
+
       // now create the worker
       wc.add("comm", intracomm);
       String workerClass = MPIContext.workerClass(cfg);
@@ -452,7 +459,7 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(cfg, intracomm.getRank(), wc, null, null);
+          container.execute(cfg, intracomm.getRank(), wc, persistentVolume, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -619,5 +626,21 @@ public final class MPIWorker {
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
+  }
+
+
+  private IPersistentVolume initPersistenceVolume(Config cfg, String jobName, int rank) {
+    File baseDir = new File(MPIContext.fileSystemMount(cfg));
+
+    // if the base dir does not exist
+    while (!baseDir.exists() && !baseDir.mkdirs()) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Thread interrupted", e);
+      }
+    }
+
+    return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
   }
 }
