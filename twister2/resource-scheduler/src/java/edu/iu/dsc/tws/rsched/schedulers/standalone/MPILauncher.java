@@ -52,6 +52,8 @@ public class MPILauncher implements ILauncher {
 
   private String jobWorkingDirectory;
 
+  private CheckpointManager checkpointManager;
+
   @Override
   public void initialize(Config mConfig) {
     this.config = mConfig;
@@ -59,7 +61,7 @@ public class MPILauncher implements ILauncher {
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
 
-    CheckpointManager cm = new CheckpointManager();
+    this.checkpointManager = new CheckpointManager();
   }
 
   @Override
@@ -224,13 +226,10 @@ public class MPILauncher implements ILauncher {
 
     final boolean[] start = {false};
     // now start the controller, which will get the resources and start
-    Thread controllerThread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        IController controller = new MPIController(true);
-        controller.initialize(config);
-        start[0] = controller.start(job);
-      }
+    Thread controllerThread = new Thread(() -> {
+      IController controller = new MPIController(true);
+      controller.initialize(config);
+      start[0] = controller.start(job);
     });
     controllerThread.start();
 
@@ -247,6 +246,11 @@ public class MPILauncher implements ILauncher {
         jmThread.join();
       } catch (InterruptedException ignore) {
       }
+    }
+
+    //todo move this
+    if (this.checkpointManager != null) {
+      this.checkpointManager.close();
     }
 
     return start[0];

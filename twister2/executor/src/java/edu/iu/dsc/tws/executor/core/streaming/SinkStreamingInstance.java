@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -20,20 +20,19 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.SinkCheckpointableTask;
-import edu.iu.dsc.tws.task.api.Snapshot;
+import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
+import edu.iu.dsc.tws.task.api.checkpoint.Snapshot;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkStreamingInstance implements INodeInstance {
+public class SinkStreamingInstance implements INodeInstance, ISync {
 
   private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
 
@@ -121,7 +120,7 @@ public class SinkStreamingInstance implements INodeInstance {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
         Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
             globalTaskID, workerId);
-        ((ICheckPointable) this.streamingTask).restoreSnapshot(snapshot);
+        ((Checkpointable) this.streamingTask).restoreSnapshot(snapshot);
       } catch (Exception e) {
         LOG.log(Level.WARNING, "Could not read checkpoint", e);
       }
@@ -129,36 +128,15 @@ public class SinkStreamingInstance implements INodeInstance {
   }
 
   public void prepare(Config cfg) {
-    TaskContextImpl taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
-        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan);
-    streamingTask.prepare(cfg, taskContext);
-    if (streamingTask instanceof SinkCheckpointableTask) {
-      ((SinkCheckpointableTask) streamingTask).connect(config, taskContext);
-    }
+    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
   }
 
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
-      IMessage message = streamingInQueue.poll();
-      if (message != null) {
-        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) != MessageFlags.SYNC_BARRIER) {
-          streamingTask.execute(message);
-        } else {
-          //Send acknowledge message to jobmaster
-          LOG.info("Barrier message received in Sink " + globalTaskId
-              + " from source " + message.sourceTask());
-
-          Object messageContent = message.getContent();
-
-          if (messageContent instanceof ArrayList) {
-            @SuppressWarnings("unchecked")
-            ArrayList<Integer> messageArray = (ArrayList<Integer>) messageContent;
-
-            if (storeSnapshot(messageArray.get(0))) {
-              ((SinkCheckpointableTask) streamingTask).receivedValidBarrier(message);
-            }
-          }
-        }
+      IMessage m = streamingInQueue.poll();
+      if (m != null) {
+        streamingTask.execute(m);
       }
     }
 
@@ -185,7 +163,7 @@ public class SinkStreamingInstance implements INodeInstance {
     streamingInParOps.put(edge, op);
   }
 
-  public BlockingQueue<IMessage> getstreamingInQueue() {
+  public BlockingQueue<IMessage> getStreamingInQueue() {
     return streamingInQueue;
   }
 
@@ -193,11 +171,27 @@ public class SinkStreamingInstance implements INodeInstance {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
       fsStateBackend.writeToStateBackend(config, globalTaskId, workerId,
-          (ICheckPointable) streamingTask, checkpointID);
+          (Checkpointable) streamingTask, checkpointID);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, "Could not store checkpoint ", e);
       return false;
     }
+  }
+
+  @Override
+  public boolean sync(String edge, byte[] value) {
+    ByteBuffer wrap = ByteBuffer.wrap(value);
+    long barrierId = wrap.getLong();
+
+    LOG.info("Sync Received on edge : " + edge + " " + barrierId);
+
+    this.storeSnapshot((int) barrierId);
+
+
+
+    //reset comm, to accept new messages
+    this.streamingInParOps.get(edge).reset();
+    return true;
   }
 }

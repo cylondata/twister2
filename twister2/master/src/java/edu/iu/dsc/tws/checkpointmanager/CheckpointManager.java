@@ -43,8 +43,10 @@ public class CheckpointManager extends Thread {
 
   private Progress looper;
 
-  public CheckpointManager() {
+  private boolean running = true;
 
+  public CheckpointManager() {
+    super("Checkpoint Manager");
     looper = new Progress();
     rrServer = new RRServer(cfg, "localhost", 6789, looper,
         -2, new ServerConnectHandler());
@@ -64,11 +66,13 @@ public class CheckpointManager extends Thread {
 
   @Override
   public void run() {
-
-    while (true) {
+    while (this.running) {
       looper.loop();
     }
+  }
 
+  public void close() {
+    this.running = false;
   }
 
   public class ServerConnectHandler implements ConnectHandler {

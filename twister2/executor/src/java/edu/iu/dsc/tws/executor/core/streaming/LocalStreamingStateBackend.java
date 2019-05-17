@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +24,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalDataInputStream;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.executor.core.Runtime;
-import edu.iu.dsc.tws.task.api.ICheckPointable;
+import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
 
 public class LocalStreamingStateBackend {
 
@@ -55,22 +56,31 @@ public class LocalStreamingStateBackend {
   }
 
   public void writeToStateBackend(Config config, int streamingTaskId,
-                                  int workerId, ICheckPointable streamingTask,
+                                  int workerId, Checkpointable streamingTask,
                                   int checkpointID) throws Exception {
     synchronized (this) {
-      Runtime runtime = (Runtime) config.get(Runtime.RUNTIME);
-      Path path1 = new Path(runtime.getParentpath(), runtime.getJobName());
+      File snapshots = new File("/tmp/snapshots/" + workerId);
+      if (!snapshots.exists()) {
+        snapshots.mkdirs();
+      }
+
+
+      Path path1 = new Path(snapshots.getPath());
       Path path2 = new Path(path1, String.valueOf(checkpointID));
-      LocalFileSystem localFileSystem = (LocalFileSystem) runtime.getFileSystem();
-      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
-          0, localFileSystem);
+//      LocalFileSystem localFileSystem = new LocalFileSystem();
+//      FsCheckpointStreamFactory fs = new FsCheckpointStreamFactory(path2, path2,
+//          0, localFileSystem);
       KryoSerializer kryoSerializer = new KryoSerializer();
-      byte[] checkpoint = kryoSerializer.serialize(streamingTask.getSnapshot());
-      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
-          fs.createCheckpointStateOutputStream();
-      stream.initialize(String.valueOf(streamingTaskId), String.valueOf(workerId));
-      stream.write(checkpoint);
-      stream.closeWriting();
+//      byte[] checkpoint = kryoSerializer.serialize(streamingTask.getSnapshot());
+//
+//      FileOutputStream fos = new FileOutputStream(new File(snapshots, checkpointID + ""));
+//      fos.write(checkpoint);
+//      fos.close();
+//      FsCheckpointStreamFactory.FsCheckpointStateOutputStream stream =
+//          fs.createCheckpointStateOutputStream();
+//      stream.initialize(String.valueOf(streamingTaskId), String.valueOf(workerId));
+//      stream.write(checkpoint);
+//      stream.closeWriting();
     }
   }
 

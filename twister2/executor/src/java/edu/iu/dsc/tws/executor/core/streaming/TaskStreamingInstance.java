@@ -22,22 +22,23 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.ICheckPointable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.Snapshot;
+import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
+import edu.iu.dsc.tws.task.api.checkpoint.Snapshot;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
  */
-public class TaskStreamingInstance implements INodeInstance {
+public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * The actual task executing
    */
@@ -159,7 +160,7 @@ public class TaskStreamingInstance implements INodeInstance {
         LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
         Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
             taskId, workerId);
-        ((ICheckPointable) this.task).restoreSnapshot(snapshot);
+        ((Checkpointable) this.task).restoreSnapshot(snapshot);
       } catch (Exception e) {
         LOG.log(Level.WARNING, "Could not read checkpoint", e);
       }
@@ -254,11 +255,16 @@ public class TaskStreamingInstance implements INodeInstance {
   public boolean storeSnapshot() {
     try {
       LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, taskId, workerId, (ICheckPointable) task, 1);
+      fsStateBackend.writeToStateBackend(config, taskId, workerId, (Checkpointable) task, 1);
       return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, " Could not store checkpoint", e);
       return false;
     }
+  }
+
+  @Override
+  public boolean sync(String edge, byte[] value) {
+    return true;
   }
 }
