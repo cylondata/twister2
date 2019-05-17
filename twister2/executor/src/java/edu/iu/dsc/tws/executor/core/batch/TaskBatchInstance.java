@@ -306,7 +306,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public void reset() {
     this.taskContext.reset();
     if (task instanceof Closable) {
-      ((Closable) task).refresh();
+      ((Closable) task).reset();
     }
     state = new InstanceState(InstanceState.INIT);
   }
