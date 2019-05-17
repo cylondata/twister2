@@ -111,6 +111,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
         //do nothing
       }
     }
+    LOG.info("Stopping execution....");
     execution.stop();
     execution.close();
   }
