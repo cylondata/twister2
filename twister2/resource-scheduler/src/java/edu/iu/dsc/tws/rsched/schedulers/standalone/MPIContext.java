@@ -76,6 +76,7 @@ public class MPIContext extends SchedulerContext {
   }
 
   public static String fileSystemMount(Config cfg) {
-    return cfg.getStringValue(FILE_SYSTEM_MOUNT);
+    return TokenSub.substitute(cfg, cfg.getStringValue(FILE_SYSTEM_MOUNT,
+        "${TWISTER2_HOME}/persistent/fs/"), Context.substitutions);
   }
 }

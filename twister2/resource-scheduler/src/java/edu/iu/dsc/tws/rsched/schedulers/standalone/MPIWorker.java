@@ -641,6 +641,6 @@ public final class MPIWorker {
       }
     }
 
-    return new FSPersistentVolume(baseDir.getAbsolutePath() + File.separator + jobName, rank);
+    return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
   }
 }
