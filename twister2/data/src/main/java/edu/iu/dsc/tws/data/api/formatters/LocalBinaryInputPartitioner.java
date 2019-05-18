@@ -20,8 +20,9 @@ public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
 
   private OrderedInputSplitAssigner assigner;
 
-  public LocalBinaryInputPartitioner(Path filePath, int numTasks) {
-    super(filePath, numTasks);
+  public LocalBinaryInputPartitioner(Path filePath, int numTasks, int records) {
+    //super(filePath, numTasks);
+    super(filePath, records);
     this.nTasks = numTasks;
   }
 

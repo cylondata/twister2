@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -48,9 +49,20 @@ public class MDSDataObjectSource extends BaseSource {
   private String edgeName;
   private String dataDirectory;
 
-  public MDSDataObjectSource(String edgename, String dataDirectory) {
+  public int getDimension() {
+    return dimension;
+  }
+
+  public void setDimension(int dimension) {
+    this.dimension = dimension;
+  }
+
+  private int dimension;
+
+  public MDSDataObjectSource(String edgename, String dataDirectory, int dim) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
+    this.dimension = dim;
   }
 
   public String getDataDirectory() {
@@ -104,7 +116,7 @@ public class MDSDataObjectSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
-        new Path(getDataDirectory()), 2000 * Short.BYTES));
+    this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
+        new Path(getDataDirectory()), context.getParallelism(), getDimension() * Short.BYTES));
   }
 }
