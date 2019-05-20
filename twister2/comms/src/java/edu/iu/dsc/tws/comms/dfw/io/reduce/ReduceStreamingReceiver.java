@@ -103,7 +103,7 @@ public abstract class ReduceStreamingReceiver extends SourceReceiver {
 
   @Override
   protected boolean isFilledToSend(int target, boolean sync) {
-    return true;
+    return reducedValuesMap.get(target).size() > 0;
   }
 
   public abstract boolean handleMessage(int source, Object message, int flags, int dest);
