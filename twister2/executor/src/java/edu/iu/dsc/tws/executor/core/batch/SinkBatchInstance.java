@@ -105,6 +105,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    * Keep track of syncs received
    */
   private Set<String> syncReceived = new HashSet<>();
+  private TaskContextImpl context;
 
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int taskId, int globalTaskId,
@@ -126,6 +127,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   }
 
   public void reset() {
+    this.context.reset();
     state = new InstanceState(InstanceState.INIT);
     if (batchTask instanceof Closable) {
       ((Closable) batchTask).refresh();
@@ -133,8 +135,9 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   }
 
   public void prepare(Config cfg) {
-    batchTask.prepare(cfg, new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule));
+    context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
+    batchTask.prepare(cfg, context);
   }
 
   public boolean execute() {

@@ -83,6 +83,11 @@ public class BatchSharingExecutor2 implements IExecutor {
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
+    // if this is a previously executed plan we have to reset the nodes
+    if (plan.getExecutionState() == ExecutionState.EXECUTED) {
+      resetNodes(plan.getNodes(), plan.getParallelOperations());
+    }
+
     // go through the instances
     return runExecution(plan);
   }

@@ -71,12 +71,12 @@ public class DataFlowContext extends CommunicationContext {
     return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
   }
 
-  public static int getShuffleMaxRecordsInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64);
+  public static long getShuffleMaxRecordsInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64L);
   }
 
-  public static int getShuffleMaxBytesInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400);
+  public static long getShuffleMaxBytesInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400L);
   }
 
   public static int getNetworkPartitionBatchGroupingSize(Config config) {

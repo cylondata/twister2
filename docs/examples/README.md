@@ -9,4 +9,5 @@ In the examples section, we discuss the following.
 * [MultiStage Examples](multistage/multistage_examples.md)
 * [Tera Sort](terasort/terasort.md)
 * [Machine Learning Examples](ml/README.md)
+* [Windowing](windowing/windowing.md)
 * [benchmark Suite](benchmark/benchmark.md)

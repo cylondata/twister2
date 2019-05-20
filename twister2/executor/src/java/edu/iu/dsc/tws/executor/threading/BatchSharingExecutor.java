@@ -68,6 +68,11 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       return true;
     }
 
+    // if this is a previously executed plan we have to reset the nodes
+    if (executionPlan.getExecutionState() == ExecutionState.EXECUTED) {
+      resetNodes(executionPlan.getNodes(), executionPlan.getParallelOperations());
+    }
+
     scheduleExecution(nodes);
 
     // we progress until all the channel finish
@@ -116,6 +121,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     } catch (InterruptedException e) {
       throw new RuntimeException("Interrupted", e);
     }
+
+    executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
     // clear the finished instances
     finishedInstances.set(0);

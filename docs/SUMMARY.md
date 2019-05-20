@@ -117,6 +117,7 @@
     * [system.yml](configurations/aurora/system.md)
     * [task.yml](configurations/aurora/task.md)
     * [uploader.yml](configurations/aurora/uploader.md)
+* [Publications](publications.md)  
 * [Tutorial](tutorial/README.md)
   * [Big data stack](tutorial/big-data-stack.md)
   * [Twister2 overview](tutorial/twister2-overview.md)

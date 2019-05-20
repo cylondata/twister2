@@ -82,6 +82,7 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
 
     int elementsToRead = Math.min(leftToRead, remainingInBuffer);
 
+    byteBuffer.position(currentBufferLocation); //setting position for bulk read
     byteBuffer.get(val, startIndex, elementsToRead);
 
     if (totalDataLength == elementsToRead + startIndex) {
@@ -98,5 +99,9 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   @Override
   public byte[] packToByteArray(byte[] data) {
     return data;
+  }
+
+  public byte[] unpackFromByteArray(byte[] array) {
+    return array;
   }
 }
