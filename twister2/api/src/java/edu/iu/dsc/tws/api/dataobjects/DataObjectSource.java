@@ -63,7 +63,6 @@ public class DataObjectSource<T> extends BaseSource {
 
   /**
    * Getter property to set the edge name
-   * @return
    */
   public String getEdgeName() {
     return edgeName;
@@ -71,7 +70,6 @@ public class DataObjectSource<T> extends BaseSource {
 
   /**
    * Setter property to set the edge name
-   * @param edgeName
    */
   public void setEdgeName(String edgeName) {
     this.edgeName = edgeName;
