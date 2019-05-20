@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -254,51 +253,56 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     if (numOfBytesInMemory >= maxBytesToKeepInMemory
         || this.recordsInMemory.size() >= maxRecordsInMemory) {
 
-
-      // save the bytes to disk
-      this.writeToFile();
-
-      numOfBytesInMemory = 0;
-
-      //making previous things garbage collectible
-      this.recordsInMemory = new LinkedList<>();
-      noOfFileWritten++;
-    }
-  }
-
-  private void writeToFile() {
-    try {
+      //create references to existing data
+      LinkedList<Tuple> referenceToRecordsInMemory = null;
       if (this.fileWriteLock.availablePermits() == 0) {
         LOG.warning("Communication thread blocks on disk IO thread!");
       }
-      this.fileWriteLock.acquire(); // allow 1 parallel write to disk
+      try {
+        this.fileWriteLock.acquire(); // allow 1 parallel write to disk
+        referenceToRecordsInMemory = this.recordsInMemory;
+      } catch (InterruptedException e) {
+        LOG.log(Level.SEVERE, "Couldn't write to the file", e);
+      } finally {
+        fileWriteLock.release();
+      }
 
-      //create references to existing data
-      final LinkedList<Tuple> referenceToRecordsInMemory = this.recordsInMemory;
-      final String fileName = getSaveFileName(noOfFileWritten);
-      final long bytesInMemory = numOfBytesInMemory;
+      // save the bytes to disk
+      CommonThreadPool.getExecutor().execute(new FileSaveWorker(referenceToRecordsInMemory));
+      try {
+        this.fileWriteLock.acquire(); // allow 1 parallel write to disk
+        //making previous things garbage collectible
+        this.recordsInMemory = new LinkedList<>();
+        noOfFileWritten++;
+        numOfBytesInMemory = 0;
+      } catch (InterruptedException e) {
+        LOG.log(Level.SEVERE, "Couldn't write to the file", e);
+        fileWriteLock.release();
+      } finally {
+        this.fileWriteLock.release();
+      }
+    }
+  }
 
-      CommonThreadPool.getExecutor().execute(() -> {
-        try {
-          // do the sort
-          referenceToRecordsInMemory.sort(comparatorWrapper);
+  private class FileSaveWorker implements Runnable {
+    //create references to existing data
+    private LinkedList<Tuple> referenceToRecordsInMemory;
+    private String fileName = getSaveFileName(noOfFileWritten);
+    private long bytesInMemory = numOfBytesInMemory;
 
-          long largestTupleWritten = FileLoader.saveKeyValues(
-              referenceToRecordsInMemory, bytesInMemory, fileName, keyType);
-          //todo get inside set?
-          largestTupleSizeRecorded.set(
-              Math.max(largestTupleSizeRecorded.get(), largestTupleWritten)
-          );
-        } finally {
-          fileWriteLock.release();
-        }
-      });
-    } catch (RejectedExecutionException regex) {
-      LOG.log(Level.SEVERE, "Couldn't submit async write task", regex);
-      fileWriteLock.release();
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Couldn't write to the file", e);
-      fileWriteLock.release();
+    FileSaveWorker(LinkedList<Tuple> referenceToRecordsInMemory) {
+      this.referenceToRecordsInMemory = referenceToRecordsInMemory;
+    }
+
+    @Override
+    public void run() {
+      // do the sort
+      referenceToRecordsInMemory.sort(comparatorWrapper);
+
+      long largestTupleWritten = FileLoader.saveKeyValues(
+          referenceToRecordsInMemory, bytesInMemory, fileName, keyType);
+      //todo get inside set?
+      largestTupleSizeRecorded.set(Math.max(largestTupleSizeRecorded.get(), largestTupleWritten));
     }
   }
 
