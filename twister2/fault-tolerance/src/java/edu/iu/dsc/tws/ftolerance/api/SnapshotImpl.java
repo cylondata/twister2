@@ -73,14 +73,28 @@ public class SnapshotImpl implements Snapshot {
   private Map<String, Object> values = new HashMap<>();
   private Map<String, DataPacker> packers = new HashMap<>();
 
+  private String prefix;
+
+  public SnapshotImpl() {
+    this("");
+  }
+
+  public SnapshotImpl(String prefix) {
+    this.prefix = prefix;
+  }
+
+  private String appendPrefix(String key) {
+    return prefix + key;
+  }
+
   @Override
   public void setPacker(String key, DataPacker dataPacker) {
-    this.packers.put(key, dataPacker);
+    this.packers.put(appendPrefix(key), dataPacker);
   }
 
   @Override
   public void setValue(String key, Object value) {
-    this.values.put(key, value);
+    this.values.put(appendPrefix(key), value);
   }
 
   @Override
