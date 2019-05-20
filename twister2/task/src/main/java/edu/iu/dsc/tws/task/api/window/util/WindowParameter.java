@@ -34,6 +34,9 @@ public class WindowParameter implements Serializable {
 
   private WindowConfig.Duration sldingDurationSize;
 
+  /**
+   * Tumbling
+   */
   public WindowParameter withTumblingCountWindow(long winLength) {
     return withTumblingCountWindowInit(winLength);
   }
@@ -53,6 +56,34 @@ public class WindowParameter implements Serializable {
     this.sldingDurationSize = this.windowDurationSize;
     return this;
   }
+
+  /**
+   * Sliding
+   */
+
+  public WindowParameter withSlidingingCountWindow(long winLength, long slidingLength) {
+    return withSlidingCountWindowInit(winLength, slidingLength);
+  }
+
+  private WindowParameter withSlidingCountWindowInit(long winLength, long slidingLength) {
+    this.windowCountSize = newCountInstance(winLength);
+    this.slidingCountSize = newCountInstance(slidingLength);
+    return this;
+  }
+
+  public WindowParameter withSlidingDurationWindow(long winLength, TimeUnit winLengthTU,
+                                                   long slidingLength, TimeUnit slidingLengthTU) {
+    return withSlidingDurationWindowInit(winLength, winLengthTU, slidingLength, slidingLengthTU);
+  }
+
+  private WindowParameter withSlidingDurationWindowInit(long winLength, TimeUnit winLengthTU,
+                                                        long slidingLength,
+                                                        TimeUnit slidingLengthTU) {
+    this.windowDurationSize = newDurationInstance(winLength, winLengthTU);
+    this.sldingDurationSize = newDurationInstance(slidingLength, slidingLengthTU);
+    return this;
+  }
+
 
   private WindowConfig.Count newCountInstance(long value) {
     return new WindowConfig.Count(value);
