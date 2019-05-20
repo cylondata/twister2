@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
@@ -29,7 +30,8 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 /**
  * Input formatter class that reads binary files
  */
-public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
+public abstract class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
+
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger(BinaryInputPartitioner.class.getName());
@@ -39,9 +41,28 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
    */
   protected transient int recordLength;
 
+  protected transient  int numSplits;
+
   public BinaryInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
     this.recordLength = recordLen;
+  }
+
+  public BinaryInputPartitioner(Path filePath, int recordLen, int numberOfTasks) {
+    super(filePath);
+    this.numSplits = numberOfTasks;
+    this.recordLength = recordLen;
+  }
+
+  public BinaryInputPartitioner(Path filePath, int recordLen, int numberOfTasks, Config config) {
+    super(filePath, config);
+    this.numSplits = numberOfTasks;
+    this.recordLength = recordLen;
+  }
+
+  @Override
+  public void configure(Config parameters) {
+    this.config = parameters;
   }
 
   /**

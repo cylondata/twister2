@@ -3,10 +3,11 @@ package edu.iu.dsc.tws.data.api.formatters;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
+import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
 public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
 
@@ -14,21 +15,24 @@ public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
 
   private static final Logger LOG = Logger.getLogger(LocalTextInputPartitioner.class.getName());
 
-  private int nTasks;
+  private int numberOfTasks;
 
   private Config config;
 
-  private OrderedInputSplitAssigner assigner;
+  private int recordLength;
 
-  public LocalBinaryInputPartitioner(Path filePath, int numTasks, int records) {
-    //super(filePath, numTasks);
-    super(filePath, records);
-    this.nTasks = numTasks;
+  private LocatableInputSplitAssigner assigner;
+
+  public LocalBinaryInputPartitioner(Path filePath, int nTasks, int recordLen) {
+    super(filePath, recordLen, nTasks);
+    this.numberOfTasks = nTasks;
+    this.recordLength = recordLen;
   }
 
-  public LocalBinaryInputPartitioner(Path filePath, int numTasks, Config cfg) {
-    super(filePath, numTasks);
-    this.nTasks = numTasks;
+  public LocalBinaryInputPartitioner(Path filePath, int nTasks, int recordLen, Config cfg) {
+    super(filePath, recordLen, nTasks);
+    this.numberOfTasks = nTasks;
+    this.recordLength = recordLen;
     this.config = cfg;
   }
 
@@ -38,12 +42,10 @@ public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
     return new BinaryInputSplit(num, file, start, length, hosts);
   }
 
-  public OrderedInputSplitAssigner getInputSplitAssigner(
-      FileInputSplit[] inputSplits) {
+  public InputSplitAssigner getInputSplitAssigner(FileInputSplit[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner(inputSplits, nTasks);
+      assigner = new LocatableInputSplitAssigner(inputSplits);
     }
     return assigner;
   }
 }
-

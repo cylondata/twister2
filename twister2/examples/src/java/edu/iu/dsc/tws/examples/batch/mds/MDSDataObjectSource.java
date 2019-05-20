@@ -12,7 +12,10 @@
 package edu.iu.dsc.tws.examples.batch.mds;
 
 import java.io.IOException;
-import java.util.logging.Level;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
@@ -41,7 +44,7 @@ public class MDSDataObjectSource extends BaseSource {
 
   private BinaryInputPartitioner inputPartitioner;
   private FileInputSplit[] splits;
-  private InputSplit currentSplit;
+  //private InputSplit currentSplit;
 
   /**
    * Edge name to write the partitoned datapoints
@@ -75,7 +78,6 @@ public class MDSDataObjectSource extends BaseSource {
 
   /**
    * Getter property to set the edge name
-   * @return
    */
   public String getEdgeName() {
     return edgeName;
@@ -83,7 +85,6 @@ public class MDSDataObjectSource extends BaseSource {
 
   /**
    * Setter property to set the edge name
-   * @param edgeName
    */
   public void setEdgeName(String edgeName) {
     this.edgeName = edgeName;
@@ -95,19 +96,39 @@ public class MDSDataObjectSource extends BaseSource {
    */
   @Override
   public void execute() {
-    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-    while (inputSplit != null) {
+
+    int minSplits = 8;
+    double expectedSum = 1.97973979E8;
+    double newSum = 0.0;
+    int count = 0;
+    Buffer buffer = null;
+
+    InputSplit currentSplit = source.getNextSplit(context.taskIndex());
+    byte[] line = new byte[4000];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
+    byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    while (currentSplit != null) {
       try {
-        while (!inputSplit.reachedEnd()) {
-          Object value = inputSplit.nextRecord(null);
-          if (value != null) {
-            context.write(getEdgeName(), value);
+        while (!currentSplit.reachedEnd()) {
+          if (currentSplit.nextRecord(line) != null) {
+            byteBuffer.clear();
+            byteBuffer.put(line);
+            byteBuffer.flip();
+            buffer = byteBuffer.asShortBuffer();
+            short[] shortArray = new short[2000];
+            ((ShortBuffer) buffer).get(shortArray);
+            for (short i : shortArray) {
+              newSum += i;
+              count++;
+            }
           }
-        }
-        inputSplit = source.getNextSplit(context.taskIndex());
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to read the input", e);
+        }//End of while
+        currentSplit = source.getNextSplit(context.taskIndex());
+      } catch (IOException ioe) {
+        throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }
+      LOG.info("%d New Sum:" + newSum);
+      LOG.info("%d Count:" + count);
     }
     context.end(getEdgeName());
   }
@@ -117,6 +138,6 @@ public class MDSDataObjectSource extends BaseSource {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), getDimension() * Short.BYTES));
+        new Path(getDataDirectory()), context.getParallelism(), 2000 * Short.BYTES, cfg));
   }
 }

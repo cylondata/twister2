@@ -13,12 +13,16 @@ package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 
 public class BinaryInputSplit extends FileInputSplit<byte[]> {
+
+  private static final Logger LOG = Logger.getLogger(BinaryInputSplit.class.getName());
   /**
    * The configuration key to set the binary record length.
    */
@@ -177,6 +181,35 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
     fillBuffer(0);
   }
 
+//  /**
+//   * Opens the given input split. This method opens the input stream to the specified file,
+//   * allocates read buffers
+//   * and positions the stream at the correct position, making sure that any partial record at
+//   * the beginning is skipped.
+//   */
+//  public void open(Config config) throws IOException {
+//    open();
+//    initBuffers();
+//    //Check if we are starting at a new record and adjust as needed (only needed for binary files)
+//    long recordMod = this.splitStart % this.recordLength;
+//    if (recordMod != 0) {
+//      //We are not at the start of a record, we change the offset to take it to the start of the
+//      //next record
+//      this.offset = this.splitStart + this.recordLength - recordMod;
+//      //TODO: when debugging check if this shoould be >=
+//      if (this.offset > this.splitStart + this.splitLength) {
+//        this.end = true; // We do not have a record in this split
+//      }
+//    } else {
+//      this.offset = splitStart;
+//    }
+//
+//    if (this.splitStart != 0) {
+//      this.stream.seek(offset);
+//    }
+//    fillBuffer(0);
+//  }
+
   @Override
   public boolean reachedEnd() throws IOException {
     return false;
@@ -201,11 +234,13 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
     //TODO L2: check for faster methods to perform this
     if (reusable != null && reusable.length == this.recordLength) {
       System.arraycopy(bytes, readOffset, reusable, 0, numBytes);
+      LOG.info("Read records are 1:" + Arrays.toString(reusable));
       return reusable;
     } else {
       //TODO L2:check if this has any memory leaks
       byte[] tmp = new byte[this.recordLength];
       System.arraycopy(bytes, readOffset, tmp, 0, numBytes);
+      LOG.info("Read records are 2:" + Arrays.toString(tmp));
       return tmp;
     }
   }
@@ -218,6 +253,7 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
       this.currOffset = this.readPos;
       this.currLen = this.recordLength;
       this.readPos = this.readPos + this.recordLength;
+      System.out.println("Reading Position (if):" + this.readPos);
       return true;
     } else {
       //Need to refill the buffer
@@ -225,6 +261,7 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
         this.currOffset = this.readPos;
         this.currLen = this.recordLength;
         this.readPos = this.readPos + this.recordLength;
+        System.out.println("Reading Position (else):" + this.readPos);
         return true;
       } else {
         return false;
