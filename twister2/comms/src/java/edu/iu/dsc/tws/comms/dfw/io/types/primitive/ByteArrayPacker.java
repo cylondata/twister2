@@ -100,4 +100,8 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   public byte[] packToByteArray(byte[] data) {
     return data;
   }
+
+  public byte[] unpackFromByteArray(byte[] array) {
+    return array;
+  }
 }
