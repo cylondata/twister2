@@ -260,7 +260,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     }
 
     for (int i : finishedTargets) {
-      if (!finishedTargetsCompleted.contains(i)) {
+      if (!finishedTargetsCompleted.contains(i) && partition.isDelegateComplete()) {
         finishTarget(i);
         targetStates.put(i, ReceiverState.SYNCED);
         onSyncEvent(i, null);

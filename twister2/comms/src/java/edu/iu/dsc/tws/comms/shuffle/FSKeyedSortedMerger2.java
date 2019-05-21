@@ -252,15 +252,23 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     // it is time to write
     if (numOfBytesInMemory >= maxBytesToKeepInMemory
         || this.recordsInMemory.size() >= maxRecordsInMemory) {
-
       //create references to existing data
       LinkedList<Tuple> referenceToRecordsInMemory = null;
       if (this.fileWriteLock.availablePermits() == 0) {
         LOG.warning("Communication thread blocks on disk IO thread!");
       }
+      int noOfFiles = 0;
+      long memoryBytes = 0;
       try {
         this.fileWriteLock.acquire(); // allow 1 parallel write to disk
         referenceToRecordsInMemory = this.recordsInMemory;
+        noOfFiles = noOfFileWritten;
+        memoryBytes = numOfBytesInMemory;
+
+        //making previous things garbage collectible
+        this.recordsInMemory = new LinkedList<>();
+        noOfFileWritten++;
+        numOfBytesInMemory = 0;
       } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Couldn't write to the file", e);
       } finally {
@@ -268,30 +276,22 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       }
 
       // save the bytes to disk
-      CommonThreadPool.getExecutor().execute(new FileSaveWorker(referenceToRecordsInMemory));
-      try {
-        this.fileWriteLock.acquire(); // allow 1 parallel write to disk
-        //making previous things garbage collectible
-        this.recordsInMemory = new LinkedList<>();
-        noOfFileWritten++;
-        numOfBytesInMemory = 0;
-      } catch (InterruptedException e) {
-        LOG.log(Level.SEVERE, "Couldn't write to the file", e);
-        fileWriteLock.release();
-      } finally {
-        this.fileWriteLock.release();
-      }
+      CommonThreadPool.getExecutor().execute(
+          new FileSaveWorker(referenceToRecordsInMemory, noOfFiles, memoryBytes));
     }
   }
 
   private class FileSaveWorker implements Runnable {
     //create references to existing data
     private LinkedList<Tuple> referenceToRecordsInMemory;
-    private String fileName = getSaveFileName(noOfFileWritten);
-    private long bytesInMemory = numOfBytesInMemory;
+    private String fileName;
+    private long bytesInMemory;
 
-    FileSaveWorker(LinkedList<Tuple> referenceToRecordsInMemory) {
+    FileSaveWorker(LinkedList<Tuple> referenceToRecordsInMemory,
+                   int numFilesWritten, long memoryBytes) {
       this.referenceToRecordsInMemory = referenceToRecordsInMemory;
+      this.bytesInMemory = memoryBytes;
+      this.fileName = getSaveFileName(numFilesWritten);
     }
 
     @Override

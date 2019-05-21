@@ -362,7 +362,9 @@ public class TeraSort extends TaskWorker {
       LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
       tasksCount.decrementAndGet();
       try {
-        resultsWriter.close();
+        if (resultsWriter != null) {
+          resultsWriter.close();
+        }
       } catch (IOException e) {
         LOG.log(Level.WARNING, "Failed to close file channel of results writer", e);
       }
