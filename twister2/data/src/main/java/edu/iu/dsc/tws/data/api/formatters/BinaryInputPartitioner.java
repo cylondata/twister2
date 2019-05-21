@@ -30,8 +30,7 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 /**
  * Input formatter class that reads binary files
  */
-public abstract class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
-
+public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
   private static final long serialVersionUID = 1L;
 
   private static final Logger LOG = Logger.getLogger(BinaryInputPartitioner.class.getName());
@@ -56,6 +55,7 @@ public abstract class BinaryInputPartitioner extends FileInputPartitioner<byte[]
 
   public BinaryInputPartitioner(Path filePath, int recordLen, int numberOfTasks, Config config) {
     super(filePath, config);
+    this.configure(config);
     this.numSplits = numberOfTasks;
     this.recordLength = recordLen;
   }
@@ -138,9 +138,8 @@ public abstract class BinaryInputPartitioner extends FileInputPartitioner<byte[]
           // get the block containing the majority of the data
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
           // create a new split
-          FileInputSplit fis = new BinaryInputSplit(splitNum++, file.getPath(),
-              position, currentSplitSize,
-              blocks[blockIndex].getHosts());
+          FileInputSplit fis = new BinaryInputSplit(splitNum++, file.getPath(), position,
+              currentSplitSize, blocks[blockIndex].getHosts());
           inputSplits.add(fis);
 
           // adjust the positions
@@ -161,8 +160,8 @@ public abstract class BinaryInputPartitioner extends FileInputPartitioner<byte[]
   }
 
   @Override
-  protected FileInputSplit createSplit(int num, Path file, long start,
-                                       long length, String[] hosts) {
+  protected FileInputSplit createSplit(int num, Path file, long start, long length,
+                                       String[] hosts) {
     return null;
   }
 }

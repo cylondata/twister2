@@ -21,8 +21,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
-import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
@@ -42,8 +40,8 @@ public class MDSDataObjectSource extends BaseSource {
    */
   private DataSource<?, ?> source;
 
-  private BinaryInputPartitioner inputPartitioner;
-  private FileInputSplit[] splits;
+  //private FileInputPartitioner inputPartitioner;
+  //private FileInputSplit[] splits;
   //private InputSplit currentSplit;
 
   /**
@@ -97,19 +95,21 @@ public class MDSDataObjectSource extends BaseSource {
   @Override
   public void execute() {
 
-    int minSplits = 8;
+    int minSplits = 4;
     double expectedSum = 1.97973979E8;
     double newSum = 0.0;
     int count = 0;
     Buffer buffer = null;
 
     InputSplit currentSplit = source.getNextSplit(context.taskIndex());
-    byte[] line = new byte[4000];
-    ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
-    byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    LOG.info("%%%%%%%%%%%%% Current Split value:" + currentSplit);
+    byte[] line = new byte[2000];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+    byteBuffer.order(ByteOrder.BIG_ENDIAN);
     while (currentSplit != null) {
       try {
         while (!currentSplit.reachedEnd()) {
+          LOG.info("current split line:" + currentSplit.nextRecord(null));
           if (currentSplit.nextRecord(line) != null) {
             byteBuffer.clear();
             byteBuffer.put(line);
@@ -137,7 +137,10 @@ public class MDSDataObjectSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), 2000 * Short.BYTES, cfg));
+    //this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
+    //    new Path(getDataDirectory()), context.getParallelism(), 2000 * Short.BYTES, cfg));
+
+    this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
+        new Path(getDataDirectory()), 2000 * Short.BYTES, context.getParallelism(), cfg));
   }
 }
