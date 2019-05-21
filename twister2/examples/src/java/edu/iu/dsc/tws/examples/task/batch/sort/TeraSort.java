@@ -66,7 +66,7 @@ import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
-import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_RECORDS_IN_MEMORY;
+import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_FILE_SIZE;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
@@ -90,7 +90,7 @@ public class TeraSort extends TaskWorker {
   private static final String ARG_TASKS_SINKS = "sinks";
 
   private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
-  private static final String ARG_TUNE_MAX_RECORDS_IN_MEMORY = "memoryRecordsLimit";
+  private static final String ARG_TUNE_MAX_SHUFFLE_FILE_SIZE = "fileSizeBytes";
 
   private static final String TASK_SOURCE = "sort-source";
   private static final String TASK_RECV = "sort-recv";
@@ -549,7 +549,7 @@ public class TeraSort extends TaskWorker {
         false
     ));
     options.addOption(createOption(
-        ARG_TUNE_MAX_RECORDS_IN_MEMORY, true, "Maximum records to keep in memory",
+        ARG_TUNE_MAX_SHUFFLE_FILE_SIZE, true, "Maximum records to keep in memory",
         false
     ));
 
@@ -589,10 +589,10 @@ public class TeraSort extends TaskWorker {
       jobConfig.put(ARG_TUNE_MAX_BYTES_IN_MEMORY, maxBytesInMemory); //for benchmark service
     }
 
-    if (cmd.hasOption(ARG_TUNE_MAX_RECORDS_IN_MEMORY)) {
-      long maxRecordsInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_RECORDS_IN_MEMORY));
-      jobConfig.put(SHUFFLE_MAX_RECORDS_IN_MEMORY, maxRecordsInMemory);
-      jobConfig.put(ARG_TUNE_MAX_RECORDS_IN_MEMORY, maxRecordsInMemory);
+    if (cmd.hasOption(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE)) {
+      long maxRecordsInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE));
+      jobConfig.put(SHUFFLE_MAX_FILE_SIZE, maxRecordsInMemory);
+      jobConfig.put(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE, maxRecordsInMemory);
     }
 
     if (cmd.hasOption(ARG_BENCHMARK_METADATA)) {
