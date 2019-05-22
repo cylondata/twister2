@@ -36,9 +36,10 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.api.BaseWindowSink;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.collectives.WindowedReduce;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 
 public class STWindowExample extends BenchTaskWorker {
 
@@ -54,23 +55,32 @@ public class STWindowExample extends BenchTaskWorker {
     BaseWindowSource g = new SourceWindowTask(edge);
 
     // Tumbling Window
-    BaseWindowSink dw = new DirectWindowedReceivingTask()
+    BaseWindowedSink dw = new DirectWindowedReceivingTask()
         .withTumblingCountWindow(5);
-    BaseWindowSink dwDuration = new DirectWindowedReceivingTask()
+    BaseWindowedSink dwDuration = new DirectWindowedReceivingTask()
         .withTumblingDurationWindow(2, TimeUnit.MILLISECONDS);
 
     // Sliding Window
-    BaseWindowSink sdw = new DirectWindowedReceivingTask()
+    BaseWindowedSink sdw = new DirectWindowedReceivingTask()
         .withSlidingCountWindow(5, 2);
 
-    BaseWindowSink sdwDuration = new DirectWindowedReceivingTask()
-        .withSlidingDurationWindow(2, TimeUnit.MILLISECONDS, 1,
-            TimeUnit.MILLISECONDS);
+    BaseWindowedSink sdwDuration = new DirectWindowedReceivingTask()
+        .withSlidingDurationWindow(2, TimeUnit.MILLISECONDS,
+            1, TimeUnit.MILLISECONDS);
 
+    BaseWindowedSink sdwDurationReduce = new DirectReduceWindowedTask(new ReduceFunctionImpl())
+        .withSlidingDurationWindow(2, TimeUnit.MILLISECONDS,
+            1, TimeUnit.MILLISECONDS);
+
+    BaseWindowedSink sdwCountSlidingReduce = new DirectReduceWindowedTask(new ReduceFunctionImpl())
+        .withSlidingCountWindow(5, 2);
+
+    BaseWindowedSink sdwCountTumblingReduce = new DirectReduceWindowedTask(new ReduceFunctionImpl())
+        .withTumblingCountWindow(5);
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
-    computeConnection.direct(SOURCE, edge, DataType.INTEGER);
+    computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingReduce, sinkParallelism);
+    computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }
@@ -109,5 +119,31 @@ public class STWindowExample extends BenchTaskWorker {
       return windowMessage;
     }
 
+  }
+
+  protected static class DirectReduceWindowedTask extends WindowedReduce<int[]> {
+
+
+    public DirectReduceWindowedTask(ReduceWindowedFunction<int[]> reduceWindowedFunction) {
+      super(reduceWindowedFunction);
+    }
+
+    @Override
+    public boolean reduce(int[] content) {
+      LOG.info("Window Reduced Value : " + Arrays.toString(content));
+      return true;
+    }
+  }
+
+  protected static class ReduceFunctionImpl implements ReduceWindowedFunction<int[]> {
+
+    @Override
+    public int[] onMessage(int[] object1, int[] object2) {
+      int[] ans = new int[object1.length];
+      for (int i = 0; i < object1.length; i++) {
+        ans[i] = object1[i] + object2[i];
+      }
+      return ans;
+    }
   }
 }

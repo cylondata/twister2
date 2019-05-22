@@ -13,5 +13,4 @@ package edu.iu.dsc.tws.task.api.window.function;
 
 public interface ReduceWindowedFunction<T> extends IWindowFunction<T> {
 
-  T reduce(T t0, T t1);
 }
