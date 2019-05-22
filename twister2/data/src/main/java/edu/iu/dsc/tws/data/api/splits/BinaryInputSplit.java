@@ -88,6 +88,11 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
     super(num, file, start, length, hosts);
   }
 
+  public BinaryInputSplit(int num, Path file,  int recordLen, String[] hosts) {
+    super(num, file, hosts);
+    this.recordLength = recordLen;
+  }
+
   public ByteOrder getEndianess() {
     return endianess;
   }
@@ -104,7 +109,7 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
   }
 
   public void setBufferSize(int buffSize) {
-    if (bufferSize < 2) {
+    if (buffSize < 2) {
       throw new IllegalArgumentException("Buffer size must be at least 2.");
     }
     this.bufferSize = buffSize;
@@ -143,12 +148,10 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
   @Override
   public void configure(Config parameters) {
     super.configure(parameters);
-    this.config = parameters;
-
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
-    int recordLen = parameters.getIntegerValue(RECORD_LENGTH, -1);
-    LOG.info("Record Length is:" + recordLen);
+    //int recordLen = parameters.getIntegerValue(RECORD_LENGTH, 2000 * Short.BYTES);
+    int recordLen = 1000 * Short.BYTES;
     if (recordLen > 0) {
       setRecordLength(recordLen);
     }
@@ -160,8 +163,32 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
    * and positions the stream at the correct position, making sure that any partial record at
    * the beginning is skipped.
    */
+  public void open() throws IOException {
+    super.open();
+    initBuffers();
+    //Check if we are starting at a new record and adjust as needed (only needed for binary files)
+    long recordMod = this.splitStart % this.recordLength;
+    if (recordMod != 0) {
+      //We are not at the start of a record, we change the offset to take it to the start of the
+      //next record
+      this.offset = this.splitStart + this.recordLength - recordMod;
+      //TODO: when debugging check if this shoould be >=
+      if (this.offset > this.splitStart + this.splitLength) {
+        this.end = true; // We do not have a record in this split
+      }
+    } else {
+      this.offset = splitStart;
+    }
+
+    if (this.splitStart != 0) {
+      this.stream.seek(offset);
+    }
+    fillBuffer(0);
+  }
+
   public void open(Config cfg) throws IOException {
     super.open(cfg);
+    this.configure(cfg);
     initBuffers();
     //Check if we are starting at a new record and adjust as needed (only needed for binary files)
     long recordMod = this.splitStart % this.recordLength;
