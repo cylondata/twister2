@@ -23,9 +23,8 @@ public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
 
   private LocatableInputSplitAssigner assigner;
 
-  public LocalBinaryInputPartitioner(Path filePath, int nTasks, int recordLen) {
-    super(filePath, recordLen, nTasks);
-    this.numberOfTasks = nTasks;
+  public LocalBinaryInputPartitioner(Path filePath, int recordLen) {
+    super(filePath, recordLen);
     this.recordLength = recordLen;
   }
 
@@ -36,7 +35,6 @@ public class LocalBinaryInputPartitioner extends BinaryInputPartitioner {
     this.config = cfg;
   }
 
-  @Override
   protected BinaryInputSplit createSplit(int num, Path file, long start,
                                          long length, String[] hosts) {
     return new BinaryInputSplit(num, file, start, length, hosts);

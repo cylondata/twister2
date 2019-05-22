@@ -11,18 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.mds;
 
-import java.io.IOException;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class MDSDataObjectSource extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(MDSDataObjectSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -40,9 +40,7 @@ public class MDSDataObjectSource extends BaseSource {
    */
   private DataSource<?, ?> source;
 
-  //private FileInputPartitioner inputPartitioner;
-  //private FileInputSplit[] splits;
-  //private InputSplit currentSplit;
+  private InputPartitioner inputPartitioner;
 
   /**
    * Edge name to write the partitoned datapoints
@@ -95,41 +93,68 @@ public class MDSDataObjectSource extends BaseSource {
   @Override
   public void execute() {
 
-    int minSplits = 4;
-    double expectedSum = 1.97973979E8;
     double newSum = 0.0;
     int count = 0;
-    Buffer buffer = null;
 
-    InputSplit currentSplit = source.getNextSplit(context.taskIndex());
-    LOG.info("%%%%%%%%%%%%% Current Split value:" + currentSplit);
+    Buffer buffer;
     byte[] line = new byte[2000];
     ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
-    while (currentSplit != null) {
-      try {
-        while (!currentSplit.reachedEnd()) {
-          LOG.info("current split line:" + currentSplit.nextRecord(null));
-          if (currentSplit.nextRecord(line) != null) {
-            byteBuffer.clear();
-            byteBuffer.put(line);
-            byteBuffer.flip();
-            buffer = byteBuffer.asShortBuffer();
-            short[] shortArray = new short[2000];
-            ((ShortBuffer) buffer).get(shortArray);
-            for (short i : shortArray) {
-              newSum += i;
-              count++;
-            }
+
+//    InputSplit inputSplit = source.getNextSplit(context.taskIndex());
+//    while (inputSplit != null) {
+//      try {
+//        while (!inputSplit.reachedEnd()) {
+//          if (inputSplit.nextRecord(line) != null) {
+//            LOG.fine("Array values are:" + Arrays.toString(line));
+//            byteBuffer.clear();
+//            byteBuffer.put(line);
+//            byteBuffer.flip();
+//            buffer = byteBuffer.asShortBuffer();
+//            short[] shortArray = new short[1000];
+//            ((ShortBuffer) buffer).get(shortArray);
+//            for (short i : shortArray) {
+//              newSum += i;
+//              count++;
+//            }
+//          }
+//        }
+//        inputSplit = source.getNextSplit(context.taskIndex());
+//      } catch (Exception ioe) {
+//        throw new RuntimeException("IOException Occured:" + ioe.getMessage());
+//      }
+//      LOG.info("Task Index, sum and count values are:" + context.taskIndex()
+//          + "\t" + newSum + "\t" + count);
+//    }
+
+    //Working Code
+    try {
+      InputSplit[] inputSplits = inputPartitioner.createInputSplits(context.getParallelism());
+      InputSplitAssigner inputSplitAssigner = inputPartitioner.getInputSplitAssigner(inputSplits);
+      InputSplit currentSplit;
+
+      while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost",
+          context.taskIndex())) != null) {
+        currentSplit.open(this.config);
+        while (currentSplit.nextRecord(line) != null) {
+          byteBuffer.clear();
+          byteBuffer.put(line);
+          byteBuffer.flip();
+          buffer = byteBuffer.asShortBuffer();
+          short[] shortArray = new short[1000];
+          ((ShortBuffer) buffer).get(shortArray);
+          for (short i : shortArray) {
+            newSum += i;
+            count++;
           }
-        }//End of while
-        currentSplit = source.getNextSplit(context.taskIndex());
-      } catch (IOException ioe) {
-        throw new RuntimeException("IOException Occured:" + ioe.getMessage());
+        }
       }
-      LOG.info("%d New Sum:" + newSum);
-      LOG.info("%d Count:" + count);
+      LOG.info("Task Index, sum and count values are:" + context.taskIndex()
+          + "\t" + newSum + "\t" + count);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+    context.write(getEdgeName(), "hello finished splitting0");
     context.end(getEdgeName());
   }
 
@@ -137,10 +162,12 @@ public class MDSDataObjectSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    //this.source = runtime.createInput(cfg, context, new LocalBinaryInputPartitioner(
-    //    new Path(getDataDirectory()), context.getParallelism(), 2000 * Short.BYTES, cfg));
+    //this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
+    //    new Path(getDataDirectory()), 1000 * Short.BYTES, cfg));
 
-    this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
-        new Path(getDataDirectory()), 2000 * Short.BYTES, context.getParallelism(), cfg));
+    this.config = cfg;
+    this.inputPartitioner = new BinaryInputPartitioner(new Path(getDataDirectory()),
+        getDimension() * Short.BYTES);
+    this.inputPartitioner.configure(cfg);
   }
 }
