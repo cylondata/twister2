@@ -113,16 +113,6 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   private Map<Integer, List<Integer>> expIds;
 
   /**
-   * The max amount of bytes
-   */
-  private long maxBytesInMemory;
-
-  /**
-   * The max amount of records
-   */
-  private long maxRecordsInMemory;
-
-  /**
    * Keep state about the targets
    */
   protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
@@ -136,15 +126,16 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxFileSize = DataFlowContext.getShuffleFileSize(cfg);
     expIds = expectedIds;
     thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new HashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
-    initMergers();
+    initMergers(maxBytesInMemory, maxRecordsInMemory, maxFileSize);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
 
     for (Integer target : expectedIds.keySet()) {
@@ -155,7 +146,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Initialize the mergers, this happens after each refresh
    */
-  private void initMergers() {
+  private void initMergers(long maxBytesInMemory, long maxRecordsInMemory, long maxFileSize) {
     for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
           partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
@@ -165,7 +156,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             DFWIOUtils.getOperationName(target, partition, refresh), partition.getDataType());
       } else {
         if (sorted) {
-          sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
+          sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxFileSize,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
               partition.getKeyType(), partition.getDataType(), comparator, target);
         } else {
@@ -260,7 +251,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     }
 
     for (int i : finishedTargets) {
-      if (!finishedTargetsCompleted.contains(i)) {
+      if (!finishedTargetsCompleted.contains(i) && partition.isDelegateComplete()) {
         finishTarget(i);
         targetStates.put(i, ReceiverState.SYNCED);
         onSyncEvent(i, null);
