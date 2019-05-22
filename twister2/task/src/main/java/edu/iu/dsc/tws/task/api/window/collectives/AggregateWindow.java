@@ -14,16 +14,16 @@ package edu.iu.dsc.tws.task.api.window.collectives;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
+import edu.iu.dsc.tws.task.api.window.function.AggregateWindowedFunction;
 
-public abstract class WindowedReduce<T> extends BaseWindowedSink<T> {
+public abstract class AggregateWindow<T> extends BaseWindowedSink<T> {
 
-  private ReduceWindowedFunction<T> reduceWindowedFunction;
+  public abstract boolean aggregate(T message);
 
-  public abstract boolean reduce(T content);
+  private AggregateWindowedFunction<T> aggregateWindowedFunction;
 
-  public WindowedReduce(ReduceWindowedFunction<T> reduceWindowedFunction) {
-    this.reduceWindowedFunction = reduceWindowedFunction;
+  public AggregateWindow(AggregateWindowedFunction aggregateWindowedFunction) {
+    this.aggregateWindowedFunction = aggregateWindowedFunction;
   }
 
   @Override
@@ -35,10 +35,10 @@ public abstract class WindowedReduce<T> extends BaseWindowedSink<T> {
         if (current == null) {
           current = value;
         } else {
-          current = reduceWindowedFunction.onMessage(current, value);
+          current = aggregateWindowedFunction.onMessage(current, value);
         }
       }
-      reduce(current);
+      aggregate(current);
     }
     return windowMessage;
   }
