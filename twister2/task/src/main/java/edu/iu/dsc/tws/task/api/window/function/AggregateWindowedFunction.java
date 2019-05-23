@@ -11,9 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.function;
 
-import edu.iu.dsc.tws.task.api.IFunction;
-
-
-public interface IWindowFunction<T> extends IFunction<T> {
-
+public interface AggregateWindowedFunction<T> extends IWindowFunction<T> {
 }

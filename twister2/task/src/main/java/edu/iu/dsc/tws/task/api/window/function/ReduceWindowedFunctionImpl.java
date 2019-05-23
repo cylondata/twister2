@@ -12,5 +12,8 @@
 package edu.iu.dsc.tws.task.api.window.function;
 
 public abstract class ReduceWindowedFunctionImpl<T> implements ReduceWindowedFunction<T> {
-
+  @Override
+  public T onMessage(T object1, T object2) {
+    return null;
+  }
 }

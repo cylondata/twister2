@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
+import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
@@ -53,6 +54,12 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   private IEvictionPolicy<T> evictionPolicy;
 
   private IWindow iWindow;
+
+  private T collectiveOutput;
+
+  private ReduceWindowedFunction<T> reduceWindowedFunction;
+
+  private IWindowMessage<T> collectiveEvents;
 
   protected BaseWindowedSink() {
   }
@@ -132,6 +139,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       @Override
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
+        collectiveEvents = events;
         execute(events);
       }
     };
@@ -170,4 +178,22 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public void refresh() {
 
   }
+
+
+//  public BaseWindowedSink<T> reduce(ReduceWindowedFunction<T> reduceFunction) {
+////    List<IMessage<T>> msgs = collectiveEvents.getWindow();
+////    T current = null;
+////    for (IMessage<T> m : msgs) {
+////      T val = m.getContent();
+////      if (current == null) {
+////        current = val;
+////      } else {
+////        current = reduceWindowedFunction.reduce(current, val);
+////      }
+////    }
+////    this.collectiveOutput = current;
+//    return this;
+//  }
+
+
 }
