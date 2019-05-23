@@ -213,7 +213,7 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
 
   @Override
   public boolean reachedEnd() {
-    return false;
+    return this.end;
   }
 
   @Override

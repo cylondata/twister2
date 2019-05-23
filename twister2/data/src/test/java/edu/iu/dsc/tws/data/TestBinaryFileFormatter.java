@@ -49,9 +49,7 @@ public class TestBinaryFileFormatter {
 
     double expectedSum = 1.6375350724E1;
     double newSum = 0.0;
-
     Buffer buffer;
-
     try {
       InputSplit[] inputSplits = binaryInputPartitioner.createInputSplits(minSplits);
       InputSplitAssigner inputSplitAssigner = binaryInputPartitioner.
@@ -61,7 +59,6 @@ public class TestBinaryFileFormatter {
       byte[] line = new byte[2000];
       ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
       byteBuffer.order(ByteOrder.BIG_ENDIAN);
-
       while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost", 0)) != null) {
         currentSplit.open(txtFileConf);
           while (currentSplit.nextRecord(line) != null) {
