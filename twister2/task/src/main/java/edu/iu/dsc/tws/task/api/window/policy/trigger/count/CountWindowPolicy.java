@@ -23,13 +23,13 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
 
   private static final Logger LOG = Logger.getLogger(CountWindowPolicy.class.getName());
 
-  private final int count;
+  private final long count;
   private final AtomicInteger currentCount;
   private final IManager manager;
   private final IEvictionPolicy<T> evictionPolicy;
   private boolean started;
 
-  public CountWindowPolicy(int count, IManager manager, IEvictionPolicy<T> evictionPolicy) {
+  public CountWindowPolicy(long count, IManager manager, IEvictionPolicy<T> evictionPolicy) {
     this.count = count;
     this.manager = manager;
     this.evictionPolicy = evictionPolicy;
@@ -51,7 +51,7 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
   public void track(Event<T> event) {
     if (started && !event.isWatermark()) {
       if (currentCount.incrementAndGet() >= count) {
-        this.manager.onEvent(event);
+        this.manager.onEvent();
       }
     }
   }

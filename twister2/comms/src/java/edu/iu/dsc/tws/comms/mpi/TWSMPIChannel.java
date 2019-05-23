@@ -37,6 +37,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.dfw.ChannelListener;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
@@ -70,7 +71,7 @@ public class TWSMPIChannel implements TWSChannel {
   }
 
   private class MPIReceiveRequests {
-    List<MPIRequest> pendingRequests;
+    IterativeLinkedList<MPIRequest> pendingRequests;
     int rank;
     int edge;
     ChannelListener callback;
@@ -81,12 +82,12 @@ public class TWSMPIChannel implements TWSChannel {
       this.edge = e;
       this.callback = callback;
       this.availableBuffers = buffers;
-      this.pendingRequests = new ArrayList<>();
+      this.pendingRequests = new IterativeLinkedList<>();
     }
   }
 
   private class MPISendRequests {
-    List<MPIRequest> pendingSends;
+    IterativeLinkedList<MPIRequest> pendingSends;
     int rank;
     int edge;
     ChannelMessage message;
@@ -96,7 +97,7 @@ public class TWSMPIChannel implements TWSChannel {
       this.rank = rank;
       this.edge = e;
       this.message = message;
-      pendingSends = new ArrayList<>();
+      pendingSends = new IterativeLinkedList<>();
       this.callback = callback;
     }
   }
@@ -119,7 +120,7 @@ public class TWSMPIChannel implements TWSChannel {
   /**
    * Wait for completion sends
    */
-  private List<MPISendRequests> waitForCompletionSends;
+  private IterativeLinkedList<MPISendRequests> waitForCompletionSends;
 
   /**
    * Holds requests that are pending for close
@@ -153,7 +154,7 @@ public class TWSMPIChannel implements TWSChannel {
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(pendingSize);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
-    this.waitForCompletionSends = Collections.synchronizedList(new ArrayList<>(1024));
+    this.waitForCompletionSends = new IterativeLinkedList<>();
     this.workerId = worker;
   }
 
@@ -249,7 +250,6 @@ public class TWSMPIChannel implements TWSChannel {
    * Progress the communications that are pending
    */
   public void progress() {
-//    LOG.info(String.format("%d PROGRESS HAPPENING", workerId));
     // we should rate limit here
     while (pendingSends.size() > 0) {
       // post the message
@@ -273,13 +273,14 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    Iterator<MPISendRequests> sendRequestsIterator = waitForCompletionSends.iterator();
-    boolean canProgress = true;
-    while (sendRequestsIterator.hasNext() && canProgress) {
-      MPISendRequests sendRequests = sendRequestsIterator.next();
-      Iterator<MPIRequest> requestIterator = sendRequests.pendingSends.iterator();
+    IterativeLinkedList.ILLIterator sendRequestsIterator
+        = waitForCompletionSends.iterator();
+    while (sendRequestsIterator.hasNext()) {
+      MPISendRequests sendRequests = (MPISendRequests) sendRequestsIterator.next();
+      IterativeLinkedList.ILLIterator requestIterator
+          = sendRequests.pendingSends.iterator();
       while (requestIterator.hasNext()) {
-        MPIRequest r = requestIterator.next();
+        MPIRequest r = (MPIRequest) requestIterator.next();
         try {
           Status status = r.request.testStatus();
           // this request has finished
@@ -287,7 +288,6 @@ public class TWSMPIChannel implements TWSChannel {
             completedSendCount++;
             requestIterator.remove();
           } else {
-            canProgress = false;
             break;
           }
         } catch (MPIException e) {
@@ -314,9 +314,10 @@ public class TWSMPIChannel implements TWSChannel {
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
       try {
-        Iterator<MPIRequest> requestIterator = receiveRequests.pendingRequests.iterator();
+        IterativeLinkedList.ILLIterator requestIterator
+            = receiveRequests.pendingRequests.iterator();
         while (requestIterator.hasNext()) {
-          MPIRequest r = requestIterator.next();
+          MPIRequest r = (MPIRequest) requestIterator.next();
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
@@ -366,15 +367,18 @@ public class TWSMPIChannel implements TWSChannel {
         MPIReceiveRequests receiveRequests = itr.next();
         if (receiveRequests.edge == closeRequest.getRight()
             && receiveRequests.rank == closeRequest.getLeft()) {
-          for (MPIRequest r : receiveRequests.pendingRequests) {
+          IterativeLinkedList.ILLIterator pendItr
+              = receiveRequests.pendingRequests.iterator();
+          while (pendItr.hasNext()) {
             try {
-              r.request.cancel();
+              MPIRequest request = (MPIRequest) pendItr.next();
+              request.request.cancel();
+              pendItr.remove();
             } catch (MPIException e) {
               LOG.log(Level.WARNING, String.format("MPI Receive cancel error: rank %d edge %d",
                   closeRequest.getLeft(), closeRequest.getRight()));
             }
           }
-          receiveRequests.pendingRequests.clear();
           itr.remove();
         }
       }

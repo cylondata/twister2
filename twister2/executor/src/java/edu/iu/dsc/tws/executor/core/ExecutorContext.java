@@ -20,6 +20,11 @@ public class ExecutorContext extends Context {
       "twister2.exector.instance.queue.low.watermark";
   public static final String INSTANCE_QUEUE_HIGH_WATERMARK =
       "twister2.exector.instance.queue.high.watermark";
+  public static final String BATCH_EXECUTOR = "twister2.executor.batch.name";
+  public static final String BATCH_EXECUTOR_SHARING_SEP_COMM
+      = "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor";
+  public static final String BATCH_EXECUTOR_SHARING
+      = "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2";
 
   public static final String TWISTER2_RUNTIME_OBJECT = "_twister2.runtime_";
 
@@ -33,5 +38,9 @@ public class ExecutorContext extends Context {
 
   public static int instanceQueueHighWaterMark(Config cfg) {
     return cfg.getIntegerValue(INSTANCE_QUEUE_LOW_WATERMARK, 128);
+  }
+
+  public static String getBatchExecutor(Config cfg) {
+    return cfg.getStringValue(BATCH_EXECUTOR, BATCH_EXECUTOR_SHARING_SEP_COMM);
   }
 }

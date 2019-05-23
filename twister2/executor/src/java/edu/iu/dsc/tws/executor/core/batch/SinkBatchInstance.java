@@ -16,7 +16,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -54,7 +53,12 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   /**
    * The globally unique batchTask id
    */
-  private int batchTaskId;
+  private int globalTaskId;
+
+  /**
+   * Task id
+   */
+  private int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
@@ -101,17 +105,18 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    * Keep track of syncs received
    */
   private Set<String> syncReceived = new HashSet<>();
-
-  private static final Logger LOG = Logger.getLogger(SinkBatchInstance.class.getName());
+  private TaskContextImpl context;
 
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
-                           String tName, int tId, int tIndex, int parallel, int wId,
+                           String tName, int taskId, int globalTaskId,
+                           int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Map<String, String> inEdges,
                            TaskSchedulePlan taskSchedule) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
-    this.batchTaskId = tId;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
     this.batchTaskIndex = tIndex;
     this.parallelism = parallel;
     this.nodeConfigs = cfgs;
@@ -122,6 +127,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   }
 
   public void reset() {
+    this.context.reset();
     state = new InstanceState(InstanceState.INIT);
     if (batchTask instanceof Closable) {
       ((Closable) batchTask).refresh();
@@ -129,8 +135,9 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   }
 
   public void prepare(Config cfg) {
-    batchTask.prepare(cfg, new TaskContextImpl(batchTaskIndex, batchTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule));
+    context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
+    batchTask.prepare(cfg, context);
   }
 
   public boolean execute() {
@@ -167,7 +174,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
 
   @Override
   public int getId() {
-    return batchTaskId;
+    return globalTaskId;
   }
 
   @Override
@@ -216,8 +223,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     return batchInQueue;
   }
 
-  public int getBatchTaskId() {
-    return batchTaskId;
+  public int getGlobalTaskId() {
+    return globalTaskId;
   }
 
   public int getBatchTaskIndex() {

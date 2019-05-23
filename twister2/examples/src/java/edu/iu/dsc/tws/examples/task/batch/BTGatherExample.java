@@ -67,7 +67,8 @@ public class BTGatherExample extends BenchTaskWorker {
     @Override
     public boolean gather(Iterator<Tuple<Integer, int[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
-      LOG.info(String.format("%d received gather %d", context.getWorkerId(), context.taskId()));
+      LOG.info(String.format("%d received gather %d", context.getWorkerId(),
+          context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       this.verified = verifyResults(resultsVerifier, content, null, verified);

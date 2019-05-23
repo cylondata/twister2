@@ -11,16 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.batch.roundrobin;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -28,31 +30,42 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
 import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class RoundRobinBatchTaskSchedulerTest {
 
+  private static final Logger LOG = Logger.getLogger(
+      RoundRobinBatchTaskSchedulerTest.class.getName());
+
   @Test
-  public void testUniqueSchedules() {
+  public void testUniqueSchedules1() {
+
     int parallel = 16;
+    int workers = 2;
     DataFlowTaskGraph graph = createGraph(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
-    WorkerPlan workerPlan = createWorkPlan(parallel);
+    WorkerPlan workerPlan = createWorkPlan(workers);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 1; i++) {
       TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
-
-      Assert.assertNotNull(plan1);
-      Assert.assertNotNull(plan2);
-
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
+
+      Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        ContainerPlan containerPlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+        Assert.assertEquals(containerPlanTaskInstances.size(),
+            graph.vertex("source").getParallelism());
+      }
     }
   }
 
   @Test
   public void testUniqueSchedules2() {
-    int parallel = 16;
+
+    int parallel = 256;
     DataFlowTaskGraph graph = createGraph(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
@@ -60,40 +73,32 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     WorkerPlan workerPlan2 = createWorkPlan2(parallel);
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 1000; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
-
-      Assert.assertNotNull(plan1);
-      Assert.assertNotNull(plan2);
-
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
-
-      int instancescount1 = 0;
-
-      for (ContainerPlan containerPlan : plan1.getContainers()) {
-        instancescount1 = containerPlan.getTaskInstances().size();
-      }
-      Assert.assertEquals(instancescount1, graph.getTaskVertexSet().size());
     }
   }
 
+  @Test
+  public void testUniqueSchedules3() {
 
-  private boolean containerEquals(ContainerPlan p1,
-                                  ContainerPlan p2) {
-    if (p1.getContainerId() != p2.getContainerId()) {
-      return false;
-    }
+    int parallel = 16;
+    int workers = 2;
+    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
+    scheduler.initialize(Config.newBuilder().build());
 
-    if (p1.getTaskInstances().size() != p2.getTaskInstances().size()) {
-      return false;
-    }
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
-    for (TaskInstancePlan instancePlan : p1.getTaskInstances()) {
-      if (!p2.getTaskInstances().contains(instancePlan)) {
-        return false;
-      }
+    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+      ContainerPlan containerPlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      Assert.assertEquals(containerPlanTaskInstances.size() / graph.getTaskVertexSet().size(),
+          Integer.parseInt(graph.getGraphConstraints().get(
+              Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
     }
-    return true;
   }
 
   private WorkerPlan createWorkPlan(int workers) {
@@ -113,69 +118,38 @@ public class RoundRobinBatchTaskSchedulerTest {
   }
 
   private DataFlowTaskGraph createGraph(int parallel) {
-    TestSource ts = new TestSource();
-    TestSink testSink = new TestSink();
-    TestSink1 testSink1 = new TestSink1();
-    TestSink2 testSink2 = new TestSink2();
-    TestSink3 testSink3 = new TestSink3();
+
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", ts, 16);
-    ComputeConnection c1 = builder.addSink("sink1", testSink, 16);
-    ComputeConnection c2 = builder.addSink("sink2", testSink1, 16);
-    ComputeConnection c3 = builder.addSink("merge", testSink2, 16);
-    ComputeConnection c4 = builder.addSink("final", testSink3, 16);
+    builder.addSource("source", testSource, parallel);
+    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    c1.partition("source", "partition-edge1", DataType.INTEGER_ARRAY);
-    c2.partition("source", "partition-edge2", DataType.INTEGER_ARRAY);
-    c3.partition("sink2", "partition-edge3", DataType.INTEGER_ARRAY);
-    c4.partition("merge", "partition-edge4", DataType.INTEGER_ARRAY);
-
+    sinkConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
     builder.setMode(OperationMode.BATCH);
-    return builder.build();
+
+    DataFlowTaskGraph graph = builder.build();
+    return graph;
   }
 
-  public static class TestSource extends BaseSource {
-    private static final long serialVersionUID = -254264903510284748L;
+  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    @Override
-    public void execute() {
-    }
-  }
+    TaskSchedulerClassTest.TestSource testSource = new  TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-  public static class TestSink extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
+    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    builder.addSource("source", testSource, parallel);
+    ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
+    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
-  }
+    computeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    sinkConnection.direct("compute", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    builder.setMode(OperationMode.BATCH);
 
-  public static class TestSink1 extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
-  }
-
-  public static class TestSink2 extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
-  }
-
-  public static class TestSink3 extends BaseSink {
-    private static final long serialVersionUID = -254264903510284748L;
-
-    @Override
-    public boolean execute(IMessage message) {
-      return false;
-    }
+    builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");
+    DataFlowTaskGraph graph = builder.build();
+    return graph;
   }
 }

@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.executor.api;
 
 public interface IWindowInstance {
-  void initializePolicy();
+
 }

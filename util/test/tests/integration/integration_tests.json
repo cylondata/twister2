@@ -1,0 +1,53 @@
+{
+  "id": "integration_tests",
+  "directory": {
+    "relativeToRoot": true,
+    "path": ""
+  },
+  "jar": "libexamples-java.jar",
+  "args": [
+    {
+      "id": "itr",
+      "name": "Iterations",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 10
+      }
+    },
+    {
+      "id": "workers",
+      "name": "Workers",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 4
+      }
+    },
+    {
+      "id": "size",
+      "name": "Data Size",
+      "optional": false,
+      "values": {
+        "type": "fixed",
+        "value": 1024
+      }
+    },
+    {
+      "id": "stream",
+      "name": "Stream",
+      "optional": true,
+      "values": {
+        "type": "none"
+      }
+    },
+    {
+      "id": "verify",
+      "name": "Verification",
+      "optional": false,
+      "values": {
+        "type": "none"
+      }
+    }
+  ]
+}

@@ -88,7 +88,8 @@ public class BTPartitionExample extends BenchTaskWorker {
     @Override
     public boolean partition(Iterator<int[]> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
-      LOG.info(String.format("%d received partition %d", context.getWorkerId(), context.taskId()));
+      LOG.info(String.format("%d received partition %d", context.getWorkerId(),
+          context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       if (resultsVerifier != null) {

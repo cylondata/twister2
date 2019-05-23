@@ -128,6 +128,7 @@ public final class MesosJobMasterStarter {
     }
 
     waitIndefinitely();
+    registrar.deleteJobMasterZNode();
     registrar.close();
   }
 

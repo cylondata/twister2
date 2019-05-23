@@ -72,7 +72,7 @@ EXPOSE 2022 2023 30000 30001 30002 30003 30004 30005 30006 30007 30008 30009 300
 
 
 COPY rootfs/config /root/.ssh/
-COPY twister2-0.2.0 /twister2-0.2.0/
+COPY twister2-0.2.1 /twister2-0.2.1/
 
 RUN apt-get update && apt-get install -y python python-dev python-pip python-virtualenv rsync
 CMD ["/init.sh","-bash"]

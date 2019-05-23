@@ -27,6 +27,7 @@ public class SchedulerContext extends Context {
   public static final String WORKER_CLASS = "twister2.job.worker.class";
   public static final String DRIVER_CLASS = "twister2.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
+  public static final String JOB_ARCHIVE_TEMP_DIR = "twister2.job.archive.temp.dir";
 
   public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
 
@@ -46,7 +47,7 @@ public class SchedulerContext extends Context {
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 
-  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.0.tar.gz";
+  public static final String CORE_PACKAGE_FILENAME_DEFAULT = "twister2-core-0.2.1.tar.gz";
   public static final String CORE_PACKAGE_FILENAME = "twister2.package.core";
 
   public static final String JOB_PACKAGE_FILENAME_DEFAULT = "twister2-job.tar.gz";
@@ -71,6 +72,8 @@ public class SchedulerContext extends Context {
 
   public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
 
+  public static final String DOWNLOAD_METHOD = "twister2.uploader.download.method";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -91,13 +94,17 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(TWISTER2_PACKAGES_PATH);
   }
 
+  public static String jobArchiveTempDirectory(Config cfg) {
+    return cfg.getStringValue(JOB_ARCHIVE_TEMP_DIR);
+  }
+
   public static String temporaryPackagesPath(Config cfg) {
     return cfg.getStringValue(TEMPORARY_PACKAGES_PATH);
   }
 
   public static String systemPackageUrl(Config cfg) {
     return TokenSub.substitute(cfg, cfg.getStringValue(SYSTEM_PACKAGE_URI,
-        "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"), Context.substitutions);
+        "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"), Context.substitutions);
   }
 
   public static URI jobPackageUri(Config cfg) {
@@ -148,6 +155,9 @@ public class SchedulerContext extends Context {
         .equals("edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel");
   }
 
+  public static String downloadMethod(Config cfg) {
+    return cfg.getStringValue(DOWNLOAD_METHOD);
+  }
   public static List<String> additionalPorts(Config cfg) {
     return cfg.getStringList(ADDITIONAL_PORTS);
   }

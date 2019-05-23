@@ -46,7 +46,6 @@ public class KMeansWorkerUtils {
     this.dsize = Integer.parseInt(config.getStringValue("dsize"));
     this.csize = Integer.parseInt(config.getStringValue("csize"));
     this.dimension = Integer.parseInt(config.getStringValue("dim"));
-
     datapoint = new double[dsize / parallel][dimension];
     centroid = new double[csize][dimension];
   }

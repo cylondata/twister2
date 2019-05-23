@@ -52,7 +52,7 @@ public class TopologyContext {
   }
 
   public int getThisTaskId() {
-    return this.t2TaskContext.taskId();
+    return this.t2TaskContext.globalTaskId();
   }
 
   public String getThisComponentId() {

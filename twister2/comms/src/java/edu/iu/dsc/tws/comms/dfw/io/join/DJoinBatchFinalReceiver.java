@@ -142,8 +142,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     // The init method is called twice TODO: would be better to do a complete new data flow
     // operation
 
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxBytesToFile = DataFlowContext.getShuffleFileSize(cfg);
     if (operationLeft != null) {
       this.operationRight = op;
     } else {
@@ -157,8 +157,9 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       for (int target : expectedIds.keySet()) {
         String shuffleDirectory = this.shuffleDirectories.get(
             (op.getTaskPlan().getIndexOfTaskInNode(target)) % this.shuffleDirectories.size());
-        Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
-            shuffleDirectory, DFWIOUtils.getOperationName(target, operationLeft, refresh),
+        Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory,
+            maxBytesToFile, shuffleDirectory,
+            DFWIOUtils.getOperationName(target, operationLeft, refresh),
             operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
 
         sortedMergers.put(target, sortedMerger);

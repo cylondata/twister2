@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
@@ -56,10 +57,28 @@ public class TargetPartialReceiver extends TargetReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
     thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
-    thisDestinations = op.getTargets();
+
+    Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(),
+        op.getTargets());
+    // we are going to send the sync to worker target at last, this will ensure that we are not
+    // going to start sorting before we send the syncs to other nodes
+    thisDestinations = new HashSet<>(new TreeSet<>((o1, o2) -> {
+      if (thisWorkerTargets.contains(o1) && thisWorkerTargets.contains(o2)) {
+        return o1 - o2;
+      } else if (thisWorkerTargets.contains(o1)) {
+        return 1;
+      } else if (thisWorkerTargets.contains(o2)) {
+        return -1;
+      } else {
+        return o1 - o2;
+      }
+    }));
+    thisDestinations.addAll(op.getTargets());
+
     for (int target : thisDestinations) {
       messages.put(target, new LinkedBlockingQueue<>());
     }
+
     // we are at the receiving state
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.INIT);
@@ -115,7 +134,7 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(Integer target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 

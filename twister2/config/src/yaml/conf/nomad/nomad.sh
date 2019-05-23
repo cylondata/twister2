@@ -15,10 +15,10 @@ echo $NOMAD_ALLOC_ID
 echo $debug
 
 # download the package
-wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.2.0.tar.gz .
+wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.2.1.tar.gz .
 wget http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz .
 
-tar -xvf twister2-core-0.2.0.tar.gz
+tar -xvf twister2-core-0.2.1.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
 
 profile=

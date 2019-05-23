@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Vertex;
 
 /**
- * This is a global task id generator depending on the taskId, task index and task name
+ * This is a global task id generator depending on the globalTaskId, task index and task name
  */
 public class TaskIdGenerator {
 

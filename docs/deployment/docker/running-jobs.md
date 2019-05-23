@@ -22,7 +22,7 @@ If you want to build docker image by yourself, you can download the [Dockerfile]
 docker build -t repositoryname:tag .
 
 # example: 
-# docker build -t twister2/standalone:0.2.0 .
+# docker build -t twister2/standalone:0.2.1 .
 ```
 
 ## Running The Container
@@ -35,10 +35,10 @@ docker run -it twister2/standalone bash
 
 ## Running Jobs
 
-Docker image contains the source code and prebuilt twister2. Prebuilt twister2 is in the `~/twister2-0.2.0`  So, make sure that you are in that directory
+Docker image contains the source code and prebuilt twister2. Prebuilt twister2 is in the `~/twister2-0.2.1`  So, make sure that you are in that directory
 
 ```bash
-cd ~/twister2-0.2.0
+cd ~/twister2-0.2.1
 ```
 
 In order to run a job you can use the following command on the interactive bash session
@@ -67,7 +67,7 @@ bazel build --config=ubuntu scripts/package:tarpkgs
 This will build twister2 distribution in the file:
 
 ```bash
-bazel-bin/scripts/package/twister2-0.2.0.tar.gz
+bazel-bin/scripts/package/twister2-0.2.1.tar.gz
 ```
 
 If you want to modify the twister2 code and test without installing all the dependencies to your machine, you can mount the directory to the docker container:

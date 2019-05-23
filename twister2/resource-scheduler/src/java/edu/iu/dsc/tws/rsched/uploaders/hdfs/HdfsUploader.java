@@ -18,15 +18,16 @@ import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.TypeUtils;
 import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
 import edu.iu.dsc.tws.rsched.interfaces.IUploader;
+
 
 public class HdfsUploader implements IUploader {
   private static final Logger LOG = Logger.getLogger(HdfsUploader.class.getName());
   // get the directory containing the file
   private String destTopologyDirectoryURI;
   private Config config;
-  private String topologyPackageLocation;
   private URI packageURI;
 
   // The controller on hdfs
@@ -52,6 +53,7 @@ public class HdfsUploader implements IUploader {
 
   // Utils method
   protected boolean isLocalFileExists(String file) {
+
     return new File(file).isFile();
   }
 
@@ -60,6 +62,7 @@ public class HdfsUploader implements IUploader {
     // first, check if the topology package exists
     File file = new File(sourceLocation);
     String fileName = file.getName();
+    packageURI = TypeUtils.getURI(destTopologyDirectoryURI + "/" + fileName);
     if (!isLocalFileExists(sourceLocation)) {
       throw new UploaderException(
         String.format("Expected topology package file to be uploaded does not exist at '%s'",
@@ -103,6 +106,7 @@ public class HdfsUploader implements IUploader {
 
   @Override
   public boolean undo() {
+
     return controller.delete(packageURI.toString());
   }
 

@@ -163,7 +163,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     boolean needsFurtherProgress = false;
     for (int target : messages.keySet()) {
       // if we are at init state nothing to do
-      if (targetStates.get(target) == ReceiverState.INIT) {
+      if (targetStates.get(target) == ReceiverState.SYNCED) {
         continue;
       }
       // now check weather we have the messages for this source

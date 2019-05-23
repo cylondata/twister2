@@ -11,9 +11,6 @@ twister2.nomad.scheduler.uri: "http://149.165.150.81:4646"
 # specify cpu requests in term of cores.  This config maps core to clock freqency.
 twister2.nomad.core.freq.mapping: 2000
 
-# file system uploader to be used
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 # weather we are in a shared file system, if that is the case, each worker will not download the
 # core package and job package, otherwise they will download those packages
@@ -23,4 +20,4 @@ twister2.filesystem.shared: true
 twister2.nomad.shell.script: "nomad.sh"
 
 # path to the system core package
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"

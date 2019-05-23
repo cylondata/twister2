@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseCompute;
@@ -66,10 +65,11 @@ public class DataflowAddNodeExperiment extends TaskWorker {
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
+
+    //ExecutionPlan plan = taskExecutor.plan(graph);
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < iter; i++) {
-      taskExecutor.execute(graph, plan);
+      //taskExecutor.execute(graph, plan);
       LOG.info("Completed Iteration:" + i);
     }
     long stopTime = System.currentTimeMillis();
@@ -110,7 +110,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.FINE, "Received Points (First Compute Task): " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {
@@ -131,7 +131,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
       LOG.log(Level.FINE, "Received Points (Second Compute Task): " + context.getWorkerId()
-          + ":" + context.taskId());
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {

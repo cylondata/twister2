@@ -326,6 +326,10 @@ You can find the code to our SVM Implementation
  
  Sample Execution
  
+ Note: Make sure your data in the file has same line length in all lines. 
+ Our inbuilt splitter currently assumes this. And we will release a more dyanmic
+ Data API to handle this in a near future release. 
+ 
  ### Data Format :
  
  ```csv
@@ -455,7 +459,7 @@ of partitions considering the total data size.
 Here the data loader has to load the data considering training and testing data sizes.
 So the source path and data sizes are different. The data size means the number of 
 lines in your file (it must be in csv format as mentioned in the task example section).
-Currently that field is not implicitly handled in the current release (0.2.0).
+Currently that field is not implicitly handled in the current release (0.2.1).
 
 **DataLoadingTask** extends the **BaseSource**, so the expected data type can be defined. 
 The overriden **next()** method uses the Twister2 Data API to load the data. 

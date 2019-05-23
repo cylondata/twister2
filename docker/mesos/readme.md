@@ -21,7 +21,7 @@ twister2 core and job files into this docker container when you initialize it.
 
 ```bash
 $ cd twister2
-$ wget web_server_ip_address:port_number/twister2/mesos/twister2-core-0.2.0.tar.gz
+$ wget web_server_ip_address:port_number/twister2/mesos/twister2-core-0.2.1.tar.gz
 $ wget web_server_ip_address:port_number/twister2/mesos/twister2-job.tar.gz
 ```
 

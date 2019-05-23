@@ -14,12 +14,11 @@ package edu.iu.dsc.tws.task.api.window.manage;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.window.api.Event;
 
 public interface IManager<T> extends Serializable {
 
   void add(IMessage<T> message);
 
-  void onEvent(Event<T> event);
+  void onEvent();
 
 }

@@ -58,7 +58,7 @@ public class PredictionReduceTask extends BaseSink implements Collector {
         this.object = (double[]) message.getContent();
         if (debug) {
           LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
-              + ":" + this.context.taskId() + ":" + Arrays.toString(this.object));
+              + ":" + this.context.globalTaskId() + ":" + Arrays.toString(this.object));
         }
       } else if (message.getContent() instanceof Double) {
         this.status = true;

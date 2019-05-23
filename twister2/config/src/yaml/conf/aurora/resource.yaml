@@ -1,5 +1,5 @@
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"
 
 # launcher class for aurora submission
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher

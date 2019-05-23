@@ -25,42 +25,42 @@ Now lets add the Twister2 dependencies to the pom. Please add the correct versio
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>comms-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>proto-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>resource-scheduler-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>common-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>api-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>data-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>task-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
     <dependency>
       <groupId>edu.iu.dsc.tws</groupId>
       <artifactId>taskscheduler-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.1</version>
     </dependency>
   </dependencies>
 ```

@@ -13,7 +13,7 @@
       "optional": false,
       "values": {
         "type": "fixed",
-        "value": 10000000
+        "value": 50000
       }
     },
     {

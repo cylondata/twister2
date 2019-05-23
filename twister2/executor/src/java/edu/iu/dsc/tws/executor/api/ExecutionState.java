@@ -9,16 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.validation;
+package edu.iu.dsc.tws.executor.api;
 
-import edu.iu.dsc.tws.executor.api.IExecutionValidation;
-
-public class ExecutionValidation implements IExecutionValidation {
-
-
-
-  @Override
-  public boolean validate() {
-    return false;
-  }
+public enum ExecutionState {
+  INIT,
+  EXECUTED,
 }

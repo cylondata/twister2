@@ -107,7 +107,7 @@ public class WordCountJob extends TaskWorker {
     public boolean execute(IMessage message) {
       if (message.getContent() instanceof Tuple) {
         Tuple kc = (Tuple) message.getContent();
-        LOG.log(Level.INFO, String.format("%d Word %s count %s", context.taskId(),
+        LOG.log(Level.INFO, String.format("%d Word %s count %s", context.globalTaskId(),
             kc.getKey(), ((int[]) kc.getValue())[0]));
       }
       return true;

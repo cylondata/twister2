@@ -31,7 +31,7 @@ public class JobMasterContext extends Context {
       "twister2.job.master.assigns.worker.ids";
 
   // worker to master ping interval in milliseconds
-  public static final long PING_INTERVAL_DEFAULT = 10000;
+  public static final long PING_INTERVAL_DEFAULT = 30000;
   public static final String PING_INTERVAL = "twister2.worker.ping.interval";
 
   public static final int JOB_MASTER_PORT_DEFAULT = 11011;

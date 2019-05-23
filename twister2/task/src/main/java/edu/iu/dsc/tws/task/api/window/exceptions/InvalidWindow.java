@@ -9,16 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.validation;
+package edu.iu.dsc.tws.task.api.window.exceptions;
 
-import edu.iu.dsc.tws.task.api.Operations;
-
-public class ExecutionValidationFactory extends ExecutionValidation {
-
-  private Operations ops;
-
-  @Override
-  public boolean validate() {
-    return super.validate();
+public class InvalidWindow extends Exception {
+  public InvalidWindow(String message) {
+    super(message);
   }
 }

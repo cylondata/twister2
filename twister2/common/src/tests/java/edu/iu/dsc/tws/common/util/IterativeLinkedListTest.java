@@ -9,9 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.executor.validation;
+package edu.iu.dsc.tws.common.util;
 
-public class IExecutionValidationRule {
+import org.junit.Assert;
+import org.junit.Test;
 
+public class IterativeLinkedListTest {
+  @Test
+  public void testIterator() {
+    IterativeLinkedList<Integer> list = new IterativeLinkedList<>();
+    for (int i = 0; i < 10; i++) {
+      list.add(i);
+    }
 
+    IterativeLinkedList.ILLIterator itr = list.iterator();
+    int expected = 0;
+    while (itr.hasNext()) {
+      Assert.assertEquals(expected++, itr.next());
+    }
+  }
 }

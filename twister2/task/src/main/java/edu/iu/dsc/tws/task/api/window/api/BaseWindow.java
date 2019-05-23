@@ -13,21 +13,21 @@ package edu.iu.dsc.tws.task.api.window.api;
 
 public abstract class BaseWindow implements IWindow {
 
-  protected final int windowLength;
-  protected final int slideLength;
+  protected final long windowLength;
+  protected final long slideLength;
 
-  public BaseWindow(int windowLength, int slideLength) {
+  public BaseWindow(long windowLength, long slideLength) {
     this.windowLength = windowLength;
     this.slideLength = slideLength;
   }
 
   @Override
-  public int getWindowLength() {
+  public long getWindowLength() {
     return this.windowLength;
   }
 
   @Override
-  public int getSlidingLength() {
+  public long getSlidingLength() {
     return this.slideLength;
   }
 

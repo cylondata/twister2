@@ -59,7 +59,7 @@ public class KMeansWorker extends TaskWorker {
   @SuppressWarnings("unchecked")
   @Override
   public void execute() {
-    LOG.log(Level.INFO, "Task worker starting: " + workerId);
+    LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
@@ -162,18 +162,19 @@ public class KMeansWorker extends TaskWorker {
     DataFlowTaskGraph kmeansTaskGraph = kmeansTaskGraphBuilder.build();
 
     //Perform the iterations from 0 to 'n' number of iterations
+    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
-      ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
       //add the datapoints and centroids as input to the kmeanssource task.
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
       //actual execution of the third task graph
-      taskExecutor.execute(kmeansTaskGraph, plan);
+      taskExecutor.itrExecute(kmeansTaskGraph, plan);
       //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
+    taskExecutor.waitFor(kmeansTaskGraph, plan);
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
@@ -182,9 +183,9 @@ public class KMeansWorker extends TaskWorker {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
+      LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
+          + Arrays.deepToString(centroid));
     }
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
   }
 
   private static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -236,7 +237,7 @@ public class KMeansWorker extends TaskWorker {
     @Override
     public boolean execute(IMessage message) {
 //      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-//          + ":" + context.taskId());
+//          + ":" + context.globalTaskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {

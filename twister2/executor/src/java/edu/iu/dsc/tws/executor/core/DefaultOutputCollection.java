@@ -22,18 +22,12 @@ public class DefaultOutputCollection implements OutputCollection {
 
   private BlockingQueue<IMessage> outQueue;
 
-  private int count = 0;
-
   public DefaultOutputCollection(BlockingQueue<IMessage> outQueue) {
     this.outQueue = outQueue;
   }
 
   @Override
   public boolean collect(String edge, IMessage m) {
-    boolean offer = this.outQueue.offer(m);
-    if (offer) {
-      count++;
-    }
-    return offer;
+    return this.outQueue.offer(m);
   }
 }

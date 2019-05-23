@@ -4,15 +4,29 @@
 
 Tera Sort is a common benchmark to measure and compare high performance big data frameworks such as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.
 
-In twister2, we generate a batch of tuples, each having a random integer as the key and a byte array of configurable length as the value. These tuples will be sent from multiple sources to a single sinks with keyed gather operation applied as the connection. Keyed Gather operation is configured with a comparator to sort by key. 
+In twister2, when terasort is running in non file based mode, we generate a batch of tuples, each having a random byte array as the key and a byte array of configurable length as the value. These tuples will be sent from multiple sources to a single sinks with keyed gather operation applied as the connection. Keyed Gather operation is configured with a comparator to sort by key. 
 
 Tera sort benchmark can be spawned as follows.
 
-```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20```
+```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -keySeed 1000 -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20```
+
+Instead of using a random data source, TeraSort can be configured to run with a file data source as follows.
+
+```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -valueSize 90 -keySize 10 -inputFile /path/to/file-%d -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20```
 
 ### Tera Sort parameters
 
-#### Data Configuration
+#### Data Configuration - File Based mode
+
+| Parameter  | Description | Default Value |
+| ------------- | ------------- | ------------- |
+| inputFile  | Path to the input file. This path can contain, %d which will be replaced with the task index at runtime. For example, if file is specified as input-%d, when executing task with index 0, it will search for file input-0.  | Mandatory |
+| valueSize | Size of the value component of the tuple in bytes | Mandatory |
+| keySize | Size of the value component of the tuple in bytes | Mandatory |
+
+
+#### Data Configuration - Non File Based mode
+Terasort will switch to non file based mode, if filePath is not specified.
 
 | Parameter  | Description | Default Value |
 | ------------- | ------------- | ------------- |
@@ -35,3 +49,7 @@ Tera sort benchmark can be spawned as follows.
 | ------------- | ------------- | ------------- |
 | memoryBytesLimit | Maximum amount of random access memory(in bytes) to utilize to hold incoming tuples. Tuples will be written to the disk, once this limit is exceeded. | 6400 |
 | memoryRecordsLimit | Maximum amount of tuples to keep in RAM. | 64 |
+
+### Generating data files
+
+[gensort Data Generator](http://www.ordinal.com/gensort.html) can be used to generate data files.

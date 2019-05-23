@@ -36,11 +36,12 @@ public class GatherVerifier extends ResultsVerifier<int[], Iterator<Tuple<Intege
           Set<Integer> taskIds = ctx.getTasksByName(sourceTaskName).stream()
               .map(TaskInstancePlan::getTaskIndex)
               .collect(Collectors.toSet());
+          int taskId = ctx.getTasksByName(sourceTaskName).stream().findFirst().get().getTaskId();
           List<Tuple<Integer, int[]>> generatedData = new ArrayList<>();
           for (Integer taskIndex : taskIds) {
             for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
               //todo temp 100000, change once engine is fixed
-              generatedData.add(new Tuple<>(100000 + taskIndex, ints));
+              generatedData.add(new Tuple<>((taskId * 100000) + taskIndex, ints));
             }
           }
           return generatedData.iterator();

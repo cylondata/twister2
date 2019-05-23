@@ -33,7 +33,8 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
 
   private Set<Integer> sourcesWithSyncsSent = new HashSet<>();
-  private int groupingSize = 100;
+  private long groupingSize = 100;
+  private boolean allSyncsReceived = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -45,13 +46,13 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   protected void addSyncMessage(int source, int target) {
     super.addSyncMessage(source, target);
     this.sourcesWithSyncsSent.add(source);
+    this.allSyncsReceived = sourcesWithSyncsSent.size() == thisSources.size();
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(Integer target) {
     return readyToSend.get(target) != null
-        && (readyToSend.get(target).size() > groupingSize
-        || sourcesWithSyncsSent.size() == thisSources.size());
+        && (allSyncsReceived || readyToSend.get(target).size() > groupingSize);
   }
 
   @Override

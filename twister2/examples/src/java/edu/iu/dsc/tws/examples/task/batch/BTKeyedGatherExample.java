@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -46,7 +45,7 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType keyType = DataType.INTEGER_ARRAY;
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
@@ -71,10 +70,9 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-        int sinksCount = ctx.getTasksByName(SINK).size();
         Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
             .map(TaskInstancePlan::getTaskIndex)
-            .filter(i -> i % sinksCount == ctx.taskIndex())
+            .filter(i -> (Math.abs(i.hashCode())) == ctx.taskIndex())
             .collect(Collectors.toSet());
 
         List<int[]> dataFromEachTask = new ArrayList<>();
@@ -91,7 +89,8 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
         return finalOutput.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
-              IntComparator.getInstance(),
+              (d1, d2) -> true, //return true for any key, since we
+              // can't determine this due to hash based selector
               new IteratorComparator<>(
                   IntArrayComparator.getInstance()
               )
@@ -103,7 +102,7 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     public boolean keyedGather(Iterator<Tuple<Integer, Iterator<int[]>>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       LOG.info(String.format("%d received keyed-gather %d",
-          context.getWorkerId(), context.taskId()));
+          context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       this.verified = verifyResults(resultsVerifier, content, null, verified);

@@ -98,7 +98,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag) {
-    while (!keyedGather.reduce(task, key, data, flag)) {
+    while (!keyedGather.gather(task, key, data, flag)) {
       // lets wait a litte and try again
       keyedGather.progress();
     }

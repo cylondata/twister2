@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.task.api.window.config;
 
 import edu.iu.dsc.tws.task.api.window.api.BaseWindow;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
-import edu.iu.dsc.tws.task.api.window.strategy.TumblingCountWindowStrategy;
+import edu.iu.dsc.tws.task.api.window.strategy.count.TumblingCountWindowStrategy;
 
 public final class TumblingCountWindow extends BaseWindow {
 
-  public TumblingCountWindow(int windowLength) {
+  public TumblingCountWindow(long windowLength) {
     super(windowLength, windowLength);
   }
 

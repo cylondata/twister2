@@ -13,22 +13,20 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
@@ -43,12 +41,17 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * Maximum bytes to keep in memory
    */
-  private int maxBytesToKeepInMemory;
+  private long maxBytesToKeepInMemory;
 
   /**
    * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
    */
-  private int maxRecordsInMemory;
+  private long maxRecordsInMemory;
+
+  /**
+   * Maximum bytes in a single file to write
+   */
+  private long maxBytesFile;
 
   /**
    * The base folder to work on
@@ -67,26 +70,14 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private int noOfFileWritten = 0;
 
   /**
-   * The size of the records in memory
-   */
-  private List<Integer> bytesLength = new ArrayList<>();
-
-  /**
    * List of bytes in the memory so far
    */
-  private List<Tuple>[] recordsInMemory;
-  private int currentKeyIndex = 0;
-  private Map<Object, Integer> keyToArrayIndexMap = new HashMap<>();
+  private LinkedList<Tuple> recordsInMemory;
 
   /**
-   * The deserialized objects in memory
+   * Temporary hold the tuples that needs to be sent to the disk
    */
-  private List<Tuple> objectsInMemory = new ArrayList<>();
-
-  /**
-   * Amount of bytes in the memory
-   */
-  private int numOfRecordsInMemory = 0;
+  private LinkedList<Tuple> recordsToDisk;
 
   /**
    * Maximum size of a tuple written to disk in each file
@@ -114,7 +105,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private Comparator keyComparator;
 
   private ComparatorWrapper comparatorWrapper;
-  private ListComparatorWrapper listComparatorWrapper;
 
   private volatile Semaphore fileWriteLock = new Semaphore(1);
 
@@ -124,24 +114,26 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private int target;
 
   private enum FSStatus {
-    WRITING,
+    WRITING_MEMORY,
+    WRITING_DISK,
     READING,
     DONE
   }
 
-  private FSStatus status = FSStatus.WRITING;
+  private FSStatus status = FSStatus.WRITING_MEMORY;
 
   /**
    * Create a key based sorted merger
    */
-  public FSKeyedSortedMerger2(int maxBytesInMemory, int maxRecsInMemory,
+  public FSKeyedSortedMerger2(long maxBytesInMemory, long maxBytesToAFile,
                               String dir, String opName, MessageType kType,
                               MessageType dType, Comparator kComparator, int tar) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
-    this.maxRecordsInMemory = maxRecsInMemory;
+    this.maxBytesFile = maxBytesToAFile;
 
     //we can expect atmost this much of unique keys
-    this.recordsInMemory = new List[this.maxRecordsInMemory + 1];
+    this.recordsInMemory = new LinkedList<>();
+    this.recordsToDisk = new LinkedList<>();
 
     this.folder = dir;
     this.operationName = opName;
@@ -149,11 +141,10 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.comparatorWrapper = new ComparatorWrapper(keyComparator);
-    this.listComparatorWrapper = new ListComparatorWrapper(this.comparatorWrapper);
 
     this.target = tar;
     LOG.info("Disk merger configured. Folder : " + folder
-        + ", Bytes in memory :" + maxBytesInMemory + ", Records in memory : " + maxRecsInMemory);
+        + ", Bytes in memory :" + maxBytesInMemory);
   }
 
   /**
@@ -164,27 +155,23 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       throw new RuntimeException("Cannot add after switching to reading");
     }
 
-    if (this.keyToArrayIndexMap.size() >= this.maxRecordsInMemory) {
-      this.run();
+    if (status == FSStatus.WRITING_MEMORY) {
+      this.recordsInMemory.add(new Tuple(key, data));
+      this.numOfBytesInMemory += data.length;
+
+      // we switch to disk
+      if (numOfBytesInMemory >= maxBytesToKeepInMemory) {
+        status = FSStatus.WRITING_DISK;
+        this.numOfBytesInMemory = 0;
+      }
+    } else {
+      this.recordsToDisk.add(new Tuple(key, data));
+      this.numOfBytesInMemory += data.length;
     }
-    //get existing index for this key, or generate a new index
-    int thisKeyIndex = this.keyToArrayIndexMap.computeIfAbsent(key,
-        k -> this.currentKeyIndex++);
-
-    //if this is a new key, we will have to assign a new array list
-    if (this.recordsInMemory[thisKeyIndex] == null) {
-      this.recordsInMemory[thisKeyIndex] = new ArrayList<>();
-    }
-    this.recordsInMemory[thisKeyIndex].add(new Tuple(key, data));
-
-    this.numOfRecordsInMemory++;
-
-    // todo ignoring length for now
-    // this.bytesLength.add(length);
-    this.numOfBytesInMemory += length;
   }
 
   public synchronized void switchToReading() {
+    LOG.info("Switching to read...");
     try {
       fileWriteLock.acquire();
     } catch (InterruptedException iex) {
@@ -193,11 +180,16 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     try {
       LOG.info(String.format("Reading from %d files", noOfFileWritten));
       status = FSStatus.READING;
+      // add the objects that are destined to disk, to memory
+      recordsInMemory.addAll(recordsToDisk);
+      // clear the records to disk
+      recordsToDisk = new LinkedList<>();
+      numOfBytesInMemory = 0;
+
       // lets convert the in-memory data to objects
       deserializeObjects();
       // lets sort the in-memory objects
-      //todo can be improved
-      objectsInMemory.sort(this.comparatorWrapper);
+      recordsInMemory.sort(this.comparatorWrapper);
     } finally {
       fileWriteLock.release();
     }
@@ -219,30 +211,53 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     }
   }
 
-  /**
-   * Wrapper for comparing KeyValue with the user defined comparator
-   */
-  private class ListComparatorWrapper implements Comparator<List<Tuple>> {
-    private ComparatorWrapper comparator;
-
-    ListComparatorWrapper(ComparatorWrapper com) {
-      this.comparator = com;
-    }
-
-    @Override
-    public int compare(List<Tuple> o1, List<Tuple> o2) {
-      return this.comparator.compare(o1.get(0), o2.get(0));
-    }
-  }
-
   private void deserializeObjects() {
-    this.objectsInMemory = Arrays.stream(this.recordsInMemory, 0, this.currentKeyIndex)
-        .flatMap(List::stream)
-        .parallel()
-        .map(tuple -> {
+    int threads = CommonThreadPool.getThreadCount() + 1; //this thread is also counted
+    List<Future<Boolean>> deserializeFutures = new ArrayList<>();
+
+    int chunkSize = this.recordsInMemory.size() / threads;
+
+    if (this.recordsInMemory.size() % threads != 0) {
+      chunkSize++;
+    }
+
+    for (int i = 0; i < this.recordsInMemory.size(); i += chunkSize) {
+      final int start = i;
+      final int end = Math.min(this.recordsInMemory.size(), i + chunkSize);
+      //last chunk will be processed in this thread
+      if (end == this.recordsInMemory.size()) {
+        Iterator<Tuple> itr = recordsInMemory.listIterator(start);
+        int count = 0;
+        int elements = end - start;
+        while (itr.hasNext() && count < elements) {
+          Tuple tuple = itr.next();
           Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
-          return new Tuple(tuple.getKey(), o);
-        }).collect(Collectors.toList());
+          tuple.setValue(o);
+          count++;
+        }
+      } else {
+        deserializeFutures.add(CommonThreadPool.getExecutor().submit(() -> {
+          Iterator<Tuple> itr = recordsInMemory.listIterator(start);
+          int count = 0;
+          int elements = end - start;
+          while (itr.hasNext() && count < elements) {
+            Tuple tuple = itr.next();
+            Object o = dataType.getDataPacker().unpackFromByteArray((byte[]) tuple.getValue());
+            tuple.setValue(o);
+            count++;
+          }
+          return true;
+        }));
+      }
+    }
+
+    for (int i = 0; i < deserializeFutures.size(); i++) {
+      try {
+        deserializeFutures.get(i).get();
+      } catch (InterruptedException | ExecutionException e) {
+        throw new RuntimeException("Error in deserializing records in memory", e);
+      }
+    }
   }
 
   /**
@@ -250,66 +265,66 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    */
   public synchronized void run() {
     // it is time to write
-    if (numOfBytesInMemory >= maxBytesToKeepInMemory
-        || numOfRecordsInMemory >= maxRecordsInMemory) {
+    if (numOfBytesInMemory >= maxBytesFile) {
+      //create references to existing data
+      LinkedList<Tuple> referenceToRecordsInMemory = null;
+      if (this.fileWriteLock.availablePermits() == 0) {
+        LOG.warning("Communication thread blocks on disk IO thread!");
+      }
+      int noOfFiles = 0;
+      long memoryBytes = 0;
+      try {
+        this.fileWriteLock.acquire(); // allow 1 parallel write to disk
 
-      // first sort the values
+        // if not writing to disk return
+        if (status != FSStatus.WRITING_DISK) {
+          return;
+        }
 
+        referenceToRecordsInMemory = this.recordsToDisk;
+        noOfFiles = noOfFileWritten;
+        memoryBytes = numOfBytesInMemory;
 
-//      Arrays.parallelSort(this.recordsInMemory, 0,
-//          this.currentKeyIndex, listComparatorWrapper);
+        //making previous things garbage collectible
+        this.recordsToDisk = new LinkedList<>();
+        noOfFileWritten++;
+        numOfBytesInMemory = 0;
+      } catch (InterruptedException e) {
+        LOG.log(Level.SEVERE, "Couldn't write to the file", e);
+      } finally {
+        fileWriteLock.release();
+      }
 
-      // save the bytes to disk
-      this.writeToFile();
-//      long largestTupleWritten = FileLoader.saveKeyValues(recordsInMemory,
-//          this.currentKeyIndex,
-//          numOfBytesInMemory, getSaveFileName(noOfFileWritten), keyType);
-//      largestTupleSizeRecorded = Math.max(largestTupleSizeRecorded, largestTupleWritten);
-
-      numOfRecordsInMemory = 0;
-      numOfBytesInMemory = 0;
-
-      //making previous things garbage collectible
-      this.recordsInMemory = new List[this.maxRecordsInMemory];
-      this.keyToArrayIndexMap = new HashMap<>();
-
-      currentKeyIndex = 0;
-      bytesLength.clear();
-      noOfFileWritten++;
+      if (referenceToRecordsInMemory != null) {
+        // save the bytes to disk
+        CommonThreadPool.getExecutor().execute(
+            new FileSaveWorker(referenceToRecordsInMemory, noOfFiles, memoryBytes));
+      }
     }
   }
 
-  private void writeToFile() {
-    try {
-      this.fileWriteLock.acquire(); // allow 1 parallel write to disk
+  private class FileSaveWorker implements Runnable {
+    //create references to existing data
+    private LinkedList<Tuple> referenceToRecordsInMemory;
+    private String fileName;
+    private long bytesInMemory;
 
-      //create references to existing data
-      final List<Tuple>[] referenceToRecordsInMemory = this.recordsInMemory;
-      final String fileName = getSaveFileName(noOfFileWritten);
-      final long bytesInMemory = numOfBytesInMemory;
-      final int currentIndex = currentKeyIndex;
+    FileSaveWorker(LinkedList<Tuple> referenceToRecordsInMemory,
+                   int numFilesWritten, long memoryBytes) {
+      this.referenceToRecordsInMemory = referenceToRecordsInMemory;
+      this.bytesInMemory = memoryBytes;
+      this.fileName = getSaveFileName(numFilesWritten);
+    }
 
-      ForkJoinPool.commonPool().execute(() -> {
-        try {
-          // do the sort
-          Arrays.sort(referenceToRecordsInMemory, 0,
-              currentIndex, listComparatorWrapper);
+    @Override
+    public void run() {
+      // do the sort
+      referenceToRecordsInMemory.sort(comparatorWrapper);
 
-          long largestTupleWritten = FileLoader.saveKeyValues(referenceToRecordsInMemory,
-              currentIndex, bytesInMemory, fileName, keyType);
-          //todo get inside set?
-          largestTupleSizeRecorded.set(
-              Math.max(largestTupleSizeRecorded.get(), largestTupleWritten)
-          );
-        } finally {
-          fileWriteLock.release();
-        }
-      });
-    } catch (RejectedExecutionException regex) {
-      LOG.log(Level.SEVERE, "Couldn't submit async write task", regex);
-      fileWriteLock.release();
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Couldn't write to the file", e);
+      long largestTupleWritten = FileLoader.saveKeyValues(
+          referenceToRecordsInMemory, bytesInMemory, fileName, keyType);
+      //todo get inside set?
+      largestTupleSizeRecorded.set(Math.max(largestTupleSizeRecorded.get(), largestTupleWritten));
     }
   }
 
@@ -392,9 +407,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           Math.max(numOfBytesInMemory, largestTupleSizeRecorded.get()),
           keyComparator
       );
-      if (!objectsInMemory.isEmpty()) {
+      if (!recordsInMemory.isEmpty()) {
         ControlledFileReader inMemoryReader = ControlledFileReader.loadInMemory(
-            meta, objectsInMemory, keyComparator);
+            meta, recordsInMemory, keyComparator);
         if (inMemoryReader.hasNext()) {
           this.controlledFileReaders.add(inMemoryReader);
         }
@@ -459,10 +474,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       }
     }
     File rootFolder = new File(this.getSaveFolderName());
-    boolean deleted = rootFolder.delete();
-    if (!deleted) {
-      LOG.warning("Failed to delete the directory");
-    }
+    rootFolder.deleteOnExit();
     status = FSStatus.DONE;
   }
 

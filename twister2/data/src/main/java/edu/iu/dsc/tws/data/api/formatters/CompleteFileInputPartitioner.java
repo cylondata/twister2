@@ -96,7 +96,7 @@ public abstract class CompleteFileInputPartitioner<OT>
    * @param minNumSplits Number of minimal input splits, as a hint.
    */
   @Override
-  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws Exception {
+  public FileInputSplit<OT>[] createInputSplits(int minNumSplits) throws IOException {
     if (minNumSplits < 1) {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }

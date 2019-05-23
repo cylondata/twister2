@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -36,6 +37,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 import edu.iu.dsc.tws.rsched.utils.TarGzipPacker;
 
 /**
@@ -144,7 +146,12 @@ public class ResourceAllocator {
     Path tempDirPath = null;
     String tempDirPrefix = "twister2-" + job.getJobName() + "-";
     try {
-      tempDirPath = Files.createTempDirectory(tempDirPrefix);
+      String jobArchiveTemp = SchedulerContext.jobArchiveTempDirectory(config);
+      if (jobArchiveTemp != null) {
+        tempDirPath = Files.createTempDirectory(Paths.get(jobArchiveTemp), tempDirPrefix);
+      } else {
+        tempDirPath = Files.createTempDirectory(tempDirPrefix);
+      }
     } catch (IOException e) {
       throw new RuntimeException("Failed to create temp directory with the prefix: "
           + tempDirPrefix, e);
@@ -270,6 +277,8 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
+    clearTemporaryFiles(jobDirectory);
+
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
@@ -284,6 +293,24 @@ public class ResourceAllocator {
 
     launcher.launch(updatedJob);
   }
+
+  /**
+   * clear temporary files
+   *
+   * @param jobDirectory the name of the folder to be cleaned
+   */
+  public void clearTemporaryFiles(String jobDirectory) {
+
+    String cleaningCommand = "rm -rf " + jobDirectory;
+    System.out.println("cleaning  command:" + cleaningCommand);
+    ProcessUtils.runSyncProcess(false,
+        cleaningCommand.split(" "), new StringBuilder(),
+        new File("."), true);
+
+    LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
+  }
+
+
 
   /**
    * Terminate a job

@@ -27,13 +27,13 @@ import edu.iu.dsc.tws.comms.api.ReduceFunction;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskKeySelector;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
@@ -42,17 +42,14 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
   private BKeyedReduce op;
 
-  private TaskKeySelector selector;
-
   public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
                                    Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.selector = edge.getSelector();
     this.edgeGenerator = e;
 
     DestinationSelector destSelector;
-    if (selector != null) {
+    if (edge.getPartitioner() != null) {
       destSelector = new DefaultDestinationSelector(edge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
@@ -68,9 +65,9 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
-    TaskMessage taskMessage = (TaskMessage) message;
-    Object key = extractKey(taskMessage, selector);
-    return op.reduce(source, key, taskMessage.getContent(), flags);
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.reduce(source,
+        taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
   @Override

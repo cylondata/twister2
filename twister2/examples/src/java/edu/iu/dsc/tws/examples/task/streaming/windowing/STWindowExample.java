@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -52,11 +53,23 @@ public class STWindowExample extends BenchTaskWorker {
     String edge = "edge";
     BaseWindowSource g = new SourceWindowTask(edge);
 
+    // Tumbling Window
     BaseWindowSink dw = new DirectWindowedReceivingTask()
         .withTumblingCountWindow(5);
+    BaseWindowSink dwDuration = new DirectWindowedReceivingTask()
+        .withTumblingDurationWindow(2, TimeUnit.MILLISECONDS);
+
+    // Sliding Window
+    BaseWindowSink sdw = new DirectWindowedReceivingTask()
+        .withSlidingCountWindow(5, 2);
+
+    BaseWindowSink sdwDuration = new DirectWindowedReceivingTask()
+        .withSlidingDurationWindow(2, TimeUnit.MILLISECONDS, 1,
+            TimeUnit.MILLISECONDS);
+
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;
@@ -86,9 +99,9 @@ public class STWindowExample extends BenchTaskWorker {
 
     /**
      * This method returns the final windowing message
+     *
      * @param windowMessage Aggregated IWindowMessage is obtained here
      * windowMessage contains [expired-tuples, current-tuples]
-     * @return
      */
     @Override
     public IWindowMessage<int[]> execute(IWindowMessage<int[]> windowMessage) {

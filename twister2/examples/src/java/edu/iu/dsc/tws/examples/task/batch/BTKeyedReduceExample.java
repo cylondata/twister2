@@ -30,7 +30,6 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -49,7 +48,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     int sourceParallelsim = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.INTEGER_ARRAY;
+    DataType keyType = DataType.INTEGER;
     DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
@@ -92,7 +91,8 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
         return finalOutput.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
-              IntComparator.getInstance(),
+              (d1, d2) -> true, //return true for any key, since we
+              // can't determine this due to hash based selector,
               IntArrayComparator.getInstance()
           )
       ));
@@ -102,7 +102,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     public boolean keyedReduce(Iterator<Tuple<Integer, int[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       LOG.info(String.format("%d received keyed-reduce %d",
-          context.getWorkerId(), context.taskId()));
+          context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
       this.verified = verifyResults(resultsVerifier, content, null, verified);

@@ -98,7 +98,7 @@ public class SKeyedGather {
    * @param flags message flag
    * @return true if the message is accepted
    */
-  public boolean reduce(int src, Object key, Object message, int flags) {
+  public boolean gather(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
     return keyedGather.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
   }

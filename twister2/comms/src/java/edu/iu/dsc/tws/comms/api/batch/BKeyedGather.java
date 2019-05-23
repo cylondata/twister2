@@ -100,7 +100,7 @@ public class BKeyedGather {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return keyedGather.send(source, new Tuple<>(key, data, keyType,
+    return keyedGather.send(source, Tuple.of(key, data, keyType,
         dataType), flags, dest);
   }
 

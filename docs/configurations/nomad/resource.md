@@ -24,5 +24,5 @@
 <table><tr><td>default</td><td>"nomad.sh"</td><tr><td>description</td><td>name of the script</td></table>
 
 **twister2.system.package.uri**
-<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"</td><tr><td>description</td><td>path to the system core package</td></table>
+<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"</td><tr><td>description</td><td>path to the system core package</td></table>
 

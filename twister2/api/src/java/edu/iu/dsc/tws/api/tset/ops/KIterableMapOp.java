@@ -19,6 +19,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.common.config.Config;
@@ -39,13 +40,17 @@ public class KIterableMapOp<K, V, O> implements ICompute, Receptor {
 
   private boolean keyed;
 
+  private Selector<K, O> keySelector;
+
   public KIterableMapOp() {
   }
 
-  public KIterableMapOp(KIterableMapFunction<K, V, O> mapFn, boolean inputItr, boolean kyd) {
+  public KIterableMapOp(KIterableMapFunction<K, V, O> mapFn,
+                        boolean inputItr, boolean kyd, Selector<K, O> keySelector) {
     this.mapFn = mapFn;
     this.inputIterator = inputItr;
     this.keyed = kyd;
+    this.keySelector = keySelector;
   }
 
   @SuppressWarnings("unchecked")
@@ -61,14 +66,15 @@ public class KIterableMapOp<K, V, O> implements ICompute, Receptor {
     }
 
     O result = mapFn.map(data);
-    return context.write(Constants.DEFAULT_EDGE, result);
+    K key = this.keySelector.select(result);
+    return context.write(Constants.DEFAULT_EDGE, key, result);
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.taskId(), ctx.taskName(),
-        ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
+        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
 
     mapFn.prepare(tSetContext);
   }

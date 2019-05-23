@@ -64,6 +64,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
+  private int workerId;
+
   /**
    * This method initialize the task instance values with the values specified in the task config
    * object.
@@ -77,7 +79,9 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
   }
 
   @Override
-  public void initialize(Config cfg, int workerId) {
+  public void initialize(Config cfg, int workerid) {
+    this.initialize(cfg);
+    this.workerId = workerid;
   }
 
   /**
@@ -188,9 +192,9 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       } else {
         totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
       }
+
       if (!graph.getNodeConstraints().isEmpty()) {
-        int instancesPerWorker = taskAttributes.getInstancesPerWorker(
-            vertex, graph.getNodeConstraints().get(vertex.getName()));
+        int instancesPerWorker = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
         int maxTaskInstancesPerContainer = 0;
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {

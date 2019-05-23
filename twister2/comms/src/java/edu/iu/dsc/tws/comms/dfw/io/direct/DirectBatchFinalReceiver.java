@@ -103,7 +103,7 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(Integer target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
   }

@@ -30,7 +30,7 @@
 <table><tr><td>default</td><td>"/usr/lib/mesos/0.28.1/lib/"</td><tr><td>description</td><td>the path to load native mesos library</td></table>
 
 **twister2.system.package.uri**
-<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.0.tar.gz"</td><tr><td>description</td><td>the core package uri</td></table>
+<table><tr><td>default</td><td>"${TWISTER2_DIST}/twister2-core-0.2.1.tar.gz"</td><tr><td>description</td><td>the core package uri</td></table>
 
 **twister2.mesos.fetch.uri**
 <table><tr><td>default</td><td>"http://149.165.150.81:8082"</td><tr><td>description</td><td>mesos fetch uri</td></table>

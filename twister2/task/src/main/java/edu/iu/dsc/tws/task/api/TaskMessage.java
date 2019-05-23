@@ -21,11 +21,6 @@ public class TaskMessage<T> implements IMessage<T> {
   private T content;
 
   /**
-   * Key of the data
-   */
-  private Object key;
-
-  /**
    * The edge
    */
   private String edge;
@@ -37,6 +32,7 @@ public class TaskMessage<T> implements IMessage<T> {
 
   /**
    * Create a task message with data
+   *
    * @param data data
    */
   public TaskMessage(T data) {
@@ -45,26 +41,13 @@ public class TaskMessage<T> implements IMessage<T> {
 
   /**
    * Create a task message with data
+   *
    * @param content data
    * @param edge edge
    * @param sourceTask sourcetask
    */
   public TaskMessage(T content, String edge, int sourceTask) {
     this.content = content;
-    this.edge = edge;
-    this.sourceTask = sourceTask;
-  }
-
-  /**
-   * Task message with key and data
-   * @param key key
-   * @param content data
-   * @param edge edge
-   * @param sourceTask source task
-   */
-  public TaskMessage(Object key, T content, String edge, int sourceTask) {
-    this.content = content;
-    this.key = key;
     this.edge = edge;
     this.sourceTask = sourceTask;
   }
@@ -84,9 +67,5 @@ public class TaskMessage<T> implements IMessage<T> {
 
   public int sourceTask() {
     return sourceTask;
-  }
-
-  public Object getKey() {
-    return key;
   }
 }

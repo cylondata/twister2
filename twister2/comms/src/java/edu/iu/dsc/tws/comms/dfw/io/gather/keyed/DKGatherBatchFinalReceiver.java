@@ -83,16 +83,17 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    int maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    int maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesToFile = DataFlowContext.getShuffleFileSize(cfg);
 
     for (Integer target : expectedIds.keySet()) {
 
       Shuffle sortedMerger;
       if (sorted) {
-        sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxRecordsInMemory,
-            shuffleDirectory, getOperationName(target), dataFlowOperation.getKeyType(),
-            dataFlowOperation.getDataType(), comparator, target);
+        sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory,
+            maxBytesToFile, shuffleDirectory, getOperationName(target),
+            dataFlowOperation.getKeyType(), dataFlowOperation.getDataType(), comparator, target);
       } else {
         sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
             getOperationName(target), dataFlowOperation.getKeyType(),

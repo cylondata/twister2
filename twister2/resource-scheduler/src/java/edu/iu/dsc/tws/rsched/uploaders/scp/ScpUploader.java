@@ -79,13 +79,6 @@ public class ScpUploader implements IUploader {
           String.format("Job package does not exist at '%s'", source));
     }
 
-//    if (!this.controller.mkdirsIfNotExists(destinationDirectory)) {
-//      throw new UploaderException(
-//          String.format(
-//              "Failed to create directories required for uploading the topology %s",
-//              destinationDirectory));
-//    }
-
     LOG.log(Level.INFO, String.format("Uploading the file from local"
                     + " file system to remote machine: %s -> %s.",
             source, destinationDirectory));

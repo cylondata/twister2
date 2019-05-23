@@ -142,13 +142,13 @@ public class MesosScheduler implements Scheduler {
             // int end = begin + 30;
 
  /*           Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
-                .setTaskId(taskId)
+                .setTaskId(globalTaskId)
                 .setSlaveId(offer.getSlaveId())
                 .addResources(buildResource("cpus", MesosContext.cpusPerContainer(config)))
                 .addResources(buildResource("mem", MesosContext.ramPerContainer(config)))
                 .addResources(buildResource("disk", MesosContext.diskPerContainer(config)))
                 //.addResources(buildRangeResource("ports", begin, end))
-                .setData(ByteString.copyFromUtf8("" + taskId.getValue()));*/
+                .setData(ByteString.copyFromUtf8("" + globalTaskId.getValue()));*/
 
             Protos.TaskInfoOrBuilder taskBuilder = TaskInfo.newBuilder()
                 .setTaskId(taskId)
@@ -178,6 +178,10 @@ public class MesosScheduler implements Scheduler {
 
               Protos.Parameter classNameParam = null;
 
+              Protos.Parameter downloadMethod = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("DOWNLOAD_METHOD=" + SchedulerContext.downloadMethod(config)).build();
+
+              //LOG.info("download method..:" + SchedulerContext.downloadMethod(config));
               //worker 0 will be the job master.
               if (taskId.getValue().equals("0")) {
 
@@ -224,6 +228,7 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.addParameters(computeResourceParam);
               dockerInfoBuilder.addParameters(classNameParam);
               dockerInfoBuilder.addParameters(frameworkIdParam);
+              dockerInfoBuilder.addParameters(downloadMethod);
               Protos.Volume volume = Protos.Volume.newBuilder()
                   .setContainerPath("/twister2/")
                   .setHostPath(".")

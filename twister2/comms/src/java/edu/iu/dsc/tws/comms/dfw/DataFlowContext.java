@@ -35,8 +35,12 @@ public class DataFlowContext extends CommunicationContext {
   public static final String NETWORK_PARTITION_BATCH_GROUPING_SIZE
       = "network.partition.batch.grouping.size";
 
-  public static final String SHUFFLE_MAX_BYTES_IN_MEMORY = "shuffle.memory.bytes.max";
-  public static final String SHUFFLE_MAX_RECORDS_IN_MEMORY = "shuffle.memory.records.max";
+  public static final String SHUFFLE_MAX_BYTES_IN_MEMORY =
+      "twister2.network.shuffle.memory.bytes.max";
+  public static final String SHUFFLE_MAX_RECORDS_IN_MEMORY =
+      "twister2.network.shuffle.memory.records.max";
+  public static final String SHUFFLE_MAX_FILE_SIZE =
+      "twister2.network.shuffle.file.bytes.max";
 
 
   public static final int DEFAULT_DESTINATION = 0;
@@ -71,16 +75,20 @@ public class DataFlowContext extends CommunicationContext {
     return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
   }
 
-  public static int getShuffleMaxRecordsInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64);
+  public static long getShuffleMaxRecordsInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64L);
   }
 
-  public static int getShuffleMaxBytesInMemory(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400);
+  public static long getShuffleMaxBytesInMemory(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400L);
   }
 
   public static int getNetworkPartitionBatchGroupingSize(Config config) {
     return config.getIntegerValue(NETWORK_PARTITION_BATCH_GROUPING_SIZE, 100);
+  }
+
+  public static long getShuffleFileSize(Config cfg) {
+    return cfg.getLongValue(SHUFFLE_MAX_FILE_SIZE, 1000000);
   }
 }
 

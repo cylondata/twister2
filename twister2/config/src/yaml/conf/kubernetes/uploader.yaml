@@ -33,7 +33,7 @@ twister2.kubernetes.uploader.watch.pods.starting: true
 # full directory path to upload the job package with scp
 twister2.uploader.directory: "/absolute/path/to/uploder/directory/"
 
-twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
+# twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
 
 # web server link of the job package download directory
 # this is the same directory as the uploader directory
@@ -53,3 +53,11 @@ twister2.uploader.ssh.command.options: ""
 # The ssh connection string sets the remote user name and host used by the uploader.
 twister2.uploader.ssh.command.connection: "user@uploadserver.address"
 
+# the uploader class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
+# this is the method that workers use to download the core and job packages
+# it could be  HTTP, HDFS, ..
+twister2.uploader.download.method: "HTTP"

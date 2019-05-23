@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -47,11 +48,15 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
 
   @Override
   protected void addSyncMessage(int source, int target) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
   }
 
   @Override
   protected void addSyncMessageBarrier(int source, int target, byte[] barrier) {
+    Set<Integer> sources = syncReceived.get(target);
+    sources.add(source);
     targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
     barriers.put(target, barrier);
   }
@@ -120,7 +125,7 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(int target) {
+  protected boolean isFilledToSend(Integer target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
