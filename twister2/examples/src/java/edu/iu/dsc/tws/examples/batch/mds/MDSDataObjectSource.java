@@ -51,20 +51,20 @@ public class MDSDataObjectSource extends BaseSource {
    */
   private String edgeName;
   private String dataDirectory;
-  private int dimension;
+  private int dataSize;
 
-  public MDSDataObjectSource(String edgename, String dataDirectory, int dim) {
+  public MDSDataObjectSource(String edgename, String dataDirectory, int size) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
-    this.dimension = dim;
+    this.dataSize = size;
   }
 
-  public int getDimension() {
-    return dimension;
+  public int getDataSize() {
+    return dataSize;
   }
 
-  public void setDimension(int dimension) {
-    this.dimension = dimension;
+  public void setDataSize(int dataSize) {
+    this.dataSize = dataSize;
   }
 
   public String getDataDirectory() {
@@ -111,6 +111,8 @@ public class MDSDataObjectSource extends BaseSource {
             buffer = byteBuffer.asShortBuffer();
             short[] shortArray = new short[1000];
             ((ShortBuffer) buffer).get(shortArray);
+
+            //For writing into the partition file
             //sink.add(context.taskIndex(), Arrays.toString(shortArray));
             context.write(getEdgeName(), shortArray);
           }
@@ -121,6 +123,7 @@ public class MDSDataObjectSource extends BaseSource {
         throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }
     }
+    //For writing into the partition file
     //sink.persist();
     context.end(getEdgeName());
   }
@@ -130,7 +133,9 @@ public class MDSDataObjectSource extends BaseSource {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
-        new Path(getDataDirectory()), 1000 * Short.BYTES));
+        new Path(getDataDirectory()), getDataSize() * Short.BYTES));
+
+    //For writing into the partition file
     /*this.sink = new DataSink<>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/
   }

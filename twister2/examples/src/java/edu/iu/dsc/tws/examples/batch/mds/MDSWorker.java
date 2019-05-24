@@ -68,7 +68,7 @@ public class MDSWorker extends TaskWorker {
 
     /** Task Graph to partition the generated matrix for MDS **/
     MDSDataObjectSource mdsDataObjectSource = new MDSDataObjectSource(
-        Context.TWISTER2_DIRECT_EDGE, directory, dimension);
+        Context.TWISTER2_DIRECT_EDGE, directory, matrixSize);
     MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink();
 
     TaskGraphBuilder dataObjectGraphBuilder = TaskGraphBuilder.newBuilder(config);
