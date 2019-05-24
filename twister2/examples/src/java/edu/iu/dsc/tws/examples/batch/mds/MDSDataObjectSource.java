@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
 import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -96,7 +97,6 @@ public class MDSDataObjectSource extends BaseSource {
    */
   @Override
   public void execute() {
-
     Buffer buffer;
     byte[] line = new byte[2000];
     ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
@@ -118,7 +118,7 @@ public class MDSDataObjectSource extends BaseSource {
           }
         }
         inputSplit = null;
-       // inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
+        //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
       } catch (Exception ioe) {
         throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }
@@ -133,8 +133,8 @@ public class MDSDataObjectSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), 1000 * Short.BYTES));
-    String outDir = "/tmp/matrix";
+    //String dataDirectory = String.valueOf(cfg.get(DataObjectConstants.DINPUT_DIRECTORY));
     this.sink = new DataSink<>(cfg,
-        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(outDir)));
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));
   }
 }

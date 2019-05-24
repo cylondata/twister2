@@ -11,12 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.mds;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public class MDSDataObjectSink extends BaseSink {
+
+  private static final Logger LOG = Logger.getLogger(MDSDataObjectSink.class.getName());
+
   @Override
   public boolean execute(IMessage content) {
+    List<short[]> values = new ArrayList<>();
+    while (((Iterator) content.getContent()).hasNext()) {
+      values.add((short[]) ((Iterator) content.getContent()).next());
+    }
     return false;
   }
 }
