@@ -16,12 +16,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.Collector;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class MDSDataObjectSink extends BaseSink {
+public class MDSDataObjectSink  extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(MDSDataObjectSink.class.getName());
+
+  private short[] datavalues;
 
   @Override
   public boolean execute(IMessage content) {
@@ -29,6 +36,22 @@ public class MDSDataObjectSink extends BaseSink {
     while (((Iterator) content.getContent()).hasNext()) {
       values.add((short[]) ((Iterator) content.getContent()).next());
     }
+    LOG.info("Distance Matrix (Row X Column) Length:" + values.size()
+        + "\tX\t" + values.get(0).length);
+    datavalues = new short[values.size()];
+    for (short[] value : values) {
+      datavalues = value;
+    }
     return false;
+  }
+
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
+    super.prepare(cfg, context);
+  }
+
+  @Override
+  public DataPartition<short[]> get() {
+    return new EntityPartition<>(context.taskIndex(), datavalues);
   }
 }

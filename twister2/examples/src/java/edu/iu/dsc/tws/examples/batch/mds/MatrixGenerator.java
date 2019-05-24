@@ -76,7 +76,7 @@ public class MatrixGenerator {
       FSDataOutputStream outputStream = fs.create(new Path(directory, generateRandom(10) + ".bin"));
       FileChannel out = outputStream.getChannel();
       out.write(byteBuffer);
-      outputStream.sync();
+      outputStream.flush();
       out.close();
     } catch (IOException e) {
       throw new RuntimeException("IOException Occured" + e.getMessage());

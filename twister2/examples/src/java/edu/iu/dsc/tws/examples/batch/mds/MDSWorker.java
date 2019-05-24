@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.mds;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,13 +25,17 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -76,14 +82,25 @@ public class MDSWorker extends TaskWorker {
 
     DataFlowTaskGraph dataObjectTaskGraph = dataObjectGraphBuilder.build();
     //Get the execution plan for the first task graph
-    ExecutionPlan dataObjectExecutionPlan = taskExecutor.plan(dataObjectTaskGraph);
+    ExecutionPlan plan = taskExecutor.plan(dataObjectTaskGraph);
 
     //Actual execution for the first taskgraph
-    taskExecutor.execute(dataObjectTaskGraph, dataObjectExecutionPlan);
+    taskExecutor.execute(dataObjectTaskGraph, plan);
+
+    //Retrieve the output of the first task graph
+    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
+        dataObjectTaskGraph, plan, "dataobjectsink");
+
+    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
+      DataPartition<Object>[] dataPartition = dataPointsObject.getPartitions();
+      for (int j = 0; j < dataPartition.length; j++) {
+        LOG.fine("Data Partition Values:" + dataPartition[j].getConsumer().next());
+      }
+    }
 
     /** Task Graph to run the MDS **/
-    MatrixGeneratorTask generatorTask = new MatrixGeneratorTask();
-    MatrixReceiverTask receiverTask = new MatrixReceiverTask();
+    MDSSourceTask generatorTask = new MDSSourceTask();
+    MDSReceiverTask receiverTask = new MDSReceiverTask();
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("generator", generatorTask, parallel);
@@ -92,36 +109,54 @@ public class MDSWorker extends TaskWorker {
     computeConnection.direct("generator", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataFlowTaskGraph = graphBuilder.build();
+    DataFlowTaskGraph mdsTaskGraph = graphBuilder.build();
 
     //Get the execution plan for the first task graph
-    ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    ExecutionPlan executionPlan = taskExecutor.plan(mdsTaskGraph);
 
     //Actual execution for the first taskgraph
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
-
-    //Retrieve the output of the first task graph
-    //DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-    //    dataFlowTaskGraph, executionPlan, "receiver");
+    taskExecutor.addInput(
+        mdsTaskGraph, executionPlan, "generator", "points", dataPointsObject);
+    taskExecutor.execute(mdsTaskGraph, executionPlan);
   }
 
-  private static class MatrixGeneratorTask extends BaseSource {
+  private static class MDSSourceTask extends BaseSource implements Receptor {
 
     private static final long serialVersionUID = -254264120110286748L;
 
+    private DataObject<?> dataPointsObject = null;
+
+    private short[] datapoints = null;
+
     @Override
     public void execute() {
+      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      datapoints = (short[]) dataPartition.getConsumer().next();
+      LOG.info("Data points value:" + Arrays.toString(datapoints) + "\t" + datapoints.length);
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, "MDS Execution");
+    }
+
+    @Override
+    public void add(String name, DataObject<?> data) {
+      LOG.log(Level.INFO, "Received input: " + name);
+      if ("points".equals(name)) {
+        this.dataPointsObject = data;
+      }
     }
   }
 
-  private static class MatrixReceiverTask extends BaseSink {
+  private static class MDSReceiverTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
     public boolean execute(IMessage content) {
       LOG.info("Received message:" + content.getContent().toString());
       return false;
+    }
+
+    @Override
+    public DataPartition<?> get() {
+      return null;
     }
   }
 

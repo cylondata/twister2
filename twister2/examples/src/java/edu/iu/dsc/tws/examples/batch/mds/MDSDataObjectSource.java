@@ -15,23 +15,21 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
-import edu.iu.dsc.tws.data.fs.FileSystem;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
-//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
+
+//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public class MDSDataObjectSource extends BaseSource {
 
@@ -113,7 +111,7 @@ public class MDSDataObjectSource extends BaseSource {
             buffer = byteBuffer.asShortBuffer();
             short[] shortArray = new short[1000];
             ((ShortBuffer) buffer).get(shortArray);
-            sink.add(context.taskIndex(), Arrays.toString(shortArray));
+            //sink.add(context.taskIndex(), Arrays.toString(shortArray));
             context.write(getEdgeName(), shortArray);
           }
         }
@@ -123,7 +121,7 @@ public class MDSDataObjectSource extends BaseSource {
         throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }
     }
-    sink.persist();
+    //sink.persist();
     context.end(getEdgeName());
   }
 
@@ -133,8 +131,7 @@ public class MDSDataObjectSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), 1000 * Short.BYTES));
-    //String dataDirectory = String.valueOf(cfg.get(DataObjectConstants.DINPUT_DIRECTORY));
-    this.sink = new DataSink<>(cfg,
-        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));
+    /*this.sink = new DataSink<>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/
   }
 }
