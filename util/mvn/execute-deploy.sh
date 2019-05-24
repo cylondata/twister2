@@ -90,6 +90,10 @@ deploy_library \
   twister2/taskscheduler/src/java/libtaskscheduler-java.jar \
   twister2/taskscheduler/src/java/pom.xml
 
+deploy_library \
+  twister2/compatibility/storm/libtwister2-storm.jar \
+  twister2/compatibility/storm/pom.xml
+
 deploy_proto_library \
   twister2/proto/proto-java \
   twister2/proto/pom.xml \
