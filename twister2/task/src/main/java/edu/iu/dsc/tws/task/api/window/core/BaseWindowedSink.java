@@ -41,7 +41,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract IWindowMessage<T> execute(IWindowMessage<T> windowMessage);
+  public abstract boolean execute(IWindowMessage<T> windowMessage);
 
   private WindowManager<T> windowManager;
 
@@ -66,6 +66,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
     initialize();

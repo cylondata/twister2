@@ -9,11 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.function;
+package edu.iu.dsc.tws.examples.utils.math;
 
-public abstract class ReduceWindowedFunctionImpl<T> implements ReduceWindowedFunction<T> {
-  @Override
-  public T onMessage(T object1, T object2) {
-    return null;
+import java.util.List;
+
+public final class MathUtils {
+
+  private MathUtils() {
+  }
+
+  public static int[] sumList(List<int[]> messages) {
+    int[] arr = null;
+    if (messages != null) {
+      int arrLength = messages.get(0).length;
+      arr = new int[arrLength];
+      for (int[] a : messages) {
+        for (int i = 0; i < arrLength; i++) {
+          arr[i] += a[i];
+        }
+      }
+    } else {
+      throw new NullPointerException("List is null");
+    }
+    return arr;
   }
 }

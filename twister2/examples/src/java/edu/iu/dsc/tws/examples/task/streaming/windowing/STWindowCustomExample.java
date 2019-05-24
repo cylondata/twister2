@@ -67,9 +67,9 @@ public class STWindowCustomExample extends BenchTaskWorker {
     }
 
     @Override
-    public IWindowMessage<int[]> execute(IWindowMessage<int[]> windowMessage) {
+    public boolean execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
-      return windowMessage;
+      return true;
     }
   }
 }
