@@ -9,5 +9,6 @@ t2_java_lib(
     deps = [
         "//twister2/comms/src/java:comms-java",
         "//twister2/common/src/java:common-java",
+        "//twister2/proto:proto-java"
     ],
 )
