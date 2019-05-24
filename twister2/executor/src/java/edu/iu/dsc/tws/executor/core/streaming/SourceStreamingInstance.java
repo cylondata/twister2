@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -34,7 +35,6 @@ import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
-import edu.iu.dsc.tws.task.api.checkpoint.SourceCheckpointableTask;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceStreamingInstance implements INodeInstance {
@@ -119,6 +119,7 @@ public class SourceStreamingInstance implements INodeInstance {
   private TaskSchedulePlan taskSchedule;
 
   private boolean checkpointable;
+  private StateStore stateStore;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
@@ -161,10 +162,9 @@ public class SourceStreamingInstance implements INodeInstance {
         globalTaskId, taskName, parallelism, workerId,
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule);
     streamingTask.prepare(cfg, taskContext);
-    if (streamingTask instanceof SourceCheckpointableTask) {
-      ((SourceCheckpointableTask) streamingTask).connect(config, taskContext);
+    if (this.checkpointable) {
+      this.stateStore.init(config, String.valueOf(globalTaskId));
     }
-
   }
 
   /**
