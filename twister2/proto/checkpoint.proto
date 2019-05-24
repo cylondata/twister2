@@ -17,6 +17,34 @@ message TaskDiscovery {
     }
 }
 
+enum Family {
+    WORKER = 0;
+    SOURCE_TASK = 1;
+    SINK_TASK = 2;
+}
+
+message ComponentDiscovery {
+    Family family = 1;
+    int32 index = 2;
+}
+
+message ComponentDiscoveryResponse {
+    Family family = 1;
+    int32 index = 2;
+    int64 version = 3;
+}
+
+message VersionUpdateRequest {
+    Family family = 1;
+    int32 index = 2;
+    int64 version = 3;
+}
+
+message VersionUpdateResponse {
+    Family family = 1;
+    int32 index = 2;
+}
+
 message BarrierSync {
     int32 currentBarrierID = 1;
     int32 taskID = 2;
