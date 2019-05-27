@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
@@ -19,8 +20,11 @@ import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.config.SlidingCountWindow;
+import edu.iu.dsc.tws.task.api.window.config.SlidingDurationWindow;
 import edu.iu.dsc.tws.task.api.window.config.TumblingCountWindow;
 import edu.iu.dsc.tws.task.api.window.config.TumblingDurationWindow;
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 
 public class STWindowCustomExample extends BenchTaskWorker {
@@ -40,8 +44,18 @@ public class STWindowCustomExample extends BenchTaskWorker {
         .withWindow(TumblingCountWindow.of(5));
     BaseWindowedSink dwDuration = new DirectCustomWindowReceiver()
         .withWindow(TumblingDurationWindow.of(2));
+
+    BaseWindowedSink sdw = new DirectCustomWindowReceiver()
+        .withWindow(SlidingCountWindow.of(5, 2));
+
+    WindowConfig.Duration windowLength = new WindowConfig.Duration(2, TimeUnit.MILLISECONDS);
+    WindowConfig.Duration slidingLength = new WindowConfig.Duration(2, TimeUnit.MILLISECONDS);
+
+    BaseWindowedSink sdwDuration = new DirectCustomWindowReceiver()
+        .withWindow(SlidingDurationWindow.of(windowLength, slidingLength));
+
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dwDuration, sinkParallelism);
+    computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER);
 
     return taskGraphBuilder;

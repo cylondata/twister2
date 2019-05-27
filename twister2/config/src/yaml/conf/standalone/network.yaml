@@ -31,10 +31,13 @@ network.partition.batch.grouping.size: 1000
 network.ops.persistent.dirs: ["${TWISTER2_HOME}/persistent/"]
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
-shuffle.memory.bytes.max: 102400000
+twister2.network.shuffle.memory.bytes.max: 102400000
 
 # the maximum number of records kept in memory for operations that goes to dist
-shuffle.memory.records.max: 102400000
+twister2.network.shuffle.memory.records.max: 102400000
+
+# size of the shuffle file (10MB default)
+twister2.network.shuffle.file.bytes.max: 10000000
 
 # the keyed reduce algorithm
 twister2.stream.keyed.reduce.op: "partition"

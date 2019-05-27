@@ -275,8 +275,7 @@ public class TWSMPIChannel implements TWSChannel {
 
     IterativeLinkedList.ILLIterator sendRequestsIterator
         = waitForCompletionSends.iterator();
-    boolean canProgress = true;
-    while (sendRequestsIterator.hasNext() && canProgress) {
+    while (sendRequestsIterator.hasNext()) {
       MPISendRequests sendRequests = (MPISendRequests) sendRequestsIterator.next();
       IterativeLinkedList.ILLIterator requestIterator
           = sendRequests.pendingSends.iterator();
@@ -289,7 +288,6 @@ public class TWSMPIChannel implements TWSChannel {
             completedSendCount++;
             requestIterator.remove();
           } else {
-            canProgress = false;
             break;
           }
         } catch (MPIException e) {
