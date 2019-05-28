@@ -63,7 +63,10 @@ public class LocalFileStateStore implements StateStore {
 
   @Override
   public void init(Config config, String... path) {
-    String finalPath = String.join("/", path);
+    // root --> ${TWISTER2_HOME}/checkpoint/{path...}
+    String finalPath =
+        CheckpointingContext.checkpointDir(config) + File.separator + String.join(File.separator,
+            path);
     this.rootFolder = new File(finalPath);
     if (!this.rootFolder.exists()) {
       boolean mkdirs = this.rootFolder.mkdirs();

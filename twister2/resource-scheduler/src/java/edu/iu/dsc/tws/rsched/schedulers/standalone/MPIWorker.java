@@ -18,6 +18,7 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +51,7 @@ import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.worker.FSPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.ftolerance.api.CheckpointingContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -59,7 +61,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
@@ -111,6 +112,9 @@ public final class MPIWorker {
       String jobName = MPIContext.jobName(config);
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+      // todo: temp way to add snapshot details to the config
+      this.config = updateCheckpointInfo(config);
 
       // lets split the comm
       if (JobMasterContext.isJobMasterUsed(config)) {
@@ -642,5 +646,30 @@ public final class MPIWorker {
     }
 
     return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
+  }
+
+  private Config updateCheckpointInfo(Config cfg) {
+
+    // todo: change this and include this in the checkpoint mgr
+    String checkpointDir = CheckpointingContext.checkpointDir(cfg);
+
+    new File(checkpointDir).mkdirs();
+
+    File checkpointFile = new File(checkpointDir + File.separator
+        + CheckpointingContext.LAST_SNAPSHOT_FILE);
+
+    long checkpointID = 0;
+    if (checkpointFile.exists()) {
+      try {
+        checkpointID = Long.valueOf(new String(Files.readAllBytes(checkpointFile.toPath())).trim());
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to read the checkpoint file", e);
+      }
+    }
+
+    return Config.newBuilder()
+        .putAll(cfg)
+        .put(CheckpointingContext.RESTORE_SNAPSHOT, checkpointID)
+        .build();
   }
 }
