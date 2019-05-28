@@ -30,8 +30,8 @@ public class CheckpointManager implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(CheckpointManager.class.getName());
   private static final String STR_UNDERSCORE = "_";
 
-  private final HashMap<Integer, Map<Integer, CheckpointStatus>> statusMap = new HashMap<>();
-  private final HashMap<Integer, Long> familyVersionMap = new HashMap<>();
+  private final HashMap<String, Map<Integer, CheckpointStatus>> statusMap = new HashMap<>();
+  private final HashMap<String, Long> familyVersionMap = new HashMap<>();
   private final RRServer rrServer;
   private final StateStore stateStore;
   private final String jobId;
@@ -51,14 +51,14 @@ public class CheckpointManager implements MessageHandler {
 
   private void handleDiscovery(RequestID requestID, Checkpoint.ComponentDiscovery discoveryMsg) {
     Map<Integer, CheckpointStatus> familyMap = this.statusMap.computeIfAbsent(
-        discoveryMsg.getFamilyValue(), family -> new HashMap<>()
+        discoveryMsg.getFamily(), family -> new HashMap<>()
     );
 
     familyMap.computeIfAbsent(discoveryMsg.getIndex(),
-        index -> new CheckpointStatus(discoveryMsg.getFamilyValue(), discoveryMsg.getIndex()));
+        index -> new CheckpointStatus(discoveryMsg.getFamily(), discoveryMsg.getIndex()));
 
     long latestVersion = this.familyVersionMap.computeIfAbsent(
-        discoveryMsg.getFamilyValue(), family -> {
+        discoveryMsg.getFamily(), family -> {
           long oldVersion = 0L;
           try {
             byte[] bytes = stateStore.get(getStateKey(family));
@@ -82,8 +82,8 @@ public class CheckpointManager implements MessageHandler {
     );
   }
 
-  private String getStateKey(int family) {
-    return String.join(STR_UNDERSCORE, this.jobId, String.valueOf(family));
+  private String getStateKey(String family) {
+    return String.join(STR_UNDERSCORE, this.jobId, family);
   }
 
   private void handleVersionUpdate(RequestID requestID,
@@ -92,7 +92,7 @@ public class CheckpointManager implements MessageHandler {
         + versionUpdateMsg.getFamily() + ":" + versionUpdateMsg.getIndex() + " to "
         + versionUpdateMsg.getVersion());
     Map<Integer, CheckpointStatus> familyMap =
-        this.statusMap.get(versionUpdateMsg.getFamilyValue());
+        this.statusMap.get(versionUpdateMsg.getFamily());
     if (familyMap == null) {
       LOG.severe(() -> "Received a version update message from an unknown family, "
           + versionUpdateMsg.getFamily());
@@ -109,7 +109,7 @@ public class CheckpointManager implements MessageHandler {
     checkpointStatus.setVersion(versionUpdateMsg.getVersion());
 
     long currentVersion = this.familyVersionMap.getOrDefault(
-        versionUpdateMsg.getFamilyValue(), 0L);
+        versionUpdateMsg.getFamily(), 0L);
 
     long minVersion = Long.MAX_VALUE;
 
@@ -125,11 +125,11 @@ public class CheckpointManager implements MessageHandler {
         LOG.info("Updating the version of " + versionUpdateMsg.getFamily()
             + " to " + minVersion + " from " + currentVersion);
         this.stateStore.put(
-            this.getStateKey(versionUpdateMsg.getFamilyValue()),
+            this.getStateKey(versionUpdateMsg.getFamily()),
             ByteBuffer.allocate(Long.BYTES).putLong(minVersion).array()
         );
         //update in memory cache
-        this.familyVersionMap.put(versionUpdateMsg.getFamilyValue(), minVersion);
+        this.familyVersionMap.put(versionUpdateMsg.getFamily(), minVersion);
       } catch (IOException e) {
         LOG.severe(() -> "Failed to persist the version of " + versionUpdateMsg.getFamily());
       }
