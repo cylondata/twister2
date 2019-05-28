@@ -54,20 +54,24 @@ import java.nio.channels.FileChannel;
 import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 
 public class LocalFileStateStore implements StateStore {
+
+  private static final Logger LOG = Logger.getLogger(LocalFileStateStore.class.getName());
 
   private File rootFolder;
 
   @Override
   public void init(Config config, String... path) {
-    // root --> ${TWISTER2_HOME}/checkpoint/{path...}
-    String finalPath =
-        CheckpointingContext.checkpointDir(config) + File.separator + String.join(File.separator,
-            path);
+    String finalPath = String.join("/",
+        config.getStringValue(Context.HOME), String.join("/", path));
     this.rootFolder = new File(finalPath);
+    LOG.info("Store path : " + this.rootFolder.getAbsolutePath());
+    LOG.info("Home path : " + config.getStringValue(Context.HOME));
     if (!this.rootFolder.exists()) {
       boolean mkdirs = this.rootFolder.mkdirs();
       if (!mkdirs) {

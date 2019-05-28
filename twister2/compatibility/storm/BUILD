@@ -7,6 +7,11 @@ common_deps_files = [
     "//twister2/task/src/main/java:task-java",
     "//twister2/master/src/java:master-java",
     "//twister2/api/src/java:api-java",
+    "//twister2/executor/src/java:executor-java",
+    "//twister2/comms/src/java:comms-java",
+    "//twister2/data/src/main/java:data-java",
+    "//twister2/resource-scheduler/src/java:resource-scheduler-java",
+    "@com_google_code_gson_gson//:com_google_code_gson_gson",
     "@com_esotericsoftware_kryo//jar",
 ]
 
