@@ -85,7 +85,7 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
 
   @Override
   protected boolean isFilledToSend(int target, boolean sync) {
-    return true;
+    return gatheredValuesMap.get(target).size() > 0;
   }
 
   @Override

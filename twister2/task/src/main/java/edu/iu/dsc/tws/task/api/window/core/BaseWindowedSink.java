@@ -96,9 +96,23 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return this;
   }
 
-  public BaseWindowedSink<T> withTumblingDurationWindow(int tumblingDuration, TimeUnit timeUnit) {
+  public BaseWindowedSink<T> withTumblingDurationWindow(long tumblingDuration, TimeUnit timeUnit) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingDurationWindow(tumblingDuration, timeUnit);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withSlidingCountWindow(long windowCount, long slidingCount) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingingCountWindow(windowCount, slidingCount);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withSlidingDurationWindow(long windowDuration, TimeUnit windowTU,
+                                                       long slidingDuration, TimeUnit slidingTU) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingDurationWindow(windowDuration, windowTU, slidingDuration,
+        slidingTU);
     return this;
   }
 

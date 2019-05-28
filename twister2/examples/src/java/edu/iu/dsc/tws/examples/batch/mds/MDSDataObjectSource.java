@@ -9,31 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.dataobjects;
+package edu.iu.dsc.tws.examples.batch.mds;
 
-import java.io.IOException;
-import java.util.logging.Level;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.InputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.dataset.DataSink;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-/**
- * This class is responsible for partition the datapoints which is based on the task parallelism
- * value. This class may use either the "LocalFixedInputPartitioner" or "LocalTextInputPartitioner"
- * to partition the datapoints. Finally, write the partitioned datapoints into their respective
- * edges.
- */
-public class DataObjectSource<T> extends BaseSource {
+//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
-  private static final Logger LOG = Logger.getLogger(DataObjectSource.class.getName());
+public class MDSDataObjectSource extends BaseSource {
+
+  private static final Logger LOG = Logger.getLogger(MDSDataObjectSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 
@@ -42,15 +42,29 @@ public class DataObjectSource<T> extends BaseSource {
    */
   private DataSource<?, ?> source;
 
+  private DataSink<String> sink;
+
+  private InputPartitioner inputPartitioner;
+
   /**
    * Edge name to write the partitoned datapoints
    */
   private String edgeName;
   private String dataDirectory;
+  private int dataSize;
 
-  public DataObjectSource(String edgename, String dataDirectory) {
+  public MDSDataObjectSource(String edgename, String dataDirectory, int size) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
+    this.dataSize = size;
+  }
+
+  public int getDataSize() {
+    return dataSize;
+  }
+
+  public void setDataSize(int dataSize) {
+    this.dataSize = dataSize;
   }
 
   public String getDataDirectory() {
@@ -81,20 +95,36 @@ public class DataObjectSource<T> extends BaseSource {
    */
   @Override
   public void execute() {
-    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    Buffer buffer;
+    byte[] line = new byte[2000];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+    byteBuffer.order(ByteOrder.BIG_ENDIAN);
+
+    InputSplit inputSplit = source.getNextSplit(context.taskIndex());
     while (inputSplit != null) {
       try {
         while (!inputSplit.reachedEnd()) {
-          Object value = inputSplit.nextRecord(null);
-          if (value != null) {
-            context.write(getEdgeName(), value);
+          while (inputSplit.nextRecord(line) != null) {
+            byteBuffer.clear();
+            byteBuffer.put(line);
+            byteBuffer.flip();
+            buffer = byteBuffer.asShortBuffer();
+            short[] shortArray = new short[1000];
+            ((ShortBuffer) buffer).get(shortArray);
+
+            //For writing into the partition file
+            //sink.add(context.taskIndex(), Arrays.toString(shortArray));
+            context.write(getEdgeName(), shortArray);
           }
         }
-        inputSplit = source.getNextSplit(context.taskIndex());
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to read the input", e);
+        inputSplit = null;
+        //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
+      } catch (Exception ioe) {
+        throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }
     }
+    //For writing into the partition file
+    //sink.persist();
     context.end(getEdgeName());
   }
 
@@ -102,7 +132,11 @@ public class DataObjectSource<T> extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), config));
+    this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
+        new Path(getDataDirectory()), getDataSize() * Short.BYTES));
+
+    //For writing into the partition file
+    /*this.sink = new DataSink<>(cfg,
+        new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/
   }
 }

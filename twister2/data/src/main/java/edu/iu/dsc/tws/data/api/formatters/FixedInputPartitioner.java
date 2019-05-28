@@ -65,6 +65,7 @@ public abstract class FixedInputPartitioner<OT>
 
   @Override
   public void configure(Config parameters) {
+    LOG.info("I am coming inside to configure the parameters");
     this.config = parameters;
   }
 

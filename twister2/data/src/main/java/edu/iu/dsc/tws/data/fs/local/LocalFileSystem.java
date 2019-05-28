@@ -152,7 +152,6 @@ public class LocalFileSystem extends FileSystem {
     };
   }
 
-  //Newly added methods for HDFS -> Twister2 Integration
   private File pathToFile(Path path, int bufferSize) {
     Path curPath = path;
     if (!path.isAbsolute()) {
@@ -174,7 +173,6 @@ public class LocalFileSystem extends FileSystem {
     if (parent != null && !mkdirs(parent)) {
       throw new IOException("Mkdirs failed to create " + parent);
     }
-
     final File file = pathToFile(filePath);
     return new LocalDataOutputStream(file);
   }
@@ -234,13 +232,10 @@ public class LocalFileSystem extends FileSystem {
   }
 
   /**
-   * Deletes the given file or directory.
-   *
+   * Deletes the given file and the directory
    * @param f
-   *        the file to be deleted
-   * @return <code>true</code> if all files were deleted successfully, <code>false</code> otherwise
+   * @return
    * @throws IOException
-   *         thrown if an error occurred while deleting the files/directories
    */
   private boolean delete(final File f) throws IOException {
 
@@ -257,7 +252,6 @@ public class LocalFileSystem extends FileSystem {
     } else {
       return f.delete();
     }
-
     // Now directory is empty
     return f.delete();
   }

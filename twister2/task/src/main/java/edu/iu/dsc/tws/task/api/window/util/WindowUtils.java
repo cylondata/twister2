@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.task.api.window.util;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
+import edu.iu.dsc.tws.task.api.window.config.SlidingCountWindow;
+import edu.iu.dsc.tws.task.api.window.config.SlidingDurationWindow;
 import edu.iu.dsc.tws.task.api.window.config.TumblingCountWindow;
 import edu.iu.dsc.tws.task.api.window.config.TumblingDurationWindow;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
@@ -66,7 +68,14 @@ public final class WindowUtils {
 
       } else if (windowLength > slidingLength) {
         // sliding window
-        throw new RuntimeException("Not Implemented");
+        if (buffer == WindowBuffer.Count) {
+          window = new SlidingCountWindow(windowLength, slidingLength);
+        }
+
+        if (buffer == WindowBuffer.Duration) {
+          window = new SlidingDurationWindow(windowLength, slidingLength);
+        }
+        //throw new RuntimeException("Not Implemented");
       } else {
         throw new InvalidWindow("Invalid window, window size > sliding length");
       }

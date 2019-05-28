@@ -15,10 +15,13 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
+import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -27,46 +30,51 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * Test Class for Binary formatter
  */
 public class TestBinaryFileFormatter {
-  public static void main(String[] args) {
-    Config.Builder builder = new Config.Builder();
-    builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2/"
-        + "data/src/test/resources/2000.bin");
-    Config txtFileConf = builder.build();
-    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources/2000.bin");
-    InputPartitioner binaryInputFormatter = new BinaryInputPartitioner(path, 2000 * Short.BYTES);
-    binaryInputFormatter.configure(txtFileConf);
-    int minSplits = 8;
-    double expectedSum = 1.97973979E8;
-    double newSum = 0.0;
-    int count = 0;
-    Buffer buffer = null;
 
+  private static final Logger LOG = Logger.getLogger(TestBinaryFileFormatter.class.getName());
+
+  public static void main(String[] args) {
+
+    Config.Builder builder = new Config.Builder();
+    builder.put("input.file.path", "/tmp/2000.bin");
+    builder.put("RECORD_LENGTH", 1000* Short.BYTES);
+    Config txtFileConf = builder.build();
+
+    Path path = new Path("/tmp/2000.bin");
+    InputPartitioner binaryInputPartitioner = new BinaryInputPartitioner(path, 1000 * Short.BYTES);
+    binaryInputPartitioner.configure(txtFileConf);
+
+    int count = 0;
+    int minSplits = 4;
+
+    double expectedSum = 1.6375350724E1;
+    double newSum = 0.0;
+    Buffer buffer;
     try {
-      InputSplit[] inputSplits = binaryInputFormatter.createInputSplits(minSplits);
-      InputSplitAssigner inputSplitAssigner = binaryInputFormatter.
+      InputSplit[] inputSplits = binaryInputPartitioner.createInputSplits(minSplits);
+      InputSplitAssigner inputSplitAssigner = binaryInputPartitioner.
           getInputSplitAssigner(inputSplits);
       InputSplit currentSplit;
-      byte[] line = new byte[4000];
-      ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
-      byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-      while ((currentSplit = inputSplitAssigner.getNextInputSplit(null, 0)) != null) {
-        currentSplit.open();
-        while (currentSplit.nextRecord(line) != null) {
-          byteBuffer.clear();
-          byteBuffer.put(line);
-          byteBuffer.flip();
-          buffer = byteBuffer.asShortBuffer();
-          short[] shortArray = new short[2000];
-          ((ShortBuffer) buffer).get(shortArray);
-          for (short i : shortArray) {
-            newSum += i;
-            count++;
-          }
-        }
-      }
 
-      System.out.println(newSum);
-      System.out.println(count);
+      byte[] line = new byte[2000];
+      ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+      byteBuffer.order(ByteOrder.BIG_ENDIAN);
+      while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost", 0)) != null) {
+        currentSplit.open(txtFileConf);
+          while (currentSplit.nextRecord(line) != null) {
+            byteBuffer.clear();
+            byteBuffer.put(line);
+            byteBuffer.flip();
+            buffer = byteBuffer.asShortBuffer();
+            short[] shortArray = new short[1000];
+            ((ShortBuffer) buffer).get(shortArray);
+            for (short i : shortArray) {
+              newSum += i;
+              count++;
+            }
+          }
+      }
+      LOG.info("Sum and count values are:" + newSum + "\t" + count);
     } catch (Exception e) {
       e.printStackTrace();
     }
