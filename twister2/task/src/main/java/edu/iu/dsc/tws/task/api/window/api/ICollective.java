@@ -9,11 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.function;
+package edu.iu.dsc.tws.task.api.window.api;
 
-import edu.iu.dsc.tws.task.api.IFunction;
+import java.io.Serializable;
 
+import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 
-public interface IWindowFunction<T> extends IFunction<T> {
+public interface ICollective<T> extends Serializable {
+
+  BaseWindowedSink<T> reduce();
+
+  BaseWindowedSink<T> reduce(ReduceWindowedFunction<T> reduceWindowedFunction);
+
+  T getOutput();
 
 }

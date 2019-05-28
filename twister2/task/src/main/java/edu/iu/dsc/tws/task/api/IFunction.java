@@ -13,12 +13,12 @@ package edu.iu.dsc.tws.task.api;
 
 import java.io.Serializable;
 
-public interface IFunction extends Serializable {
+public interface IFunction<T> extends Serializable {
   /**
    * The actual message callback
    *
    * @param object1 the actual message
    * @param object2 the actual message
    */
-  Object onMessage(Object object1, Object object2);
+  T onMessage(T object1, T object2);
 }

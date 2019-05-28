@@ -590,7 +590,7 @@ public final class MPIWorker {
     }
     Integer workerPort = freePorts.get("__worker__");
     freePorts.remove("__worker__");
-    LOG.info("Worker info host:" + processName + ":" + workerPort);
+    LOG.fine("Worker info host:" + processName + ":" + workerPort);
     return WorkerInfoUtils.createWorkerInfo(workerId,
         processName, workerPort, nodeInfo, computeResource, freePorts);
   }
