@@ -162,7 +162,12 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
 
     Queue<Object> msgQueue = messages.get(target);
-    return msgQueue.size() < highWaterMark;
+    List<Object> readyQueue = readyToSend.get(target);
+    int size = msgQueue.size();
+    if (readyQueue != null) {
+      size += readyQueue.size();
+    }
+    return size < highWaterMark;
   }
 
   @Override

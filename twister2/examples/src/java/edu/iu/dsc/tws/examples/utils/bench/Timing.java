@@ -113,7 +113,8 @@ public final class Timing {
 
     double average = totalDiffs.divide(BigDecimal.valueOf(flagALongs.size()),
         RoundingMode.HALF_UP).doubleValue();
-    System.out.println(String.format("Average time [%s - %s] = %f", flagA, flagB, average));
+    System.out.println(String.format("Average time [%s - %s] = %f%s", flagA, flagB,
+        average, timingUnitMap.get(flagA).getLabel()));
     return average;
   }
 

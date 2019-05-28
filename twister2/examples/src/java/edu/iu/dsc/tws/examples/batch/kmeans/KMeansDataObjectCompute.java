@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -100,23 +102,19 @@ public class KMeansDataObjectCompute extends BaseCompute {
 
   @Override
   public boolean execute(IMessage message) {
-    if (message.getContent() instanceof Iterator) {
-      int value = 0;
-      double[][] datapoint;
-      if (getParallel() > 0) {
-        datapoint = new double[getDatasize() / getParallel()][getDimension()];
-      } else {
-        datapoint = new double[getDatasize()][getDimension()];
+    List<String> values = new ArrayList<>();
+    while (((Iterator) message.getContent()).hasNext()) {
+      values.add(String.valueOf(((Iterator) message.getContent()).next()));
+    }
+    dataPointsLocal = new double[values.size()][dimension];
+    String line;
+    for (int i = 0; i < values.size(); i++) {
+      line = values.get(i);
+      String[] data = line.split(",");
+      for (int j = 0; j < dimension; j++) {
+        dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
       }
-      while (((Iterator) message.getContent()).hasNext()) {
-        String val = String.valueOf(((Iterator) message.getContent()).next());
-        String[] data = val.split(",");
-        for (int i = 0; i < getDimension(); i++) {
-          datapoint[value][i] = Double.parseDouble(data[i].trim());
-        }
-        value++;
-        context.write(getEdgeName(), datapoint);
-      }
+      context.write(getEdgeName(), dataPointsLocal);
     }
     context.end(getEdgeName());
     return true;

@@ -108,7 +108,13 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     this.file = file;
     this.start = start;
     this.length = length;
+  }
 
+  private int recordLength;
+
+  public FileInputSplit(int num,  Path file,  String[] hosts) {
+    super(num, hosts);
+    this.file = file;
   }
 
   public boolean isEnumerateNestedFiles() {
