@@ -287,6 +287,8 @@ public class InMessage {
           keyType, dataType));
     }
     unPkNumberObjects++;
+    this.setUnPkCurrentObjectLength(-1);
+    this.setUnPkCurrentKeyLength(-1);
   }
 
 
@@ -298,6 +300,7 @@ public class InMessage {
       ((List<Object>) deserializedData).add(value);
     }
     unPkNumberObjects++;
+    this.setUnPkCurrentObjectLength(-1);
   }
 
   public void addBuiltMessage(ChannelMessage channelMessage) {
