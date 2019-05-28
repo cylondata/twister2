@@ -104,7 +104,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
-    if (highWaterMark - lowWaterMark > groupingSize) {
+    if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
       LOG.info("Changing the grouping size to: " + groupingSize);
     }
