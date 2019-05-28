@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+//import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
@@ -30,7 +32,8 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
  * Input formatter class that reads binary files
  */
 public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
-  private static final long serialVersionUID = 1L;
+
+  private static final long serialVersionUID = -1L;
 
   private static final Logger LOG = Logger.getLogger(BinaryInputPartitioner.class.getName());
 
@@ -39,9 +42,34 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
    */
   protected transient int recordLength;
 
+  protected transient  int numSplits;
+
   public BinaryInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
     this.recordLength = recordLen;
+  }
+
+  public BinaryInputPartitioner(Path filePath, int recordLen, Config cfg) {
+    super(filePath);
+    this.recordLength = recordLen;
+    this.configure(cfg);
+  }
+
+  public BinaryInputPartitioner(Path filePath, int recordLen, int numberOfTasks) {
+    super(filePath);
+    this.numSplits = numberOfTasks;
+    this.recordLength = recordLen;
+  }
+
+  public BinaryInputPartitioner(Path filePath, int recordLen, int numberOfTasks, Config config) {
+    super(filePath, config);
+    this.numSplits = numberOfTasks;
+    this.recordLength = recordLen;
+  }
+
+  @Override
+  public void configure(Config parameters) {
+    this.config = parameters;
   }
 
   /**
@@ -58,12 +86,11 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
       throw new IllegalArgumentException("Number of input splits has to be at least 1.");
     }
     //TODO L2: The current implementaion only handles a snigle binary file not a set of files
-    // take the desired number of splits into account
     int curminNumSplits = Math.max(minNumSplits, this.numSplits);
 
     final Path path = this.filePath;
     final List<FileInputSplit> inputSplits = new ArrayList<FileInputSplit>(curminNumSplits);
-    // get all the files that are involved in the splits
+
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
 
@@ -73,9 +100,6 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
     if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
-      //TODO L3: implement test for unsplittable
-      //testForUnsplittable(pathFile);
-
       files.add(pathFile);
       totalLength += pathFile.getLen();
     }
@@ -83,9 +107,11 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
     //TODO L3: Handle if unsplittable
     //Splits will be made so that records are not broken into two splits
     //Odd records will be divided among the first splits so the max diff would be 1 record
+
     if (totalLength % this.recordLength != 0) {
       throw new IllegalStateException("The Binary file has a incomplete record");
     }
+
     long numberOfRecords = totalLength / this.recordLength;
     long minRecordsForSplit = Math.floorDiv(numberOfRecords, minNumSplits);
     long oddRecords = numberOfRecords % minNumSplits;
@@ -116,10 +142,10 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
         while (bytesUnassigned >= currentSplitSize) {
           // get the block containing the majority of the data
           blockIndex = getBlockIndexForPosition(blocks, position, halfSplit, blockIndex);
+
           // create a new split
-          FileInputSplit fis = new BinaryInputSplit(splitNum++, file.getPath(),
-              position, currentSplitSize,
-              blocks[blockIndex].getHosts());
+          FileInputSplit fis = new BinaryInputSplit(splitNum++, file.getPath(), position,
+              currentSplitSize, blocks[blockIndex].getHosts());
           inputSplits.add(fis);
 
           // adjust the positions
@@ -129,7 +155,6 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
       } else {
         throw new IllegalStateException("The binary file " + file.getPath() + " is Empty");
       }
-
     }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
   }
@@ -140,8 +165,8 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
   }
 
   @Override
-  protected FileInputSplit createSplit(int num, Path file, long start,
-                                       long length, String[] hosts) {
+  protected FileInputSplit createSplit(int num, Path file, long start, long length,
+                                       String[] hosts) {
     return null;
   }
 }

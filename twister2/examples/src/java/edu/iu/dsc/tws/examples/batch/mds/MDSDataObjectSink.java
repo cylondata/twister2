@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeans;
+package edu.iu.dsc.tws.examples.batch.mds;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,32 +24,25 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-/**
- * This class receives the message object from the DataObjectCompute and write into their
- * respective task index values.
- */
-public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector {
+public class MDSDataObjectSink  extends BaseSink implements Collector {
 
-  private static final Logger LOG = Logger.getLogger(KMeansDataObjectDirectSink.class.getName());
+  private static final Logger LOG = Logger.getLogger(MDSDataObjectSink.class.getName());
 
-  private static final long serialVersionUID = -1L;
+  private short[] datavalues;
 
-  private double[][] dataPointsLocal;
-
-  /**
-   * This method add the received message from the DataObject Source into the data objects.
-   */
   @Override
-  public boolean execute(IMessage message) {
-    List<double[][]> values = new ArrayList<>();
-    while (((Iterator) message.getContent()).hasNext()) {
-      values.add((double[][]) ((Iterator) message.getContent()).next());
+  public boolean execute(IMessage content) {
+    List<short[]> values = new ArrayList<>();
+    while (((Iterator) content.getContent()).hasNext()) {
+      values.add((short[]) ((Iterator) content.getContent()).next());
     }
-    dataPointsLocal = new double[values.size()][];
-    for (double[][] value : values) {
-      dataPointsLocal = value;
+    LOG.info("Distance Matrix (Row X Column) Length:" + values.size()
+        + "\tX\t" + values.get(0).length);
+    datavalues = new short[values.size()];
+    for (short[] value : values) {
+      datavalues = value;
     }
-    return true;
+    return false;
   }
 
   @Override
@@ -58,7 +51,7 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
   }
 
   @Override
-  public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  public DataPartition<short[]> get() {
+    return new EntityPartition<>(context.taskIndex(), datavalues);
   }
 }
