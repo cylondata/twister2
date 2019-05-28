@@ -24,7 +24,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 
-import edu.iu.dsc.tws.checkpointmanager.CheckpointManager;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
@@ -52,16 +51,12 @@ public class MPILauncher implements ILauncher {
 
   private String jobWorkingDirectory;
 
-  private CheckpointManager checkpointManager;
-
   @Override
   public void initialize(Config mConfig) {
     this.config = mConfig;
 
     // get the job working directory
     this.jobWorkingDirectory = MPIContext.workingDirectory(mConfig);
-
-    this.checkpointManager = new CheckpointManager();
   }
 
   @Override
@@ -246,11 +241,6 @@ public class MPILauncher implements ILauncher {
         jmThread.join();
       } catch (InterruptedException ignore) {
       }
-    }
-
-    //todo move this
-    if (this.checkpointManager != null) {
-      this.checkpointManager.close();
     }
 
     return start[0];

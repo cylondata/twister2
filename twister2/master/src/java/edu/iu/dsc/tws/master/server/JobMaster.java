@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
@@ -37,6 +38,8 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
+import edu.iu.dsc.tws.ftolerance.master.CheckpointManager;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -173,6 +176,8 @@ public class JobMaster {
    */
   private boolean clearResourcesWhenKilled;
 
+  private CheckpointManager checkpointManager;
+
   /**
    * JobMaster constructor
    *
@@ -198,7 +203,7 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.jobID = UUID.randomUUID().toString();
+    this.jobID = config.getStringValue(Context.TWISTER2_JOB_ID, UUID.randomUUID().toString());
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
@@ -312,6 +317,18 @@ public class JobMaster {
     rrServer.registerRequestHandler(workerResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
+
+    //initialize checkpoint manager
+    LocalFileStateStore localFileStateStore = new LocalFileStateStore();
+    localFileStateStore.init(config, this.jobID);
+    this.checkpointManager = new CheckpointManager(
+        this.rrServer,
+        localFileStateStore,
+        this.jobID
+    );
+    LOG.info("Checkpoint manager initialized");
+    this.checkpointManager.init();
+    //done initializing checkpoint manager
 
     rrServer.start();
     looper.loop();
