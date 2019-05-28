@@ -11,5 +11,59 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming.window;
 
-public class TaskStreamingWindowingInstance {
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
+
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
+import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskContextImpl;
+import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+
+public class TaskStreamingWindowingInstance extends TaskStreamingInstance {
+
+  private static final Logger LOG = Logger.getLogger(TaskStreamingWindowingInstance
+      .class.getName());
+
+  /**
+   * The actual windowing streamingTask executing
+   */
+  protected IWindowCompute streamingWindowTask;
+
+  public TaskStreamingWindowingInstance(IWindowCompute task, BlockingQueue<IMessage> inQueue,
+                                        BlockingQueue<IMessage> outQueue, Config config,
+                                        String tName, int taskId, int globalTaskId, int tIndex,
+                                        int parallel, int wId, Map<String, Object> cfgs,
+                                        Map<String, String> inEdges, Map<String, String> outEdges,
+                                        TaskSchedulePlan taskSchedule) {
+    super(task, inQueue, outQueue, config, tName, taskId, globalTaskId, tIndex, parallel, wId, cfgs,
+        inEdges, outEdges, taskSchedule);
+    this.streamingWindowTask = task;
+    this.inQueue = inQueue;
+    this.config = config;
+    this.globalTaskId = globalTaskId;
+    this.taskId = taskId;
+    this.taskIndex = tIndex;
+    this.parallelism = parallel;
+    this.taskName = tName;
+    this.nodeConfigs = cfgs;
+    this.workerId = wId;
+    this.lowWaterMark = ExecutorContext.instanceQueueLowWaterMark(config);
+    this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
+    this.inputEdges = inEdges;
+    this.outputEdges = outEdges;
+    this.taskSchedule = taskSchedule;
+  }
+
+  @Override
+  public void prepare(Config cfg) {
+    outputCollection = new DefaultOutputCollection(outQueue);
+    this.streamingWindowTask.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId,
+        taskName, parallelism, workerId, outputCollection, nodeConfigs, inputEdges, outputEdges,
+        taskSchedule));
+  }
 }
