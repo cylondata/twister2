@@ -151,7 +151,7 @@ public class HDFSTaskExample implements IWorker {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-        workerList, new Communicator(config, network));
+        workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, network);
     executor.execute(plan);

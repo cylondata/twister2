@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.IWindowInstance;
@@ -102,9 +103,12 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
                                         String tName, int taskId, int globalTaskId,
                                         int tIndex, int parallel, int wId,
                                         Map<String, Object> cfgs, Map<String, String> inEdges,
-                                        TaskSchedulePlan taskSchedulePlan) {
+                                        TaskSchedulePlan taskSchedulePlan,
+                                        CheckpointingClient checkpointingClient,
+                                        String taskGraphName) {
     super(streamingWindowTask, streamingInQueue, config, tName, taskId,
-        globalTaskId, tIndex, parallel, wId, cfgs, inEdges, taskSchedulePlan);
+        globalTaskId, tIndex, parallel, wId, cfgs, inEdges, taskSchedulePlan,
+        checkpointingClient, taskGraphName);
 
     this.streamingWindowTask = streamingWindowTask;
     this.streamingInQueue = streamingInQueue;

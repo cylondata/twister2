@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -102,7 +103,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
                                int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
-                               TaskSchedulePlan taskSchedulePlan) {
+                               TaskSchedulePlan taskSchedulePlan,
+                               CheckpointingClient checkpointingClient, String taskGraphName) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.taskId = taskId;

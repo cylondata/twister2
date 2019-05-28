@@ -74,7 +74,7 @@ public class CDFWRuntime implements JobListener {
    */
   public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                      Communicator net) {
-    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net);
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoSerializer();

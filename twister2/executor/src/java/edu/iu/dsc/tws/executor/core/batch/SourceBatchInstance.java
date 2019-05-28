@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -126,7 +127,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
                              Config config, String tName, int taskId,
                              int globalTaskId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
-                             TaskSchedulePlan taskSchedule) {
+                             TaskSchedulePlan taskSchedule,
+                             CheckpointingClient checkpointingClient, String taskGraphName) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;

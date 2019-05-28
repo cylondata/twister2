@@ -11,23 +11,27 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
+import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
+import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -105,7 +109,7 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int lowWaterMark;
 
-  private long barrierId = 0;
+  private long checkpointVersion = 0;
 
   /**
    * The high water mark for messages
@@ -117,15 +121,19 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private Map<String, String> outEdges;
   private TaskSchedulePlan taskSchedule;
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
 
   private boolean checkpointable;
   private StateStore stateStore;
+  private SnapshotImpl snapshot;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
                                  int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
-                                 TaskSchedulePlan taskSchedule) {
+                                 TaskSchedulePlan taskSchedule,
+                                 CheckpointingClient checkpointingClient, String taskGraphName) {
     this.streamingTask = streamingTask;
     this.taskId = taskId;
     this.outStreamingQueue = outStreamingQueue;
@@ -140,20 +148,11 @@ public class SourceStreamingInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
     this.outEdges = outEdges;
     this.taskSchedule = taskSchedule;
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.snapshot = new SnapshotImpl();
 
     this.checkpointable = this.streamingTask instanceof Checkpointable;
-
-    if (CheckpointContext.getCheckpointRecovery(config)) {
-      try {
-        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-        System.out.println("currently reading" + globalTaskId + "_" + workerId);
-        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
-            globalTaskId, workerId);
-        ((Checkpointable) this.streamingTask).restoreSnapshot(snapshot);
-      } catch (Exception e) {
-        LOG.log(Level.WARNING, "Could not read checkpoint", e);
-      }
-    }
   }
 
   public void prepare(Config cfg) {
@@ -163,7 +162,29 @@ public class SourceStreamingInstance implements INodeInstance {
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule);
     streamingTask.prepare(cfg, taskContext);
     if (this.checkpointable) {
-      this.stateStore.init(config, String.valueOf(globalTaskId));
+      Checkpointable checkpointableTask = (Checkpointable) this.streamingTask;
+      checkpointableTask.initSnapshot(this.snapshot);
+
+      this.stateStore = new LocalFileStateStore(); //todo change based on config
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+      try {
+        Checkpoint.ComponentDiscoveryResponse componentDiscoveryResponse
+            = this.checkpointingClient.sendDiscoveryMessage(this.taskGraphName, globalTaskId);
+
+        //restore snapshot
+        if (componentDiscoveryResponse.getVersion() > 0) {
+          CheckpointUtils.restoreSnapshot(this.stateStore,
+              componentDiscoveryResponse.getVersion(),
+              this.snapshot);
+          checkpointableTask.restoreSnapshot(this.snapshot);
+        }
+
+      } catch (BlockingSendException e) {
+        throw new RuntimeException("Failed to send the discovery message from "
+            + taskName + " : " + globalTaskId, e);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -184,8 +205,9 @@ public class SourceStreamingInstance implements INodeInstance {
         // if we successfully send remove message
         if (op.send(globalTaskId, message, 0)) {
           outStreamingQueue.poll();
-          this.storeSnapshot((int) barrierId++);
-          this.sendBarrier(op, barrierId, edge);
+          //todo change order. what happens if sendBarrier fails?
+          this.storeSnapshot(checkpointVersion++);
+          this.sendBarrier(op, checkpointVersion, edge);
         } else {
           // we need to break
           break;
@@ -231,15 +253,29 @@ public class SourceStreamingInstance implements INodeInstance {
   }
 
 
-  public boolean storeSnapshot(int checkpointID) {
-    try {
-      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, globalTaskId, workerId,
-          (Checkpointable) streamingTask, checkpointID);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "Could not store checkpoint", e);
-      return false;
+  public void storeSnapshot(long checkpointID) {
+    if (this.checkpointable) {
+      try {
+        //take the task snapshot
+        Checkpointable checkpointableTask = (Checkpointable) this.streamingTask;
+        checkpointableTask.takeSnapshot(this.snapshot);
+
+        //update the new version
+        this.snapshot.setVersion(checkpointID);
+
+        CheckpointUtils.commitState(
+            this.stateStore,
+            this.taskGraphName,
+            this.globalTaskId,
+            this.snapshot,
+            this.checkpointingClient,
+            (id, wid, msg) -> {
+              LOG.info("Checkpoint committed with version : " + checkpointID);
+            }
+        );
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to write checkpoint", e);
+      }
     }
   }
 }
