@@ -64,7 +64,7 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
 
   @Override
   public Checkpoint.ComponentDiscoveryResponse sendDiscoveryMessage(
-      Checkpoint.Family family, int index) throws BlockingSendException {
+      String family, int index) throws BlockingSendException {
     RequestID requestID = this.rrClient.sendRequestWaitResponse(
         Checkpoint.ComponentDiscovery.newBuilder()
             .setFamily(family)
@@ -76,7 +76,7 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
   }
 
   @Override
-  public void sendVersionUpdate(Checkpoint.Family family,
+  public void sendVersionUpdate(String family,
                                 int index, long version, MessageHandler messageHandler) {
     RequestID requestID = this.rrClient.sendRequest(
         Checkpoint.VersionUpdateRequest.newBuilder()

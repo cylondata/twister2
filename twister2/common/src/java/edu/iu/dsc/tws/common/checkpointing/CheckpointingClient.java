@@ -21,9 +21,9 @@ import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
  */
 public interface CheckpointingClient {
 
-  void sendVersionUpdate(Checkpoint.Family family,
+  void sendVersionUpdate(String family,
                          int index, long version, MessageHandler messageHandler);
 
   Checkpoint.ComponentDiscoveryResponse sendDiscoveryMessage(
-      Checkpoint.Family family, int index) throws BlockingSendException;
+      String family, int index) throws BlockingSendException;
 }

@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.task.streaming.STReduceExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowMPI;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -191,6 +192,9 @@ public class ExampleTaskMain {
           break;
         case "cdirect":
           submitJob(config, workers, jobConfig, STWindowCustomExample.class.getName());
+          break;
+        case "windowmpi":
+          submitJob(config, workers, jobConfig, STWindowMPI.class.getName());
           break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName());

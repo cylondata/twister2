@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
+import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
@@ -40,7 +41,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract IWindowMessage<T> execute(IWindowMessage<T> windowMessage);
+  public abstract boolean execute(IWindowMessage<T> windowMessage);
 
   private WindowManager<T> windowManager;
 
@@ -54,11 +55,18 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private IWindow iWindow;
 
+  private T collectiveOutput;
+
+  private ReduceWindowedFunction<T> reduceWindowedFunction;
+
+  private IWindowMessage<T> collectiveEvents;
+
   protected BaseWindowedSink() {
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
     initialize();
@@ -96,9 +104,23 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return this;
   }
 
-  public BaseWindowedSink<T> withTumblingDurationWindow(int tumblingDuration, TimeUnit timeUnit) {
+  public BaseWindowedSink<T> withTumblingDurationWindow(long tumblingDuration, TimeUnit timeUnit) {
     this.windowParameter = new WindowParameter();
     this.windowParameter.withTumblingDurationWindow(tumblingDuration, timeUnit);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withSlidingCountWindow(long windowCount, long slidingCount) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingingCountWindow(windowCount, slidingCount);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withSlidingDurationWindow(long windowDuration, TimeUnit windowTU,
+                                                       long slidingDuration, TimeUnit slidingTU) {
+    this.windowParameter = new WindowParameter();
+    this.windowParameter.withSlidingDurationWindow(windowDuration, windowTU, slidingDuration,
+        slidingTU);
     return this;
   }
 
@@ -118,6 +140,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       @Override
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
+        collectiveEvents = events;
         execute(events);
       }
     };
@@ -156,4 +179,22 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public void reset() {
 
   }
+
+
+//  public BaseWindowedSink<T> reduce(ReduceWindowedFunction<T> reduceFunction) {
+////    List<IMessage<T>> msgs = collectiveEvents.getWindow();
+////    T current = null;
+////    for (IMessage<T> m : msgs) {
+////      T val = m.getContent();
+////      if (current == null) {
+////        current = val;
+////      } else {
+////        current = reduceWindowedFunction.reduce(current, val);
+////      }
+////    }
+////    this.collectiveOutput = current;
+//    return this;
+//  }
+
+
 }

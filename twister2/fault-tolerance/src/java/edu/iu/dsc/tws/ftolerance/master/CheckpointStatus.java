@@ -13,21 +13,21 @@ package edu.iu.dsc.tws.ftolerance.master;
 
 public class CheckpointStatus {
 
-  private int family;
+  private String family;
   private int index;
   private long version;
   private long lastSyncTime;
 
-  public CheckpointStatus(int family, int index) {
+  public CheckpointStatus(String family, int index) {
     this.family = family;
     this.index = index;
   }
 
-  public int getFamily() {
+  public String getFamily() {
     return family;
   }
 
-  public void setFamily(int family) {
+  public void setFamily(String family) {
     this.family = family;
   }
 

@@ -13,20 +13,21 @@ package edu.iu.dsc.tws.task.api.window.config;
 
 import edu.iu.dsc.tws.task.api.window.api.BaseWindow;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
-import edu.iu.dsc.tws.task.api.window.strategy.duration.TumblingDurationWindowStrategy;
+import edu.iu.dsc.tws.task.api.window.strategy.count.SlidingCountWindowStratergy;
 
-public class TumblingDurationWindow extends BaseWindow {
+public class SlidingDurationWindow extends BaseWindow {
 
-  public TumblingDurationWindow(long windowLength) {
-    super(windowLength, windowLength);
+  public SlidingDurationWindow(long windowLength, long slideLength) {
+    super(windowLength, slideLength);
   }
 
   @Override
   public <T> IWindowStrategy<T> getWindowStrategy() {
-    return new TumblingDurationWindowStrategy<>(this);
+    return new SlidingCountWindowStratergy<>(this);
   }
 
-  public static TumblingDurationWindow of(long windowLength) {
-    return new TumblingDurationWindow(windowLength);
+  public static SlidingDurationWindow of(WindowConfig.Duration windowDuration,
+                                         WindowConfig.Duration slidingDuration) {
+    return new SlidingDurationWindow(windowDuration.value, slidingDuration.value);
   }
 }

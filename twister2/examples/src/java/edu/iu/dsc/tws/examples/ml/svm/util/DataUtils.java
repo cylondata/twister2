@@ -151,7 +151,6 @@ public final class DataUtils {
                 Arrays.toString(binaryBatchModel.getX()[0]),
                 binaryBatchModel.getY()[0], binaryBatchModel.getY().length));
           }
-
         }
       } else {
         LOG.severe(String.format("Something Went Wrong"));
