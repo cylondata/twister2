@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 
 /**
@@ -33,13 +32,11 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
 
   private Set<Integer> sourcesWithSyncsSent = new HashSet<>();
-  private long groupingSize = 100;
   private boolean allSyncsReceived = false;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
   }
 
   @Override
