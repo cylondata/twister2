@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -59,6 +60,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * Worker id
    */
   private int workerId;
+  private CheckpointingClient checkpointingClient;
 
   /**
    * Communications list
@@ -95,8 +97,9 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                              Communicator net) {
+                              Communicator net, CheckpointingClient checkpointingClient) {
     this.workerId = workerID;
+    this.checkpointingClient = checkpointingClient;
     this.taskIdGenerator = new TaskIdGenerator();
     this.workerInfoList = workerInfoList;
     this.edgeGenerator = new EdgeGenerator();
@@ -173,9 +176,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
 
       // lets create the instance
-      INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          inEdges, outEdges,
-          taskSchedule);
+      INodeInstance iNodeInstance = createInstances(cfg, taskGraph.getGraphName(),
+          ip, v, taskGraph.getOperationMode(), inEdges, outEdges, taskSchedule);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
           v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
@@ -290,7 +292,9 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
+  private INodeInstance createInstances(Config cfg,
+                                        String taskGraphName,
+                                        TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
                                         Map<String, String> inEdges,
                                         Map<String, String> outEdges,
@@ -307,7 +311,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkBatchInstance v = new SinkBatchInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(), ip.getTaskId(),
               taskId, ip.getTaskIndex(), vertex.getParallelism(),
-              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule);
+              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule,
+              this.checkpointingClient, taskGraphName);
           batchSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -316,7 +321,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
               vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
-              inEdges, outEdges, taskSchedule);
+              inEdges, outEdges, taskSchedule, this.checkpointingClient, taskGraphName);
           batchTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -324,7 +329,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges, taskSchedule);
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
+            taskSchedule, this.checkpointingClient, taskGraphName);
         batchSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
@@ -336,7 +342,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(),
               ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-              vertex.getConfig().toMap(), inEdges, taskSchedule);
+              vertex.getConfig().toMap(), inEdges, taskSchedule,
+              this.checkpointingClient, taskGraphName);
           streamingSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -345,7 +352,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
               vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule);
+              outEdges, taskSchedule, this.checkpointingClient, taskGraphName);
           streamingTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -355,7 +362,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
                   new LinkedBlockingQueue<>(), cfg, vertex.getName(),
                   ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                  vertex.getConfig().toMap(), inEdges, taskSchedule);
+                  vertex.getConfig().toMap(), inEdges, taskSchedule,
+                  this.checkpointingClient, taskGraphName);
           streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -364,7 +372,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
               vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule);
+              outEdges, taskSchedule, this.checkpointingClient, taskGraphName);
           streamingTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -373,7 +381,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
-            taskSchedule);
+            taskSchedule, this.checkpointingClient, taskGraphName);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {

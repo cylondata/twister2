@@ -129,6 +129,8 @@ public interface Snapshot {
     this.setValue(key, value);
   }
 
+  Object getOrDefault(String key, Object defaultValue);
+
   /**
    * Returns the current version of the snapshot
    */

@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
@@ -138,7 +139,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
                                int taskId, int globalTaskId, int tIndex,
                                int parallel, int wId, Map<String, Object> cfgs,
                                Map<String, String> inEdges, Map<String, String> outEdges,
-                               TaskSchedulePlan taskSchedule) {
+                               TaskSchedulePlan taskSchedule,
+                               CheckpointingClient checkpointingClient, String taskGraphName) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;

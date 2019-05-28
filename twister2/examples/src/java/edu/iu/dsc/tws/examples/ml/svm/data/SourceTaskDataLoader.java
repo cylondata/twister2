@@ -88,7 +88,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 //    DataObject<Object> dataSet = taskExecutor.getOutput(simpleTaskGraph, plan, "kmeanssink");
 //    DataPartition<Object> values = dataSet.getPartitions()[0];
 //    Object lastObject = values.getConsumer().next();
-//    LOG.info(String.format("Last Object : %s", lastObject.getClass().getName()));
+//    LOG.info(String.format("Last Object : %s", lastObject.getClass().getGraphName()));
 
   }
 

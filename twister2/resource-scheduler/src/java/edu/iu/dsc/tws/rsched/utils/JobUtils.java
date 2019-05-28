@@ -27,6 +27,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
@@ -160,7 +161,18 @@ public final class JobUtils {
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
+    String userDefinedJobId = System.getenv(Context.JOB_ID);
+
     builder.put(Context.JOB_NAME, job.getJobName());
+
+    String jobId = userDefinedJobId;
+    if (userDefinedJobId == null) {
+      jobId = String.format("%s-%s", job.getJobName(), UUID.randomUUID().toString());
+    }
+    builder.put(Context.JOB_ID, jobId);
+
+    LOG.severe("Job ID assigned : " + jobId);
+
     builder.put(SchedulerContext.WORKER_CLASS, job.getWorkerClassName());
     builder.put(Context.TWISTER2_WORKER_INSTANCES, job.getNumberOfWorkers());
 

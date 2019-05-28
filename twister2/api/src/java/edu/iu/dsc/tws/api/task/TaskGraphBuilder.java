@@ -58,6 +58,8 @@ public final class TaskGraphBuilder {
    */
   private OperationMode mode = OperationMode.STREAMING;
 
+  private String taskGraphName = "unnamed";
+
   /**
    * Create an instance of the task builder.
    *
@@ -79,6 +81,10 @@ public final class TaskGraphBuilder {
    */
   public void setMode(OperationMode mode) {
     this.mode = mode;
+  }
+
+  public void setTaskGraphName(String taskGraphName) {
+    this.taskGraphName = taskGraphName;
   }
 
   /**
@@ -243,6 +249,7 @@ public final class TaskGraphBuilder {
   public DataFlowTaskGraph build() {
     DataFlowTaskGraph graph = new DataFlowTaskGraph();
     graph.setOperationMode(mode);
+    graph.setGraphName(taskGraphName);
     graph.addGraphConstraints(graphConstraints);
     graph.addNodeConstraints(nodeConstraints);
 

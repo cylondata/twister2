@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -203,7 +202,11 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.jobID = config.getStringValue(Context.TWISTER2_JOB_ID, UUID.randomUUID().toString());
+    this.jobID = config.getStringValue(Context.JOB_ID);
+
+    if (this.jobID == null) {
+      throw new RuntimeException("Job ID not specified in the config.");
+    }
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");

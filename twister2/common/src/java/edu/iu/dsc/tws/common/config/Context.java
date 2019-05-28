@@ -74,6 +74,7 @@ public class Context {
 
   public static final String JOB_NAME = "twister2.job.name";
   public static final String JOB_OBJECT = "twister2.job.object";
+  public static final String JOB_ID = "twister2.job.id";
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -107,8 +108,6 @@ public class Context {
 
   public static final String TWISTER2_TASK_INSTANCE_ODD_PARALLELISM
       = "twister2.task.instance.odd.parallelism";
-
-  public static final String TWISTER2_JOB_ID = "twister2.job.id";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
