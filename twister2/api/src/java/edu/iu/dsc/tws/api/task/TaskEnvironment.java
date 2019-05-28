@@ -19,69 +19,25 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.task.graph.OperationMode;
 
-/**
- * This is an implementation of IWorker to support easy deployment of task graphs.
- */
-public abstract class TaskWorker implements IWorker {
-  private static final Logger LOG = Logger.getLogger(TaskWorker.class.getName());
+public final class TaskEnvironment {
 
-  /**
-   * The channel
-   */
-  protected TWSChannel channel;
+  private static final Logger LOG = Logger.getLogger(TaskEnvironment.class.getName());
+  private Communicator communicator;
+  private TaskExecutor taskExecutor;
+  private Config config;
+  private IWorkerController wController;
+  private static int taskGraphIndex = 0;
 
-  /**
-   * Communicator
-   */
-  protected Communicator communicator;
-
-  /**
-   * This id
-   */
-  protected int workerId;
-
-  /**
-   * Controller
-   */
-  protected IWorkerController workerController;
-
-  /**
-   * Persistent volume
-   */
-  protected IPersistentVolume persistentVolume;
-
-  /**
-   * Volatile volume
-   */
-  protected IVolatileVolume volatileVolume;
-
-  /**
-   * Configuration
-   */
-  protected Config config;
-
-  /**
-   * The task executor to be used
-   */
-  protected TaskExecutor taskExecutor;
-
-  @Override
-  public void execute(Config cfg, int workerID,
-                      IWorkerController wController, IPersistentVolume pVolume,
-                      IVolatileVolume vVolume) {
-    this.config = cfg;
-    this.workerId = workerID;
-    this.workerController = wController;
-    this.persistentVolume = pVolume;
-    this.volatileVolume = vVolume;
-
+  private TaskEnvironment(Config config, int workerId,
+                          IWorkerController wController, IVolatileVolume vVolume) {
+    this.config = config;
+    this.wController = wController;
     List<JobMasterAPI.WorkerInfo> workerInfoList = null;
     try {
       workerInfoList = wController.getAllWorkers();
@@ -91,21 +47,42 @@ public abstract class TaskWorker implements IWorker {
     }
 
     // create the channel
-    channel = Network.initializeChannel(config, workerController);
+    TWSChannel channel = Network.initializeChannel(config, wController);
     String persistent = null;
     if (vVolume != null && vVolume.getWorkerDirPath() != null) {
       persistent = vVolume.getWorkerDirPath();
     }
     // create the communicator
-    communicator = new Communicator(config, channel, persistent);
+    this.communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList,
+    this.taskExecutor = new TaskExecutor(config, workerId, workerInfoList,
         communicator, wController.getCheckpointingClient());
-    // call execute
-    execute();
-    // wait for the sync
+
+  }
+
+  public TaskExecutor getTaskExecutor() {
+    return taskExecutor;
+  }
+
+  public TaskGraphBuilder newTaskGraph(OperationMode operationMode) {
+    return this.newTaskGraph(operationMode, "task-graph-" + (taskGraphIndex++));
+  }
+
+  public TaskGraphBuilder newTaskGraph(OperationMode operationMode, String name) {
+    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(this.config);
+    taskGraphBuilder.setMode(operationMode);
+    taskGraphBuilder.setTaskGraphName(name);
+    return taskGraphBuilder;
+  }
+
+  public static TaskEnvironment init(Config config, int workerId,
+                                     IWorkerController wController, IVolatileVolume vVolume) {
+    return new TaskEnvironment(config, workerId, wController, vVolume);
+  }
+
+  public void close() {
     try {
-      workerController.waitOnBarrier();
+      wController.waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
@@ -113,12 +90,5 @@ public abstract class TaskWorker implements IWorker {
     taskExecutor.close();
     // lets terminate the network
     communicator.close();
-    // we are done executing
-    LOG.log(Level.FINE, String.format("%d Worker done", workerID));
   }
-
-  /**
-   * A user needs to implement this method to create the task graph and execute it
-   */
-  public abstract void execute();
 }

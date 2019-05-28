@@ -33,13 +33,20 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   private OperationMode operationMode = OperationMode.STREAMING;
 
+  private String graphName;
+
   public DataFlowTaskGraph() {
     super(new VertexComparator(), new EdgeComparator());
   }
 
   public DataFlowTaskGraph(OperationMode mode) {
+    this(mode, "unnamed-task-graph");
+  }
+
+  public DataFlowTaskGraph(OperationMode mode, String graphName) {
     super(new VertexComparator(), new EdgeComparator());
     this.operationMode = mode;
+    this.graphName = graphName;
   }
 
   /**
@@ -53,6 +60,15 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
       taskMap.put(de.getSourceVertex().getName(), de.getSourceVertex());
       taskMap.put(de.getTargetVertex().getName(), de.getTargetVertex());
     }
+  }
+
+  @Override
+  public String getGraphName() {
+    return this.graphName;
+  }
+
+  public void setGraphName(String graphName) {
+    this.graphName = graphName;
   }
 
   /**

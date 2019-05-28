@@ -67,6 +67,11 @@ import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.StringPacker;
 
+/**
+ * This class implements {@link Snapshot} and will have some additional methods to
+ * manipulate version and pack and unpack snapshot.User interfacing methods should always
+ * accept {@link Snapshot} interface which doesn't contain those additional methods.
+ */
 public class SnapshotImpl implements Snapshot {
 
   private Long version = -1L;
@@ -104,6 +109,11 @@ public class SnapshotImpl implements Snapshot {
 
   public void setVersion(Long version) {
     this.version = version;
+  }
+
+  @Override
+  public Object getOrDefault(String key, Object defaultValue) {
+    return this.values.getOrDefault(key, defaultValue);
   }
 
   public byte[] pack() {

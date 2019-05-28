@@ -70,8 +70,7 @@ public class LocalFileStateStore implements StateStore {
     String finalPath = String.join(File.separator,
         config.getStringValue(Context.HOME), String.join(File.separator, path));
     this.rootFolder = new File(finalPath);
-    LOG.info("Store path : " + this.rootFolder.getAbsolutePath());
-    LOG.info("Home path : " + config.getStringValue(Context.HOME));
+    LOG.info("Snapshot Store path : " + this.rootFolder.getAbsolutePath());
     if (!this.rootFolder.exists()) {
       boolean mkdirs = this.rootFolder.mkdirs();
       if (!mkdirs) {
