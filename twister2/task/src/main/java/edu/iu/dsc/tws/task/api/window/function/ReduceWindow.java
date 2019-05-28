@@ -11,9 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.function;
 
-import edu.iu.dsc.tws.task.api.IFunction;
+public class ReduceWindow<T> {
 
+  private ReduceWindowedFunction<T> reduceWindowedFunction;
 
-public interface IWindowFunction<T> extends IFunction<T> {
+  public ReduceWindow(ReduceWindowedFunction<T> reduceWindowedFunction) {
+    this.reduceWindowedFunction = reduceWindowedFunction;
+  }
+
 
 }
