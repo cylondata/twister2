@@ -286,18 +286,20 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
 
   @Override
   public boolean sync(String edge, byte[] value) {
-    ByteBuffer wrap = ByteBuffer.wrap(value);
-    long barrierId = wrap.getLong();
+    if (this.checkpointable) {
+      ByteBuffer wrap = ByteBuffer.wrap(value);
+      long barrierId = wrap.getLong();
 
-    TaskCheckpointUtils.checkpoint(
-        barrierId,
-        (Checkpointable) this.task,
-        this.snapshot,
-        this.stateStore,
-        this.taskGraphName,
-        this.globalTaskId,
-        this.checkpointingClient
-    );
+      TaskCheckpointUtils.checkpoint(
+          barrierId,
+          (Checkpointable) this.task,
+          this.snapshot,
+          this.stateStore,
+          this.taskGraphName,
+          this.globalTaskId,
+          this.checkpointingClient
+      );
+    }
     return true;
   }
 }

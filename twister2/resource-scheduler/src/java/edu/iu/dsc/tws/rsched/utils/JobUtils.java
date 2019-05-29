@@ -161,13 +161,13 @@ public final class JobUtils {
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
-    String userDefinedJobId = System.getenv(Context.JOB_ID);
+    String jobId = System.getenv(Context.JOB_ID);
 
     builder.put(Context.JOB_NAME, job.getJobName());
 
-    String jobId = userDefinedJobId;
-    if (userDefinedJobId == null) {
-      jobId = String.format("%s-%s", job.getJobName(), UUID.randomUUID().toString());
+    if (jobId == null) {
+      jobId = config.getStringValue(Context.JOB_ID,
+          String.format("%s-%s", job.getJobName(), UUID.randomUUID().toString()));
     }
     builder.put(Context.JOB_ID, jobId);
 

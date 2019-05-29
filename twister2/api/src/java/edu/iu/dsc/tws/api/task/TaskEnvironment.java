@@ -22,7 +22,9 @@ import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public final class TaskEnvironment {
@@ -62,6 +64,13 @@ public final class TaskEnvironment {
 
   public TaskExecutor getTaskExecutor() {
     return taskExecutor;
+  }
+
+  public TaskExecutor buildAndExecute(TaskGraphBuilder taskGraphBuilder) {
+    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
+    ExecutionPlan plan = this.getTaskExecutor().plan(dataFlowTaskGraph);
+    this.getTaskExecutor().execute(dataFlowTaskGraph, plan);
+    return this.getTaskExecutor();
   }
 
   public TaskGraphBuilder newTaskGraph(OperationMode operationMode) {
