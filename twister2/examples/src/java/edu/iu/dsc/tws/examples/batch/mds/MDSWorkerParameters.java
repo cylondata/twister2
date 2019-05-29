@@ -51,6 +51,16 @@ public final class MDSWorkerParameters {
    */
   private String byteType;
 
+  public String getConfigFile() {
+    return configFile;
+  }
+
+  public void setConfigFile(String configFile) {
+    this.configFile = configFile;
+  }
+
+  private String configFile;
+
   private MDSWorkerParameters(int workers) {
     this.workers = workers;
   }
@@ -70,6 +80,7 @@ public final class MDSWorkerParameters {
     String datapointDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
     String fileSystem = cfg.getStringValue(DataObjectConstants.FILE_SYSTEM);
     String byteType = cfg.getStringValue(DataObjectConstants.BYTE_TYPE);
+    String configFile = cfg.getStringValue(DataObjectConstants.CONFIG_FILE);
 
     MDSWorkerParameters jobParameters = new MDSWorkerParameters(workers);
 
@@ -82,6 +93,7 @@ public final class MDSWorkerParameters {
     jobParameters.datapointDirectory = datapointDirectory;
     jobParameters.filesystem = fileSystem;
     jobParameters.byteType = byteType;
+    jobParameters.configFile = configFile;
 
     return jobParameters;
   }
