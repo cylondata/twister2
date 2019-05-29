@@ -33,7 +33,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
-   * and source, Map<target, map<source, Queue<messages>>
+   * and source, Map<target, Queue<messages>>
    */
   protected Map<Integer, Queue<Object>> messages = new HashMap<>();
 
@@ -97,6 +97,11 @@ public abstract class TargetReceiver implements MessageReceiver {
    */
   protected long groupingSize = 100;
 
+  /**
+   * The targets
+   */
+  private int[] targets;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
@@ -107,6 +112,13 @@ public abstract class TargetReceiver implements MessageReceiver {
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
       LOG.info("Changing the grouping size to: " + groupingSize);
+    }
+
+    Set<Integer> tars = op.getTargets();
+    targets = new int[tars.size()];
+    int index = 0;
+    for (int t : tars) {
+      targets[index++] = t;
     }
   }
 
@@ -202,21 +214,28 @@ public abstract class TargetReceiver implements MessageReceiver {
     lock.lock();
     try {
       boolean allEmpty = true;
-      for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-        if (e.getValue().size() > 0) {
-          merge(e.getKey(), e.getValue());
+      for (int i = 0; i < targets.length; i++) {
+        int key = targets[i];
+        if (!messages.containsKey(key)) {
+          continue;
+        }
+
+        Queue<Object> val = messages.get(key);
+
+        if (val.size() > 0) {
+          merge(key, val);
         }
 
         // check weather we are ready to send and we have values to send
-        if (!isFilledToSend(e.getKey())) {
+        if (!isFilledToSend(key)) {
           continue;
         }
 
         // if we send this list successfully
-        if (!sendToTarget(representSource, e.getKey())) {
+        if (!sendToTarget(representSource, key)) {
           needsFurtherProgress = true;
         }
-        allEmpty &= e.getValue().isEmpty();
+        allEmpty &= val.isEmpty();
       }
 
       if (!allEmpty || !sync()) {
