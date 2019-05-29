@@ -32,6 +32,7 @@ public class DataObjectConstants {
   public static final String NUMBER_OF_FILES = "nFiles";
   public static final String FILE_SYSTEM = "filesys";
   public static final String ARGS_ITERATIONS = "iter";
+  public static final String SOURCE_VERTEX = "sourcev";
 
 
 }
