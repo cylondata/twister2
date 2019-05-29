@@ -132,8 +132,9 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     Set<Integer> globalTasks = Collections.emptySet();
     if (workerId == 0) {
-      globalTasks = instancePlan.stream().map(ip ->
-          taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
+      globalTasks = containersMap.values().stream()
+          .flatMap(containerPlan -> containerPlan.getTaskInstances().stream())
+          .map(ip -> taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
           .collect(Collectors.toSet());
     }
 

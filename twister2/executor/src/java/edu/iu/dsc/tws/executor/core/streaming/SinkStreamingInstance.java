@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
@@ -187,32 +186,23 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     return streamingInQueue;
   }
 
-  public boolean storeSnapshot(int checkpointID) {
-    try {
-      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, globalTaskId, workerId,
-          (Checkpointable) streamingTask, checkpointID);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "Could not store checkpoint ", e);
-      return false;
-    }
-  }
-
   @Override
   public boolean sync(String edge, byte[] value) {
-    ByteBuffer wrap = ByteBuffer.wrap(value);
-    long barrierId = wrap.getLong();
-
-    TaskCheckpointUtils.checkpoint(
-        barrierId,
-        (Checkpointable) this.streamingTask,
-        this.snapshot,
-        this.stateStore,
-        this.taskGraphName,
-        this.globalTaskId,
-        this.checkpointingClient
-    );
+    if (this.checkpointable) {
+      ByteBuffer wrap = ByteBuffer.wrap(value);
+      long barrierId = wrap.getLong();
+      LOG.info("Barrier received to " + this.globalTaskId + " with id " + barrierId);
+      TaskCheckpointUtils.checkpoint(
+          barrierId,
+          (Checkpointable) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.taskGraphName,
+          this.globalTaskId,
+          this.checkpointingClient
+      );
+      streamingInParOps.get(edge).reset();
+    }
     return true;
   }
 }
