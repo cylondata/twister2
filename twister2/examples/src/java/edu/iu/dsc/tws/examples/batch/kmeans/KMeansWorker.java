@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.Collector;
@@ -194,7 +193,7 @@ public class KMeansWorker extends TaskWorker {
   }
 
 
-  public static DataFlowTaskGraph buildKMeansTG(int parallelismValue, Config conf){
+  public static DataFlowTaskGraph buildKMeansTG(int parallelismValue, Config conf) {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     TaskGraphBuilder kmeansTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
