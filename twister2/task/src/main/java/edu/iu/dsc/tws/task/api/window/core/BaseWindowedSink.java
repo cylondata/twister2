@@ -20,10 +20,12 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
 import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
@@ -43,6 +45,10 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   public abstract boolean execute(IWindowMessage<T> windowMessage);
 
+  private static final int DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
+
+  private static final long DEFAULT_MAX_LAG = 0; // 0s
+
   private WindowManager<T> windowManager;
 
   private IWindowingPolicy<T> windowingPolicy;
@@ -60,6 +66,10 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   private ReduceWindowedFunction<T> reduceWindowedFunction;
 
   private IWindowMessage<T> collectiveEvents;
+
+  private ITimestampExtractor iTimestampExtractor;
+
+  private WatermarkEventGenerator<T> watermarkEventGenerator;
 
   protected BaseWindowedSink() {
   }
@@ -80,6 +90,17 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
             this.windowParameter.getWindowDurationSize(),
             this.windowParameter.getSldingDurationSize());
       }
+
+      if (iTimestampExtractor != null) {
+        // TODO : handle delayed Stream
+
+        int watermarkInterval = 1;
+        // TODO : handle this from a config param
+        watermarkInterval = DEFAULT_WATERMARK_INTERVAL;
+        watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
+            watermarkInterval, DEFAULT_MAX_LAG);
+      }
+
       IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
       this.evictionPolicy = windowStrategy.getEvictionPolicy();
       this.windowingPolicy = windowStrategy.getWindowingPolicy(this.windowManager,
@@ -121,6 +142,11 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     this.windowParameter = new WindowParameter();
     this.windowParameter.withSlidingDurationWindow(windowDuration, windowTU, slidingDuration,
         slidingTU);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withTimestampExtractor(ITimestampExtractor timestampExtractor) {
+    this.iTimestampExtractor = timestampExtractor;
     return this;
   }
 
@@ -179,22 +205,4 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public void refresh() {
 
   }
-
-
-//  public BaseWindowedSink<T> reduce(ReduceWindowedFunction<T> reduceFunction) {
-////    List<IMessage<T>> msgs = collectiveEvents.getWindow();
-////    T current = null;
-////    for (IMessage<T> m : msgs) {
-////      T val = m.getContent();
-////      if (current == null) {
-////        current = val;
-////      } else {
-////        current = reduceWindowedFunction.reduce(current, val);
-////      }
-////    }
-////    this.collectiveOutput = current;
-//    return this;
-//  }
-
-
 }
