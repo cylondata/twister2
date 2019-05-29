@@ -13,6 +13,7 @@ t2_java_lib(
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
 
