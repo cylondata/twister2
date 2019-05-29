@@ -13,7 +13,8 @@
 package edu.iu.dsc.tws.api.task.ftolerance;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -47,14 +48,6 @@ public abstract class CheckpointingTaskWorker extends TaskWorker {
    */
   private void init() {
 
-    if (workerId == 0) {
-      // todo: update check mgr with the number of workers
-      LOG.fine("Updating the worker list in the checkpoint manager");
-      List<Integer> workerIDs =
-          IntStream.range(0, workerController.getNumberOfWorkers()).boxed().
-              collect(Collectors.toList());
-    }
-
     try {
       this.localCheckpointStore = ReflectionUtils.newInstance(CheckpointingContext.
           checkpointStoreClass(config));
@@ -68,16 +61,26 @@ public abstract class CheckpointingTaskWorker extends TaskWorker {
     this.localCheckpoint = new SnapshotImpl();
 
     this.checkpointClient = workerController.getCheckpointingClient();
-    Checkpoint.ComponentDiscoveryResponse componentDiscoveryResponse;
+
+    Set<Integer> workerIDs;
+    if (workerId == 0) {
+      LOG.fine("Updating the worker list in the checkpoint manager");
+      workerIDs = IntStream.range(0, workerController.getNumberOfWorkers()).boxed().
+          collect(Collectors.toSet());
+    } else {
+      workerIDs = Collections.emptySet();
+    }
+
+    Checkpoint.FamilyInitializeResponse initFamilyRes;
     try {
-      componentDiscoveryResponse = checkpointClient.sendDiscoveryMessage(WORKER_CHECKPOINT_FAMILY,
-          workerId);
+      initFamilyRes = checkpointClient.initFamily(workerId, workerController.getNumberOfWorkers(),
+          WORKER_CHECKPOINT_FAMILY, workerIDs);
       workerController.waitOnBarrier();
     } catch (BlockingSendException | TimeoutException e) {
       throw new RuntimeException("Sending discovery message to checkpoint master failed!", e);
     }
 
-    this.latestVersion = componentDiscoveryResponse.getVersion();
+    this.latestVersion = initFamilyRes.getVersion();
     // note: local checkpoint is not recovered as yet! it will be recovered with the unpacking of
     // the recovering checkpoint
   }

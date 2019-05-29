@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.batch.kmeans.checkpointing;
+package edu.iu.dsc.tws.examples.batch.kmeans.ftolerance;
 
 import java.util.Arrays;
 import java.util.logging.Level;
