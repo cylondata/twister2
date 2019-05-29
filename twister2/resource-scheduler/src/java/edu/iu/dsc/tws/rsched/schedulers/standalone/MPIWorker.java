@@ -112,6 +112,11 @@ public final class MPIWorker {
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
 
+      /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
+         // checkpoint. This is undecided at the moment.
+      this.config = updateCheckpointInfo(config);
+      */
+
       // lets split the comm
       if (JobMasterContext.isJobMasterUsed(config)) {
         if (!JobMasterContext.jobMasterRunsInClient(config)) {
@@ -643,4 +648,29 @@ public final class MPIWorker {
 
     return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
   }
+
+/* //todo: change this and include this in the checkpoint mgr
+  private Config updateCheckpointInfo(Config cfg) {
+
+    String checkpointDir = CheckpointingContext.checkpointDir(cfg);
+
+    new File(checkpointDir).mkdirs();
+
+    File checkpointFile = new File(checkpointDir + File.separator
+        + CheckpointingContext.LAST_SNAPSHOT_FILE);
+
+    long checkpointID = 0;
+    if (checkpointFile.exists()) {
+      try {
+        checkpointID = Long.valueOf(new String(Files.readAllBytes(checkpointFile.toPath())).trim());
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to read the checkpoint file", e);
+      }
+    }
+
+    return Config.newBuilder()
+        .putAll(cfg)
+        .put(CheckpointingContext.RESTORE_SNAPSHOT, checkpointID)
+        .build();
+  }*/
 }

@@ -68,8 +68,8 @@ public class LocalFileStateStore implements StateStore {
 
   @Override
   public void init(Config config, String... path) {
-    String finalPath = String.join("/",
-        config.getStringValue(Context.HOME), String.join("/", path));
+    String finalPath = String.join(File.separator,
+        config.getStringValue(Context.HOME), String.join(File.separator, path));
     this.rootFolder = new File(finalPath);
     LOG.info("Snapshot Store path : " + this.rootFolder.getAbsolutePath());
     if (!this.rootFolder.exists()) {
