@@ -41,6 +41,9 @@ public final class CheckpointUtils {
   public static void restoreSnapshot(StateStore stateStore,
                                      Long version,
                                      SnapshotImpl snapshot) throws IOException {
+    if (version == 0) {
+      return;
+    }
     byte[] stateBytes = stateStore.get(version.toString());
     snapshot.unpack(stateBytes);
   }

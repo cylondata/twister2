@@ -18,14 +18,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
+import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
+import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -36,6 +38,8 @@ import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 public class SinkStreamingInstance implements INodeInstance, ISync {
 
   private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
+
+  private final boolean checkpointable;
 
   /**
    * The actual streamingTask executing
@@ -98,13 +102,19 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    */
   private Map<String, String> inEdges;
   private TaskSchedulePlan taskSchedulePlan;
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
+  private Long taskVersion;
+  private StateStore stateStore;
+  private SnapshotImpl snapshot;
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
                                int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
                                TaskSchedulePlan taskSchedulePlan,
-                               CheckpointingClient checkpointingClient, String taskGraphName) {
+                               CheckpointingClient checkpointingClient,
+                               String taskGraphName, Long taskVersion) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.taskId = taskId;
@@ -117,21 +127,29 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     this.taskName = tName;
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
-    if (CheckpointContext.getCheckpointRecovery(config)) {
-      try {
-        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
-            globalTaskID, workerId);
-        ((Checkpointable) this.streamingTask).restoreSnapshot(snapshot);
-      } catch (Exception e) {
-        LOG.log(Level.WARNING, "Could not read checkpoint", e);
-      }
-    }
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.taskVersion = taskVersion;
+    this.checkpointable = this.streamingTask instanceof Checkpointable;
+    this.snapshot = new SnapshotImpl();
   }
 
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+
+    if (this.checkpointable) {
+      this.stateStore = new LocalFileStateStore(); //todo change based on config
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      TaskCheckpointUtils.restore(
+          (Checkpointable) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.taskVersion,
+          globalTaskId
+      );
+    }
   }
 
   public boolean execute() {
@@ -186,14 +204,15 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     ByteBuffer wrap = ByteBuffer.wrap(value);
     long barrierId = wrap.getLong();
 
-    LOG.info("Sync Received on edge : " + edge + " " + barrierId);
-
-    this.storeSnapshot((int) barrierId);
-
-
-
-    //reset comm, to accept new messages
-    this.streamingInParOps.get(edge).reset();
+    TaskCheckpointUtils.checkpoint(
+        barrierId,
+        (Checkpointable) this.streamingTask,
+        this.snapshot,
+        this.stateStore,
+        this.taskGraphName,
+        this.globalTaskId,
+        this.checkpointingClient
+    );
     return true;
   }
 }
