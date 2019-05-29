@@ -51,8 +51,10 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
     boolean b = readyToSend.get(target) != null
         && (allSyncsReceived || readyToSend.get(target).size() > groupingSize);
     if (!b) {
-      LOG.info(String.format("Ready size %d grouping %d",
-          readyToSend.get(target).size(), groupingSize));
+      if (readyToSend.get(target) != null) {
+        LOG.info(String.format("Ready size %d grouping %d",
+            readyToSend.get(target).size(), groupingSize));
+      }
     }
     return b;
   }
