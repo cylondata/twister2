@@ -57,11 +57,15 @@ network.channel.pending.size: 2048
 # the send pending messages
 network.send.pending.max: 4
 
-# group up to 8 ~ 16 messages
-network.partition.message.group.low_water_mark: 8
+# group up to 8000 ~ 16000 messages
+network.partition.message.group.low_water_mark: 8000
 
 # this is the max number of messages to group
-network.partition.message.group.high_water_mark: 16
+network.partition.message.group.high_water_mark: 16000
+
+# in batch partition operations, this value will be used to create mini batches
+# within partial receivers
+network.partition.batch.grouping.size: 10000
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
 twister2.network.shuffle.memory.bytes.max: 102400000

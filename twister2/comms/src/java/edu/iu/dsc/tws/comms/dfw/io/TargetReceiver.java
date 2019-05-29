@@ -92,12 +92,22 @@ public abstract class TargetReceiver implements MessageReceiver {
    */
   protected SyncState syncState = SyncState.SYNC;
 
+  /**
+   * The message grouping size
+   */
+  protected long groupingSize = 100;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
     operation = op;
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
+    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    if (highWaterMark - lowWaterMark <= groupingSize) {
+      groupingSize = highWaterMark - lowWaterMark - 1;
+      LOG.info("Changing the grouping size to: " + groupingSize);
+    }
   }
 
   @Override
