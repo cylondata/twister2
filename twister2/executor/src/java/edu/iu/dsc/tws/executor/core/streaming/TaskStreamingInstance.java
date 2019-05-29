@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointmanager.utils.CheckpointContext;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -26,8 +26,11 @@ import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
+import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
+import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -128,11 +131,17 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
    */
   private Map<String, String> outputEdges;
   private TaskSchedulePlan taskSchedule;
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
+  private long tasksVersion;
 
   /**
    * Input edges
    */
   private Map<String, String> inputEdges;
+  private boolean checkpointable;
+  private StateStore stateStore;
+  private SnapshotImpl snapshot;
 
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -140,7 +149,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
                                int parallel, int wId, Map<String, Object> cfgs,
                                Map<String, String> inEdges, Map<String, String> outEdges,
                                TaskSchedulePlan taskSchedule,
-                               CheckpointingClient checkpointingClient, String taskGraphName) {
+                               CheckpointingClient checkpointingClient, String taskGraphName,
+                               long tasksVersion) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -157,22 +167,31 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     this.inputEdges = inEdges;
     this.outputEdges = outEdges;
     this.taskSchedule = taskSchedule;
-    if (CheckpointContext.getCheckpointRecovery(config)) {
-      try {
-        LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-        Snapshot snapshot = (Snapshot) fsStateBackend.readFromStateBackend(config,
-            taskId, workerId);
-        ((Checkpointable) this.task).restoreSnapshot(snapshot);
-      } catch (Exception e) {
-        LOG.log(Level.WARNING, "Could not read checkpoint", e);
-      }
-    }
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.tasksVersion = tasksVersion;
+    this.checkpointable = this.task instanceof Checkpointable;
+    this.snapshot = new SnapshotImpl();
   }
 
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
+
+    if (this.checkpointable) {
+      this.stateStore = new LocalFileStateStore(); //todo change based on config
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      TaskCheckpointUtils.restore(
+          (Checkpointable) this.task,
+          this.snapshot,
+          this.stateStore,
+          this.tasksVersion,
+          globalTaskId
+      );
+    }
+
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -267,6 +286,18 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
 
   @Override
   public boolean sync(String edge, byte[] value) {
+    ByteBuffer wrap = ByteBuffer.wrap(value);
+    long barrierId = wrap.getLong();
+
+    TaskCheckpointUtils.checkpoint(
+        barrierId,
+        (Checkpointable) this.task,
+        this.snapshot,
+        this.stateStore,
+        this.taskGraphName,
+        this.globalTaskId,
+        this.checkpointingClient
+    );
     return true;
   }
 }

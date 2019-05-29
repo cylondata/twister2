@@ -113,7 +113,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
                            int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Map<String, String> inEdges,
                            TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
-                           String taskGraphName) {
+                           String taskGraphName, Long taskVersion) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;

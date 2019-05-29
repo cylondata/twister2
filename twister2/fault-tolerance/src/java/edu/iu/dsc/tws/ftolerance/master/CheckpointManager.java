@@ -14,7 +14,9 @@ package edu.iu.dsc.tws.ftolerance.master;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -32,6 +34,7 @@ public class CheckpointManager implements MessageHandler {
 
   private final HashMap<String, Map<Integer, CheckpointStatus>> statusMap = new HashMap<>();
   private final HashMap<String, Long> familyVersionMap = new HashMap<>();
+  private final HashMap<String, FamilyInitHandler> familyInitHandlers = new HashMap<>();
   private final RRServer rrServer;
   private final StateStore stateStore;
   private final String jobId;
@@ -46,6 +49,7 @@ public class CheckpointManager implements MessageHandler {
   public void init() {
     this.rrServer.registerRequestHandler(Checkpoint.VersionUpdateRequest.newBuilder(), this);
     this.rrServer.registerRequestHandler(Checkpoint.ComponentDiscovery.newBuilder(), this);
+    this.rrServer.registerRequestHandler(Checkpoint.FamilyInitialize.newBuilder(), this);
   }
 
 
@@ -150,6 +154,59 @@ public class CheckpointManager implements MessageHandler {
       this.handleDiscovery(id, (Checkpoint.ComponentDiscovery) message);
     } else if (message instanceof Checkpoint.VersionUpdateRequest) {
       this.handleVersionUpdate(id, (Checkpoint.VersionUpdateRequest) message);
+    } else if (message instanceof Checkpoint.FamilyInitialize) {
+      this.handleFamilyInit(id, (Checkpoint.FamilyInitialize) message);
+    }
+  }
+
+  private Long getFamilyVersion(String family) {
+    if (this.familyVersionMap.containsKey(family)) {
+      return this.familyVersionMap.get(family);
+    } else {
+      long oldVersion = 0L;
+      try {
+        byte[] bytes = stateStore.get(getStateKey(family));
+        if (bytes != null) {
+          oldVersion = ByteBuffer.wrap(bytes).getLong();
+          LOG.info(family + " will be restored to " + oldVersion);
+        }
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to lookup older version for " + family, e);
+      }
+      return oldVersion;
+    }
+  }
+
+  private void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
+    LOG.info("Family init request received from " + message.getContainerIndex());
+
+    FamilyInitHandler familyInitHandler = this.familyInitHandlers.get(message.getFamily());
+
+    if (familyInitHandler == null) {
+      Long familyVersion = this.getFamilyVersion(message.getFamily());
+      familyInitHandler = new FamilyInitHandler(rrServer, message.getFamily(),
+          message.getMembersCount(), familyVersion);
+      this.familyInitHandlers.put(message.getFamily(), familyInitHandler);
+    }
+
+    // if request is coming from worker 0
+    if (message.getContainerIndex() == 0) {
+      List<Integer> membersList = message.getMembersList();
+
+      Map<Integer, CheckpointStatus> checkPointsByIndex =
+          this.statusMap.computeIfAbsent(message.getFamily(), f -> new HashMap<>());
+
+      for (Integer index : membersList) {
+        CheckpointStatus state = new CheckpointStatus(message.getFamily(), index);
+        state.setVersion(familyInitHandler.getVersion());
+        checkPointsByIndex.put(index, state);
+      }
+    }
+
+    boolean sentResponses = familyInitHandler.scheduleResponse(id);
+    if (sentResponses) {
+      LOG.info("Family " + message.getFamily() + " will start with version "
+          + familyInitHandler.getVersion());
     }
   }
 }

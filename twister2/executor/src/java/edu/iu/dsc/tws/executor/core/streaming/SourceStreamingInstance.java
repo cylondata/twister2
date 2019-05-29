@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,18 +19,16 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
-import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -123,6 +120,7 @@ public class SourceStreamingInstance implements INodeInstance {
   private TaskSchedulePlan taskSchedule;
   private CheckpointingClient checkpointingClient;
   private String taskGraphName;
+  private long tasksVersion;
 
   private boolean checkpointable;
   private StateStore stateStore;
@@ -133,7 +131,8 @@ public class SourceStreamingInstance implements INodeInstance {
                                  int globalTaskId, int tIndex, int parallel,
                                  int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
                                  TaskSchedulePlan taskSchedule,
-                                 CheckpointingClient checkpointingClient, String taskGraphName) {
+                                 CheckpointingClient checkpointingClient, String taskGraphName,
+                                 long tasksVersion) {
     this.streamingTask = streamingTask;
     this.taskId = taskId;
     this.outStreamingQueue = outStreamingQueue;
@@ -150,8 +149,8 @@ public class SourceStreamingInstance implements INodeInstance {
     this.taskSchedule = taskSchedule;
     this.checkpointingClient = checkpointingClient;
     this.taskGraphName = taskGraphName;
+    this.tasksVersion = tasksVersion;
     this.snapshot = new SnapshotImpl();
-
     this.checkpointable = this.streamingTask instanceof Checkpointable;
   }
 
@@ -162,29 +161,16 @@ public class SourceStreamingInstance implements INodeInstance {
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule);
     streamingTask.prepare(cfg, taskContext);
     if (this.checkpointable) {
-      Checkpointable checkpointableTask = (Checkpointable) this.streamingTask;
-      checkpointableTask.initSnapshot(this.snapshot);
-
       this.stateStore = new LocalFileStateStore(); //todo change based on config
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
-      try {
-        Checkpoint.ComponentDiscoveryResponse componentDiscoveryResponse
-            = this.checkpointingClient.sendDiscoveryMessage(this.taskGraphName, globalTaskId);
 
-        //restore snapshot
-        if (componentDiscoveryResponse.getVersion() > 0) {
-          CheckpointUtils.restoreSnapshot(this.stateStore,
-              componentDiscoveryResponse.getVersion(),
-              this.snapshot);
-          checkpointableTask.restoreSnapshot(this.snapshot);
-        }
-
-      } catch (BlockingSendException e) {
-        throw new RuntimeException("Failed to send the discovery message from "
-            + taskName + " : " + globalTaskId, e);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      TaskCheckpointUtils.restore(
+          (Checkpointable) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.tasksVersion,
+          globalTaskId
+      );
     }
   }
 
@@ -205,9 +191,19 @@ public class SourceStreamingInstance implements INodeInstance {
         // if we successfully send remove message
         if (op.send(globalTaskId, message, 0)) {
           outStreamingQueue.poll();
-          //todo change order. what happens if sendBarrier fails?
-          this.storeSnapshot(checkpointVersion++);
-          this.sendBarrier(op, checkpointVersion, edge);
+          if (this.checkpointable) {
+            //todo change order. what happens if sendBarrier fails?
+            TaskCheckpointUtils.checkpoint(
+                checkpointVersion++,
+                (Checkpointable) this.streamingTask,
+                this.snapshot,
+                this.stateStore,
+                this.taskGraphName,
+                this.globalTaskId,
+                this.checkpointingClient
+            );
+            this.sendBarrier(op, checkpointVersion, edge);
+          }
         } else {
           // we need to break
           break;
@@ -250,32 +246,5 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outStreamingParOps.put(edge, op);
-  }
-
-
-  public void storeSnapshot(long checkpointID) {
-    if (this.checkpointable) {
-      try {
-        //take the task snapshot
-        Checkpointable checkpointableTask = (Checkpointable) this.streamingTask;
-        checkpointableTask.takeSnapshot(this.snapshot);
-
-        //update the new version
-        this.snapshot.setVersion(checkpointID);
-
-        CheckpointUtils.commitState(
-            this.stateStore,
-            this.taskGraphName,
-            this.globalTaskId,
-            this.snapshot,
-            this.checkpointingClient,
-            (id, wid, msg) -> {
-              LOG.info("Checkpoint committed with version : " + checkpointID);
-            }
-        );
-      } catch (IOException e) {
-        throw new RuntimeException("Failed to write checkpoint", e);
-      }
-    }
   }
 }

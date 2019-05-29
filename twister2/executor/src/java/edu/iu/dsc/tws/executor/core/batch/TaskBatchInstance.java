@@ -155,7 +155,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
                            int wId, Map<String, Object> cfgs,
                            Map<String, String> inEdges, Map<String, String> outEdges,
                            TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
-                           String taskGraphName) {
+                           String taskGraphName, long tasksVersion) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;

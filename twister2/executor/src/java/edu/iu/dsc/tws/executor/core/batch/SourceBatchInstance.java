@@ -128,7 +128,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
                              int globalTaskId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
                              TaskSchedulePlan taskSchedule,
-                             CheckpointingClient checkpointingClient, String taskGraphName) {
+                             CheckpointingClient checkpointingClient, String taskGraphName,
+                             long tasksVersion) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;

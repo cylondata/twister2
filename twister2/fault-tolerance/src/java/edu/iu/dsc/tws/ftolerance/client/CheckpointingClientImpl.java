@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.ftolerance.client;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -60,6 +61,10 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
     this.rrClient.registerMessage(Checkpoint.VersionUpdateRequest.newBuilder());
     this.rrClient.registerResponseHandler(
         Checkpoint.VersionUpdateResponse.newBuilder(), this);
+
+    this.rrClient.registerMessage(Checkpoint.FamilyInitialize.newBuilder());
+    this.rrClient.registerResponseHandler(
+        Checkpoint.FamilyInitializeResponse.newBuilder(), this);
   }
 
   @Override
@@ -70,9 +75,27 @@ public final class CheckpointingClientImpl implements MessageHandler, Checkpoint
             .setFamily(family)
             .setIndex(index)
             .build(),
-        1000
+        10000
     );
     return (Checkpoint.ComponentDiscoveryResponse) this.blockingResponse.remove(requestID);
+  }
+
+  @Override
+  public Checkpoint.FamilyInitializeResponse initFamily(int containerIndex,
+                                                        int containersCount,
+                                                        String family,
+                                                        Set<Integer> members)
+      throws BlockingSendException {
+    RequestID requestID = this.rrClient.sendRequestWaitResponse(
+        Checkpoint.FamilyInitialize.newBuilder()
+            .setFamily(family)
+            .addAllMembers(members)
+            .setContainerIndex(containerIndex)
+            .setContainers(containersCount)
+            .build(),
+        10000
+    );
+    return (Checkpoint.FamilyInitializeResponse) this.blockingResponse.remove(requestID);
   }
 
   @Override

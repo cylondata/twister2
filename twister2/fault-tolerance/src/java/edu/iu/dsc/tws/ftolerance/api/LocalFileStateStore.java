@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -94,10 +95,14 @@ public class LocalFileStateStore implements StateStore {
 
   @Override
   public byte[] get(String key) throws IOException {
-    FileChannel fileChannel = this.getChannelForKey(key, StandardOpenOption.READ);
-    int size = (int) fileChannel.size(); // assume < 2GB
-    ByteBuffer allocate = ByteBuffer.allocate(size);
-    fileChannel.read(allocate);
-    return allocate.array();
+    try {
+      FileChannel fileChannel = this.getChannelForKey(key, StandardOpenOption.READ);
+      int size = (int) fileChannel.size(); // assume < 2GB
+      ByteBuffer allocate = ByteBuffer.allocate(size);
+      fileChannel.read(allocate);
+      return allocate.array();
+    } catch (NoSuchFileException nex) {
+      return null;
+    }
   }
 }

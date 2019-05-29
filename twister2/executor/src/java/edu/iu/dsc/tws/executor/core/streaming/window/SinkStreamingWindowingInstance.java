@@ -105,10 +105,10 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
                                         Map<String, Object> cfgs, Map<String, String> inEdges,
                                         TaskSchedulePlan taskSchedulePlan,
                                         CheckpointingClient checkpointingClient,
-                                        String taskGraphName) {
+                                        String taskGraphName, long tasksVersion) {
     super(streamingWindowTask, streamingInQueue, config, tName, taskId,
         globalTaskId, tIndex, parallel, wId, cfgs, inEdges, taskSchedulePlan,
-        checkpointingClient, taskGraphName);
+        checkpointingClient, taskGraphName, tasksVersion);
 
     this.streamingWindowTask = streamingWindowTask;
     this.streamingInQueue = streamingInQueue;
