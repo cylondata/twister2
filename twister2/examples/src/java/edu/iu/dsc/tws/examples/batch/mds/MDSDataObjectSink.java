@@ -28,7 +28,12 @@ public class MDSDataObjectSink  extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(MDSDataObjectSink.class.getName());
 
-  private short[] datavalues;
+  private short[] dataPoints;
+  private int columnLength;
+
+  public MDSDataObjectSink(int length) {
+    this.columnLength = length;
+  }
 
   @Override
   public boolean execute(IMessage content) {
@@ -36,13 +41,17 @@ public class MDSDataObjectSink  extends BaseSink implements Collector {
     while (((Iterator) content.getContent()).hasNext()) {
       values.add((short[]) ((Iterator) content.getContent()).next());
     }
-    LOG.info("Distance Matrix (Row X Column) Length:" + values.size()
-        + "\tX\t" + values.get(0).length);
-    datavalues = new short[values.size()];
+    LOG.info("Distance Matrix (Row X Column) Length:" + values.size() + "\tX\t"
+        + values.get(0).length);
+    dataPoints = new short[values.size() * columnLength];
+    int k = 0;
     for (short[] value : values) {
-      datavalues = value;
+      for (short aValue : value) {
+        dataPoints[k] = aValue;
+        k = k + 1;
+      }
     }
-    return false;
+    return true;
   }
 
   @Override
@@ -52,6 +61,6 @@ public class MDSDataObjectSink  extends BaseSink implements Collector {
 
   @Override
   public DataPartition<short[]> get() {
-    return new EntityPartition<>(context.taskIndex(), datavalues);
+    return new EntityPartition<>(context.taskIndex(), dataPoints);
   }
 }
