@@ -16,16 +16,16 @@ import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.config.TokenSub;
 
 public class CheckpointingContext extends Context {
-  public static String RESTORE_SNAPSHOT = "twister2.checkpointing.restore.checkpoint";
-  public static String CHECKPOINT_STORE_CLASS = "twister2.checkpointing.store.class";
-  public static String LAST_SNAPSHOT_FILE = "last.checkpoint";
+  public static final String CHECKPOINT_STORE_CLASS = "twister2.checkpointing.store.class";
+//  public static final String RESTORE_SNAPSHOT = "twister2.checkpointing.restore.checkpoint";
+//  public static final String LAST_SNAPSHOT_FILE = "last.checkpoint";
 
   /**
    * Returns the checkpoint ID/ version to restore. If returned value is 0, no restore is required!
    */
-  public static String restoreCheckpoint(Config cfg) {
+/*  public static String restoreCheckpoint(Config cfg) {
     return cfg.getStringValue(RESTORE_SNAPSHOT, "");
-  }
+  }*/
 
   public static String checkpointStoreClass(Config cfg) {
     return cfg.getStringValue(CHECKPOINT_STORE_CLASS,
