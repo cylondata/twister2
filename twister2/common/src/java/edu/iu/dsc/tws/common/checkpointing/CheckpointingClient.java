@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.checkpointing;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
@@ -26,4 +28,8 @@ public interface CheckpointingClient {
 
   Checkpoint.ComponentDiscoveryResponse sendDiscoveryMessage(
       String family, int index) throws BlockingSendException;
+
+  Checkpoint.FamilyInitializeResponse initFamily(
+      int containerIndex, int containersCount,
+      String family, Set<Integer> members) throws BlockingSendException;
 }
