@@ -93,7 +93,7 @@ public class CheckpointManager implements MessageHandler {
   private void handleVersionUpdate(RequestID requestID,
                                    Checkpoint.VersionUpdateRequest versionUpdateMsg) {
     LOG.info(() -> "Version update request received from : "
-        + versionUpdateMsg.getFamily() + ":" + versionUpdateMsg.getIndex() + " to "
+        + versionUpdateMsg.getFamily() + " : " + versionUpdateMsg.getIndex() + " with version "
         + versionUpdateMsg.getVersion());
     Map<Integer, CheckpointStatus> familyMap =
         this.statusMap.get(versionUpdateMsg.getFamily());
@@ -185,13 +185,15 @@ public class CheckpointManager implements MessageHandler {
     if (familyInitHandler == null) {
       Long familyVersion = this.getFamilyVersion(message.getFamily());
       familyInitHandler = new FamilyInitHandler(rrServer, message.getFamily(),
-          message.getMembersCount(), familyVersion);
+          message.getContainers(), familyVersion);
       this.familyInitHandlers.put(message.getFamily(), familyInitHandler);
     }
 
     // if request is coming from worker 0
     if (message.getContainerIndex() == 0) {
       List<Integer> membersList = message.getMembersList();
+
+      LOG.info("Members : " + membersList.toString());
 
       Map<Integer, CheckpointStatus> checkPointsByIndex =
           this.statusMap.computeIfAbsent(message.getFamily(), f -> new HashMap<>());

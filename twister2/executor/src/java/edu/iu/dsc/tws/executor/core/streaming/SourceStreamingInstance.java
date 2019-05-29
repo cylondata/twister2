@@ -202,7 +202,8 @@ public class SourceStreamingInstance implements INodeInstance {
                 this.globalTaskId,
                 this.checkpointingClient
             );
-            this.sendBarrier(op, checkpointVersion, edge);
+            boolean sendBarrier = this.sendBarrier(op, checkpointVersion, edge);
+            LOG.info(this.globalTaskId + " sent barrier " + sendBarrier);
           }
         } else {
           // we need to break

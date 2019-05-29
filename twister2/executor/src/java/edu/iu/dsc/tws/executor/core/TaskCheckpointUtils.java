@@ -66,7 +66,7 @@ public final class TaskCheckpointUtils {
           checkpointingClient,
           (id, wid, msg) -> {
             LOG.info("Checkpoint of " + globalTaskId
-                + "committed with version : " + checkpointID);
+                + " committed with version : " + checkpointID);
           }
       );
     } catch (IOException e) {
