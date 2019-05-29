@@ -53,6 +53,8 @@ public class TargetPartialReceiver extends TargetReceiver {
    */
   protected boolean stateCleared = false;
 
+  protected boolean cannotAccept = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -167,7 +169,12 @@ public class TargetPartialReceiver extends TargetReceiver {
     if (readyQueue != null) {
       size += readyQueue.size();
     }
-    return size < highWaterMark;
+    boolean accept = size < highWaterMark;
+    if (!accept) {
+      LOG.info(String.format("Cannot accept %d", size));
+    }
+    cannotAccept = !accept;
+    return accept;
   }
 
   @Override
