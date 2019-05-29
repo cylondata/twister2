@@ -50,7 +50,7 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   protected boolean isFilledToSend(Integer target) {
     boolean b = readyToSend.get(target) != null
         && (allSyncsReceived || readyToSend.get(target).size() > groupingSize);
-    if (cannotAccept && !b) {
+    if (!b) {
       LOG.info(String.format("Ready size %d grouping %d",
           readyToSend.get(target).size(), groupingSize));
     }
