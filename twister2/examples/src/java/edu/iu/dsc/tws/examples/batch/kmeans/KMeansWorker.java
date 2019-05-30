@@ -159,6 +159,8 @@ public class KMeansWorker extends TaskWorker {
         DataType.OBJECT);
     datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
 
+    datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
+
     //Build the first taskgraph
     return datapointsTaskGraphBuilder.build();
   }
@@ -187,6 +189,8 @@ public class KMeansWorker extends TaskWorker {
     secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
     centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
+    centroidsTaskGraphBuilder.setTaskGraphName("centTG");
+
 
     //Build the second taskgraph
     return centroidsTaskGraphBuilder.build();
@@ -207,6 +211,8 @@ public class KMeansWorker extends TaskWorker {
     kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
         new CentroidAggregator(), DataType.OBJECT);
     kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
+
+    kmeansTaskGraphBuilder.setTaskGraphName("kmeansTG");
 
     return kmeansTaskGraphBuilder.build();
   }
