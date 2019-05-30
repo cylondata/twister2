@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
 import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -129,7 +130,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     this.checkpointingClient = checkpointingClient;
     this.taskGraphName = taskGraphName;
     this.taskVersion = taskVersion;
-    this.checkpointable = this.streamingTask instanceof CheckpointableTask;
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
     this.snapshot = new SnapshotImpl();
   }
 
@@ -191,7 +193,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     if (this.checkpointable) {
       ByteBuffer wrap = ByteBuffer.wrap(value);
       long barrierId = wrap.getLong();
-      LOG.info("Barrier received to " + this.globalTaskId + " with id " + barrierId);
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId + " with id " + barrierId);
       TaskCheckpointUtils.checkpoint(
           barrierId,
           (CheckpointableTask) this.streamingTask,

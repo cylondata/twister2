@@ -12,13 +12,14 @@
 package edu.iu.dsc.tws.executor.core;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
+import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
 import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
-import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
 
 public final class TaskCheckpointUtils {
 
@@ -28,7 +29,7 @@ public final class TaskCheckpointUtils {
 
   }
 
-  public static void restore(Checkpointable checkpointableTask,
+  public static void restore(CheckpointableTask checkpointableTask,
                              SnapshotImpl snapshot,
                              StateStore stateStore, long tasksVersion, int globalTaskId) {
     checkpointableTask.initSnapshot(snapshot);
@@ -37,7 +38,7 @@ public final class TaskCheckpointUtils {
         CheckpointUtils.restoreSnapshot(stateStore,
             tasksVersion,
             snapshot);
-        LOG.info("Restoring task " + globalTaskId + " to version " + tasksVersion);
+        LOG.log(Level.FINE, "Restoring task " + globalTaskId + " to version " + tasksVersion);
         checkpointableTask.restoreSnapshot(snapshot);
       } catch (IOException e) {
         throw new RuntimeException("Failed to restore snapshot of " + globalTaskId, e);
@@ -46,7 +47,7 @@ public final class TaskCheckpointUtils {
   }
 
   public static void checkpoint(long checkpointID,
-                                Checkpointable checkpointableTask,
+                                CheckpointableTask checkpointableTask,
                                 SnapshotImpl snapshot,
                                 StateStore stateStore,
                                 String family,
@@ -65,10 +66,11 @@ public final class TaskCheckpointUtils {
           snapshot,
           checkpointingClient,
           (id, wid, msg) -> {
-            LOG.info("Checkpoint of " + globalTaskId
+            LOG.log(Level.FINE, "Checkpoint of " + globalTaskId
                 + " committed with version : " + checkpointID);
           }
       );
+      checkpointableTask.onSnapshotPersisted(snapshot);
     } catch (IOException e) {
       throw new RuntimeException("Failed to write checkpoint of " + globalTaskId, e);
     }

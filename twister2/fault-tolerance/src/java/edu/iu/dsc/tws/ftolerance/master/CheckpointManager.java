@@ -92,7 +92,7 @@ public class CheckpointManager implements MessageHandler {
 
   private void handleVersionUpdate(RequestID requestID,
                                    Checkpoint.VersionUpdateRequest versionUpdateMsg) {
-    LOG.info(() -> "Version update request received from : "
+    LOG.fine(() -> "Version update request received from : "
         + versionUpdateMsg.getFamily() + " : " + versionUpdateMsg.getIndex() + " with version "
         + versionUpdateMsg.getVersion());
     Map<Integer, CheckpointStatus> familyMap =
@@ -126,7 +126,7 @@ public class CheckpointManager implements MessageHandler {
     //if version has updated
     if (minVersion > currentVersion) {
       try {
-        LOG.info("Updating the version of " + versionUpdateMsg.getFamily()
+        LOG.fine("Updating the version of " + versionUpdateMsg.getFamily()
             + " to " + minVersion + " from " + currentVersion);
         this.stateStore.put(
             this.getStateKey(versionUpdateMsg.getFamily()),
@@ -178,7 +178,7 @@ public class CheckpointManager implements MessageHandler {
   }
 
   private void handleFamilyInit(RequestID id, Checkpoint.FamilyInitialize message) {
-    LOG.info("Family init request received from " + message.getContainerIndex());
+    LOG.fine("Family init request received from " + message.getContainerIndex());
 
     FamilyInitHandler familyInitHandler = this.familyInitHandlers.get(message.getFamily());
 
@@ -192,8 +192,6 @@ public class CheckpointManager implements MessageHandler {
     // if request is coming from worker 0
     if (message.getContainerIndex() == 0) {
       List<Integer> membersList = message.getMembersList();
-
-      LOG.info("Members : " + membersList.toString());
 
       Map<Integer, CheckpointStatus> checkPointsByIndex =
           this.statusMap.computeIfAbsent(message.getFamily(), f -> new HashMap<>());

@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
 import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
@@ -160,7 +161,8 @@ public class SourceStreamingInstance implements INodeInstance {
     this.taskGraphName = taskGraphName;
     this.tasksVersion = tasksVersion;
     this.snapshot = new SnapshotImpl();
-    this.checkpointable = this.streamingTask instanceof CheckpointableTask;
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
   }
 
   public void prepare(Config cfg) {
