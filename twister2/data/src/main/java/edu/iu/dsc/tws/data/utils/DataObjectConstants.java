@@ -34,4 +34,5 @@ public class DataObjectConstants {
   public static final String ARGS_ITERATIONS = "iter";
   public static final String BYTE_TYPE = "byteType";
   public static final String CONFIG_FILE = "config";
+  public static final String DATA_INPUT = "datainput"; //"generate" or "read"
 }
