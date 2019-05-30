@@ -80,6 +80,7 @@ public class ExampleTaskMain {
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
     options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
+    options.addOption(Utils.createOption(Constants.ARG_RESOURCE_MEMORY, true, "Instance memory", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
