@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.ftolerance.util;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
@@ -29,7 +30,7 @@ public final class CheckpointUtils {
                                  SnapshotImpl snapshot,
                                  CheckpointingClient checkpointingClient,
                                  MessageHandler messageHandler) throws IOException {
-    stateStore.put(snapshot.getVersion().toString(), snapshot.pack());
+    stateStore.put(Long.toString(snapshot.getVersion()), snapshot.pack());
     checkpointingClient.sendVersionUpdate(
         family,
         componentIndex,
@@ -45,6 +46,26 @@ public final class CheckpointUtils {
       return;
     }
     byte[] stateBytes = stateStore.get(version.toString());
+    if (stateBytes == null) {
+      throw new RuntimeException("Couldn't find version " + version + " in store");
+    }
     snapshot.unpack(stateBytes);
+  }
+
+  public static StateStore getStateStore(Config config) {
+    String checkpointingStoreClass = CheckpointingConfigurations.getCheckpointingStoreClass(config);
+    try {
+      return (StateStore) CheckpointingConfigurations.class.getClassLoader()
+          .loadClass(checkpointingStoreClass).newInstance();
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Couldn't find checkpointing store class : "
+          + checkpointingStoreClass);
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new RuntimeException("Failed to creat an instance of store : "
+          + checkpointingStoreClass);
+    } catch (ClassCastException classCastEx) {
+      throw new RuntimeException("Instance of " + checkpointingStoreClass
+          + " can't be casted to " + StateStore.class.toString());
+    }
   }
 }

@@ -28,11 +28,11 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class CheckpointingTaskExample implements IWorker {
@@ -62,7 +62,7 @@ public class CheckpointingTaskExample implements IWorker {
     taskEnvironment.close();
   }
 
-  public static class Sinktask extends BaseSink<Integer> implements Checkpointable {
+  public static class Sinktask extends BaseSink<Integer> implements CheckpointableTask {
 
     private int count = 0;
 
@@ -90,18 +90,13 @@ public class CheckpointingTaskExample implements IWorker {
   }
 
 
-  public static class SourceTask extends BaseSource implements Checkpointable {
+  public static class SourceTask extends BaseSource implements CheckpointableTask {
 
     private int count = 0;
 
     @Override
     public void execute() {
       context.write("edge", count++);
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
     }
 
     @Override

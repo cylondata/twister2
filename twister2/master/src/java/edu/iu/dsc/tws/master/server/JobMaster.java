@@ -37,8 +37,10 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
+import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.ftolerance.master.CheckpointManager;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -322,15 +324,17 @@ public class JobMaster {
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
 
     //initialize checkpoint manager
-    LocalFileStateStore localFileStateStore = new LocalFileStateStore();
-    localFileStateStore.init(config, this.jobID);
-    this.checkpointManager = new CheckpointManager(
-        this.rrServer,
-        localFileStateStore,
-        this.jobID
-    );
-    LOG.info("Checkpoint manager initialized");
-    this.checkpointManager.init();
+    if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
+      StateStore stateStore = CheckpointUtils.getStateStore(config);
+      stateStore.init(config, this.jobID);
+      this.checkpointManager = new CheckpointManager(
+          this.rrServer,
+          stateStore,
+          this.jobID
+      );
+      LOG.info("Checkpoint manager initialized");
+      this.checkpointManager.init();
+    }
     //done initializing checkpoint manager
 
     rrServer.start();
