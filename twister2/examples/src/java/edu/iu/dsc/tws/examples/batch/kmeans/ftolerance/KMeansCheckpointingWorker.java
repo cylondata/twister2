@@ -25,7 +25,6 @@
 package edu.iu.dsc.tws.examples.batch.kmeans.ftolerance;
 
 import java.util.Arrays;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskEnvironment;
@@ -89,7 +88,7 @@ public class KMeansCheckpointingWorker implements IWorker {
 
     TaskExecutor taskExecutor = taskEnv.getTaskExecutor();
 
-    LOG.log(Level.INFO, "Task worker starting: " + workerId);
+    LOG.info("Task worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
@@ -113,25 +112,25 @@ public class KMeansCheckpointingWorker implements IWorker {
     DataFlowTaskGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    taskExecutor.execute(datapointsTaskGraph, datapointsExecutionPlan);
     //Retrieve the output of the first task graph
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+        datapointsTaskGraph, datapointsExecutionPlan, "datapointsink");
 
     DataObject<Object> centroidsDataObject;
-    if (!snapshot.isCheckpointed(CENT_OBJ)) {
+    if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
       DataFlowTaskGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
       //Get the execution plan for the second task graph
-      ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+      ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
       //Actual execution for the second taskgraph
-      taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
+      taskExecutor.execute(centroidsTaskGraph, centroidsExecutionPlan);
       //Retrieve the output of the first task graph
-      centroidsDataObject = taskExecutor.getOutput(
-          centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
+      centroidsDataObject = taskExecutor.getOutput(centroidsTaskGraph, centroidsExecutionPlan,
+          "centroidsink");
     } else {
       centroidsDataObject = (DataObject<Object>) snapshot.get(CENT_OBJ);
     }

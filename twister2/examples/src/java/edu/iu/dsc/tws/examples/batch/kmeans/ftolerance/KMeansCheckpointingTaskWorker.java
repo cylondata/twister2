@@ -90,7 +90,7 @@ public class KMeansCheckpointingTaskWorker extends CheckpointingTaskWorker {
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
     DataObject<Object> centroidsDataObject;
-    if (!checkpoint.isCheckpointed(CENT_OBJ)) {
+    if (!checkpoint.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
       DataFlowTaskGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
@@ -142,6 +142,11 @@ public class KMeansCheckpointingTaskWorker extends CheckpointingTaskWorker {
     LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
         + Arrays.deepToString(centroid));
   }
+
+
+
+
+
 
 
 }

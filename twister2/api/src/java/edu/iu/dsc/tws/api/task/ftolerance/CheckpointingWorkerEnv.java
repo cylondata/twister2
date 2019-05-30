@@ -22,9 +22,7 @@ import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.ftolerance.api.CheckpointingContext;
 import edu.iu.dsc.tws.ftolerance.api.Snapshot;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
@@ -37,7 +35,7 @@ public final class CheckpointingWorkerEnv {
 
   private static final String WORKER_CHECKPOINT_FAMILY = "worker";
 
-  private int workerId;
+  private final int workerId;
   private long latestVersion;
 
   private SnapshotImpl localCheckpoint;
@@ -102,21 +100,14 @@ public final class CheckpointingWorkerEnv {
     }
 
     /**
-     *
+     * build the checkpointing worker env
      * @return
      */
     public CheckpointingWorkerEnv build() {
 
-      StateStore localCheckpointStore;
-      try {
-        localCheckpointStore = ReflectionUtils.newInstance(CheckpointingContext.
-            checkpointStoreClass(config));
-        localCheckpointStore.init(config, config.getStringValue(JOB_ID),
-            Integer.toString(workerId));
-        // note: one snapshot store for worker. Each worker may have snapshots of multiple  tasks
-      } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-        throw new RuntimeException("Unable to instantiate snapshot store", e);
-      }
+      StateStore localCheckpointStore = CheckpointUtils.getStateStore(config);
+      // one snapshot store for worker. Each node may have snapshots of multiple  workers
+      localCheckpointStore.init(config, config.getStringValue(JOB_ID), Integer.toString(workerId));
 
       Set<Integer> workerIDs = Collections.emptySet();
       if (workerId == 0) {

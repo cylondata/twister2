@@ -72,7 +72,7 @@ public class SnapshotImpl implements Snapshot {
   }
 
   @Override
-  public boolean isCheckpointed(String key) {
+  public boolean checkpointAvailable(String key) {
     return values.containsKey(key);
   }
 
