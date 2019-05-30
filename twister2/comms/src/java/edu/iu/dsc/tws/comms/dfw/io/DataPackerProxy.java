@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
@@ -51,12 +49,21 @@ public final class DataPackerProxy {
     return false;
   }
 
-  static Pair<Integer, Integer> getKeyLength(MessageType typeDefinition,
+  static int getKeyLengthLeft(MessageType typeDefinition,
                                              DataBuffer buffer, int location) {
     if (!typeDefinition.getDataPacker().isHeaderRequired()) {
-      return Pair.of(typeDefinition.getUnitSizeInBytes(), 0);
+      return typeDefinition.getUnitSizeInBytes();
     } else {
-      return Pair.of(buffer.getByteBuffer().getInt(location), Integer.BYTES);
+      return buffer.getByteBuffer().getInt(location);
+    }
+  }
+
+  static int getKeyLengthRight(MessageType typeDefinition,
+                              DataBuffer buffer, int location) {
+    if (!typeDefinition.getDataPacker().isHeaderRequired()) {
+      return 0;
+    } else {
+      return Integer.BYTES;
     }
   }
 }

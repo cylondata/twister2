@@ -56,20 +56,23 @@ public class MDSWorker extends TaskWorker {
     MDSWorkerParameters mdsWorkerParameters = MDSWorkerParameters.build(config);
 
     int parallel = mdsWorkerParameters.getParallelismValue();
-    int dimension = mdsWorkerParameters.getDimension();
-    int matrixSize = mdsWorkerParameters.getDsize();
+    int matrixRowLength = mdsWorkerParameters.getDsize();
+    int matrixColumLength = mdsWorkerParameters.getDimension();
+
+    //For running mds
+    //String configFile = config.getStringValue("config");
 
     String directory = config.getStringValue("dinput");
     String byteType = config.getStringValue("byteType");
 
     /** Generate the Matrix for the MDS **/
     MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
-    matrixGen.generate(matrixSize, dimension, directory, byteType);
+    matrixGen.generate(matrixRowLength, matrixColumLength, directory, byteType);
 
     /** Task Graph to partition the generated matrix for MDS **/
-    MDSDataObjectSource mdsDataObjectSource = new MDSDataObjectSource(
-        Context.TWISTER2_DIRECT_EDGE, directory, matrixSize);
-    MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink();
+    MDSDataObjectSource mdsDataObjectSource = new MDSDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        directory, matrixRowLength);
+    MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink(matrixColumLength);
 
     TaskGraphBuilder dataObjectGraphBuilder = TaskGraphBuilder.newBuilder(config);
     dataObjectGraphBuilder.addSource("dataobjectsource", mdsDataObjectSource, parallel);
@@ -90,13 +93,6 @@ public class MDSWorker extends TaskWorker {
     //Retrieve the output of the first task graph
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         dataObjectTaskGraph, plan, "dataobjectsink");
-
-    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
-      DataPartition<Object>[] dataPartition = dataPointsObject.getPartitions();
-      for (int j = 0; j < dataPartition.length; j++) {
-        LOG.fine("Data Partition Values:" + dataPartition[j].getConsumer().next());
-      }
-    }
 
     /** Task Graph to run the MDS **/
     MDSSourceTask generatorTask = new MDSSourceTask();

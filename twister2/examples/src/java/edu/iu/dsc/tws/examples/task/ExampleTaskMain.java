@@ -81,6 +81,7 @@ public class ExampleTaskMain {
     options.addOption(Utils.createOption(Constants.ARGS_INIT_ITERATIONS, true, "Data", false));
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
     options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
+    options.addOption(Utils.createOption(Constants.ARG_RESOURCE_MEMORY, true, "Instance memory", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -133,6 +134,11 @@ public class ExampleTaskMain {
       benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
     }
 
+    int memory = 1024;
+    if (cmd.hasOption(Constants.ARG_RESOURCE_MEMORY)) {
+      memory = Integer.parseInt(cmd.getOptionValue(Constants.ARG_RESOURCE_MEMORY));
+    }
+
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(Constants.ARGS_ITR, Integer.toString(itr));
@@ -159,80 +165,81 @@ public class ExampleTaskMain {
     if (!stream) {
       switch (operation) {
         case "reduce":
-          submitJob(config, workers, jobConfig, BTReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BTReduceExample.class.getName(), memory);
           break;
         case "allreduce":
-          submitJob(config, workers, jobConfig, BTAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BTAllReduceExample.class.getName(), memory);
           break;
         case "gather":
-          submitJob(config, workers, jobConfig, BTGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BTGatherExample.class.getName(), memory);
           break;
         case "allgather":
-          submitJob(config, workers, jobConfig, BTAllGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BTAllGatherExample.class.getName(), memory);
           break;
         case "bcast":
-          submitJob(config, workers, jobConfig, BTBroadCastExample.class.getName());
+          submitJob(config, workers, jobConfig, BTBroadCastExample.class.getName(), memory);
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, BTPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, BTPartitionExample.class.getName(), memory);
           break;
         case "keyed-reduce":
-          submitJob(config, workers, jobConfig, BTKeyedReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BTKeyedReduceExample.class.getName(), memory);
           break;
         case "keyed-gather":
-          submitJob(config, workers, jobConfig, BTKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BTKeyedGatherExample.class.getName(), memory);
           break;
         case "keyed-partition":
-          submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName());
+          submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName(), memory);
           break;
       }
     } else {
       switch (operation) {
         case "direct":
-          submitJob(config, workers, jobConfig, STWindowExample.class.getName());
+          submitJob(config, workers, jobConfig, STWindowExample.class.getName(), memory);
           break;
         case "cdirect":
-          submitJob(config, workers, jobConfig, STWindowCustomExample.class.getName());
+          submitJob(config, workers, jobConfig, STWindowCustomExample.class.getName(), memory);
           break;
         case "windowmpi":
-          submitJob(config, workers, jobConfig, STWindowMPI.class.getName());
+          submitJob(config, workers, jobConfig, STWindowMPI.class.getName(), memory);
           break;
         case "windowt":
           submitJob(config, workers, jobConfig, STWindowEventTimeExample.class.getName());
           break;
         case "reduce":
-          submitJob(config, workers, jobConfig, STReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, STReduceExample.class.getName(), memory);
           break;
         case "allreduce":
-          submitJob(config, workers, jobConfig, STAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, STAllReduceExample.class.getName(), memory);
           break;
         case "gather":
-          submitJob(config, workers, jobConfig, STGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, STGatherExample.class.getName(), memory);
           break;
         case "allgather":
-          submitJob(config, workers, jobConfig, STAllGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, STAllGatherExample.class.getName(), memory);
           break;
         case "bcast":
-          submitJob(config, workers, jobConfig, STBroadCastExample.class.getName());
+          submitJob(config, workers, jobConfig, STBroadCastExample.class.getName(), memory);
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, STPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, STPartitionExample.class.getName(), memory);
           break;
         case "keyed-reduce":
-          submitJob(config, workers, jobConfig, STKeyedReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, STKeyedReduceExample.class.getName(), memory);
           break;
         case "keyed-gather":
-          submitJob(config, workers, jobConfig, STKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, STKeyedGatherExample.class.getName(), memory);
           break;
         case "keyed-partition":
-          submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName());
+          submitJob(config, workers, jobConfig, STPartitionKeyedExample.class.getName(), memory);
           break;
       }
     }
   }
 
 
-  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+  private static void submitJob(Config config, int containers,
+                                JobConfig jobConfig, String clazz, int memory) {
     LOG.info("Submitting Job ...");
 
     Twister2Job twister2Job;
