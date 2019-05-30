@@ -29,8 +29,6 @@ import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-//import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-
 public class MDSDataObjectSource extends BaseSource {
 
   private static final Logger LOG = Logger.getLogger(MDSDataObjectSource.class.getName());
@@ -54,38 +52,38 @@ public class MDSDataObjectSource extends BaseSource {
   private int dataSize;
 
   public MDSDataObjectSource(String edgename, String dataDirectory, int size) {
-    this.edgeName = edgename;
-    this.dataDirectory = dataDirectory;
-    this.dataSize = size;
+    setEdgeName(edgename);
+    setDataDirectory(dataDirectory);
+    setDataSize(size);
   }
 
-  public int getDataSize() {
+  private int getDataSize() {
     return dataSize;
   }
 
-  public void setDataSize(int dataSize) {
+  private void setDataSize(int dataSize) {
     this.dataSize = dataSize;
   }
 
-  public String getDataDirectory() {
+  private String getDataDirectory() {
     return dataDirectory;
   }
 
-  public void setDataDirectory(String dataDirectory) {
+  private void setDataDirectory(String dataDirectory) {
     this.dataDirectory = dataDirectory;
   }
 
   /**
    * Getter property to set the edge name
    */
-  public String getEdgeName() {
+  private String getEdgeName() {
     return edgeName;
   }
 
   /**
    * Setter property to set the edge name
    */
-  public void setEdgeName(String edgeName) {
+  private void setEdgeName(String edgeName) {
     this.edgeName = edgeName;
   }
 
@@ -99,8 +97,8 @@ public class MDSDataObjectSource extends BaseSource {
     byte[] line = new byte[2000];
     ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
-
     InputSplit inputSplit = source.getNextSplit(context.taskIndex());
+    int count = 0;
     while (inputSplit != null) {
       try {
         while (!inputSplit.reachedEnd()) {
@@ -109,14 +107,16 @@ public class MDSDataObjectSource extends BaseSource {
             byteBuffer.put(line);
             byteBuffer.flip();
             buffer = byteBuffer.asShortBuffer();
-            short[] shortArray = new short[1000];
+            short[] shortArray = new short[getDataSize()];
             ((ShortBuffer) buffer).get(shortArray);
 
             //For writing into the partition file
             //sink.add(context.taskIndex(), Arrays.toString(shortArray));
             context.write(getEdgeName(), shortArray);
+            count++;
           }
         }
+        LOG.info("count value is:" + count);
         inputSplit = null;
         //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
       } catch (Exception ioe) {

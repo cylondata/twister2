@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -251,9 +249,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     this.partialReceiver.init(cfg, this, router.partialExpectedTaskIds());
 
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource
         = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
