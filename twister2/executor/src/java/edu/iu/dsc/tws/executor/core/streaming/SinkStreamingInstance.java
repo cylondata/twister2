@@ -50,58 +50,58 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    * All the inputs will come through a single queue, otherwise we need to look
    * at different queues for messages
    */
-  private BlockingQueue<IMessage> streamingInQueue;
+  protected BlockingQueue<IMessage> streamingInQueue;
 
   /**
    * Inward parallel operations
    */
-  private Map<String, IParallelOperation> streamingInParOps = new HashMap<>();
+  protected Map<String, IParallelOperation> streamingInParOps = new HashMap<>();
 
   /**
    * The configuration
    */
-  private Config config;
+  protected Config config;
 
   /**
    * The globally unique streamingTask id
    */
-  private int globalTaskId;
+  protected int globalTaskId;
 
   /**
    * The task id
    */
-  private int taskId;
+  protected int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
    */
-  private int streamingTaskIndex;
+  protected int streamingTaskIndex;
 
   /**
    * Number of parallel tasks
    */
-  private int parallelism;
+  protected int parallelism;
 
   /**
    * Name of the streamingTask
    */
-  private String taskName;
+  protected String taskName;
 
   /**
    * Node configurations
    */
-  private Map<String, Object> nodeConfigs;
+  protected Map<String, Object> nodeConfigs;
 
   /**
    * The worker id
    */
-  private int workerId;
+  protected int workerId;
 
   /**
    * The input edges
    */
-  private Map<String, String> inEdges;
-  private TaskSchedulePlan taskSchedulePlan;
+  protected Map<String, String> inEdges;
+  protected TaskSchedulePlan taskSchedulePlan;
   private CheckpointingClient checkpointingClient;
   private String taskGraphName;
   private Long taskVersion;

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming.window;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
@@ -37,66 +36,7 @@ public class SinkStreamingWindowingInstance extends SinkStreamingInstance implem
   /**
    * The actual windowing streamingTask executing
    */
-  private IWindowCompute streamingWindowTask;
-
-  /**
-   * All the inputs will come through a single queue, otherwise we need to look
-   * at different queues for messages
-   */
-  private BlockingQueue<IMessage> streamingInQueue;
-
-  /**
-   * Inward parallel operations
-   */
-  private Map<String, IParallelOperation> streamingInParOps = new HashMap<>();
-
-  /**
-   * The configuration
-   */
-  private Config config;
-
-  /**
-   * The globally unique streamingTask id
-   */
-  private int globalTaskId;
-
-  /**
-   * Task id
-   */
-  private int taskId;
-
-  /**
-   * Task index that goes from 0 to parallism - 1
-   */
-  private int streamingTaskIndex;
-
-  /**
-   * Number of parallel tasks
-   */
-  private int parallelism;
-
-  /**
-   * Name of the streamingTask
-   */
-  private String taskName;
-
-  /**
-   * Node configurations
-   */
-  private Map<String, Object> nodeConfigs;
-
-  /**
-   * The worker id
-   */
-  private int workerId;
-
-  /**
-   * The input edges
-   */
-  private Map<String, String> inEdges;
-
-  private TaskSchedulePlan taskSchedulePlan;
-
+  protected IWindowCompute streamingWindowTask;
 
   public SinkStreamingWindowingInstance(IWindowCompute streamingWindowTask,
                                         BlockingQueue<IMessage> streamingInQueue, Config config,

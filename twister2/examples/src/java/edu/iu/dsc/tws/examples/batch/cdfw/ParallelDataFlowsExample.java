@@ -75,6 +75,7 @@ public final class ParallelDataFlowsExample {
       DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
+
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
     }

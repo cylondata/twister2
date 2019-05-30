@@ -16,14 +16,14 @@ network.channel.pending.size: 2048
 network.send.pending.max: 4
 
 # group up to 8 ~ 16 messages
-network.partition.message.group.low_water_mark: 80000
+network.partition.message.group.low_water_mark: 8000
 
 # this is the max number of messages to group
-network.partition.message.group.high_water_mark: 160000
+network.partition.message.group.high_water_mark: 16000
 
 # in batch partition operations, this value will be used to create mini batches
 # within partial receivers
-network.partition.batch.grouping.size: 1000
+network.partition.batch.grouping.size: 10000
 
 # For disk based operations, this directory list will be used to persist incoming messages.
 # This can be used to balance the load between multiple devices, by specifying directory locations

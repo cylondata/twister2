@@ -54,52 +54,52 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
    * All the inputs will come through a single queue, otherwise we need to look
    * at different queues for messages
    */
-  private BlockingQueue<IMessage> inQueue;
+  protected BlockingQueue<IMessage> inQueue;
 
   /**
    * Output will go throuh a single queue
    */
-  private BlockingQueue<IMessage> outQueue;
+  protected BlockingQueue<IMessage> outQueue;
 
   /**
    * The configuration
    */
-  private Config config;
+  protected Config config;
 
   /**
    * The output collection to be used
    */
-  private OutputCollection outputCollection;
+  protected OutputCollection outputCollection;
 
   /**
    * The globally unique task id
    */
-  private int globalTaskId;
+  protected int globalTaskId;
 
   /**
    * The task id
    */
-  private int taskId;
+  protected int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
    */
-  private int taskIndex;
+  protected int taskIndex;
 
   /**
    * Number of parallel tasks
    */
-  private int parallelism;
+  protected int parallelism;
 
   /**
    * Name of the task
    */
-  private String taskName;
+  protected String taskName;
 
   /**
    * Node configurations
    */
-  private Map<String, Object> nodeConfigs;
+  protected Map<String, Object> nodeConfigs;
 
   /**
    * Parallel operations
@@ -114,23 +114,23 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * The worker id
    */
-  private int workerId;
+  protected int workerId;
 
   /**
    * The low watermark for queued messages
    */
-  private int lowWaterMark;
+  protected int lowWaterMark;
 
   /**
    * The high water mark for messages
    */
-  private int highWaterMark;
+  protected int highWaterMark;
 
   /**
    * Output edges
    */
-  private Map<String, String> outputEdges;
-  private TaskSchedulePlan taskSchedule;
+  protected Map<String, String> outputEdges;
+  protected TaskSchedulePlan taskSchedule;
   private CheckpointingClient checkpointingClient;
   private String taskGraphName;
   private long tasksVersion;
@@ -138,7 +138,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  private Map<String, String> inputEdges;
+  protected Map<String, String> inputEdges;
   private boolean checkpointable;
   private StateStore stateStore;
   private SnapshotImpl snapshot;

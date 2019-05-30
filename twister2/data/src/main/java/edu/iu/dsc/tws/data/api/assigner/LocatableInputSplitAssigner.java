@@ -72,7 +72,7 @@ public class LocatableInputSplitAssigner<T> implements InputSplitAssigner<T> {
           if (split != null) {
             // got a split to assign. Double check that it hasn't been assigned before.
             if (this.unassigned.remove(split)) {
-              LOG.info("Assigning split to null host (random assignment).");
+              LOG.fine("Assigning split to null host (random assignment).");
 
               remoteAssignments++;
               return split.getSplit();
@@ -146,7 +146,7 @@ public class LocatableInputSplitAssigner<T> implements InputSplitAssigner<T> {
         if (split != null) {
           // found a valid split. Double check that it hasn't been assigned before.
           if (this.unassigned.remove(split)) {
-            LOG.info("Assigning local split to host " + host);
+            LOG.fine("Assigning local split to host " + host);
 
             localAssignments++;
             return split.getSplit();
@@ -167,7 +167,7 @@ public class LocatableInputSplitAssigner<T> implements InputSplitAssigner<T> {
         if (split != null) {
           // found a valid split. Double check that it hasn't been assigned yet.
           if (this.unassigned.remove(split)) {
-            LOG.info("Assigning remote split to host " + host);
+            LOG.fine("Assigning remote split to host " + host);
 
             remoteAssignments++;
             return split.getSplit();

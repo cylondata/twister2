@@ -257,3 +257,4 @@ def load_modules():
     _maven_import(artifact = "net.bytebuddy:byte-buddy:1.9.3", licenses = ["notice"], sha256 = "a27350be602caea67a33d31281496c84c69b5ab34ddc228e9ff2253fc8f9cd31")
     _maven_import(artifact = "org.hibernate:hibernate-core:5.3.7.Final", licenses = ["notice"], sha256 = "862822a3ebf43aa38ff7d36346bb4cef1fc5a5c400b0a8f35d4a33df816202e9")
     _maven_import(artifact = "org.springframework.boot:spring-boot-loader:2.1.0.RELEASE", licenses = ["notice"], sha256 = "776f84cf9c67e3c5c719e92bd9369c9b10b5e35f3814d8eb3de1317539c96eb1")
+    _maven_import(artifact = "it.unimi.dsi:fastutil:8.2.2", licenses = ["notice"], sha256 = "a6492bd60e4a93c3e302c00291497696bf6d2f927eacaff11cb4fa336dfd5097")

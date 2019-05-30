@@ -66,6 +66,7 @@ public class ExampleMain {
     options.addOption(Constants.ARGS_VERIFY, false, "verify");
     options.addOption(Utils.createOption(BenchmarkMetadata.ARG_BENCHMARK_METADATA, true, "Benchmark Metadata", false));
     options.addOption(Utils.createOption(Constants.ARGS_WINDOW, false, "Weather windowing is used", false));
+    options.addOption(Utils.createOption(Constants.ARG_RESOURCE_MEMORY, true, "Instance memory", false));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -127,6 +128,11 @@ public class ExampleMain {
       benchmarkMetadata = cmd.getOptionValue(BenchmarkMetadata.ARG_BENCHMARK_METADATA);
     }
 
+    int memory = 1024;
+    if (cmd.hasOption(Constants.ARG_RESOURCE_MEMORY)) {
+      memory = Integer.parseInt(cmd.getOptionValue(Constants.ARG_RESOURCE_MEMORY));
+    }
+
     boolean window = cmd.hasOption(Constants.ARGS_WINDOW);
 
     // build JobConfig
@@ -156,79 +162,79 @@ public class ExampleMain {
     if (!stream) {
       switch (operation) {
         case "reduce":
-          submitJob(config, workers, jobConfig, BReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BReduceExample.class.getName(), memory);
           break;
         case "allreduce":
-          submitJob(config, workers, jobConfig, BAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BAllReduceExample.class.getName(), memory);
           break;
         case "keyedreduce":
-          submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, BKeyedReduceExample.class.getName(), memory);
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, BPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, BPartitionExample.class.getName(), memory);
           break;
         case "keyedpartition":
-          submitJob(config, workers, jobConfig, BKeyedPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, BKeyedPartitionExample.class.getName(), memory);
           break;
         case "gather":
-          submitJob(config, workers, jobConfig, BGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BGatherExample.class.getName(), memory);
           break;
         case "allgather":
-          submitJob(config, workers, jobConfig, BAllGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BAllGatherExample.class.getName(), memory);
           break;
         case "keyedgather":
-          submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BKeyedGatherExample.class.getName(), memory);
           break;
         case "dkeyedgather":
-          submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, BDKeyedGatherExample.class.getName(), memory);
           break;
         case "join":
-          submitJob(config, workers, jobConfig, BJoinExample.class.getName());
+          submitJob(config, workers, jobConfig, BJoinExample.class.getName(), memory);
           break;
         case "joinstudent":
-          submitJob(config, workers, jobConfig, BJoinStudentExample.class.getName());
+          submitJob(config, workers, jobConfig, BJoinStudentExample.class.getName(), memory);
           break;
         case "djoin":
-          submitJob(config, workers, jobConfig, BDJoinExample.class.getName());
+          submitJob(config, workers, jobConfig, BDJoinExample.class.getName(), memory);
           break;
         case "direct":
-          submitJob(config, workers, jobConfig, BDirectExample.class.getName());
+          submitJob(config, workers, jobConfig, BDirectExample.class.getName(), memory);
           break;
         case "bcast":
-          submitJob(config, workers, jobConfig, BBroadcastExample.class.getName());
+          submitJob(config, workers, jobConfig, BBroadcastExample.class.getName(), memory);
           break;
       }
     } else {
       switch (operation) {
         case "reduce":
-          submitJob(config, workers, jobConfig, SReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SReduceExample.class.getName(), memory);
           break;
         case "keyedreduce":
-          submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedReduceExample.class.getName(), memory);
           break;
         case "bcast":
-          submitJob(config, workers, jobConfig, SBroadcastExample.class.getName());
+          submitJob(config, workers, jobConfig, SBroadcastExample.class.getName(), memory);
           break;
         case "partition":
-          submitJob(config, workers, jobConfig, SPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, SPartitionExample.class.getName(), memory);
           break;
         case "keyedpartition":
-          submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedPartitionExample.class.getName(), memory);
           break;
         case "gather":
-          submitJob(config, workers, jobConfig, SGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SGatherExample.class.getName(), memory);
           break;
         case "keyedgather":
-          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SKeyedGatherExample.class.getName(), memory);
           break;
         case "allreduce":
-          submitJob(config, workers, jobConfig, SAllReduceExample.class.getName());
+          submitJob(config, workers, jobConfig, SAllReduceExample.class.getName(), memory);
           break;
         case "allgather":
-          submitJob(config, workers, jobConfig, SAllGatherExample.class.getName());
+          submitJob(config, workers, jobConfig, SAllGatherExample.class.getName(), memory);
           break;
         case "direct":
-          submitJob(config, workers, jobConfig, SDirectExample.class.getName());
+          submitJob(config, workers, jobConfig, SDirectExample.class.getName(), memory);
           break;
         default:
           LOG.log(Level.SEVERE, "Un-supported operation: " + operation);
@@ -236,12 +242,13 @@ public class ExampleMain {
     }
   }
 
-  private static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+  private static void submitJob(Config config, int containers,
+                                JobConfig jobConfig, String clazz, int memory) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
         .setJobName(clazz)
         .setWorkerClass(clazz)
-        .addComputeResource(1, 1024, containers)
+        .addComputeResource(1, memory, containers)
         .setConfig(jobConfig)
         .build();
     // now submit the job

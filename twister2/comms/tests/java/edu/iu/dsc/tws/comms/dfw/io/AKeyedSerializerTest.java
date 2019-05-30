@@ -94,7 +94,7 @@ public class AKeyedSerializerTest {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
+        null, type, null, null, data);
 
     AKeyedSerializer serializer = new AKeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
@@ -230,7 +230,7 @@ public class AKeyedSerializerTest {
   private InMessage listValueCase(int numBuffers, int size, List<Object> data, MessageType type) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
+        null, type, null, null, data);
 
     AKeyedSerializer serializer = new AKeyedSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, false);

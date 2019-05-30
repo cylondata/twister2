@@ -26,6 +26,8 @@ import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
@@ -41,7 +43,7 @@ public class TargetPartialReceiver extends TargetReceiver {
   /**
    * Keep the list of tuples for each target
    */
-  protected Map<Integer, List<Object>> readyToSend = new HashMap<>();
+  protected Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
 
   /**
    * The barriers for each source
@@ -134,7 +136,7 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(Integer target) {
+  protected boolean isFilledToSend(int target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
@@ -162,7 +164,13 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
 
     Queue<Object> msgQueue = messages.get(target);
-    return msgQueue.size() < highWaterMark;
+    List<Object> readyQueue = readyToSend.get(target);
+    int size = msgQueue.size();
+    if (readyQueue != null) {
+      size += readyQueue.size();
+    }
+
+    return size < highWaterMark;
   }
 
   @Override

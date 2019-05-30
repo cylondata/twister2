@@ -111,10 +111,12 @@ public class OutMessage {
    */
   private MessageHeader header;
 
+  private Object data;
+
   public OutMessage(int src, int edge, int path, int target, int flags,
                     Set<Integer> intSends, Set<Integer> extSends,
                     MessageType dataType, MessageType keyType,
-                    ChannelMessageReleaseCallback releaseCallback) {
+                    ChannelMessageReleaseCallback releaseCallback, Object data) {
     this.source = src;
     this.edge = edge;
     this.path = path;
@@ -126,6 +128,11 @@ public class OutMessage {
     this.dataType = dataType;
     this.keyType = keyType;
     this.releaseCallback = releaseCallback;
+    this.data = data;
+  }
+
+  public Object getData() {
+    return data;
   }
 
   public SendState getSendState() {
