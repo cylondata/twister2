@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.ftolerance.api;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
@@ -27,7 +28,7 @@ import edu.iu.dsc.tws.comms.dfw.io.types.StringPacker;
  */
 public class SnapshotImpl implements Snapshot {
 
-  private Long version = 0L;
+  private long version = 0L;
   private Map<String, Object> values = new HashMap<>();
   private Map<String, DataPacker> packers = new HashMap<>();
 
@@ -66,7 +67,7 @@ public class SnapshotImpl implements Snapshot {
   }
 
   @Override
-  public Long getVersion() {
+  public long getVersion() {
     return this.version;
   }
 
@@ -75,7 +76,7 @@ public class SnapshotImpl implements Snapshot {
     return values.containsKey(key);
   }
 
-  public void setVersion(Long version) {
+  public void setVersion(long version) {
     this.version = version;
   }
 
@@ -132,5 +133,32 @@ public class SnapshotImpl implements Snapshot {
           ObjectPacker.getInstance()).unpackFromByteArray(valueBytes);
       this.values.put(key, value);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SnapshotImpl snapshot = (SnapshotImpl) o;
+    return Objects.equals(version, snapshot.version);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(version);
+  }
+
+  public SnapshotImpl copy() {
+    SnapshotImpl copy = new SnapshotImpl();
+    copy.packers = this.packers;
+    copy.values = new HashMap<>(this.values);
+    copy.version = this.version;
+
+    this.values.clear();
+    return copy;
   }
 }

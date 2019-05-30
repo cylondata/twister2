@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
@@ -28,15 +27,16 @@ import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
+import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
@@ -170,7 +170,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     this.checkpointingClient = checkpointingClient;
     this.taskGraphName = taskGraphName;
     this.tasksVersion = tasksVersion;
-    this.checkpointable = this.task instanceof Checkpointable;
+    this.checkpointable = this.task instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
     this.snapshot = new SnapshotImpl();
   }
 
@@ -180,11 +181,11 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
 
     if (this.checkpointable) {
-      this.stateStore = new LocalFileStateStore(); //todo change based on config
+      this.stateStore = CheckpointUtils.getStateStore(config);
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
 
       TaskCheckpointUtils.restore(
-          (Checkpointable) this.task,
+          (CheckpointableTask) this.task,
           this.snapshot,
           this.stateStore,
           this.tasksVersion,
@@ -208,15 +209,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   public boolean execute() {
     // execute if there are incoming messages
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
-      IMessage message = inQueue.poll();
-      if (message != null) {
-        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) != MessageFlags.SYNC_BARRIER) {
-          task.execute(message);
-        } else {
-          if (storeSnapshot()) {
-            outQueue.add(message);
-          }
-        }
+      IMessage m = inQueue.poll();
+      if (m != null) {
+        task.execute(m);
       }
     }
 
@@ -269,21 +264,6 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     return inQueue;
   }
 
-  public BlockingQueue<IMessage> getOutQueue() {
-    return outQueue;
-  }
-
-  public boolean storeSnapshot() {
-    try {
-      LocalStreamingStateBackend fsStateBackend = new LocalStreamingStateBackend();
-      fsStateBackend.writeToStateBackend(config, taskId, workerId, (Checkpointable) task, 1);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, " Could not store checkpoint", e);
-      return false;
-    }
-  }
-
   @Override
   public boolean sync(String edge, byte[] value) {
     if (this.checkpointable) {
@@ -292,7 +272,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
 
       TaskCheckpointUtils.checkpoint(
           barrierId,
-          (Checkpointable) this.task,
+          (CheckpointableTask) this.task,
           this.snapshot,
           this.stateStore,
           this.taskGraphName,

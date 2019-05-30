@@ -40,7 +40,7 @@ public interface Snapshot {
   /**
    * Returns the current version of the snapshot
    */
-  Long getVersion();
+  long getVersion();
 
   boolean isCheckpointed(String key);
 }

@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -806,8 +807,6 @@ public class ComputeConnection {
   }
 
   private boolean isPrimitiveType(DataType dataType) {
-    return dataType == DataType.INTEGER_ARRAY
-        || dataType == DataType.DOUBLE_ARRAY || dataType == DataType.LONG_ARRAY
-        || dataType == DataType.BYTE_ARRAY || dataType == DataType.SHORT_ARRAY;
+    return Utils.dataTypeToMessageType(dataType).isPrimitive();
   }
 }
