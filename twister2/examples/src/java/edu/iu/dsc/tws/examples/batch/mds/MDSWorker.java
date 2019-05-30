@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.mds;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,15 +58,19 @@ public class MDSWorker extends TaskWorker {
     int matrixRowLength = mdsWorkerParameters.getDsize();
     int matrixColumLength = mdsWorkerParameters.getDimension();
 
-    //For running mds
-    //String configFile = config.getStringValue("config");
+    String dataInput = mdsWorkerParameters.getDataInput();
+    String configFile = mdsWorkerParameters.getConfigFile();
+    String directory = mdsWorkerParameters.getDatapointDirectory();
+    String byteType = mdsWorkerParameters.getByteType();
 
-    String directory = config.getStringValue("dinput");
-    String byteType = config.getStringValue("byteType");
+    LOG.info("Data Points to be generated or read" + dataInput + "\t" + directory
+        + "\t" + byteType + "\t" + configFile);
 
-    /** Generate the Matrix for the MDS **/
-    MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
-    matrixGen.generate(matrixRowLength, matrixColumLength, directory, byteType);
+    /* Generate the Matrix for the MDS **/
+    if (Context.TWISTER2_DATA_INPUT.equalsIgnoreCase(dataInput)) {
+      MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
+      matrixGen.generate(matrixRowLength, matrixColumLength, directory, byteType);
+    }
 
     /** Task Graph to partition the generated matrix for MDS **/
     MDSDataObjectSource mdsDataObjectSource = new MDSDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
@@ -128,7 +131,6 @@ public class MDSWorker extends TaskWorker {
     public void execute() {
       DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
       datapoints = (short[]) dataPartition.getConsumer().next();
-      LOG.info("Data points value:" + Arrays.toString(datapoints) + "\t" + datapoints.length);
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, "MDS Execution");
     }
 
@@ -167,15 +169,17 @@ public class MDSWorker extends TaskWorker {
     Options options = new Options();
     options.addOption(DataObjectConstants.WORKERS, true, "Workers");
     options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
-
     options.addOption(DataObjectConstants.DSIZE, true, "Size of the matrix rows");
     options.addOption(DataObjectConstants.DIMENSIONS, true, "dimension of the matrix");
-    options.addOption(DataObjectConstants.BYTE_TYPE, true, "bytetype");
 
+    options.addOption(DataObjectConstants.BYTE_TYPE, true, "bytetype");
+    options.addOption(DataObjectConstants.DATA_INPUT, true, "datainput");
     options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY,
         true, "Matrix Input Creation directory", true));
     options.addOption(Utils.createOption(DataObjectConstants.FILE_SYSTEM,
         true, "file system", true));
+    options.addOption(Utils.createOption(DataObjectConstants.CONFIG_FILE,
+        true, "config File", true));
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -191,6 +195,8 @@ public class MDSWorker extends TaskWorker {
     String byteType = cmd.getOptionValue(DataObjectConstants.BYTE_TYPE);
     String dataDirectory = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
     String fileSystem = cmd.getOptionValue(DataObjectConstants.FILE_SYSTEM);
+    String configFile = cmd.getOptionValue(DataObjectConstants.CONFIG_FILE);
+    String dataInput = cmd.getOptionValue(DataObjectConstants.DATA_INPUT);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -203,6 +209,8 @@ public class MDSWorker extends TaskWorker {
     jobConfig.put(DataObjectConstants.BYTE_TYPE, byteType);
     jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, dataDirectory);
     jobConfig.put(DataObjectConstants.FILE_SYSTEM, fileSystem);
+    jobConfig.put(DataObjectConstants.CONFIG_FILE, configFile);
+    jobConfig.put(DataObjectConstants.DATA_INPUT, dataInput);
 
     // build JobConfig
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
