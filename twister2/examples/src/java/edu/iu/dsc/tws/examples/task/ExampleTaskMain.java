@@ -204,7 +204,7 @@ public class ExampleTaskMain {
           submitJob(config, workers, jobConfig, STWindowMPI.class.getName(), memory);
           break;
         case "windowt":
-          submitJob(config, workers, jobConfig, STWindowEventTimeExample.class.getName());
+          submitJob(config, workers, jobConfig, STWindowEventTimeExample.class.getName(), memory);
           break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName(), memory);
