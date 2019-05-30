@@ -112,7 +112,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
-      LOG.info("Changing the grouping size to: " + groupingSize);
+      LOG.fine("Changing the grouping size to: " + groupingSize);
     }
 
     Set<Integer> tars = op.getTargets();
