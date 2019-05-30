@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,6 +27,7 @@ import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
+import edu.iu.dsc.tws.comms.utils.OperationUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -121,6 +123,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     for (int t : tars) {
       targets[index++] = t;
     }
+    OperationUtils.shuffleArray(new Random(System.nanoTime()), targets);
   }
 
   @Override
