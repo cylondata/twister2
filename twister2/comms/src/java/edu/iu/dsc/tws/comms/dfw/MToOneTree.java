@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -51,6 +52,11 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
    * the source tasks
    */
   protected Set<Integer> sources;
+
+  /**
+   * The targets
+   */
+  private Set<Integer> targets;
 
   /**
    * The target tast
@@ -104,6 +110,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
+    this.targets = new HashSet<>();
+    this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
@@ -120,6 +128,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = keyed;
     this.keyType = kType;
     this.dataType = dType;
+    this.targets = new HashSet<>();
+    this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
@@ -402,5 +412,15 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   @Override
   public String getUniqueId() {
     return String.valueOf(edgeValue);
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sources;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targets;
   }
 }

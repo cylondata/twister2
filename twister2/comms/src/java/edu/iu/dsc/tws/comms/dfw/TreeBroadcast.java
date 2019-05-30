@@ -62,6 +62,11 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sourceSet;
 
   /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> targetSet;
+
+  /**
    * The sources which are pending for finish
    */
   private Set<Integer> pendingFinishSources;
@@ -111,6 +116,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -126,6 +132,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -463,6 +470,16 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }
 
