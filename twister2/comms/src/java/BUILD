@@ -29,6 +29,7 @@ java_binary(
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
 
@@ -42,6 +43,7 @@ java_binary(
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
 
@@ -64,6 +66,7 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
 
@@ -86,5 +89,6 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
+        "@it_unimi_dsi_fastutil//jar",
     ],
 )
