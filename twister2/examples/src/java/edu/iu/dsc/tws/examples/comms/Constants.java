@@ -37,4 +37,5 @@ public final class Constants {
   public static final String ARGS_VERIFY = "verify";
   public static final String ARGS_NUMBER_OF_FILES = "nFiles";
   public static final String ARGS_SHARED_FILE_SYSTEM = "fShared";
+  public static final String ARG_RESOURCE_MEMORY = "instanceMemory";
 }
