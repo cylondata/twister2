@@ -70,19 +70,20 @@ import java.nio.file.StandardOpenOption;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
 
 public class LocalFileStateStore implements StateStore {
 
   private static final Logger LOG = Logger.getLogger(LocalFileStateStore.class.getName());
 
+  public static final String CHECKPOINTING_STORE_FS_DIR = "twister2.checkpointing.store.fs.dir";
+
   private File rootFolder;
 
   @Override
   public void init(Config config, String... path) {
     String finalPath = String.join(File.separator,
-        config.getStringValue(Context.HOME), String.join(File.separator, path));
+        config.getStringValue(CHECKPOINTING_STORE_FS_DIR), String.join(File.separator, path));
     this.rootFolder = new File(finalPath);
     LOG.info("Snapshot Store path : " + this.rootFolder.getAbsolutePath());
     if (!this.rootFolder.exists()) {
