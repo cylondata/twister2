@@ -105,6 +105,11 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sourceSet;
 
   /**
+   * Keep targets as a set to return
+   */
+  private Set<Integer> targetSet;
+
+  /**
    * The sources which are pending for finish
    */
   private Set<Integer> pendingFinishSources;
@@ -140,6 +145,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.type = t;
     this.sourceSet = new HashSet<>(sources);
+    this.targetSet = new HashSet<>(target);
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
     // the sources to targets mapping
@@ -381,7 +387,17 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
+  @Override
+  public MessageType getDataType() {
+    return type;
+  }
+
   public Set<Integer> getSources() {
     return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }
