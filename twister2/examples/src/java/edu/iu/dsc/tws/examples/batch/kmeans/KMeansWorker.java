@@ -106,7 +106,6 @@ public class KMeansWorker extends TaskWorker {
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    LOG.info("Finished first execution");
     //Retrieve the output of the first task graph
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
@@ -140,7 +139,6 @@ public class KMeansWorker extends TaskWorker {
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     //Actual execution for the second taskgraph
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
-    LOG.info("Finished second execution");
     //Retrieve the output of the first task graph
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
@@ -166,7 +164,6 @@ public class KMeansWorker extends TaskWorker {
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
-      LOG.info("Starting iteration: " + i);
       //add the datapoints and centroids as input to the kmeanssource task.
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
