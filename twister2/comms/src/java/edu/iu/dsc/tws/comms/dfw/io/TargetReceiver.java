@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -28,6 +27,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public abstract class TargetReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(TargetReceiver.class.getName());
 
@@ -35,7 +36,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * Lets keep track of the messages, we need to keep track of the messages for each target
    * and source, Map<target, Queue<messages>>
    */
-  protected Map<Integer, Queue<Object>> messages = new HashMap<>();
+  protected Int2ObjectOpenHashMap<Queue<Object>> messages = new Int2ObjectOpenHashMap<>();
 
   /**
    * The worker id this receiver is in
@@ -294,7 +295,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    *
    * @return true if we are filled enough to send
    */
-  protected abstract boolean isFilledToSend(Integer target);
+  protected abstract boolean isFilledToSend(int target);
 
   @Override
   public void onFinish(int source) {

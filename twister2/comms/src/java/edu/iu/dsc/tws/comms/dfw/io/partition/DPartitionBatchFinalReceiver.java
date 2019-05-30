@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io.partition;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +36,8 @@ import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 /**
  * A receiver that goes to disk
  */
@@ -51,7 +52,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Sort mergers for each target
    */
-  private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
+  private Int2ObjectOpenHashMap<Shuffle> sortedMergers = new Int2ObjectOpenHashMap<>();
 
   /**
    * weather we need to sort the records according to key
@@ -81,7 +82,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Finished workers per target (target -> finished workers)
    */
-  private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
+  private Int2ObjectOpenHashMap<Set<Integer>> finishedSources = new Int2ObjectOpenHashMap<>();
 
   /**
    * After all the sources finished for a target we add to this set
@@ -116,7 +117,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Keep state about the targets
    */
-  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
+  protected Int2ObjectOpenHashMap<ReceiverState> targetStates = new Int2ObjectOpenHashMap<>();
 
   /**
    * We use a target array to iterator
@@ -137,7 +138,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     long maxFileSize = DataFlowContext.getShuffleFileSize(cfg);
     expIds = expectedIds;
     thisWorker = op.getTaskPlan().getThisExecutor();
-    finishedSources = new HashMap<>();
+    finishedSources = new Int2ObjectOpenHashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
