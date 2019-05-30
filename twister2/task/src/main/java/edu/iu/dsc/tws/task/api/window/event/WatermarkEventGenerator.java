@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import edu.iu.dsc.tws.task.api.window.exceptions.FailureException;
+import edu.iu.dsc.tws.task.api.window.exceptions.FailedException;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 
 public class WatermarkEventGenerator<T> implements Runnable {
@@ -33,6 +33,7 @@ public class WatermarkEventGenerator<T> implements Runnable {
   private final long interval;
   private ScheduledFuture<?> executorFuture;
   private volatile long lastWatermarkTime;
+  private long currentProcessedMessageTime = 0;
 
   public WatermarkEventGenerator(WindowManager<T> winManager, long eventLagTime, long interval) {
     this.windowManager = winManager;
@@ -66,16 +67,26 @@ public class WatermarkEventGenerator<T> implements Runnable {
     }
   }
 
-  private void checkFailures() throws FailureException {
+  public boolean track(long time) {
+    Long currentValue = currentProcessedMessageTime;
+    if (currentValue == 0 || time > currentValue) {
+      currentProcessedMessageTime = currentValue;
+    }
+    checkFailures();
+    return time >= lastWatermarkTime;
+  }
+
+
+  private void checkFailures() {
     if (executorFuture != null && executorFuture.isDone()) {
       try {
         executorFuture.get();
       } catch (InterruptedException ex) {
         LOG.severe(String.format("Exception Occurred : %s", ex.getMessage()));
-        throw new FailureException(ex.getMessage());
+        throw new FailedException(ex);
       } catch (ExecutionException ex) {
         LOG.severe(String.format("Exception Occurred : %s", ex.getMessage()));
-        throw new FailureException(ex.getMessage());
+        throw new FailedException(ex);
       }
     }
   }

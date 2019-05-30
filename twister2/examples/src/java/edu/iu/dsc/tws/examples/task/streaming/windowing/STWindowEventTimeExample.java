@@ -91,9 +91,10 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
 
     BaseWindowedSink sdwCountTumblingProcess
         = new DirectProcessWindowedTask(new ProcessFunctionImpl())
-        .withTimestampExtractor(timestampExtractor)
+        .withCustomTimestampExtractor(timestampExtractor)
+        .withAllowedLateness(10, TimeUnit.MILLISECONDS)
+        .withWatermarkInterval(3, TimeUnit.MILLISECONDS)
         .withTumblingCountWindow(5);
-
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);

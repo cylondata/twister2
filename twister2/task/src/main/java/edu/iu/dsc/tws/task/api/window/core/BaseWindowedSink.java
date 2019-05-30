@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.task.api.window.core;
 
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -23,11 +24,11 @@ import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
@@ -45,9 +46,13 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   public abstract boolean execute(IWindowMessage<T> windowMessage);
 
-  private static final int DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
+  private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
 
   private static final long DEFAULT_MAX_LAG = 0; // 0s
+
+  private WindowConfig.Duration watermarkInterval = null;
+
+  private WindowConfig.Duration allowedLateness = null;
 
   private WindowManager<T> windowManager;
 
@@ -63,11 +68,9 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private T collectiveOutput;
 
-  private ReduceWindowedFunction<T> reduceWindowedFunction;
-
   private IWindowMessage<T> collectiveEvents;
 
-  private ITimestampExtractor iTimestampExtractor;
+  private ITimestampExtractor<T> iTimestampExtractor;
 
   private WatermarkEventGenerator<T> watermarkEventGenerator;
 
@@ -94,11 +97,23 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       if (iTimestampExtractor != null) {
         // TODO : handle delayed Stream
 
-        int watermarkInterval = 1;
+        long watermarkInt = 1;
+        long allowedLtns = 0;
         // TODO : handle this from a config param
-        watermarkInterval = DEFAULT_WATERMARK_INTERVAL;
+        if (this.watermarkInterval != null) {
+          watermarkInt = this.watermarkInterval.value;
+        } else {
+          watermarkInt = DEFAULT_WATERMARK_INTERVAL;
+        }
+
+        if (this.allowedLateness != null) {
+          allowedLtns = this.allowedLateness.value;
+        } else {
+          allowedLtns = DEFAULT_MAX_LAG;
+        }
+
         watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
-            watermarkInterval, DEFAULT_MAX_LAG);
+            watermarkInt, allowedLtns);
       }
 
       IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
@@ -115,7 +130,18 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   @Override
   public boolean execute(IMessage<T> message) {
-    this.windowManager.add(message);
+    if (isTimestamped()) {
+      long time = iTimestampExtractor.extractTimestamp(message.getContent());
+      if (watermarkEventGenerator.track(time)) {
+        this.windowManager.add(message, time);
+      } else {
+        // TODO : handle the late tuple stream a delayed message won't be handled unless a
+        //  late stream
+      }
+    } else {
+      this.windowManager.add(message);
+    }
+
     return true;
   }
 
@@ -145,8 +171,23 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return this;
   }
 
-  public BaseWindowedSink<T> withTimestampExtractor(ITimestampExtractor timestampExtractor) {
+  public BaseWindowedSink<T> withCustomTimestampExtractor(ITimestampExtractor timestampExtractor) {
     this.iTimestampExtractor = timestampExtractor;
+    return this;
+  }
+
+  public BaseWindowedSink<T> withTimestampExtractor() {
+    this.iTimestampExtractor = new TimestampExtractor();
+    return this;
+  }
+
+  public BaseWindowedSink<T> withAllowedLateness(long lateness, TimeUnit timeUnit) {
+    this.allowedLateness = new WindowConfig.Duration(lateness, timeUnit);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withWatermarkInterval(long watermarkInt, TimeUnit timeUnit) {
+    this.watermarkInterval = new WindowConfig.Duration(watermarkInt, timeUnit);
     return this;
   }
 
@@ -193,16 +234,28 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   }
 
   public void start() {
+    if (watermarkEventGenerator != null) {
+      LOG.log(Level.FINE, "Starting watermark generator");
+      watermarkEventGenerator.start();
+    }
+    LOG.log(Level.FINE, "Starting windowing policy");
     this.windowingPolicy.start();
   }
 
   @Override
   public void close() {
+    if (watermarkEventGenerator != null) {
+      watermarkEventGenerator.shutdown();
+    }
     this.windowManager.shutdown();
   }
 
   @Override
   public void refresh() {
 
+  }
+
+  private boolean isTimestamped() {
+    return iTimestampExtractor != null;
   }
 }

@@ -12,10 +12,13 @@
 package edu.iu.dsc.tws.task.api.window.manage;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -46,17 +49,21 @@ public class WindowManager<T> implements IManager<T> {
 
   private final ConcurrentLinkedQueue<Event<T>> queue;
 
+  private final Set<Event<T>> previousWindowEvents;
+
   public WindowManager(WindowLifeCycleListener<T> windowLifeCycleListener) {
     this.windowLifeCycleListener = windowLifeCycleListener;
     this.queue = new ConcurrentLinkedQueue<>();
     this.expiredEvents = new ArrayList<>();
     this.lock = new ReentrantLock();
+    this.previousWindowEvents = new HashSet<>();
   }
 
   public WindowManager() {
     this.queue = new ConcurrentLinkedQueue<>();
     this.expiredEvents = new ArrayList<>();
     this.lock = new ReentrantLock();
+    this.previousWindowEvents = new HashSet<>();
   }
 
   public IWindowingPolicy<T> getWindowingPolicy() {
@@ -96,7 +103,7 @@ public class WindowManager<T> implements IManager<T> {
 
 
   @Override
-  public void onEvent() {
+  public boolean onEvent() {
     List<Event<T>> windowEvents = null;
     List<IMessage<T>> expired = null;
     try {
@@ -107,11 +114,35 @@ public class WindowManager<T> implements IManager<T> {
     } finally {
       lock.unlock();
     }
-    if (!windowEvents.isEmpty()) {
-      IWindowMessage<T> iWindowMessage = bundleWindowMessage(windowEvents);
-      this.windowLifeCycleListener.onActivation(iWindowMessage, null, null);
+    List<IMessage<T>> events = new ArrayList<>();
+    List<IMessage<T>> newEvents = new ArrayList<>();
+    for (Event<T> event : windowEvents) {
+      events.add(event.get());
+      if (!previousWindowEvents.contains(event)) {
+        newEvents.add(event.get());
+      }
     }
+    previousWindowEvents.clear();
+    if (!events.isEmpty()) {
+      previousWindowEvents.addAll(windowEvents);
+      LOG.log(Level.FINE, String.format("WindowLifeCycleListener onActivation, "
+          + "events in the window : %d", events.size()));
+      IWindowMessage<T> ievents = bundleWindowIMessage(events);
+      IWindowMessage<T> inewEvents = bundleWindowIMessage(newEvents);
+      IWindowMessage<T> iexpired = bundleWindowIMessage(null);
+      windowLifeCycleListener.onActivation(ievents, inewEvents, iexpired);
+    } else {
+      LOG.log(Level.FINE,
+          String.format("No events processed for the window, onActivation method is not called"));
+    }
+
+//    if (!windowEvents.isEmpty()) {
+//      IWindowMessage<T> iWindowMessage = bundleWindowMessage(windowEvents);
+//      this.windowLifeCycleListener.onActivation(iWindowMessage, null, null);
+//    }
     this.windowingPolicy.reset();
+
+    return !events.isEmpty();
   }
 
   public List<Event<T>> scanEvents(boolean fullScan) {
@@ -151,6 +182,16 @@ public class WindowManager<T> implements IManager<T> {
     return winMessage;
   }
 
+  public IWindowMessage<T> bundleWindowIMessage(List<IMessage<T>> events) {
+    WindowMessageImpl winMessage = null;
+    List<IMessage<T>> messages = new ArrayList<>();
+    for (IMessage<T> m : events) {
+      messages.add(m);
+    }
+    winMessage = new WindowMessageImpl(messages);
+    return winMessage;
+  }
+
 
   public void track(Event<T> windowEvent) {
     this.evictionPolicy.track(windowEvent);
@@ -165,6 +206,43 @@ public class WindowManager<T> implements IManager<T> {
     if (windowingPolicy != null) {
       windowingPolicy.shutdown();
     }
+  }
+
+  public List<Long> getSlidingCountTimestamps(long start, long end, long slide) {
+    List<Long> timestamps = new ArrayList<>();
+    if (end > start) {
+      int count = 0;
+      long ts = Long.MIN_VALUE;
+      for (Event<T> event : queue) {
+        if (event.getTimeStamp() > start && event.getTimeStamp() <= end) {
+          ts = Math.max(ts, event.getTimeStamp());
+          if (++count % slide == 0) {
+            timestamps.add(ts);
+          }
+        }
+      }
+    }
+    return timestamps;
+  }
+
+  public long getEventCount(long referenceTime) {
+    long eventCount = 0;
+    for (Event<T> event : queue) {
+      if (event.getTimeStamp() <= referenceTime) {
+        ++eventCount;
+      }
+    }
+    return eventCount;
+  }
+
+  public long getEarliestEventTimestamp(long start, long end) {
+    long minTimestamp = Long.MAX_VALUE;
+    for (Event<T> event : queue) {
+      if (event.getTimeStamp() > start && event.getTimeStamp() <= end) {
+        minTimestamp = Math.min(minTimestamp, event.getTimeStamp());
+      }
+    }
+    return minTimestamp;
   }
 
 }
