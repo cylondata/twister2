@@ -24,14 +24,14 @@ import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.LocalFileStateStore;
 import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
 import edu.iu.dsc.tws.ftolerance.api.StateStore;
+import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.checkpoint.Checkpointable;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkStreamingInstance implements INodeInstance, ISync {
@@ -129,7 +129,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     this.checkpointingClient = checkpointingClient;
     this.taskGraphName = taskGraphName;
     this.taskVersion = taskVersion;
-    this.checkpointable = this.streamingTask instanceof Checkpointable;
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask;
     this.snapshot = new SnapshotImpl();
   }
 
@@ -138,11 +138,11 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
 
     if (this.checkpointable) {
-      this.stateStore = new LocalFileStateStore(); //todo change based on config
+      this.stateStore = CheckpointUtils.getStateStore(config);
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
 
       TaskCheckpointUtils.restore(
-          (Checkpointable) this.streamingTask,
+          (CheckpointableTask) this.streamingTask,
           this.snapshot,
           this.stateStore,
           this.taskVersion,
@@ -194,7 +194,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       LOG.info("Barrier received to " + this.globalTaskId + " with id " + barrierId);
       TaskCheckpointUtils.checkpoint(
           barrierId,
-          (Checkpointable) this.streamingTask,
+          (CheckpointableTask) this.streamingTask,
           this.snapshot,
           this.stateStore,
           this.taskGraphName,
