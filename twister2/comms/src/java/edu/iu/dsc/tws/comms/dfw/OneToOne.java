@@ -23,8 +23,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -174,10 +172,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   private void init() {
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
-        = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
