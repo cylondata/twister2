@@ -47,9 +47,10 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(Integer target) {
-    return readyToSend.get(target) != null
+  protected boolean isFilledToSend(int target) {
+    boolean b = readyToSend.get(target) != null
         && (allSyncsReceived || readyToSend.get(target).size() > groupingSize);
+    return b;
   }
 
   @Override
