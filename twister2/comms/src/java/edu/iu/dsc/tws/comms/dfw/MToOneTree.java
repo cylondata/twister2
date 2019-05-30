@@ -25,8 +25,6 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
@@ -79,7 +77,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
    */
   private MessageReceiver partialReceiver;
 
-  private int index = 0;
+  private int index;
 
   private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
 
@@ -267,9 +265,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     LOG.log(Level.FINE, String.format("%d reduce sources %s dest %d send tasks: %s",
         workerId, sources, destination, router.sendQueueIds()));
 
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource
         = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
@@ -278,9 +276,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-              DataFlowContext.sendPendingMax(cfg));
+      ArrayBlockingQueue<OutMessage> pendingSendMessages =
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
         serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), workerId,
@@ -298,9 +295,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<>(
-              capacity);
+      Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {

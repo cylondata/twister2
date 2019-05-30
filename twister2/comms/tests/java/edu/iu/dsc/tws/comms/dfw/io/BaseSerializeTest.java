@@ -32,7 +32,7 @@ public class BaseSerializeTest {
                                       MessageType type, MessageType keyType) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
+        null, type, null, null, data);
 
     KeyedSerializer serializer = new KeyedSerializer(
         new KryoSerializer(), 0, keyType, type);
@@ -69,7 +69,7 @@ public class BaseSerializeTest {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, keyType, null);
+        null, type, keyType, null, data);
 
     KeyedSerializer serializer = new KeyedSerializer(
         new KryoSerializer(), 0, keyType, type);

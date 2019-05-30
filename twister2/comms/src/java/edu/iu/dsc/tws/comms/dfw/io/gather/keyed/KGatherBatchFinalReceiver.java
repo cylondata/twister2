@@ -26,6 +26,8 @@ import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 /**
  * Final receiver for keyed gather
  */
@@ -38,7 +40,8 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   /**
    * The reduced values for each target and key
    */
-  protected Map<Integer, Map<Object, List<Object>>> gathered = new HashMap<>();
+  protected Int2ObjectOpenHashMap<Map<Object, List<Object>>> gathered =
+      new Int2ObjectOpenHashMap<>();
 
   public KGatherBatchFinalReceiver(BulkReceiver receiver,
                                    int limitPerKey) {
@@ -99,7 +102,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(Integer target) {
+  protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
         && messages.get(target).isEmpty();
   }

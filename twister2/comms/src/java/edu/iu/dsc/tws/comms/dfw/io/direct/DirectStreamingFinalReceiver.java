@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.direct;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -24,6 +23,8 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
   // the receiver
   private SingularReceiver receiver;
@@ -31,7 +32,7 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
   /**
    * Keep the list of tuples for each target
    */
-  private Map<Integer, Queue<Object>> readyToSend = new HashMap<>();
+  private Int2ObjectOpenHashMap<Queue<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
 
   public DirectStreamingFinalReceiver(SingularReceiver receiver) {
     this.receiver = receiver;
@@ -112,7 +113,7 @@ public class DirectStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isFilledToSend(Integer target) {
+  protected boolean isFilledToSend(int target) {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
