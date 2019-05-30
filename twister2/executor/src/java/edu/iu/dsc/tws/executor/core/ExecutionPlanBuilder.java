@@ -41,6 +41,8 @@ import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.window.SinkStreamingWindowingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
+import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
+import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -130,31 +132,35 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     Set<TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
 
-    Set<Integer> globalTasks = Collections.emptySet();
-    if (workerId == 0) {
-      globalTasks = containersMap.values().stream()
-          .flatMap(containerPlan -> containerPlan.getTaskInstances().stream())
-          .map(ip -> taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
-          .collect(Collectors.toSet());
-    }
-
     long tasksVersion = 0L;
 
-    try {
-      Checkpoint.FamilyInitializeResponse familyInitializeResponse =
-          this.checkpointingClient.initFamily(
-              workerId,
-              containersMap.size(),
-              taskGraph.getGraphName(),
-              globalTasks
-          );
+    if (CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+      Set<Integer> globalTasks = Collections.emptySet();
+      if (workerId == 0) {
+        globalTasks = containersMap.values().stream()
+            .flatMap(containerPlan -> containerPlan.getTaskInstances().stream())
+            .filter(ip -> taskGraph.vertex(ip.getTaskName())
+                .getTask() instanceof CheckpointableTask)
+            .map(ip -> taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
+            .collect(Collectors.toSet());
+      }
 
-      tasksVersion = familyInitializeResponse.getVersion();
-    } catch (BlockingSendException e) {
-      throw new RuntimeException("Failed to register tasks with Checkpoint Manager", e);
+      try {
+        Checkpoint.FamilyInitializeResponse familyInitializeResponse =
+            this.checkpointingClient.initFamily(
+                workerId,
+                containersMap.size(),
+                taskGraph.getGraphName(),
+                globalTasks
+            );
+
+        tasksVersion = familyInitializeResponse.getVersion();
+      } catch (BlockingSendException e) {
+        throw new RuntimeException("Failed to register tasks with Checkpoint Manager", e);
+      }
+
+      LOG.info("Tasks will start with version " + tasksVersion);
     }
-
-    LOG.info("Tasks will start with version " + tasksVersion);
 
     // for each task we are going to create the communications
     for (TaskInstancePlan ip : instancePlan) {
