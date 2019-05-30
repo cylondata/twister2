@@ -14,11 +14,13 @@ package edu.iu.dsc.tws.ftolerance.util;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.ftolerance.stores.LocalFileStateStore;
 
-public class CheckpointingConfigurations {
+public final class CheckpointingConfigurations {
 
   public static final String CHECKPOINTING_ENABLED = "twister2.checkpointing.enable";
   public static final String CHECKPOINTING_STORE_CLASS = "twister2.checkpointing.store";
 
+  private CheckpointingConfigurations() {
+  }
 
   public static boolean isCheckpointingEnabled(Config config) {
     return config.getBooleanValue(CHECKPOINTING_ENABLED, false);
