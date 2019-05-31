@@ -184,8 +184,7 @@ public class SourceStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      IParallelOperation op = outOpArray[i];
-      op.progress();
+      outOpArray[i].progress();
     }
 
     return true;

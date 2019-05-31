@@ -279,8 +279,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   public boolean progressCommunication() {
     boolean allDone = true;
     for (int i = 0; i < outOpArray.length; i++) {
-      IParallelOperation op = outOpArray[i];
-      if (op.progress()) {
+      if (outOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -291,8 +290,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   public boolean isComplete() {
     boolean complete = true;
     for (int i = 0; i < outOpArray.length; i++) {
-      IParallelOperation op = outOpArray[i];
-      if (!op.isComplete()) {
+      if (!outOpArray[i].isComplete()) {
         complete = false;
       }
     }

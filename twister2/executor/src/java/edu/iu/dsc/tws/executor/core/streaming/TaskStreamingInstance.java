@@ -236,13 +236,11 @@ public class TaskStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      IParallelOperation op = outOpArray[i];
-      op.progress();
+      outOpArray[i].progress();
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      IParallelOperation op = intOpArray[i];
-      op.progress();
+      intOpArray[i].progress();
     }
 
     return true;
