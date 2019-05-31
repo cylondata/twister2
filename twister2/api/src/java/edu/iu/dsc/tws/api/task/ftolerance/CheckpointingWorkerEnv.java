@@ -34,6 +34,7 @@ public final class CheckpointingWorkerEnv {
   private static final Logger LOG = Logger.getLogger(CheckpointingWorkerEnv.class.getName());
 
   private static final String WORKER_CHECKPOINT_FAMILY = "worker";
+  private static final String WORKER_CHECKPOINT_DIR = "twister2-checkpoints";
 
   private final int workerId;
   private long latestVersion;
@@ -107,7 +108,7 @@ public final class CheckpointingWorkerEnv {
 
       StateStore localCheckpointStore = CheckpointUtils.getStateStore(config);
       // one snapshot store for worker. Each node may have snapshots of multiple  workers
-      localCheckpointStore.init(config, config.getStringValue(JOB_NAME),
+      localCheckpointStore.init(config, WORKER_CHECKPOINT_DIR, config.getStringValue(JOB_NAME),
           Integer.toString(workerId));
 
       Set<Integer> workerIDs = Collections.emptySet();
