@@ -105,6 +105,16 @@ public class SourceStreamingInstance implements INodeInstance {
   private Map<String, String> outEdges;
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
@@ -132,6 +142,19 @@ public class SourceStreamingInstance implements INodeInstance {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId,
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outStreamingParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outEdges.size()];
+    index = 0;
+    for (String e : outEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
   }
 
   /**
@@ -160,8 +183,9 @@ public class SourceStreamingInstance implements INodeInstance {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < outOpArray.length; i++) {
+      IParallelOperation op = outOpArray[i];
+      op.progress();
     }
 
     return true;

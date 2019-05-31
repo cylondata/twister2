@@ -124,6 +124,26 @@ public class TaskStreamingInstance implements INodeInstance {
    */
   protected Map<String, String> inputEdges;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int taskId, int globalTaskId, int tIndex,
@@ -152,6 +172,32 @@ public class TaskStreamingInstance implements INodeInstance {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outputEdges.size()];
+    index = 0;
+    for (String e : outputEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[inParOps.size()];
+    index = 0;
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inputEdges.size()];
+    index = 0;
+    for (String e : inputEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -189,12 +235,14 @@ public class TaskStreamingInstance implements INodeInstance {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < outOpArray.length; i++) {
+      IParallelOperation op = outOpArray[i];
+      op.progress();
     }
 
-    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < intOpArray.length; i++) {
+      IParallelOperation op = intOpArray[i];
+      op.progress();
     }
 
     return true;
