@@ -31,10 +31,14 @@ import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.count.WatermarkCountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.WatermarkDurationEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.count.WatermarkCountWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.WatermarkDurationWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 import edu.iu.dsc.tws.task.api.window.util.WindowParameter;
 import edu.iu.dsc.tws.task.api.window.util.WindowUtils;
@@ -82,6 +86,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     super.prepare(cfg, ctx);
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
+
     initialize();
   }
 
@@ -115,13 +120,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
             watermarkInt, allowedLtns);
       }
-
-      IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
-      this.evictionPolicy = windowStrategy.getEvictionPolicy();
-      this.windowingPolicy = windowStrategy.getWindowingPolicy(this.windowManager,
-          this.evictionPolicy);
-      this.windowManager.setEvictionPolicy(this.evictionPolicy);
-      this.windowManager.setWindowingPolicy(this.windowingPolicy);
+      setPolicies(this.iWindow.getWindowStrategy());
       start();
     } catch (InvalidWindow invalidWindow) {
       invalidWindow.printStackTrace();
@@ -232,6 +231,46 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       return new DurationEvictionPolicy<>(windowLengthDuration.value);
     }
   }
+
+  public void setPolicies(IWindowStrategy<T> windowStrategy) {
+    // Setting Eviction Policies
+    IEvictionPolicy<T> eviPolicy = windowStrategy.getEvictionPolicy();
+    if (isTimestamped()) {
+      if (eviPolicy instanceof CountEvictionPolicy) {
+        LOG.info(String.format("WatermarkCountEvictionPolicy selected"));
+        this.evictionPolicy = new WatermarkCountEvictionPolicy(this.windowParameter
+            .getWindowCountSize().value);
+      }
+      if (eviPolicy instanceof DurationEvictionPolicy) {
+        LOG.info(String.format("WatermarkDurationEvictionPolicy selected"));
+        this.evictionPolicy = new WatermarkDurationEvictionPolicy(this.windowParameter
+            .getWindowDurationSize().value, this.allowedLateness.value);
+      }
+    } else {
+      this.evictionPolicy = eviPolicy;
+    }
+
+    // Setting Windowing Policies
+    IWindowingPolicy<T> winPolicy = windowStrategy
+        .getWindowingPolicy(this.windowManager, this.evictionPolicy);
+    if (isTimestamped()) {
+      if (winPolicy instanceof CountWindowPolicy) {
+        this.windowingPolicy = new WatermarkCountWindowPolicy(this.windowParameter
+            .getSlidingCountSize().value, this.windowManager, this.evictionPolicy,
+            this.windowManager);
+      }
+      if (winPolicy instanceof DurationWindowPolicy) {
+        this.windowingPolicy = new WatermarkDurationWindowPolicy(this.windowParameter
+            .getSldingDurationSize().value, this.windowManager, this.windowManager,
+            this.evictionPolicy);
+      }
+    } else {
+      this.windowingPolicy = winPolicy;
+    }
+    this.windowManager.setEvictionPolicy(this.evictionPolicy);
+    this.windowManager.setWindowingPolicy(this.windowingPolicy);
+  }
+
 
   public void start() {
     if (watermarkEventGenerator != null) {

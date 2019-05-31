@@ -19,9 +19,8 @@ import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
-public class WatermarkCountTriggerPolicy<T> implements IWindowingPolicy<T> {
+public class WatermarkCountWindowPolicy<T> extends CountWindowPolicy<T> {
 
   private final long count;
   private final AtomicInteger currentCount;
@@ -31,9 +30,10 @@ public class WatermarkCountTriggerPolicy<T> implements IWindowingPolicy<T> {
   private boolean started;
   private long lastProcessedTimestamp = 0;
 
-  public WatermarkCountTriggerPolicy(long count, IManager manager,
-                                     IEvictionPolicy<T> evictionPolicy,
-                                     WindowManager<T> winManager) {
+  public WatermarkCountWindowPolicy(long count, IManager manager,
+                                    IEvictionPolicy<T> evictionPolicy,
+                                    WindowManager<T> winManager) {
+    super(count, manager, evictionPolicy);
     this.count = count;
     this.manager = manager;
     this.windowManager = winManager;

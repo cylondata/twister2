@@ -28,7 +28,7 @@ public class DurationEvictionPolicy<T> implements IEvictionPolicy<T> {
 
   private final long windowLength;
 
-  private IEvictionContext evictionContext;
+  protected IEvictionContext evictionContext;
 
 
   public DurationEvictionPolicy(long winLength) {

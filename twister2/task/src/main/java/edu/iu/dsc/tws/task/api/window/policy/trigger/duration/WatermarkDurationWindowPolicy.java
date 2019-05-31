@@ -19,11 +19,10 @@ import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 
-public class WatermarkDurationPolicy<T> implements IWindowingPolicy<T> {
+public class WatermarkDurationWindowPolicy<T> extends DurationWindowPolicy<T> {
 
-  private static final Logger LOG = Logger.getLogger(WatermarkDurationPolicy.class.getName());
+  private static final Logger LOG = Logger.getLogger(WatermarkDurationWindowPolicy.class.getName());
   private final long slidingInterval;
   private final IManager manager;
   private final WindowManager<T> windowManager;
@@ -31,9 +30,10 @@ public class WatermarkDurationPolicy<T> implements IWindowingPolicy<T> {
   private boolean started;
   private long nextWindowEndTime = 0;
 
-  public WatermarkDurationPolicy(long slidingInterval, IManager manager,
-                                 WindowManager<T> windowManager,
-                                 IEvictionPolicy<T> evictionPolicy) {
+  public WatermarkDurationWindowPolicy(long slidingInterval, IManager manager,
+                                       WindowManager<T> windowManager,
+                                       IEvictionPolicy<T> evictionPolicy) {
+    super(slidingInterval, manager, evictionPolicy);
     this.slidingInterval = slidingInterval;
     this.manager = manager;
     this.windowManager = windowManager;

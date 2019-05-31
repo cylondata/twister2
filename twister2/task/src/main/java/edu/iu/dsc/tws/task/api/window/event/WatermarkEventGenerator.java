@@ -33,7 +33,7 @@ public class WatermarkEventGenerator<T> implements Runnable {
   private final long interval;
   private ScheduledFuture<?> executorFuture;
   private volatile long lastWatermarkTime;
-  private long currentProcessedMessageTime = 0;
+  private volatile long currentProcessedMessageTime = 0;
 
   public WatermarkEventGenerator(WindowManager<T> winManager, long eventLagTime, long interval) {
     this.windowManager = winManager;

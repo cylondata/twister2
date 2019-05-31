@@ -129,7 +129,8 @@ public class WindowManager<T> implements IManager<T> {
           + "events in the window : %d", events.size()));
       IWindowMessage<T> ievents = bundleWindowIMessage(events);
       IWindowMessage<T> inewEvents = bundleWindowIMessage(newEvents);
-      IWindowMessage<T> iexpired = bundleWindowIMessage(null);
+      //TODO : handle expired events
+      IWindowMessage<T> iexpired = null;
       windowLifeCycleListener.onActivation(ievents, inewEvents, iexpired);
     } else {
       LOG.log(Level.FINE,
