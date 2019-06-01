@@ -136,7 +136,8 @@ public class STWindowExample extends BenchTaskWorker {
      * windowMessage contains [expired-tuples, current-tuples]
      */
     @Override
-    public boolean execute(IWindowMessage<int[]> windowMessage) {
+    public boolean execute(IWindowMessage<int[]> windowMessage,
+                           IWindowMessage<int[]> lateMessages) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
       return true;
     }

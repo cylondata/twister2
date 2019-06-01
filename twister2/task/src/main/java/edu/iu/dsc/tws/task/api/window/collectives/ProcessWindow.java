@@ -25,7 +25,7 @@ public abstract class ProcessWindow<T> extends BaseWindowedSink<T> {
   }
 
   @Override
-  public boolean execute(IWindowMessage<T> windowMessage) {
+  public boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages) {
     IWindowMessage<T> newMessage = this.processWindowedFunction.process(windowMessage);
     process(newMessage);
     return true;

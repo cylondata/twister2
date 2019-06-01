@@ -27,7 +27,7 @@ public abstract class FoldWindow<T, K> extends BaseWindowedSink<T> {
   }
 
   @Override
-  public boolean execute(IWindowMessage<T> windowMessage) {
+  public boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages) {
     if (windowMessage != null) {
       T current = null;
       K output = null;

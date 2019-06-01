@@ -27,7 +27,7 @@ public abstract class ReduceWindow<T> extends BaseWindowedSink<T> {
   }
 
   @Override
-  public boolean execute(IWindowMessage<T> windowMessage) {
+  public boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages) {
     if (windowMessage != null) {
       T current = null;
       for (IMessage<T> msg : windowMessage.getWindow()) {

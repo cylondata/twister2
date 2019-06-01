@@ -137,10 +137,6 @@ public class WindowManager<T> implements IManager<T> {
           String.format("No events processed for the window, onActivation method is not called"));
     }
 
-//    if (!windowEvents.isEmpty()) {
-//      IWindowMessage<T> iWindowMessage = bundleWindowMessage(windowEvents);
-//      this.windowLifeCycleListener.onActivation(iWindowMessage, null, null);
-//    }
     this.windowingPolicy.reset();
 
     return !events.isEmpty();
@@ -168,7 +164,6 @@ public class WindowManager<T> implements IManager<T> {
     } finally {
       lock.unlock();
     }
-
     return eventsToProcess;
   }
 

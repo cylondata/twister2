@@ -63,14 +63,15 @@ public class WatermarkEventGenerator<T> implements Runnable {
         lastWatermarkTime = watermarkTime;
       }
     } catch (Throwable throwable) {
-      LOG.severe(String.format("Failure occured in watermarked event %s ", throwable.getMessage()));
+      LOG.severe(String.format("Failure occurred in the watermarked event %s ",
+          throwable.getMessage()));
     }
   }
 
   public boolean track(long time) {
     Long currentValue = currentProcessedMessageTime;
     if (currentValue == 0 || time > currentValue) {
-      currentProcessedMessageTime = currentValue;
+      currentProcessedMessageTime = time;
     }
     checkFailures();
     return time >= lastWatermarkTime;

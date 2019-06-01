@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.core;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +49,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract boolean execute(IWindowMessage<T> windowMessage);
+  public abstract boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages);
 
   private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
 
@@ -118,7 +119,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         }
 
         watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
-            watermarkInt, allowedLtns);
+            allowedLtns, watermarkInt);
       }
       setPolicies(this.iWindow.getWindowStrategy());
       start();
@@ -136,6 +137,8 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       } else {
         // TODO : handle the late tuple stream a delayed message won't be handled unless a
         //  late stream
+        // TODO : Here another latemessage function can be called or we can bundle the late messages
+        //  with the next windowing message
       }
     } else {
       this.windowManager.add(message);
@@ -207,7 +210,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
         collectiveEvents = events;
-        execute(events);
+        execute(events, null);
       }
     };
   }
@@ -255,11 +258,13 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         .getWindowingPolicy(this.windowManager, this.evictionPolicy);
     if (isTimestamped()) {
       if (winPolicy instanceof CountWindowPolicy) {
+        LOG.info(String.format("WatermarkCountWindowingPolicy selected"));
         this.windowingPolicy = new WatermarkCountWindowPolicy(this.windowParameter
             .getSlidingCountSize().value, this.windowManager, this.evictionPolicy,
             this.windowManager);
       }
       if (winPolicy instanceof DurationWindowPolicy) {
+        LOG.info(String.format("WatermarkDurationWindowingPolicy selected"));
         this.windowingPolicy = new WatermarkDurationWindowPolicy(this.windowParameter
             .getSldingDurationSize().value, this.windowManager, this.windowManager,
             this.evictionPolicy);
@@ -296,5 +301,16 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private boolean isTimestamped() {
     return iTimestampExtractor != null;
+  }
+
+  private static class WindowedLateOutputCollector<T> {
+    private final List<IMessage<T>> messageList;
+    private IWindowMessage<T> iWindowMessage = null;
+
+    WindowedLateOutputCollector(List<IMessage<T>> list) {
+      messageList =  list;
+    }
+
+
   }
 }
