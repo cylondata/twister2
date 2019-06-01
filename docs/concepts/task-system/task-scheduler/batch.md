@@ -31,21 +31,20 @@ the available workers as given below:
 ```text
 **Schedule Batches**
 
-1st batch --> Source
+1st batch --> Task 1 (Source)
 2nd batch --> Task 2
 3rd batch --> Task 3 & Task 4
-4th batch --> Target
+4th batch --> Task 5 (Target)
 ```
 
 For example, if there are 2 containers and 4 batches of tasks \(dependency tasks\) with a task 
-parallelism value of 2, task instance 0 of 1st task \(Task 1\) will go to container 0 and task 
-instance 1 of 1st task will go to container 1, task instance 0 of 2nd task \(Task 2\) will go to 
-container 0 and task instance 1 of 2nd task will go to container 1, whereas task instance 0 of 3rd 
-task \(Task 3\) will go to container 0 and task instance 0 of 4th task\(Task 4\) will go to container 
-0 and task instance 1 of 3rd task \(Task 3\) will go to container 1 and task instance 2 of 
-4th task \(Task 4\) will go to container 1. Finally, task instance 0 of 4th task will go to 
-container 0 and task instance 1 of 4th task will go to container 1. At a time, a batch of task\(s\) 
-\(either single task or multiple tasks\) takes part in the execution.
+parallelism value of 2, in the first batch, task instance 0 of 1st task \(Task 1\) will go to 
+container 0 and task instance 1 of 1st task will go to container 1. In the second batch, task instance 
+0 of 2nd task will go to container 0 and task instance 1 of 2nd will go to container 1. In the third 
+batch, task instance 0 of 3rd task will go to container 0, task instance 1 of 3rd task will go to 
+container 1, task instance 0 of 4th task will go to container 0 and task instance 1 of 4th task will 
+go to container 1. In the fourth batch, task instance 0 of 5th task will go to container 0, task 
+instance 1 of 5th task will go to container 1.  
 
 It generates the task schedule plan which consists of multiple containers \(container plan\) and the 
 allocation of task instances \(task instance plan\) on those containers. The size of the container 

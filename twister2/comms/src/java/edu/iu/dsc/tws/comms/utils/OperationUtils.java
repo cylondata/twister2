@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,5 +85,18 @@ public final class OperationUtils {
       mainReceives.add(key);
     }
     return integerMapMap;
+  }
+
+  public static void shuffleArray(Random random, int[] array) {
+    int count = array.length;
+    for (int i = count; i > 1; i--) {
+      swap(array, i - 1, random.nextInt(i));
+    }
+  }
+
+  public static void swap(int[] array, int i, int j) {
+    int temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
   }
 }

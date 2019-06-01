@@ -107,6 +107,16 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   private Set<String> syncReceived = new HashSet<>();
   private TaskContextImpl context;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int taskId, int globalTaskId,
                            int tIndex, int parallel, int wId,
@@ -138,6 +148,19 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
         parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
     batchTask.prepare(cfg, context);
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[batchInParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inputEdges.size()];
+    index = 0;
+    for (String e : inputEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
   }
 
   public boolean execute() {
@@ -196,8 +219,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    */
   public boolean progressCommunication() {
     boolean allDone = true;
-    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
-      if (e.getValue().progress()) {
+    for (int i = 0; i < intOpArray.length; i++) {
+      if (intOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -207,8 +230,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   @Override
   public boolean isComplete() {
     boolean complete = true;
-    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < intOpArray.length; i++) {
+      if (!intOpArray[i].isComplete()) {
         complete = false;
       }
     }
