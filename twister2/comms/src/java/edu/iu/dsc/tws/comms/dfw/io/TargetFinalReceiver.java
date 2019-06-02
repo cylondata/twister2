@@ -45,6 +45,8 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
    */
   protected boolean stateCleared = false;
 
+  protected int[] thisDestinationsArray;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -56,8 +58,11 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       targetStates.put(target, ReceiverState.INIT);
     }
 
+    int index = 0;
+    thisDestinationsArray = new int[thisDestinations.size()];
     for (int target : thisDestinations) {
       messages.put(target, new LinkedBlockingQueue<>());
+      thisDestinationsArray[index++] = target;
     }
   }
 
@@ -110,7 +115,8 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   @Override
   protected boolean sync() {
     boolean allSynced = true;
-    for (int target : thisDestinations) {
+    for (int i = 0; i < thisDestinationsArray.length; i++) {
+      int target = thisDestinationsArray[i];
       // if we have synced no need to go forward
       if (targetStates.get(target) == ReceiverState.INIT
           || targetStates.get(target) == ReceiverState.SYNCED) {
