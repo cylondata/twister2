@@ -49,7 +49,9 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages);
+  public abstract boolean execute(IWindowMessage<T> windowMessage);
+
+  public abstract boolean getLateMessages(IMessage<T> lateMessages);
 
   private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
 
@@ -139,6 +141,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         //  late stream
         // TODO : Here another latemessage function can be called or we can bundle the late messages
         //  with the next windowing message
+        getLateMessages(message);
       }
     } else {
       this.windowManager.add(message);
@@ -210,7 +213,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
         collectiveEvents = events;
-        execute(events, null);
+        execute(events);
       }
     };
   }

@@ -68,8 +68,7 @@ public class STWindowMPI extends BenchTaskWorker {
      * windowMessage contains [expired-tuples, current-tuples]
      */
     @Override
-    public boolean execute(IWindowMessage<int[]> windowMessage,
-                           IWindowMessage<int[]> lateMessages) {
+    public boolean execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
 
 
@@ -103,5 +102,9 @@ public class STWindowMPI extends BenchTaskWorker {
       return true;
     }
 
+    @Override
+    public boolean getLateMessages(IMessage<int[]> lateMessages) {
+      return true;
+    }
   }
 }

@@ -136,12 +136,17 @@ public class STWindowExample extends BenchTaskWorker {
      * windowMessage contains [expired-tuples, current-tuples]
      */
     @Override
-    public boolean execute(IWindowMessage<int[]> windowMessage,
-                           IWindowMessage<int[]> lateMessages) {
+    public boolean execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
       return true;
     }
 
+    @Override
+    public boolean getLateMessages(IMessage<int[]> lateMessage) {
+      LOG.info(String.format("Late Message : %s",
+          lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
+      return true;
+    }
   }
 
   protected static class DirectReduceWindowedTask extends ReduceWindow<int[]> {
@@ -156,6 +161,12 @@ public class STWindowExample extends BenchTaskWorker {
       LOG.info("Window Reduced Value : " + Arrays.toString(content));
       return true;
     }
+
+    @Override
+    public boolean reduceLateMessage(int[] content) {
+      LOG.info(String.format("Late Reduced Message : %s", Arrays.toString(content)));
+      return false;
+    }
   }
 
   protected static class DirectAggregateWindowedTask extends AggregateWindow<int[]> {
@@ -167,6 +178,12 @@ public class STWindowExample extends BenchTaskWorker {
     @Override
     public boolean aggregate(int[] message) {
       LOG.info("Window Aggregate Value : " + Arrays.toString(message));
+      return true;
+    }
+
+    @Override
+    public boolean aggregateLateMessages(int[] message) {
+      LOG.info(String.format("Late Aggregate Message : %s", Arrays.toString(message)));
       return true;
     }
   }
@@ -181,6 +198,12 @@ public class STWindowExample extends BenchTaskWorker {
     public boolean fold(String content) {
       LOG.info("Window Fold Value : " + content);
       return true;
+    }
+
+    @Override
+    public boolean foldLateMessage(String lateMessage) {
+      LOG.info(String.format("Late Aggregate Message : %s", lateMessage));
+      return false;
     }
   }
 
@@ -198,6 +221,13 @@ public class STWindowExample extends BenchTaskWorker {
       }
       return true;
     }
+
+    @Override
+    public boolean processLateMessages(IMessage<int[]> lateMessage) {
+      LOG.info(String.format("Late Message : %s",
+          lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
+      return true;
+    }
   }
 
 
@@ -210,6 +240,14 @@ public class STWindowExample extends BenchTaskWorker {
         ans[i] = object1[i] + object2[i];
       }
       return ans;
+    }
+
+    @Override
+    public int[] reduceLateMessage(int[] lateMessage) {
+      for (int i = 0; i < lateMessage.length; i++) {
+        lateMessage[i] = lateMessage[i] * 2;
+      }
+      return lateMessage;
     }
   }
 
@@ -276,8 +314,22 @@ public class STWindowExample extends BenchTaskWorker {
     }
 
     @Override
+    public IMessage<int[]> processLateMessage(IMessage<int[]> lateMessage) {
+      int[] res = lateMessage.getContent();
+      if (res != null) {
+        for (int i = 0; i < res.length; i++) {
+          res[i] = res[i] * 2;
+        }
+      }
+      return new TaskMessage<>(res);
+    }
+
+    @Override
     public int[] onMessage(int[] object1, int[] object2) {
-      return new int[0];
+      if (object1 != null && object2 != null) {
+        return add(object1, object2);
+      }
+      return null;
     }
 
     private int[] add(int[] a1, int[] a2) {

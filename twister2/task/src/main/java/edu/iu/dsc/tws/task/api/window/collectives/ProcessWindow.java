@@ -11,12 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.collectives;
 
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.api.window.function.ProcessWindowedFunction;
 
 public abstract class ProcessWindow<T> extends BaseWindowedSink<T> {
   public abstract boolean process(IWindowMessage<T> windowMessage);
+
+  public abstract boolean processLateMessages(IMessage<T> lateMessage);
 
   private ProcessWindowedFunction<T> processWindowedFunction;
 
@@ -25,9 +28,14 @@ public abstract class ProcessWindow<T> extends BaseWindowedSink<T> {
   }
 
   @Override
-  public boolean execute(IWindowMessage<T> windowMessage, IWindowMessage<T> lateMessages) {
+  public boolean execute(IWindowMessage<T> windowMessage) {
     IWindowMessage<T> newMessage = this.processWindowedFunction.process(windowMessage);
     process(newMessage);
     return true;
+  }
+
+  @Override
+  public boolean getLateMessages(IMessage<T> lateMessages) {
+    return processLateMessages(this.processWindowedFunction.processLateMessage(lateMessages));
   }
 }

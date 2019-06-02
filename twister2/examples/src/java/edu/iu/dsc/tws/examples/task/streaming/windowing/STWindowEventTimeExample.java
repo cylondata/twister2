@@ -132,12 +132,17 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
      * windowMessage contains [expired-tuples, current-tuples]
      */
     @Override
-    public boolean execute(IWindowMessage<int[]> windowMessage,
-                           IWindowMessage<int[]> lateMessages) {
+    public boolean execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
       return true;
     }
 
+    @Override
+    public boolean getLateMessages(IMessage<int[]> lateMessages) {
+      LOG.info(String.format("Late Message : %s",
+          lateMessages.getContent() != null ? Arrays.toString(lateMessages.getContent()) : "null"));
+      return true;
+    }
   }
 
   protected static class DirectReduceWindowedTask extends ReduceWindow<int[]> {
@@ -152,6 +157,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
       LOG.info("Window Reduced Value : " + Arrays.toString(content));
       return true;
     }
+
+    @Override
+    public boolean reduceLateMessage(int[] content) {
+      return false;
+    }
   }
 
   protected static class DirectAggregateWindowedTask extends AggregateWindow<int[]> {
@@ -165,6 +175,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
       LOG.info("Window Aggregate Value : " + Arrays.toString(message));
       return true;
     }
+
+    @Override
+    public boolean aggregateLateMessages(int[] message) {
+      return false;
+    }
   }
 
   protected static class DirectFoldWindowedTask extends FoldWindow<int[], String> {
@@ -177,6 +192,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
     public boolean fold(String content) {
       LOG.info("Window Fold Value : " + content);
       return true;
+    }
+
+    @Override
+    public boolean foldLateMessage(String lateMessage) {
+      return false;
     }
   }
 
@@ -194,6 +214,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
       }
       return true;
     }
+
+    @Override
+    public boolean processLateMessages(IMessage<IntData> lateMessage) {
+      return false;
+    }
   }
 
 
@@ -206,6 +231,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         ans[i] = object1[i] + object2[i];
       }
       return ans;
+    }
+
+    @Override
+    public int[] reduceLateMessage(int[] lateMessage) {
+      return new int[0];
     }
   }
 
@@ -268,6 +298,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
       }
       WindowMessageImpl<IntData> windowMessage1 = new WindowMessageImpl<>(messages);
       return windowMessage1;
+    }
+
+    @Override
+    public IMessage<IntData> processLateMessage(IMessage<IntData> lateMessage) {
+      return null;
     }
 
     @Override
