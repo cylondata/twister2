@@ -145,8 +145,7 @@ public class SinkStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      IParallelOperation op = intOpArray[i];
-      op.progress();
+      intOpArray[i].progress();
     }
 
     return true;

@@ -220,8 +220,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   public boolean progressCommunication() {
     boolean allDone = true;
     for (int i = 0; i < intOpArray.length; i++) {
-      IParallelOperation op = intOpArray[i];
-      if (op.progress()) {
+      if (intOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -232,8 +231,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   public boolean isComplete() {
     boolean complete = true;
     for (int i = 0; i < intOpArray.length; i++) {
-      IParallelOperation op = intOpArray[i];
-      if (!op.isComplete()) {
+      if (!intOpArray[i].isComplete()) {
         complete = false;
       }
     }

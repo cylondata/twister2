@@ -306,8 +306,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public boolean progressCommunication(IParallelOperation[] ops) {
     boolean allDone = true;
     for (int i = 0; i < ops.length; i++) {
-      IParallelOperation op = ops[i];
-      if (op.progress()) {
+      if (ops[i].progress()) {
         allDone = false;
       }
     }
@@ -318,15 +317,13 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public boolean isComplete() {
     boolean complete = true;
     for (int i = 0; i < outOpArray.length; i++) {
-      IParallelOperation op = outOpArray[i];
-      if (op.progress()) {
+      if (outOpArray[i].progress()) {
         complete = false;
       }
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      IParallelOperation op = intOpArray[i];
-      if (!op.isComplete()) {
+      if (!intOpArray[i].isComplete()) {
         complete = false;
       }
     }
