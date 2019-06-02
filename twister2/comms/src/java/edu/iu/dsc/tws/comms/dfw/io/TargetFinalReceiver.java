@@ -23,6 +23,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public abstract class TargetFinalReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetFinalReceiver.class.getName());
   /**
@@ -33,12 +35,12 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   /**
    * Keep state about the targets
    */
-  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
+  protected Int2ObjectOpenHashMap<ReceiverState> targetStates = new Int2ObjectOpenHashMap<>();
 
   /**
    * The barriers for each target
    */
-  protected Map<Integer, byte[]> barriers = new HashMap<>();
+  protected Int2ObjectOpenHashMap<byte[]> barriers = new Int2ObjectOpenHashMap<>();
 
   /**
    * State is cleared
