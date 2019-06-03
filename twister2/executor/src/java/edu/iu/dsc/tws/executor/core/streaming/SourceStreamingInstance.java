@@ -135,6 +135,7 @@ public class SourceStreamingInstance implements INodeInstance {
   private int barrierMessagesSent = 0;
   private Queue<Snapshot> snapshotQueue = new LinkedList<>();
   private long executions = 0;
+  private long checkPointingFrequency = 1000;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
@@ -163,6 +164,7 @@ public class SourceStreamingInstance implements INodeInstance {
     this.snapshot = new SnapshotImpl();
     this.checkpointable = this.streamingTask instanceof CheckpointableTask
         && CheckpointingConfigurations.isCheckpointingEnabled(config);
+    this.checkPointingFrequency = CheckpointingConfigurations.getCheckPointingFrequency(config);
   }
 
   public void prepare(Config cfg) {
@@ -193,7 +195,7 @@ public class SourceStreamingInstance implements INodeInstance {
       // lets execute the task
       streamingTask.execute();
 
-      if (this.checkpointable && executions++ % 1000 == 0) {
+      if (this.checkpointable && executions++ % this.checkPointingFrequency == 0) {
         TaskCheckpointUtils.checkpoint(
             checkpointVersion++,
             (CheckpointableTask) this.streamingTask,
