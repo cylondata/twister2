@@ -253,7 +253,6 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     if (batchTask instanceof Closable) {
       ((Closable) batchTask).refresh();
     }
-    LOG.info("Task reset");
     taskContext.reset();
     state = new InstanceState(InstanceState.INIT);
   }
