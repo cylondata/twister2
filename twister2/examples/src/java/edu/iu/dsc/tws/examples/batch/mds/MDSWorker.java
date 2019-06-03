@@ -63,9 +63,6 @@ public class MDSWorker extends TaskWorker {
     String directory = mdsWorkerParameters.getDatapointDirectory();
     String byteType = mdsWorkerParameters.getByteType();
 
-    LOG.info("Data Points to be generated or read" + dataInput + "\t" + directory
-        + "\t" + byteType + "\t" + configFile);
-
     /* Generate the Matrix for the MDS **/
     if (Context.TWISTER2_DATA_INPUT.equalsIgnoreCase(dataInput)) {
       MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
@@ -74,7 +71,7 @@ public class MDSWorker extends TaskWorker {
 
     /** Task Graph to partition the generated matrix for MDS **/
     MDSDataObjectSource mdsDataObjectSource = new MDSDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        directory, matrixRowLength);
+        directory, matrixRowLength, matrixColumLength);
     MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink(matrixColumLength);
 
     TaskGraphBuilder dataObjectGraphBuilder = TaskGraphBuilder.newBuilder(config);

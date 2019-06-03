@@ -39,9 +39,7 @@ public class MDSDataObjectSource extends BaseSource {
    * DataSource to partition the datapoints
    */
   private DataSource<?, ?> source;
-
   private DataSink<String> sink;
-
   private InputPartitioner inputPartitioner;
 
   /**
@@ -49,20 +47,32 @@ public class MDSDataObjectSource extends BaseSource {
    */
   private String edgeName;
   private String dataDirectory;
-  private int dataSize;
+  private int matrixRowLength;
 
-  public MDSDataObjectSource(String edgename, String dataDirectory, int size) {
+  public int getMatrixRowLength() {
+    return matrixRowLength;
+  }
+
+  public void setMatrixRowLength(int matrixRowLength) {
+    this.matrixRowLength = matrixRowLength;
+  }
+
+  public int getMatrixColumnLength() {
+    return matrixColumnLength;
+  }
+
+  public void setMatrixColumnLength(int matrixColumnLength) {
+    this.matrixColumnLength = matrixColumnLength;
+  }
+
+  private int matrixColumnLength;
+
+  public MDSDataObjectSource(String edgename, String dataDirectory, int matrixRowLength,
+                             int matrixColumnLength) {
     setEdgeName(edgename);
     setDataDirectory(dataDirectory);
-    setDataSize(size);
-  }
-
-  private int getDataSize() {
-    return dataSize;
-  }
-
-  private void setDataSize(int dataSize) {
-    this.dataSize = dataSize;
+    setMatrixRowLength(matrixRowLength);
+    setMatrixColumnLength(matrixColumnLength);
   }
 
   private String getDataDirectory() {
@@ -94,8 +104,8 @@ public class MDSDataObjectSource extends BaseSource {
   @Override
   public void execute() {
     Buffer buffer;
-    byte[] line = new byte[2000];
-    ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+    byte[] line = new byte[getMatrixRowLength() * getMatrixColumnLength()];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(getMatrixRowLength() * getMatrixColumnLength());
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     InputSplit inputSplit = source.getNextSplit(context.taskIndex());
     int count = 0;
@@ -107,7 +117,7 @@ public class MDSDataObjectSource extends BaseSource {
             byteBuffer.put(line);
             byteBuffer.flip();
             buffer = byteBuffer.asShortBuffer();
-            short[] shortArray = new short[getDataSize()];
+            short[] shortArray = new short[getMatrixRowLength() * getMatrixColumnLength()];
             ((ShortBuffer) buffer).get(shortArray);
 
             //For writing into the partition file
@@ -133,7 +143,7 @@ public class MDSDataObjectSource extends BaseSource {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
-        new Path(getDataDirectory()), getDataSize() * Short.BYTES));
+        new Path(getDataDirectory()), getMatrixRowLength() * Short.BYTES));
 
     //For writing into the partition file
     /*this.sink = new DataSink<>(cfg,
