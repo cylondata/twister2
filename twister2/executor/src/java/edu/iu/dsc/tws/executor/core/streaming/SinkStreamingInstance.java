@@ -209,8 +209,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     }
 
     if (this.checkpointable && this.streamingInQueue.isEmpty()) {
-      boolean executed = this.pendingCheckpoint.execute();
-      if (executed) {
+      long checkpointedBarrierId = this.pendingCheckpoint.execute();
+      if (checkpointedBarrierId != -1) {
         ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
       }
     }

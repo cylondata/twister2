@@ -85,9 +85,9 @@ public class PendingCheckpoint {
     this.currentBarrierId = -1;
   }
 
-  public boolean execute() {
+  public long execute() {
     if (!this.pending) {
-      return false;
+      return -1;
     }
 
     if (this.edgesOnCurrentBarrier.size() == this.noOfedges) {
@@ -102,12 +102,13 @@ public class PendingCheckpoint {
           this.globalTaskId,
           this.checkpointingClient
       );
+      long barrierId = this.currentBarrierId;
       this.reset();
-      return true;
+      return barrierId;
     } else {
       LOG.warning("Called checkpoint execute when barriers "
           + "are partially received from sources.");
     }
-    return false;
+    return -1;
   }
 }
