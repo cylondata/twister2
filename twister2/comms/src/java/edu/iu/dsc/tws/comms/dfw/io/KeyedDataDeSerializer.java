@@ -26,8 +26,8 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
-public class KeyedDeSerializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(KeyedDeSerializer.class.getName());
+public class KeyedDataDeSerializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(KeyedDataDeSerializer.class.getName());
 
   private DataPacker dataPacker;
 
@@ -37,8 +37,8 @@ public class KeyedDeSerializer implements MessageDeSerializer {
 
   private int workerId;
 
-  public KeyedDeSerializer(KryoSerializer kryoSerializer, int exec,
-                           MessageType keyType, MessageType dataType) {
+  public KeyedDataDeSerializer(KryoSerializer kryoSerializer, int exec,
+                               MessageType keyType, MessageType dataType) {
     this.dataPacker = dataType.getDataPacker();
     this.keyPacker = keyType.getDataPacker();
     this.keyType = keyType;

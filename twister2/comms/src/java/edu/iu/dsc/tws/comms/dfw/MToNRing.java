@@ -33,11 +33,11 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
@@ -277,10 +277,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), thisWorker,
+        serializerMap.put(s, new KeyedDataSerializer(new KryoSerializer(), thisWorker,
             keyType, dataType));
       } else {
-        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), thisWorker, dataType));
+        serializerMap.put(s, new DataSerializer(new KryoSerializer(), thisWorker, dataType));
       }
     }
 
@@ -294,10 +294,10 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDeSerializer(new KryoSerializer(),
+        deSerializerMap.put(ex, new KeyedDataDeSerializer(new KryoSerializer(),
             thisWorker, keyType, dataType));
       } else {
-        deSerializerMap.put(ex, new AKeyedDeserializer(thisWorker, dataType));
+        deSerializerMap.put(ex, new DataDeserializer(thisWorker, dataType));
       }
     }
     // create the delegate
