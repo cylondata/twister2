@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.ftolerance.master;
+package edu.iu.dsc.tws.checkpointing.master;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -21,10 +21,10 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
 public class CheckpointManager implements MessageHandler {

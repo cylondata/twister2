@@ -19,16 +19,15 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskEnvironment;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
-import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -123,9 +122,7 @@ public class CheckpointingTaskExample implements IWorker {
     }
 
     // first load the configurations from command line and config files
-    HashMap<String, Object> c = new HashMap<>();
-    c.put(Context.JOB_ID, "my-id");
-    Config config = ResourceAllocator.loadConfig(c);
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // lets put a configuration here
     JobConfig jobConfig = new JobConfig();

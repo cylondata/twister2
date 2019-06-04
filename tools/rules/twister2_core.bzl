@@ -92,14 +92,14 @@ def twister2_dashboard_files():
         "//dashboard/server:twister2-dash-server",
     ]
 
-def twister2_core_fault_tolerance_files():
+def twister2_core_checkpointing_files():
     return [
-        "//twister2/fault-tolerance/src/java:fault-tolerance-java",
+        "//twister2/checkpointing/src/java:checkpointing-java",
     ]
 
 def twister2_core_restarter_files():
     return [
-        "//twister2/fault-tolerance/src/java/edu/iu/dsc/tws/restarter:restarter-java",
+        "//twister2/checkpointing/src/java/edu/iu/dsc/tws/restarter:restarter-java",
     ]
 
 def twister2_storm_files():

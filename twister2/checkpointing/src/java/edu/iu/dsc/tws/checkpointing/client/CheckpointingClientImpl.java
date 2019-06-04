@@ -21,7 +21,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.ftolerance.client;
+package edu.iu.dsc.tws.checkpointing.client;
 
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
 /**
  * This client can be used to communicate with
- * {@link edu.iu.dsc.tws.ftolerance.master.CheckpointManager}
+ * {@link edu.iu.dsc.tws.checkpointing.master.CheckpointManager}
  */
 public final class CheckpointingClientImpl implements MessageHandler, CheckpointingClient {
 

@@ -41,8 +41,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ID;
 

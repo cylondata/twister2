@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.ftolerance.api;
+package edu.iu.dsc.tws.checkpointing.api;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;

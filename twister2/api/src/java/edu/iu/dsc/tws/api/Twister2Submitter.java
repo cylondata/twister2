@@ -15,12 +15,12 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;

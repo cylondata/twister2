@@ -10,7 +10,7 @@ t2_java_lib(
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
         "//twister2/proto:proto-java",
-        "//twister2/fault-tolerance/src/java:fault-tolerance-java",
+        "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/task/src/main/java:task-java",
         "@javax_ws_rs_javax_ws_rs_api//jar",
         "@com_google_protobuf_protobuf_java//jar",

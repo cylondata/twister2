@@ -9,10 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.ftolerance.task;
+package edu.iu.dsc.tws.checkpointing.task;
 
 
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 
 public interface CheckpointableTask {
 

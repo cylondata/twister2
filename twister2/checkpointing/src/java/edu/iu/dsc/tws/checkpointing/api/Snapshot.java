@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.ftolerance.api;
+package edu.iu.dsc.tws.checkpointing.api;
 
 import edu.iu.dsc.tws.comms.api.DataPacker;
 

@@ -9,15 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.ftolerance.util;
+package edu.iu.dsc.tws.checkpointing.util;
 
 import java.io.IOException;
 
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
-import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
 
 public final class CheckpointUtils {
 

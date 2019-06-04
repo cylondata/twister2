@@ -3,8 +3,8 @@ package(default_visibility = ["//visibility:public"])
 load("//tools:maven.bzl", "t2_java_lib")
 
 t2_java_lib(
-    name = "fault-tolerance-java",
-    srcs = glob(["**/ftolerance/**/*.java"]),
+    name = "checkpointing-java",
+    srcs = glob(["**/checkpointing/**/*.java"]),
     artifact_name = "Twister2 Fault Tolerance",
     deps = [
         "//twister2/common/src/java:common-java",

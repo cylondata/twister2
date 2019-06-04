@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -40,8 +42,6 @@ import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
