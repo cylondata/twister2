@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskEnvironment;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
 import edu.iu.dsc.tws.api.task.ftolerance.CheckpointingWorkerEnv;
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
@@ -43,7 +44,6 @@ import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 /**

@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ftolerance.CheckpointingTaskWorker;
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -25,7 +26,6 @@ import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 
 /**

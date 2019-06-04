@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -85,15 +83,15 @@ public class KeyedDeSerializer implements MessageDeSerializer {
 
       if (currentKeyLength == -1) {
         // we assume we can read the key length from here
-        Pair<Integer, Integer> keyLength = DataPackerProxy.getKeyLength(
-            keyType, buffer, currentLocation
-        );
-        remaining = remaining - keyLength.getRight();
-        currentLocation += keyLength.getRight();
+        int right = DataPackerProxy.getKeyLengthRight(keyType, buffer, currentLocation);
+        int left = DataPackerProxy.getKeyLengthLeft(keyType, buffer, currentLocation);
+
+        remaining = remaining - right;
+        currentLocation += right;
 
         // we have to set the current object length
-        currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
-        currentKeyLength = keyLength.getLeft();
+        currentObjectLength = currentObjectLength - left - right;
+        currentKeyLength = left;
 
         currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
 
@@ -166,17 +164,15 @@ public class KeyedDeSerializer implements MessageDeSerializer {
             currentLocation += Integer.BYTES;
 
             // we assume we can read the key length from here
-            Pair<Integer, Integer> keyLength = DataPackerProxy.getKeyLength(
-                keyType,
-                buffer,
-                currentLocation
-            );
-            remaining = remaining - keyLength.getRight();
-            currentLocation += keyLength.getRight();
+            int right = DataPackerProxy.getKeyLengthRight(keyType, buffer, currentLocation);
+            int left = DataPackerProxy.getKeyLengthLeft(keyType, buffer, currentLocation);
+
+            remaining = remaining - right;
+            currentLocation += right;
 
             // we have to set the current object length
-            currentObjectLength = currentObjectLength - keyLength.getLeft() - keyLength.getRight();
-            currentKeyLength = keyLength.getLeft();
+            currentObjectLength = currentObjectLength - left - right;
+            currentKeyLength = left;
 
             currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
 

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -28,14 +27,16 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 public abstract class TargetReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(TargetReceiver.class.getName());
 
   /**
    * Lets keep track of the messages, we need to keep track of the messages for each target
-   * and source, Map<target, map<source, Queue<messages>>
+   * and source, Map<target, Queue<messages>>
    */
-  protected Map<Integer, Queue<Object>> messages = new HashMap<>();
+  protected Int2ObjectOpenHashMap<Queue<Object>> messages = new Int2ObjectOpenHashMap<>();
 
   /**
    * The worker id this receiver is in
@@ -92,12 +93,34 @@ public abstract class TargetReceiver implements MessageReceiver {
    */
   protected SyncState syncState = SyncState.SYNC;
 
+  /**
+   * The message grouping size
+   */
+  protected long groupingSize = 100;
+
+  /**
+   * The targets
+   */
+  protected int[] targets;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getTaskPlan().getThisExecutor();
     operation = op;
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
+    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    if (highWaterMark - lowWaterMark <= groupingSize) {
+      groupingSize = highWaterMark - lowWaterMark - 1;
+      LOG.fine("Changing the grouping size to: " + groupingSize);
+    }
+
+    Set<Integer> tars = op.getTargets();
+    targets = new int[tars.size()];
+    int index = 0;
+    for (int t : tars) {
+      targets[index++] = t;
+    }
   }
 
   @Override
@@ -192,21 +215,28 @@ public abstract class TargetReceiver implements MessageReceiver {
     lock.lock();
     try {
       boolean allEmpty = true;
-      for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-        if (e.getValue().size() > 0) {
-          merge(e.getKey(), e.getValue());
+      for (int i = 0; i < targets.length; i++) {
+        int key = targets[i];
+        if (!messages.containsKey(key)) {
+          continue;
+        }
+
+        Queue<Object> val = messages.get(key);
+
+        if (val.size() > 0) {
+          merge(key, val);
         }
 
         // check weather we are ready to send and we have values to send
-        if (!isFilledToSend(e.getKey())) {
+        if (!isFilledToSend(key)) {
           continue;
         }
 
         // if we send this list successfully
-        if (!sendToTarget(representSource, e.getKey())) {
+        if (!sendToTarget(representSource, key)) {
           needsFurtherProgress = true;
         }
-        allEmpty &= e.getValue().isEmpty();
+        allEmpty &= val.isEmpty();
       }
 
       if (!allEmpty || !sync()) {
@@ -232,8 +262,9 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @return true if there is nothing to process
    */
   protected boolean isAllEmpty() {
-    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-      if (e.getValue().size() > 0) {
+    for (int i = 0; i < targets.length; i++) {
+      Queue<Object> queue = messages.get(targets[i]);
+      if (queue.size() > 0) {
         return false;
       }
     }
@@ -265,7 +296,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    *
    * @return true if we are filled enough to send
    */
-  protected abstract boolean isFilledToSend(Integer target);
+  protected abstract boolean isFilledToSend(int target);
 
   @Override
   public void onFinish(int source) {

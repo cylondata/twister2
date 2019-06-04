@@ -155,23 +155,28 @@ public final class JobUtils {
     return Paths.get(home, jobFileName + ".job").toAbsolutePath().toString();
   }
 
+  public static Config resolveJobId(Config config, String jobName) {
+    Config.Builder builder = Config.newBuilder().putAll(config);
+
+    String jobId = config.getStringValue(Context.JOB_ID);
+
+    if (jobId == null) {
+      jobId = String.format("%s-%s", jobName, UUID.randomUUID().toString());
+      builder.put(Context.JOB_ID, jobId);
+    }
+
+    LOG.severe("Job ID assigned : " + jobId);
+
+    return builder.build();
+  }
+
   /**
    * write the values from Job object to config object
    */
   public static Config updateConfigs(JobAPI.Job job, Config config) {
     Config.Builder builder = Config.newBuilder().putAll(config);
 
-    String jobId = System.getenv(Context.JOB_ID);
-
     builder.put(Context.JOB_NAME, job.getJobName());
-
-    if (jobId == null) {
-      jobId = config.getStringValue(Context.JOB_ID,
-          String.format("%s-%s", job.getJobName(), UUID.randomUUID().toString()));
-    }
-    builder.put(Context.JOB_ID, jobId);
-
-    LOG.severe("Job ID assigned : " + jobId);
 
     builder.put(SchedulerContext.WORKER_CLASS, job.getWorkerClassName());
     builder.put(Context.TWISTER2_WORKER_INSTANCES, job.getNumberOfWorkers());

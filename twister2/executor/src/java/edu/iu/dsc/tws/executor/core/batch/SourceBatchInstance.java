@@ -123,6 +123,16 @@ public class SourceBatchInstance implements INodeInstance, ISync {
    */
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int taskId,
                              int globalTaskId, int tIndex, int parallel,
@@ -152,6 +162,19 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     taskContext = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, batchTaskName,
         parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
     batchTask.prepare(cfg, taskContext);
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outBatchParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outputEdges.size()];
+    index = 0;
+    for (String e : outputEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
   }
 
   /**
@@ -172,7 +195,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
 
       // now check the context
       boolean isDone = true;
-      for (String e : outputEdges.keySet()) {
+      for (int i = 0; i < outEdgeArray.length; i++) {
+        String e = outEdgeArray[i];
         if (!taskContext.isDone(e)) {
           // we are done with execution
           isDone = false;
@@ -257,8 +281,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
    */
   public boolean progressCommunication() {
     boolean allDone = true;
-    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
-      if (e.getValue().progress()) {
+    for (int i = 0; i < outOpArray.length; i++) {
+      if (outOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -268,8 +292,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   @Override
   public boolean isComplete() {
     boolean complete = true;
-    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < outOpArray.length; i++) {
+      if (!outOpArray[i].isComplete()) {
         complete = false;
       }
     }

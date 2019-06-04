@@ -47,7 +47,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     SecondComputeTask secondComputeTask = new SecondComputeTask();
 
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
-    DataflowJobParameters dataflowJobParameters = new DataflowJobParameters().build(config);
+    DataflowJobParameters dataflowJobParameters = DataflowJobParameters.build(config);
 
     int parallel = dataflowJobParameters.getParallelismValue();
     int iter = dataflowJobParameters.getIterations();

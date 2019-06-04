@@ -10,17 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
@@ -28,6 +17,10 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.driver.IDriver;
@@ -37,10 +30,6 @@ import edu.iu.dsc.tws.common.net.tcp.StatusCode;
 import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
-import edu.iu.dsc.tws.ftolerance.master.CheckpointManager;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;

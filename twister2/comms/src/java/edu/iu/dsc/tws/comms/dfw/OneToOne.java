@@ -23,8 +23,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -106,6 +104,11 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sourceSet;
 
   /**
+   * Keep targets as a set to return
+   */
+  private Set<Integer> targetSet;
+
+  /**
    * The sources which are pending for finish
    */
   private Set<Integer> pendingFinishSources;
@@ -141,6 +144,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.type = t;
     this.sourceSet = new HashSet<>(sources);
+    this.targetSet = new HashSet<>(target);
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
     // the sources to targets mapping
@@ -173,10 +177,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   private void init() {
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
-        = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
@@ -381,7 +384,17 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
+  @Override
+  public MessageType getDataType() {
+    return type;
+  }
+
   public Set<Integer> getSources() {
     return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }

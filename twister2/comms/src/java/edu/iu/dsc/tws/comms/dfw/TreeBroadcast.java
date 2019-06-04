@@ -61,6 +61,11 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sourceSet;
 
   /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> targetSet;
+
+  /**
    * The sources which are pending for finish
    */
   private Set<Integer> pendingFinishSources;
@@ -86,7 +91,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private int executor;
   private int edge;
   private MessageType type;
-  private Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
+  private Map<Integer, ArrayBlockingQueue<OutMessage>>
       pendingSendMessagesPerSource = new HashMap<>();
   private Lock lock = new ReentrantLock();
 
@@ -110,6 +115,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -125,6 +131,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -235,8 +242,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         source, destinations, router.sendQueueIds()));
     thisSources = TaskPlanUtils.getTasksOfThisWorker(tPlan, sourceSet);
 
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource =
-        new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
@@ -244,9 +250,8 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-              DataFlowContext.sendPendingMax(cfg));
+      ArrayBlockingQueue<OutMessage> pendingSendMessages =
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (keyType == null) {
         serializerMap.put(s, new AKeyedSerializer());
@@ -263,9 +268,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<>(
-              capacity);
+      Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
@@ -395,8 +398,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
     }
 
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(src);
+    ArrayBlockingQueue<OutMessage> pendingSendMessages = pendingSendMessagesPerSource.get(src);
 
     // create a send message to keep track of the serialization at the initial stage
     // the sub-edge is 0
@@ -408,7 +410,8 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         currentMessage.getHeader().getEdge(),
         di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes(), type, null, delegate);
+        routingParameters.getExternalRoutes(), type, null, delegate,
+        DataFlowContext.EMPTY_OBJECT);
     sendMessage.getChannelMessages().offer(currentMessage);
 
     // we need to update here
@@ -420,8 +423,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
 
     // now try to put this into pending
-    return pendingSendMessages.offer(
-        new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
+    return pendingSendMessages.offer(sendMessage);
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {
@@ -465,6 +467,16 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }
 

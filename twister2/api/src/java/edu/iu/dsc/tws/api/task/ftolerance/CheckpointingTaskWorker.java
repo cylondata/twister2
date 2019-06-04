@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.ftolerance.api.Snapshot;
-import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ID;
 

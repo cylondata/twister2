@@ -21,6 +21,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
@@ -31,7 +32,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.worker.JobListener;
-import edu.iu.dsc.tws.ftolerance.client.CheckpointingClientImpl;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;

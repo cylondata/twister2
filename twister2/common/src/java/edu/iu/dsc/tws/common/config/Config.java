@@ -20,6 +20,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+
 /**
  * Config is an Immutable Map of &lt;String, Object&gt; The get/set API that uses Key objects
  * should be favored over Strings. Usage of the String API should be refactored out.
@@ -278,6 +280,10 @@ public class Config {
       sb.append(", ").append(entry.getValue()).append(")\n");
     }
     return sb.toString();
+  }
+
+  public byte[] serialize() {
+    return new KryoSerializer().serialize(this.cfgMap);
   }
 
   public static class Builder {
