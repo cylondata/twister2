@@ -157,6 +157,8 @@ public class BaseSerializeTest {
         vals[i] = (byte) i;
       }
       return vals;
+    } else if (dataType == MessageTypes.INTEGER) {
+      return 1;
     } else {
       return null;
     }

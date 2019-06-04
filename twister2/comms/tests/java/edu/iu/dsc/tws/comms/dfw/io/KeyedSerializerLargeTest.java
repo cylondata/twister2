@@ -11,31 +11,59 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.comms.api.MessageHeader;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
+import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 public class KeyedSerializerLargeTest extends BaseSerializeTest {
+  private KeyedDataSerializer serializer;
+
+  private BlockingQueue<DataBuffer> bufferQueue;
+
+  private KeyedDataDeSerializer deserializer;
+
+  @Before
+  public void setUp() throws Exception {
+    bufferQueue = createDataQueue(32, 1024000);
+    serializer = new KeyedDataSerializer(
+        new KryoSerializer(), 0, MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY);
+    serializer.init(Config.newBuilder().build(), bufferQueue, true);
+
+    deserializer = new KeyedDataDeSerializer(new KryoSerializer(), 0,
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY);
+    deserializer.init(Config.newBuilder().build(), true);
+  }
+
   @SuppressWarnings("Unchecked")
   @Test
   public void testBuildLargeListByteMessage() {
     int numBuffers = 32;
     int size = 1024000;
 
-    for (int numObjects = 15000; numObjects < 16000; numObjects++) {
+    for (int numObjects = 1; numObjects < 5000; numObjects++) {
       System.out.println("Starting test : " + numObjects);
       List<Object> data = new AggregatedObjects<>();
       for (int i = 0; i < numObjects; i++) {
-        Object o = createKeyedData(90, MessageTypes.BYTE_ARRAY, 10, MessageTypes.BYTE_ARRAY);
+        Object o = createKeyedData(100, MessageTypes.INTEGER_ARRAY, 1, MessageTypes.INTEGER);
         data.add(o);
       }
 
       InMessage inMessage = keyedListValueCase(numBuffers, size, data,
-          MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY);
+          MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER);
 
       List<Object> result = (List<Object>) inMessage.getDeserializedData();
 
@@ -45,10 +73,44 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
         Tuple deserializedData = (Tuple) result.get(i);
         Tuple d = (Tuple) data.get(i);
 
-        Assert.assertArrayEquals((byte[]) deserializedData.getKey(), (byte[]) ((Tuple) d).getKey());
-        Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
-            (byte[]) ((Tuple) d).getValue());
+        Assert.assertEquals(deserializedData.getKey(), d.getKey());
+        Assert.assertArrayEquals((int[]) deserializedData.getValue(),
+            (int[]) ((Tuple) d).getValue());
       }
     }
+  }
+
+  public InMessage keyedListValueCase(int numBuffers, int size, List<Object> data,
+                                      MessageType type, MessageType keyType) {
+    OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
+        null, type, null, null, data);
+
+    List<ChannelMessage> messages = new ArrayList<>();
+
+    int count = 0;
+    while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
+      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      messages.add(ch);
+      System.out.println("Adding count " + count++);
+    }
+
+    MessageHeader header = deserializer.buildHeader(
+        messages.get(0).getBuffers().get(0), 1);
+    InMessage inMessage = new InMessage(0, type,
+        null, header);
+    inMessage.setKeyType(keyType);
+    for (ChannelMessage channelMessage : messages) {
+      for (DataBuffer dataBuffer : channelMessage.getBuffers()) {
+        inMessage.addBufferAndCalculate(dataBuffer);
+      }
+    }
+    deserializer.build(inMessage, 1);
+    for (ChannelMessage d : inMessage.getBuiltMessages()) {
+      for (DataBuffer buffer : d.getNormalBuffers()) {
+        buffer.getByteBuffer().clear();
+        bufferQueue.offer(buffer);
+      }
+    }
+    return inMessage;
   }
 }
