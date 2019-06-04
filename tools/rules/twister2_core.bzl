@@ -97,6 +97,11 @@ def twister2_core_fault_tolerance_files():
         "//twister2/fault-tolerance/src/java:fault-tolerance-java",
     ]
 
+def twister2_core_restarter_files():
+    return [
+        "//twister2/fault-tolerance/src/java/edu/iu/dsc/tws/restarter:restarter-java",
+    ]
+
 def twister2_storm_files():
     return [
         "//twister2/compatibility/storm:twister2-storm",
