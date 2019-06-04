@@ -18,13 +18,12 @@ import java.util.Queue;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
-public class KeyedDeSerializer implements MessageDeSerializer {
+public class DataDeserializer implements MessageDeSerializer {
 
   @Override
   public void init(Config cfg, boolean k) {
@@ -41,8 +40,6 @@ public class KeyedDeSerializer implements MessageDeSerializer {
   @Override
   public Object build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
-    MessageType keyType = currentMessage.getKeyType();
-    DataPacker keyPacker = keyType.getDataPacker();
     DataPacker dataPacker = currentMessage.getDataType().getDataPacker();
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
     MessageHeader header = currentMessage.getHeader();
@@ -65,7 +62,6 @@ public class KeyedDeSerializer implements MessageDeSerializer {
 
       // if we are at the beginning
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
-      int currentKeyLength = currentMessage.getUnPkCurrentKeyLength();
 
       if (currentMessage.getUnPkBuffers() == 0) {
         currentLocation = 16;
@@ -79,121 +75,43 @@ public class KeyedDeSerializer implements MessageDeSerializer {
         currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
         remaining = remaining - Integer.BYTES;
         currentLocation += Integer.BYTES;
+
+        // starting to build a new object
+        currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
       }
 
-      if (currentKeyLength == -1) {
-        // we assume we can read the key length from here
-        int right = DataPackerProxy.getKeyLengthRight(keyType, buffer, currentLocation);
-        int left = DataPackerProxy.getKeyLengthLeft(keyType, buffer, currentLocation);
-
-        remaining = remaining - right;
-        currentLocation += right;
-
-        // we have to set the current object length
-        currentObjectLength = currentObjectLength - left - right;
-        currentKeyLength = left;
-
-        currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
-
-        try {
-          currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
-
-
-          currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-          // we are going to read the key first
-          currentMessage.setReadingKey(true);
-        } catch (NegativeArraySizeException e) {
-          throw new RuntimeException(e);
-        }
-      }
 
       while (remaining > 0) {
-        if (currentMessage.isReadingKey()) {
-          ObjectBuilderImpl keyBuilder = currentMessage.getKeyBuilder();
-          int bytesRead = keyPacker.readDataFromBuffer(
-              keyBuilder,
-              currentLocation,
-              buffer
-          );
+        // read the values from the buffer
+        ObjectBuilderImpl dataBuilder = currentMessage.getDataBuilder();
+        int bytesRead = dataPacker.readDataFromBuffer(
+            dataBuilder, currentLocation,
+            buffer
+        );
+        dataBuilder.incrementCompletedSizeBy(bytesRead);
 
-          keyBuilder.incrementCompletedSizeBy(bytesRead);
-
-          currentLocation += bytesRead;
-          remaining = remaining - bytesRead;
-
-          currentMessage.setReadingKey(!keyBuilder.isBuilt());
-
-          if (keyBuilder.isBuilt()) {
-            //done reading key
-            currentMessage.setReadingKey(false);
-          } else {
-            break;
-          }
+        currentLocation += bytesRead;
+        remaining = remaining - bytesRead;
+        // okay we are done with this object
+        if (dataBuilder.isBuilt()) {
+          currentMessage.addCurrentObject();
+          currentMessage.setUnPkCurrentObjectLength(-1);
+        } else {
+          // lets break the inner while loop
+          break;
         }
 
-        if (!currentMessage.isReadingKey()) {
-          ObjectBuilderImpl dataBuilder = currentMessage.getDataBuilder();
-          // read the values from the buffer
-          int byteRead = dataPacker.readDataFromBuffer(
-              dataBuilder,
-              currentLocation,
-              buffer
-          );
-          dataBuilder.incrementCompletedSizeBy(byteRead);
+        // could have next object length?
+        if (remaining >= Integer.BYTES) {
+          currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
+          remaining = remaining - Integer.BYTES;
+          currentLocation += Integer.BYTES;
 
-          currentLocation += byteRead;
-          remaining = remaining - byteRead;
-          // okay we are done with this object
-          if (dataBuilder.isBuilt()) {
-            // lets add the object
-            currentMessage.addCurrentKeyedObject();
-          } else {
-            // lets break the inner while loop
-            break;
-          }
-
-          int bytesToReadKey = 0;
-          if (keyPacker.isHeaderRequired()) {
-            bytesToReadKey += Integer.BYTES;
-          }
-
-          if (remaining >= Integer.BYTES + bytesToReadKey) {
-            currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-            remaining = remaining - Integer.BYTES;
-            currentLocation += Integer.BYTES;
-
-            // we assume we can read the key length from here
-            int right = DataPackerProxy.getKeyLengthRight(keyType, buffer, currentLocation);
-            int left = DataPackerProxy.getKeyLengthLeft(keyType, buffer, currentLocation);
-
-            remaining = remaining - right;
-            currentLocation += right;
-
-            // we have to set the current object length
-            currentObjectLength = currentObjectLength - left - right;
-            currentKeyLength = left;
-
-            currentMessage.getKeyBuilder().init(keyPacker, currentKeyLength);
-
-            currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
-
-            currentMessage.setUnPkCurrentKeyLength(currentKeyLength);
-            currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-            // we are going to read the key first
-            currentMessage.setReadingKey(true);
-          } else if (remaining >= Integer.BYTES) {
-            currentObjectLength = buffer.getByteBuffer().getInt(currentLocation);
-            remaining = remaining - Integer.BYTES;
-            currentLocation += Integer.BYTES;
-
-            currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
-            currentMessage.setUnPkCurrentKeyLength(-1);
-            currentMessage.setReadingKey(true);
-          } else {
-            // we have to break here as we cannot read further
-            break;
-          }
+          currentMessage.getDataBuilder().init(dataPacker, currentObjectLength);
+          currentMessage.setUnPkCurrentObjectLength(currentObjectLength);
+        } else {
+          // we have to break here as we cannot read further
+          break;
         }
       }
 

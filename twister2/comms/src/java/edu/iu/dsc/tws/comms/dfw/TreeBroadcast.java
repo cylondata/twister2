@@ -35,10 +35,10 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
@@ -254,9 +254,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (keyType == null) {
-        serializerMap.put(s, new AKeyedSerializer());
+        serializerMap.put(s, new DataSerializer());
       } else {
-        serializerMap.put(s, new KeyedSerializer());
+        serializerMap.put(s, new KeyedDataSerializer());
       }
     }
 
@@ -272,9 +272,9 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
-        deSerializerMap.put(source, new AKeyedDeserializer());
+        deSerializerMap.put(source, new DataDeserializer());
       } else {
-        deSerializerMap.put(source, new KeyedDeSerializer());
+        deSerializerMap.put(source, new KeyedDataDeSerializer());
       }
     }
 

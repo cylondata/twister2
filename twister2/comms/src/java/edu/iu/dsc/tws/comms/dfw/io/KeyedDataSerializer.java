@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataPacker;
@@ -23,8 +22,7 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
 /**
  * This serializer will be used to serialize messages with keys
  */
-public class KeyedSerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(KeyedSerializer.class.getName());
+public class KeyedDataSerializer extends BaseSerializer {
 
   @Override
   public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {

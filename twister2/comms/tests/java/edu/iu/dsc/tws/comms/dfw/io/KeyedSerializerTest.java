@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -21,14 +20,14 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 
-public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
+public class KeyedSerializerTest extends BaseSerializeTest {
   @Test
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.INTEGER;
-    Object data = createKeyedData(800, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.INTEGER_ARRAY;
+    Object data = createKeyedData(800, type, MessageTypes.INTEGER);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.INTEGER, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
     Assert.assertArrayEquals((int[]) deserializedData.getValue(),
@@ -39,9 +38,9 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeDoubleMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.DOUBLE;
-    Object data = createKeyedData(800, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.DOUBLE_ARRAY;
+    Object data = createKeyedData(800, type, MessageTypes.DOUBLE);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.DOUBLE, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((double) deserializedData.getKey(), (double) ((Tuple) data).getKey(),
         0.1);
@@ -53,9 +52,9 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeLongMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.LONG;
-    Object data = createKeyedData(800, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.LONG_ARRAY;
+    Object data = createKeyedData(800, type, MessageTypes.LONG);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.LONG, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((long) deserializedData.getKey(), (long) ((Tuple) data).getKey());
     Assert.assertArrayEquals((long[]) deserializedData.getValue(),
@@ -66,9 +65,9 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeShortMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.SHORT;
-    Object data = createKeyedData(800, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.SHORT_ARRAY;
+    Object data = createKeyedData(800, type, MessageTypes.SHORT);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.SHORT, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((short) deserializedData.getKey(), (short) ((Tuple) data).getKey());
     Assert.assertArrayEquals((short[]) deserializedData.getValue(),
@@ -79,9 +78,10 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeByteMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.BYTE;
-    Object data = createKeyedData(800, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.BYTE_ARRAY;
+    Object data = createKeyedData(800, type, MessageTypes.BYTE_ARRAY);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type,
+        MessageTypes.BYTE_ARRAY, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertArrayEquals((byte[]) deserializedData.getKey(), (byte[]) ((Tuple) data).getKey());
     Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
@@ -92,9 +92,9 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildIntegerMessage() {
     int numBuffers = 4;
     int size = 1000;
-    MessageType type = MessageTypes.INTEGER;
-    Object data = createKeyedData(80, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    MessageType type = MessageTypes.INTEGER_ARRAY;
+    Object data = createKeyedData(80, type, MessageTypes.INTEGER);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.INTEGER, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertEquals((int) deserializedData.getKey(), (int) ((Tuple) data).getKey());
     Assert.assertArrayEquals((int[]) deserializedData.getValue(),
@@ -106,8 +106,8 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int numBuffers = 4;
     int size = 1000;
     MessageType type = MessageTypes.OBJECT;
-    Object data = createKeyedData(80, type);
-    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, type, data);
+    Object data = createKeyedData(80, type, MessageTypes.OBJECT);
+    InMessage inMessage = keyedSingleValueCase(numBuffers, size, type, MessageTypes.OBJECT, data);
     Tuple deserializedData = (Tuple) inMessage.getDeserializedData();
     Assert.assertArrayEquals((byte[]) deserializedData.getKey(),
         (byte[]) ((Tuple) data).getKey());
@@ -120,13 +120,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListIntMessage() {
     int numBuffers = 16;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageTypes.INTEGER);
+      Object o = createKeyedData(800, MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data,
+        MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple exp = (Tuple) result.get(i);
@@ -145,13 +146,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
     int size = 1000;
 
     for (int j = 1; j < 128; j++) {
-      List<Object> data = new ArrayList<>();
+      List<Object> data = new AggregatedObjects<>();
       for (int i = 0; i < j; i++) {
-        Object o = createKeyedData(80, MessageTypes.INTEGER);
+        Object o = createKeyedData(80, MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER);
         data.add(o);
       }
 
-      InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
+      InMessage inMessage = keyedListValueCase(numBuffers, size, data,
+          MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER);
       try {
         List<Object> result = (List<Object>) inMessage.getDeserializedData();
         for (int i = 0; i < result.size(); i++) {
@@ -173,13 +175,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListLongMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageTypes.LONG);
+      Object o = createKeyedData(800, MessageTypes.LONG_ARRAY, MessageTypes.LONG);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.LONG);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data,
+        MessageTypes.LONG_ARRAY, MessageTypes.LONG);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -197,13 +200,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListDoubleMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageTypes.DOUBLE);
+      Object o = createKeyedData(800, MessageTypes.DOUBLE_ARRAY, MessageTypes.DOUBLE);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.DOUBLE);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data,
+        MessageTypes.DOUBLE_ARRAY, MessageTypes.DOUBLE);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -221,13 +225,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListShortMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageTypes.SHORT);
+      Object o = createKeyedData(800, MessageTypes.SHORT_ARRAY, MessageTypes.SHORT);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.SHORT);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageTypes.SHORT_ARRAY,
+        MessageTypes.SHORT);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -244,13 +249,14 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListByteMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createKeyedData(800, MessageTypes.BYTE);
+      Object o = createKeyedData(800, MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.BYTE);
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data,
+        MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Tuple deserializedData = (Tuple) result.get(i);
@@ -267,13 +273,13 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
   public void testBuildLargeListIntegerByteMessage() {
     int numBuffers = 128;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 128; i++) {
-      Object o = createKeyedData(320, MessageTypes.BYTE, MessageTypes.INTEGER);
+      Object o = createKeyedData(320, MessageTypes.BYTE_ARRAY, MessageTypes.INTEGER);
       data.add(o);
     }
 
-    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageTypes.BYTE,
+    InMessage inMessage = keyedListValueCase(numBuffers, size, data, MessageTypes.BYTE_ARRAY,
         MessageTypes.INTEGER);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
@@ -284,14 +290,5 @@ public class KeyedAKeyedSerializerTest extends BaseSerializeTest {
       Assert.assertArrayEquals((byte[]) deserializedData.getValue(),
           (byte[]) d.getValue());
     }
-  }
-
-  private InMessage listValueCase(int numBuffers, int size, List<Object> data,
-                                  MessageType type) {
-    return keyedListValueCase(numBuffers, size, data, type, type);
-  }
-
-  private Object createKeyedData(int size, MessageType dataType) {
-    return createKeyedData(size, dataType, dataType);
   }
 }

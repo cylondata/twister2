@@ -43,7 +43,7 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
  * For other cases such as integer or double keys, we know the length of the key, so we only send
  * the key.
  */
-public class AKeyedSerializer extends BaseSerializer {
+public class DataSerializer extends BaseSerializer {
 
   /**
    * Builds the body of the message. Based on the message type different build methods are called
