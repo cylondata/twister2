@@ -119,4 +119,13 @@ public class LocalFileStateStore implements StateStore {
       return null;
     }
   }
+
+  @Override
+  public boolean contains(String key) throws IOException {
+    try (FileChannel channel = getChannelForKey(key, StandardOpenOption.READ)) {
+      return true;
+    } catch (NoSuchFileException nex) {
+      return false;
+    }
+  }
 }

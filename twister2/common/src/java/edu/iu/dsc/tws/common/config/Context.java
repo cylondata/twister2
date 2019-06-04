@@ -169,6 +169,10 @@ public class Context {
     return cfg.getStringValue(JOB_NAME);
   }
 
+  public static String jobId(Config cfg) {
+    return cfg.getStringValue(JOB_ID);
+  }
+
   public static String dataConfigurationFile(Config cfg) {
     return cfg.getStringValue(DATA_YAML);
   }

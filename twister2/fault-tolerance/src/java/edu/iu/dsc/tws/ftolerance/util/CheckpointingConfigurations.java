@@ -18,6 +18,10 @@ public final class CheckpointingConfigurations {
 
   public static final String CHECKPOINTING_ENABLED = "twister2.checkpointing.enable";
   public static final String CHECKPOINTING_STORE_CLASS = "twister2.checkpointing.store";
+  public static final String CHECKPOINTING_SOURCE_FREQUNCY
+      = "twister2.checkpointing.source.frequency";
+
+  public static final String RESTORING_CHECKPOINTED_JOB = "RESTORING_CHECKPOINTED_JOB";
 
   private CheckpointingConfigurations() {
   }
@@ -29,5 +33,13 @@ public final class CheckpointingConfigurations {
   public static String getCheckpointingStoreClass(Config config) {
     return config.getStringValue(CHECKPOINTING_STORE_CLASS,
         LocalFileStateStore.class.getCanonicalName());
+  }
+
+  public static boolean startingFromACheckpoint(Config config) {
+    return config.getBooleanValue(RESTORING_CHECKPOINTED_JOB, false);
+  }
+
+  public static long getCheckPointingFrequency(Config config) {
+    return config.getLongValue(CHECKPOINTING_SOURCE_FREQUNCY, 1000);
   }
 }

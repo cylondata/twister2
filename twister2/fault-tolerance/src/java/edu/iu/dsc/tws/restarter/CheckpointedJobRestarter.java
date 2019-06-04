@@ -69,7 +69,10 @@ public final class CheckpointedJobRestarter {
 
     Config config = ResourceAllocator.loadConfig(configMap);
     Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder().build();
+    twister2Job = Twister2Job.newBuilder()
+        .setWorkerClass("")
+        .addComputeResource(0, 0, 1)
+        .setJobName("Job Restarter").build();
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }

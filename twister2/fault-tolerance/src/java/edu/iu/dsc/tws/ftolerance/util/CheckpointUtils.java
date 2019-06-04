@@ -21,6 +21,9 @@ import edu.iu.dsc.tws.ftolerance.api.StateStore;
 
 public final class CheckpointUtils {
 
+  private static final String JOB_CONFIG_STATE_PREFIX = "JOB_CONFIG_";
+  private static final String JOB_META_STATE_PREFIX = "JOB_META_";
+
   private CheckpointUtils() {
   }
 
@@ -67,5 +70,32 @@ public final class CheckpointUtils {
       throw new RuntimeException("Instance of " + checkpointingStoreClass
           + " can't be casted to " + StateStore.class.toString());
     }
+  }
+
+  private static String getJobConfigKey(String jobId) {
+    return JOB_CONFIG_STATE_PREFIX + jobId;
+  }
+
+  private static String getJobMetaKey(String jobId) {
+    return JOB_META_STATE_PREFIX + jobId;
+  }
+
+  public static void saveJobConfigAndMeta(String jobId, byte[] jobMeta,
+                                          byte[] jobConfig,
+                                          StateStore stateStore) throws IOException {
+    stateStore.put(getJobConfigKey(jobId), jobConfig);
+    stateStore.put(getJobMetaKey(jobId), jobMeta);
+  }
+
+  public static byte[] restoreJobConfig(String jobId, StateStore stateStore) throws IOException {
+    return stateStore.get(getJobConfigKey(jobId));
+  }
+
+  public static byte[] restoreJobMeta(String jobId, StateStore stateStore) throws IOException {
+    return stateStore.get(getJobMetaKey(jobId));
+  }
+
+  public static boolean containsJobInStore(String jobId, StateStore stateStore) throws IOException {
+    return stateStore.contains(getJobConfigKey(jobId)) && stateStore.contains(getJobMetaKey(jobId));
   }
 }

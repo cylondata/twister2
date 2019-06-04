@@ -82,4 +82,6 @@ public interface StateStore {
   void put(String key, byte[] data) throws IOException;
 
   byte[] get(String key) throws IOException;
+
+  boolean contains(String key) throws IOException;
 }
