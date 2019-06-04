@@ -39,9 +39,7 @@ public class MDSDataObjectSource extends BaseSource {
    * DataSource to partition the datapoints
    */
   private DataSource<?, ?> source;
-
   private DataSink<String> sink;
-
   private InputPartitioner inputPartitioner;
 
   /**
@@ -94,8 +92,8 @@ public class MDSDataObjectSource extends BaseSource {
   @Override
   public void execute() {
     Buffer buffer;
-    byte[] line = new byte[2000];
-    ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+    byte[] line = new byte[getDataSize() * 2];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(getDataSize() * 2);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     InputSplit inputSplit = source.getNextSplit(context.taskIndex());
     int count = 0;
@@ -116,7 +114,6 @@ public class MDSDataObjectSource extends BaseSource {
             count++;
           }
         }
-        LOG.info("count value is:" + count);
         inputSplit = null;
         //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
       } catch (Exception ioe) {
@@ -134,7 +131,6 @@ public class MDSDataObjectSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), getDataSize() * Short.BYTES));
-
     //For writing into the partition file
     /*this.sink = new DataSink<>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/

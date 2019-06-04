@@ -88,6 +88,17 @@ public class SinkStreamingInstance implements INodeInstance {
   protected Map<String, String> inEdges;
   protected TaskSchedulePlan taskSchedulePlan;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
+
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
@@ -110,6 +121,19 @@ public class SinkStreamingInstance implements INodeInstance {
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[streamingInParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inEdges.size()];
+    index = 0;
+    for (String e : inEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
   }
 
   public boolean execute() {
@@ -120,8 +144,8 @@ public class SinkStreamingInstance implements INodeInstance {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < intOpArray.length; i++) {
+      intOpArray[i].progress();
     }
 
     return true;
