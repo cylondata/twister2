@@ -162,6 +162,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
    * Keep an array out out edges for iteration
    */
   private String[] outEdgeArray;
+  private PendingCheckpoint pendingCheckpoint;
 
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -235,6 +236,17 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       this.stateStore = CheckpointUtils.getStateStore(config);
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
 
+      this.pendingCheckpoint = new PendingCheckpoint(
+          this.taskGraphName,
+          (CheckpointableTask) this.task,
+          this.globalTaskId,
+          this.intOpArray,
+          this.inEdgeArray.length,
+          this.checkpointingClient,
+          this.stateStore,
+          this.snapshot
+      );
+
       TaskCheckpointUtils.restore(
           (CheckpointableTask) this.task,
           this.snapshot,
@@ -254,6 +266,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     inParOps.put(edge, op);
   }
 
+  /**
+   * Executing compute task
+   */
   public boolean execute() {
     // execute if there are incoming messages
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
@@ -293,6 +308,14 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       intOpArray[i].progress();
     }
 
+
+    if (this.checkpointable && this.inQueue.isEmpty()) {
+      boolean executed = this.pendingCheckpoint.execute();
+      if (executed) {
+        ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
+      }
+    }
+
     return true;
   }
 
@@ -318,15 +341,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       ByteBuffer wrap = ByteBuffer.wrap(value);
       long barrierId = wrap.getLong();
 
-      TaskCheckpointUtils.checkpoint(
-          barrierId,
-          (CheckpointableTask) this.task,
-          this.snapshot,
-          this.stateStore,
-          this.taskGraphName,
-          this.globalTaskId,
-          this.checkpointingClient
-      );
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId
+          + " with id " + barrierId + " from " + edge);
+      this.pendingCheckpoint.schedule(edge, barrierId);
     }
     return true;
   }

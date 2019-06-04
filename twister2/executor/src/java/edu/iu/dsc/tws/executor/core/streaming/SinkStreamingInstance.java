@@ -102,11 +102,13 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    */
   protected Map<String, String> inEdges;
   protected TaskSchedulePlan taskSchedulePlan;
+
   private CheckpointingClient checkpointingClient;
   private String taskGraphName;
   private Long taskVersion;
   private StateStore stateStore;
   private SnapshotImpl snapshot;
+  private PendingCheckpoint pendingCheckpoint;
 
   /**
    * Keep an array for iteration
@@ -144,24 +146,17 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     this.checkpointable = this.streamingTask instanceof CheckpointableTask
         && CheckpointingConfigurations.isCheckpointingEnabled(config);
     this.snapshot = new SnapshotImpl();
+
   }
 
+  /**
+   * Preparing sink task
+   *
+   * @param cfg configuration
+   */
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
-
-    if (this.checkpointable) {
-      this.stateStore = CheckpointUtils.getStateStore(config);
-      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
-
-      TaskCheckpointUtils.restore(
-          (CheckpointableTask) this.streamingTask,
-          this.snapshot,
-          this.stateStore,
-          this.taskVersion,
-          globalTaskId
-      );
-    }
 
     /// we will use this array for iteration
     this.intOpArray = new IParallelOperation[streamingInParOps.size()];
@@ -175,6 +170,30 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     for (String e : inEdges.keySet()) {
       this.inEdgeArray[index++] = e;
     }
+
+    if (this.checkpointable) {
+      this.stateStore = CheckpointUtils.getStateStore(config);
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      this.pendingCheckpoint = new PendingCheckpoint(
+          this.taskGraphName,
+          (CheckpointableTask) this.streamingTask,
+          this.globalTaskId,
+          this.intOpArray,
+          this.inEdges.size(),
+          this.checkpointingClient,
+          this.stateStore,
+          this.snapshot
+      );
+
+      TaskCheckpointUtils.restore(
+          (CheckpointableTask) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.taskVersion,
+          globalTaskId
+      );
+    }
   }
 
   public boolean execute() {
@@ -187,6 +206,13 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
 
     for (int i = 0; i < intOpArray.length; i++) {
       intOpArray[i].progress();
+    }
+
+    if (this.checkpointable && this.streamingInQueue.isEmpty()) {
+      boolean executed = this.pendingCheckpoint.execute();
+      if (executed) {
+        ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
+      }
     }
 
     return true;
@@ -217,17 +243,9 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     if (this.checkpointable) {
       ByteBuffer wrap = ByteBuffer.wrap(value);
       long barrierId = wrap.getLong();
-      LOG.fine(() -> "Barrier received to " + this.globalTaskId + " with id " + barrierId);
-      TaskCheckpointUtils.checkpoint(
-          barrierId,
-          (CheckpointableTask) this.streamingTask,
-          this.snapshot,
-          this.stateStore,
-          this.taskGraphName,
-          this.globalTaskId,
-          this.checkpointingClient
-      );
-      streamingInParOps.get(edge).reset();
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId
+          + " with id " + barrierId + " from " + edge);
+      this.pendingCheckpoint.schedule(edge, barrierId);
     }
     return true;
   }

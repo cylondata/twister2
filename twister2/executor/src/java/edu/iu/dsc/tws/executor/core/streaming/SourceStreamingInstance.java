@@ -221,7 +221,7 @@ public class SourceStreamingInstance implements INodeInstance {
 
       if (this.checkpointable && executions++ % this.checkPointingFrequency == 0) {
         TaskCheckpointUtils.checkpoint(
-            checkpointVersion++,
+            checkpointVersion,
             (CheckpointableTask) this.streamingTask,
             this.snapshot,
             this.stateStore,
@@ -229,7 +229,7 @@ public class SourceStreamingInstance implements INodeInstance {
             this.globalTaskId,
             this.checkpointingClient
         );
-        this.scheduleBarriers(checkpointVersion);
+        this.scheduleBarriers(checkpointVersion++);
         this.snapshotQueue.add(this.snapshot.copy());
       }
     }

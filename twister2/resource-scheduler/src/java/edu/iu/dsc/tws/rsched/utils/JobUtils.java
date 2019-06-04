@@ -163,8 +163,9 @@ public final class JobUtils {
     if (jobId == null) {
       jobId = String.format("%s-%s", jobName, UUID.randomUUID().toString());
       builder.put(Context.JOB_ID, jobId);
-      LOG.severe("Job ID assigned : " + jobId);
     }
+
+    LOG.severe("Job ID assigned : " + jobId);
 
     return builder.build();
   }

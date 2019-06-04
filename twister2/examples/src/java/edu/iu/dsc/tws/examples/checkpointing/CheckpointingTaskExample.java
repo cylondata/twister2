@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -51,9 +52,12 @@ public class CheckpointingTaskExample implements IWorker {
 
     taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
-    taskGraphBuilder.addSink("sink", new Sinktask(), parallelism).direct(
+//    taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
+//        .direct("source", "so-c", DataType.INTEGER);
+
+    taskGraphBuilder.addSink("sink", new SinkTask(), parallelism).direct(
         "source",
-        "edge",
+        "so-si",
         DataType.INTEGER
     );
 
@@ -61,7 +65,35 @@ public class CheckpointingTaskExample implements IWorker {
     taskEnvironment.close();
   }
 
-  public static class Sinktask extends BaseSink<Integer> implements CheckpointableTask {
+  public static class ComputeTask extends BaseCompute<Integer> implements CheckpointableTask {
+
+    private int count = 0;
+
+    @Override
+    public void restoreSnapshot(Snapshot snapshot) {
+      this.count = (int) snapshot.getOrDefault("count", 0);
+      LOG.info("Restored compute to  " + count);
+    }
+
+    @Override
+    public void takeSnapshot(Snapshot snapshot) {
+      snapshot.setValue("count", this.count);
+    }
+
+    @Override
+    public void initSnapshot(Snapshot snapshot) {
+      snapshot.setPacker("count", MessageTypes.INTEGER.getDataPacker());
+    }
+
+    @Override
+    public boolean execute(IMessage<Integer> content) {
+      this.count = content.getContent();
+      context.write("c-si", this.count);
+      return true;
+    }
+  }
+
+  public static class SinkTask extends BaseSink<Integer> implements CheckpointableTask {
 
     private int count = 0;
 
@@ -95,7 +127,7 @@ public class CheckpointingTaskExample implements IWorker {
 
     @Override
     public void execute() {
-      context.write("edge", count++);
+      context.write("so-si", count++);
     }
 
     @Override
