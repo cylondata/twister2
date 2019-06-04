@@ -137,6 +137,16 @@ public class SourceStreamingInstance implements INodeInstance {
   private long executions = 0;
   private long checkPointingFrequency = 1000;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
@@ -173,6 +183,20 @@ public class SourceStreamingInstance implements INodeInstance {
         globalTaskId, taskName, parallelism, workerId,
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule);
     streamingTask.prepare(cfg, taskContext);
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outStreamingParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outEdges.size()];
+    index = 0;
+    for (String e : outEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
+
     if (this.checkpointable) {
       this.stateStore = CheckpointUtils.getStateStore(config);
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
@@ -239,13 +263,12 @@ public class SourceStreamingInstance implements INodeInstance {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outStreamingParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < outOpArray.length; i++) {
+      outOpArray[i].progress();
     }
 
     return true;
   }
-
 
   @Override
   public INode getNode() {
@@ -257,6 +280,10 @@ public class SourceStreamingInstance implements INodeInstance {
     if (streamingTask instanceof Closable) {
       ((Closable) streamingTask).close();
     }
+  }
+
+  public BlockingQueue<IMessage> getOutStreamingQueue() {
+    return outStreamingQueue;
   }
 
   public void scheduleBarriers(Long bid) {

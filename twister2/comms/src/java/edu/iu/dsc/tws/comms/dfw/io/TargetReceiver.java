@@ -101,7 +101,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * The targets
    */
-  private int[] targets;
+  protected int[] targets;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -112,7 +112,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
-      LOG.info("Changing the grouping size to: " + groupingSize);
+      LOG.fine("Changing the grouping size to: " + groupingSize);
     }
 
     Set<Integer> tars = op.getTargets();
@@ -262,8 +262,9 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @return true if there is nothing to process
    */
   protected boolean isAllEmpty() {
-    for (Map.Entry<Integer, Queue<Object>> e : messages.entrySet()) {
-      if (e.getValue().size() > 0) {
+    for (int i = 0; i < targets.length; i++) {
+      Queue<Object> queue = messages.get(targets[i]);
+      if (queue.size() > 0) {
         return false;
       }
     }

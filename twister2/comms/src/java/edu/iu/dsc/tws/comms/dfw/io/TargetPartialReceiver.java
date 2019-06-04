@@ -55,10 +55,30 @@ public class TargetPartialReceiver extends TargetReceiver {
    */
   protected boolean stateCleared = false;
 
+  /**
+   * Source array for iterations
+   */
+  private int[] thisSourceArray;
+
+  /**
+   * Target array for iterations
+   */
+  private int[] targetArray;
+
+  /**
+   * This source array for iteration
+   */
+  private int[] sourceArray;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
     thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
+    int index = 0;
+    thisSourceArray = new int[thisSources.size()];
+    for (int s : thisSources) {
+      this.thisSourceArray[index++] = s;
+    }
 
     Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(),
         op.getTargets());
@@ -77,14 +97,23 @@ public class TargetPartialReceiver extends TargetReceiver {
     }));
     thisDestinations.addAll(op.getTargets());
 
+    this.targetArray = new int[thisDestinations.size()];
+    index = 0;
+    for (int t : thisDestinations) {
+      targetArray[index++] = t;
+    }
+
     for (int target : thisDestinations) {
       messages.put(target, new LinkedBlockingQueue<>());
     }
 
+    index = 0;
+    sourceArray = new int[thisSources.size()];
     // we are at the receiving state
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.INIT);
       syncSent.put(source, new HashSet<>());
+      sourceArray[index++] = source;
     }
   }
 
@@ -127,8 +156,9 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   protected boolean isAllEmpty() {
     boolean b = super.isAllEmpty();
-    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
-      if (e.getValue().size() > 0) {
+    for (int i = 0; i < targets.length; i++) {
+      List<Object> queue = readyToSend.get(targets[i]);
+      if (queue != null && queue.size() > 0) {
         return false;
       }
     }
@@ -182,12 +212,13 @@ public class TargetPartialReceiver extends TargetReceiver {
   public boolean sync() {
     boolean allSyncsSent = true;
     boolean allSynced = true;
-    for (Map.Entry<Integer, ReceiverState> e : sourceStates.entrySet()) {
-      if (e.getValue() == ReceiverState.RECEIVING) {
+    for (int i = 0; i < sourceArray.length; i++) {
+      ReceiverState state = sourceStates.get(sourceArray[i]);
+      if (state == ReceiverState.RECEIVING) {
         return false;
       }
 
-      if (e.getValue() != ReceiverState.INIT && e.getValue() != ReceiverState.SYNCED) {
+      if (state != ReceiverState.INIT && state != ReceiverState.SYNCED) {
         allSynced = false;
       }
     }
@@ -196,9 +227,11 @@ public class TargetPartialReceiver extends TargetReceiver {
       return true;
     }
 
-    for (int source : thisSources) {
+    for (int i = 0; i < thisSourceArray.length; i++) {
+      int source = thisSourceArray[i];
       Set<Integer> finishedDestPerSource = syncSent.get(source);
-      for (int dest : thisDestinations) {
+      for (int j = 0; j < targetArray.length; j++) {
+        int dest = targetArray[j];
         if (!finishedDestPerSource.contains(dest)) {
 
           byte[] message;
