@@ -303,16 +303,18 @@ public class TaskContextImpl implements TaskContext {
     return collect;
   }
 
+  /**
+   * Check weather all the edges are finished
+   */
   private void checkAllEdgesFinished() {
     boolean finished = true;
     for (String e : outEdgeNames) {
       if (!isDone.containsKey(e)) {
         finished = false;
+        break;
       }
     }
-    if (finished) {
-      allEdgedFinished = true;
-    }
+    allEdgedFinished = finished;
   }
 
   /**
