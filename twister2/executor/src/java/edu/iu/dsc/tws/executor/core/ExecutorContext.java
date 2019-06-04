@@ -37,7 +37,7 @@ public class ExecutorContext extends Context {
   }
 
   public static int instanceQueueHighWaterMark(Config cfg) {
-    return cfg.getIntegerValue(INSTANCE_QUEUE_LOW_WATERMARK, 128);
+    return cfg.getIntegerValue(INSTANCE_QUEUE_HIGH_WATERMARK, 128);
   }
 
   public static String getBatchExecutor(Config cfg) {

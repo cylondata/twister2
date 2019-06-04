@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -84,7 +84,7 @@ public class OutMessage {
   /**
    * Channel messages created for sending this message through network
    */
-  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
+  private Queue<ChannelMessage> channelMessages = new LinkedList<>();
 
   /**
    * Keep track of the send state
