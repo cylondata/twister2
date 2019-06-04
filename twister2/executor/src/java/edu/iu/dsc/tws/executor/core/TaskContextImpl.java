@@ -194,7 +194,7 @@ public class TaskContextImpl implements TaskContext {
     return parallelism;
   }
 
-  /**Bloomington
+  /**
    * Get the worker id this task is running
    *
    * @return worker id
