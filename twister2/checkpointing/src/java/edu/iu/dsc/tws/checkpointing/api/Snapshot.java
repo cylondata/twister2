@@ -42,5 +42,5 @@ public interface Snapshot {
    */
   long getVersion();
 
-  boolean isCheckpointed(String key);
+  boolean checkpointAvailable(String key);
 }

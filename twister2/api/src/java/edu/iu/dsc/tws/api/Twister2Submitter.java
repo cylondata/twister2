@@ -56,18 +56,20 @@ public final class Twister2Submitter {
       }
     }
 
-    Config configCopy = config;
+    Config configCopy = JobUtils.resolveJobId(config, twister2Job.getJobName());
 
     // save the job to transfer to workers
     JobAPI.Job job = twister2Job.serialize();
 
-    //if checkpointing is enabled, twister2Job and config will be saved to the state backend
-    if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
-      LOG.info("Checkpointing has enabled for this job.");
-      String jobId = JobUtils.resolveJobId(config, twister2Job.getJobName());
+    // get existing id or create a new job id
+    String jobId = configCopy.getStringValue(Context.JOB_ID);
 
-      StateStore stateStore = CheckpointUtils.getStateStore(config);
-      stateStore.init(config, jobId);
+    //if checkpointing is enabled, twister2Job and config will be saved to the state backend
+    if (CheckpointingConfigurations.isCheckpointingEnabled(configCopy)) {
+      LOG.info("Checkpointing has enabled for this job.");
+
+      StateStore stateStore = CheckpointUtils.getStateStore(configCopy);
+      stateStore.init(configCopy, jobId);
 
       try {
         if (startingFromACheckpoint) {
@@ -87,7 +89,7 @@ public final class Twister2Submitter {
           // first time running or re-running the job, backup configs
           LOG.info("Saving job config and metadata");
           CheckpointUtils.saveJobConfigAndMeta(
-              jobId, job.toByteArray(), config.serialize(), stateStore);
+              jobId, job.toByteArray(), configCopy.serialize(), stateStore);
         }
       } catch (IOException e) {
         LOG.severe("Failed to submit th checkpointing enabled job");

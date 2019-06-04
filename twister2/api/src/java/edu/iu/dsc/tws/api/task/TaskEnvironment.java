@@ -62,10 +62,18 @@ public final class TaskEnvironment {
 
   }
 
+  /**
+   * Use task executor for fine grained task graph manipulations. For single task graph builds,
+   * use @buildAndExecute
+   * @return taskExecutor
+   */
   public TaskExecutor getTaskExecutor() {
     return taskExecutor;
   }
 
+  /**
+   * for single task graph runs
+   */
   public TaskExecutor buildAndExecute(TaskGraphBuilder taskGraphBuilder) {
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = this.getTaskExecutor().plan(dataFlowTaskGraph);

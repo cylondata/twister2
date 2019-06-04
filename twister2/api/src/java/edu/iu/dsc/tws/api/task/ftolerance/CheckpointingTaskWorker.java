@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.checkpointing.api.CheckpointingContext;
 import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.api.StateStore;
@@ -28,7 +27,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import static edu.iu.dsc.tws.common.config.Context.JOB_ID;
 
@@ -48,12 +46,7 @@ public abstract class CheckpointingTaskWorker extends TaskWorker {
    */
   private void init() {
 
-    try {
-      this.localCheckpointStore = ReflectionUtils.newInstance(CheckpointingContext.
-          checkpointStoreClass(config));
-    } catch (Exception e) {
-      throw new RuntimeException("Unable to instantiate snapshot store", e);
-    }
+    this.localCheckpointStore = CheckpointUtils.getStateStore(config);
     localCheckpointStore.init(config, config.getStringValue(JOB_ID),
         Integer.toString(workerId));
     // note: one snapshot store for worker. Each worker may have snapshots of multiple  tasks
