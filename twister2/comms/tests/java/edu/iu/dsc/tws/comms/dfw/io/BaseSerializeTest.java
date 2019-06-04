@@ -150,6 +150,18 @@ public class BaseSerializeTest {
     }
   }
 
+  public Object createKeyObject(MessageType dataType, int size) {
+    if (dataType == MessageTypes.BYTE_ARRAY) {
+      byte[] vals = new byte[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (byte) i;
+      }
+      return vals;
+    } else {
+      return null;
+    }
+  }
+
   public Object createKeyObject(MessageType dataType) {
     if (dataType == MessageTypes.INTEGER) {
       return 1;
@@ -173,6 +185,12 @@ public class BaseSerializeTest {
   public Object createKeyedData(int size, MessageType dataType, MessageType keyType) {
     Object data = createDataObject(size, dataType);
     Object key = createKeyObject(keyType);
+    return new Tuple(key, data, keyType, dataType);
+  }
+
+  public Object createKeyedData(int size, MessageType dataType, int keySize, MessageType keyType) {
+    Object data = createDataObject(size, dataType);
+    Object key = createKeyObject(keyType, keySize);
     return new Tuple(key, data, keyType, dataType);
   }
 }
