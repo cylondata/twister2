@@ -336,6 +336,7 @@ public class TeraSort extends TaskWorker {
       byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
+      long readStart = System.currentTimeMillis();
       while (content.hasNext()) {
         Tuple<byte[], Iterator<byte[]>> nextTuple = content.next();
         if (previousKey != null
@@ -359,7 +360,8 @@ public class TeraSort extends TaskWorker {
           }
         }
       }
-      LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
+      LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
+          (System.currentTimeMillis() - readStart)));
       tasksCount.decrementAndGet();
       try {
         if (resultsWriter != null) {
