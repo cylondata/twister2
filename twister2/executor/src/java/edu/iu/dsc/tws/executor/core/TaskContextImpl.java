@@ -150,6 +150,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public void reset() {
     this.isDone = new HashMap<>();
+    this.allEdgedFinished = false;
   }
 
   /**
@@ -290,6 +291,7 @@ public class TaskContextImpl implements TaskContext {
   public boolean writeEnd(String edge, Object message) {
     boolean writeSuccess = this.write(edge, message);
     isDone.put(edge, true);
+    checkAllEdgesFinished();
     return writeSuccess;
   }
 
