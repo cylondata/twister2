@@ -92,7 +92,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     }
 
     boolean send = bulkReceiver.receive(target,
-        this.groupByKey ? new UnGroupedGatherIterator(values) : new GroupedGatherIterator(values));
+        this.groupByKey ? new GroupedGatherIterator(values) : new UnGroupedGatherIterator(values));
     if (send) {
       gathered.remove(target);
     }
