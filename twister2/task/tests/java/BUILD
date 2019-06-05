@@ -10,6 +10,7 @@ java_library(
         "//third_party/java:powermock",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
+        "//twister2/task/src/main/java:task-java",
         "//twister2/data/src/main/java:data-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_guava_guava//jar",
@@ -21,6 +22,7 @@ java_library(
 java_tests(
     test_classes = [
         "edu.iu.dsc.tws.task.test.Hello",
+        "edu.iu.dsc.tws.task.test.WatermarkGeneratorTest",
     ],
     runtime_deps = [
         ":task-tests",
