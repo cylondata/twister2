@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public class BinaryInputSplit extends FileInputSplit<byte[]> {
 
@@ -151,7 +152,8 @@ public class BinaryInputSplit extends FileInputSplit<byte[]> {
     // the if() clauses are to prevent the configure() method from
     // overwriting the values set by the setters
     //int recordLen = parameters.getIntegerValue(RECORD_LENGTH, 2000 * Short.BYTES);
-    int recordLen = 1000 * Short.BYTES;
+    int datasize = Integer.parseInt(String.valueOf(parameters.get(DataObjectConstants.DSIZE)));
+    int recordLen = datasize * Short.BYTES;
     if (recordLen > 0) {
       setRecordLength(recordLen);
     }
