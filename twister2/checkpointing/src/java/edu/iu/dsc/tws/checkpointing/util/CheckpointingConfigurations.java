@@ -16,6 +16,7 @@ import edu.iu.dsc.tws.common.config.Config;
 
 public final class CheckpointingConfigurations {
 
+  public static final String JOB_MASTER_USED = "twister2.job.master.used";
   public static final String CHECKPOINTING_ENABLED = "twister2.checkpointing.enable";
   public static final String CHECKPOINTING_STORE_CLASS = "twister2.checkpointing.store";
   public static final String CHECKPOINTING_SOURCE_FREQUNCY
@@ -27,7 +28,8 @@ public final class CheckpointingConfigurations {
   }
 
   public static boolean isCheckpointingEnabled(Config config) {
-    return config.getBooleanValue(CHECKPOINTING_ENABLED, false);
+    return config.getBooleanValue(CHECKPOINTING_ENABLED, false)
+        && config.getBooleanValue(JOB_MASTER_USED, true);
   }
 
   public static String getCheckpointingStoreClass(Config config) {

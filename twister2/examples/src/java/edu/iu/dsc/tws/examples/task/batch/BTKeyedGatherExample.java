@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.typed.batch.BKeyedGatherCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BKeyedGatherGroupedCompute;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
 
@@ -49,15 +49,15 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new KeyedGatherSinkTask();
+    ISink r = new KeyedGatherGroupedSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
     return taskGraphBuilder;
   }
 
-  protected static class KeyedGatherSinkTask extends BKeyedGatherCompute<Integer, int[]>
-      implements ISink {
+  protected static class KeyedGatherGroupedSinkTask
+      extends BKeyedGatherGroupedCompute<Integer, int[]> implements ISink {
 
     private static final long serialVersionUID = -254264903510284798L;
 

@@ -160,7 +160,7 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory,
             maxBytesToFile, shuffleDirectory,
             DFWIOUtils.getOperationName(target, operationLeft, refresh),
-            operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
+            operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target, true);
 
         sortedMergers.put(target, sortedMerger);
         targetDone.put(target, false);
