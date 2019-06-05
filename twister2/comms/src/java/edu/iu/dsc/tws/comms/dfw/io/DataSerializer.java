@@ -12,11 +12,8 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
@@ -47,22 +44,6 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
  * the key.
  */
 public class DataSerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(DataSerializer.class.getName());
-
-  private MessageType dataType;
-
-  private DataPacker packer;
-
-  public DataSerializer(KryoSerializer serializer, int executor, MessageType dataType) {
-    super(serializer, executor);
-    this.serializer = serializer;
-    this.dataType = dataType;
-
-    packer = dataType.getDataPacker();
-
-    LOG.fine("Initializing serializer on worker: " + executor);
-  }
-
 
   /**
    * Builds the body of the message. Based on the message type different build methods are called
@@ -74,7 +55,8 @@ public class DataSerializer extends BaseSerializer {
    */
   public boolean serializeSingleMessage(Object payload,
                                         OutMessage sendMessage, DataBuffer targetBuffer) {
-    return serializeData(payload, sendMessage.getSerializationState(), targetBuffer);
+    return serializeData(payload, sendMessage.getSerializationState(),
+        targetBuffer, sendMessage.getDataType().getDataPacker());
   }
 
   /**
@@ -86,12 +68,12 @@ public class DataSerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   private boolean serializeData(Object payload, SerializeState state,
-                                DataBuffer targetBuffer) {
+                                DataBuffer targetBuffer, DataPacker dataPacker) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
       // okay we need to serialize the data
-      int dataLength = packer.determineLength(payload, state);
+      int dataLength = dataPacker.determineLength(payload, state);
       state.getActive().setTotalToCopy(dataLength);
 
       state.setCurrentHeaderLength(dataLength);
@@ -116,7 +98,7 @@ public class DataSerializer extends BaseSerializer {
     }
 
     boolean completed = DataPackerProxy.writeDataToBuffer(
-        packer,
+        dataPacker,
         payload,
         byteBuffer,
         state

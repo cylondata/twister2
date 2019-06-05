@@ -14,10 +14,8 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -27,25 +25,6 @@ import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
 public class KeyedDataDeSerializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(KeyedDataDeSerializer.class.getName());
-
-  private DataPacker dataPacker;
-
-  private DataPacker keyPacker;
-
-  private MessageType keyType;
-
-  private int workerId;
-
-  public KeyedDataDeSerializer(KryoSerializer kryoSerializer, int exec,
-                               MessageType keyType, MessageType dataType) {
-    this.dataPacker = dataType.getDataPacker();
-    this.keyPacker = keyType.getDataPacker();
-    this.keyType = keyType;
-    this.workerId = exec;
-
-    LOG.fine("Initializing serializer on worker: " + exec);
-  }
 
   @Override
   public void init(Config cfg, boolean k) {
@@ -62,6 +41,9 @@ public class KeyedDataDeSerializer implements MessageDeSerializer {
   @Override
   public Object build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
+    MessageType keyType = currentMessage.getKeyType();
+    DataPacker keyPacker = keyType.getDataPacker();
+    DataPacker dataPacker = currentMessage.getDataType().getDataPacker();
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
     MessageHeader header = currentMessage.getHeader();
 
@@ -122,7 +104,7 @@ public class KeyedDataDeSerializer implements MessageDeSerializer {
           // we are going to read the key first
           currentMessage.setReadingKey(true);
         } catch (NegativeArraySizeException e) {
-          throw new RuntimeException("Exec " + workerId, e);
+          throw new RuntimeException(e);
         }
       }
 

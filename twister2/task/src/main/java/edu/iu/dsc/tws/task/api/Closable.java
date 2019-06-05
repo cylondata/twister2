@@ -21,8 +21,8 @@ public interface Closable {
   void close();
 
   /**
-   * Refresh the task
+   * Reset the task
    */
-  default void refresh() {
+  default void reset() {
   }
 }

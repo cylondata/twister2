@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.api;
 
 import edu.iu.dsc.tws.common.config.Config;
 
-public abstract class BaseNode implements INode {
+public abstract class BaseNode implements INode, Closable {
 
   protected TaskContext context;
 
@@ -23,5 +23,15 @@ public abstract class BaseNode implements INode {
   public void prepare(Config cfg, TaskContext ctx) {
     this.config = cfg;
     this.context = ctx;
+  }
+
+  @Override
+  public void close() {
+
+  }
+
+  @Override
+  public void reset() {
+
   }
 }

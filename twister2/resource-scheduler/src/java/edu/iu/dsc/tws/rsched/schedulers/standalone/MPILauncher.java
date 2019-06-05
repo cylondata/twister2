@@ -221,13 +221,10 @@ public class MPILauncher implements ILauncher {
 
     final boolean[] start = {false};
     // now start the controller, which will get the resources and start
-    Thread controllerThread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        IController controller = new MPIController(true);
-        controller.initialize(config);
-        start[0] = controller.start(job);
-      }
+    Thread controllerThread = new Thread(() -> {
+      IController controller = new MPIController(true);
+      controller.initialize(config);
+      start[0] = controller.start(job);
     });
     controllerThread.start();
 

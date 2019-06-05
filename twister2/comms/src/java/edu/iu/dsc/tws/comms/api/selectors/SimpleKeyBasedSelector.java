@@ -58,5 +58,4 @@ public class SimpleKeyBasedSelector implements DestinationSelector {
   public void commit(int source, int next) {
 
   }
-
 }

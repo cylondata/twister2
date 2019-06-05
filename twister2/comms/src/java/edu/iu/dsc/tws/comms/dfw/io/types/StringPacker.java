@@ -90,7 +90,7 @@ public final class StringPacker implements DataPacker<String, char[]> {
 
   @Override
   public byte[] packToByteArray(String data) {
-    return data.getBytes();
+    return CHAR_ARRAY_PACKER.packToByteArray(data.toCharArray());
   }
 
   @Override

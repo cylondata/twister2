@@ -124,7 +124,7 @@ public class BKeyedGather {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    keyedGather.clean();
+  public void reset() {
+    keyedGather.reset();
   }
 }

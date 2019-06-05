@@ -176,7 +176,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
 
   }
 

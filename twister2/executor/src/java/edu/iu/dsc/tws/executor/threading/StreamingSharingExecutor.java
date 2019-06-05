@@ -55,6 +55,8 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
       schedulerExecution(nodes);
 
       progressStreamComm();
+    } catch (Exception ex) {
+      LOG.log(Level.SEVERE, "Error in scheduling execution", ex);
     } finally {
       notStopped = false;
       cleanUp(executionPlan, nodes);

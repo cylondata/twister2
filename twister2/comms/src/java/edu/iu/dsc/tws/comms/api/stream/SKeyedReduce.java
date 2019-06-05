@@ -138,6 +138,6 @@ public class SKeyedReduce {
    * Clean the operation, this doesn't close it
    */
   public void refresh() {
-    keyedReduce.clean();
+    keyedReduce.reset();
   }
 }

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -121,7 +122,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
                            String tName, int taskId, int globalTaskId,
                            int tIndex, int parallel, int wId,
                            Map<String, Object> cfgs, Map<String, String> inEdges,
-                           TaskSchedulePlan taskSchedule) {
+                           TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
+                           String taskGraphName, Long taskVersion) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
@@ -140,7 +142,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     this.context.reset();
     state = new InstanceState(InstanceState.INIT);
     if (batchTask instanceof Closable) {
-      ((Closable) batchTask).refresh();
+      ((Closable) batchTask).reset();
     }
   }
 

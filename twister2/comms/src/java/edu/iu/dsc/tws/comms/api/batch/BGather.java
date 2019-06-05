@@ -115,7 +115,7 @@ public class BGather {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    gather.clean();
+  public void reset() {
+    gather.reset();
   }
 }

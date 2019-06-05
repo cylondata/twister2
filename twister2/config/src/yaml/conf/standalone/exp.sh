@@ -6,8 +6,8 @@ if [ $em != $2 ]; then
     cp = $2
 fi
 
-if [ $OMPI_COMM_WORLD_RANK = "1" ]; then
-    profile=-agentpath:/home/skamburu/tools/jprofiler10/bin/linux-x64/libjprofilerti.so=port=8849
+if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
+    profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
     debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
 fi
 

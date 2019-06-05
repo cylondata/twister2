@@ -107,6 +107,6 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 }
