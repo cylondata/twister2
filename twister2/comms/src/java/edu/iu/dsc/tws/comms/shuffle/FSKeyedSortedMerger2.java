@@ -51,6 +51,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * Maximum bytes in a single file to write
    */
   private long maxBytesFile;
+  private boolean groupByKey;
 
   /**
    * The base folder to work on
@@ -126,9 +127,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    */
   public FSKeyedSortedMerger2(long maxBytesInMemory, long maxBytesToAFile,
                               String dir, String opName, MessageType kType,
-                              MessageType dType, Comparator kComparator, int tar) {
+                              MessageType dType, Comparator kComparator,
+                              int tar, boolean groupByKey) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxBytesFile = maxBytesToAFile;
+    this.groupByKey = groupByKey;
 
     //we can expect atmost this much of unique keys
     this.recordsInMemory = new ArrayList<>();
@@ -358,36 +361,46 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         }
 
         @Override
-        public Tuple<Object, Iterator> next() {
+        public Tuple<Object, Object> next() {
           if (!hasNext()) {
             throw new NoSuchElementException("There are no more keys to iterate");
           }
           final Object currentKey = nextTuple.getKey();
-          this.itOfCurrentKey = new Iterator<Object>() {
-            @Override
-            public boolean hasNext() {
-              return nextTuple != null && nextTuple.getKey().equals(currentKey);
-            }
 
-            @Override
-            public Object next() {
-              if (this.hasNext()) {
-                Object returnValue = nextTuple.getValue();
-                if (fsIterator.hasNext()) {
-                  nextTuple = fsIterator.next();
-                } else {
-                  nextTuple = null;
-                }
-                return returnValue;
-              } else {
-                throw new NoSuchElementException("There are no more values for key "
-                    + currentKey);
-              }
-            }
-          };
-          Tuple<Object, Iterator> nextValueSet = new Tuple<>();
+          Tuple<Object, Object> nextValueSet = new Tuple<>();
           nextValueSet.setKey(currentKey);
-          nextValueSet.setValue(this.itOfCurrentKey);
+          if (groupByKey) {
+            this.itOfCurrentKey = new Iterator<Object>() {
+              @Override
+              public boolean hasNext() {
+                return nextTuple != null && nextTuple.getKey().equals(currentKey);
+              }
+
+              @Override
+              public Object next() {
+                if (this.hasNext()) {
+                  Object returnValue = nextTuple.getValue();
+                  if (fsIterator.hasNext()) {
+                    nextTuple = fsIterator.next();
+                  } else {
+                    nextTuple = null;
+                  }
+                  return returnValue;
+                } else {
+                  throw new NoSuchElementException("There are no more values for key "
+                      + currentKey);
+                }
+              }
+            };
+            nextValueSet.setValue(this.itOfCurrentKey);
+          } else {
+            nextValueSet.setValue(nextTuple.getValue());
+            if (fsIterator.hasNext()) {
+              nextTuple = fsIterator.next();
+            } else {
+              nextTuple = null;
+            }
+          }
           return nextValueSet;
         }
       };
