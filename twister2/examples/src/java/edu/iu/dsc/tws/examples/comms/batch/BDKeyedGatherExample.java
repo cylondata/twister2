@@ -69,7 +69,8 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     // create the communication
     keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(),
-        new SimpleKeyBasedSelector(), true, Comparator.comparingInt(o -> (Integer) o));
+        new SimpleKeyBasedSelector(), true,
+        Comparator.comparingInt(o -> (Integer) o), true);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

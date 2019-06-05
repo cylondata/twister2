@@ -62,7 +62,7 @@ import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.typed.AllReduceCompute;
-import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BKeyedGatherUnGroupedCompute;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
@@ -185,7 +185,7 @@ public class TeraSort extends TaskWorker {
             taskPartitioner,
             new HashMap<>(),
             true,
-            ByteArrayComparator.getInstance());
+            ByteArrayComparator.getInstance(), false);
 
 
     DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
@@ -297,7 +297,7 @@ public class TeraSort extends TaskWorker {
     }
   }
 
-  public static class Receiver extends KeyedGatherCompute<byte[], Iterator<byte[]>>
+  public static class Receiver extends BKeyedGatherUnGroupedCompute<byte[], byte[]>
       implements ISink {
 
     private boolean timingCondition = false;
@@ -328,7 +328,7 @@ public class TeraSort extends TaskWorker {
     }
 
     @Override
-    public boolean keyedGather(Iterator<Tuple<byte[], Iterator<byte[]>>> content) {
+    public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
@@ -337,7 +337,7 @@ public class TeraSort extends TaskWorker {
       boolean allOrdered = true;
       long tupleCount = 0;
       while (content.hasNext()) {
-        Tuple<byte[], Iterator<byte[]>> nextTuple = content.next();
+        Tuple<byte[], byte[]> nextTuple = content.next();
         if (previousKey != null
             && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
@@ -348,12 +348,8 @@ public class TeraSort extends TaskWorker {
 
         if (this.resultsWriter != null) {
           try {
-            Iterator<byte[]> values = nextTuple.getValue();
-            while (values.hasNext()) {
-              resultsWriter.write(nextTuple.getKey());
-              byte[] val = values.next();
-              resultsWriter.write(val);
-            }
+            resultsWriter.write(nextTuple.getKey());
+            resultsWriter.write(nextTuple.getValue());
           } catch (IOException e) {
             LOG.log(Level.WARNING, "Failed to write results to file.", e);
           }
