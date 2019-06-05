@@ -15,7 +15,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
@@ -72,12 +71,12 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * List of bytes in the memory so far
    */
-  private LinkedList<Tuple> recordsInMemory;
+  private ArrayList<Tuple> recordsInMemory;
 
   /**
    * Temporary hold the tuples that needs to be sent to the disk
    */
-  private LinkedList<Tuple> recordsToDisk;
+  private ArrayList<Tuple> recordsToDisk;
 
   /**
    * Maximum size of a tuple written to disk in each file
@@ -132,8 +131,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.maxBytesFile = maxBytesToAFile;
 
     //we can expect atmost this much of unique keys
-    this.recordsInMemory = new LinkedList<>();
-    this.recordsToDisk = new LinkedList<>();
+    this.recordsInMemory = new ArrayList<>();
+    this.recordsToDisk = new ArrayList<>();
 
     this.folder = dir;
     this.operationName = opName;
@@ -183,13 +182,15 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       // add the objects that are destined to disk, to memory
       recordsInMemory.addAll(recordsToDisk);
       // clear the records to disk
-      recordsToDisk = new LinkedList<>();
+      recordsToDisk = new ArrayList<>();
       numOfBytesInMemory = 0;
 
       // lets convert the in-memory data to objects
       deserializeObjects();
       // lets sort the in-memory objects
+      long start = System.currentTimeMillis();
       recordsInMemory.sort(this.comparatorWrapper);
+      LOG.info("Memory sorting time: " + (System.currentTimeMillis() - start));
     } finally {
       fileWriteLock.release();
     }
@@ -214,7 +215,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     int threads = CommonThreadPool.getThreadCount() + 1; //this thread is also counted
     List<Future<Boolean>> deserializeFutures = new ArrayList<>();
-
+    long st = System.currentTimeMillis();
     int chunkSize = this.recordsInMemory.size() / threads;
 
     if (this.recordsInMemory.size() % threads != 0) {
@@ -258,6 +259,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         throw new RuntimeException("Error in deserializing records in memory", e);
       }
     }
+    LOG.info("Memory deserialize time: " + (System.currentTimeMillis() - st));
   }
 
   /**
@@ -267,7 +269,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     // it is time to write
     if (numOfBytesInMemory >= maxBytesFile) {
       //create references to existing data
-      LinkedList<Tuple> referenceToRecordsInMemory = null;
+      ArrayList<Tuple> referenceToRecordsInMemory = null;
       if (this.fileWriteLock.availablePermits() == 0) {
         LOG.warning("Communication thread blocks on disk IO thread!");
       }
@@ -286,7 +288,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         memoryBytes = numOfBytesInMemory;
 
         //making previous things garbage collectible
-        this.recordsToDisk = new LinkedList<>();
+        this.recordsToDisk = new ArrayList<>();
         noOfFileWritten++;
         numOfBytesInMemory = 0;
       } catch (InterruptedException e) {
@@ -305,11 +307,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
   private class FileSaveWorker implements Runnable {
     //create references to existing data
-    private LinkedList<Tuple> referenceToRecordsInMemory;
+    private ArrayList<Tuple> referenceToRecordsInMemory;
     private String fileName;
     private long bytesInMemory;
 
-    FileSaveWorker(LinkedList<Tuple> referenceToRecordsInMemory,
+    FileSaveWorker(ArrayList<Tuple> referenceToRecordsInMemory,
                    int numFilesWritten, long memoryBytes) {
       this.referenceToRecordsInMemory = referenceToRecordsInMemory;
       this.bytesInMemory = memoryBytes;

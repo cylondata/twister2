@@ -25,12 +25,12 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
-public class AKeyedDeserializer implements MessageDeSerializer {
-  private static final Logger LOG = Logger.getLogger(AKeyedDeserializer.class.getName());
+public class DataDeserializer implements MessageDeSerializer {
+  private static final Logger LOG = Logger.getLogger(DataDeserializer.class.getName());
 
   private DataPacker dataPacker;
 
-  public AKeyedDeserializer(int exec, MessageType dataType) {
+  public DataDeserializer(int exec, MessageType dataType) {
     dataPacker = dataType.getDataPacker();
     LOG.fine("Initializing serializer on worker: " + exec);
   }

@@ -30,12 +30,12 @@ import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
-public class AKeyedSerializerTest {
+public class DataSerializerTest {
   @Test
   public void testBuildLargeIntegerMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.INTEGER;
+    MessageType type = MessageTypes.INTEGER_ARRAY;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((int[]) inMessage.getDeserializedData(), (int[]) data);
@@ -45,7 +45,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeDoubleMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.DOUBLE;
+    MessageType type = MessageTypes.DOUBLE_ARRAY;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((double[]) inMessage.getDeserializedData(), (double[]) data, .01);
@@ -55,7 +55,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeLongMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.LONG;
+    MessageType type = MessageTypes.LONG_ARRAY;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((long[]) inMessage.getDeserializedData(), (long[]) data);
@@ -65,7 +65,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeShortMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.SHORT;
+    MessageType type = MessageTypes.SHORT_ARRAY;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((short[]) inMessage.getDeserializedData(), (short[]) data);
@@ -75,7 +75,7 @@ public class AKeyedSerializerTest {
   public void testBuildLargeByteMessage() {
     int numBuffers = 10;
     int size = 1000;
-    MessageType type = MessageTypes.BYTE;
+    MessageType type = MessageTypes.BYTE_ARRAY;
     Object data = createData(800, type);
     InMessage inMessage = singleValueCase(numBuffers, size, type, data);
     Assert.assertArrayEquals((byte[]) inMessage.getDeserializedData(), (byte[]) data);
@@ -97,7 +97,7 @@ public class AKeyedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null, data);
 
-    AKeyedSerializer serializer = new AKeyedSerializer(new KryoSerializer(), 0, type);
+    DataSerializer serializer = new DataSerializer(new KryoSerializer(), 0, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -107,7 +107,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
+    DataDeserializer deserializer = new DataDeserializer(0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -128,13 +128,13 @@ public class AKeyedSerializerTest {
   public void testBuildLargeListIntMessage() {
     int numBuffers = 16;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageTypes.INTEGER);
+      Object o = createData(800, MessageTypes.INTEGER_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.INTEGER_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -149,13 +149,13 @@ public class AKeyedSerializerTest {
   public void testBuildLargeListLongMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageTypes.LONG);
+      Object o = createData(800, MessageTypes.LONG_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.LONG);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.LONG_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -170,13 +170,13 @@ public class AKeyedSerializerTest {
   public void testBuildLargeListDoubleMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageTypes.DOUBLE);
+      Object o = createData(800, MessageTypes.DOUBLE_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.DOUBLE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.DOUBLE_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -191,13 +191,13 @@ public class AKeyedSerializerTest {
   public void testBuildLargeListShortMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageTypes.SHORT);
+      Object o = createData(800, MessageTypes.SHORT_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.SHORT);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.SHORT_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -212,13 +212,13 @@ public class AKeyedSerializerTest {
   public void testBuildLargeListByteMessage() {
     int numBuffers = 32;
     int size = 1000;
-    List<Object> data = new ArrayList<>();
+    List<Object> data = new AggregatedObjects<>();
     for (int i = 0; i < 4; i++) {
-      Object o = createData(800, MessageTypes.BYTE);
+      Object o = createData(800, MessageTypes.BYTE_ARRAY);
       data.add(o);
     }
 
-    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.BYTE);
+    InMessage inMessage = listValueCase(numBuffers, size, data, MessageTypes.BYTE_ARRAY);
     List<Object> result = (List<Object>) inMessage.getDeserializedData();
     for (int i = 0; i < result.size(); i++) {
       Object exp = result.get(i);
@@ -233,7 +233,7 @@ public class AKeyedSerializerTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null, data);
 
-    AKeyedSerializer serializer = new AKeyedSerializer(new KryoSerializer(), 0, type);
+    DataSerializer serializer = new DataSerializer(new KryoSerializer(), 0, type);
     serializer.init(Config.newBuilder().build(), bufferQueue, false);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -244,7 +244,7 @@ public class AKeyedSerializerTest {
       messages.add(ch);
     }
 
-    AKeyedDeserializer deserializer = new AKeyedDeserializer(0, type);
+    DataDeserializer deserializer = new DataDeserializer(0, type);
     deserializer.init(Config.newBuilder().build(), false);
 
     MessageHeader header = deserializer.buildHeader(
@@ -261,31 +261,31 @@ public class AKeyedSerializerTest {
   }
 
   public static Object createData(int size, MessageType type) {
-    if (type == MessageTypes.INTEGER) {
+    if (type == MessageTypes.INTEGER_ARRAY) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageTypes.LONG) {
+    } else if (type == MessageTypes.LONG_ARRAY) {
       long[] vals = new long[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageTypes.DOUBLE) {
+    } else if (type == MessageTypes.DOUBLE_ARRAY) {
       double[] vals = new double[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (type == MessageTypes.SHORT) {
+    } else if (type == MessageTypes.SHORT_ARRAY) {
       short[] vals = new short[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (short) i;
       }
       return vals;
-    } else if (type == MessageTypes.BYTE) {
+    } else if (type == MessageTypes.BYTE_ARRAY) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
