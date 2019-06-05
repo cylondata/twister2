@@ -11,5 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointmanager.state;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Snapshot {
+
+  private List<StorableState> stateMap = new ArrayList<>();
+
+  public Object getState() {
+    return stateMap;
+  }
+
+  public void addState(StorableState storableState) {
+    stateMap.add(storableState);
+  }
 }

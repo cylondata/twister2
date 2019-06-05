@@ -103,7 +103,7 @@ public class BAllReduce {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    reduce.clean();
+  public void reset() {
+    reduce.reset();
   }
 }

@@ -27,7 +27,6 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -269,10 +268,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer(new KryoSerializer(), executor,
-            keyType, dataType));
+        serializerMap.put(s, new KeyedDataSerializer());
       } else {
-        serializerMap.put(s, new DataSerializer(new KryoSerializer(), executor, dataType));
+        serializerMap.put(s, new DataSerializer());
       }
     }
 
@@ -286,10 +284,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDataDeSerializer(new KryoSerializer(),
-            executor, keyType, receiveType));
+        deSerializerMap.put(ex, new KeyedDataDeSerializer());
       } else {
-        deSerializerMap.put(ex, new DataDeserializer(executor, receiveType));
+        deSerializerMap.put(ex, new DataDeserializer());
       }
     }
 
@@ -363,7 +360,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (partialReceiver != null) {
       partialReceiver.clean();
     }

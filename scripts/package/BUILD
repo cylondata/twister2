@@ -35,6 +35,8 @@ load("//tools:rules/twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools:rules/twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools:rules/twister2_core.bzl", "twister2_dashboard_files")
 load("//tools:rules/twister2_core.bzl", "twister2_storm_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_checkpointing_files")
+load("//tools:rules/twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_lib_files")
 load("//tools:rules/twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
@@ -262,6 +264,7 @@ pack_tw2(
         ":twister2-dashboard",
         ":twister2-dist",
         ":twister2-examples",
+        ":twister2-fault-tolerance",
         ":twister2-harp-libs",
         ":twister2-lib-api",
         ":twister2-lib-common",
@@ -274,6 +277,7 @@ pack_tw2(
         ":twister2-lib-third_party",
         ":twister2-master-jersey",
         ":twister2-master-lib",
+        ":twister2-restarter",
     ],
 )
 
@@ -285,6 +289,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-bin",
+        ":twister2-checkpointing",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-dashboard",
@@ -293,16 +298,6 @@ pack_tw2(
         ":twister2-conf-mesos",
         ":twister2-conf-nomad",
         ":twister2-conf-slurm",
-        ":twister2-test",
-        ":twister2-test-values",
-        ":twister2-test-util",
-        ":twister2-test-tree",
-        ":twister2-test-tests",
-        ":twister2-test-tests-apps-tera-sort",
-        ":twister2-test-tests-comms",
-        ":twister2-test-tests-integration",
-        ":twister2-test-tests-integration-comms",
-        ":twister2-test-tests-integration-task",
         ":twister2-conf-standalone",
         ":twister2-core-lib-executor",
         ":twister2-dashboard",
@@ -324,7 +319,18 @@ pack_tw2(
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-restarter",
         ":twister2-storm",
+        ":twister2-test",
+        ":twister2-test-tests",
+        ":twister2-test-tests-apps-tera-sort",
+        ":twister2-test-tests-comms",
+        ":twister2-test-tests-integration",
+        ":twister2-test-tests-integration-comms",
+        ":twister2-test-tests-integration-task",
+        ":twister2-test-tree",
+        ":twister2-test-util",
+        ":twister2-test-values",
     ],
 )
 
@@ -511,8 +517,22 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-checkpointing",
+    srcs = twister2_core_checkpointing_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-restarter",
+    srcs = twister2_core_restarter_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-test",
-    srcs = ["//util/test:test"],
+    srcs = ["//util/test"],
     package_dir = "util/test",
     version = T2_VERSION,
 )
@@ -579,5 +599,3 @@ pack_tw2(
     package_dir = "util/test/tests/integration/task",
     version = T2_VERSION,
 )
-
-

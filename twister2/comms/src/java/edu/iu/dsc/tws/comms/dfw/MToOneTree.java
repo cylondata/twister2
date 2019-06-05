@@ -27,7 +27,6 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -290,10 +289,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer(new KryoSerializer(), workerId,
-            keyType, dataType));
+        serializerMap.put(s, new KeyedDataSerializer());
       } else {
-        serializerMap.put(s, new DataSerializer(new KryoSerializer(), workerId, dataType));
+        serializerMap.put(s, new DataSerializer());
       }
     }
 
@@ -309,10 +307,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(e, new KeyedDataDeSerializer(new KryoSerializer(),
-            workerId, keyType, dataType));
+        deSerializerMap.put(e, new KeyedDataDeSerializer());
       } else {
-        deSerializerMap.put(e, new DataDeserializer(workerId, dataType));
+        deSerializerMap.put(e, new DataDeserializer());
       }
     }
 
@@ -376,7 +373,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (partialReceiver != null) {
       partialReceiver.clean();
     }

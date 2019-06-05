@@ -83,7 +83,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

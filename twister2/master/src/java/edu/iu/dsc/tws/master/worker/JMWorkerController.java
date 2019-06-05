@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.ControllerContext;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
@@ -41,18 +42,23 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   private int numberOfWorkers;
 
   private RRClient rrClient;
+  private CheckpointingClient checkpointingClient;
   private Config config;
 
-  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker, RRClient rrClient) {
-    this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config));
+  public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
+                            RRClient rrClient, CheckpointingClient checkpointingClient) {
+    this(config, thisWorker, rrClient, JobMasterContext.workerInstances(config),
+        checkpointingClient);
   }
 
   public JMWorkerController(Config config, JobMasterAPI.WorkerInfo thisWorker,
-                            RRClient rrClient, int numberOfWorkers) {
+                            RRClient rrClient, int numberOfWorkers,
+                            CheckpointingClient checkpointingClient) {
     this.config = config;
     this.numberOfWorkers = numberOfWorkers;
     this.thisWorker = thisWorker;
     this.rrClient = rrClient;
+    this.checkpointingClient = checkpointingClient;
     workerList = new ArrayList<>();
     workerList.add(thisWorker);
   }
@@ -64,7 +70,6 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
 
   /**
    * when the job is scaled, we update the number of workers
-   * @param numOfWorkers
    */
   public void scaled(int change, int numOfWorkers) {
     this.numberOfWorkers = numOfWorkers;
@@ -122,7 +127,7 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     if (!sentAndReceived) {
       throw
           new TimeoutException("All workers have not joined the job on the specified time limit: "
-          + timeLimit + "ms.");
+              + timeLimit + "ms.");
     }
 
     return workerList;
@@ -207,4 +212,8 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
     }
   }
 
+  @Override
+  public CheckpointingClient getCheckpointingClient() {
+    return this.checkpointingClient;
+  }
 }

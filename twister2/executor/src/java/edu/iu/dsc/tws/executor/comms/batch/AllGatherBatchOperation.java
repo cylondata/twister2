@@ -103,6 +103,6 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 }

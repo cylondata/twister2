@@ -30,6 +30,8 @@ public class TaskMessage<T> implements IMessage<T> {
    */
   private int sourceTask;
 
+  private int flag;
+
   /**
    * Create a task message with data
    *
@@ -52,6 +54,11 @@ public class TaskMessage<T> implements IMessage<T> {
     this.sourceTask = sourceTask;
   }
 
+  public TaskMessage(T content, int flag, String edge, int sourceTask) {
+    this(content, edge, sourceTask);
+    this.flag = flag;
+  }
+
   public T getContent() {
     return content;
   }
@@ -65,7 +72,17 @@ public class TaskMessage<T> implements IMessage<T> {
     return edge;
   }
 
+  @Override
+  public int getFlag() {
+    return this.flag;
+  }
+
   public int sourceTask() {
     return sourceTask;
+  }
+
+  @Override
+  public void setFlag(int flag) {
+    this.flag = flag;
   }
 }
