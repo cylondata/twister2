@@ -361,7 +361,7 @@ public class TeraSort extends TaskWorker {
         }
       }
       LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
-          (System.currentTimeMillis() - readStart)));
+          System.currentTimeMillis() - readStart));
       tasksCount.decrementAndGet();
       try {
         if (resultsWriter != null) {
