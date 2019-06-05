@@ -20,7 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -39,12 +38,10 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
   @Before
   public void setUp() throws Exception {
     bufferQueue = createDataQueue(32, 1024000);
-    serializer = new KeyedDataSerializer(
-        new KryoSerializer(), 0, MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY);
+    serializer = new KeyedDataSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
-    deserializer = new KeyedDataDeSerializer(new KryoSerializer(), 0,
-        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY);
+    deserializer = new KeyedDataDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
   }
 
@@ -83,7 +80,7 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
   public InMessage keyedListValueCase(int numBuffers, int size, List<Object> data,
                                       MessageType type, MessageType keyType) {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null, data);
+        null, type, keyType, null, data);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
