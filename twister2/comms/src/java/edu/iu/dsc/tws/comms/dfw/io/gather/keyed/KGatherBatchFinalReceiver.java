@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
    * Final receiver that get the reduced values for the operation
    */
   private BulkReceiver bulkReceiver;
+  private boolean groupByKey;
 
   /**
    * The reduced values for each target and key
@@ -44,8 +46,9 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       new Int2ObjectOpenHashMap<>();
 
   public KGatherBatchFinalReceiver(BulkReceiver receiver,
-                                   int limitPerKey) {
+                                   boolean groupByKey) {
     this.bulkReceiver = receiver;
+    this.groupByKey = groupByKey;
   }
 
   @Override
@@ -88,7 +91,8 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       return true;
     }
 
-    boolean send = bulkReceiver.receive(target, new GatherIterator(values));
+    boolean send = bulkReceiver.receive(target,
+        this.groupByKey ? new UnGroupedGatherIterator(values) : new GroupedGatherIterator(values));
     if (send) {
       gathered.remove(target);
     }
@@ -108,12 +112,53 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private class GatherIterator implements Iterator<Object> {
+  private class UnGroupedGatherIterator implements Iterator<Object> {
 
     private Map<Object, List<Object>> messageMap;
     private Queue<Object> keyList = new LinkedList<>();
 
-    GatherIterator(Map<Object, List<Object>> messageMap) {
+    private Object currentKey;
+    private List<Object> currentValues;
+    private int currentIndex = 0;
+
+    UnGroupedGatherIterator(Map<Object, List<Object>> messageMap) {
+      this.messageMap = messageMap;
+      keyList.addAll(messageMap.keySet());
+      this.moveToNextKey();
+    }
+
+    private void moveToNextKey() {
+      this.currentKey = this.keyList.poll();
+      this.currentValues = this.messageMap.getOrDefault(this.currentKey,
+          Collections.emptyList());
+      this.currentIndex = 0;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return currentKey != null;
+    }
+
+    @Override
+    public Object next() {
+      Tuple tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++),
+          operation.getKeyType(), operation.getDataType());
+
+      if (this.currentIndex == this.currentValues.size()) {
+        this.moveToNextKey();
+      }
+
+      return tuple;
+    }
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private class GroupedGatherIterator implements Iterator<Object> {
+
+    private Map<Object, List<Object>> messageMap;
+    private Queue<Object> keyList = new LinkedList<>();
+
+    GroupedGatherIterator(Map<Object, List<Object>> messageMap) {
       this.messageMap = messageMap;
       keyList.addAll(messageMap.keySet());
     }

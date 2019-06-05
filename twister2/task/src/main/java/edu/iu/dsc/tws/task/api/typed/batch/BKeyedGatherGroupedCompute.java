@@ -27,10 +27,10 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
+import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
 
-public abstract class BKeyedGatherCompute<K, T>
-    extends AbstractIterableDataCompute<Tuple<K, Iterator<T>>> {
+public abstract class BKeyedGatherGroupedCompute<K, T>
+    extends KeyedGatherCompute<K, Iterator<T>> {
 
   public abstract boolean keyedGather(Iterator<Tuple<K, Iterator<T>>> content);
 
