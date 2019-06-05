@@ -65,7 +65,7 @@ public class WatermarkDurationWindowPolicy<T> extends DurationWindowPolicy<T> {
 
   @Override
   public void start() {
-
+    started = true;
   }
 
   @Override

@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.policy.eviction.duration;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.constant.Action;
 
 public class WatermarkDurationEvictionPolicy<T> extends DurationEvictionPolicy<T> {
+  private static final Logger LOG = Logger
+      .getLogger(WatermarkDurationEvictionPolicy.class.getName());
   private final long lag;
 
   public WatermarkDurationEvictionPolicy(long winLength) {

@@ -22,6 +22,8 @@ import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.extract.EventTimeExtractor;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -30,7 +32,6 @@ import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.collectives.AggregateWindow;
 import edu.iu.dsc.tws.task.api.window.collectives.FoldWindow;
@@ -55,7 +56,7 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
     String edge = "edge";
     BaseWindowSource g = new SourceWindowTimeStampTask(edge);
 
-    ITimestampExtractor<IntData> timestampExtractor = new TimestampExtractor<>();
+    ITimestampExtractor<EventTimeData> timestampExtractor = new EventTimeExtractor();
 
     // Tumbling Window
     BaseWindowedSink dw = new DirectWindowedReceivingTask()
@@ -90,12 +91,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         .withTumblingCountWindow(5);
 
     BaseWindowedSink sdwCountTumblingProcess
-        = new DirectProcessWindowedTask(new ProcessFunctionImpl())
+        = new DirectProcessWindowedIntTask(new ProcessFunctionIntImpl())
         .withCustomTimestampExtractor(timestampExtractor)
-        .withAllowedLateness(10, TimeUnit.MILLISECONDS)
-        .withWatermarkInterval(3, TimeUnit.MILLISECONDS)
-        .withTumblingCountWindow(5);
-
+        .withAllowedLateness(0, TimeUnit.MILLISECONDS)
+        .withWatermarkInterval(1, TimeUnit.MILLISECONDS)
+        .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
     computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
@@ -221,6 +221,29 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
     }
   }
 
+  protected static class DirectProcessWindowedIntTask extends ProcessWindow<EventTimeData> {
+
+    public DirectProcessWindowedIntTask(
+        ProcessWindowedFunction<EventTimeData> processWindowedFunction) {
+      super(processWindowedFunction);
+    }
+
+    @Override
+    public boolean process(IWindowMessage<EventTimeData> windowMessage) {
+//      for (IMessage<EventTimeData> msg : windowMessage.getWindow()) {
+//        int[] msgC = msg.getContent().getData();
+//        LOG.info("Process Window Value : " + Arrays.toString(msgC));
+//      }
+      LOG.info(String.format("Num Events : %d", windowMessage.getWindow().size()));
+      return true;
+    }
+
+    @Override
+    public boolean processLateMessages(IMessage<EventTimeData> lateMessage) {
+      return false;
+    }
+  }
+
 
   protected static class ReduceFunctionImpl implements ReduceWindowedFunction<int[]> {
 
@@ -327,6 +350,54 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
       intData.setData(data);
       intData.setTime(t);
       return intData;
+    }
+  }
+
+  protected static class ProcessFunctionIntImpl implements ProcessWindowedFunction<EventTimeData> {
+
+    @Override
+    public IWindowMessage<EventTimeData> process(IWindowMessage<EventTimeData> windowMessage) {
+      EventTimeData current = null;
+      List<IMessage<EventTimeData>> messages = new ArrayList<>(windowMessage.getWindow().size());
+      for (IMessage<EventTimeData> msg : windowMessage.getWindow()) {
+        EventTimeData value = msg.getContent();
+        if (current == null) {
+          current = value;
+        } else {
+          current = add(current, value);
+          messages.add(new TaskMessage<>(current));
+        }
+      }
+      WindowMessageImpl<EventTimeData> windowMessage1 = new WindowMessageImpl<>(messages);
+      return windowMessage1;
+    }
+
+    @Override
+    public IMessage<EventTimeData> processLateMessage(IMessage<EventTimeData> lateMessage) {
+      return null;
+    }
+
+    @Override
+    public EventTimeData onMessage(EventTimeData object1, EventTimeData object2) {
+      return add(object1, object2);
+    }
+
+    private int[] add(int[] a1, int[] a2) {
+      int[] ans = new int[a1.length];
+      for (int i = 0; i < a1.length; i++) {
+        ans[i] = 2 * (a1[i] + a2[i]);
+      }
+      return ans;
+    }
+
+    private EventTimeData add(EventTimeData d1, EventTimeData d2) {
+      EventTimeData eventTimeData = null;
+      long t1 = d1.getTime();
+      long t2 = d2.getTime();
+      int[] data = add(d1.getData(), d2.getData());
+      long t = (t1 + t2) / (long) 2.0;
+      eventTimeData = new EventTimeData(data, d1.getId(), t);
+      return eventTimeData;
     }
   }
 }

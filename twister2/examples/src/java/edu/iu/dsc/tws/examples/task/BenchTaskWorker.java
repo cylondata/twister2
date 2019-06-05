@@ -21,10 +21,10 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 
+import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
@@ -35,8 +35,6 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
-import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingPolicy;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -232,7 +230,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private int iterations;
     private boolean timingCondition;
     private boolean keyed = false;
-    private ITimestampExtractor iTimestampExtractor;
 
     private boolean endNotified = false;
 
@@ -244,7 +241,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     public SourceWindowTask(String e) {
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
-      this.iTimestampExtractor = new TimestampExtractor();
     }
 
     public SourceWindowTask(String e, boolean keyed) {
@@ -308,7 +304,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     private int iterations;
     private boolean timingCondition;
     private boolean keyed = false;
-    private ITimestampExtractor iTimestampExtractor;
+    private long prevTime = System.currentTimeMillis();
 
     private boolean endNotified = false;
 
@@ -320,7 +316,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     public SourceWindowTimeStampTask(String e) {
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
-      this.iTimestampExtractor = new TimestampExtractor();
     }
 
     public SourceWindowTimeStampTask(String e, boolean keyed) {
@@ -355,13 +350,17 @@ public abstract class BenchTaskWorker extends TaskWorker {
         if (count == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
-
-        IntData intData = new IntData();
-        intData.setData(inputDataArray);
-        intData.setTime(System.currentTimeMillis());
-
-        if ((this.keyed && context.write(this.edge, context.taskIndex(), intData))
-            || (!this.keyed && context.write(this.edge, intData))) {
+        long timestamp = System.currentTimeMillis();
+//        IntData intData = new IntData();
+//        intData.setData(inputDataArray);
+//        intData.setTime(System.currentTimeMillis());
+//        LOG.info(String.format("Worker Id %d, EventTime Diff : %s", this.context.getWorkerId(),
+//            String.valueOf(timestamp - prevTime)));
+        EventTimeData eventTimeData = new EventTimeData(inputDataArray, count,
+            timestamp);
+        prevTime = timestamp;
+        if ((this.keyed && context.write(this.edge, context.taskIndex(), eventTimeData))
+            || (!this.keyed && context.write(this.edge, eventTimeData))) {
           count++;
         }
 

@@ -9,9 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.api;
+package edu.iu.dsc.tws.examples.task.streaming.windowing.extract;
 
-public abstract class TimestampExtractor<T> implements ITimestampExtractor<T> {
+import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
+import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
 
-
+public class EventTimeExtractor extends TimestampExtractor<EventTimeData> {
+  @Override
+  public long extractTimestamp(EventTimeData eventTimeData) {
+    return eventTimeData.getTime();
+  }
 }

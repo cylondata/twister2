@@ -96,7 +96,7 @@ public class WindowManager<T> implements IManager<T> {
     if (!windowEvent.isWatermark()) {
       queue.add(windowEvent);
     } else {
-      LOG.info(String.format("Event With WaterMark ts %f ", (double) windowEvent.getTimeStamp()));
+      LOG.fine(String.format("Event With WaterMark ts %f ", (double) windowEvent.getTimeStamp()));
     }
     track(windowEvent);
   }
@@ -195,7 +195,7 @@ public class WindowManager<T> implements IManager<T> {
   }
 
   public void compactWindow() {
-    //TODO : handle the expired window accumilation with caution
+    //TODO : handle the expired window accumulation with caution
   }
 
   public void shutdown() {

@@ -97,7 +97,8 @@ public class STWindowExample extends BenchTaskWorker {
 
     BaseWindowedSink sdwCountTumblingProcess
         = new DirectProcessWindowedTask(new ProcessFunctionImpl())
-        .withTumblingCountWindow(5);
+        .withSlidingDurationWindow(5, TimeUnit.MILLISECONDS, 3,
+            TimeUnit.MILLISECONDS);
 
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
@@ -318,7 +319,7 @@ public class STWindowExample extends BenchTaskWorker {
       int[] res = lateMessage.getContent();
       if (res != null) {
         for (int i = 0; i < res.length; i++) {
-          res[i] = res[i] * 2;
+          res[i] = res[i];
         }
       }
       return new TaskMessage<>(res);
@@ -335,7 +336,7 @@ public class STWindowExample extends BenchTaskWorker {
     private int[] add(int[] a1, int[] a2) {
       int[] ans = new int[a1.length];
       for (int i = 0; i < a1.length; i++) {
-        ans[i] = 2 * (a1[i] + a2[i]);
+        ans[i] = a1[i] + a2[i];
       }
       return ans;
     }

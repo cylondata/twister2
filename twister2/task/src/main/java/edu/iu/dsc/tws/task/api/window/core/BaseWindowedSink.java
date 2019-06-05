@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.core;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,11 +23,11 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.api.GlobalStreamId;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
@@ -57,6 +59,8 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final long DEFAULT_MAX_LAG = 0; // 0s
 
+  private long maxLagMs = 0;
+
   private WindowConfig.Duration watermarkInterval = null;
 
   private WindowConfig.Duration allowedLateness = null;
@@ -81,6 +85,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private WatermarkEventGenerator<T> watermarkEventGenerator;
 
+
   protected BaseWindowedSink() {
   }
 
@@ -89,11 +94,10 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     super.prepare(cfg, ctx);
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
-
-    initialize();
+    initialize(ctx);
   }
 
-  public void initialize() {
+  public void initialize(TaskContext context) {
     try {
       if (this.iWindow == null) {
         this.iWindow = WindowUtils.getWindow(this.windowParameter.getWindowCountSize(),
@@ -106,7 +110,6 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         // TODO : handle delayed Stream
 
         long watermarkInt = 1;
-        long allowedLtns = 0;
         // TODO : handle this from a config param
         if (this.watermarkInterval != null) {
           watermarkInt = this.watermarkInterval.value;
@@ -115,13 +118,13 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
         }
 
         if (this.allowedLateness != null) {
-          allowedLtns = this.allowedLateness.value;
+          maxLagMs = this.allowedLateness.value;
         } else {
-          allowedLtns = DEFAULT_MAX_LAG;
+          maxLagMs = DEFAULT_MAX_LAG;
         }
 
         watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
-            allowedLtns, watermarkInt);
+            maxLagMs, watermarkInt, getComponentStreams(context));
       }
       setPolicies(this.iWindow.getWindowStrategy());
       start();
@@ -134,7 +137,8 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   public boolean execute(IMessage<T> message) {
     if (isTimestamped()) {
       long time = iTimestampExtractor.extractTimestamp(message.getContent());
-      if (watermarkEventGenerator.track(time)) {
+      GlobalStreamId streamId = new GlobalStreamId(message.edge());
+      if (watermarkEventGenerator.track(streamId, time)) {
         this.windowManager.add(message, time);
       } else {
         // TODO : handle the late tuple stream a delayed message won't be handled unless a
@@ -182,7 +186,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
   }
 
   public BaseWindowedSink<T> withTimestampExtractor() {
-    this.iTimestampExtractor = new TimestampExtractor();
+    this.iTimestampExtractor = null;
     return this;
   }
 
@@ -250,7 +254,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       if (eviPolicy instanceof DurationEvictionPolicy) {
         LOG.info(String.format("WatermarkDurationEvictionPolicy selected"));
         this.evictionPolicy = new WatermarkDurationEvictionPolicy(this.windowParameter
-            .getWindowDurationSize().value, this.allowedLateness.value);
+            .getWindowDurationSize().value, maxLagMs);
       }
     } else {
       this.evictionPolicy = eviPolicy;
@@ -282,6 +286,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   public void start() {
     if (watermarkEventGenerator != null) {
+      LOG.info("Starting WatermarkGenerator");
       LOG.log(Level.FINE, "Starting watermark generator");
       watermarkEventGenerator.start();
     }
@@ -311,9 +316,31 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     private IWindowMessage<T> iWindowMessage = null;
 
     WindowedLateOutputCollector(List<IMessage<T>> list) {
-      messageList =  list;
+      messageList = list;
     }
 
 
   }
+
+  private Set<GlobalStreamId> getComponentStreams(TaskContext context) {
+    Set<GlobalStreamId> streams = new HashSet<>();
+    //TODO : Handle the checkpointing edge
+    streams = wrapGlobalStreamId(context);
+    return streams;
+  }
+
+  /**
+   * Get the edges connected to this task
+   * @param context
+   * @return
+   */
+  private Set<GlobalStreamId> wrapGlobalStreamId(TaskContext context) {
+    Set<GlobalStreamId> streams = new HashSet<>();
+    for (String s : context.getInputs().keySet()) {
+      GlobalStreamId globalStreamId = new GlobalStreamId(s);
+      streams.add(globalStreamId);
+    }
+    return streams;
+  }
+
 }

@@ -25,6 +25,8 @@ package edu.iu.dsc.tws.task.api.window.api;
 
 import java.io.Serializable;
 
-public interface ITimeStampedData extends Serializable {
+public interface ITimeStampedData<T> extends Serializable {
   long getTime();
+  T getData();
+
 }
