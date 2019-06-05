@@ -18,7 +18,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -34,8 +33,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, null, null, data);
 
-    KeyedDataSerializer serializer = new KeyedDataSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataSerializer serializer = new KeyedDataSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -46,8 +44,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer(new KryoSerializer(), 0,
-        keyType, type);
+    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -71,8 +68,7 @@ public class BaseSerializeTest {
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
         null, type, keyType, null, data);
 
-    KeyedDataSerializer serializer = new KeyedDataSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataSerializer serializer = new KeyedDataSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -82,8 +78,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(

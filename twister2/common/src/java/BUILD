@@ -19,10 +19,14 @@ t2_java_lib(
 
 t2_java_lib(
     name = "config-java",
-    srcs = glob(["**/config/*.java"]),
+    srcs = glob([
+        "**/config/*.java",
+        "**/kryo/*.java",
+    ]),
     artifact_name = "Twister2 Common Configuration",
     generate_pom = False,
     deps = [
+        "@com_esotericsoftware_kryo//jar",
         "@com_google_protobuf_protobuf_java//jar",
         "@org_yaml_snakeyaml//jar",
     ],
