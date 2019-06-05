@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
-
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
@@ -111,6 +110,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
         //do nothing
       }
     }
+    LOG.info("Stopping execution....");
     execution.stop();
     execution.close();
   }

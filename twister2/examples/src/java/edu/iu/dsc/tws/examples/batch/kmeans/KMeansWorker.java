@@ -78,30 +78,10 @@ public class KMeansWorker extends TaskWorker {
         centroidDirectory);
 
     long startTime = System.currentTimeMillis();
+
     /* First Graph to partition and read the partitioned data points **/
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
-    KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-
-    //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addCompute(
-        "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = datapointsTaskGraphBuilder.addSink(
-        "datapointsink", dataObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
-
-    //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
+    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+        parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
@@ -110,31 +90,10 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
+
     /* Second Graph to read the centroids **/
-    DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
-    KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, csize, dimension);
-    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
-    TaskGraphBuilder centroidsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-
-    //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    centroidsTaskGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource,
-        parallelismValue);
-    ComputeConnection centroidComputeConnection = centroidsTaskGraphBuilder.addCompute(
-        "centroidcompute", centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = centroidsTaskGraphBuilder.addSink(
-        "centroidsink", centroidObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the second task graph
-    centroidComputeConnection.direct("centroidsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
-
-    //Build the second taskgraph
-    DataFlowTaskGraph centroidsTaskGraph = centroidsTaskGraphBuilder.build();
+    DataFlowTaskGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
+        parallelismValue, dimension, config);
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     //Actual execution for the second taskgraph
@@ -145,21 +104,9 @@ public class KMeansWorker extends TaskWorker {
 
     long endTimeData = System.currentTimeMillis();
 
+
     /* Third Graph to do the actual calculation **/
-    KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
-    KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
-    TaskGraphBuilder kmeansTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-
-    //Add source, and sink tasks to the task graph builder for the third task graph
-    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
-    ComputeConnection kMeanscomputeConnection = kmeansTaskGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, parallelismValue);
-
-    //Creating the communication edges between the tasks for the third task graph
-    kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
-        new CentroidAggregator(), DataType.OBJECT);
-    kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph kmeansTaskGraph = kmeansTaskGraphBuilder.build();
+    DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
@@ -183,12 +130,94 @@ public class KMeansWorker extends TaskWorker {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-      LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
-          + Arrays.deepToString(centroid));
     }
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+        + Arrays.deepToString(centroid));
   }
 
-  private static class KMeansSourceTask extends BaseSource implements Receptor {
+  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                             int parallelismValue, int dimension, Config conf) {
+    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory);
+    KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
+        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
+    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
+    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+
+    //Add source, compute, and sink tasks to the task graph builder for the first task graph
+    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource,
+        parallelismValue);
+    ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addCompute(
+        "datapointcompute", dataObjectCompute, parallelismValue);
+    ComputeConnection firstGraphComputeConnection = datapointsTaskGraphBuilder.addSink(
+        "datapointsink", dataObjectSink, parallelismValue);
+
+    //Creating the communication edges between the tasks for the second task graph
+    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
+
+    datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
+
+    //Build the first taskgraph
+    return datapointsTaskGraphBuilder.build();
+  }
+
+
+  public static DataFlowTaskGraph buildCentroidsTG(String centroidDirectory, int csize,
+                                            int parallelismValue, int dimension, Config conf) {
+    DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
+        Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
+    KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
+        Context.TWISTER2_DIRECT_EDGE, csize, dimension);
+    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
+    TaskGraphBuilder centroidsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+
+    //Add source, compute, and sink tasks to the task graph builder for the second task graph
+    centroidsTaskGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource,
+        parallelismValue);
+    ComputeConnection centroidComputeConnection = centroidsTaskGraphBuilder.addCompute(
+        "centroidcompute", centroidObjectCompute, parallelismValue);
+    ComputeConnection secondGraphComputeConnection = centroidsTaskGraphBuilder.addSink(
+        "centroidsink", centroidObjectSink, parallelismValue);
+
+    //Creating the communication edges between the tasks for the second task graph
+    centroidComputeConnection.direct("centroidsource", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
+        DataType.OBJECT);
+    centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
+    centroidsTaskGraphBuilder.setTaskGraphName("centTG");
+
+
+    //Build the second taskgraph
+    return centroidsTaskGraphBuilder.build();
+  }
+
+
+  public static DataFlowTaskGraph buildKMeansTG(int parallelismValue, Config conf) {
+    KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
+    KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
+    TaskGraphBuilder kmeansTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+
+    //Add source, and sink tasks to the task graph builder for the third task graph
+    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
+    ComputeConnection kMeanscomputeConnection = kmeansTaskGraphBuilder.addSink(
+        "kmeanssink", kMeansAllReduceTask, parallelismValue);
+
+    //Creating the communication edges between the tasks for the third task graph
+    kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
+        new CentroidAggregator(), DataType.OBJECT);
+    kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
+
+    kmeansTaskGraphBuilder.setTaskGraphName("kmeansTG");
+
+    return kmeansTaskGraphBuilder.build();
+  }
+
+  public static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     private double[][] centroid = null;
@@ -226,7 +255,7 @@ public class KMeansWorker extends TaskWorker {
     }
   }
 
-  private static class KMeansAllReduceTask extends BaseSink implements Collector {
+  public static class KMeansAllReduceTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[][] centroids;
@@ -264,7 +293,7 @@ public class KMeansWorker extends TaskWorker {
   /**
    * This class aggregates the cluster centroid values and sum the new centroid values.
    */
-  public class CentroidAggregator implements IFunction {
+  public static class CentroidAggregator implements IFunction {
     private static final long serialVersionUID = -254264120110286748L;
 
     /**

@@ -89,7 +89,7 @@ public class SDirect {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    direct.clean();
+  public void reset() {
+    direct.reset();
   }
 }

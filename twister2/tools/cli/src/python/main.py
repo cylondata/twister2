@@ -27,6 +27,7 @@ import twister2.tools.cli.src.python.config as config
 import twister2.tools.cli.src.python.submit as submit
 import twister2.tools.cli.src.python.result as result
 import twister2.tools.cli.src.python.dashboard as dashboard
+import twister2.tools.cli.src.python.restart as restart
 
 Log = log.Log
 
@@ -73,6 +74,7 @@ def create_parser():
     kill.create_parser(subparsers)
     submit.create_parser(subparsers)
     dashboard.create_parser(subparsers)
+    restart.create_parser(subparsers)
 
     return parser
 
@@ -90,7 +92,8 @@ def run(command, parser, command_args, unknown_args):
         'kill':kill,
         'submit':submit,
         'help':cli_help,
-        'dash':dashboard
+        'dash':dashboard,
+        'restart':restart
     }
 
     if command in runners:

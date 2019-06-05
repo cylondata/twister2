@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.checkpointmanager.state_backend;
 
 import java.io.IOException;
 
-import javax.print.attribute.standard.JobName;
-
 import edu.iu.dsc.tws.checkpointmanager.CheckpointStorage;
 import edu.iu.dsc.tws.checkpointmanager.CompletedCheckpointStorageLocation;
 import edu.iu.dsc.tws.data.fs.Path;
@@ -32,16 +30,20 @@ public abstract class AbstractFsCheckpointStorage implements CheckpointStorage {
 
   private static final byte[] REFERENCE_MAGIC_NUMBER = new byte[]{0x05, 0x5F, 0x3F, 0x18};
 
-  private final JobName jobName;
+  private final String jobName;
 
 
-  protected AbstractFsCheckpointStorage(JobName jobName) {
+  protected AbstractFsCheckpointStorage(String jobName) {
     this.jobName = jobName;
   }
 
   protected static CompletedCheckpointStorageLocation resolveCheckpointPointer(
       String checkpointPointer) throws IOException {
     return null;
+  }
+
+  protected static Path getCheckpointDirectoryForJob(Path baseCheckpointPath, String jobName) {
+    return new Path(baseCheckpointPath, jobName);
   }
 
   protected static Path createCheckpointDirectory(Path baseDirectory, long checkpointId) {

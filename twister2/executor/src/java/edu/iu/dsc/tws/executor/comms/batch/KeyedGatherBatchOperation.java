@@ -56,7 +56,6 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     try {
       useDisk = (Boolean) edge.getProperty("use-disk");
       keyComparator = (Comparator) edge.getProperty("key-comparator");
-      LOG.info("Configuring disk based batch operation");
     } catch (Exception ex) {
       //ignore
     }
@@ -117,7 +116,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

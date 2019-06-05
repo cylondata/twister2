@@ -11,13 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -25,7 +35,12 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkStreamingInstance implements INodeInstance {
+public class SinkStreamingInstance implements INodeInstance, ISync {
+
+  private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
+
+  private final boolean checkpointable;
+
   /**
    * The actual streamingTask executing
    */
@@ -88,6 +103,13 @@ public class SinkStreamingInstance implements INodeInstance {
   protected Map<String, String> inEdges;
   protected TaskSchedulePlan taskSchedulePlan;
 
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
+  private Long taskVersion;
+  private StateStore stateStore;
+  private SnapshotImpl snapshot;
+  private PendingCheckpoint pendingCheckpoint;
+
   /**
    * Keep an array for iteration
    */
@@ -103,7 +125,9 @@ public class SinkStreamingInstance implements INodeInstance {
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
                                int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
-                               TaskSchedulePlan taskSchedulePlan) {
+                               TaskSchedulePlan taskSchedulePlan,
+                               CheckpointingClient checkpointingClient,
+                               String taskGraphName, Long taskVersion) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.taskId = taskId;
@@ -116,8 +140,20 @@ public class SinkStreamingInstance implements INodeInstance {
     this.taskName = tName;
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.taskVersion = taskVersion;
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
+    this.snapshot = new SnapshotImpl();
+
   }
 
+  /**
+   * Preparing sink task
+   *
+   * @param cfg configuration
+   */
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
@@ -134,6 +170,30 @@ public class SinkStreamingInstance implements INodeInstance {
     for (String e : inEdges.keySet()) {
       this.inEdgeArray[index++] = e;
     }
+
+    if (this.checkpointable) {
+      this.stateStore = CheckpointUtils.getStateStore(config);
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      this.pendingCheckpoint = new PendingCheckpoint(
+          this.taskGraphName,
+          (CheckpointableTask) this.streamingTask,
+          this.globalTaskId,
+          this.intOpArray,
+          this.inEdges.size(),
+          this.checkpointingClient,
+          this.stateStore,
+          this.snapshot
+      );
+
+      TaskCheckpointUtils.restore(
+          (CheckpointableTask) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.taskVersion,
+          globalTaskId
+      );
+    }
   }
 
   public boolean execute() {
@@ -146,6 +206,13 @@ public class SinkStreamingInstance implements INodeInstance {
 
     for (int i = 0; i < intOpArray.length; i++) {
       intOpArray[i].progress();
+    }
+
+    if (this.checkpointable && this.streamingInQueue.isEmpty()) {
+      long checkpointedBarrierId = this.pendingCheckpoint.execute();
+      if (checkpointedBarrierId != -1) {
+        ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
+      }
     }
 
     return true;
@@ -167,7 +234,19 @@ public class SinkStreamingInstance implements INodeInstance {
     streamingInParOps.put(edge, op);
   }
 
-  public BlockingQueue<IMessage> getstreamingInQueue() {
+  public BlockingQueue<IMessage> getStreamingInQueue() {
     return streamingInQueue;
+  }
+
+  @Override
+  public boolean sync(String edge, byte[] value) {
+    if (this.checkpointable) {
+      ByteBuffer wrap = ByteBuffer.wrap(value);
+      long barrierId = wrap.getLong();
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId
+          + " with id " + barrierId + " from " + edge);
+      this.pendingCheckpoint.schedule(edge, barrierId);
+    }
+    return true;
   }
 }
