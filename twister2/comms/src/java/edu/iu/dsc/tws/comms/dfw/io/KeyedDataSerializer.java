@@ -56,7 +56,7 @@ public class KeyedDataSerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   private boolean serializeKeyedData(Object payload, Object key,
-                                     DataPacker keyPacker, DataPacker dataPacker,
+                                     DataPacker dataPacker, DataPacker keyPacker,
                                      SerializeState state,
                                      DataBuffer targetBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
