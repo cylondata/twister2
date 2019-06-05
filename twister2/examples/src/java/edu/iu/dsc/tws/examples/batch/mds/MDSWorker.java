@@ -218,7 +218,7 @@ public class MDSWorker extends TaskWorker {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("MatrixGenerator-job");
     jobBuilder.setWorkerClass(MDSWorker.class.getName());
-    jobBuilder.addComputeResource(2, 512, 1.0, workers);
+    jobBuilder.addComputeResource(2, 2048, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
