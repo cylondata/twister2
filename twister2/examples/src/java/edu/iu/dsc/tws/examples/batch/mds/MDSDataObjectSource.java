@@ -131,6 +131,7 @@ public class MDSDataObjectSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), getDataSize() * Short.BYTES));
+
     //For writing into the partition file
     /*this.sink = new DataSink<>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/

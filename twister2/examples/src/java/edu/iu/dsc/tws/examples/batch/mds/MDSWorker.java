@@ -78,6 +78,7 @@ public class MDSWorker extends TaskWorker {
     MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink(matrixColumLength);
 
     TaskGraphBuilder dataObjectGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    dataObjectGraphBuilder.setTaskGraphName("MDSDataProcessing");
     dataObjectGraphBuilder.addSource("dataobjectsource", mdsDataObjectSource, parallel);
 
     ComputeConnection dataObjectComputeConnection = dataObjectGraphBuilder.addSink(
@@ -102,6 +103,7 @@ public class MDSWorker extends TaskWorker {
     MDSReceiverTask receiverTask = new MDSReceiverTask();
 
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    graphBuilder.setTaskGraphName("MDSCompute");
     graphBuilder.addSource("generator", generatorTask, parallel);
     ComputeConnection computeConnection = graphBuilder.addSink("receiver", receiverTask,
         parallel);
