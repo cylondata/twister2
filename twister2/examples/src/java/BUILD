@@ -15,6 +15,7 @@ common_deps_files = [
     "//twister2/data/src/main/java:data-java",
     "//twister2/executor/src/java:executor-java",
     "//twister2/master/src/java:master-java",
+    "//twister2/checkpointing/src/java:checkpointing-java",
     "//third_party:ompi_javabinding_java",
     "@com_google_guava_guava//jar",
     "@org_lmdbjava_lmdbjava//jar",
@@ -38,7 +39,6 @@ common_deps_files = [
     "@com_fasterxml_jackson_core_jackson_databind//:com_fasterxml_jackson_core_jackson_databind",
     "//third_party:harp_collective",
     "//twister2/compatibility/storm:twister2-storm",
-
 ]
 
 t2_java_lib(
