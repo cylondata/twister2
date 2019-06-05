@@ -139,6 +139,6 @@ public class SKeyedGather {
    * Clean the operation, this doesn't close it
    */
   public void refresh() {
-    keyedGather.clean();
+    keyedGather.reset();
   }
 }

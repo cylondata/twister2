@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -65,5 +66,10 @@ public class MPIJobWorkerController implements IWorkerController {
   @Override
   public Object getRuntimeObject(String name) {
     return runtimeObjects.get(name);
+  }
+
+  @Override
+  public CheckpointingClient getCheckpointingClient() {
+    return this.delegate.getCheckpointingClient();
   }
 }

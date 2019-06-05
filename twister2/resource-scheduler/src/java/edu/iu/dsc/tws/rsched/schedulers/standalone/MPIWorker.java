@@ -47,6 +47,8 @@ import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.worker.FSPersistentVolume;
+import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -109,6 +111,11 @@ public final class MPIWorker {
       String jobName = MPIContext.jobName(config);
       String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
       JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+
+      /* // todo: adding checkpoint info to the config could be a way to get start from an arbitary
+         // checkpoint. This is undecided at the moment.
+      this.config = updateCheckpointInfo(config);
+      */
 
       // lets split the comm
       if (JobMasterContext.isJobMasterUsed(config)) {
@@ -404,6 +411,8 @@ public final class MPIWorker {
       // now create the worker
       IWorkerController wc = createWorkerController(job);
       MPIJobWorkerController mpiWorkerContorller = new MPIJobWorkerController(wc);
+      IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
+
       mpiWorkerContorller.add("comm", intracomm);
       String workerClass = MPIContext.workerClass(cfg);
       try {
@@ -411,7 +420,8 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, null, null);
+          container.execute(cfg, intracomm.getRank(), mpiWorkerContorller, persistentVolume,
+              null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -444,6 +454,8 @@ public final class MPIWorker {
 
       Map<Integer, JobMasterAPI.WorkerInfo> infos = createResourcePlan(cfg, intracomm, job);
       MPIWorkerController wc = new MPIWorkerController(intracomm.getRank(), infos);
+      IPersistentVolume persistentVolume = initPersistenceVolume(cfg, job.getJobName(), rank);
+
       // now create the worker
       wc.add("comm", intracomm);
       String workerClass = MPIContext.workerClass(cfg);
@@ -452,7 +464,7 @@ public final class MPIWorker {
         if (object instanceof IWorker) {
           IWorker container = (IWorker) object;
           // now initialize the container
-          container.execute(cfg, intracomm.getRank(), wc, null, null);
+          container.execute(cfg, intracomm.getRank(), wc, persistentVolume, null);
         } else {
           throw new RuntimeException("Cannot instantiate class: " + object.getClass());
         }
@@ -620,4 +632,45 @@ public final class MPIWorker {
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
   }
+
+
+  private IPersistentVolume initPersistenceVolume(Config cfg, String jobName, int rank) {
+    File baseDir = new File(MPIContext.fileSystemMount(cfg));
+
+    // if the base dir does not exist
+    while (!baseDir.exists() && !baseDir.mkdirs()) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {
+        throw new RuntimeException("Thread interrupted", e);
+      }
+    }
+
+    return new FSPersistentVolume(baseDir.getAbsolutePath(), rank);
+  }
+
+/* //todo: change this and include this in the checkpoint mgr
+  private Config updateCheckpointInfo(Config cfg) {
+
+    String checkpointDir = CheckpointingContext.checkpointDir(cfg);
+
+    new File(checkpointDir).mkdirs();
+
+    File checkpointFile = new File(checkpointDir + File.separator
+        + CheckpointingContext.LAST_SNAPSHOT_FILE);
+
+    long checkpointID = 0;
+    if (checkpointFile.exists()) {
+      try {
+        checkpointID = Long.valueOf(new String(Files.readAllBytes(checkpointFile.toPath())).trim());
+      } catch (IOException e) {
+        throw new RuntimeException("Unable to read the checkpoint file", e);
+      }
+    }
+
+    return Config.newBuilder()
+        .putAll(cfg)
+        .put(CheckpointingContext.RESTORE_SNAPSHOT, checkpointID)
+        .build();
+  }*/
 }

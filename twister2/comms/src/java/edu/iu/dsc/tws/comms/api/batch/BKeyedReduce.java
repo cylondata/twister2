@@ -81,7 +81,7 @@ public class BKeyedReduce {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    keyedReduce.clean();
+  public void reset() {
+    keyedReduce.reset();
   }
 }

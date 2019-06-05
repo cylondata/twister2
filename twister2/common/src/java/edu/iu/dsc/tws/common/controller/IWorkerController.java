@@ -25,6 +25,7 @@ package edu.iu.dsc.tws.common.controller;
 
 import java.util.List;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -35,7 +36,6 @@ public interface IWorkerController {
 
   /**
    * return the WorkerInfo object for this worker
-   * @return
    */
   JobMasterAPI.WorkerInfo getWorkerInfo();
 
@@ -47,7 +47,6 @@ public interface IWorkerController {
   /**
    * return the number of all workers in this job,
    * including non-started ones and finished ones
-   * @return
    */
   int getNumberOfWorkers();
 
@@ -56,7 +55,6 @@ public interface IWorkerController {
    * some workers that has not joined yet, may not be included in this list.
    * users can compare the total number of workers to the size of this list and
    * understand whether there are non-joined workers
-   * @return
    */
   List<JobMasterAPI.WorkerInfo> getJoinedWorkers();
 
@@ -65,9 +63,8 @@ public interface IWorkerController {
    * If some workers has not joined the job yet, wait for them.
    * After waiting for the timeout specified in ControllerContext.maxWaitTimeForAllToJoin
    * if some workers still could not join, throw an exception
-   *
+   * <p>
    * return all workers in the job including the ones that have already left, if any
-   * @return
    */
   List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException;
 
@@ -75,16 +72,21 @@ public interface IWorkerController {
    * wait for all workers in the job to arrive at this barrier
    * After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
    * if some workers still could not arrive at the barrier, throw an exception
-   * @return
    */
   void waitOnBarrier() throws TimeoutException;
 
   /**
    * Get object with a given name
+   *
    * @param name name
    * @return the object
    */
   default Object getRuntimeObject(String name) {
+    return null;
+  }
+
+  default CheckpointingClient getCheckpointingClient() {
+    //todo remove null return
     return null;
   }
 }

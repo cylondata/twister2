@@ -130,8 +130,8 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       }
 
       if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
-        onSyncEvent(target, barriers.get(target));
         targetStates.put(target, ReceiverState.SYNCED);
+        onSyncEvent(target, barriers.get(target));
       }
     }
 

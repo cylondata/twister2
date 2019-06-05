@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.api;
 
+import edu.iu.dsc.tws.comms.api.types.EmptyType;
 import edu.iu.dsc.tws.comms.api.types.ObjectType;
 import edu.iu.dsc.tws.comms.api.types.PrimitiveMessageTypes;
 import edu.iu.dsc.tws.comms.api.types.StringType;
@@ -86,4 +87,6 @@ public final class MessageTypes {
   public static final StringType STRING = new StringType();
 
   public static final ObjectType OBJECT = new ObjectType();
+
+  public static final EmptyType EMPTY = new EmptyType();
 }

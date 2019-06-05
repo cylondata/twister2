@@ -57,7 +57,7 @@ public final class TaskUtils {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-          workerList, new Communicator(config, network));
+        workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID,
         network, OperationMode.BATCH);
@@ -82,7 +82,7 @@ public final class TaskUtils {
 
     TWSChannel network = Network.initializeChannel(config, workerController);
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(workerID,
-          workerList, new Communicator(config, network));
+        workerList, new Communicator(config, network), workerController.getCheckpointingClient());
     ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
     Executor executor = new Executor(config, workerID, network);
     executor.execute(plan);
@@ -90,7 +90,7 @@ public final class TaskUtils {
 
   public static WorkerPlan createWorkerPlan(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     List<Worker> workers = new ArrayList<>();
-    for (JobMasterAPI.WorkerInfo workerInfo: workerInfoList) {
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
       Worker w = new Worker(workerInfo.getWorkerID());
       workers.add(w);
     }

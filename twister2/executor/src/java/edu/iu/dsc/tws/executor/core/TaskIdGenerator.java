@@ -50,12 +50,12 @@ public class TaskIdGenerator {
 
   /**
    * Generate a unique global task id
-   * @param taskName name of the task
+   *
    * @param taskId task id
    * @param taskIndex task index
    * @return the global task id
    */
-  public int generateGlobalTaskId(String taskName, int taskId, int taskIndex) {
+  public int generateGlobalTaskId(int taskId, int taskIndex) {
     return taskId * 100000 + taskIndex;
   }
 
@@ -65,7 +65,7 @@ public class TaskIdGenerator {
 
     Set<Integer> sources = new HashSet<>();
     for (int i = 0; i < parallel; i++) {
-      sources.add(generateGlobalTaskId(taskName, taskId, i));
+      sources.add(generateGlobalTaskId(taskId, i));
     }
     return sources;
   }
@@ -74,7 +74,7 @@ public class TaskIdGenerator {
     Set<TaskInstancePlan> ips = cPlan.getTaskInstances();
     Set<Integer> tasks = new HashSet<>();
     for (TaskInstancePlan ip : ips) {
-      tasks.add(generateGlobalTaskId(ip.getTaskName(), ip.getTaskId(), ip.getTaskIndex()));
+      tasks.add(generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()));
     }
     return tasks;
   }

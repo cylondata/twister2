@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.config;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+
 public final class ConfigLoader {
   private ConfigLoader() {
   }
@@ -56,7 +58,9 @@ public final class ConfigLoader {
         .putAll(loadConfig(Context.uploaderConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.networkConfigurationFile(localConfig)))
         .putAll(loadConfig(Context.systemConfigurationFile(localConfig)))
-        .putAll(loadConfig(Context.dataConfigurationFile(localConfig)));
+        .putAll(loadConfig(Context.dataConfigurationFile(localConfig)))
+        .putAll(loadConfig(Context.checkpointConfigurationFile(localConfig)));
+
     Config config = cb.build();
     return Config.transform(config);
   }
@@ -65,5 +69,10 @@ public final class ConfigLoader {
     Config.Builder cb = Config.newBuilder()
         .putAll(loadConfig(filePath));
     return Config.transform(cb.build());
+  }
+
+  public static Config loadConfig(byte[] serializedMap) {
+    return Config.newBuilder().putAll(
+        (Map) new KryoSerializer().deserialize(serializedMap)).build();
   }
 }

@@ -30,6 +30,7 @@ public class BAllGather {
 
   /**
    * Construct a AllGather operation
+   *
    * @param comm the communicator
    * @param plan task plan
    * @param sources source tasks
@@ -79,6 +80,7 @@ public class BAllGather {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -87,6 +89,7 @@ public class BAllGather {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {
@@ -101,7 +104,7 @@ public class BAllGather {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    gather.clean();
+  public void reset() {
+    gather.reset();
   }
 }

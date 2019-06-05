@@ -117,6 +117,6 @@ public class SKeyedPartition {
    */
   public void refresh() {
     // deregister from the channel
-    partition.clean();
+    partition.reset();
   }
 }

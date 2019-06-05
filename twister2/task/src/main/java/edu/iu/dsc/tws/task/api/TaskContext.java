@@ -115,6 +115,14 @@ public interface TaskContext {
   boolean write(String edge, Object message);
 
   /**
+   * Write a barrier message to the destination
+   *
+   * @param edge edge
+   * @param message message
+   */
+  boolean writeBarrier(String edge, Object message);
+
+  /**
    * Write the last message
    *
    * @param edge edge

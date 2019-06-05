@@ -25,7 +25,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -277,10 +276,9 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
       if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer(new KryoSerializer(), thisWorker,
-            keyType, dataType));
+        serializerMap.put(s, new KeyedDataSerializer());
       } else {
-        serializerMap.put(s, new DataSerializer(new KryoSerializer(), thisWorker, dataType));
+        serializerMap.put(s, new DataSerializer());
       }
     }
 
@@ -294,10 +292,9 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDataDeSerializer(new KryoSerializer(),
-            thisWorker, keyType, dataType));
+        deSerializerMap.put(ex, new KeyedDataDeSerializer());
       } else {
-        deSerializerMap.put(ex, new DataDeserializer(thisWorker, dataType));
+        deSerializerMap.put(ex, new DataDeserializer());
       }
     }
     // create the delegate
@@ -453,7 +450,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (merged != null) {
       merger.clean();
     }

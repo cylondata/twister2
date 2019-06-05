@@ -11,13 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-public abstract class BaseCompute<T> extends BaseNode implements ICompute<T>, Closable {
-  @Override
-  public void close() {
-  }
+public abstract class BaseCompute<T> extends BaseNode implements ICompute<T> {
 
-  @Override
-  public void refresh() {
-  }
 }
 
