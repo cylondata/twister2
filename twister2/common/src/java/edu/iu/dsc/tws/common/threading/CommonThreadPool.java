@@ -66,6 +66,9 @@ public final class CommonThreadPool {
   public static ExecutorService getExecutor() {
     if (commonThreadPool == null) {
       throw new RuntimeException("Twister2 common thread pool has not initialized");
+    } else if (commonThreadPool.threads == 0) {
+      throw new RuntimeException("Requested common thread pool executor which is "
+          + "configured with 0 threads");
     } else {
       return commonThreadPool.executorService;
     }
