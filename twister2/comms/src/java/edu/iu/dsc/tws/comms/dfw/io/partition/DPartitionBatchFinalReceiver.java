@@ -140,13 +140,15 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
     long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     long maxFileSize = DataFlowContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
+
     expIds = expectedIds;
     thisWorker = op.getTaskPlan().getThisExecutor();
     finishedSources = new Int2ObjectOpenHashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
-    initMergers(maxBytesInMemory, maxRecordsInMemory, maxFileSize);
+    initMergers(maxBytesInMemory, maxRecordsInMemory, maxFileSize, parallelIOAllowance);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
 
     int index = 0;
@@ -160,7 +162,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Initialize the mergers, this happens after each refresh
    */
-  private void initMergers(long maxBytesInMemory, long maxRecordsInMemory, long maxFileSize) {
+  private void initMergers(long maxBytesInMemory, long maxRecordsInMemory, long maxFileSize,
+                           int parallelIOAllowance) {
     for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
           partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
@@ -172,7 +175,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxFileSize,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
-              partition.getKeyType(), partition.getDataType(), comparator, target, groupByKey);
+              partition.getKeyType(), partition.getDataType(), comparator, target,
+              groupByKey, parallelIOAllowance);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
               DFWIOUtils.getOperationName(target, partition, refresh), partition.getKeyType(),

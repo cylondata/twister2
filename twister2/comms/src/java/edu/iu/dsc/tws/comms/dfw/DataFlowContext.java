@@ -41,6 +41,8 @@ public class DataFlowContext extends CommunicationContext {
       "twister2.network.shuffle.memory.records.max";
   public static final String SHUFFLE_MAX_FILE_SIZE =
       "twister2.network.shuffle.file.bytes.max";
+  public static final String SHUFFLE_PARALLEL_IO =
+      "twister2.network.shuffle.parallel.io";
 
 
   public static final int DEFAULT_DESTINATION = 0;
@@ -89,6 +91,10 @@ public class DataFlowContext extends CommunicationContext {
 
   public static long getShuffleFileSize(Config cfg) {
     return cfg.getLongValue(SHUFFLE_MAX_FILE_SIZE, 1000000);
+  }
+
+  public static int getParallelIOAllowance(Config cfg) {
+    return cfg.getIntegerValue(SHUFFLE_PARALLEL_IO, 1);
   }
 }
 
