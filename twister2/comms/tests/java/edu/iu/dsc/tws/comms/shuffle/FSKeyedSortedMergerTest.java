@@ -49,7 +49,7 @@ public class FSKeyedSortedMergerTest {
   public void before() throws Exception {
     fsMerger = new FSKeyedSortedMerger2(1000, 100, "/tmp",
         "fskeyedsortedmerger", MessageTypes.INTEGER, MessageTypes.OBJECT,
-        Comparator.comparingInt(i -> (Integer) i), 0, true);
+        Comparator.comparingInt(i -> (Integer) i), 0, true, 2);
     serializer = new KryoSerializer();
   }
 

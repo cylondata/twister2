@@ -39,6 +39,9 @@ twister2.network.shuffle.memory.records.max: 102400000
 # size of the shuffle file (10MB default)
 twister2.network.shuffle.file.bytes.max: 10000000
 
+# no of parallel IO operations permitted
+twister2.network.shuffle.parallel.io: 2
+
 # the keyed reduce algorithm
 twister2.stream.keyed.reduce.op: "partition"
 
