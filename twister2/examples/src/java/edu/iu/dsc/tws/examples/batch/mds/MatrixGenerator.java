@@ -42,19 +42,12 @@ public class MatrixGenerator {
 
   /**
    * To generate the matrix for MDS application
-   * @param numberOfRows
-   * @param dimensions
-   * @param directory
-   * @param byteType
    */
   public void generate(int numberOfRows, int dimensions, String directory, String byteType) {
-
     endianness = "big".equals(byteType) ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
-
     short[] input = new short[numberOfRows * dimensions];
     for (int i = 0; i < numberOfRows * dimensions; i++) {
-      double temp = Math.random() * Short.MAX_VALUE;
-      input[i] = (short) temp;
+      input[i] = (short) Math.random();
     }
     try {
       ByteBuffer byteBuffer = ByteBuffer.allocate(numberOfRows * dimensions * 2);

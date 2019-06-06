@@ -96,7 +96,6 @@ public class MDSDataObjectSource extends BaseSource {
     ByteBuffer byteBuffer = ByteBuffer.allocate(getDataSize() * 2);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     InputSplit inputSplit = source.getNextSplit(context.taskIndex());
-    int count = 0;
     while (inputSplit != null) {
       try {
         while (!inputSplit.reachedEnd()) {
@@ -107,11 +106,9 @@ public class MDSDataObjectSource extends BaseSource {
             buffer = byteBuffer.asShortBuffer();
             short[] shortArray = new short[getDataSize()];
             ((ShortBuffer) buffer).get(shortArray);
-
             //For writing into the partition file
             //sink.add(context.taskIndex(), Arrays.toString(shortArray));
             context.write(getEdgeName(), shortArray);
-            count++;
           }
         }
         inputSplit = null;
@@ -131,6 +128,7 @@ public class MDSDataObjectSource extends BaseSource {
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new BinaryInputPartitioner(
         new Path(getDataDirectory()), getDataSize() * Short.BYTES));
+
     //For writing into the partition file
     /*this.sink = new DataSink<>(cfg,
         new TextOutputWriter(FileSystem.WriteMode.OVERWRITE, new Path(getDataDirectory())));*/
