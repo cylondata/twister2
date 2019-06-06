@@ -32,6 +32,8 @@ public class MPIContext extends SchedulerContext {
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
+  public static final String FILE_SYSTEM_MOUNT = "twister2.resource.fs.mount";
+
   public static final String JIP = "__job_master_ip__";
 
   public static final String JPORT = "__job_master_port__";
@@ -71,5 +73,10 @@ public class MPIContext extends SchedulerContext {
 
   public static boolean isSharedFs(Config cfg) {
     return cfg.getBooleanValue(NODES_ON_SHARED_FS, true);
+  }
+
+  public static String fileSystemMount(Config cfg) {
+    return TokenSub.substitute(cfg, cfg.getStringValue(FILE_SYSTEM_MOUNT,
+        "${TWISTER2_HOME}/persistent/fs/"), Context.substitutions);
   }
 }

@@ -70,7 +70,7 @@ public interface DataFlowOperation {
   /**
    * Reset and get the operation to initial state
    */
-  void clean();
+  void reset();
 
   /**
    * Weather the operation doesn't have any pending sends or receives

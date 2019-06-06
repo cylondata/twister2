@@ -11,31 +11,47 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceStreamingInstance implements INodeInstance {
+
+  private static final Logger LOG = Logger.getLogger(SourceStreamingInstance.class.getName());
   /**
    * The actual streamingTask executing
    */
   private ISource streamingTask;
 
   /**
-   * Output will go throuh a single queue
+   * Output will go through a single queue
    */
   private BlockingQueue<IMessage> outStreamingQueue;
 
@@ -94,6 +110,8 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private int lowWaterMark;
 
+  private long checkpointVersion = 0;
+
   /**
    * The high water mark for messages
    */
@@ -104,6 +122,20 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private Map<String, String> outEdges;
   private TaskSchedulePlan taskSchedule;
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
+  private long tasksVersion;
+
+  /**
+   * Checkpoint variables
+   */
+  private boolean checkpointable;
+  private StateStore stateStore;
+  private SnapshotImpl snapshot;
+  private int barrierMessagesSent = 0;
+  private Queue<Snapshot> snapshotQueue = new LinkedList<>();
+  private long executions = 0;
+  private long checkPointingFrequency = 1000;
 
   /**
    * Keep an array for iteration
@@ -119,7 +151,9 @@ public class SourceStreamingInstance implements INodeInstance {
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
                                  int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
-                                 TaskSchedulePlan taskSchedule) {
+                                 TaskSchedulePlan taskSchedule,
+                                 CheckpointingClient checkpointingClient, String taskGraphName,
+                                 long tasksVersion) {
     this.streamingTask = streamingTask;
     this.taskId = taskId;
     this.outStreamingQueue = outStreamingQueue;
@@ -134,14 +168,21 @@ public class SourceStreamingInstance implements INodeInstance {
     this.highWaterMark = ExecutorContext.instanceQueueHighWaterMark(config);
     this.outEdges = outEdges;
     this.taskSchedule = taskSchedule;
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.tasksVersion = tasksVersion;
+    this.snapshot = new SnapshotImpl();
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
+    this.checkPointingFrequency = CheckpointingConfigurations.getCheckPointingFrequency(config);
   }
 
   public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
-
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+    TaskContextImpl taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId,
-        outputStreamingCollection, nodeConfigs, outEdges, taskSchedule));
+        outputStreamingCollection, nodeConfigs, outEdges, taskSchedule);
+    streamingTask.prepare(cfg, taskContext);
 
     /// we will use this array for iteration
     this.outOpArray = new IParallelOperation[outStreamingParOps.size()];
@@ -155,6 +196,19 @@ public class SourceStreamingInstance implements INodeInstance {
     for (String e : outEdges.keySet()) {
       this.outEdgeArray[index++] = e;
     }
+
+    if (this.checkpointable) {
+      this.stateStore = CheckpointUtils.getStateStore(config);
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      TaskCheckpointUtils.restore(
+          (CheckpointableTask) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.tasksVersion,
+          globalTaskId
+      );
+    }
   }
 
   /**
@@ -164,6 +218,20 @@ public class SourceStreamingInstance implements INodeInstance {
     if (outStreamingQueue.size() < lowWaterMark) {
       // lets execute the task
       streamingTask.execute();
+
+      if (this.checkpointable && executions++ % this.checkPointingFrequency == 0) {
+        TaskCheckpointUtils.checkpoint(
+            checkpointVersion,
+            (CheckpointableTask) this.streamingTask,
+            this.snapshot,
+            this.stateStore,
+            this.taskGraphName,
+            this.globalTaskId,
+            this.checkpointingClient
+        );
+        this.scheduleBarriers(checkpointVersion++);
+        this.snapshotQueue.add(this.snapshot.copy());
+      }
     }
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
@@ -172,8 +240,20 @@ public class SourceStreamingInstance implements INodeInstance {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
         // if we successfully send remove message
-        if (op.send(globalTaskId, message, 0)) {
+        if (op.send(globalTaskId, message, message.getFlag())) {
           outStreamingQueue.poll();
+
+          if (this.checkpointable) {
+            if ((message.getFlag() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+              barrierMessagesSent++;
+
+              if (barrierMessagesSent == outStreamingParOps.size()) {
+                barrierMessagesSent = 0;
+                ((CheckpointableTask) this.streamingTask)
+                    .onCheckpointPropagated(this.snapshotQueue.poll());
+              }
+            }
+          }
         } else {
           // we need to break
           break;
@@ -204,6 +284,15 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public BlockingQueue<IMessage> getOutStreamingQueue() {
     return outStreamingQueue;
+  }
+
+  public void scheduleBarriers(Long bid) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    buffer.putLong(bid);
+    for (String edge : outStreamingParOps.keySet()) {
+      this.outStreamingQueue.add(new TaskMessage<>(buffer.array(),
+          MessageFlags.SYNC_BARRIER, edge, this.globalTaskId));
+    }
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {

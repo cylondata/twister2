@@ -177,17 +177,17 @@ public class AllReduce implements DataFlowOperation {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (partialReceiver != null) {
       partialReceiver.clean();
     }
 
     if (reduce != null) {
-      reduce.clean();
+      reduce.reset();
     }
 
     if (broadcast != null) {
-      broadcast.clean();
+      broadcast.reset();
     }
   }
 

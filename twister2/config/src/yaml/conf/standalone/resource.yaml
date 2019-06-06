@@ -35,3 +35,6 @@ twister2.resource.scheduler.mpi.mapby: "node"
 # between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set
 # to true, else it will run the bootstrap process
 twister2.resource.sharedfs: true
+
+# Directory for file system volume mount
+twister2.resource.fs.mount: "${TWISTER2_HOME}/persistent/fs/"

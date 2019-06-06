@@ -28,4 +28,14 @@ public interface IMessage<T> {
    * @return the edge identifier
    */
   String edge();
+
+  /**
+   * Returns the flag of the message
+   * @return flag of the message
+   */
+  int getFlag();
+
+  int sourceTask();
+
+  void setFlag(int barrier);
 }

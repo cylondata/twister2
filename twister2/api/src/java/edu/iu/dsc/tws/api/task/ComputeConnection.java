@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -387,13 +388,16 @@ public class ComputeConnection {
    * @param name name of the edge
    * @param keyTpe the key data type
    * @param dataType the data type
+   * @param groupByKey In batched keyed reduce, setting this option to true will group the tupls
+   * by key
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
                                        DataType keyTpe, DataType dataType,
                                        TaskPartitioner partitioner,
                                        Map<String, Object> properties,
-                                       boolean useDisk, Comparator keyComparator) {
+                                       boolean useDisk, Comparator keyComparator,
+                                       boolean groupByKey) {
     Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
         null, partitioner);
     edge.setProperties(properties);
@@ -402,6 +406,7 @@ public class ComputeConnection {
     // once twister2 code is refactored
     edge.addProperty("use-disk", useDisk);
     edge.addProperty("key-comparator", keyComparator);
+    edge.addProperty("group-by-key", groupByKey);
     inputs.put(parent, edge);
 
     return this;
@@ -422,7 +427,7 @@ public class ComputeConnection {
                                        DataType keyTpe, DataType dataType,
                                        boolean useDisk, Comparator keyComparator) {
     return this.keyedGather(parent, name, keyTpe, dataType,
-        null, new HashMap<>(), useDisk, keyComparator);
+        null, new HashMap<>(), useDisk, keyComparator, true);
   }
 
   /**
@@ -435,9 +440,10 @@ public class ComputeConnection {
    * @return the ComputeConnection
    */
   public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType) {
+                                       DataType keyTpe,
+                                       DataType dataType) {
     return this.keyedGather(parent, name, keyTpe, dataType,
-        null, new HashMap<>(), false, null);
+        null, new HashMap<>(), false, null, true);
   }
 
   /**
@@ -454,7 +460,7 @@ public class ComputeConnection {
                                        DataType keyTpe, DataType dataType,
                                        TaskPartitioner partitioner) {
     return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        Collections.emptyMap(), false, null);
+        Collections.emptyMap(), false, null, true);
   }
 
   /**
@@ -473,7 +479,7 @@ public class ComputeConnection {
                                        TaskPartitioner partitioner,
                                        Map<String, Object> properties) {
     return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        properties, false, null);
+        properties, false, null, true);
   }
 
   /**
@@ -806,8 +812,6 @@ public class ComputeConnection {
   }
 
   private boolean isPrimitiveType(DataType dataType) {
-    return dataType == DataType.INTEGER_ARRAY
-        || dataType == DataType.DOUBLE_ARRAY || dataType == DataType.LONG_ARRAY
-        || dataType == DataType.BYTE_ARRAY || dataType == DataType.SHORT_ARRAY;
+    return Utils.dataTypeToMessageType(dataType).isPrimitive();
   }
 }

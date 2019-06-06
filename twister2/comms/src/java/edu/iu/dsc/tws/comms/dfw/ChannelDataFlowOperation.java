@@ -30,6 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -322,9 +323,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);
 
-      currentMessage = new InMessage(id, receiveDataType, this, header);
+      MessageType recvDType = receiveDataType;
+      MessageType recvKType = receiveKeyType;
+
+      if ((header.getFlags() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        recvDType = MessageTypes.BYTE_ARRAY;
+        recvKType = MessageTypes.EMPTY;
+      }
+
+      currentMessage = new InMessage(id, recvDType, this, header);
       if (isKeyed) {
-        currentMessage.setKeyType(receiveKeyType);
+        currentMessage.setKeyType(recvKType);
       }
       if (!currentMessage.addBufferAndCalculate(buffer)) {
         currentMessages.put(source, currentMessage);

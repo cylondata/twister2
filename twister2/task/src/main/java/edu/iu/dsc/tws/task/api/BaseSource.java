@@ -11,12 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api;
 
-public abstract class BaseSource extends BaseNode implements ISource, Closable {
-  @Override
-  public void close() {
-  }
+public abstract class BaseSource extends BaseNode implements ISource {
 
-  @Override
-  public void refresh() {
-  }
 }

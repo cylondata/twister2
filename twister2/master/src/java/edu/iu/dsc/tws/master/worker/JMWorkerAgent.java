@@ -21,6 +21,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.StatusCode;
@@ -102,6 +103,8 @@ public final class JMWorkerAgent {
    * in milli seconds
    */
   private static final long CONNECTION_TRY_TIME_LIMIT = 100000;
+
+  private CheckpointingClientImpl checkpointClient;
 
   /**
    * Singleton JMWorkerAgent
@@ -222,7 +225,9 @@ public final class JMWorkerAgent {
    */
   private void initJMWorkerController() {
 
-    workerController = new JMWorkerController(config, thisWorker, rrClient, numberOfWorkers);
+    this.checkpointClient = new CheckpointingClientImpl(rrClient);
+    workerController = new JMWorkerController(config, thisWorker, rrClient,
+        numberOfWorkers, this.checkpointClient);
 
     JobMasterAPI.ListWorkersRequest.Builder listRequestBuilder =
         JobMasterAPI.ListWorkersRequest.newBuilder();
@@ -237,6 +242,8 @@ public final class JMWorkerAgent {
         JobMasterAPI.BarrierResponse.newBuilder();
     rrClient.registerResponseHandler(barrierRequestBuilder, workerController);
     rrClient.registerResponseHandler(barrierResponseBuilder, workerController);
+
+    this.checkpointClient.init();
   }
 
   /**
@@ -361,6 +368,10 @@ public final class JMWorkerAgent {
    */
   public JMWorkerMessenger getJMWorkerMessenger() {
     return workerMessenger;
+  }
+
+  public CheckpointingClientImpl getCheckpointClient() {
+    return checkpointClient;
   }
 
   /**

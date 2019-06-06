@@ -74,6 +74,11 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
           edgeGenerator.getStringMapping(communicationEdge), target);
       return messages.offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(edge, message);
+    }
   }
 
   public boolean progress() {
@@ -87,7 +92,7 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

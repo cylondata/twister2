@@ -10,26 +10,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
@@ -173,6 +166,8 @@ public class JobMaster {
    */
   private boolean clearResourcesWhenKilled;
 
+  private CheckpointManager checkpointManager;
+
   /**
    * JobMaster constructor
    *
@@ -198,7 +193,11 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.jobID = UUID.randomUUID().toString();
+    this.jobID = config.getStringValue(Context.JOB_ID);
+
+    if (this.jobID == null) {
+      throw new RuntimeException("Job ID not specified in the config.");
+    }
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
@@ -312,6 +311,20 @@ public class JobMaster {
     rrServer.registerRequestHandler(workerResponseBuilder, workerMonitor);
 
     rrServer.registerRequestHandler(joinedBuilder, workerMonitor);
+
+    //initialize checkpoint manager
+    if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
+      StateStore stateStore = CheckpointUtils.getStateStore(config);
+      stateStore.init(config, this.jobID);
+      this.checkpointManager = new CheckpointManager(
+          this.rrServer,
+          stateStore,
+          this.jobID
+      );
+      LOG.info("Checkpoint manager initialized");
+      this.checkpointManager.init();
+    }
+    //done initializing checkpoint manager
 
     rrServer.start();
     looper.loop();

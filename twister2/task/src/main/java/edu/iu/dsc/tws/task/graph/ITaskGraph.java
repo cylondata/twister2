@@ -120,6 +120,8 @@ public interface ITaskGraph<TV, TE> {
    * This method returns the set of outgoing task edges for the task vertex 'TV'
    */
   Set<TE> outgoingTaskEdgesOf(TV taskVertex);
+
+  String getGraphName();
 }
 
 
