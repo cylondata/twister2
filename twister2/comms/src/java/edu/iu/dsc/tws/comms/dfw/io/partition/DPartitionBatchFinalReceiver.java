@@ -103,6 +103,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    * The directory in which we will be saving the shuffle objects
    */
   private List<String> shuffleDirectories;
+  private boolean groupByKey;
 
   /**
    * Keep a refresh count to make the directories when refreshed
@@ -125,11 +126,14 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   private int[] targetsArray;
 
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
-                                      List<String> shuffleDirs, Comparator<Object> com) {
+                                      List<String> shuffleDirs,
+                                      Comparator<Object> com,
+                                      boolean groupByKey) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.comparator = com;
     this.shuffleDirectories = shuffleDirs;
+    this.groupByKey = groupByKey;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -168,7 +172,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxFileSize,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
-              partition.getKeyType(), partition.getDataType(), comparator, target);
+              partition.getKeyType(), partition.getDataType(), comparator, target, groupByKey);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
               DFWIOUtils.getOperationName(target, partition, refresh), partition.getKeyType(),
