@@ -56,9 +56,11 @@ public final class CommonThreadPool {
   private CommonThreadPool(int thread, long keepAlive) {
     this.threads = thread;
     final AtomicInteger threadCount = new AtomicInteger(0);
-    this.executorService = new ThreadPoolExecutor(0, thread, keepAlive,
-        TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-        r -> new Thread(r, "twister2-common-thread-pool-" + threadCount.getAndIncrement()));
+    if (thread > 0) {
+      this.executorService = new ThreadPoolExecutor(0, thread, keepAlive,
+          TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+          r -> new Thread(r, "twister2-common-thread-pool-" + threadCount.getAndIncrement()));
+    }
   }
 
   public static ExecutorService getExecutor() {
