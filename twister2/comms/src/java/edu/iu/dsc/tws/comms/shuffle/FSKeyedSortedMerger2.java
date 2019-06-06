@@ -276,7 +276,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       //create references to existing data
       ArrayList<Tuple> referenceToRecordsInMemory = null;
       if (this.concurrentIOs.availablePermits() == 0) {
-        LOG.warning("Communication thread will block on disk IO thread, "
+        LOG.fine("Communication thread will block on disk IO thread, "
             + "since " + this.parallelIOAllowance + " io operations are already ongoing.");
       }
       int noOfFiles;
