@@ -302,7 +302,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           // save the bytes to disk
           FileSaveWorker fileSaveWorker = new FileSaveWorker(
               referenceToRecordsInMemory, noOfFiles, memoryBytes);
-          if (CommonThreadPool.getThreadCount() != 0) {
+          if (CommonThreadPool.isActive()) {
             CommonThreadPool.getExecutor().execute(fileSaveWorker);
           } else {
             fileSaveWorker.run();
