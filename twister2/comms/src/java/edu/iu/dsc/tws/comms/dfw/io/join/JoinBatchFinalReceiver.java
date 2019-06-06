@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw.io.join;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -89,8 +90,11 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Boolean> targetDone = new HashMap<>();
 
-  public JoinBatchFinalReceiver(BulkReceiver bulkReceiver) {
+  private Comparator<Object> comparator;
+
+  public JoinBatchFinalReceiver(BulkReceiver bulkReceiver, Comparator<Object> com) {
     this.receiver = bulkReceiver;
+    this.comparator = com;
   }
 
   @Override

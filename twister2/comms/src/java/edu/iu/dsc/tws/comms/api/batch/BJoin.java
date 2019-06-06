@@ -62,16 +62,15 @@ public class BJoin {
   public BJoin(Communicator comm, TaskPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType dataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle) {
+               DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver(
-          rcvr, shuffleDirs, new IntegerComparator());
+      finalRcvr = new DJoinBatchFinalReceiver(rcvr, shuffleDirs, comparator);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver(rcvr);
+      finalRcvr = new JoinBatchFinalReceiver(rcvr, comparator);
     }
 
 

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -71,7 +72,16 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
     // create the join communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+        MessageTypes.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false,
+        new Comparator<Object>() {
+          @Override
+          public int compare(Object o1, Object o2) {
+            if (o1 instanceof String && o2 instanceof String) {
+              return ((String) o1).compareTo((String) o2);
+            }
+            return 0;
+          }
+        });
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -88,6 +98,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   /**
    * Messages that are sent to the join operation are sent to the communication layer
+   *
    * @param task task id
    * @param key the key of the message
    * @param data the data for this message
