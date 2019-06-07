@@ -82,11 +82,9 @@ public class TopologyBuilder implements Serializable {
       switch (grouping.getGroupingTechnique()) {
         case DIRECT:
           LOG.info("Adding direct grouping : " + grouping);
-          computeConnection.direct(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+          computeConnection.direct(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         case SHUFFLE:
           LOG.info("Adding shuffle grouping : " + grouping

@@ -206,8 +206,14 @@ public class RoundRobinTaskSchedulerTest {
     ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
         "sink", testSink, parallel);
 
-    computeConnection.direct("source", "cdirect-edge", DataType.OBJECT);
-    sinkComputeConnection.direct("compute", "sdirect-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("cdirect-edge")
+        .withDataType(DataType.OBJECT);
+
+    sinkComputeConnection.direct("compute")
+        .viaEdge("sdirect-edge")
+        .withDataType(DataType.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "24");

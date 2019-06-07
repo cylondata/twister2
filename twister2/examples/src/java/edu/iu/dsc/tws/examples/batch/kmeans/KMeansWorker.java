@@ -153,10 +153,12 @@ public class KMeansWorker extends TaskWorker {
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
+    datapointComputeConnection.direct("datapointsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+    firstGraphComputeConnection.direct("datapointcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
@@ -184,10 +186,12 @@ public class KMeansWorker extends TaskWorker {
         "centroidsink", centroidObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    centroidComputeConnection.direct("centroidsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
+    centroidComputeConnection.direct("centroidsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+    secondGraphComputeConnection.direct("centroidcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
     centroidsTaskGraphBuilder.setTaskGraphName("centTG");
 

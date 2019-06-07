@@ -59,8 +59,14 @@ public class DataflowAddNodeExperiment extends TaskWorker {
         = builder.addCompute("secondcompute", secondComputeTask, parallel);
     ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
 
-    computeConnection.direct("source", "fdirect", DataType.OBJECT);
-    computeConnection1.direct("firstcompute", "sdirect", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("fdirect")
+        .withDataType(DataType.OBJECT);
+
+    computeConnection1.direct("firstcompute")
+        .viaEdge("sdirect")
+        .withDataType(DataType.OBJECT);
+
     rc.allreduce("secondcompute")
         .viaEdge("all-reduce")
         .withReductionFunction(new Aggregator())

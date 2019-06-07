@@ -196,7 +196,9 @@ public class DataLocalityBatchTaskSchedulerTest {
     builder.addSource("source", testSource, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    sinkConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    sinkConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -211,7 +213,9 @@ public class DataLocalityBatchTaskSchedulerTest {
     taskGraphBuilder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
         parallel);
-    computeConnection.direct("source", "direct-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("direct-edge")
+        .withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
@@ -230,8 +234,13 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    computeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-    sinkConnection.direct("compute", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+
+    sinkConnection.direct("compute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
@@ -256,16 +265,24 @@ public class DataLocalityBatchTaskSchedulerTest {
         = builder.addCompute("secondcompute", secondTestCompute, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    firstComputeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-    secondComputeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    firstComputeConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+
+    secondComputeConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+
     sinkConnection.allreduce("firstcompute")
         .viaEdge("freduce")
         .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
         .withDataType(DataType.OBJECT);
+
     sinkConnection.allreduce("secondcompute")
         .viaEdge("sreduce")
         .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
         .withDataType(DataType.OBJECT);
+
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
