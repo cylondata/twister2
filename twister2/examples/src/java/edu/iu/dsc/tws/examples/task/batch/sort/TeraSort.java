@@ -180,12 +180,14 @@ public class TeraSort extends TaskWorker {
     Receiver receiver = new Receiver();
     teraSortTaskGraph.addSink(TASK_RECV, receiver,
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
-        .keyedGather(TASK_SOURCE, EDGE,
-            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY,
-            taskPartitioner,
-            new HashMap<>(),
-            true,
-            ByteArrayComparator.getInstance(), false);
+        .keyedGather(TASK_SOURCE)
+        .viaEdge(EDGE)
+        .withDataType(DataType.BYTE_ARRAY)
+        .withKeyType(DataType.BYTE_ARRAY)
+        .withTaskPartitioner(taskPartitioner)
+        .useDisk(true)
+        .sortBatchByKey(true, ByteArrayComparator.getInstance())
+        .groupBatchByKey(false);
 
 
     DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();

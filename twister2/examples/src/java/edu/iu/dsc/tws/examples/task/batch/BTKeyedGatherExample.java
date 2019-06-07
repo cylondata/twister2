@@ -52,7 +52,10 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     ISink r = new KeyedGatherGroupedSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
+    computeConnection.keyedGather(SOURCE)
+        .viaEdge(edge)
+        .withKeyType(keyType)
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

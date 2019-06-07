@@ -23,7 +23,6 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
 
   private IFunction redFunction;
   private Op op;
-  private TaskPartitioner tPartitioner;
 
   protected KeyedReduceConfig(String parent, ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_REDUCE, computeConnection);
@@ -48,17 +47,6 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
     return this.withDataType(dataType);
   }
 
-  public <T> KeyedReduceConfig withTaskPartitioner(Class<T> tClass,
-                                                   TaskPartitioner<T> taskPartitioner) {
-    this.tPartitioner = taskPartitioner;
-    return this;
-  }
-
-  public KeyedReduceConfig withTaskPartitioner(TaskPartitioner taskPartitioner) {
-    this.tPartitioner = taskPartitioner;
-    return this;
-  }
-
   @Override
   void validate() {
     ReduceConfig.validateReduce(this.redFunction, this.op, this.getOpDataType());
@@ -67,7 +55,6 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
   @Override
   protected Edge updateEdge(Edge newEdge) {
     ReduceConfig.updateReduceEdge(newEdge, this.redFunction, this.op, this.getOpDataType());
-    newEdge.setPartitioner(this.tPartitioner);
     return newEdge;
   }
 }
