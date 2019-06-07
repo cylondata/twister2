@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionConfig extends AbstractKeyedOpsConfig<KeyedPartitionConfig> {
 
-  protected KeyedPartitionConfig(String parent, ComputeConnection computeConnection) {
+  public KeyedPartitionConfig(String parent, ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_PARTITION, computeConnection);
   }
 

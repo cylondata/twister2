@@ -24,7 +24,7 @@ public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig>
   private boolean grpByKey = true;
   private boolean srtByKey;
 
-  protected KeyedGatherConfig(String parent,
+  public KeyedGatherConfig(String parent,
                               ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_GATHER, computeConnection);
   }

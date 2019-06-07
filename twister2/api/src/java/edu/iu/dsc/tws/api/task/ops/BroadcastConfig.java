@@ -12,7 +12,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 
 public class BroadcastConfig extends AbstractOpsConfig<BroadcastConfig> {
 
-  BroadcastConfig(String source, ComputeConnection computeConnection) {
+  public BroadcastConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.BROADCAST, computeConnection);
   }
 

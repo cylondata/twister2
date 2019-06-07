@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 
 public class DirectConfig extends AbstractOpsConfig<DirectConfig> {
 
-  protected DirectConfig(String source, ComputeConnection computeConnection) {
+  public DirectConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.DIRECT, computeConnection);
   }
 

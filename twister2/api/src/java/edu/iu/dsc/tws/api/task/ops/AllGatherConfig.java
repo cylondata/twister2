@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class AllGatherConfig extends GatherConfig {
 
-  protected AllGatherConfig(String source, ComputeConnection computeConnection) {
+  public AllGatherConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.ALLGATHER, computeConnection);
   }
 }

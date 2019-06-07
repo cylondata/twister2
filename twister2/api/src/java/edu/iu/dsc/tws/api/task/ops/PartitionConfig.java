@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 
 public class PartitionConfig extends AbstractOpsConfig<PartitionConfig> {
 
-  protected PartitionConfig(String source, ComputeConnection computeConnection) {
+  public PartitionConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.PARTITION, computeConnection);
   }
 

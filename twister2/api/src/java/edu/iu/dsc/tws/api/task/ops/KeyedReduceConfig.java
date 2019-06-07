@@ -23,7 +23,7 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
   private IFunction redFunction;
   private Op op;
 
-  protected KeyedReduceConfig(String parent, ComputeConnection computeConnection) {
+  public KeyedReduceConfig(String parent, ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_REDUCE, computeConnection);
   }
 

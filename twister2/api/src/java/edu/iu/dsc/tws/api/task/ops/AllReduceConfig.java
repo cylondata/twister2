@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class AllReduceConfig extends ReduceConfig {
 
-  protected AllReduceConfig(String source, ComputeConnection computeConnection) {
+  public AllReduceConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.ALLREDUCE, computeConnection);
   }
 }

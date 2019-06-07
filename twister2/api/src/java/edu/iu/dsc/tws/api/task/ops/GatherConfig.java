@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 
 public class GatherConfig extends AbstractOpsConfig<GatherConfig> {
 
-  protected GatherConfig(String source, ComputeConnection computeConnection) {
+  public GatherConfig(String source, ComputeConnection computeConnection) {
     super(source, OperationNames.GATHER, computeConnection);
   }
 

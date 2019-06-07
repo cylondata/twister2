@@ -82,8 +82,7 @@ public class ComputeConnection {
    * @return the {@link BroadcastConfig}
    */
   public BroadcastConfig broadcast(String source) {
-    BroadcastConfig broadcastConfig = AbstractOpsConfig.withSource(source,
-        this, BroadcastConfig.class);
+    BroadcastConfig broadcastConfig = new BroadcastConfig(source, this);
     this.addToAutoConfig(source, broadcastConfig);
     return broadcastConfig;
   }
@@ -95,8 +94,7 @@ public class ComputeConnection {
    * @return the {@link ReduceConfig}
    */
   public ReduceConfig reduce(String source) {
-    ReduceConfig reduceConfig = AbstractOpsConfig.withSource(source, this,
-        ReduceConfig.class);
+    ReduceConfig reduceConfig = new ReduceConfig(source, this);
     this.addToAutoConfig(source, reduceConfig);
     return reduceConfig;
   }
@@ -108,8 +106,7 @@ public class ComputeConnection {
    * @return the {@link KeyedReduceConfig}
    */
   public KeyedReduceConfig keyedReduce(String source) {
-    KeyedReduceConfig keyedReduceConfig = AbstractOpsConfig.withSource(source,
-        this, KeyedReduceConfig.class);
+    KeyedReduceConfig keyedReduceConfig = new KeyedReduceConfig(source, this);
     this.addToAutoConfig(source, keyedReduceConfig);
     return keyedReduceConfig;
   }
@@ -121,8 +118,7 @@ public class ComputeConnection {
    * @return the {@link GatherConfig}
    */
   public GatherConfig gather(String source) {
-    GatherConfig gatherConfig = AbstractOpsConfig.withSource(source, this,
-        GatherConfig.class);
+    GatherConfig gatherConfig = new GatherConfig(source, this);
     this.addToAutoConfig(source, gatherConfig);
     return gatherConfig;
   }
@@ -134,8 +130,7 @@ public class ComputeConnection {
    * @return the {@link KeyedGatherConfig}
    */
   public KeyedGatherConfig keyedGather(String source) {
-    KeyedGatherConfig keyedGatherConfig = AbstractOpsConfig.withSource(source,
-        this, KeyedGatherConfig.class);
+    KeyedGatherConfig keyedGatherConfig = new KeyedGatherConfig(source, this);
     this.addToAutoConfig(source, keyedGatherConfig);
     return keyedGatherConfig;
   }
@@ -147,8 +142,7 @@ public class ComputeConnection {
    * @return the {@link KeyedGatherConfig}
    */
   public PartitionConfig partition(String source) {
-    PartitionConfig partitionConfig = AbstractOpsConfig.withSource(source, this,
-        PartitionConfig.class);
+    PartitionConfig partitionConfig = new PartitionConfig(source, this);
     this.addToAutoConfig(source, partitionConfig);
     return partitionConfig;
   }
@@ -160,9 +154,7 @@ public class ComputeConnection {
    * @return the {@link KeyedPartitionConfig}
    */
   public KeyedPartitionConfig keyedPartition(String source) {
-    KeyedPartitionConfig keyedPartitionConfig = AbstractOpsConfig.withSource(source,
-        this,
-        KeyedPartitionConfig.class);
+    KeyedPartitionConfig keyedPartitionConfig = new KeyedPartitionConfig(source, this);
     this.addToAutoConfig(source, keyedPartitionConfig);
     return keyedPartitionConfig;
   }
@@ -174,8 +166,7 @@ public class ComputeConnection {
    * @return the {@link AllReduceConfig}
    */
   public AllReduceConfig allreduce(String source) {
-    AllReduceConfig allReduceConfig = AbstractOpsConfig.withSource(source,
-        this, AllReduceConfig.class);
+    AllReduceConfig allReduceConfig = new AllReduceConfig(source, this);
     this.addToAutoConfig(source, allReduceConfig);
     return allReduceConfig;
   }
@@ -188,8 +179,7 @@ public class ComputeConnection {
    * @return the {@link AllGatherConfig}
    */
   public AllGatherConfig allgather(String source) {
-    AllGatherConfig allGatherConfig = AbstractOpsConfig.withSource(source, this,
-        AllGatherConfig.class);
+    AllGatherConfig allGatherConfig = new AllGatherConfig(source, this);
     this.addToAutoConfig(source, allGatherConfig);
     return allGatherConfig;
   }
@@ -202,8 +192,7 @@ public class ComputeConnection {
    * @return the {@link DirectConfig}
    */
   public DirectConfig direct(String source) {
-    DirectConfig directConfig = AbstractOpsConfig.withSource(source, this,
-        DirectConfig.class);
+    DirectConfig directConfig = new DirectConfig(source, this);
     this.addToAutoConfig(source, directConfig);
     return directConfig;
   }
