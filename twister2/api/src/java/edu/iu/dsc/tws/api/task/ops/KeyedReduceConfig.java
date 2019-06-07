@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig> {
@@ -29,6 +28,8 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
   }
 
   /**
+   * Define a function to handle the reduction
+   *
    * @param tClass Class of {@link IFunction} arguments
    */
   public <T> KeyedReduceConfig withReductionFunction(Class<T> tClass,

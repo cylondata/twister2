@@ -136,7 +136,8 @@ public class KMeansWorker extends TaskWorker {
   }
 
   public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue, int dimension, Config conf) {
+                                                    int parallelismValue, int dimension,
+                                                    Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
@@ -169,9 +170,10 @@ public class KMeansWorker extends TaskWorker {
 
 
   public static DataFlowTaskGraph buildCentroidsTG(String centroidDirectory, int csize,
-                                                   int parallelismValue, int dimension, Config conf) {
-    DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
+                                                   int parallelismValue, int dimension,
+                                                   Config conf) {
+    DataFileReplicatedReadSource dataFileReplicatedReadSource
+        = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
     KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();

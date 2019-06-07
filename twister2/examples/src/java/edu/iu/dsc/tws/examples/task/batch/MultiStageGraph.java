@@ -51,7 +51,7 @@ public class MultiStageGraph extends TaskWorker {
     ComputeConnection rc = builder.addSink("sink", rt, 1);
     rc.reduce("compute")
         .viaEdge("compute-edge")
-        .withReductionFunction(((object1, object2) -> object1));
+        .withReductionFunction((object1, object2) -> object1);
 
     builder.setMode(OperationMode.BATCH);
 

@@ -36,6 +36,8 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
   }
 
   /**
+   * Define a function to handle the reduction
+   *
    * @param tClass Class of {@link IFunction} arguments
    */
   public <T> ReduceConfig withReductionFunction(Class<T> tClass,
