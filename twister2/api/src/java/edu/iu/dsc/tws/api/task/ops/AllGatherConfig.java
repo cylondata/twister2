@@ -13,26 +13,10 @@ package edu.iu.dsc.tws.api.task.ops;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.task.graph.Edge;
 
-public class GatherConfig extends AbstractOpsConfig<GatherConfig> {
+public class AllGatherConfig extends GatherConfig {
 
-  protected GatherConfig(String source, ComputeConnection computeConnection) {
-    super(source, OperationNames.GATHER, computeConnection);
-  }
-
-  protected GatherConfig(String source, String operationName,
-                         ComputeConnection computeConnection) {
-    super(source, operationName, computeConnection);
-  }
-
-  @Override
-  void validate() {
-    // nothing to do here in gather
-  }
-
-  @Override
-  protected Edge updateEdge(Edge newEdge) {
-    return newEdge;
+  protected AllGatherConfig(String source, ComputeConnection computeConnection) {
+    super(source, OperationNames.ALLGATHER, computeConnection);
   }
 }
