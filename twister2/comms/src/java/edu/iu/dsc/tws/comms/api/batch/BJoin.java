@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
@@ -68,7 +68,7 @@ public class BJoin {
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver(rcvr, shuffleDirs, comparator);
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
     } else {
       finalRcvr = new JoinBatchFinalReceiver(rcvr, comparator);
     }

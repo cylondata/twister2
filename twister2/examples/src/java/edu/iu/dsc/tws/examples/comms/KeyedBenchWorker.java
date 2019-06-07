@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.net.Network;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
@@ -90,6 +91,9 @@ public abstract class KeyedBenchWorker implements IWorker {
     this.jobParameters = JobParameters.build(cfg);
     this.config = cfg;
     this.workerId = workerID;
+
+    //initialize common thread pool
+    CommonThreadPool.init(config);
 
     // wait for all workers in this job to join
     try {
