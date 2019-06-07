@@ -48,35 +48,45 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
     return this.withDataType(dataType);
   }
 
-  @Override
-  void validate() {
-    if (redFunction == null && op == null) {
-      this.failValidation("Either reduction function or Operation "
+  public static void validateReduce(IFunction reductionFunction,
+                                    Op operation,
+                                    DataType dataType) {
+    if (reductionFunction == null && operation == null) {
+      failValidation("Either reduction function or Operation "
           + "should be specified when declaring reduce operations.");
     }
 
-    if (redFunction != null && op != null) {
-      this.failValidation("Both Reduction Function and Op can't be assigned "
+    if (reductionFunction != null && operation != null) {
+      failValidation("Both Reduction Function and Op can't be assigned "
           + "for a single reduce operation.");
     }
 
-    if (op != null && this.getOpDataType() == null) {
-      this.failValidation("Data type should specified for a reduce operation with an Op.");
+    if (operation != null && dataType == null) {
+      failValidation("Data type should specified for a reduce operation with an Op.");
     }
 
-    if (op != null && this.getOpDataType() != null &&
-        !Utils.dataTypeToMessageType(this.getOpDataType()).isPrimitive()) {
-      this.failValidation("Reduce operations are only applicable to primitive types.");
+    if (operation != null && !Utils.dataTypeToMessageType(dataType).isPrimitive()) {
+      failValidation("Reduce operations are only applicable to primitive types.");
+    }
+  }
+
+  @Override
+  void validate() {
+    validateReduce(this.redFunction, this.op, this.getOpDataType());
+  }
+
+  public static void updateReduceEdge(Edge reduceEdge, IFunction reductionFunction,
+                                      Op operation, DataType dataType) {
+    if (reductionFunction != null) {
+      reduceEdge.setFunction(reductionFunction);
+    } else if (operation != null) {
+      reduceEdge.setFunction(new ReduceFn(operation, dataType));
     }
   }
 
   @Override
   protected Edge updateEdge(Edge newEdge) {
-    if (this.redFunction != null) {
-      newEdge.setFunction(this.redFunction);
-    } else if (this.op != null) {
-      newEdge.setFunction(new ReduceFn(this.op, this.getOpDataType()));
-    }
+    updateReduceEdge(newEdge, this.redFunction, this.op, this.getOpDataType());
     return newEdge;
   }
 }

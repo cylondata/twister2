@@ -108,7 +108,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     }
   }
 
-  protected void failValidation(String msg) {
+  protected static void failValidation(String msg) {
     throw new OpConfigValidationFailedException(msg);
   }
 

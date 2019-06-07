@@ -16,7 +16,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
-public class TaskPartitionFunction<T> implements TaskPartitioner {
+public class TaskPartitionFunction<T> implements TaskPartitioner<T> {
   private PartitionFunction<T> partitionFunction;
 
   public TaskPartitionFunction(PartitionFunction<T> parFn) {

@@ -170,7 +170,9 @@ public class RoundRobinTaskSchedulerTest {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
+    c.reduce("source")
+        .viaEdge("edge")
+        .withOperation(Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
     return builder.build();
   }
@@ -182,7 +184,7 @@ public class RoundRobinTaskSchedulerTest {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
+    c.reduce("source").viaEdge("edge").withOperation(Op.SUM, DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "16");
