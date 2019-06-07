@@ -56,7 +56,10 @@ public class DataflowNodeExperiment extends TaskWorker {
     ComputeConnection computeConnection = builder.addCompute("compute", computeTask, parallel);
     ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
     computeConnection.direct("source", "direct", DataType.OBJECT);
-    rc.allreduce("compute", "all-reduce", new Aggregator(), DataType.OBJECT);
+    rc.allreduce("compute")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();

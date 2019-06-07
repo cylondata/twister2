@@ -74,8 +74,10 @@ public class SourceTaskDataLoader extends TaskWorker {
     taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
     ComputeConnection computeConnection = taskGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelism);
-    computeConnection.allreduce("kmeanssource", "all-reduce",
-        new SimpleDataAggregator(), DataType.OBJECT);
+    computeConnection.allreduce("kmeanssource")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new SimpleDataAggregator())
+        .withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph simpleTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);

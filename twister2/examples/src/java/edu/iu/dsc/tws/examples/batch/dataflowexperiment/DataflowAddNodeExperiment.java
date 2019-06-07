@@ -61,7 +61,10 @@ public class DataflowAddNodeExperiment extends TaskWorker {
 
     computeConnection.direct("source", "fdirect", DataType.OBJECT);
     computeConnection1.direct("firstcompute", "sdirect", DataType.OBJECT);
-    rc.allreduce("secondcompute", "all-reduce", new Aggregator(), DataType.OBJECT);
+    rc.allreduce("secondcompute")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();

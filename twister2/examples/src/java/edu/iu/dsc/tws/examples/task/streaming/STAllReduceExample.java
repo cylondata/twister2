@@ -44,7 +44,9 @@ public class STAllReduceExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER_ARRAY);
+    computeConnection.allreduce(SOURCE)
+        .viaEdge(edge)
+        .withOperation(Op.SUM, DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }

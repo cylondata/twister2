@@ -26,7 +26,13 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
   private Op op;
 
   protected ReduceConfig(String source, ComputeConnection computeConnection) {
-    super(source, OperationNames.REDUCE, computeConnection);
+    this(source, OperationNames.REDUCE, computeConnection);
+  }
+
+  protected ReduceConfig(String source,
+                         String operationName,
+                         ComputeConnection computeConnection) {
+    super(source, operationName, computeConnection);
   }
 
   /**

@@ -276,8 +276,10 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 //        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
 //            new ReduceAggregator(), DataType.OBJECT);
     svmReduceConnection
-        .allreduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
-            new ReduceAggregator(), DataType.OBJECT);
+        .allreduce(Constants.SimpleGraphConfig.SVM_COMPUTE)
+        .viaEdge(Constants.SimpleGraphConfig.REDUCE_EDGE)
+        .withReductionFunction(new ReduceAggregator())
+        .withDataType(DataType.OBJECT);
 
     trainingBuilder.setMode(operationMode);
     DataFlowTaskGraph graph = trainingBuilder.build();

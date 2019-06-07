@@ -56,7 +56,6 @@ import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
@@ -124,9 +123,9 @@ public class TeraSort extends TaskWorker {
       SamplerReduce samplerReduce = new SamplerReduce();
       samplingGraph.addCompute(TASK_SAMPLER_REDUCE, samplerReduce,
           config.getIntegerValue(ARG_RESOURCE_INSTANCES, 4))
-          .allreduce(TASK_SAMPLER, EDGE, (IFunction) (object1, object2) -> {
-            byte[] minMax1 = (byte[]) object1;
-            byte[] minMax2 = (byte[]) object2;
+          .allreduce(TASK_SAMPLER)
+          .viaEdge(EDGE)
+          .withReductionFunction(byte[].class, (minMax1, minMax2) -> {
 
             byte[] min1 = Arrays.copyOfRange(minMax1, 0, keySize);
             byte[] max1 = Arrays.copyOfRange(minMax1, keySize, minMax1.length);

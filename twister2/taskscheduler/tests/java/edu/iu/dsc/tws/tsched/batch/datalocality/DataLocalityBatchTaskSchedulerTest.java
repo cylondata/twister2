@@ -221,7 +221,7 @@ public class DataLocalityBatchTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    TaskSchedulerClassTest.TestSource testSource = new  TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -242,7 +242,7 @@ public class DataLocalityBatchTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithMultipleComputeTaskAndConstraints(int parallel) {
 
-    TaskSchedulerClassTest.TestSource testSource = new  TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute firstTestCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestComputeChild secondTestCompute
         = new TaskSchedulerClassTest.TestComputeChild();
@@ -258,10 +258,14 @@ public class DataLocalityBatchTaskSchedulerTest {
 
     firstComputeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
     secondComputeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-    sinkConnection.allreduce("firstcompute", "freduce",
-        new TaskSchedulerClassTest.Aggregator(), DataType.OBJECT);
-    sinkConnection.allreduce("secondcompute", "sreduce",
-        new TaskSchedulerClassTest.Aggregator(), DataType.OBJECT);
+    sinkConnection.allreduce("firstcompute")
+        .viaEdge("freduce")
+        .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
+        .withDataType(DataType.OBJECT);
+    sinkConnection.allreduce("secondcompute")
+        .viaEdge("sreduce")
+        .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
+        .withDataType(DataType.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");

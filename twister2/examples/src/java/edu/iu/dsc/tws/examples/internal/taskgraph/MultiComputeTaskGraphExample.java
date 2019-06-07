@@ -121,8 +121,15 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     firstComputeConnection.direct("source", "fdirect", DataType.OBJECT);
     secondComputeConnection.direct("source", "sdirect", DataType.OBJECT);
-    reduceConnection.allreduce("firstcompute", "freduce", new Aggregator(), DataType.OBJECT);
-    reduceConnection.allreduce("secondcompute", "sreduce", new Aggregator(), DataType.OBJECT);
+    reduceConnection.allreduce("firstcompute")
+        .viaEdge("freduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT)
+        .connect()
+        .allreduce("secondcompute")
+        .viaEdge("sreduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 
