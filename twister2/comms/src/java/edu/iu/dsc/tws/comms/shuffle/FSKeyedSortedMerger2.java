@@ -271,6 +271,11 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * This method saves the data to file system
    */
   public synchronized void run() {
+    // if not writing to disk return
+    if (status != FSStatus.WRITING_DISK) {
+      return;
+    }
+
     // it is time to write
     if (numOfBytesInMemory >= maxBytesFile) {
       //create references to existing data
@@ -288,11 +293,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         }
 
         this.concurrentIOs.acquire(); // allow only 'concurrentIOAllowance' parallel writes to disk
-
-        // if not writing to disk return
-        if (status != FSStatus.WRITING_DISK) {
-          return;
-        }
 
         referenceToRecordsInMemory = this.recordsToDisk;
         noOfFiles = noOfFileWritten;
@@ -315,7 +315,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         numOfBytesInMemory = 0;
       } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Couldn't write to the file", e);
-        fileWriteLock.release();
+        concurrentIOs.release();
       }
     }
   }
