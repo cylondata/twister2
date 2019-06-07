@@ -23,10 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.ops;
 
-import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -94,18 +92,6 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
       throw new OpConfigValidationFailedException("Parent can't be null");
     }
     this.validate();
-  }
-
-
-  public static <T> T withSource(String source, ComputeConnection computeConnection,
-                                 Class<T> tClass) {
-    try {
-      Constructor<T> constructor = tClass.getConstructor(String.class, ComputeConnection.class);
-      return constructor.newInstance(source, computeConnection);
-    } catch (Exception nex) {
-      LOG.log(Level.SEVERE, "Couldn't create an instance of config class", nex);
-      throw new RuntimeException(nex);
-    }
   }
 
   protected static void failValidation(String msg) {

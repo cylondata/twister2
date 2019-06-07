@@ -218,9 +218,9 @@ public class ComputeConnection {
           throw new RuntimeException("Failed to connect non-existing task: " + nodeName);
         }
 
-        Vertex v2 = graph.vertex(edgeName);
+        Vertex v2 = graph.vertex(source);
         if (v2 == null) {
-          throw new RuntimeException("Failed to connect non-existing task: " + edgeName);
+          throw new RuntimeException("Failed to connect non-existing task: " + source);
         }
         graph.addTaskEdge(v2, v1, edge);
       });
