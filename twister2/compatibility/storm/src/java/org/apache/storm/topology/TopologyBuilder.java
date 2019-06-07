@@ -92,11 +92,9 @@ public class TopologyBuilder implements Serializable {
           LOG.info("Adding shuffle grouping : " + grouping
               + "{" + grouping.getComponentId() + ","
               + this.generateEdgeName(grouping, nodeId));
-          computeConnection.partition(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+          computeConnection.partition(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         case FIELD:
           computeConnection.keyedPartition(

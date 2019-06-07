@@ -148,7 +148,9 @@ public final class TwoDataFlowsExample {
     graphBuilderX.addSource("source1", firstSourceTask, parallelism);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelism);
-    partitionConnection.partition("source1", "partition", DataType.OBJECT);
+    partitionConnection.partition("source1")
+        .viaEdge("partition")
+        .withDataType(DataType.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
