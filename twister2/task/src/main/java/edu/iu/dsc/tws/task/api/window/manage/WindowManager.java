@@ -130,7 +130,7 @@ public class WindowManager<T> implements IManager<T> {
       IWindowMessage<T> ievents = bundleWindowIMessage(events);
       IWindowMessage<T> inewEvents = bundleWindowIMessage(newEvents);
       //TODO : handle expired events
-      IWindowMessage<T> iexpired = null;
+      IWindowMessage<T> iexpired = bundleWindowIMessage(expired);
       windowLifeCycleListener.onActivation(ievents, inewEvents, iexpired);
     } else {
       LOG.log(Level.FINE,

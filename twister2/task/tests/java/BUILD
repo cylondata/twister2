@@ -23,6 +23,7 @@ java_tests(
     test_classes = [
         "edu.iu.dsc.tws.task.test.Hello",
         "edu.iu.dsc.tws.task.test.WatermarkGeneratorTest",
+        "edu.iu.dsc.tws.task.test.WindowManagerTest",
     ],
     runtime_deps = [
         ":task-tests",

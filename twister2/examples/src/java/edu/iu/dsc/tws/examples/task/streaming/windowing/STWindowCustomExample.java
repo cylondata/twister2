@@ -75,6 +75,11 @@ public class STWindowCustomExample extends BenchTaskWorker {
     }
 
     @Override
+    public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
+      return true;
+    }
+
+    @Override
     public boolean getLateMessages(IMessage<int[]> lateMessage) {
       LOG.info(String.format("Late Message : %s",
           lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));

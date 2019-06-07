@@ -53,4 +53,9 @@ public abstract class ReduceWindow<T> extends BaseWindowedSink<T> {
     }
     return false;
   }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
+  }
 }

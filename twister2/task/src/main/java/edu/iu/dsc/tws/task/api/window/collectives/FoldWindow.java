@@ -63,4 +63,9 @@ public abstract class FoldWindow<T, K> extends BaseWindowedSink<T> {
     }
     return true;
   }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
+  }
 }

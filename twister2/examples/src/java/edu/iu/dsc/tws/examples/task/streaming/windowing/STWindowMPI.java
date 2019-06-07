@@ -103,6 +103,11 @@ public class STWindowMPI extends BenchTaskWorker {
     }
 
     @Override
+    public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
+      return false;
+    }
+
+    @Override
     public boolean getLateMessages(IMessage<int[]> lateMessages) {
       return true;
     }

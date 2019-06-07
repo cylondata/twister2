@@ -138,6 +138,11 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
     }
 
     @Override
+    public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
+      return false;
+    }
+
+    @Override
     public boolean getLateMessages(IMessage<int[]> lateMessages) {
       LOG.info(String.format("Late Message : %s",
           lateMessages.getContent() != null ? Arrays.toString(lateMessages.getContent()) : "null"));
@@ -162,6 +167,7 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
     public boolean reduceLateMessage(int[] content) {
       return false;
     }
+
   }
 
   protected static class DirectAggregateWindowedTask extends AggregateWindow<int[]> {

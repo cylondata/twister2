@@ -28,19 +28,28 @@ import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class WindowManagerTest {
 
   private WindowManager<Integer> windowManager;
   private Listener listener;
 
+  private List<IMessage<Integer>> mockList;
+
   private static class Listener implements WindowLifeCycleListener<Integer> {
-    private IWindowMessage<Integer> onExpiryEvents = new WindowMessageImpl<>(null, null);
-    private IWindowMessage<Integer> onActivationEvents = new WindowMessageImpl<>(null, null);
-    private IWindowMessage<Integer> onActivationNewEvents = new WindowMessageImpl<>(null, null);
-    private IWindowMessage<Integer> onActivationExpiredEvents = new WindowMessageImpl<>(null, null);
+    private IWindowMessage<Integer> onExpiryEvents
+        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+        new ArrayList<IMessage<Integer>>());
+    private IWindowMessage<Integer> onActivationEvents
+        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+        new ArrayList<IMessage<Integer>>());
+    private IWindowMessage<Integer> onActivationNewEvents
+        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+        new ArrayList<IMessage<Integer>>());
+    private IWindowMessage<Integer> onActivationExpiredEvents
+        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+        new ArrayList<IMessage<Integer>>());
 
     // all events since last clear
     private List<IWindowMessage<Integer>> allOnExpiryEvents = new ArrayList<>();
@@ -49,10 +58,14 @@ public class WindowManagerTest {
     private List<IWindowMessage<Integer>> allOnActivationExpiredEvents = new ArrayList<>();
 
     public void clear() {
-      onExpiryEvents = new WindowMessageImpl<>(null, null);
-      onActivationEvents = new WindowMessageImpl<>(null, null);
-      onActivationNewEvents = new WindowMessageImpl<>(null, null);
-      onActivationExpiredEvents = new WindowMessageImpl<>(null, null);
+      onExpiryEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+          new ArrayList<IMessage<Integer>>());
+      onActivationEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+          new ArrayList<IMessage<Integer>>());
+      onActivationNewEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+          new ArrayList<IMessage<Integer>>());
+      onActivationExpiredEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
+          new ArrayList<IMessage<Integer>>());
 
       allOnExpiryEvents.clear();
       allOnActivationEvents.clear();
@@ -63,7 +76,7 @@ public class WindowManagerTest {
     @Override
     public void onExpiry(IWindowMessage<Integer> events) {
       onExpiryEvents = events;
-      allOnActivationEvents.add(events);
+      allOnExpiryEvents.add(events);
     }
 
     @Override
@@ -97,39 +110,61 @@ public class WindowManagerTest {
     triggerPolicy.start();
     windowManager.setEvictionPolicy(evictionPolicy);
     windowManager.setWindowingPolicy(triggerPolicy);
+    IMessage<Integer> m0 = new TaskMessage<>(0);
     IMessage<Integer> m1 = new TaskMessage<>(1);
     IMessage<Integer> m2 = new TaskMessage<>(2);
+    IMessage<Integer> m3 = new TaskMessage<>(3);
+    IMessage<Integer> m4 = new TaskMessage<>(4);
+    IMessage<Integer> m5 = new TaskMessage<>(5);
+    IMessage<Integer> m6 = new TaskMessage<>(6);
+    mockList = new ArrayList<>(7);
+    mockList.add(m0);
+    mockList.add(m1);
+    mockList.add(m2);
+    mockList.add(m3);
+    mockList.add(m4);
+    mockList.add(m5);
+    mockList.add(m6);
+
+    windowManager.add(m0);
     windowManager.add(m1);
-    windowManager.add(m2);
     // nothing expired yet
     assertTrue(listener.onExpiryEvents.getExpiredWindow().isEmpty());
-    assertEquals(seqIMessage(m1, m2), listener.onActivationEvents);
-//    assertEquals(seq(1, 2), listener.onActivationNewEvents);
-//    assertTrue(listener.onActivationExpiredEvents.isEmpty());
-//    windowManager.add(3);
-//    windowManager.add(4);
-//    // nothing expired yet
-//    assertTrue(listener.onExpiryEvents.isEmpty());
-//    assertEquals(seq(1, 4), listener.onActivationEvents);
-//    assertEquals(seq(3, 4), listener.onActivationNewEvents);
-//    assertTrue(listener.onActivationExpiredEvents.isEmpty());
-//    windowManager.add(5);
-//    windowManager.add(6);
-//    // 1 expired
-//    assertEquals(seq(1), listener.onExpiryEvents);
-//    assertEquals(seq(2, 6), listener.onActivationEvents);
-//    assertEquals(seq(5, 6), listener.onActivationNewEvents);
-//    assertEquals(seq(1), listener.onActivationExpiredEvents);
-//    listener.clear();
-//    windowManager.add(7);
-//    // nothing expires until threshold is hit
-//    assertTrue(listener.onExpiryEvents.isEmpty());
-//    windowManager.add(8);
-//    // 1 expired
-//    assertEquals(seq(2, 3), listener.onExpiryEvents);
-//    assertEquals(seq(4, 8), listener.onActivationEvents);
-//    assertEquals(seq(7, 8), listener.onActivationNewEvents);
-//    assertEquals(seq(2, 3), listener.onActivationExpiredEvents);
+
+    assertEquals(null, null);
+    int start = 0;
+    int end = 1;
+    List<IMessage<Integer>> num01 = seqIMessage(start, end);
+    assertEquals(num01.size(), (end - start) + 1);
+
+    int count = 0;
+
+    printIWindowMessage(listener.onActivationEvents, new IOutputFunction<Integer>() {
+      private int count = 0;
+
+      @Override
+      public void print(Integer integer) {
+        System.out.println(count++ + " : " + integer);
+      }
+    });
+
+
+    printIMessageList(num01, new IOutputFunction<Integer>() {
+      private int count = 0;
+
+      @Override
+      public void print(Integer integer) {
+        System.out.println(count++ + " : " + integer);
+      }
+    });
+
+
+    assertTrue(listener.onExpiryEvents.getExpiredWindow().isEmpty());
+    assertEquals(seqIMessage(0, 1), listener.onActivationEvents.getWindow());
+    assertNotEquals(seqIMessage(1, 2), listener.onActivationEvents.getWindow());
+    assertEquals(seqIMessage(0, 1), listener.onActivationNewEvents.getWindow());
+    //assertTrue(listener.onActivationExpiredEvents.getExpiredWindow().isEmpty());
+
   }
 
   private List<Integer> seq(int start, int stop) {
@@ -140,12 +175,41 @@ public class WindowManagerTest {
     return ints;
   }
 
-  private List<IMessage<Integer>> seqIMessage(IMessage<Integer> start, IMessage<Integer> end) {
-    List<IMessage<Integer>> iMessageList = new ArrayList<>();
-    for (int i = start.getContent(); i < end.getContent(); i++) {
-      iMessageList.add(new TaskMessage(i));
+  private List<IMessage<Integer>> seqIMessage(int start, int end) {
+    if (mockList.size() >= (end - start) + 1) {
+      List<IMessage<Integer>> iMessageList = new ArrayList<>();
+      for (int i = start; i <= end; i++) {
+        iMessageList.add(mockList.get(i));
+      }
+
+      return iMessageList;
+
     }
-    return iMessageList;
+    return null;
+  }
+
+  private <T> void printIWindowMessage(IWindowMessage<T> windowMessage,
+                                       IOutputFunction<T> outputfunction) {
+    if (windowMessage.getWindow() != null) {
+      printIMessageList(windowMessage.getWindow(), outputfunction);
+    }
+  }
+
+  interface IOutputFunction<T> {
+    void print(T t);
+  }
+
+  private <T> void printIMessageList(List<IMessage<T>> iMessageList,
+                                     IOutputFunction<T> outputFunction) {
+    if (iMessageList != null && outputFunction != null) {
+      for (IMessage<T> message : iMessageList) {
+        printIMessage(message, outputFunction);
+      }
+    }
+  }
+
+  private <T> void printIMessage(IMessage<T> message, IOutputFunction<T> outputFunction) {
+    outputFunction.print(message.getContent());
   }
 
 }

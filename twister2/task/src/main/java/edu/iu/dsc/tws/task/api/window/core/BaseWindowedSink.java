@@ -53,6 +53,8 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   public abstract boolean execute(IWindowMessage<T> windowMessage);
 
+  public abstract boolean getExpire(IWindowMessage<T> expiredMessages);
+
   public abstract boolean getLateMessages(IMessage<T> lateMessages);
 
   private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
@@ -211,13 +213,14 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       @Override
       public void onExpiry(IWindowMessage<T> events) {
         // TODO : design the logic
+        getExpire(events);
       }
 
       @Override
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
         collectiveEvents = events;
-        execute(events);
+        execute(collectiveEvents);
       }
     };
   }

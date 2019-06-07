@@ -38,4 +38,9 @@ public abstract class ProcessWindow<T> extends BaseWindowedSink<T> {
   public boolean getLateMessages(IMessage<T> lateMessages) {
     return processLateMessages(this.processWindowedFunction.processLateMessage(lateMessages));
   }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
+  }
 }
