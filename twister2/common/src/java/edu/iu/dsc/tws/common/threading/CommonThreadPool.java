@@ -81,4 +81,9 @@ public final class CommonThreadPool {
       return commonThreadPool.threads;
     }
   }
+
+  public static boolean isActive() {
+    return commonThreadPool != null && commonThreadPool.executorService != null
+        && commonThreadPool.threads > 0;
+  }
 }

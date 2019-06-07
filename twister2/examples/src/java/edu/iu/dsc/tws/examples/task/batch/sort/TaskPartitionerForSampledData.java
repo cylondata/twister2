@@ -59,7 +59,7 @@ public class TaskPartitionerForSampledData extends TaskPartitionerForRandom {
   }
 
   @Override
-  public int partition(int source, Object data) {
-    return this.destinationsList.get(this.getIndex((byte[]) data));
+  public int partition(int source, byte[] data) {
+    return this.destinationsList.get(this.getIndex(data));
   }
 }

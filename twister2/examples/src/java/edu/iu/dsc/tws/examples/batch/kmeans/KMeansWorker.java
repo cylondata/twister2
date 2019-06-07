@@ -136,7 +136,8 @@ public class KMeansWorker extends TaskWorker {
   }
 
   public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                             int parallelismValue, int dimension, Config conf) {
+                                                    int parallelismValue, int dimension,
+                                                    Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
@@ -153,10 +154,12 @@ public class KMeansWorker extends TaskWorker {
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
+    datapointComputeConnection.direct("datapointsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+    firstGraphComputeConnection.direct("datapointcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
@@ -167,9 +170,10 @@ public class KMeansWorker extends TaskWorker {
 
 
   public static DataFlowTaskGraph buildCentroidsTG(String centroidDirectory, int csize,
-                                            int parallelismValue, int dimension, Config conf) {
-    DataFileReplicatedReadSource dataFileReplicatedReadSource = new DataFileReplicatedReadSource(
-        Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
+                                                   int parallelismValue, int dimension,
+                                                   Config conf) {
+    DataFileReplicatedReadSource dataFileReplicatedReadSource
+        = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
     KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
@@ -184,10 +188,12 @@ public class KMeansWorker extends TaskWorker {
         "centroidsink", centroidObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    centroidComputeConnection.direct("centroidsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
+    centroidComputeConnection.direct("centroidsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+    secondGraphComputeConnection.direct("centroidcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
     centroidsTaskGraphBuilder.setTaskGraphName("centTG");
 
@@ -208,8 +214,10 @@ public class KMeansWorker extends TaskWorker {
         "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
-    kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
-        new CentroidAggregator(), DataType.OBJECT);
+    kMeanscomputeConnection.allreduce("kmeanssource")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new CentroidAggregator())
+        .withDataType(DataType.OBJECT);
     kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     kmeansTaskGraphBuilder.setTaskGraphName("kmeansTG");

@@ -44,7 +44,9 @@ public class BTReduceExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER_ARRAY);
+    computeConnection.reduce(SOURCE)
+        .viaEdge(edge)
+        .withOperation(Op.SUM, DataType.INTEGER_ARRAY);
     return taskGraphBuilder;
   }
 
