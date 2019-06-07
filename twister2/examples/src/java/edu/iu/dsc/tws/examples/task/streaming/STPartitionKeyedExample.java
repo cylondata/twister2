@@ -50,7 +50,10 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     ISink r = new SKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
+    computeConnection.keyedPartition(SOURCE)
+        .viaEdge(edge)
+        .withKeyType(keyType)
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

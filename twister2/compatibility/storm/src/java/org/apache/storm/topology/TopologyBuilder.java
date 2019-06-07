@@ -97,12 +97,10 @@ public class TopologyBuilder implements Serializable {
               .withDataType(DataType.OBJECT);
           break;
         case FIELD:
-          computeConnection.keyedPartition(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT,
-              DataType.OBJECT
-          );
+          computeConnection.keyedPartition(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT)
+              .withKeyType(DataType.OBJECT);
           nodes.get(grouping.getComponentId()).setKeyedOutEdges(
               grouping.getStreamId(),
               grouping.getGroupingKey()
