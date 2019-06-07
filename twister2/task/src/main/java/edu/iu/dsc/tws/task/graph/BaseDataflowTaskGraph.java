@@ -310,8 +310,7 @@ public abstract class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE
   public boolean containsTaskEdge(TV sourceTaskVertex, TV targetTaskVertex, TE taskEdge) {
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (edgeComparator.compare(de.getTaskEdge(), taskEdge) == 0
-          && vertexComparator.compare(de.getSourceVertex(), sourceTaskVertex) == 0
-          && vertexComparator.compare(de.getTargetVertex(), targetTaskVertex) == 0) {
+          && vertexComparator.compare(de.getSourceVertex(), sourceTaskVertex) == 0) {
         return true;
       }
     }
