@@ -353,9 +353,10 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .addSink(Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK, predictionReduceTask,
             reduceParallelism);
     predictionReduceConnection
-        .reduce(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK,
-            Constants.SimpleGraphConfig.PREDICTION_EDGE, new PredictionAggregator(),
-            DataType.OBJECT);
+        .reduce(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK)
+        .viaEdge(Constants.SimpleGraphConfig.PREDICTION_EDGE)
+        .withReductionFunction(new PredictionAggregator())
+        .withDataType(DataType.OBJECT);
     testingBuilder.setMode(operationMode);
     DataFlowTaskGraph predictionGraph = testingBuilder.build();
     ExecutionPlan predictionPlan = taskExecutor.plan(predictionGraph);

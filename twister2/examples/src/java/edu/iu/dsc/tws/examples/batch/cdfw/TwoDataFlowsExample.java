@@ -140,7 +140,7 @@ public final class TwoDataFlowsExample {
   }
 
   private static void runFirstJob(Config config, CDFWEnv cdfwEnv,
-                                          int parallelism, DafaFlowJobConfig jobConfig) {
+                                  int parallelism, DafaFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
@@ -167,7 +167,10 @@ public final class TwoDataFlowsExample {
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelism);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
-    reduceConn.reduce("source1", "reduce", new Aggregator(), DataType.OBJECT);
+    reduceConn.reduce("source1")
+        .viaEdge("reduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();

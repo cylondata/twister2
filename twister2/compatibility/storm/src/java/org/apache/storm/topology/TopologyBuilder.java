@@ -112,10 +112,9 @@ public class TopologyBuilder implements Serializable {
           break;
         case ALL:
           computeConnection.broadcast(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+              grouping.getComponentId()
+          ).viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         default:
           throw new UnsupportedOperationException(
