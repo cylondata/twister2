@@ -62,7 +62,7 @@ public class StormBenchmark extends TaskWorker {
           .reduce("generator").viaEdge("edge").withOperation(Op.SUM, DataType.DOUBLE_ARRAY);
     } else {
       taskGraphBuilder.addSink("sink", dataSink)
-          .gather("generator", "edge");
+          .gather("generator").viaEdge("edge");
     }
 
     taskGraphBuilder.setMode(OperationMode.STREAMING);
