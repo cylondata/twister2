@@ -37,6 +37,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.comms.utils.JoinUtils;
+import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 
 public class JoinBatchFinalReceiver implements MessageReceiver {
 
@@ -55,8 +57,8 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
   /**
    * Keep the destination messages
    */
-  private Map<Integer, List<Object>> targetMessagesLeft = new HashMap<>();
-  private Map<Integer, List<Object>> targetMessagesRight = new HashMap<>();
+  private Map<Integer, List<Tuple>> targetMessagesLeft = new HashMap<>();
+  private Map<Integer, List<Tuple>> targetMessagesRight = new HashMap<>();
   /**
    * The dataflow operation left partition
    */
@@ -90,11 +92,11 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
 
   private Map<Integer, Boolean> targetDone = new HashMap<>();
 
-  private Comparator<Object> comparator;
+  private KeyComparatorWrapper comparator;
 
   public JoinBatchFinalReceiver(BulkReceiver bulkReceiver, Comparator<Object> com) {
     this.receiver = bulkReceiver;
-    this.comparator = com;
+    this.comparator = new KeyComparatorWrapper(com);
   }
 
   @Override
@@ -146,7 +148,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     }
 
     lock.lock();
-    Map<Integer, List<Object>> targetMessages;
+    Map<Integer, List<Tuple>> targetMessages;
     Map<Integer, Set<Integer>> onFinishedSources;
 
     if (tag == 0) {
@@ -169,14 +171,14 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
         return true;
       }
 
-      List<Object> targetMsgList = targetMessages.get(target);
+      List<Tuple> targetMsgList = targetMessages.get(target);
       if (targetMsgList == null) {
         throw new RuntimeException(String.format("%d target not exisits %d", executor, target));
       }
       if (object instanceof List) {
-        targetMsgList.addAll((Collection<?>) object);
+        targetMsgList.addAll((Collection<? extends Tuple>) object);
       } else {
-        targetMsgList.add(object);
+        targetMsgList.add((Tuple) object);
       }
     } finally {
       lock.unlock();
@@ -195,9 +197,9 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
       lock.lock();
       try {
         if (checkIfFinished(target)) {
-          Map<Object, List<Object>> results = innerJoin(targetMessagesLeft.get(target),
-              targetMessagesRight.get(target));
-          receiver.receive(target, new JoinIterator(results));
+          List<Object> results = JoinUtils.innerJoin(targetMessagesLeft.get(target),
+              targetMessagesRight.get(target), comparator);
+          receiver.receive(target, results.iterator());
           targetDone.put(target, true);
         } else {
           needsFurtherProgress = true;
@@ -209,38 +211,6 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     }
 
     return needsFurtherProgress;
-  }
-
-  /**
-   * Performs an inner join on the two data lists that have been provided.
-   * The join is performed using the key value.
-   *
-   * @param left left partition of the join
-   * @param right right partition of the join
-   * @return the joined list of values
-   */
-  private Map<Object, List<Object>> innerJoin(List<Object> left, List<Object> right) {
-    Map<Object, List<Object>> joined = new HashMap<>();
-    for (Object entry : left) {
-      Object key = ((Tuple) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((Tuple) entry).getValue());
-      } else {
-        joined.put(key, new AggregatedObjects<>());
-        joined.get(key).add(((Tuple) entry).getValue());
-      }
-    }
-
-    for (Object entry : right) {
-      Object key = ((Tuple) entry).getKey();
-      if (joined.containsKey(key)) {
-        joined.get(key).add(((Tuple) entry).getValue());
-      } else {
-        joined.put(key, new AggregatedObjects<>());
-        joined.get(key).add(((Tuple) entry).getValue());
-      }
-    }
-    return joined;
   }
 
   /**
