@@ -49,8 +49,11 @@ public class TaskWorkerDataLoader extends TaskWorker {
     taskGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", sinkTask, parallelism);
-    firstGraphComputeConnection.direct("datapointsource",
-        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+
+    firstGraphComputeConnection.direct("datapointsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();

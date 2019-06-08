@@ -43,7 +43,9 @@ public class BTBroadCastExample extends BenchTaskWorker {
     ISink r = new BroadcastSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.broadcast(SOURCE, edge);
+
+    computeConnection.broadcast(SOURCE).viaEdge(edge);
+
     return taskGraphBuilder;
   }
 

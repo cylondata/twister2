@@ -44,7 +44,10 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
+    computeConnection.keyedReduce(SOURCE)
+        .viaEdge(edge)
+        .withOperation(operation, dataType)
+        .withKeyType(keyType);
     return taskGraphBuilder;
   }
 

@@ -94,9 +94,11 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
     DataType dataType = TSetUtils.getDataType(getClassV());
-    connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<>(reduceFn), keyType, dataType,
-        new TaskPartitionFunction<K>(partitionFunction));
+    connection.keyedReduce(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withReductionFunction(new ReduceOpFunction<>(reduceFn))
+        .withKeyType(keyType).withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

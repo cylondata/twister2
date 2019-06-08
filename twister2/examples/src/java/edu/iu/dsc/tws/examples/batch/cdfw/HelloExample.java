@@ -61,8 +61,10 @@ public final class HelloExample {
       graphBuilderX.addSource("source1", firstSource, 4);
       ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
-      reduceConn.reduce("source1", "all-reduce", new Aggregator(),
-          DataType.OBJECT);
+      reduceConn.reduce("source1")
+          .viaEdge("all-reduce")
+          .withReductionFunction(new Aggregator())
+          .withDataType(DataType.OBJECT);
 
       graphBuilderX.setMode(OperationMode.BATCH);
       DataFlowTaskGraph batchGraph = graphBuilderX.build();

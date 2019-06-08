@@ -11,20 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Set;
 
-import edu.iu.dsc.tws.api.task.function.ReduceFn;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.api.task.ops.AbstractOpsConfig;
+import edu.iu.dsc.tws.api.task.ops.AllGatherConfig;
+import edu.iu.dsc.tws.api.task.ops.AllReduceConfig;
+import edu.iu.dsc.tws.api.task.ops.BroadcastConfig;
+import edu.iu.dsc.tws.api.task.ops.DirectConfig;
+import edu.iu.dsc.tws.api.task.ops.GatherConfig;
+import edu.iu.dsc.tws.api.task.ops.KeyedGatherConfig;
+import edu.iu.dsc.tws.api.task.ops.KeyedPartitionConfig;
+import edu.iu.dsc.tws.api.task.ops.KeyedReduceConfig;
+import edu.iu.dsc.tws.api.task.ops.PartitionConfig;
+import edu.iu.dsc.tws.api.task.ops.ReduceConfig;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.Vertex;
@@ -33,7 +35,6 @@ import edu.iu.dsc.tws.task.graph.Vertex;
  * Represents a compute connection.
  */
 public class ComputeConnection {
-  private static final Logger LOG = Logger.getLogger(ComputeConnection.class.getName());
 
   /**
    * Name of the node, that is trying to connect to other nodes in the graph
@@ -42,8 +43,15 @@ public class ComputeConnection {
 
   /**
    * The inputs created through this connection
+   * <Source,<EdgeName,Edge>>
    */
-  private Map<String, Edge> inputs = new HashMap<>();
+  private Map<String, Map<String, Edge>> inputs = new HashMap<>();
+
+  /**
+   * When building up the operation chain, if user don't call {@link AbstractOpsConfig::connect}
+   * they will be kept in this map to auto connect later.
+   */
+  private Map<String, Set<AbstractOpsConfig>> autoConnectConfig = new HashMap<>();
 
   /**
    * Create a compute connection
@@ -54,764 +62,168 @@ public class ComputeConnection {
     this.nodeName = nodeName;
   }
 
-  /**
-   * Create a broadcast connection
-   *
-   * @param parent the parent to connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection broadcast(String parent) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.BROADCAST);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a broadcast connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @return the ComputeConnection
-   */
-  public ComputeConnection broadcast(String parent, String name) {
-    Edge edge = new Edge(name, OperationNames.BROADCAST);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a broadcast connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @return the ComputeConnection
-   */
-  public ComputeConnection broadcast(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a broadcast connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param properties the properties for this connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection broadcast(String parent, String name, DataType dataType,
-                                     Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.BROADCAST, dataType);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param function the reduce function
-   * @return the ComputeConnection
-   */
-  public ComputeConnection reduce(String parent, IFunction function) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE, function);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param op the reduce function.
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection reduce(String parent, Op op, DataType dataType) {
-    if (!isPrimitiveType(dataType)) {
-      LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
+  void putEdgeFromSource(String source, Edge edge) {
+    Map<String, Edge> edgesFromSource = inputs.computeIfAbsent(source, s -> new HashMap<>());
+    if (edgesFromSource.containsKey(edge.getName())) {
+      throw new RuntimeException("Edges from the same source should be unique. "
+          + "Found " + edge.getName() + " already defined from source " + source);
     }
+    edgesFromSource.put(edge.getName(), edge);
+  }
 
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.REDUCE,
-        dataType, new ReduceFn(op, dataType));
-    inputs.put(parent, edge);
-
-    return this;
+  private void addToAutoConfig(String source, AbstractOpsConfig config) {
+    this.autoConnectConfig.computeIfAbsent(source, s -> new HashSet<>()).add(config);
   }
 
   /**
-   * Create a reduce connection
+   * Create a broadcast configuration
    *
-   * @param parent the parent to connection
-   * @param function the reduce function
-   * @param dataType the data type
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link BroadcastConfig}
    */
-  public ComputeConnection reduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
-        OperationNames.REDUCE, dataType, function);
-    inputs.put(parent, edge);
-
-    return this;
+  public BroadcastConfig broadcast(String source) {
+    BroadcastConfig broadcastConfig = new BroadcastConfig(source, this);
+    this.addToAutoConfig(source, broadcastConfig);
+    return broadcastConfig;
   }
 
   /**
-   * Create a reduce connection
+   * Create a reduce configuration
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link ReduceConfig}
    */
-  public ComputeConnection reduce(String parent, String name, IFunction function) {
-    Edge edge = new Edge(name, OperationNames.REDUCE, DataType.OBJECT, function);
-    inputs.put(parent, edge);
-
-    return this;
+  public ReduceConfig reduce(String source) {
+    ReduceConfig reduceConfig = new ReduceConfig(source, this);
+    this.addToAutoConfig(source, reduceConfig);
+    return reduceConfig;
   }
 
   /**
-   * Create a reduce connection
+   * Create a keyed reduce config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param op the reduce function.
-   * @param dataType the data type
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link KeyedReduceConfig}
    */
-  public ComputeConnection reduce(String parent, String name, Op op, DataType dataType) {
-    if (!isPrimitiveType(dataType)) {
-      LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
-    }
-
-    Edge edge = new Edge(name, OperationNames.REDUCE, dataType,
-        new ReduceFn(op, dataType));
-    inputs.put(parent, edge);
-
-    return this;
+  public KeyedReduceConfig keyedReduce(String source) {
+    KeyedReduceConfig keyedReduceConfig = new KeyedReduceConfig(source, this);
+    this.addToAutoConfig(source, keyedReduceConfig);
+    return keyedReduceConfig;
   }
 
   /**
-   * Create a reduce connection
+   * Create a gather config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param dataType the data type
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link GatherConfig}
    */
-  public ComputeConnection reduce(String parent, String name,
-                                  IFunction function, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
-    inputs.put(parent, edge);
-
-    return this;
+  public GatherConfig gather(String source) {
+    GatherConfig gatherConfig = new GatherConfig(source, this);
+    this.addToAutoConfig(source, gatherConfig);
+    return gatherConfig;
   }
 
   /**
-   * Create a reduce connection
+   * Create a keyed gather config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param dataType the data type
-   * @param properties properties of the connection
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link KeyedGatherConfig}
    */
-  public ComputeConnection reduce(String parent, String name,
-                                  IFunction function, DataType dataType,
-                                  Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.REDUCE, dataType, function);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
+  public KeyedGatherConfig keyedGather(String source) {
+    KeyedGatherConfig keyedGatherConfig = new KeyedGatherConfig(source, this);
+    this.addToAutoConfig(source, keyedGatherConfig);
+    return keyedGatherConfig;
   }
 
   /**
-   * Create a keyed reduce connection
+   * Create a partition config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link KeyedGatherConfig}
    */
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       IFunction function, DataType keyTpe, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe, function);
-    inputs.put(parent, edge);
-
-    return this;
+  public PartitionConfig partition(String source) {
+    PartitionConfig partitionConfig = new PartitionConfig(source, this);
+    this.addToAutoConfig(source, partitionConfig);
+    return partitionConfig;
   }
 
   /**
-   * Create a keyed reduce connection
+   * Create a keyed partition config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link KeyedPartitionConfig}
    */
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       IFunction function, DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner) {
-    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
-        function, partitioner);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       Op op, DataType keyTpe, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
-        new ReduceFn(op, dataType));
-    inputs.put(parent, edge);
-
-    return this;
+  public KeyedPartitionConfig keyedPartition(String source) {
+    KeyedPartitionConfig keyedPartitionConfig = new KeyedPartitionConfig(source, this);
+    this.addToAutoConfig(source, keyedPartitionConfig);
+    return keyedPartitionConfig;
   }
 
   /**
-   * Create a keyed reduce connection
+   * Create an allreduce config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param properties properties of the connection
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link AllReduceConfig}
    */
-  public ComputeConnection keyedReduce(String parent, String name,
-                                       IFunction function, DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner,
-                                       Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.KEYED_REDUCE, dataType, keyTpe,
-        function, partitioner);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection gather(String parent) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER,
-        DataType.OBJECT, DataType.OBJECT);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection gather(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.GATHER, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @return the ComputeConnection
-   */
-  public ComputeConnection gather(String parent, String name) {
-    Edge edge = new Edge(name, OperationNames.GATHER, DataType.OBJECT);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection gather(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
-    inputs.put(parent, edge);
-
-    return this;
+  public AllReduceConfig allreduce(String source) {
+    AllReduceConfig allReduceConfig = new AllReduceConfig(source, this);
+    this.addToAutoConfig(source, allReduceConfig);
+    return allReduceConfig;
   }
 
 
   /**
-   * Create a gather connection
+   * Create an allgather config
    *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @param props map of properties
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link AllGatherConfig}
    */
-  public ComputeConnection gather(String parent, String name, DataType dataType,
-                                  Map<String, Object> props) {
-    Edge edge = new Edge(name, OperationNames.GATHER, dataType);
-    edge.addProperties(props);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param groupByKey In batched keyed reduce, setting this option to true will group the tupls
-   * by key
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner,
-                                       Map<String, Object> properties,
-                                       boolean useDisk, Comparator keyComparator,
-                                       boolean groupByKey) {
-    Edge edge = new Edge(name, OperationNames.KEYED_GATHER, dataType, keyTpe,
-        null, partitioner);
-    edge.setProperties(properties);
-
-    //todo move these hard coded properties to a proper place in API package,
-    // once twister2 code is refactored
-    edge.addProperty("use-disk", useDisk);
-    edge.addProperty("key-comparator", keyComparator);
-    edge.addProperty("group-by-key", groupByKey);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param useDisk use the disk if memory overflows
-   * @param keyComparator comparator to compare keys
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType,
-                                       boolean useDisk, Comparator keyComparator) {
-    return this.keyedGather(parent, name, keyTpe, dataType,
-        null, new HashMap<>(), useDisk, keyComparator, true);
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe,
-                                       DataType dataType) {
-    return this.keyedGather(parent, name, keyTpe, dataType,
-        null, new HashMap<>(), false, null, true);
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param partitioner the partitioner
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner) {
-    return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        Collections.emptyMap(), false, null, true);
-  }
-
-  /**
-   * Create a keyed gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param partitioner the partitioner
-   * @param properties properties of the connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection keyedGather(String parent, String name,
-                                       DataType keyTpe, DataType dataType,
-                                       TaskPartitioner partitioner,
-                                       Map<String, Object> properties) {
-    return this.keyedGather(parent, name, keyTpe, dataType, partitioner,
-        properties, false, null, true);
-  }
-
-  /**
-   * Create a partition connection
-   *
-   * @param parent the parent to connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection partition(String parent) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a partition connection
-   *
-   * @param parent the parent to connection
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection partition(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.PARTITION, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a partition connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @return the ComputeConnection
-   */
-  public ComputeConnection partition(String parent, String name) {
-    Edge edge = new Edge(name, OperationNames.PARTITION, DataType.OBJECT);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a partition connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection partition(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.PARTITION, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  public ComputeConnection keyedPartition(String parent, String name,
-                                          DataType keyTpe, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.KEYED_PARTITION, dataType, keyTpe);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a keyed partition
-   *
-   * @param parent the parent to connection
-   * @param edgeName name of the edge
-   * @param keyTpe the key data type
-   * @param dataType the data type
-   * @param partitioner the partitioner
-   * @return compute connection
-   */
-  public ComputeConnection keyedPartition(String parent, String edgeName,
-                                          DataType keyTpe, DataType dataType,
-                                          TaskPartitioner partitioner) {
-    Edge edge = new Edge(edgeName, OperationNames.KEYED_PARTITION, dataType, keyTpe,
-        null, partitioner);
-    inputs.put(parent, edge);
-
-    return this;
+  public AllGatherConfig allgather(String source) {
+    AllGatherConfig allGatherConfig = new AllGatherConfig(source, this);
+    this.addToAutoConfig(source, allGatherConfig);
+    return allGatherConfig;
   }
 
 
   /**
-   * Create a reduce connection
+   * Crate a direct config
    *
-   * @param parent the parent to connection
-   * @param function the reduce function
-   * @return the ComputeConnection
+   * @param source the source to connection
+   * @return the {@link DirectConfig}
    */
-  public ComputeConnection allreduce(String parent, IFunction function) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE, function);
-    inputs.put(parent, edge);
-
-    return this;
+  public DirectConfig direct(String source) {
+    DirectConfig directConfig = new DirectConfig(source, this);
+    this.addToAutoConfig(source, directConfig);
+    return directConfig;
   }
 
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param op the reduce function.
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, Op op, DataType dataType) {
-    if (!isPrimitiveType(dataType)) {
-      LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
-    }
-
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLREDUCE,
-        dataType, new ReduceFn(op, dataType));
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param function the reduce function
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, IFunction function, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE,
-        OperationNames.ALLREDUCE, dataType, function);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, String name, IFunction function) {
-    Edge edge = new Edge(name, OperationNames.ALLREDUCE, DataType.OBJECT, function);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param op the reduce function.
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, String name, Op op, DataType dataType) {
-    if (!isPrimitiveType(dataType)) {
-      LOG.log(Level.SEVERE, "Reduce operations are only applicable to primitive types");
-    }
-
-    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, new ReduceFn(op, dataType));
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param dataType the data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, String name,
-                                     IFunction function, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a reduce connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param function the reduce function
-   * @param dataType the data type
-   * @param properties properties of the connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allreduce(String parent, String name,
-                                     IFunction function, DataType dataType,
-                                     Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.ALLREDUCE, dataType, function);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allgather(String parent) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allgather(String parent, DataType dataType) {
-    Edge edge = new Edge(TaskConfigurations.DEFAULT_EDGE, OperationNames.ALLGATHER, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allgather(String parent, String name) {
-    Edge edge = new Edge(name, OperationNames.ALLGATHER, DataType.OBJECT);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allgather(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a gather connection
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @param properties properties of the connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection allgather(String parent, String name, DataType dataType,
-                                     Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.ALLGATHER, dataType);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a direct connection between two parallel task sets
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @return the ComputeConnection
-   */
-  public ComputeConnection direct(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
-    inputs.put(parent, edge);
-
-    return this;
-  }
-
-  /**
-   * Create a direct connection between two parallel task sets
-   *
-   * @param parent the parent to connection
-   * @param name name of the edge
-   * @param dataType data type
-   * @param properties properties of the connection
-   * @return the ComputeConnection
-   */
-  public ComputeConnection direct(String parent, String name, DataType dataType,
-                                  Map<String, Object> properties) {
-    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
-    edge.setProperties(properties);
-    inputs.put(parent, edge);
-
-    return this;
+  private void doAutoConnect() {
+    this.autoConnectConfig.forEach((source, configs) -> {
+      configs.forEach(abstractOpsConfig -> {
+        if (!(this.inputs.containsKey(source)
+            && this.inputs.get(source).containsKey(abstractOpsConfig.getEdgeName()))) {
+          abstractOpsConfig.connect();
+        }
+      });
+    });
+    this.autoConnectConfig.clear();
   }
 
   void build(DataFlowTaskGraph graph) {
-    for (Map.Entry<String, Edge> e : inputs.entrySet()) {
-      Vertex v1 = graph.vertex(nodeName);
-      if (v1 == null) {
-        throw new RuntimeException("Failed to connect non-existing task: " + nodeName);
-      }
+    this.doAutoConnect();
+    this.inputs.forEach((source, edges) -> {
+      edges.forEach((edgeName, edge) -> {
+        Vertex v1 = graph.vertex(nodeName);
+        if (v1 == null) {
+          throw new RuntimeException("Failed to connect non-existing task: " + nodeName);
+        }
 
-      Vertex v2 = graph.vertex(e.getKey());
-      if (v2 == null) {
-        throw new RuntimeException("Failed to connect non-existing task: " + e.getKey());
-      }
-      graph.addTaskEdge(v2, v1, e.getValue());
-    }
-  }
-
-  private boolean isPrimitiveType(DataType dataType) {
-    return Utils.dataTypeToMessageType(dataType).isPrimitive();
+        Vertex v2 = graph.vertex(source);
+        if (v2 == null) {
+          throw new RuntimeException("Failed to connect non-existing task: " + source);
+        }
+        graph.addTaskEdge(v2, v1, edge);
+      });
+    });
   }
 }

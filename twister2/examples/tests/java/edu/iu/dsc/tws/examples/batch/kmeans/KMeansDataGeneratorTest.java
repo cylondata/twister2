@@ -60,7 +60,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source", "direct", DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalTextInputPartitioner localTextInputPartitioner = new
@@ -94,7 +94,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source", "direct", DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalFixedInputPartitioner localFixedInputPartitioner = new
