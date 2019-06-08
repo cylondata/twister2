@@ -121,7 +121,6 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
-    join.finish(src, 0);
-    join.finish(src, 1);
+    join.finish(src);
   }
 }

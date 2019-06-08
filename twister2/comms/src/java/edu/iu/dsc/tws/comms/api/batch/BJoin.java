@@ -130,14 +130,9 @@ public class BJoin {
    *
    * @param source the source that is ending
    */
-  public void finish(int source, int tag) {
-    if (tag == 0) {
-      partitionLeft.finish(source);
-    } else if (tag == 1) {
-      partitionRight.finish(source);
-    } else {
-      throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
-    }
+  public void finish(int source) {
+    partitionLeft.finish(source);
+    partitionRight.finish(source);
   }
 
   /**
