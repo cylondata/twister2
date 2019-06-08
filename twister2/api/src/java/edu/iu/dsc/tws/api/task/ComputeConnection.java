@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.task.ops.AllReduceConfig;
 import edu.iu.dsc.tws.api.task.ops.BroadcastConfig;
 import edu.iu.dsc.tws.api.task.ops.DirectConfig;
 import edu.iu.dsc.tws.api.task.ops.GatherConfig;
+import edu.iu.dsc.tws.api.task.ops.JoinConfig;
 import edu.iu.dsc.tws.api.task.ops.KeyedGatherConfig;
 import edu.iu.dsc.tws.api.task.ops.KeyedPartitionConfig;
 import edu.iu.dsc.tws.api.task.ops.KeyedReduceConfig;
@@ -134,6 +135,19 @@ public class ComputeConnection {
     this.addToAutoConfig(source, keyedGatherConfig);
     return keyedGatherConfig;
   }
+
+  /**
+   * Create a join operation
+   *
+   * @param source the source to connection
+   * @return the {@link JoinConfig}
+   */
+  public JoinConfig join(String source) {
+    JoinConfig joinConfig = new JoinConfig(source, this);
+    this.addToAutoConfig(source, joinConfig);
+    return joinConfig;
+  }
+
 
   /**
    * Create a partition config

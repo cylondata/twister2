@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
@@ -62,16 +62,15 @@ public class BJoin {
   public BJoin(Communicator comm, TaskPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType dataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle) {
+               DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver(
-          rcvr, shuffleDirs, new IntegerComparator());
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver(rcvr);
+      finalRcvr = new JoinBatchFinalReceiver(rcvr, comparator);
     }
 
 
@@ -131,14 +130,9 @@ public class BJoin {
    *
    * @param source the source that is ending
    */
-  public void finish(int source, int tag) {
-    if (tag == 0) {
-      partitionLeft.finish(source);
-    } else if (tag == 1) {
-      partitionRight.finish(source);
-    } else {
-      throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
-    }
+  public void finish(int source) {
+    partitionLeft.finish(source);
+    partitionRight.finish(source);
   }
 
   /**

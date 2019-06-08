@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.DirectBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.GatherBatchOperation;
+import edu.iu.dsc.tws.executor.comms.batch.JoinBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedPartitionBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.KeyedReduceBatchOperation;
@@ -97,6 +98,9 @@ public class ParallelOperationFactory {
               dests, edgeGenerator, edge);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, edge);
+        } else if (OperationNames.JOIN.equals(edge.getOperation())) {
+          return new JoinBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge);
         }
       }
