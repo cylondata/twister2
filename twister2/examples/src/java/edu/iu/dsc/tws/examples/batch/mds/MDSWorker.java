@@ -68,7 +68,7 @@ public class MDSWorker extends TaskWorker {
 
     /* Generate the Matrix for the MDS **/
     if (Context.TWISTER2_DATA_INPUT.equalsIgnoreCase(dataInput)) {
-      MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
+      MatrixGenerator matrixGen = new MatrixGenerator(config);
       matrixGen.generate(datasize, matrixColumLength, directory, byteType);
     }
 
