@@ -472,6 +472,38 @@ public class WindowManagerTest {
 
   }
 
+  @Test
+  public void testEventTimeLag() throws Exception {
+    IEvictionPolicy<Integer> evictionPolicy = new WatermarkDurationEvictionPolicy<>(20, 5);
+    windowManager.setEvictionPolicy(evictionPolicy);
+    IWindowingPolicy<Integer> triggerPolicy
+        = new WatermarkDurationWindowPolicy<Integer>(10, windowManager, windowManager,
+        evictionPolicy);
+    triggerPolicy.start();
+    windowManager.setWindowingPolicy(triggerPolicy);
+
+    windowManager.add(mockList.get(0), 603);
+    windowManager.add(mockList.get(1), 605);
+    windowManager.add(mockList.get(2), 607);
+    windowManager.add(mockList.get(3), 618);
+    windowManager.add(mockList.get(4), 626);
+    windowManager.add(mockList.get(5), 632);
+    windowManager.add(mockList.get(6), 629);
+    windowManager.add(mockList.get(7), 636);
+    // send a watermark event, which should trigger three windows.
+    windowManager.add(new WatermarkEvent<Integer>(631));
+//        System.out.println(listener.allOnActivationEvents);
+    assertEquals(3, listener.allOnActivationEvents.size());
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(0, 4), listener.allOnActivationEvents.get(1).getWindow());
+    // out of order events should be processed upto the lag
+    List<IMessage<Integer>> tempList = new ArrayList<>(3);
+    tempList.add(mockList.get(3));
+    tempList.add(mockList.get(4));
+    tempList.add(mockList.get(6));
+    assertEquals(tempList, listener.allOnActivationEvents.get(2).getWindow());
+  }
+
   //TODO : the test expired threshold must be tested, test cases fail
   private void testExpireThreshold() throws Exception {
     int threshold = WindowManager.EXPIRE_EVENTS_THRESHOLD;
