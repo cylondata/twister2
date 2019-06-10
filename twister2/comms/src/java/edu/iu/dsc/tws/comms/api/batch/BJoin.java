@@ -56,12 +56,12 @@ public class BJoin {
    * @param sources source tasks
    * @param targets target tasks
    * @param rcvr receiver
-   * @param dataType data type
+   * @param leftDataType data type
    * @param destSelector destination selector
    */
   public BJoin(Communicator comm, TaskPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
-               MessageType dataType, BulkReceiver rcvr,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
@@ -76,14 +76,14 @@ public class BJoin {
 
     this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        dataType, keyType);
+        leftDataType, keyType);
 
     this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        dataType, keyType);
+        rightDataType, keyType);
 
-    this.partitionLeft.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.partitionRight.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, comm.nextEdge());
+    this.partitionRight.init(comm.getConfig(), rightDataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, sources, targets);
   }
 
@@ -96,7 +96,7 @@ public class BJoin {
    * @param flags data flag
    * @return true if the data is accepted
    */
-  public boolean partition(int source, Object key, Object data, int flags, int tag) {
+  public boolean join(int source, Object key, Object data, int flags, int tag) {
     int dest = destinationSelector.next(source, key, data);
 
     boolean send;

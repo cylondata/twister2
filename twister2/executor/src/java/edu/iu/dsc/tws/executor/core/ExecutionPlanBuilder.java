@@ -50,8 +50,6 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.window.IWindowCompute;
-import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -168,7 +166,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
 
       INode node = v.getTask();
-      if (node instanceof ICompute || node instanceof ISource || node instanceof IWindowCompute) {
+      if (node instanceof ICompute || node instanceof ISource) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
@@ -188,8 +186,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ICompute || node instanceof ISink || node instanceof IWindowedSink
-          || node instanceof IWindowCompute) {
+      if (node instanceof ICompute || node instanceof ISink) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -232,8 +229,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       //let's separate the execution instance generation based on the Operation Mode
       // support to windows need to decide the type of instance that has to be initialized
       // so along with the operation mode, the windowing mode must be tested
-
-
       if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {

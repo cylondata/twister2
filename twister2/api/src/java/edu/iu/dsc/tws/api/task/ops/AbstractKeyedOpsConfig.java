@@ -19,8 +19,8 @@ import edu.iu.dsc.tws.task.graph.Edge;
 public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
     extends AbstractOpsConfig<T> {
 
-  private DataType opKeyType = DataType.OBJECT;
-  private TaskPartitioner tPartitioner;
+  protected DataType opKeyType = DataType.OBJECT;
+  protected TaskPartitioner tPartitioner;
 
   protected AbstractKeyedOpsConfig(String parent,
                                    String operationName,

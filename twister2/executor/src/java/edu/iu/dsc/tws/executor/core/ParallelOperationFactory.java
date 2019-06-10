@@ -16,6 +16,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.executor.api.IBinaryParallelOperation;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
@@ -58,10 +59,23 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
+  public IBinaryParallelOperation build(Edge leftEdge, Edge rightEdge, Set<Integer> sources,
+                                        Set<Integer> dests, OperationMode operationMode) {
+    if (operationMode.equals(OperationMode.BATCH)) {
+      if (leftEdge.isKeyed() && rightEdge.isKeyed()) {
+        if (OperationNames.JOIN.equals(leftEdge.getOperation())) {
+          return new JoinBatchOperation(config, channel, taskPlan, sources,
+              dests, edgeGenerator, leftEdge, rightEdge);
+        }
+      }
+    }
+    throw new RuntimeException("Un-supported operation name");
+  }
+
   /**
    * Building the parallel operation based on the batch or streaming tasks. And also
    * the sub cateogories depends on the communication used for each edge in the task graph.
-   ***/
+   */
   public IParallelOperation build(Edge edge, Set<Integer> sources, Set<Integer> dests,
                                   OperationMode operationMode) {
 
@@ -98,9 +112,6 @@ public class ParallelOperationFactory {
               dests, edgeGenerator, edge);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
           return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
-              dests, edgeGenerator, edge);
-        } else if (OperationNames.JOIN.equals(edge.getOperation())) {
-          return new JoinBatchOperation(config, channel, taskPlan, sources,
               dests, edgeGenerator, edge);
         }
       }

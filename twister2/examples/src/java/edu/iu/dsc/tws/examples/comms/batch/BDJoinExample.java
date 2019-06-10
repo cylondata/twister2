@@ -39,7 +39,7 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
-    while (!join.partition(task, key, data, flag, tag)) {
+    while (!join.join(task, key, data, flag, tag)) {
       // lets wait a litte and try again
       join.progress();
     }
@@ -64,7 +64,8 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
     // create the communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), true,
+        MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
+        new JoinReceiver(), new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

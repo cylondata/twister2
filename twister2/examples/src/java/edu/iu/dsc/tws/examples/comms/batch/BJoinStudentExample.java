@@ -72,7 +72,8 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
     // create the join communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false,
+        MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
+        new SimpleKeyBasedSelector(), false,
         new Comparator<Object>() {
           @Override
           public int compare(Object o1, Object o2) {
@@ -107,7 +108,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * @return true, this method will wait till the message is accepted by the communication layer
    */
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
-    while (!join.partition(task, key, data, flag, tag)) {
+    while (!join.join(task, key, data, flag, tag)) {
       // lets wait a litte and try again
       join.progress();
     }

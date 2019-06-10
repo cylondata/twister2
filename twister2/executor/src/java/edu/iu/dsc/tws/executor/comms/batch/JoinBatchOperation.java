@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.executor.api.IBinaryParallelOperation;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 import edu.iu.dsc.tws.executor.core.EdgeGenerator;
@@ -32,18 +33,19 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
-public class JoinBatchOperation extends AbstractParallelOperation {
+public class JoinBatchOperation extends AbstractParallelOperation
+    implements IBinaryParallelOperation {
   protected BJoin op;
 
   public JoinBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                             Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                            Edge edge) {
-    super(config, network, tPlan, edge.getName());
+                            Edge leftEdge, Edge rightEdge) {
+    super(config, network, tPlan, leftEdge.getName());
     this.edgeGenerator = e;
 
     DestinationSelector destSelector;
-    if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+    if (leftEdge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(leftEdge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
     }
@@ -51,31 +53,39 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     boolean useDisk = false;
     Comparator keyComparator = null;
     try {
-      useDisk = (Boolean) edge.getProperty("use-disk");
-      keyComparator = (Comparator) edge.getProperty("key-comparator");
+      useDisk = (Boolean) leftEdge.getProperty("use-disk");
+      keyComparator = (Comparator) leftEdge.getProperty("key-comparator");
     } catch (Exception ex) {
       //ignore
     }
 
-    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
     op = new BJoin(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator);
+        Utils.dataTypeToMessageType(leftEdge.getKeyType()),
+        Utils.dataTypeToMessageType(leftEdge.getDataType()),
+        Utils.dataTypeToMessageType(leftEdge.getDataType()),
+        new GatherRecvrImpl(), destSelector, useDisk, keyComparator);
 
-    communicationEdge = e.generate(edge.getName());
+    communicationEdge = e.generate(leftEdge.getName());
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage<Tuple> taskMessage = (TaskMessage) message;
-    return op.partition(source, taskMessage.getContent().getKey(),
+    return op.join(source, taskMessage.getContent().getKey(),
         taskMessage.getContent().getValue(), flags, 0);
   }
 
   @Override
   public boolean progress() {
     return op.progress() || op.hasPending();
+  }
+
+  @Override
+  public boolean sendRight(int source, IMessage message, int flags) {
+    TaskMessage<Tuple> taskMessage = (TaskMessage) message;
+    return op.join(source, taskMessage.getContent().getKey(),
+        taskMessage.getContent().getValue(), flags, 1);
   }
 
   private class GatherRecvrImpl implements BulkReceiver {
