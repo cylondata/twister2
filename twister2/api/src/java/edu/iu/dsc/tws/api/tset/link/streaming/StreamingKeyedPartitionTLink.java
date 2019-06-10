@@ -87,8 +87,10 @@ public class StreamingKeyedPartitionTLink<T, K> extends StreamingKeyValueTLink<T
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
     DataType dataType = TSetUtils.getDataType(getClassT());
-    connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<K>(partitionFunction));
+    connection.keyedPartition(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withKeyType(keyType).withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

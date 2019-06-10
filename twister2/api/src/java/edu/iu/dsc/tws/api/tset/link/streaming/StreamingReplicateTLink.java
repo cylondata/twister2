@@ -80,7 +80,8 @@ public class StreamingReplicateTLink<T> extends BaseTLink {
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.broadcast(parent.getName()).viaEdge(Constants.DEFAULT_EDGE)
+        .withDataType(dataType).connect();
   }
 
   @Override

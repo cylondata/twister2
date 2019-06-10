@@ -82,29 +82,23 @@ public class TopologyBuilder implements Serializable {
       switch (grouping.getGroupingTechnique()) {
         case DIRECT:
           LOG.info("Adding direct grouping : " + grouping);
-          computeConnection.direct(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+          computeConnection.direct(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         case SHUFFLE:
           LOG.info("Adding shuffle grouping : " + grouping
               + "{" + grouping.getComponentId() + ","
               + this.generateEdgeName(grouping, nodeId));
-          computeConnection.partition(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+          computeConnection.partition(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         case FIELD:
-          computeConnection.keyedPartition(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT,
-              DataType.OBJECT
-          );
+          computeConnection.keyedPartition(grouping.getComponentId())
+              .viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT)
+              .withKeyType(DataType.OBJECT);
           nodes.get(grouping.getComponentId()).setKeyedOutEdges(
               grouping.getStreamId(),
               grouping.getGroupingKey()
@@ -112,10 +106,9 @@ public class TopologyBuilder implements Serializable {
           break;
         case ALL:
           computeConnection.broadcast(
-              grouping.getComponentId(),
-              this.generateEdgeName(grouping, nodeId),
-              DataType.OBJECT
-          );
+              grouping.getComponentId()
+          ).viaEdge(this.generateEdgeName(grouping, nodeId))
+              .withDataType(DataType.OBJECT);
           break;
         default:
           throw new UnsupportedOperationException(

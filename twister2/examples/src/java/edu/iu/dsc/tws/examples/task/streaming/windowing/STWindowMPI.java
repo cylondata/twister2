@@ -51,7 +51,7 @@ public class STWindowMPI extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
-    computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }
@@ -84,7 +84,7 @@ public class STWindowMPI extends BenchTaskWorker {
         int[] res = MathUtils.sumList(newMessages);
         Arrays.fill(res, context.taskIndex());
         LOG.info(String.format("Win Size : [%d] ,Rank[%d], Worker Id[%d] , Before Reduce : "
-            + "Array = %s", newMessages.size(), worldRank, context.getWorkerId(),
+                + "Array = %s", newMessages.size(), worldRank, context.getWorkerId(),
             Arrays.toString(res)));
 
         int[] globalSum = new int[res.length];

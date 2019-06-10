@@ -17,26 +17,19 @@ import java.util.Set;
 /**
  * Task partitioner
  */
-public interface TaskPartitioner extends Serializable {
+public interface TaskPartitioner<T> extends Serializable {
   /**
    * Prepare the partition
-   * @param sources
-   * @param destinations
    */
   void prepare(Set<Integer> sources, Set<Integer> destinations);
 
   /**
    * Get a partition
-   * @param source
-   * @param data
-   * @return
    */
-  int partition(int source, Object data);
+  int partition(int source, T data);
 
   /**
    * Indicate that we are using this partition
-   * @param source
-   * @param partition
    */
   void commit(int source, int partition);
 }

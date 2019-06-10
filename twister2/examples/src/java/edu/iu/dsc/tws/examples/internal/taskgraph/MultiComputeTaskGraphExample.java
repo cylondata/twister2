@@ -119,10 +119,23 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
         "secondcompute", secondComputeTask, parallel);
     ComputeConnection reduceConnection = builder.addSink("sink", reduceTask, parallel);
 
-    firstComputeConnection.direct("source", "fdirect", DataType.OBJECT);
-    secondComputeConnection.direct("source", "sdirect", DataType.OBJECT);
-    reduceConnection.allreduce("firstcompute", "freduce", new Aggregator(), DataType.OBJECT);
-    reduceConnection.allreduce("secondcompute", "sreduce", new Aggregator(), DataType.OBJECT);
+    firstComputeConnection.direct("source")
+        .viaEdge("fdirect")
+        .withDataType(DataType.OBJECT);
+
+    secondComputeConnection.direct("source")
+        .viaEdge("sdirect")
+        .withDataType(DataType.OBJECT);
+
+    reduceConnection.allreduce("firstcompute")
+        .viaEdge("freduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT)
+        .connect()
+        .allreduce("secondcompute")
+        .viaEdge("sreduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 

@@ -68,7 +68,7 @@ public class MDSWorker extends TaskWorker {
 
     /* Generate the Matrix for the MDS **/
     if (Context.TWISTER2_DATA_INPUT.equalsIgnoreCase(dataInput)) {
-      MatrixGenerator matrixGen = new MatrixGenerator(config, workerId);
+      MatrixGenerator matrixGen = new MatrixGenerator(config);
       matrixGen.generate(datasize, matrixColumLength, directory, byteType);
     }
 
@@ -83,8 +83,9 @@ public class MDSWorker extends TaskWorker {
 
     ComputeConnection dataObjectComputeConnection = mdsDataProcessingGraphBuilder.addSink(
         "dataobjectsink", mdsDataObjectSink, parallel);
-    dataObjectComputeConnection.direct(
-        "dataobjectsource", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    dataObjectComputeConnection.direct("dataobjectsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
@@ -107,7 +108,9 @@ public class MDSWorker extends TaskWorker {
     mdsComputeProcessingGraphBuilder.addSource("generator", generatorTask, parallel);
     ComputeConnection computeConnection = mdsComputeProcessingGraphBuilder.addSink("receiver",
         receiverTask, parallel);
-    computeConnection.direct("generator", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    computeConnection.direct("generator")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(DataType.OBJECT);
     mdsComputeProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();

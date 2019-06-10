@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -46,14 +45,11 @@ public class MultiStageGraph extends TaskWorker {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
-    pc.partition("source", "partition-edge", DataType.OBJECT);
+    pc.partition("source").viaEdge("partition-edge").withDataType(DataType.OBJECT);
     ComputeConnection rc = builder.addSink("sink", rt, 1);
-    rc.reduce("compute", "compute-edge", new IFunction() {
-      @Override
-      public Object onMessage(Object object1, Object object2) {
-        return object1;
-      }
-    });
+    rc.reduce("compute")
+        .viaEdge("compute-edge")
+        .withReductionFunction((object1, object2) -> object1);
     builder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();

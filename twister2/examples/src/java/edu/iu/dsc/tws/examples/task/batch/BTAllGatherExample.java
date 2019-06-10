@@ -45,7 +45,7 @@ public class BTAllGatherExample extends BenchTaskWorker {
     ISink r = new AllGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.allgather(SOURCE, edge, dataType);
+    computeConnection.allgather(SOURCE).viaEdge(edge).withDataType(dataType);
     return taskGraphBuilder;
   }
 
