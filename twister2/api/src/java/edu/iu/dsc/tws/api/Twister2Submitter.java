@@ -11,10 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api;
 
+import java.io.IOException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -30,26 +35,73 @@ public final class Twister2Submitter {
 
   /**
    * Submit a Twister2 job
+   *
    * @param twister2Job job
    */
   public static void submitJob(Twister2Job twister2Job, Config config) {
-
     // if this is a Kubernetes cluster, check the job name,
     // if it does not conform to Kubernetes rules, change it
-    if (Context.clusterType(config).equals(KubernetesConstants.KUBERNETES_CLUSTER_TYPE)) {
-      processJobNameForK8s(twister2Job);
-    } else if (Context.clusterType(config).equals("mesos")) {
-      twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
-    } else if (Context.clusterType(config).equals("nomad")) {
-      twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
+    boolean startingFromACheckpoint = CheckpointingConfigurations.startingFromACheckpoint(config);
+    if (!startingFromACheckpoint) {
+      switch (Context.clusterType(config)) {
+        case KubernetesConstants.KUBERNETES_CLUSTER_TYPE:
+          processJobNameForK8s(twister2Job);
+          break;
+        case "mesos":
+        case "nomad":
+          twister2Job.setJobName(twister2Job.getJobName() + System.currentTimeMillis());
+          break;
+        default:
+          //do nothing
+      }
     }
+
+    Config configCopy = JobUtils.resolveJobId(config, twister2Job.getJobName());
 
     // save the job to transfer to workers
     JobAPI.Job job = twister2Job.serialize();
+
+    // get existing id or create a new job id
+    String jobId = configCopy.getStringValue(Context.JOB_ID);
+
+    //if checkpointing is enabled, twister2Job and config will be saved to the state backend
+    if (CheckpointingConfigurations.isCheckpointingEnabled(configCopy)) {
+      LOG.info("Checkpointing has enabled for this job.");
+
+      StateStore stateStore = CheckpointUtils.getStateStore(configCopy);
+      stateStore.init(configCopy, jobId);
+
+      try {
+        if (startingFromACheckpoint) {
+          // if job is starting from a checkpoint and previous state is not found in store
+          if (!CheckpointUtils.containsJobInStore(jobId, stateStore)) {
+            throw new RuntimeException("Couldn't find job state in store to restart " + jobId);
+          }
+
+          //restarting the job
+          LOG.info("Found job " + jobId + " in state store. Restoring...");
+          byte[] jobMetaBytes = CheckpointUtils.restoreJobMeta(jobId, stateStore);
+          job = JobAPI.Job.parseFrom(jobMetaBytes);
+
+          byte[] configBytes = CheckpointUtils.restoreJobConfig(jobId, stateStore);
+          configCopy = ConfigLoader.loadConfig(configBytes);
+        } else {
+          // first time running or re-running the job, backup configs
+          LOG.info("Saving job config and metadata");
+          CheckpointUtils.saveJobConfigAndMeta(
+              jobId, job.toByteArray(), configCopy.serialize(), stateStore);
+        }
+      } catch (IOException e) {
+        LOG.severe("Failed to submit th checkpointing enabled job");
+        throw new RuntimeException(e);
+      }
+    }
+
+
     LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
 
     // update the config object with the values from job
-    Config updatedConfig = JobUtils.updateConfigs(job, config);
+    Config updatedConfig = JobUtils.updateConfigs(job, configCopy);
 
     // launch the luancher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
@@ -84,7 +136,6 @@ public final class Twister2Submitter {
   /**
    * write the values from Job object to config object
    * only write the values that are initialized
-   * @return
    */
   public static void processJobNameForK8s(Twister2Job twister2Job) {
 

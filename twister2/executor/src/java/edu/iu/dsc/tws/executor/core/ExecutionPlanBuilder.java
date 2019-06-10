@@ -24,6 +24,8 @@ import java.util.stream.Collectors;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
@@ -39,10 +41,7 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
-import edu.iu.dsc.tws.executor.core.streaming.window.SinkStreamingWindowingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -88,9 +87,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private Table<String, Integer, SourceStreamingInstance> streamingSourceInstances
       = HashBasedTable.create();
   private Table<String, Integer, SinkStreamingInstance> streamingSinkInstances
-      = HashBasedTable.create();
-
-  private Table<String, Integer, SinkStreamingWindowingInstance> streamingSinkWindowingInstances
       = HashBasedTable.create();
 
 
@@ -267,12 +263,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
             op.register(i, streamingSinkInstance.getStreamingInQueue());
             op.registerSync(i, streamingSinkInstance);
-          } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
-            SinkStreamingWindowingInstance sinkStreamingWindowingInstance
-                = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
-            sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            op.register(i, sinkStreamingWindowingInstance.getStreamingInQueue());
-            op.registerSync(i, sinkStreamingWindowingInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
@@ -382,26 +372,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               vertex.getConfig().toMap(), inEdges, taskSchedule,
               this.checkpointingClient, taskGraphName, tasksVersion);
           streamingSinkInstances.put(vertex.getName(), taskId, v);
-          return v;
-        } else {
-          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(),
-              new LinkedBlockingQueue<>(), cfg,
-              vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
-          streamingTaskInstances.put(vertex.getName(), taskId, v);
-          return v;
-        }
-      } else if (newInstance instanceof IWindowCompute) {
-        if (newInstance instanceof IWindowedSink) {
-          SinkStreamingWindowingInstance v =
-              new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
-                  new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-                  ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                  vertex.getConfig().toMap(), inEdges, taskSchedule,
-                  this.checkpointingClient, taskGraphName, tasksVersion);
-          streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
           TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,

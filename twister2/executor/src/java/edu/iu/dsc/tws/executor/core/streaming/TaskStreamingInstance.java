@@ -17,6 +17,11 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
@@ -27,11 +32,6 @@ import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
 import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.ftolerance.api.SnapshotImpl;
-import edu.iu.dsc.tws.ftolerance.api.StateStore;
-import edu.iu.dsc.tws.ftolerance.task.CheckpointableTask;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointUtils;
-import edu.iu.dsc.tws.ftolerance.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -46,7 +46,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * The actual task executing
    */
-  private ICompute task;
+  protected ICompute task;
 
   private static final Logger LOG = Logger.getLogger(TaskStreamingInstance.class.getName());
 
@@ -54,83 +54,83 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
    * All the inputs will come through a single queue, otherwise we need to look
    * at different queues for messages
    */
-  private BlockingQueue<IMessage> inQueue;
+  protected BlockingQueue<IMessage> inQueue;
 
   /**
    * Output will go throuh a single queue
    */
-  private BlockingQueue<IMessage> outQueue;
+  protected BlockingQueue<IMessage> outQueue;
 
   /**
    * The configuration
    */
-  private Config config;
+  protected Config config;
 
   /**
    * The output collection to be used
    */
-  private OutputCollection outputCollection;
+  protected OutputCollection outputCollection;
 
   /**
    * The globally unique task id
    */
-  private int globalTaskId;
+  protected int globalTaskId;
 
   /**
    * The task id
    */
-  private int taskId;
+  protected int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
    */
-  private int taskIndex;
+  protected int taskIndex;
 
   /**
    * Number of parallel tasks
    */
-  private int parallelism;
+  protected int parallelism;
 
   /**
    * Name of the task
    */
-  private String taskName;
+  protected String taskName;
 
   /**
    * Node configurations
    */
-  private Map<String, Object> nodeConfigs;
+  protected Map<String, Object> nodeConfigs;
 
   /**
    * Parallel operations
    */
-  private Map<String, IParallelOperation> outParOps = new HashMap<>();
+  protected Map<String, IParallelOperation> outParOps = new HashMap<>();
 
   /**
    * Inward parallel operations
    */
-  private Map<String, IParallelOperation> inParOps = new HashMap<>();
+  protected Map<String, IParallelOperation> inParOps = new HashMap<>();
 
   /**
    * The worker id
    */
-  private int workerId;
+  protected int workerId;
 
   /**
    * The low watermark for queued messages
    */
-  private int lowWaterMark;
+  protected int lowWaterMark;
 
   /**
    * The high water mark for messages
    */
-  private int highWaterMark;
+  protected int highWaterMark;
 
   /**
    * Output edges
    */
-  private Map<String, String> outputEdges;
-  private TaskSchedulePlan taskSchedule;
+  protected Map<String, String> outputEdges;
+  protected TaskSchedulePlan taskSchedule;
   private CheckpointingClient checkpointingClient;
   private String taskGraphName;
   private long tasksVersion;
@@ -138,10 +138,31 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  private Map<String, String> inputEdges;
+  protected Map<String, String> inputEdges;
   private boolean checkpointable;
   private StateStore stateStore;
   private SnapshotImpl snapshot;
+
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+  private PendingCheckpoint pendingCheckpoint;
 
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
@@ -175,14 +196,56 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     this.snapshot = new SnapshotImpl();
   }
 
+  /**
+   * Preparing the task
+   *
+   * @param cfg configuration
+   */
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
 
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outputEdges.size()];
+    index = 0;
+    for (String e : outputEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[inParOps.size()];
+    index = 0;
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inputEdges.size()];
+    index = 0;
+    for (String e : inputEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
+
     if (this.checkpointable) {
       this.stateStore = CheckpointUtils.getStateStore(config);
       this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      this.pendingCheckpoint = new PendingCheckpoint(
+          this.taskGraphName,
+          (CheckpointableTask) this.task,
+          this.globalTaskId,
+          this.intOpArray,
+          this.inEdgeArray.length,
+          this.checkpointingClient,
+          this.stateStore,
+          this.snapshot
+      );
 
       TaskCheckpointUtils.restore(
           (CheckpointableTask) this.task,
@@ -204,8 +267,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   }
 
   /**
-   * Execution Method calls the SourceTasks run method to get context
-   **/
+   * Executing compute task
+   */
   public boolean execute() {
     // execute if there are incoming messages
     while (!inQueue.isEmpty() && outQueue.size() < lowWaterMark) {
@@ -237,12 +300,20 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < outOpArray.length; i++) {
+      outOpArray[i].progress();
     }
 
-    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < intOpArray.length; i++) {
+      intOpArray[i].progress();
+    }
+
+
+    if (this.checkpointable && this.inQueue.isEmpty()) {
+      boolean executed = this.pendingCheckpoint.execute();
+      if (executed) {
+        ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
+      }
     }
 
     return true;
@@ -270,15 +341,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       ByteBuffer wrap = ByteBuffer.wrap(value);
       long barrierId = wrap.getLong();
 
-      TaskCheckpointUtils.checkpoint(
-          barrierId,
-          (CheckpointableTask) this.task,
-          this.snapshot,
-          this.stateStore,
-          this.taskGraphName,
-          this.globalTaskId,
-          this.checkpointingClient
-      );
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId
+          + " with id " + barrierId + " from " + edge);
+      this.pendingCheckpoint.schedule(edge, barrierId);
     }
     return true;
   }

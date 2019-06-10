@@ -3,9 +3,11 @@
 ## Round Robin Task Scheduler
 
 RoundRobin Task Scheduler allocates the task instances of the task graph in a round robin fashion. 
-For example, if there are 2 containers and 2 tasks with a task parallelism value of 2, task instance 
-0 of 1st task will go to container 1 and task instance 0 of 2nd task will go to container 1 whereas 
-task instance 1 of 1st task will go to container 1 and task instance 1 of 2nd task will go to container 2.
+For example, if there are 2 containers and 2 tasks with a task parallelism value of 4, task instance 
+0 of 1st task will go to container 1, task instance 1 of 1st task will go to container 2, task instance
+3 of 1st task will go to container 1 and task instance 4 of 1st task will go to container 2. Similarly,
+task instance 0 of 2nd task will go to container 1, task instance 1 of 2nd task will go to container 2, 
+task instance 3 of 1st task will go to container 1 and task instance 4 of 1st task will go to container 2
 
 It generates the task schedule plan which consists of the containers \(container plan\) and the 
 allocation of task instances \(task instance plan\) on those containers. The size of the container 
@@ -38,7 +40,7 @@ FirstFit Task Scheduler allocates the task instances of the task graph in a heur
 The main objective of the task scheduler is to reduce the total number of containers and support the 
 heterogeneous containers and task instances allocation.
 
-For example, if there are two tasks with parallelism value of 2, 1st task -&gt; instance 0 will go 
+For example, if there are two tasks with parallelism value of 4, 1st task -&gt; instance 0 will go 
 to container 0, 1st task -&gt; instance 1 will go to container 0, 2nd task -&gt; instance 0 will go 
 to container 0 \(if the total task instance required values doesn't reach the maximum size of 
 container 0. If the container has reached its maximum limit then it will allocate the 2nd task -&gt; 

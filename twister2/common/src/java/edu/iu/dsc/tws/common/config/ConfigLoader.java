@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.config;
 
 import java.util.Map;
 
+import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+
 public final class ConfigLoader {
   private ConfigLoader() {
   }
@@ -67,5 +69,10 @@ public final class ConfigLoader {
     Config.Builder cb = Config.newBuilder()
         .putAll(loadConfig(filePath));
     return Config.transform(cb.build());
+  }
+
+  public static Config loadConfig(byte[] serializedMap) {
+    return Config.newBuilder().putAll(
+        (Map) new KryoSerializer().deserialize(serializedMap)).build();
   }
 }

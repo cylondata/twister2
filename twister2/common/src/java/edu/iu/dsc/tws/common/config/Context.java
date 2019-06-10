@@ -91,6 +91,8 @@ public class Context {
 
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
+  public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"
+
   public static final String TWISTER2_PARTITION_EDGE = "partition";
 
   public static final String TWISTER2_LOCAL_FILESYSTEM = "local";
@@ -167,6 +169,10 @@ public class Context {
 
   public static String jobName(Config cfg) {
     return cfg.getStringValue(JOB_NAME);
+  }
+
+  public static String jobId(Config cfg) {
+    return cfg.getStringValue(JOB_ID);
   }
 
   public static String dataConfigurationFile(Config cfg) {

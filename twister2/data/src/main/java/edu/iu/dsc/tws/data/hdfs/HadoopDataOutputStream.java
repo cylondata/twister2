@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.data.hdfs;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
 
@@ -39,6 +41,16 @@ public final class HadoopDataOutputStream extends FSDataOutputStream {
   @Override
   public void close() throws IOException {
     fosOutputStream.close();
+  }
+
+  //TODO: Implement this method later for hdfs
+  @Override
+  public void write(ByteBuffer byteBuffer) throws IOException {
+  }
+
+  @Override
+  public FileChannel getChannel() throws IOException {
+    return null;
   }
 
   @Override
