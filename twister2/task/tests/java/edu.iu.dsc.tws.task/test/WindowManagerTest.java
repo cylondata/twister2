@@ -284,22 +284,22 @@ public class WindowManagerTest {
 
 //        System.out.println(listener.allOnActivationEvents);
     assertEquals(3, listener.allOnActivationEvents.size());
-    assertEquals(mockList.subList(0, 2), listener.allOnActivationEvents.get(0).getWindow());
-    assertEquals(mockList.subList(0, 3), listener.allOnActivationEvents.get(1).getWindow());
-    assertEquals(mockList.subList(3, 4), listener.allOnActivationEvents.get(2).getWindow());
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(0, 4), listener.allOnActivationEvents.get(1).getWindow());
+    assertEquals(mockList.subList(3, 5), listener.allOnActivationEvents.get(2).getWindow());
 
     assertEquals(Collections.emptyList(), listener.allOnActivationExpiredEvents.get(0)
         .getExpiredWindow());
     assertEquals(Collections.emptyList(), listener.allOnActivationExpiredEvents.get(1)
         .getExpiredWindow());
-    assertEquals(mockList.subList(0, 2), listener.allOnActivationExpiredEvents.get(2)
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationExpiredEvents.get(2)
         .getExpiredWindow());
 
-    assertEquals(mockList.subList(0, 2), listener.allOnActivationNewEvents.get(0));
-    assertEquals(mockList.subList(3, 3), listener.allOnActivationNewEvents.get(1));
-    assertEquals(mockList.subList(4, 4), listener.allOnActivationNewEvents.get(2));
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationNewEvents.get(0).getWindow());
+    assertEquals(mockList.subList(3, 4), listener.allOnActivationNewEvents.get(1).getWindow());
+    assertEquals(mockList.subList(4, 5), listener.allOnActivationNewEvents.get(2).getWindow());
 
-    assertEquals(mockList.subList(0, 2), listener.allOnExpiryEvents.get(0));
+    assertEquals(mockList.subList(0, 3), listener.allOnExpiryEvents.get(0).getExpiredWindow());
 
     // add more events with a gap in ts
     windowManager.add(mockList.get(6), 825);
@@ -311,21 +311,24 @@ public class WindowManagerTest {
     windowManager.add(new WatermarkEvent<Integer>(834));
 
     assertEquals(3, listener.allOnActivationEvents.size());
-    assertEquals(mockList.subList(4, 5), listener.allOnActivationEvents.get(0));
-    assertEquals(mockList.subList(5, 5), listener.allOnActivationEvents.get(1));
-    assertEquals(mockList.subList(6, 8), listener.allOnActivationEvents.get(2));
+    assertEquals(mockList.subList(4, 6), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(5, 6), listener.allOnActivationEvents.get(1).getWindow());
+    assertEquals(mockList.subList(6, 9), listener.allOnActivationEvents.get(2).getWindow());
 
-    assertEquals(mockList.subList(3, 3), listener.allOnActivationExpiredEvents.get(0));
-    assertEquals(mockList.subList(4, 4), listener.allOnActivationExpiredEvents.get(1));
-    assertEquals(Collections.emptyList(), listener.allOnActivationExpiredEvents.get(2));
+    assertEquals(mockList.subList(3, 4), listener.allOnActivationExpiredEvents.get(0)
+        .getExpiredWindow());
+    assertEquals(mockList.subList(4, 5), listener.allOnActivationExpiredEvents.get(1)
+        .getExpiredWindow());
+    assertEquals(Collections.emptyList(), listener.allOnActivationExpiredEvents.get(2)
+        .getExpiredWindow());
 
-    assertEquals(mockList.subList(5, 5), listener.allOnActivationNewEvents.get(0));
-    assertEquals(Collections.emptyList(), listener.allOnActivationNewEvents.get(1));
-    assertEquals(mockList.subList(6, 8), listener.allOnActivationNewEvents.get(2));
+    assertEquals(mockList.subList(5, 6), listener.allOnActivationNewEvents.get(0).getWindow());
+    assertEquals(Collections.emptyList(), listener.allOnActivationNewEvents.get(1).getWindow());
+    assertEquals(mockList.subList(6, 9), listener.allOnActivationNewEvents.get(2).getWindow());
 
-    assertEquals(mockList.subList(3, 3), listener.allOnExpiryEvents.get(0));
-    assertEquals(mockList.subList(4, 4), listener.allOnExpiryEvents.get(1));
-    assertEquals(mockList.subList(5, 5), listener.allOnExpiryEvents.get(2));
+    assertEquals(mockList.subList(3, 4), listener.allOnExpiryEvents.get(0).getExpiredWindow());
+    assertEquals(mockList.subList(4, 5), listener.allOnExpiryEvents.get(1).getExpiredWindow());
+    assertEquals(mockList.subList(5, 6), listener.allOnExpiryEvents.get(2).getExpiredWindow());
   }
 
 
