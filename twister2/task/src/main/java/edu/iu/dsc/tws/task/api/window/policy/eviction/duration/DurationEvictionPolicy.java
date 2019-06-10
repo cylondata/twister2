@@ -60,7 +60,7 @@ public class DurationEvictionPolicy<T> implements IEvictionPolicy<T> {
     // compute window length adjustment (delta) to account for time drift
     if (context.getSlidingInterval() != null) {
       if (prevContext == null) {
-        delta = Integer.MAX_VALUE; // consider all events for the initial window
+        delta = Long.MAX_VALUE; // consider all events for the initial window
       } else {
         delta = context.getReferenceTime() - prevContext.getReferenceTime()
             - context.getSlidingInterval();

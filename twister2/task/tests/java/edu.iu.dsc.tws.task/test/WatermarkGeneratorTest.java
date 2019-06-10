@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.task.test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +48,7 @@ public class WatermarkGeneratorTest {
       }
     };
     // set watermark interval to a high value and trigger manually to fix timing issues
-    watermarkEventGenerator = new WatermarkEventGenerator(windowManager, 100000, 5,
+    watermarkEventGenerator = new WatermarkEventGenerator(windowManager, 5, 100000,
         Collections.singleton(streamId("s1")));
     watermarkEventGenerator.start();
   }
@@ -62,38 +64,38 @@ public class WatermarkGeneratorTest {
     watermarkEventGenerator.track(streamId("s1"), 100);
     watermarkEventGenerator.track(streamId("s1"), 110);
     watermarkEventGenerator.run();
-    assertTrue(eventList.size() == 0);
-    //assertTrue(eventList.get(0).isWatermark());
-    //assertEquals(105, eventList.get(0).getTimeStamp());
+    assertTrue(eventList.get(0).isWatermark());
+    assertEquals(105, eventList.get(0).getTimeStamp());
   }
 
-//  @Test
-//  public void testTrackSingleStreamOutOfOrder() throws Exception {
-//    watermarkEventGenerator.track(streamId("s1"), 100);
-//    watermarkEventGenerator.track(streamId("s1"), 110);
-//    watermarkEventGenerator.track(streamId("s1"), 104);
-//    watermarkEventGenerator.run();
-//    assertTrue(eventList.get(0).isWatermark());
-//    assertEquals(105, eventList.get(0).getTimeStamp());
-//  }
-//
-//  @Test
-//  public void testTrackTwoStreams() throws Exception {
-//    Set<GlobalStreamId> streams = new HashSet<>();
-//    streams.add(streamId("s1"));
-//    streams.add(streamId("s2"));
-//    watermarkEventGenerator = new WatermarkEventGenerator<>(windowManager, 100000, 5, streams);
-//
-//    watermarkEventGenerator.track(streamId("s1"), 100);
-//    watermarkEventGenerator.track(streamId("s1"), 110);
-//    watermarkEventGenerator.run();
-//    assertTrue(eventList.isEmpty());
-//    watermarkEventGenerator.track(streamId("s2"), 95);
-//    watermarkEventGenerator.track(streamId("s2"), 98);
-//    watermarkEventGenerator.run();
-//    assertTrue(eventList.get(0).isWatermark());
-//    assertEquals(93, eventList.get(0).getTimeStamp());
-//  }
+  @Test
+  public void testTrackSingleStreamOutOfOrder() throws Exception {
+    watermarkEventGenerator.track(streamId("s1"), 100);
+    watermarkEventGenerator.track(streamId("s1"), 110);
+    watermarkEventGenerator.track(streamId("s1"), 104);
+    watermarkEventGenerator.run();
+    assertTrue(eventList.get(0).isWatermark());
+    assertEquals(105, eventList.get(0).getTimeStamp());
+  }
+
+
+  @Test
+  public void testTrackTwoStreams() throws Exception {
+    Set<GlobalStreamId> streams = new HashSet<>();
+    streams.add(streamId("s1"));
+    streams.add(streamId("s2"));
+    watermarkEventGenerator = new WatermarkEventGenerator<>(windowManager, 5, 10000, streams);
+
+    watermarkEventGenerator.track(streamId("s1"), 100);
+    watermarkEventGenerator.track(streamId("s1"), 110);
+    watermarkEventGenerator.run();
+    assertTrue(eventList.isEmpty());
+    watermarkEventGenerator.track(streamId("s2"), 95);
+    watermarkEventGenerator.track(streamId("s2"), 98);
+    watermarkEventGenerator.run();
+    assertTrue(eventList.get(0).isWatermark());
+    assertEquals(93, eventList.get(0).getTimeStamp());
+  }
 
   @Test
   public void testNoEvents() throws Exception {
@@ -101,21 +103,21 @@ public class WatermarkGeneratorTest {
     assertTrue(eventList.isEmpty());
   }
 
-//  @Test
-//  public void testLateEvent() throws Exception {
-//    assertTrue(watermarkEventGenerator.track(streamId("s1"), 100));
-//    assertTrue(watermarkEventGenerator.track(streamId("s1"), 110));
-//    watermarkEventGenerator.run();
-//    assertTrue(eventList.get(0).isWatermark());
-//    assertEquals(105, eventList.get(0).getTimeStamp());
-//    eventList.clear();
-//    assertTrue(watermarkEventGenerator.track(streamId("s1"), 105));
-//    assertTrue(watermarkEventGenerator.track(streamId("s1"), 106));
-//    assertTrue(watermarkEventGenerator.track(streamId("s1"), 115));
-//    assertFalse(watermarkEventGenerator.track(streamId("s1"), 104));
-//    watermarkEventGenerator.run();
-//    assertTrue(eventList.get(0).isWatermark());
-//    assertEquals(110, eventList.get(0).getTimeStamp());
-//  }
+  @Test
+  public void testLateEvent() throws Exception {
+    assertTrue(watermarkEventGenerator.track(streamId("s1"), 100));
+    assertTrue(watermarkEventGenerator.track(streamId("s1"), 110));
+    watermarkEventGenerator.run();
+    assertTrue(eventList.get(0).isWatermark());
+    assertEquals(105, eventList.get(0).getTimeStamp());
+    eventList.clear();
+    assertTrue(watermarkEventGenerator.track(streamId("s1"), 105));
+    assertTrue(watermarkEventGenerator.track(streamId("s1"), 106));
+    assertTrue(watermarkEventGenerator.track(streamId("s1"), 115));
+    assertFalse(watermarkEventGenerator.track(streamId("s1"), 104));
+    watermarkEventGenerator.run();
+    assertTrue(eventList.get(0).isWatermark());
+    assertEquals(110, eventList.get(0).getTimeStamp());
+  }
 
 }

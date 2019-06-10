@@ -36,7 +36,7 @@ public class WindowManager<T> implements IManager<T> {
 
   private static final Logger LOG = Logger.getLogger(WindowManager.class.getName());
 
-  public static final int EXPIRE_EVENTS_THRESHOLD = 100;
+  public static final int EXPIRE_EVENTS_THRESHOLD = 20;
 
   private static final long serialVersionUID = -15452808832480739L;
 
@@ -220,7 +220,6 @@ public class WindowManager<T> implements IManager<T> {
   }
 
   public void compactWindow() {
-    //TODO : handle the expired window accumulation with caution
     if (eventsSinceLastExpiration.incrementAndGet() >= EXPIRE_EVENTS_THRESHOLD) {
       scanEvents(false);
     }
