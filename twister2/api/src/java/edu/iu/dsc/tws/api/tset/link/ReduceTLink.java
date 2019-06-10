@@ -93,8 +93,10 @@ public class ReduceTLink<T> extends BaseTLink<T> {
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<>(getReduceFn()), dataType);
+    connection.reduce(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withReductionFunction(new ReduceOpFunction<>(getReduceFn()))
+        .withDataType(dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

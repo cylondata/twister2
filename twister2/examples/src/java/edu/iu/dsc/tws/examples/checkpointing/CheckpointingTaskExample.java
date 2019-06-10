@@ -52,14 +52,13 @@ public class CheckpointingTaskExample implements IWorker {
 
     taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
-//    taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
-//        .direct("source", "so-c", DataType.INTEGER);
+    taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
+        .direct("source").viaEdge("so-c").withDataType(DataType.INTEGER);
 
-    taskGraphBuilder.addSink("sink", new SinkTask(), parallelism).direct(
-        "source",
-        "so-si",
-        DataType.INTEGER
-    );
+    taskGraphBuilder.addSink("sink", new SinkTask(), parallelism)
+        .direct("compute")
+        .viaEdge("c-si")
+        .withDataType(DataType.INTEGER);
 
     taskEnvironment.buildAndExecute(taskGraphBuilder);
     taskEnvironment.close();
@@ -127,7 +126,7 @@ public class CheckpointingTaskExample implements IWorker {
 
     @Override
     public void execute() {
-      context.write("so-si", count++);
+      context.write("so-c", count++);
     }
 
     @Override

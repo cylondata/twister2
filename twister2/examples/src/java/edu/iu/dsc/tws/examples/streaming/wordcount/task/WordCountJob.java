@@ -61,8 +61,12 @@ public class WordCountJob extends TaskWorker {
     // build the graph
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
-    builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
-        new ReduceFn(Op.SUM, DataType.INTEGER_ARRAY), DataType.OBJECT, DataType.INTEGER_ARRAY);
+    builder.addSink("word-aggregator", counter, 4)
+        .keyedReduce("word-source")
+        .viaEdge(EDGE)
+        .withReductionFunction(new ReduceFn(Op.SUM, DataType.INTEGER_ARRAY))
+        .withKeyType(DataType.OBJECT)
+        .withDataType(DataType.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
 
     // execute the graph

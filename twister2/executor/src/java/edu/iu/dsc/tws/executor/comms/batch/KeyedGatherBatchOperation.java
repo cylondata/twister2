@@ -53,10 +53,11 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     boolean useDisk = false;
     Comparator keyComparator = null;
+    boolean groupByKey = true;
     try {
+      groupByKey = (Boolean) edge.getProperty("group-by-key");
       useDisk = (Boolean) edge.getProperty("use-disk");
       keyComparator = (Comparator) edge.getProperty("key-comparator");
-      LOG.info("Configuring disk based batch operation");
     } catch (Exception ex) {
       //ignore
     }
@@ -65,7 +66,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     op = new BKeyedGather(newComm, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator);
+        destSelector, useDisk, keyComparator, groupByKey);
 
     communicationEdge = e.generate(edge.getName());
   }

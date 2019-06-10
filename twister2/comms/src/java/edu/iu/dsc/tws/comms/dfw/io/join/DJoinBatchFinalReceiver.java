@@ -144,6 +144,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
 
     long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
     long maxBytesToFile = DataFlowContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
+
     if (operationLeft != null) {
       this.operationRight = op;
     } else {
@@ -157,10 +159,12 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
       for (int target : expectedIds.keySet()) {
         String shuffleDirectory = this.shuffleDirectories.get(
             (op.getTaskPlan().getIndexOfTaskInNode(target)) % this.shuffleDirectories.size());
+
         Shuffle sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory,
             maxBytesToFile, shuffleDirectory,
             DFWIOUtils.getOperationName(target, operationLeft, refresh),
-            operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target);
+            operationLeft.getKeyType(), operationLeft.getDataType(), comparator, target,
+            true, parallelIOAllowance);
 
         sortedMergers.put(target, sortedMerger);
         targetDone.put(target, false);

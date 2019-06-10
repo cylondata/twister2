@@ -76,8 +76,10 @@ public class StreamingAllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.Bas
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.allreduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<T>(getReduceFn()), dataType);
+    connection.allreduce(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withReductionFunction(new ReduceOpFunction<>(getReduceFn()))
+        .withDataType(dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

@@ -44,7 +44,7 @@ public class STPartitionExample extends BenchTaskWorker {
     ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.partition(SOURCE, edge, dataType);
+    computeConnection.partition(SOURCE).viaEdge(edge).withDataType(dataType);
     return taskGraphBuilder;
   }
 

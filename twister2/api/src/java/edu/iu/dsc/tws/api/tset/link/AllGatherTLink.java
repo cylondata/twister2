@@ -70,7 +70,9 @@ public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
   @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
-    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.allgather(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withDataType(dataType);
   }
 
   @Override

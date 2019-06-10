@@ -12,24 +12,38 @@
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
-import java.util.Queue;
-import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 /**
- * This serializer will be used to serialize messages with keys
+ * Builds the message and copies it into data buffers.The structure of the message depends on the
+ * type of message that is sent, for example if it is a keyed message or not.
+ * <p>
+ * The main structure of the built message is |Header|Body|.
+ * <p>
+ * The header has the following structure
+ * |source|flags|destinationID|numberOfMessages|,
+ * source - source of the message
+ * flags - message flags
+ * destinationId - where the message is sent
+ * numberOfMessages - number of messages
+ * <p>
+ * Header can be followed by 0 or more messages, each message will have the following structure
+ * |length(integer)|message body|
+ * <p>
+ * For a keyed message the message body consists of two parts
+ * |key|body|
+ * <p>
+ * For some keys we need to send the length of the key, i.e. byte arrays and objects. In that case
+ * key consists of two parts
+ * |key length(integer)|actual key|
+ * <p>
+ * For other cases such as integer or double keys, we know the length of the key, so we only send
+ * the key.
  */
-public class KeyedSerializer extends BaseSerializer {
-  private static final Logger LOG = Logger.getLogger(KeyedSerializer.class.getName());
-
-  @Override
-  public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
-    this.sendBuffers = buffers;
-  }
+public class DataSerializer extends BaseSerializer {
 
   /**
    * Builds the body of the message. Based on the message type different build methods are called
@@ -41,70 +55,39 @@ public class KeyedSerializer extends BaseSerializer {
    */
   public boolean serializeSingleMessage(Object payload,
                                         OutMessage sendMessage, DataBuffer targetBuffer) {
-    Tuple tuple = (Tuple) payload;
-    return serializeKeyedData(tuple.getValue(), tuple.getKey(),
-        sendMessage.getDataType().getDataPacker(),
-        sendMessage.getKeyType().getDataPacker(),
-        sendMessage.getSerializationState(), targetBuffer);
+    return serializeData(payload, sendMessage.getSerializationState(),
+        targetBuffer, sendMessage.getDataType().getDataPacker());
   }
 
   /**
-   * Helper method that builds the body of the message for keyed messages.
+   * Helper method that builds the body of the message for regular messages.
    *
    * @param payload the message that needs to be built
-   * @param key the key associated with the message
    * @param state the state object of the message
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeKeyedData(Object payload, Object key,
-                                     DataPacker keyPacker, DataPacker dataPacker,
-                                     SerializeState state,
-                                     DataBuffer targetBuffer) {
+  private boolean serializeData(Object payload, SerializeState state,
+                                DataBuffer targetBuffer, DataPacker dataPacker) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {
-      int keyLength = keyPacker.determineLength(key, state);
-      state.getActive().setTotalToCopy(keyLength);
-
-      // now swap the data store.
-      state.swap();
-
       // okay we need to serialize the data
       int dataLength = dataPacker.determineLength(payload, state);
-      state.setCurrentHeaderLength(dataLength + keyLength);
       state.getActive().setTotalToCopy(dataLength);
 
-      state.swap(); //next we will be processing key, so need to swap
+      state.setCurrentHeaderLength(dataLength);
 
+      // add the header bytes to the total bytes
       state.setPart(SerializeState.Part.HEADER);
     }
 
     if (state.getPart() == SerializeState.Part.HEADER) {
       // first we need to copy the data size to buffer
-      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength(),
-          state.getActive().getTotalToCopy(), keyPacker)) {
-        // now set the size of the buffer
-        targetBuffer.setSize(byteBuffer.position());
+      if (buildSubMessageHeader(targetBuffer, state.getCurrentHeaderLength())) {
         return false;
       }
-      state.setPart(SerializeState.Part.KEY);
-    }
-
-    if (state.getPart() == SerializeState.Part.KEY) {
-      // this call will copy the key length to buffer as well
-      boolean complete = DataPackerProxy.writeDataToBuffer(
-          keyPacker,
-          key,
-          byteBuffer,
-          state
-      );
-      // now set the size of the buffer
-      targetBuffer.setSize(byteBuffer.position());
-      if (complete) {
-        state.swap(); //if key is done, swap to activate saved data object
-        state.setPart(SerializeState.Part.BODY);
-      }
+      state.setPart(SerializeState.Part.BODY);
     }
 
     // now we can serialize the body
@@ -114,13 +97,13 @@ public class KeyedSerializer extends BaseSerializer {
       return false;
     }
 
-    // now lets copy the actual data
     boolean completed = DataPackerProxy.writeDataToBuffer(
         dataPacker,
         payload,
         byteBuffer,
         state
     );
+
     // now set the size of the buffer
     targetBuffer.setSize(byteBuffer.position());
 
@@ -133,19 +116,12 @@ public class KeyedSerializer extends BaseSerializer {
    * sub message. The structure of the sub message header is |length + (key length)|. The key length
    * is added for keyed messages
    */
-  private boolean buildSubMessageHeader(DataBuffer buffer, int length,
-                                        int keyLength, DataPacker keyPacker) {
+  private boolean buildSubMessageHeader(DataBuffer buffer, int length) {
     ByteBuffer byteBuffer = buffer.getByteBuffer();
-    int requiredSpace = keyPacker.isHeaderRequired()
-        ? MAX_SUB_MESSAGE_HEADER_SPACE : NORMAL_SUB_MESSAGE_HEADER_SIZE;
-    if (byteBuffer.remaining() < requiredSpace) {
+    if (byteBuffer.remaining() < NORMAL_SUB_MESSAGE_HEADER_SIZE) {
       return true;
     }
-    int keyLengthSize = keyPacker.isHeaderRequired() ? Integer.BYTES : 0;
-    byteBuffer.putInt(length + keyLengthSize);
-    if (keyPacker.isHeaderRequired()) {
-      byteBuffer.putInt(keyLength);
-    }
+    byteBuffer.putInt(length);
     return false;
   }
 }

@@ -61,9 +61,13 @@ public class TaskGraphBuildTest {
     taskGraphBuilder.addSource("source", testSource, 4);
     ComputeConnection computeConnection = taskGraphBuilder.addCompute(
         "compute", testCompute, 4);
-    computeConnection.partition("source", TaskConfigurations.DEFAULT_EDGE, DataType.OBJECT);
+    computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
+        .withDataType(DataType.OBJECT);
     ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
-    rc.allreduce("compute", TaskConfigurations.DEFAULT_EDGE, new Aggregator(), DataType.OBJECT);
+    rc.allreduce("compute")
+        .viaEdge(TaskConfigurations.DEFAULT_EDGE)
+        .withReductionFunction(new Aggregator())
+        .withDataType(DataType.OBJECT);
     DataFlowTaskGraph graph = taskGraphBuilder.build();
     return graph;
   }

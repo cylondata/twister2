@@ -19,7 +19,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -152,7 +151,7 @@ public final class FileLoader {
   /**
    * This method accepts a Array of lists instead of a list of tuples
    */
-  public static long saveKeyValues(LinkedList<Tuple> records,
+  public static long saveKeyValues(List<Tuple> records,
                                    long size, String outFileName, MessageType keyType) {
     try {
       long maxRecord = Long.MIN_VALUE; //max size of a tuple saved to this file

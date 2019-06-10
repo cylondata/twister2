@@ -39,9 +39,7 @@ public class MDSDataObjectSource extends BaseSource {
    * DataSource to partition the datapoints
    */
   private DataSource<?, ?> source;
-
   private DataSink<String> sink;
-
   private InputPartitioner inputPartitioner;
 
   /**
@@ -94,11 +92,10 @@ public class MDSDataObjectSource extends BaseSource {
   @Override
   public void execute() {
     Buffer buffer;
-    byte[] line = new byte[2000];
-    ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
+    byte[] line = new byte[getDataSize() * 2];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(getDataSize() * 2);
     byteBuffer.order(ByteOrder.BIG_ENDIAN);
     InputSplit inputSplit = source.getNextSplit(context.taskIndex());
-    int count = 0;
     while (inputSplit != null) {
       try {
         while (!inputSplit.reachedEnd()) {
@@ -109,14 +106,11 @@ public class MDSDataObjectSource extends BaseSource {
             buffer = byteBuffer.asShortBuffer();
             short[] shortArray = new short[getDataSize()];
             ((ShortBuffer) buffer).get(shortArray);
-
             //For writing into the partition file
             //sink.add(context.taskIndex(), Arrays.toString(shortArray));
             context.write(getEdgeName(), shortArray);
-            count++;
           }
         }
-        LOG.info("count value is:" + count);
         inputSplit = null;
         //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
       } catch (Exception ioe) {

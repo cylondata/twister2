@@ -56,13 +56,12 @@ import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.typed.AllReduceCompute;
-import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
+import edu.iu.dsc.tws.task.api.typed.batch.BKeyedGatherUnGroupedCompute;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
@@ -124,9 +123,9 @@ public class TeraSort extends TaskWorker {
       SamplerReduce samplerReduce = new SamplerReduce();
       samplingGraph.addCompute(TASK_SAMPLER_REDUCE, samplerReduce,
           config.getIntegerValue(ARG_RESOURCE_INSTANCES, 4))
-          .allreduce(TASK_SAMPLER, EDGE, (IFunction) (object1, object2) -> {
-            byte[] minMax1 = (byte[]) object1;
-            byte[] minMax2 = (byte[]) object2;
+          .allreduce(TASK_SAMPLER)
+          .viaEdge(EDGE)
+          .withReductionFunction(byte[].class, (minMax1, minMax2) -> {
 
             byte[] min1 = Arrays.copyOfRange(minMax1, 0, keySize);
             byte[] max1 = Arrays.copyOfRange(minMax1, keySize, minMax1.length);
@@ -180,12 +179,14 @@ public class TeraSort extends TaskWorker {
     Receiver receiver = new Receiver();
     teraSortTaskGraph.addSink(TASK_RECV, receiver,
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
-        .keyedGather(TASK_SOURCE, EDGE,
-            DataType.BYTE_ARRAY, DataType.BYTE_ARRAY,
-            taskPartitioner,
-            new HashMap<>(),
-            true,
-            ByteArrayComparator.getInstance());
+        .keyedGather(TASK_SOURCE)
+        .viaEdge(EDGE)
+        .withDataType(DataType.BYTE_ARRAY)
+        .withKeyType(DataType.BYTE_ARRAY)
+        .withTaskPartitioner(taskPartitioner)
+        .useDisk(true)
+        .sortBatchByKey(true, ByteArrayComparator.getInstance())
+        .groupBatchByKey(false);
 
 
     DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
@@ -297,7 +298,7 @@ public class TeraSort extends TaskWorker {
     }
   }
 
-  public static class Receiver extends KeyedGatherCompute<byte[], Iterator<byte[]>>
+  public static class Receiver extends BKeyedGatherUnGroupedCompute<byte[], byte[]>
       implements ISink {
 
     private boolean timingCondition = false;
@@ -328,7 +329,7 @@ public class TeraSort extends TaskWorker {
     }
 
     @Override
-    public boolean keyedGather(Iterator<Tuple<byte[], Iterator<byte[]>>> content) {
+    public boolean keyedGather(Iterator<Tuple<byte[], byte[]>> content) {
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
@@ -336,8 +337,9 @@ public class TeraSort extends TaskWorker {
       byte[] previousKey = null;
       boolean allOrdered = true;
       long tupleCount = 0;
+      long readStart = System.currentTimeMillis();
       while (content.hasNext()) {
-        Tuple<byte[], Iterator<byte[]>> nextTuple = content.next();
+        Tuple<byte[], byte[]> nextTuple = content.next();
         if (previousKey != null
             && ByteArrayComparator.INSTANCE.compare(previousKey, nextTuple.getKey()) > 0) {
           LOG.info("Unordered tuple found");
@@ -348,18 +350,15 @@ public class TeraSort extends TaskWorker {
 
         if (this.resultsWriter != null) {
           try {
-            Iterator<byte[]> values = nextTuple.getValue();
-            while (values.hasNext()) {
-              resultsWriter.write(nextTuple.getKey());
-              byte[] val = values.next();
-              resultsWriter.write(val);
-            }
+            resultsWriter.write(nextTuple.getKey());
+            resultsWriter.write(nextTuple.getValue());
           } catch (IOException e) {
             LOG.log(Level.WARNING, "Failed to write results to file.", e);
           }
         }
       }
-      LOG.info(String.format("Received %d tuples. Ordered : %b", tupleCount, allOrdered));
+      LOG.info(String.format("Received %d tuples. Ordered : %b, write: %d", tupleCount, allOrdered,
+          System.currentTimeMillis() - readStart));
       tasksCount.decrementAndGet();
       try {
         if (resultsWriter != null) {

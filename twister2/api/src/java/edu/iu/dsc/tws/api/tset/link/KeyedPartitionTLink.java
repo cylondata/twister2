@@ -88,8 +88,11 @@ public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
     DataType dataType = TSetUtils.getDataType(getClassV());
-    connection.keyedPartition(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<K>(partitionFunction));
+    connection.keyedPartition(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withKeyType(keyType)
+        .withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

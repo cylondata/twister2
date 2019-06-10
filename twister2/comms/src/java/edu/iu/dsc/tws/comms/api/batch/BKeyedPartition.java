@@ -53,7 +53,7 @@ public class BKeyedPartition {
     int e = comm.nextEdge();
     this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator),
+        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator, true),
         new PartitionPartialReceiver(), dataType, MessageTypes.BYTE_ARRAY, keyType,
         keyType, e);
     this.partition.init(comm.getConfig(), dataType, plan, e);

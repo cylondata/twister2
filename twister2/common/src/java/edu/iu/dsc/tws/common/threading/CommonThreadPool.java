@@ -56,14 +56,19 @@ public final class CommonThreadPool {
   private CommonThreadPool(int thread, long keepAlive) {
     this.threads = thread;
     final AtomicInteger threadCount = new AtomicInteger(0);
-    this.executorService = new ThreadPoolExecutor(0, thread, keepAlive,
-        TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
-        r -> new Thread(r, "twister2-common-thread-pool-" + threadCount.getAndIncrement()));
+    if (thread > 0) {
+      this.executorService = new ThreadPoolExecutor(0, thread, keepAlive,
+          TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
+          r -> new Thread(r, "twister2-common-thread-pool-" + threadCount.getAndIncrement()));
+    }
   }
 
   public static ExecutorService getExecutor() {
     if (commonThreadPool == null) {
       throw new RuntimeException("Twister2 common thread pool has not initialized");
+    } else if (commonThreadPool.threads == 0) {
+      throw new RuntimeException("Requested common thread pool executor which is "
+          + "configured with 0 threads");
     } else {
       return commonThreadPool.executorService;
     }
@@ -75,5 +80,10 @@ public final class CommonThreadPool {
     } else {
       return commonThreadPool.threads;
     }
+  }
+
+  public static boolean isActive() {
+    return commonThreadPool != null && commonThreadPool.executorService != null
+        && commonThreadPool.threads > 0;
   }
 }
