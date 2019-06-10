@@ -372,6 +372,46 @@ public class WindowManagerTest {
     assertEquals(mockList.subList(6, 9), listener.allOnActivationEvents.get(3).getWindow());
   }
 
+  @Test
+  public void testCountBasedTriggerWithEventTs() throws Exception {
+    IEvictionPolicy<Integer> evictionPolicy = new WatermarkDurationEvictionPolicy<>(20);
+    windowManager.setEvictionPolicy(evictionPolicy);
+    IWindowingPolicy<Integer> triggerPolicy
+        = new WatermarkCountWindowPolicy<>(3, windowManager, evictionPolicy, windowManager);
+    triggerPolicy.start();
+    windowManager.setWindowingPolicy(triggerPolicy);
+
+    windowManager.add(mockList.get(0), 603);
+    windowManager.add(mockList.get(1), 605);
+    windowManager.add(mockList.get(2), 607);
+    windowManager.add(mockList.get(3), 618);
+    windowManager.add(mockList.get(4), 625);
+    windowManager.add(mockList.get(5), 626);
+    windowManager.add(mockList.get(6), 629);
+    windowManager.add(mockList.get(7), 636);
+    // send a watermark event, which should trigger three windows.
+    windowManager.add(new WatermarkEvent<>(631));
+//        System.out.println(listener.allOnActivationEvents);
+
+    assertEquals(2, listener.allOnActivationEvents.size());
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(2, 6), listener.allOnActivationEvents.get(1).getWindow());
+
+    // add more events with a gap in ts
+    windowManager.add(mockList.get(8), 665);
+    windowManager.add(mockList.get(9), 666);
+    windowManager.add(mockList.get(10), 667);
+    windowManager.add(mockList.get(11), 669);
+    windowManager.add(mockList.get(11), 679);
+
+    listener.clear();
+    windowManager.add(new WatermarkEvent<>(674));
+//        System.out.println(listener.allOnActivationEvents);
+    assertEquals(2, listener.allOnActivationEvents.size());
+    // same set of events part of three windows
+    assertEquals(mockList.get(8), listener.allOnActivationEvents.get(0).getWindow().get(0));
+    assertEquals(mockList.subList(8, 12), listener.allOnActivationEvents.get(1).getWindow());
+  }
 
   //TODO : the test expired threshold must be tested, test cases fail
   private void testExpireThreshold() throws Exception {
