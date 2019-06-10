@@ -442,6 +442,36 @@ public class WindowManagerTest {
     assertEquals(mockList.subList(8, 10), listener.allOnActivationEvents.get(4).getWindow());
   }
 
+  @Test
+  public void testCountBasedSlidingWithSameEventTs() throws Exception {
+    IEvictionPolicy<Integer> evictionPolicy = new WatermarkCountEvictionPolicy<>(5);
+    windowManager.setEvictionPolicy(evictionPolicy);
+    IWindowingPolicy<Integer> triggerPolicy
+        = new WatermarkCountWindowPolicy<>(2, windowManager, evictionPolicy, windowManager);
+    triggerPolicy.start();
+    windowManager.setWindowingPolicy(triggerPolicy);
+
+    windowManager.add(mockList.get(0), 10);
+    windowManager.add(mockList.get(1), 10);
+    windowManager.add(mockList.get(2), 11);
+    windowManager.add(mockList.get(3), 12);
+    windowManager.add(mockList.get(4), 12);
+    windowManager.add(mockList.get(5), 12);
+    windowManager.add(mockList.get(6), 12);
+    windowManager.add(mockList.get(7), 13);
+    windowManager.add(mockList.get(8), 14);
+    windowManager.add(mockList.get(9), 15);
+
+    windowManager.add(new WatermarkEvent<Integer>(20));
+    assertEquals(5, listener.allOnActivationEvents.size());
+    assertEquals(mockList.subList(0, 2), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(0, 4), listener.allOnActivationEvents.get(1).getWindow());
+    assertEquals(mockList.subList(1, 6), listener.allOnActivationEvents.get(2).getWindow());
+    assertEquals(mockList.subList(3, 8), listener.allOnActivationEvents.get(3).getWindow());
+    assertEquals(mockList.subList(5, 10), listener.allOnActivationEvents.get(4).getWindow());
+
+  }
+
   //TODO : the test expired threshold must be tested, test cases fail
   private void testExpireThreshold() throws Exception {
     int threshold = WindowManager.EXPIRE_EVENTS_THRESHOLD;
