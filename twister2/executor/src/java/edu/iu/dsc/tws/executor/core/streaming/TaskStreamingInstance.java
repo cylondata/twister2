@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
@@ -286,13 +287,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
 
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
-        int flags = 0;
-        if ((message.getFlag() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
-          message.setFlag(MessageFlags.SYNC_BARRIER);
-          flags = MessageFlags.SYNC_BARRIER;
-        }
         // if we successfully send remove
-        if (op.send(globalTaskId, message, flags)) {
+        if (op.send(globalTaskId, message, message.getFlag())) {
           outQueue.poll();
         } else {
           break;
@@ -308,15 +304,24 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       intOpArray[i].progress();
     }
 
-
-    if (this.checkpointable && this.inQueue.isEmpty()) {
-      boolean executed = this.pendingCheckpoint.execute();
-      if (executed) {
+    if (this.checkpointable && this.inQueue.isEmpty() && this.outQueue.isEmpty()) {
+      long checkpointedBarrierId = this.pendingCheckpoint.execute();
+      if (checkpointedBarrierId != -1) {
+        this.scheduleBarriers(checkpointedBarrierId);
         ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
       }
     }
 
     return true;
+  }
+
+  public void scheduleBarriers(Long bid) {
+    ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+    buffer.putLong(bid);
+    for (String edge : outEdgeArray) {
+      this.outQueue.add(new TaskMessage<>(buffer.array(),
+          MessageFlags.SYNC_BARRIER, edge, this.globalTaskId));
+    }
   }
 
   @Override

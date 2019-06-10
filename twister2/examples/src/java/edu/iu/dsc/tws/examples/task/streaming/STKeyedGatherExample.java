@@ -57,7 +57,10 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     ISink r = new KeyedGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
+    computeConnection.keyedGather(SOURCE)
+        .viaEdge(edge)
+        .withKeyType(keyType)
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

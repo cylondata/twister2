@@ -26,6 +26,7 @@ public final class OperationNames {
   public static final String KEYED_REDUCE = "keyed_reduce";
   public static final String KEYED_GATHER = "keyed_gather";
   public static final String DIRECT = "direct";
+  public static final String JOIN = "join";
 
 }
 

@@ -74,7 +74,7 @@ public class StreamingPartitionTLink<T> extends BaseTLink<T> {
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.partition(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.partition(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   public PartitionFunction<T> getPartitionFunction() {

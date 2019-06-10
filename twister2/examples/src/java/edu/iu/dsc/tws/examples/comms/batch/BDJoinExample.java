@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -63,7 +64,8 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
     // create the communication
     join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), true);
+        MessageTypes.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), true,
+        Comparator.comparingInt(o -> (Integer) o));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -119,7 +121,6 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
-    join.finish(src, 0);
-    join.finish(src, 1);
+    join.finish(src);
   }
 }

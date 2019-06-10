@@ -41,8 +41,7 @@ public class MDSDataObjectSink  extends BaseSink implements Collector {
     while (((Iterator) content.getContent()).hasNext()) {
       values.add((short[]) ((Iterator) content.getContent()).next());
     }
-    LOG.info("Distance Matrix (Row X Column) Length:" + values.size() + "\tX\t"
-        + values.get(0).length);
+    LOG.info("Distance Matrix (Row X Column):" + values.size() + "\tX\t" + values.get(0).length);
     dataPoints = new short[values.size() * columnLength];
     int k = 0;
     for (short[] value : values) {

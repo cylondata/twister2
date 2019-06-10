@@ -71,9 +71,8 @@ public final class MDSWorkerParameters {
   public static MDSWorkerParameters build(Config cfg) {
 
     int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.WORKERS));
-    int parallelismVal = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.PARALLELISM_VALUE));
-
+    int parallelismVal = Integer.parseInt(cfg.getStringValue(
+        DataObjectConstants.PARALLELISM_VALUE));
     int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
     int dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
 
@@ -84,10 +83,8 @@ public final class MDSWorkerParameters {
     String dataInput = cfg.getStringValue(DataObjectConstants.DATA_INPUT);
 
     MDSWorkerParameters jobParameters = new MDSWorkerParameters(workers);
-
     jobParameters.workers = workers;
     jobParameters.parallelismValue = parallelismVal;
-
     jobParameters.dsize = dsize;
     jobParameters.dimension = dimension;
 
@@ -96,7 +93,6 @@ public final class MDSWorkerParameters {
     jobParameters.byteType = byteType;
     jobParameters.configFile = configFile;
     jobParameters.dataInput = dataInput;
-
     return jobParameters;
   }
 
@@ -138,9 +134,6 @@ public final class MDSWorkerParameters {
 
   @Override
   public String toString() {
-
-    return "JobParameters{"
-        + ", workers=" + workers
-        + '}';
+    return "JobParameters{" + ", workers=" + workers + '}';
   }
 }

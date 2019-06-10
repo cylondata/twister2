@@ -31,10 +31,16 @@ public interface CheckpointableTask {
    */
   void initSnapshot(Snapshot snapshot);
 
+  /**
+   * This method will be called when task persist it's local state to the store
+   */
   default void onSnapshotPersisted(Snapshot snapshot) {
 
   }
 
+  /**
+   * This method will be called immediately after task report it's version to the checkpoint master
+   */
   default void onCheckpointPropagated(Snapshot snapshot) {
 
   }

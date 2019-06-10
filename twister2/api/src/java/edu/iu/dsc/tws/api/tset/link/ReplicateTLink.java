@@ -96,7 +96,8 @@ public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.broadcast(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.broadcast(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType).connect();
   }
 
   @Override

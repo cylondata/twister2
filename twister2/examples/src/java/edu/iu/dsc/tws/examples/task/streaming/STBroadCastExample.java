@@ -43,8 +43,9 @@ public class STBroadCastExample extends BenchTaskWorker {
     ISink r = new BroadCastSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.broadcast(SOURCE, edge, DataType.INTEGER_ARRAY);
+    taskGraphBuilder.addSink(SINK, r, sinkParallelism)
+        .broadcast(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+
     return taskGraphBuilder;
   }
 

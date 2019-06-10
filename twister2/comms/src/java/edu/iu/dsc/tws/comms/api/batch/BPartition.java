@@ -63,7 +63,7 @@ public class BPartition {
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDirs, null);
+          rcvr, false, shuffleDirs, null, true);
     } else {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
