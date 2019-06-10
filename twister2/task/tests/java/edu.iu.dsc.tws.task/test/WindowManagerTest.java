@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.task.test;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -22,11 +24,13 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
+import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.constant.Action;
 import edu.iu.dsc.tws.task.api.window.event.WatermarkEvent;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
@@ -502,6 +506,53 @@ public class WindowManagerTest {
     tempList.add(mockList.get(4));
     tempList.add(mockList.get(6));
     assertEquals(tempList, listener.allOnActivationEvents.get(2).getWindow());
+  }
+
+  @Test
+  public void testScanStop() throws Exception {
+    final Set<IMessage<Integer>> eventsScanned = new HashSet<>();
+    IEvictionPolicy<Integer> evictionPolicy
+        = new WatermarkDurationEvictionPolicy<Integer>(20, 5) {
+          @Override
+          public Action evict(Event<Integer> event) {
+            eventsScanned.add(event.get());
+            return super.evict(event);
+          } };
+    windowManager.setEvictionPolicy(evictionPolicy);
+    IWindowingPolicy<Integer> triggerPolicy
+        = new WatermarkDurationWindowPolicy<Integer>(10, windowManager, windowManager,
+        evictionPolicy);
+    triggerPolicy.start();
+    windowManager.setWindowingPolicy(triggerPolicy);
+
+    windowManager.add(mockList.get(0), 603);
+    windowManager.add(mockList.get(1), 605);
+    windowManager.add(mockList.get(2), 607);
+    windowManager.add(mockList.get(3), 618);
+    windowManager.add(mockList.get(4), 626);
+    windowManager.add(mockList.get(5), 629);
+    windowManager.add(mockList.get(6), 636);
+    windowManager.add(mockList.get(7), 637);
+    windowManager.add(mockList.get(8), 638);
+    windowManager.add(mockList.get(9), 639);
+
+    // send a watermark event, which should trigger three windows.
+    windowManager.add(new WatermarkEvent<Integer>(631));
+
+    assertEquals(3, listener.allOnActivationEvents.size());
+    assertEquals(mockList.subList(0, 3), listener.allOnActivationEvents.get(0).getWindow());
+    assertEquals(mockList.subList(0, 4), listener.allOnActivationEvents.get(1).getWindow());
+
+    // out of order events should be processed upto the lag
+    List<IMessage<Integer>> tempList = new ArrayList<>(3);
+    tempList.add(mockList.get(3));
+    tempList.add(mockList.get(4));
+    tempList.add(mockList.get(5));
+    assertEquals(tempList, listener.allOnActivationEvents.get(2).getWindow());
+
+    // events 8, 9, 10 should not be scanned at all since TimeEvictionPolicy lag 5s should break
+    // the WindowManager scan loop early.
+    assertEquals(new HashSet<>(mockList.subList(0, 7)), eventsScanned);
   }
 
   //TODO : the test expired threshold must be tested, test cases fail
