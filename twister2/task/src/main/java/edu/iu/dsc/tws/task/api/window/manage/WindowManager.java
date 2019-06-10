@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,6 +36,8 @@ public class WindowManager<T> implements IManager<T> {
 
   private static final Logger LOG = Logger.getLogger(WindowManager.class.getName());
 
+  public static final int EXPIRE_EVENTS_THRESHOLD = 100;
+
   private static final long serialVersionUID = -15452808832480739L;
 
   private IWindowingPolicy<T> windowingPolicy;
@@ -51,12 +54,15 @@ public class WindowManager<T> implements IManager<T> {
 
   private final Set<Event<T>> previousWindowEvents;
 
+  private final AtomicInteger eventsSinceLastExpiration;
+
   public WindowManager(WindowLifeCycleListener<T> windowLifeCycleListener) {
     this.windowLifeCycleListener = windowLifeCycleListener;
     this.queue = new ConcurrentLinkedQueue<>();
     this.expiredEvents = new ArrayList<>();
     this.lock = new ReentrantLock();
     this.previousWindowEvents = new HashSet<>();
+    this.eventsSinceLastExpiration = new AtomicInteger();
   }
 
   public WindowManager() {
@@ -64,6 +70,7 @@ public class WindowManager<T> implements IManager<T> {
     this.expiredEvents = new ArrayList<>();
     this.lock = new ReentrantLock();
     this.previousWindowEvents = new HashSet<>();
+    this.eventsSinceLastExpiration = new AtomicInteger();
   }
 
   public IWindowingPolicy<T> getWindowingPolicy() {
@@ -99,6 +106,7 @@ public class WindowManager<T> implements IManager<T> {
       LOG.fine(String.format("Event With WaterMark ts %f ", (double) windowEvent.getTimeStamp()));
     }
     track(windowEvent);
+    compactWindow();
   }
 
 
@@ -127,10 +135,10 @@ public class WindowManager<T> implements IManager<T> {
       previousWindowEvents.addAll(windowEvents);
       LOG.log(Level.FINE, String.format("WindowLifeCycleListener onActivation, "
           + "events in the window : %d", events.size()));
-      IWindowMessage<T> ievents = bundleWindowIMessage(events);
-      IWindowMessage<T> inewEvents = bundleWindowIMessage(newEvents);
+      IWindowMessage<T> ievents = bundleNonExpiredWindowIMessage(events);
+      IWindowMessage<T> inewEvents = bundleNonExpiredWindowIMessage(newEvents);
       //TODO : handle expired events
-      IWindowMessage<T> iexpired = bundleWindowIMessage(expired);
+      IWindowMessage<T> iexpired = bundleExpiredWindowIMessage(expired);
       windowLifeCycleListener.onActivation(ievents, inewEvents, iexpired);
     } else {
       LOG.log(Level.FINE,
@@ -164,6 +172,13 @@ public class WindowManager<T> implements IManager<T> {
     } finally {
       lock.unlock();
     }
+    eventsSinceLastExpiration.set(0);
+    if (!eventsToExpire.isEmpty()) {
+      LOG.severe(String.format("OnExiry called on WindowLifeCycleListener"));
+      IWindowMessage<T> eventsToExpireIWindow = bundleExpiredWindowIMessage(eventsToExpire);
+      windowLifeCycleListener.onExpiry(eventsToExpireIWindow);
+    }
+
     return eventsToProcess;
   }
 
@@ -178,13 +193,23 @@ public class WindowManager<T> implements IManager<T> {
     return winMessage;
   }
 
-  public IWindowMessage<T> bundleWindowIMessage(List<IMessage<T>> events) {
+  public IWindowMessage<T> bundleNonExpiredWindowIMessage(List<IMessage<T>> events) {
     WindowMessageImpl winMessage = null;
     List<IMessage<T>> messages = new ArrayList<>();
     for (IMessage<T> m : events) {
       messages.add(m);
     }
     winMessage = new WindowMessageImpl(messages);
+    return winMessage;
+  }
+
+  public IWindowMessage<T> bundleExpiredWindowIMessage(List<IMessage<T>> events) {
+    WindowMessageImpl winMessage = null;
+    List<IMessage<T>> messages = new ArrayList<>();
+    for (IMessage<T> m : events) {
+      messages.add(m);
+    }
+    winMessage = new WindowMessageImpl(null, messages);
     return winMessage;
   }
 
@@ -196,6 +221,9 @@ public class WindowManager<T> implements IManager<T> {
 
   public void compactWindow() {
     //TODO : handle the expired window accumulation with caution
+    if (eventsSinceLastExpiration.incrementAndGet() >= EXPIRE_EVENTS_THRESHOLD) {
+      scanEvents(false);
+    }
   }
 
   public void shutdown() {

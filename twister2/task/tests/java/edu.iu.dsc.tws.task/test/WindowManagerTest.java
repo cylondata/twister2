@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.task.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,10 +25,13 @@ import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
+import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
 import static org.junit.Assert.*;
 
 public class WindowManagerTest {
@@ -117,6 +121,10 @@ public class WindowManagerTest {
     IMessage<Integer> m4 = new TaskMessage<>(4);
     IMessage<Integer> m5 = new TaskMessage<>(5);
     IMessage<Integer> m6 = new TaskMessage<>(6);
+    IMessage<Integer> m7 = new TaskMessage<>(7);
+    IMessage<Integer> m8 = new TaskMessage<>(8);
+    IMessage<Integer> m9 = new TaskMessage<>(9);
+    IMessage<Integer> m10 = new TaskMessage<>(10);
     mockList = new ArrayList<>(7);
     mockList.add(m0);
     mockList.add(m1);
@@ -125,6 +133,11 @@ public class WindowManagerTest {
     mockList.add(m4);
     mockList.add(m5);
     mockList.add(m6);
+    mockList.add(m7);
+    mockList.add(m8);
+    mockList.add(m9);
+    mockList.add(m10);
+
 
     windowManager.add(m0);
     windowManager.add(m1);
@@ -163,9 +176,48 @@ public class WindowManagerTest {
     assertEquals(seqIMessage(0, 1), listener.onActivationEvents.getWindow());
     assertNotEquals(seqIMessage(1, 2), listener.onActivationEvents.getWindow());
     assertEquals(seqIMessage(0, 1), listener.onActivationNewEvents.getWindow());
-    //assertTrue(listener.onActivationExpiredEvents.getExpiredWindow().isEmpty());
+    assertTrue(listener.onActivationExpiredEvents.getExpiredWindow().isEmpty());
+
+    windowManager.add(m2);
+    windowManager.add(m3);
+
+    assertTrue(listener.onExpiryEvents.getExpiredWindow().isEmpty());
+
+    assertEquals(seqIMessage(0, 3), listener.onActivationEvents.getWindow());
+    assertEquals(seqIMessage(2, 3), listener.onActivationNewEvents.getWindow());
+    assertTrue(listener.onActivationExpiredEvents.getExpiredWindow().isEmpty());
+    windowManager.add(m4);
+    windowManager.add(m5);
+
+    // 1 expired ( here the expected window size exceeds and expiration calls on eviction)
+    assertEquals(seqIMessage(0), listener.onExpiryEvents.getExpiredWindow());
+    assertEquals(seqIMessage(1, 5), listener.onActivationEvents.getWindow());
+    assertEquals(seqIMessage(4, 5), listener.onActivationNewEvents.getWindow());
+    assertEquals(seqIMessage(0), listener.onActivationExpiredEvents.getExpiredWindow());
+    listener.clear();
+    windowManager.add(m6);
+    // nothing expires until threshold is hit
+    assertTrue(listener.onExpiryEvents.getExpiredWindow().isEmpty());
+    windowManager.add(m7);
+    // 1 expired ( here the expected window size exceeds and expiration calls on eviction)
+    assertEquals(seqIMessage(1, 2), listener.onExpiryEvents.getExpiredWindow());
+    assertEquals(seqIMessage(3, 7), listener.onActivationEvents.getWindow());
+    assertEquals(seqIMessage(6, 7), listener.onActivationNewEvents.getWindow());
+    assertEquals(seqIMessage(1, 2), listener.onActivationExpiredEvents.getExpiredWindow());
 
   }
+
+  @Test
+  public void testExpireThreshold() throws Exception {
+    int threshold = WindowManager.EXPIRE_EVENTS_THRESHOLD;
+    int windowLength = 5;
+    IEvictionPolicy<Integer> evictionPolicy = new CountEvictionPolicy<Integer>(5);
+    windowManager.setEvictionPolicy(evictionPolicy);
+    IWindowingPolicy<Integer> windowingPolicy
+        = new DurationWindowPolicy<Integer>(new WindowConfig
+        .Duration(1, TimeUnit.HOURS).value, windowManager, evictionPolicy );
+  }
+
 
   private List<Integer> seq(int start, int stop) {
     List<Integer> ints = new ArrayList<>();
@@ -173,6 +225,10 @@ public class WindowManagerTest {
       ints.add(i);
     }
     return ints;
+  }
+
+  private List<IMessage<Integer>> seqIMessage(int start) {
+    return seqIMessage(start, start);
   }
 
   private List<IMessage<Integer>> seqIMessage(int start, int end) {

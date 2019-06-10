@@ -98,7 +98,8 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
-    computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+    //computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }
