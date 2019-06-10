@@ -94,8 +94,11 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
   public void buildConnection(ComputeConnection connection) {
     DataType keyType = TSetUtils.getDataType(getClassK());
     DataType dataType = TSetUtils.getDataType(getClassV());
-    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<>(partitionFunction));
+    connection.keyedGather(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withKeyType(keyType)
+        .withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

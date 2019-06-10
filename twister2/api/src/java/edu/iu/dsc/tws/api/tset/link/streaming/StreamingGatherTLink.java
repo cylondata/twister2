@@ -71,7 +71,7 @@ public class StreamingGatherTLink<T> extends BaseTLink<T> {
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
 
-    connection.gather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   @Override

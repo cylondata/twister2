@@ -58,7 +58,9 @@ public class STWindowCustomExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
-    computeConnection.direct(SOURCE, edge, DataType.INTEGER);
+    computeConnection.direct(SOURCE)
+        .viaEdge(edge)
+        .withDataType(DataType.INTEGER);
 
     return taskGraphBuilder;
   }

@@ -65,7 +65,7 @@ public class DirectTLink<T> extends BaseTLink<T> {
   @Override
   public void buildConnection(ComputeConnection connection) {
     DataType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    connection.direct(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   @Override

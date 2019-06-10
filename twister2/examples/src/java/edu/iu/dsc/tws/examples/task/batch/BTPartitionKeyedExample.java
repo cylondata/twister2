@@ -53,7 +53,10 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     ISink r = new BKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
+    computeConnection.keyedPartition(SOURCE)
+        .viaEdge(edge)
+        .withKeyType(keyType)
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

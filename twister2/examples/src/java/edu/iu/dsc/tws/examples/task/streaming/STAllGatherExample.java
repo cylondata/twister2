@@ -45,7 +45,7 @@ public class STAllGatherExample extends BenchTaskWorker {
     ISink r = new AllGatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, psource);
     computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
-    computeConnection.allgather(SOURCE, edge, dataType);
+    computeConnection.allgather(SOURCE).viaEdge(edge).withDataType(dataType);
     return taskGraphBuilder;
   }
 
