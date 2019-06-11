@@ -41,7 +41,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
   protected String operationName;
   protected ComputeConnection computeConnection;
   protected String edgeName = TaskConfigurations.DEFAULT_EDGE;
-  private DataType opDataType = DataType.OBJECT;
+  protected DataType opDataType = DataType.OBJECT;
   protected Map<String, Object> propertiesMap;
 
   protected AbstractOpsConfig(String source,

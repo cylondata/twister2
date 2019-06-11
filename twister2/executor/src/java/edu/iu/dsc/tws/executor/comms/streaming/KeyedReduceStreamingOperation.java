@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -40,8 +39,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   private SKeyedReduce op;
 
   public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                       Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                       Edge edge) {
+                                       Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -62,7 +60,6 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
     MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
 
-    this.edgeGenerator = e;
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedReduce(newComm, taskPlan, sources, dests, keyType, dataType,
         new ReduceFunctionImpl(edge.getFunction()), new SingularRecvrImpl(), destSelector);
@@ -105,8 +102,7 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

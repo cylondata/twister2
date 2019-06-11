@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.api.IBinaryParallelOperation;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -38,10 +37,9 @@ public class JoinBatchOperation extends AbstractParallelOperation
   protected BJoin op;
 
   public JoinBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                            Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
+                            Set<Integer> sources, Set<Integer> dests,
                             Edge leftEdge, Edge rightEdge) {
-    super(config, network, tPlan, leftEdge.getName());
-    this.edgeGenerator = e;
+    super(config, network, tPlan, leftEdge.getGroup());
 
     DestinationSelector destSelector;
     if (leftEdge.getPartitioner() != null) {
@@ -63,10 +61,8 @@ public class JoinBatchOperation extends AbstractParallelOperation
     op = new BJoin(newComm, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(leftEdge.getKeyType()),
         Utils.dataTypeToMessageType(leftEdge.getDataType()),
-        Utils.dataTypeToMessageType(leftEdge.getDataType()),
+        Utils.dataTypeToMessageType(rightEdge.getDataType()),
         new GatherRecvrImpl(), destSelector, useDisk, keyComparator);
-
-    communicationEdge = e.generate(leftEdge.getName());
   }
 
   @Override
@@ -95,8 +91,7 @@ public class JoinBatchOperation extends AbstractParallelOperation
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
@@ -107,7 +102,7 @@ public class JoinBatchOperation extends AbstractParallelOperation
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

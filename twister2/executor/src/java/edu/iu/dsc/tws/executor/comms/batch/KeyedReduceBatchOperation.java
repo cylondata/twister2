@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -30,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -43,10 +41,8 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   private BKeyedReduce op;
 
   public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   Edge edge) {
+                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
@@ -60,7 +56,6 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
         new ReduceFunctionImpl(edge.getFunction()),
         new BulkReceiverImpl(), Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()), destSelector);
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -100,26 +95,13 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
-    }
-
-    public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
-      BlockingQueue<IMessage> messages = outMessages.get(target);
-      if (messages != null) {
-        if (messages.offer(msg)) {
-          return true;
-        }
-      }
-      return true;
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

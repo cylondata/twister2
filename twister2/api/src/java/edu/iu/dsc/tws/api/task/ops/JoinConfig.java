@@ -45,13 +45,23 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this.withProperty("key-comparator", keyComparator);
   }
 
+  public JoinConfig viaLeftEdge(String edge) {
+    this.edgeName = edge;
+    return this;
+  }
+
   public JoinConfig viaRightEdge(String edge) {
     this.rightEdgeName = edge;
     return this;
   }
 
-  public JoinConfig withDataType(DataType dataType) {
+  public JoinConfig withRightDataType(DataType dataType) {
     this.rightOpDataType = dataType;
+    return this;
+  }
+
+  public JoinConfig withLeftDataType(DataType dataType) {
+    this.opDataType = dataType;
     return this;
   }
 

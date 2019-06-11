@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.batch.BPartition;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -35,8 +34,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   protected BPartition op;
 
   public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                 Set<Integer> sources, Set<Integer> targets,
-                                 EdgeGenerator e, Edge edge) {
+                                 Set<Integer> sources, Set<Integer> targets, Edge edge) {
     super(config, network, tPlan, edge.getName());
     DataType dataType = edge.getDataType();
     String edgeName = edge.getName();
@@ -48,12 +46,10 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     }
     Communicator newComm = channel.newWithConfig(edge.getProperties());
 
-    this.edgeGenerator = e;
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(newComm, taskPlan, sources, targets,
         Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
         new LoadBalanceSelector(), shuffle);
-    communicationEdge = e.generate(edgeName);
   }
 
   public void send(int source, IMessage message) {
@@ -71,14 +67,13 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 
