@@ -10,13 +10,13 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.batch.kmeans.ftolerance;
+package edu.iu.dsc.tws.examples.batch.kmeans.checkpointing;
 
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ftolerance.CheckpointingTaskWorker;
+import edu.iu.dsc.tws.api.task.checkpointing.CheckpointingTaskWorker;
 import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
 import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;

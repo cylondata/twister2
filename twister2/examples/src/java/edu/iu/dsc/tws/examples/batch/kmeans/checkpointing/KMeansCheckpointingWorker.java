@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.batch.kmeans.ftolerance;
+package edu.iu.dsc.tws.examples.batch.kmeans.checkpointing;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskEnvironment;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.task.ftolerance.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
