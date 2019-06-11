@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.api.task.ops;
 
 import java.util.Comparator;
-import java.util.UUID;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.ComputeConnectionUtils;
@@ -28,6 +27,8 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
   private String rightEdgeName;
 
   private DataType rightOpDataType = DataType.OBJECT;
+
+  private String group;
 
   public JoinConfig(String leftParent, String rightParent,
                            ComputeConnection computeConnection) {
@@ -54,6 +55,11 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this;
   }
 
+  public JoinConfig withGroup(String g) {
+    this.group = g;
+    return this;
+  }
+
   @Override
   void validate() {
     if (this.keyCompartor == null) {
@@ -67,11 +73,19 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
 
   public ComputeConnection connect() {
     Edge leftEdge = this.buildEdge();
-    Edge rightEdge = this.buildRightEdge();
+    leftEdge.setEdgeIndex(0);
+    leftEdge.setNumberOfEdges(2);
 
-    String uuid = UUID.randomUUID().toString();
-    leftEdge.setGroup(uuid);
-    rightEdge.setGroup(uuid);
+    Edge rightEdge = this.buildRightEdge();
+    rightEdge.setEdgeIndex(1);
+    rightEdge.setNumberOfEdges(2);
+
+    // we generate the name
+    if (group == null) {
+      group = edgeName + "-" + rightEdgeName + "-" + source + "-" + rightSource;
+    }
+    leftEdge.setGroup(group);
+    rightEdge.setGroup(group);
 
     ComputeConnectionUtils.connectEdge(this.computeConnection, this.source, leftEdge);
     ComputeConnectionUtils.connectEdge(this.computeConnection, this.rightSource, rightEdge);

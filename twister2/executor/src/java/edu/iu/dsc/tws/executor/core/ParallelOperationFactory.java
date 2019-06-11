@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -59,9 +60,14 @@ public class ParallelOperationFactory {
     this.edgeGenerator = e;
   }
 
-  public IBinaryParallelOperation build(Edge leftEdge, Edge rightEdge, Set<Integer> sources,
+  public IBinaryParallelOperation build(List<Edge> edges, Set<Integer> sources,
                                         Set<Integer> dests, OperationMode operationMode) {
     if (operationMode.equals(OperationMode.BATCH)) {
+      if (edges.size() < 1) {
+        throw new RuntimeException("Two edges should be present");
+      }
+      Edge leftEdge = edges.get(0);
+      Edge rightEdge = edges.get(1);
       if (leftEdge.isKeyed() && rightEdge.isKeyed()) {
         if (OperationNames.JOIN.equals(leftEdge.getOperation())) {
           return new JoinBatchOperation(config, channel, taskPlan, sources,

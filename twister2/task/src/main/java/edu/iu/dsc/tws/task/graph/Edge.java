@@ -67,6 +67,16 @@ public class Edge {
    */
   private String group;
 
+  /**
+   * The edge index
+   */
+  private int edgeIndex;
+
+  /**
+   * Number of edges for a particular operation
+   */
+  private int numberOfEdges;
+
   public Edge() {
   }
 
@@ -251,5 +261,21 @@ public class Edge {
 
   public void setGroup(String group) {
     this.group = group;
+  }
+
+  public void setEdgeIndex(int edgeIndex) {
+    this.edgeIndex = edgeIndex;
+  }
+
+  public void setNumberOfEdges(int numberOfEdges) {
+    this.numberOfEdges = numberOfEdges;
+  }
+
+  public int getEdgeIndex() {
+    return edgeIndex;
+  }
+
+  public int getNumberOfEdges() {
+    return numberOfEdges;
   }
 }

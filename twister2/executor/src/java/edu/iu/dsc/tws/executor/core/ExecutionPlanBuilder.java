@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,7 @@ import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.graph.Vertex;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import mpi.Comm;
 
 public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private static final Logger LOG = Logger.getLogger(ExecutionPlanBuilder.class.getName());
@@ -95,6 +97,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private EdgeGenerator edgeGenerator;
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
+
+  /**
+   * Keep track of the grouped operations
+   */
+  private Map<String, Communication> groupedPraOpTable = new HashMap<>();
 
   public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
                               Communicator net, CheckpointingClient checkpointingClient) {
@@ -178,10 +185,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
               getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
 
-          if (!parOpTable.contains(v.getName(), e.getName())) {
-            parOpTable.put(v.getName(), e.getName(),
-                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-          }
+          createCommunication(child, e, v, srcTasks, tarTasks);
           outEdges.put(e.getName(), child.getName());
         }
       }
@@ -197,10 +201,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
               ip.getTaskId(), taskGraph);
 
-          if (!parOpTable.contains(parent.getName(), e.getName())) {
-            parOpTable.put(parent.getName(), e.getName(),
-                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
-          }
+          createCommunication(v, e, parent, srcTasks, tarTasks);
           inEdges.put(e.getName(), parent.getName());
         }
       }
@@ -219,8 +220,15 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       // lets create the communication
       OperationMode operationMode = taskGraph.getOperationMode();
-      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
-          operationMode);
+      IParallelOperation op;
+      if (c.getEdge().size() == 1) {
+        op = opFactory.build(c.getEdge(0), c.getSourceTasks(), c.getTargetTasks(),
+            operationMode);
+      } else if (c.getEdge().size() > 1){
+        op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(), operationMode);
+      } else {
+        throw new RuntimeException("Cannot have communication with 0 edges");
+      }
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
@@ -234,12 +242,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getSourceTask(), i);
-            taskStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+            taskStreamingInstance.registerOutParallelOperation(c.getEdge(0).getName(), op);
             op.registerSync(i, taskStreamingInstance);
           } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
             SourceStreamingInstance sourceStreamingInstance
                 = streamingSourceInstances.get(c.getSourceTask(), i);
-            sourceStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+            sourceStreamingInstance.registerOutParallelOperation(c.getEdge(0).getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());
           }
@@ -250,12 +258,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskStreamingInstance.getInQueue());
-            taskStreamingInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            taskStreamingInstance.registerInParallelOperation(c.getEdge(0).getName(), op);
             op.registerSync(i, taskStreamingInstance);
           } else if (streamingSinkInstances.contains(c.getTargetTask(), i)) {
             SinkStreamingInstance streamingSinkInstance
                 = streamingSinkInstances.get(c.getTargetTask(), i);
-            streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            streamingSinkInstance.registerInParallelOperation(c.getEdge(0).getName(), op);
             op.register(i, streamingSinkInstance.getStreamingInQueue());
             op.registerSync(i, streamingSinkInstance);
           } else {
@@ -269,11 +277,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         for (Integer i : sourcesOfThisWorker) {
           if (batchTaskInstances.contains(c.getSourceTask(), i)) {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getSourceTask(), i);
-            taskBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+            taskBatchInstance.registerOutParallelOperation(c.getEdge(0).getName(), op);
           } else if (batchSourceInstances.contains(c.getSourceTask(), i)) {
             SourceBatchInstance sourceBatchInstance
                 = batchSourceInstances.get(c.getSourceTask(), i);
-            sourceBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
+            sourceBatchInstance.registerOutParallelOperation(c.getEdge(0).getName(), op);
           } else {
             throw new RuntimeException("Not found: " + c.getSourceTask());
           }
@@ -283,11 +291,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           if (batchTaskInstances.contains(c.getTargetTask(), i)) {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskBatchInstance.getInQueue());
-            taskBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            taskBatchInstance.registerInParallelOperation(c.getEdge(0).getName(), op);
             op.registerSync(i, taskBatchInstance);
           } else if (batchSinkInstances.contains(c.getTargetTask(), i)) {
             SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(c.getTargetTask(), i);
-            sinkBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            sinkBatchInstance.registerInParallelOperation(c.getEdge(0).getName(), op);
             op.register(i, sinkBatchInstance.getBatchInQueue());
             op.registerSync(i, sinkBatchInstance);
           } else {
@@ -298,6 +306,25 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
     }
     return execution;
+  }
+
+  private void createCommunication(Vertex v, Edge e, Vertex parent,
+                                   Set<Integer> srcTasks, Set<Integer> tarTasks) {
+    if (!parOpTable.contains(parent.getName(), e.getName())) {
+      Communication comm = new Communication(parent.getName(), v.getName(),
+          srcTasks, tarTasks, e.getNumberOfEdges());
+      comm.addEdge(e.getEdgeIndex(), e);
+      parOpTable.put(parent.getName(), e.getName(), comm);
+      if (e.getGroup() != null) {
+        groupedPraOpTable.put(e.getGroup(), comm);
+      }
+    } else {
+      // check if this is a grouped one
+      if (e.getGroup() != null && groupedPraOpTable.containsKey(e.getGroup())) {
+        Communication comm = groupedPraOpTable.get(e.getGroup());
+        comm.addEdge(e.getEdgeIndex(), e);
+      }
+    }
   }
 
   private Set<Integer> intersectionOfTasks(ContainerPlan cp,
@@ -408,19 +435,24 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   private class Communication {
-    private Edge edge;
+    private List<Edge> edge = new ArrayList<>();
     private Set<Integer> sourceTasks;
     private Set<Integer> targetTasks;
     private String sourceTask;
     private String targetTask;
+    private int numberOfEdges;
 
-    Communication(Edge e, String srcTask, String tarTast,
-                  Set<Integer> srcTasks, Set<Integer> tarTasks) {
-      this.edge = e;
+    Communication(String srcTask, String tarTast,
+                  Set<Integer> srcTasks, Set<Integer> tarTasks, int numberOfEdges) {
       this.targetTasks = tarTasks;
       this.sourceTasks = srcTasks;
       this.sourceTask = srcTask;
       this.targetTask = tarTast;
+      this.numberOfEdges = numberOfEdges;
+    }
+
+    public void addEdge(int index, Edge e) {
+      edge.add(index, e);
     }
 
     Set<Integer> getSourceTasks() {
@@ -431,8 +463,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       return targetTasks;
     }
 
-    public Edge getEdge() {
-      return edge;
+    public Edge getEdge(int index) {
+      return edge.get(index);
     }
 
     String getSourceTask() {
@@ -441,6 +473,14 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     String getTargetTask() {
       return targetTask;
+    }
+
+    public List<Edge> getEdge() {
+      return edge;
+    }
+
+    public int getNumberOfEdges() {
+      return numberOfEdges;
     }
   }
 }
