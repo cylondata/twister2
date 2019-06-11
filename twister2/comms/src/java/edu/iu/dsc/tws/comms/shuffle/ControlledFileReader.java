@@ -228,17 +228,22 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
     return this.keyComparator.compare(this.nextKey(), o.nextKey());
   }
 
+  private static final String RP_KEYED_Q = "KEYED_Q";
+  private static final String RP_VALUES_Q = "VALUES_Q";
+  private static final String RP_VALUE_SIZE_Q = "VALUE_SIZE_Q";
+  private static final String RP_MAPPED_TILL = "MAPPED_TILL";
+
   @Override
   public void createRestorePoint() {
     this.restorePoint = new RestorePoint();
-    this.restorePoint.put("KEYED_Q", new LinkedList<>(this.keysQ));
-    this.restorePoint.put("VALUES_Q", new LinkedList<>(this.valuesQ));
-    this.restorePoint.put("VALUE_SIZE_Q", new LinkedList<>(this.valueSizeQ));
+    this.restorePoint.put(RP_KEYED_Q, new LinkedList<>(this.keysQ));
+    this.restorePoint.put(RP_VALUES_Q, new LinkedList<>(this.valuesQ));
+    this.restorePoint.put(RP_VALUE_SIZE_Q, new LinkedList<>(this.valueSizeQ));
     int bufferPosition = 0;
     if (this.buffer != null) {
       bufferPosition = this.buffer.position();
     }
-    this.restorePoint.put("MAPPED_TILL", this.mappedTill + bufferPosition);
+    this.restorePoint.put(RP_MAPPED_TILL, this.mappedTill + bufferPosition);
   }
 
   @Override
@@ -248,10 +253,10 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
     }
     this.releaseResources(); // release if this is already open
 
-    this.keysQ = (Queue<Object>) this.restorePoint.get("KEYED_Q");
-    this.valuesQ = (Queue<Object>) this.restorePoint.get("VALUES_Q");
-    this.valueSizeQ = (Queue<Integer>) this.restorePoint.get("VALUE_SIZE_Q");
-    this.mappedTill = (long) this.restorePoint.get("MAPPED_TILL");
+    this.keysQ = (Queue<Object>) this.restorePoint.get(RP_KEYED_Q);
+    this.valuesQ = (Queue<Object>) this.restorePoint.get(RP_VALUES_Q);
+    this.valueSizeQ = (Queue<Integer>) this.restorePoint.get(RP_VALUE_SIZE_Q);
+    this.mappedTill = (long) this.restorePoint.get(RP_MAPPED_TILL);
 
     this.open();
   }

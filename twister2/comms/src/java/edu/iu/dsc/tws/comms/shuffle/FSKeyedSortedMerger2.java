@@ -360,6 +360,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     try {
       return new RestorableIterator<Object>() {
 
+        private static final String RP_NEXT_TUPLE = "NEXT_TUPLE";
+        private static final String RP_IT_OF_CURR_KEY = "IT_OF_CURR_KEY";
+
         private FSIterator fsIterator = new FSIterator();
         private Tuple nextTuple = fsIterator.hasNext() ? fsIterator.next() : null;
         private Iterator itOfCurrentKey = null;
@@ -369,9 +372,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         @Override
         public void createRestorePoint() {
           this.restorePoint = new RestorePoint();
-          this.restorePoint.put("NEXT_TUPLE", this.nextTuple);
+          this.restorePoint.put(RP_NEXT_TUPLE, this.nextTuple);
           if (groupByKey) {
-            this.restorePoint.put("IT_OF_CURR_KEY", this.itOfCurrentKey);
+            this.restorePoint.put(RP_IT_OF_CURR_KEY, this.itOfCurrentKey);
           }
           this.fsIterator.createRestorePoint();
         }
@@ -381,8 +384,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           if (!this.hasRestorePoint()) {
             throw new RuntimeException("Couldn't find a valid restore point to restore from.");
           }
-          this.nextTuple = (Tuple) this.restorePoint.get("NEXT_TUPLE");
-          this.itOfCurrentKey = (Iterator) this.restorePoint.get("IT_OF_CURR_KEY");
+          this.nextTuple = (Tuple) this.restorePoint.get(RP_NEXT_TUPLE);
+          this.itOfCurrentKey = (Iterator) this.restorePoint.get(RP_IT_OF_CURR_KEY);
           this.fsIterator.restore();
         }
 
@@ -465,6 +468,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
   private class FSIterator implements RestorableIterator<Object> {
 
+    private static final String RP_SAME_KEY_READER = "SAME_KEY_READER";
+    private static final String RP_FILE_READERS = "FILE_READERS";
 
     private PriorityQueue<ControlledFileReader> controlledFileReaders
         = new PriorityQueue<>(1 + noOfFileWritten);
@@ -535,13 +540,13 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
       if (this.sameKeyReader != null) {
         this.sameKeyReader.createRestorePoint();
-        this.restorePoint.put("SAME_KEY_READER", this.sameKeyReader);
+        this.restorePoint.put(RP_SAME_KEY_READER, this.sameKeyReader);
       }
 
       List<ControlledFileReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
       fileReaderList.forEach(ControlledFileReader::createRestorePoint);
 
-      this.restorePoint.put("FILE_READERS", fileReaderList);
+      this.restorePoint.put(RP_FILE_READERS, fileReaderList);
     }
 
     @Override
@@ -549,14 +554,14 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       if (!this.hasRestorePoint()) {
         throw new RuntimeException("Couldn't find a valid restore point to restore from.");
       }
-      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get("SAME_KEY_READER");
+      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get(RP_SAME_KEY_READER);
       if (this.sameKeyReader != null) {
         this.sameKeyReader.restore();
       }
 
       this.controlledFileReaders.clear();
       List<ControlledFileReader> fileReaderList =
-          (List<ControlledFileReader>) this.restorePoint.get("FILE_READERS");
+          (List<ControlledFileReader>) this.restorePoint.get(RP_FILE_READERS);
 
       fileReaderList.forEach(fr -> {
         fr.restore();
