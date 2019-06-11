@@ -3,88 +3,88 @@
 ###################################################################
 # Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"
 # By default it is roundrobin mode.
-twister2.streaming.taskscheduler: "roundrobin"
+twister2.taskscheduler.streaming: "roundrobin"
 
 # Task Scheduler class for the round robin streaming task scheduler
-twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
 
 # Task Scheduler for the Data Locality Aware Streaming Task Scheduler
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
 
 # Task Scheduler for the FirstFit Streaming Task Scheduler
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
 
 # Task Scheduler for the userDefined Streaming Task Scheduler
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
 
 # Task scheduling mode for the batch jobs "roundrobin" or "datalocalityaware" or "userdefined"
 # By default it is roundrobin mode.
-twister2.batch.taskscheduler: "roundrobin"
+twister2.taskscheduler.batch: "roundrobin"
 
 # Task Scheduler class for the round robin batch task scheduler
-twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
 
 # Task Scheduler for the Data Locality Aware Batch Task Scheduler
-#twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
 
 # Task Scheduler for the userDefined Batch Task Scheduler
-#twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
 
 # Number of task instances to be allocated to each worker/container
-twister2.task.instances: 2
+twister2.taskscheduler.task.instances: 2
 
 # Ram value to be allocated to each task instance
-twister2.task.instance.ram: 512.0
+twister2.taskscheduler.task.instance.ram: 512.0
 
 # Disk value to be allocated to each task instance
-twister2.task.instance.disk: 500.0
+twister2.taskscheduler.task.instance.disk: 500.0
 
-# CPU value to be allocated to each task instance
-twister2.task.instance.cpu: 2.0
-
-# Default Container Padding Values
-# Default padding value of the ram to be allocated to each container
-twister2.ram.padding.container: 2.0
-
-# Default padding value of the disk to be allocated to each container
-twister2.disk.padding.container: 12.0
-
-# CPU padding value to be allocated to each container
-twister2.cpu.padding.container: 1.0
-
-# CPU percentage value to be allocated to each container
-twister2.container.padding.percentage: 2
+# CPU value to be allocated to each task instancetwister2.task.parallelism
+twister2.taskscheduler.instance.cpu: 2.0
 
 #Default Container Instance Values
 # Ram value to be allocated to each container
-twister2.container.instance.ram: 4096.0
+twister2.taskscheduler.container.instance.ram: 4096.0
 
 # Disk value to be allocated to each container
-twister2.container.instance.disk: 8000.0
+twister2.taskscheduler.container.instance.disk: 8000.0
 
-twister2.container.instance.cpu: 16.0
+twister2.taskscheduler.container.instance.cpu: 16.0
+
+# Default Container Padding Values
+# Default padding value of the ram to be allocated to each container
+twister2.taskscheduler.ram.padding.container: 2.0
+
+# Default padding value of the disk to be allocated to each container
+twister2.taskscheduler.disk.padding.container: 12.0
+
+# CPU padding value to be allocated to each container
+twister2.taskscheduler.cpu.padding.container: 1.0
+
+# Percentage value to be allocated to each container
+twister2.taskscheduler.container.padding.percentage: 2
 
 # Static Default Network parameters
 # Bandwidth value to be allocated to each container instance for datalocality scheduling
-twister2.container.instance.bandwidth: 100 #Mbps
+twister2.taskscheduler.container.instance.bandwidth: 100 #Mbps
 
 # Latency value to be allocated to each container instance for datalocality scheduling
-twister2.container.instance.latency: 0.002 #Milliseconds
+twister2.taskscheduler.container.instance.latency: 0.002 #Milliseconds
 
 # Bandwidth to be allocated to each datanode instance for datalocality scheduling
-twister2.datanode.instance.bandwidth: 200 #Mbps
+twister2.taskscheduler.datanode.instance.bandwidth: 200 #Mbps
 
 # Latency value to be allocated to each datanode instance for datalocality scheduling
-twister2.datanode.instance.latency: 0.01 #Milliseconds
+twister2.taskscheduler.datanode.instance.latency: 0.01 #Milliseconds
 
 # Prallelism value to each task instance
-twister2.task.parallelism: 2
+twister2.taskscheduler.task.parallelism: 2
 
 # Task type to each submitted job by default it is "streaming" job.
-twister2.task.type: "streaming"
+twister2.taskscheduler.task.type: "streaming"
 
 # number of threads per worker
-twister2.exector.worker.threads: 1
+twister2.exector.worker.threads: 2
 
 # name of the batch executor
 twister2.executor.batch.name: "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2"
