@@ -9,7 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.task.ftolerance;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.checkpointing.worker;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -28,12 +40,13 @@ import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.comms.api.DataPacker;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
-import static edu.iu.dsc.tws.common.config.Context.JOB_ID;
+import static edu.iu.dsc.tws.common.config.Context.JOB_NAME;
 
 public final class CheckpointingWorkerEnv {
   private static final Logger LOG = Logger.getLogger(CheckpointingWorkerEnv.class.getName());
 
   private static final String WORKER_CHECKPOINT_FAMILY = "worker";
+  private static final String WORKER_CHECKPOINT_DIR = "twister2-checkpoints";
 
   private final int workerId;
   private long latestVersion;
@@ -106,7 +119,8 @@ public final class CheckpointingWorkerEnv {
 
       StateStore localCheckpointStore = CheckpointUtils.getStateStore(config);
       // one snapshot store for worker. Each node may have snapshots of multiple  workers
-      localCheckpointStore.init(config, config.getStringValue(JOB_ID), Integer.toString(workerId));
+      localCheckpointStore.init(config, WORKER_CHECKPOINT_DIR, config.getStringValue(JOB_NAME),
+          Integer.toString(workerId));
 
       Set<Integer> workerIDs = Collections.emptySet();
       if (workerId == 0) {
