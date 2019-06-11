@@ -100,10 +100,12 @@ public final class JoinUtils {
       private Tuple backedUpLeft;
       private Tuple backedUpRight;
 
-      //
+      // flags to mark the required side of iteration
       private boolean shouldDoLeftIterations = false;
       private boolean shouldDoRightIterations = false;
 
+      // keeps the no of iterations done on each side of the relationship while keeping the
+      // other side constant
       private int leftIterations = 0;
       private int rightIterations = 0;
 
@@ -128,9 +130,8 @@ public final class JoinUtils {
         }
 
         /*
-         if this is the end of left iteration(jtFromLeftIt == null) &&
-         left iteration has produced some results(used leftIt.next())
-         at least once (this.leftIterations), then restore leftIt
+         if this is the end of left iteration(jtFromLeftIt == null), configure the right iterations
+         to run next and restore left iterator
         */
         if (jtFromLeftIt == null) {
           this.leftIterations = 0;
@@ -193,13 +194,15 @@ public final class JoinUtils {
           this.currentRight = this.backedUpRight != null ? this.backedUpRight : rightIt.next();
           this.backedUpRight = null;
 
+          // still we don't need left or right iterations at this point
           this.shouldDoLeftIterations = false;
           this.shouldDoRightIterations = false;
 
           if (comparator.compare(this.currentLeft, this.currentRight) == 0) {
             this.nextJoinTuple = new JoinedTuple<>(this.currentLeft.getKey(),
                 this.currentLeft.getValue(), this.currentRight.getValue());
-            // schedule to run the left iteration next
+            // schedule to run the left iteration next.
+            // Left iteration at the end will schedule right iteration
             this.shouldDoLeftIterations = true;
             break;
           } else if (comparator.compare(this.currentLeft, this.currentRight) < 0) {
@@ -214,7 +217,6 @@ public final class JoinUtils {
             this.backedUpLeft = this.currentLeft;
           }
         }
-
       }
 
       {
