@@ -356,13 +356,46 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   /**
    * This method gives the values
    */
-  public Iterator<Object> readIterator() {
+  public RestorableIterator<Object> readIterator() {
     try {
-      return new Iterator<Object>() {
+      return new RestorableIterator<Object>() {
 
         private FSIterator fsIterator = new FSIterator();
         private Tuple nextTuple = fsIterator.hasNext() ? fsIterator.next() : null;
         private Iterator itOfCurrentKey = null;
+
+        private RestorePoint restorePoint;
+
+        @Override
+        public void createRestorePoint() {
+          this.restorePoint = new RestorePoint();
+          this.restorePoint.put("NEXT_TUPLE", this.nextTuple);
+          if (groupByKey) {
+            this.restorePoint.put("IT_OF_CURR_KEY", this.itOfCurrentKey);
+          }
+          this.fsIterator.createRestorePoint();
+        }
+
+        @Override
+        public void restore() {
+          if (!this.hasRestorePoint()) {
+            throw new RuntimeException("Couldn't find a valid restore point to restore from.");
+          }
+          this.nextTuple = (Tuple) this.restorePoint.get("NEXT_TUPLE");
+          this.itOfCurrentKey = (Iterator) this.restorePoint.get("IT_OF_CURR_KEY");
+          this.fsIterator.restore();
+        }
+
+        @Override
+        public boolean hasRestorePoint() {
+          return this.restorePoint != null;
+        }
+
+        @Override
+        public void clearRestorePoint() {
+          this.restorePoint = null;
+          this.fsIterator.clearRestorePoint();
+        }
 
         private void skipKeys() {
           //user is trying to skip keys. For now, we are iterating over them internally
@@ -430,12 +463,14 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     }
   }
 
-  private class FSIterator implements Iterator<Object> {
+  private class FSIterator implements RestorableIterator<Object> {
 
 
     private PriorityQueue<ControlledFileReader> controlledFileReaders
         = new PriorityQueue<>(1 + noOfFileWritten);
     private ControlledFileReader sameKeyReader;
+
+    private RestorePoint restorePoint;
 
     FSIterator() {
       ControlledFileReaderFlags meta = new ControlledFileReaderFlags(
@@ -492,6 +527,53 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         fr.releaseResources();
       }
       return nextTuple;
+    }
+
+    @Override
+    public void createRestorePoint() {
+      this.restorePoint = new RestorePoint();
+
+      if (this.sameKeyReader != null) {
+        this.sameKeyReader.createRestorePoint();
+        this.restorePoint.put("SAME_KEY_READER", this.sameKeyReader);
+      }
+
+      List<ControlledFileReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
+      fileReaderList.forEach(ControlledFileReader::createRestorePoint);
+
+      this.restorePoint.put("FILE_READERS", fileReaderList);
+    }
+
+    @Override
+    public void restore() {
+      if (!this.hasRestorePoint()) {
+        throw new RuntimeException("Couldn't find a valid restore point to restore from.");
+      }
+      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get("SAME_KEY_READER");
+      if (this.sameKeyReader != null) {
+        this.sameKeyReader.restore();
+      }
+
+      this.controlledFileReaders.clear();
+      List<ControlledFileReader> fileReaderList =
+          (List<ControlledFileReader>) this.restorePoint.get("FILE_READERS");
+
+      fileReaderList.forEach(fr -> {
+        fr.restore();
+        controlledFileReaders.add(fr);
+      });
+    }
+
+    @Override
+    public boolean hasRestorePoint() {
+      return this.restorePoint != null;
+    }
+
+    @Override
+    public void clearRestorePoint() {
+      this.restorePoint = null;
+      this.controlledFileReaders.iterator()
+          .forEachRemaining(ControlledFileReader::clearRestorePoint);
     }
   }
 
