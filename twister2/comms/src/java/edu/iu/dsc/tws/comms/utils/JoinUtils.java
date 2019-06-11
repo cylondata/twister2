@@ -83,7 +83,7 @@ public final class JoinUtils {
   }
 
   /**
-   * Non
+   * This util can be used to perform disk based inner join operations.
    */
   public static Iterator<JoinedTuple> innerJoin(RestorableIterator<Tuple<?, ?>> leftIt,
                                                 RestorableIterator<Tuple<?, ?>> rightIt,
@@ -95,9 +95,12 @@ public final class JoinUtils {
       private Tuple currentLeft;
       private Tuple currentRight;
 
+      // backup variables will hold a Tuple temporary if had to call .next()
+      // once during the join operation before creating a iterator restore point.
       private Tuple backedUpLeft;
       private Tuple backedUpRight;
 
+      //
       private boolean shouldDoLeftIterations = false;
       private boolean shouldDoRightIterations = false;
 
@@ -162,9 +165,8 @@ public final class JoinUtils {
         }
 
         /*
-         if this is the end of left iteration(jtFromRightIt == null) &&
-         left iteration has produced some results(used leftIt.next())
-         at least once (this.leftIterations), then restore leftIt
+         if this is the end of left iteration(jtFromRightIt == null), configure the right iterations
+         to run next and restore left iterator
         */
         if (jtFromRightIt == null) {
           this.rightIterations = 0;
@@ -197,6 +199,7 @@ public final class JoinUtils {
           if (comparator.compare(this.currentLeft, this.currentRight) == 0) {
             this.nextJoinTuple = new JoinedTuple<>(this.currentLeft.getKey(),
                 this.currentLeft.getValue(), this.currentRight.getValue());
+            // schedule to run the left iteration next
             this.shouldDoLeftIterations = true;
             break;
           } else if (comparator.compare(this.currentLeft, this.currentRight) < 0) {
@@ -215,6 +218,7 @@ public final class JoinUtils {
       }
 
       {
+        // start by creating the first join tuple
         this.makeNextJoinTuple();
       }
 
