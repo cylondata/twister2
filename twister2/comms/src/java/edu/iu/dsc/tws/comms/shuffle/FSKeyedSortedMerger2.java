@@ -477,8 +477,10 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     private RestorePoint restorePoint;
 
+    private ControlledFileReaderFlags meta;
+
     FSIterator() {
-      ControlledFileReaderFlags meta = new ControlledFileReaderFlags(
+      this.meta = new ControlledFileReaderFlags(
           Math.max(numOfBytesInMemory, largestTupleSizeRecorded.get()),
           keyComparator
       );
@@ -554,6 +556,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       if (!this.hasRestorePoint()) {
         throw new RuntimeException("Couldn't find a valid restore point to restore from.");
       }
+      this.meta.reset();
       this.sameKeyReader = (ControlledFileReader) this.restorePoint.get(RP_SAME_KEY_READER);
       if (this.sameKeyReader != null) {
         this.sameKeyReader.restore();
