@@ -13,27 +13,32 @@ package edu.iu.dsc.tws.comms.dfw.io.join;
 
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.comms.utils.JoinUtils;
+import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 
-public class DJoinBatchFinalReceiver2 implements MessageReceiver {
+public class JoinBatchFinalReceiver2 implements MessageReceiver {
+  private static final Logger LOG = Logger.getLogger(JoinBatchFinalReceiver2.class.getName());
+
   /**
    * The left receiver
    */
-  private DPartitionBatchFinalReceiver leftReceiver;
+  private JoinPartitionBatchReceiver leftReceiver;
 
   /**
    * The right receiver
    */
-  private DPartitionBatchFinalReceiver rightReceiver;
+  private JoinPartitionBatchReceiver rightReceiver;
 
   /**
    * The user provided receiver
@@ -43,22 +48,25 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
   /**
    * The iterators returned by left
    */
-  private Map<Integer, Iterator<Object>> leftValues;
+  private Map<Integer, List<Tuple>> leftValues;
 
   /**
    * The iterators return by right
    */
-  private Map<Integer, Iterator<Object>> rightValues;
+  private Map<Integer, List<Tuple>> rightValues;
 
-  public DJoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
-                                  List<String> shuffleDirs, Comparator<Object> com) {
+  /**
+   * Comparator
+   */
+  private KeyComparatorWrapper comparator;
+
+  public JoinBatchFinalReceiver2(BulkReceiver bulkReceiver, Comparator<Object> com) {
     this.bulkReceiver = bulkReceiver;
-    this.leftReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(0),
-        true, shuffleDirs, com, false);
-    this.rightReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(1),
-        true, shuffleDirs, com, false);
+    this.leftReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(0), 0);
+    this.rightReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(1), 1);
     this.leftValues = new HashMap<>();
     this.rightValues = new HashMap<>();
+    this.comparator = new KeyComparatorWrapper(com);
   }
 
   @Override
@@ -114,7 +122,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     return leftReceiver.progress() | rightReceiver.progress();
   }
 
-  private class InnerBulkReceiver implements BulkReceiver {
+  private class InnerBulkReceiver implements SingularReceiver {
     private int tag;
 
     InnerBulkReceiver(int tag) {
@@ -126,18 +134,22 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     }
 
     @Override
-    public boolean receive(int target, Iterator<Object> it) {
+    public boolean receive(int target, Object it) {
       if (tag == 0) {
-        leftValues.put(target, it);
+        leftValues.put(target, (List<Tuple>) it);
 
         if (rightValues.containsKey(target)) {
-          bulkReceiver.receive(target, it);
+          List<Object> results = JoinUtils.innerJoin(leftValues.get(target),
+              rightValues.get(target), comparator);
+          bulkReceiver.receive(target, results.iterator());
         }
       } else {
-        rightValues.put(target, it);
+        rightValues.put(target, (List<Tuple>) it);
 
         if (leftValues.containsKey(target)) {
-          bulkReceiver.receive(target, it);
+          List<Object> results = JoinUtils.innerJoin(leftValues.get(target),
+              rightValues.get(target), comparator);
+          bulkReceiver.receive(target, results.iterator());
         }
       }
       return true;

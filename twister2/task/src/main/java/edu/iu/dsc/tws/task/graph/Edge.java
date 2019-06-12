@@ -65,7 +65,7 @@ public class Edge {
   /**
    * Multiple edges may be in a single operation. We need to configure the group
    */
-  private String group;
+  private String targetEdge;
 
   /**
    * The edge index
@@ -255,12 +255,12 @@ public class Edge {
    * Get the group name, if the group is set, multiple edges can belong to a same group
    * @return the group
    */
-  public String getGroup() {
-    return group;
+  public String getTargetEdge() {
+    return targetEdge;
   }
 
-  public void setGroup(String group) {
-    this.group = group;
+  public void setTargetEdge(String targetEdge) {
+    this.targetEdge = targetEdge;
   }
 
   public void setEdgeIndex(int edgeIndex) {

@@ -17,7 +17,6 @@ import java.util.Set;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.executor.api.IBinaryParallelOperation;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
@@ -56,7 +55,7 @@ public class ParallelOperationFactory {
     this.taskPlan = plan;
   }
 
-  public IBinaryParallelOperation build(List<Edge> edges, Set<Integer> sources,
+  public IParallelOperation build(List<Edge> edges, Set<Integer> sources,
                                         Set<Integer> dests, OperationMode operationMode) {
     if (operationMode.equals(OperationMode.BATCH)) {
       if (edges.size() < 1) {

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,11 +96,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
-  /**
-   * Keep track of the grouped operations
-   */
-  private Map<String, Communication> groupedPraOpTable = new HashMap<>();
-
   public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
                               Communicator net, CheckpointingClient checkpointingClient) {
     this.workerId = workerID;
@@ -161,7 +157,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     // for each task we are going to create the communications
     for (TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
-      Map<String, String> inEdges = new HashMap<>();
+      Map<String, Set<String>> inEdges = new HashMap<>();
       Map<String, String> outEdges = new HashMap<>();
       if (v == null) {
         throw new RuntimeException("Non-existing task scheduled: " + ip.getTaskName());
@@ -198,11 +194,18 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
           createCommunication(v, e, parent, srcTasks, tarTasks);
           // if we are a grouped edge, we have to use the group name
-          if (e.getGroup() == null) {
-            inEdges.put(e.getName(), parent.getName());
+          String inEdge;
+          if (e.getTargetEdge() == null) {
+            inEdge = e.getName();
           } else {
-            inEdges.put(e.getGroup(), parent.getName());
+            inEdge = e.getTargetEdge();
           }
+
+          Set<String> parents = inEdges.get(inEdge);
+          if (parents == null) {
+            parents = new HashSet<>();
+          }
+          parents.add(inEdge);
         }
       }
 
@@ -239,7 +242,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       // we use the target edge as the group name
       String targetEdge;
       if (c.getEdge().size() > 1) {
-        targetEdge = c.getEdge(0).getGroup();
+        targetEdge = c.getEdge(0).getTargetEdge();
       } else {
         targetEdge = c.getEdge(0).getName();
       }
@@ -329,23 +332,28 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     return execution;
   }
 
-  private void createCommunication(Vertex v, Edge e, Vertex parent,
+  private void createCommunication(Vertex node, Edge e, Vertex parent,
                                    Set<Integer> srcTasks, Set<Integer> tarTasks) {
-    if (!parOpTable.contains(parent.getName(), e.getName())) {
-      Communication comm = new Communication(v.getName(),
-          srcTasks, tarTasks, e.getNumberOfEdges());
-      comm.addEdge(e.getEdgeIndex(), e);
-      comm.addSourceTask(e.getEdgeIndex(), parent.getName());
-      parOpTable.put(parent.getName(), e.getName(), comm);
-      if (e.getGroup() != null) {
-        groupedPraOpTable.put(e.getGroup(), comm);
+    if (e.getTargetEdge() == null) {
+      if (!parOpTable.contains(parent.getName(), e.getName())) {
+        Communication comm = new Communication(node.getName(),
+            srcTasks, tarTasks, e.getNumberOfEdges());
+        comm.addEdge(e.getEdgeIndex(), e);
+        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+        parOpTable.put(parent.getName(), e.getName(), comm);
       }
     } else {
       // check if this is a grouped one
-      if (e.getGroup() != null && groupedPraOpTable.containsKey(e.getGroup())) {
-        Communication comm = groupedPraOpTable.get(e.getGroup());
+      if (parOpTable.contains(parent.getName(), e.getTargetEdge())) {
+        Communication comm = parOpTable.get(parent.getName(), e.getTargetEdge());
         comm.addEdge(e.getEdgeIndex(), e);
-        comm.addSourceTask(e.getEdgeIndex(), v.getName());
+        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+      } else {
+        Communication comm = new Communication(node.getName(),
+            srcTasks, tarTasks, e.getNumberOfEdges());
+        comm.addEdge(e.getEdgeIndex(), e);
+        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+        parOpTable.put(parent.getName(), e.getTargetEdge(), comm);
       }
     }
   }
@@ -368,7 +376,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                                         String taskGraphName,
                                         TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
-                                        Map<String, String> inEdges,
+                                        Map<String, Set<String>> inEdges,
                                         Map<String, String> outEdges,
                                         TaskSchedulePlan taskSchedule, long tasksVersion) {
     // lets add the task

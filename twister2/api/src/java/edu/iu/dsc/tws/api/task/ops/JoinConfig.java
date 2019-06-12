@@ -34,6 +34,7 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
                            ComputeConnection computeConnection) {
     super(leftParent, OperationNames.JOIN, computeConnection);
     this.rightSource = rightParent;
+    this.withProperty("use-disk", false);
   }
 
   public JoinConfig useDisk(boolean useDisk) {
@@ -94,8 +95,8 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     if (group == null) {
       group = edgeName + "-" + rightEdgeName + "-" + source + "-" + rightSource;
     }
-    leftEdge.setGroup(group);
-    rightEdge.setGroup(group);
+    leftEdge.setTargetEdge(group);
+    rightEdge.setTargetEdge(group);
 
     ComputeConnectionUtils.connectEdge(this.computeConnection, this.source, leftEdge);
     ComputeConnectionUtils.connectEdge(this.computeConnection, this.rightSource, rightEdge);
