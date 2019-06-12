@@ -106,7 +106,7 @@ public final class TaskEnvironment {
     return new TaskEnvironment(config, workerId, wController, vVolume);
   }
 
-  public static TaskEnvironment init(WorkerEnv workerEnv){
+  public static TaskEnvironment init(WorkerEnv workerEnv) {
     return new TaskEnvironment(workerEnv);
   }
 

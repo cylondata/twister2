@@ -87,7 +87,7 @@ public class TaskExecutor {
     this.checkpointingClient = checkpointingClient;
   }
 
-  public TaskExecutor(WorkerEnv workerEnv){
+  public TaskExecutor(WorkerEnv workerEnv) {
     this.config = workerEnv.getConfig();
     this.workerID = workerEnv.getWorkerId();
     this.workerInfoList = workerEnv.getWorkerList();

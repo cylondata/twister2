@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -40,10 +40,7 @@ public class BDirectExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     if (!jobParameters.getTaskStages().get(0).equals(jobParameters.getTaskStages().get(1))) {
       int min = Math.min(jobParameters.getTaskStages().get(0),
           jobParameters.getTaskStages().get(1));
@@ -58,13 +55,14 @@ public class BDirectExample extends BenchWorker {
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
+
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
     for (int i = 0; i < noOfTargetTasks; i++) {
       targets.add(noOfSourceTasks + i);
     }
 
     // create the communication
-    direct = new BDirect(communicator, taskPlan, sources, targets,
+    direct = new BDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,
         new DirectReceiver(), MessageTypes.INTEGER_ARRAY);
 
 

@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
@@ -126,17 +127,34 @@ public final class Utils {
   /**
    * Create task plan according to stages
    *
-   * @param cfg configuration
+   * @param workerEnv worker environment
    * @param noOfTaskEachStage no of tasks at each stage
    * @return task plan
+   */
+
+  public static TaskPlan createStageTaskPlan(WorkerEnv workerEnv, List<Integer> noOfTaskEachStage) {
+    return createStageTaskPlan(workerEnv.getConfig(), workerEnv.getWorkerId(), noOfTaskEachStage,
+        workerEnv.getWorkerList());
+  }
+
+  // todo: remove this signature
+  /**
+   * create task plan
+   * @param cfg
+   * @param workerID
+   * @param noOfTaskEachStage
+   * @param workerList
+   * @return
    */
   public static TaskPlan createStageTaskPlan(Config cfg, int workerID,
                                              List<Integer> noOfTaskEachStage,
                                              List<JobMasterAPI.WorkerInfo> workerList) {
+//    int workerID = workerEnv.getWorkerId();
+//    List<JobMasterAPI.WorkerInfo> workerList = workerEnv.getWorkerList();
+
     int noOfContainers = workerList.size();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToExeuctors = new HashMap<>();
-    int thisExecutor = workerID;
 
     Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode =
         WorkerResourceUtils.getWorkersPerNode(workerList);
@@ -179,7 +197,7 @@ public final class Utils {
 //    groupsToExeuctors.put(2, new HashSet<>(Arrays.asList(0)));
 //    groupsToExeuctors.put(3, new HashSet<>(Arrays.asList(3)));
 
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, nodeToTasks, thisExecutor);
+    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, nodeToTasks, workerID);
   }
 
   public static Set<Integer> getTasksOfExecutor(int exec, TaskPlan plan,

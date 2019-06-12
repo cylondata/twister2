@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
@@ -46,10 +46,7 @@ public class SGatherExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -59,9 +56,8 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    gather = new SGather(communicator, taskPlan, sources, target, MessageTypes.INTEGER_ARRAY,
-        new FinalReduceReceiver());
-
+    gather = new SGather(workerEnv.getCommunicator(), taskPlan, sources, target,
+        MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

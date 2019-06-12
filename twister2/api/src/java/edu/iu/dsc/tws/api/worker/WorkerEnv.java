@@ -50,8 +50,10 @@ public final class WorkerEnv {
   private Communicator communicator;
   private TWSChannel channel;
 
+  private static volatile WorkerEnv workerEnv;
 
-  public WorkerEnv(Config config, int workerId, IWorkerController workerController,
+
+  private WorkerEnv(Config config, int workerId, IWorkerController workerController,
                    IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.config = config;
     this.workerId = workerId;
@@ -112,5 +114,18 @@ public final class WorkerEnv {
   public void close() {
     this.communicator.close();
     this.channel.close();
+  }
+
+  public static WorkerEnv init(Config config, int workerId, IWorkerController workerController,
+                               IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    if (workerEnv == null) {
+      synchronized (WorkerEnv.class) {
+        if (workerEnv == null) {
+          workerEnv = new WorkerEnv(config, workerId, workerController, persistentVolume,
+              volatileVolume);
+        }
+      }
+    }
+    return workerEnv;
   }
 }

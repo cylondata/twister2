@@ -12,16 +12,15 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
@@ -48,22 +47,15 @@ public class SAllGatherExample extends BenchWorker {
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
-    Set<Integer> sources = new HashSet<>();
+  protected void execute(WorkerEnv workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    Set<Integer> sources = generateSet(0, noOfSourceTasks);
+
     int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = new HashSet<>();
-    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
-      targets.add(i);
-    }
+    Set<Integer> targets = generateSet(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks);
+
     // create the communication
-    gather = new SAllGather(communicator, taskPlan, sources, targets,
+    gather = new SAllGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
         new FinalReduceReceiver(),
         MessageTypes.INTEGER_ARRAY);
 

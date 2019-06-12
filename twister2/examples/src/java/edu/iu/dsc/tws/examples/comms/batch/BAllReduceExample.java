@@ -12,16 +12,15 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllReduce;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
@@ -42,22 +41,15 @@ public class BAllReduceExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
-    Set<Integer> sources = new HashSet<>();
+  protected void execute(WorkerEnv workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    Set<Integer> sources = generateSet(0, noOfSourceTasks);
+
     int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = new HashSet<>();
-    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
-      targets.add(i);
-    }
+    Set<Integer> targets = generateSet(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks);
+
     // create the communication
-    reduce = new BAllReduce(communicator, taskPlan, sources, targets,
+    reduce = new BAllReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);

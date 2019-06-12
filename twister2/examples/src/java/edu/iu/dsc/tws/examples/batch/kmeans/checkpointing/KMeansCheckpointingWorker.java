@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskEnvironment;
 import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.api.worker.checkpointing.CheckpointingWorkerEnv;
 import edu.iu.dsc.tws.checkpointing.api.Snapshot;
 import edu.iu.dsc.tws.common.config.Config;

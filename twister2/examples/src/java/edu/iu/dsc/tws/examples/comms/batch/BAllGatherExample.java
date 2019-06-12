@@ -13,17 +13,16 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.examples.Utils;
@@ -47,23 +46,16 @@ public class BAllGatherExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
-    Set<Integer> sources = new HashSet<>();
+  protected void execute(WorkerEnv workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    Set<Integer> sources = generateSet(0, noOfSourceTasks);
+
     int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = new HashSet<>();
-    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
-      targets.add(i);
-    }
+    Set<Integer> targets = generateSet(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks);
+
     // create the communication
-    gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
-        MessageTypes.INTEGER_ARRAY);
+    gather = new BAllGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
+        new FinalSingularReceiver(), MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
