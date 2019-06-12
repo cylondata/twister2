@@ -1,15 +1,23 @@
-twister2.hadoop.home: "${HADOOP_HOME}"
+#Home directory of the hadoop
+twister2.data.hadoop.home: "${HADOOP_HOME}"
 
-twister2.hdfs.url: "hdfs://hdfshostname:9000"
+#Specify the URL of the namenode with port
+twister2.data.hdfs.url: "hdfs://namenode:9000"
 
-twister2.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
+#specify the hdfs class
+twister2.data.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
 
-twister2.hdfs.implementation.key: "fs.hdfs.impl"
+#Specify the hdfs key
+twister2.data.hdfs.implementation.key: "fs.hdfs.impl"
 
-twister2.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
+#Specify the config directory of the hdfs
+twister2.data.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
 
-twister2.hdfs.data.directory: "/user/userxxx/"
+#Specify the data directory of the hdfs
+twister2.data.hdfs.data.directory: "/user/username/"
 
-twister2.hdfs.namenode: "namenode.domain.name"
+#Specify the name of the namenode
+twister2.data.hdfs.namenode: "namenode.domain.name"
 
-twister2.hdfs.namenode.port: "9000"
+#Specify the namenode port
+twister2.data.hdfs.namenode.port: "9000"
