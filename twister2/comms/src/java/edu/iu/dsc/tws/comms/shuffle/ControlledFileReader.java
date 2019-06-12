@@ -232,6 +232,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
   private static final String RP_VALUES_Q = "VALUES_Q";
   private static final String RP_VALUE_SIZE_Q = "VALUE_SIZE_Q";
   private static final String RP_MAPPED_TILL = "MAPPED_TILL";
+  private static final String RP_KEEP_OPEN = "KEEP_OPEN";
 
   @Override
   public void createRestorePoint() {
@@ -244,6 +245,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
       bufferPosition = this.buffer.position();
     }
     this.restorePoint.put(RP_MAPPED_TILL, this.mappedTill + bufferPosition);
+    this.restorePoint.put(RP_KEEP_OPEN, this.buffer != null);
   }
 
   @Override
@@ -251,6 +253,10 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
     if (!this.hasRestorePoint()) {
       throw new RuntimeException("Couldn't find a restore point to restore from.");
     }
+
+    boolean shouldKeepOpen = (boolean) this.restorePoint.getOrDefault(RP_KEEP_OPEN,
+        false);
+
     this.releaseResources(); // release if this is already open
 
     this.keysQ = (Queue<Object>) this.restorePoint.get(RP_KEYED_Q);
@@ -258,7 +264,9 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
     this.valueSizeQ = (Queue<Integer>) this.restorePoint.get(RP_VALUE_SIZE_Q);
     this.mappedTill = (long) this.restorePoint.get(RP_MAPPED_TILL);
 
-    this.open();
+    if (shouldKeepOpen) {
+      this.open();
+    }
   }
 
   @Override
