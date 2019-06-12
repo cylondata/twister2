@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -40,6 +41,8 @@ public class JoinBatchOperation extends AbstractParallelOperation {
   private Edge leftEdge;
 
   private Edge rightEdge;
+
+  private Set<Integer> finishedSources = new HashSet<>();
 
   public JoinBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                             Set<Integer> sources, Set<Integer> dests,
@@ -113,17 +116,22 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void finish(int source) {
-    op.finish(source);
+    if (!finishedSources.contains(source)) {
+      op.finish(source);
+      finishedSources.add(source);
+    }
   }
 
   @Override
   public void close() {
     op.close();
+    finishedSources.clear();
   }
 
   @Override
   public void reset() {
     op.reset();
+    finishedSources.clear();
   }
 
   @Override
