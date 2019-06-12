@@ -17,17 +17,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
@@ -52,8 +50,6 @@ public abstract class BenchWorker implements IWorker {
 
   protected JobParameters jobParameters;
 
-  protected TWSChannel channel;
-
   protected Communicator communicator;
 
   protected final Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
@@ -72,6 +68,7 @@ public abstract class BenchWorker implements IWorker {
   protected BenchmarkResultsRecorder resultsRecorder;
 
   private long streamWait = 0;
+  private WorkerEnv workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -91,24 +88,18 @@ public abstract class BenchWorker implements IWorker {
     this.config = cfg;
     this.workerId = workerID;
 
-    //initialize common thread pool
-    CommonThreadPool.init(config);
+    // create a worker environment
+    this.workerEnv = new WorkerEnv(cfg, workerID, workerController, persistentVolume,
+        volatileVolume);
 
-    try {
-      this.workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+    this.workerList = workerEnv.getWorkerList();
 
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
         jobParameters.getTaskStages(), workerList);
 
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
     // create the communicator
-    communicator = new Communicator(cfg, channel);
+    communicator = workerEnv.getCommunicator();
 
     //todo collect experiment data : will be removed
     experimentData = new ExperimentData();
@@ -167,7 +158,7 @@ public abstract class BenchWorker implements IWorker {
         streamWait = 0;
       }
       // communicationProgress the channel
-      channel.progress();
+      workerEnv.getChannel().progress();
       // we should communicationProgress the communication directive
       needProgress = progressCommunication();
     }
