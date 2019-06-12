@@ -9,16 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.manage;
+package edu.iu.dsc.tws.task.api.window.event;
 
-import java.io.Serializable;
+import edu.iu.dsc.tws.task.api.window.api.EventImpl;
 
-import edu.iu.dsc.tws.task.api.IMessage;
+public class WatermarkEvent<T> extends EventImpl<T> {
+  public WatermarkEvent(long t) {
+    super(null, t);
+  }
 
-public interface IManager<T> extends Serializable {
+  @Override
+  public boolean isWatermark() {
+    return true;
+  }
 
-  void add(IMessage<T> message);
-
-  boolean onEvent();
-
+  @Override
+  public String toString() {
+    return "WatermarkEvent : " + super.toString();
+  }
 }

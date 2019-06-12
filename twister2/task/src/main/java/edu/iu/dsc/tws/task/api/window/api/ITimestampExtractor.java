@@ -9,16 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.manage;
+package edu.iu.dsc.tws.task.api.window.api;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.task.api.IMessage;
+public interface ITimestampExtractor<T> extends Serializable {
 
-public interface IManager<T> extends Serializable {
-
-  void add(IMessage<T> message);
-
-  boolean onEvent();
+  long extractTimestamp(T t);
 
 }

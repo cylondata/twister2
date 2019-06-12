@@ -11,31 +11,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.policy.trigger.count;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.window.api.DefaultEvictionContext;
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 
-public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
-
-  private static final Logger LOG = Logger.getLogger(CountWindowPolicy.class.getName());
+public class WatermarkCountWindowPolicy<T> extends CountWindowPolicy<T> {
 
   private final long count;
   private final AtomicInteger currentCount;
   private final IManager manager;
+  private final WindowManager<T> windowManager;
   private final IEvictionPolicy<T> evictionPolicy;
   private boolean started;
+  private long lastProcessedTimestamp = 0;
 
-  public CountWindowPolicy(long count, IManager manager, IEvictionPolicy<T> evictionPolicy) {
+  public WatermarkCountWindowPolicy(long count, IManager manager,
+                                    IEvictionPolicy<T> evictionPolicy,
+                                    WindowManager<T> winManager) {
+    super(count, manager, evictionPolicy);
     this.count = count;
     this.manager = manager;
+    this.windowManager = winManager;
     this.evictionPolicy = evictionPolicy;
     this.currentCount = new AtomicInteger();
     this.started = false;
+
   }
 
   @Override
@@ -50,37 +55,47 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
 
   @Override
   public void track(Event<T> event) {
-    if (started && !event.isWatermark()) {
-      if (currentCount.incrementAndGet() >= count) {
-        evictionPolicy.setContext(new DefaultEvictionContext(System.currentTimeMillis()));
-        this.manager.onEvent();
-      }
+    if (started && event.isWatermark()) {
+      onWatermarkEvent(event);
     }
   }
 
   @Override
   public void reset() {
-    this.currentCount.set(0);
+    // NO IMPLEMENTATION
   }
 
   @Override
   public void start() {
-    this.started = true;
+    started = true;
   }
 
   @Override
   public void shutdown() {
+    // NO IMPLEMENTATION
+  }
 
+  private void onWatermarkEvent(Event<T> watermarkEvent) {
+    long watermarkTimestamp = watermarkEvent.getTimeStamp();
+    List<Long> eventTimestamps = windowManager.getSlidingCountTimestamps(lastProcessedTimestamp,
+        watermarkTimestamp, count);
+    for (long t : eventTimestamps) {
+      evictionPolicy.setContext(new DefaultEvictionContext(t, null, Long.valueOf(count)));
+      manager.onEvent();
+      lastProcessedTimestamp = t;
+    }
   }
 
   @Override
   public String toString() {
-    return "CountWindowPolicy{"
+    return "WatermarkCountTriggerPolicy{"
         + "count=" + count
         + ", currentCount=" + currentCount
         + ", manager=" + manager
+        + ", windowManager=" + windowManager
         + ", evictionPolicy=" + evictionPolicy
         + ", started=" + started
+        + ", lastProcessedTimestamp=" + lastProcessedTimestamp
         + '}';
   }
 }

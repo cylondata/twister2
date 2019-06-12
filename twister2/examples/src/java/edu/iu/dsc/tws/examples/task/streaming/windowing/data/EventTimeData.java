@@ -9,46 +9,35 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples;
+package edu.iu.dsc.tws.examples.task.streaming.windowing.data;
 
 import edu.iu.dsc.tws.task.api.window.api.ITimeStampedData;
 
-public class IntData implements ITimeStampedData {
+public class EventTimeData implements ITimeStampedData<int[]> {
+
   private int[] data;
 
   private int id;
 
-  private long time;
+  private long eventTime;
 
-  public IntData(int[] data) {
+  public EventTimeData(int[] data, int id, long eventTime) {
     this.data = data;
-  }
-
-  public IntData() {
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
     this.id = id;
-  }
-
-  public int[] getData() {
-    return data;
-  }
-
-  public void setData(int[] data) {
-    this.data = data;
+    this.eventTime = eventTime;
   }
 
   @Override
   public long getTime() {
-    return this.time;
+    return this.eventTime;
   }
 
-  public void setTime(long time) {
-    this.time = time;
+  @Override
+  public int[] getData() {
+    return this.data;
+  }
+
+  public int getId() {
+    return id;
   }
 }

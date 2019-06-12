@@ -9,16 +9,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.api.window.manage;
+package edu.iu.dsc.tws.task.test;
 
-import java.io.Serializable;
+import org.junit.Test;
 
-import edu.iu.dsc.tws.task.api.IMessage;
+public class Hello {
 
-public interface IManager<T> extends Serializable {
-
-  void add(IMessage<T> message);
-
-  boolean onEvent();
+  @Test
+  public void hello() {
+    System.out.println("Hello Task");
+  }
 
 }

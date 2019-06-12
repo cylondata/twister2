@@ -28,6 +28,7 @@
   * [Operator API](concepts/operator-api.md) 
   * [Task API](concepts/task-api.md) 
   * [TSet API](concepts/tset-api.md) 
+  * [Windowing API](concepts/windowing/windowing.md)
 * [Task System](concepts/task-system/task-system.md)      
   * [Task Graph](concepts/task-system/task-graph/task-graph.md)
   * [Executor](concepts/task-system/task-executor/task-executor.md)  

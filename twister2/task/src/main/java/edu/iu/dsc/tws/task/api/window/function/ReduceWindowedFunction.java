@@ -12,5 +12,5 @@
 package edu.iu.dsc.tws.task.api.window.function;
 
 public interface ReduceWindowedFunction<T> extends IWindowFunction<T> {
-
+  T reduceLateMessage(T lateMessage);
 }

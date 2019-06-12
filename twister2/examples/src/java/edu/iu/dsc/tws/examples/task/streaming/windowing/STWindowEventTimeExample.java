@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
 import java.util.ArrayList;
@@ -32,13 +20,17 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.extract.EventTimeExtractor;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.api.typed.DirectCompute;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
 import edu.iu.dsc.tws.task.api.window.collectives.AggregateWindow;
@@ -51,9 +43,9 @@ import edu.iu.dsc.tws.task.api.window.function.FoldWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.function.ProcessWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 
-public class STWindowExample extends BenchTaskWorker {
+public class STWindowEventTimeExample extends BenchTaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(STWindowExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(STWindowEventTimeExample.class.getName());
 
   @Override
   public TaskGraphBuilder buildTaskGraph() {
@@ -62,7 +54,9 @@ public class STWindowExample extends BenchTaskWorker {
     int sinkParallelism = taskStages.get(1);
 
     String edge = "edge";
-    BaseWindowSource g = new SourceWindowTask(edge);
+    BaseWindowSource g = new SourceWindowTimeStampTask(edge);
+
+    ITimestampExtractor<EventTimeData> timestampExtractor = new EventTimeExtractor();
 
     // Tumbling Window
     BaseWindowedSink dw = new DirectWindowedReceivingTask()
@@ -89,23 +83,23 @@ public class STWindowExample extends BenchTaskWorker {
         .withTumblingCountWindow(5);
 
     BaseWindowedSink sdwCountTumblingAggregate
-        = new DirectAggregateWindowedTask(new AggregateFunctionImpl(1, 2))
+        = new STWindowExample
+        .DirectAggregateWindowedTask(new AggregateFunctionImpl(1, 2))
         .withTumblingCountWindow(5);
 
     BaseWindowedSink sdwCountTumblingFold = new DirectFoldWindowedTask(new FoldFunctionImpl())
         .withTumblingCountWindow(5);
 
     BaseWindowedSink sdwCountTumblingProcess
-        = new DirectProcessWindowedTask(new ProcessFunctionImpl())
-        .withSlidingDurationWindow(5, TimeUnit.MILLISECONDS, 3,
-            TimeUnit.MILLISECONDS);
-
-
+        = new DirectProcessWindowedIntTask(new ProcessFunctionIntImpl())
+        .withCustomTimestampExtractor(timestampExtractor)
+        .withAllowedLateness(0, TimeUnit.MILLISECONDS)
+        .withWatermarkInterval(1, TimeUnit.MILLISECONDS)
+        .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
-    computeConnection.direct(SOURCE)
-        .viaEdge(edge)
-        .withDataType(DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+    //computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }
@@ -146,13 +140,13 @@ public class STWindowExample extends BenchTaskWorker {
 
     @Override
     public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
-      return true;
+      return false;
     }
 
     @Override
-    public boolean getLateMessages(IMessage<int[]> lateMessage) {
+    public boolean getLateMessages(IMessage<int[]> lateMessages) {
       LOG.info(String.format("Late Message : %s",
-          lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
+          lateMessages.getContent() != null ? Arrays.toString(lateMessages.getContent()) : "null"));
       return true;
     }
   }
@@ -172,9 +166,9 @@ public class STWindowExample extends BenchTaskWorker {
 
     @Override
     public boolean reduceLateMessage(int[] content) {
-      LOG.info(String.format("Late Reduced Message : %s", Arrays.toString(content)));
       return false;
     }
+
   }
 
   protected static class DirectAggregateWindowedTask extends AggregateWindow<int[]> {
@@ -191,8 +185,7 @@ public class STWindowExample extends BenchTaskWorker {
 
     @Override
     public boolean aggregateLateMessages(int[] message) {
-      LOG.info(String.format("Late Aggregate Message : %s", Arrays.toString(message)));
-      return true;
+      return false;
     }
   }
 
@@ -210,31 +203,51 @@ public class STWindowExample extends BenchTaskWorker {
 
     @Override
     public boolean foldLateMessage(String lateMessage) {
-      LOG.info(String.format("Late Aggregate Message : %s", lateMessage));
       return false;
     }
   }
 
-  protected static class DirectProcessWindowedTask extends ProcessWindow<int[]> {
+  protected static class DirectProcessWindowedTask extends ProcessWindow<IntData> {
 
-    public DirectProcessWindowedTask(ProcessWindowedFunction<int[]> processWindowedFunction) {
+    public DirectProcessWindowedTask(ProcessWindowedFunction<IntData> processWindowedFunction) {
       super(processWindowedFunction);
     }
 
     @Override
-    public boolean process(IWindowMessage<int[]> windowMessage) {
-      for (IMessage<int[]> msg : windowMessage.getWindow()) {
-        int[] msgC = msg.getContent();
+    public boolean process(IWindowMessage<IntData> windowMessage) {
+      for (IMessage<IntData> msg : windowMessage.getWindow()) {
+        int[] msgC = msg.getContent().getData();
         LOG.info("Process Window Value : " + Arrays.toString(msgC));
       }
       return true;
     }
 
     @Override
-    public boolean processLateMessages(IMessage<int[]> lateMessage) {
-      LOG.info(String.format("Late Message : %s",
-          lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
+    public boolean processLateMessages(IMessage<IntData> lateMessage) {
+      return false;
+    }
+  }
+
+  protected static class DirectProcessWindowedIntTask extends ProcessWindow<EventTimeData> {
+
+    public DirectProcessWindowedIntTask(
+        ProcessWindowedFunction<EventTimeData> processWindowedFunction) {
+      super(processWindowedFunction);
+    }
+
+    @Override
+    public boolean process(IWindowMessage<EventTimeData> windowMessage) {
+//      for (IMessage<EventTimeData> msg : windowMessage.getWindow()) {
+//        int[] msgC = msg.getContent().getData();
+//        LOG.info("Process Window Value : " + Arrays.toString(msgC));
+//      }
+      LOG.info(String.format("Num Events : %d", windowMessage.getWindow().size()));
       return true;
+    }
+
+    @Override
+    public boolean processLateMessages(IMessage<EventTimeData> lateMessage) {
+      return false;
     }
   }
 
@@ -252,10 +265,7 @@ public class STWindowExample extends BenchTaskWorker {
 
     @Override
     public int[] reduceLateMessage(int[] lateMessage) {
-      for (int i = 0; i < lateMessage.length; i++) {
-        lateMessage[i] = lateMessage[i] * 2;
-      }
-      return lateMessage;
+      return new int[0];
     }
   }
 
@@ -301,51 +311,100 @@ public class STWindowExample extends BenchTaskWorker {
     }
   }
 
-  protected static class ProcessFunctionImpl implements ProcessWindowedFunction<int[]> {
+  protected static class ProcessFunctionImpl implements ProcessWindowedFunction<IntData> {
 
     @Override
-    public IWindowMessage<int[]> process(IWindowMessage<int[]> windowMessage) {
-      int[] current = null;
-      List<IMessage<int[]>> messages = new ArrayList<>(windowMessage.getWindow().size());
-      for (IMessage<int[]> msg : windowMessage.getWindow()) {
-        int[] value = msg.getContent();
+    public IWindowMessage<IntData> process(IWindowMessage<IntData> windowMessage) {
+      IntData current = null;
+      List<IMessage<IntData>> messages = new ArrayList<>(windowMessage.getWindow().size());
+      for (IMessage<IntData> msg : windowMessage.getWindow()) {
+        IntData value = msg.getContent();
         if (current == null) {
           current = value;
         } else {
           current = add(current, value);
           messages.add(new TaskMessage<>(current));
         }
-
       }
-      WindowMessageImpl<int[]> windowMessage1 = new WindowMessageImpl<>(messages);
+      WindowMessageImpl<IntData> windowMessage1 = new WindowMessageImpl<>(messages);
       return windowMessage1;
     }
 
     @Override
-    public IMessage<int[]> processLateMessage(IMessage<int[]> lateMessage) {
-      int[] res = lateMessage.getContent();
-      if (res != null) {
-        for (int i = 0; i < res.length; i++) {
-          res[i] = res[i];
-        }
-      }
-      return new TaskMessage<>(res);
+    public IMessage<IntData> processLateMessage(IMessage<IntData> lateMessage) {
+      return null;
     }
 
     @Override
-    public int[] onMessage(int[] object1, int[] object2) {
-      if (object1 != null && object2 != null) {
-        return add(object1, object2);
-      }
-      return null;
+    public IntData onMessage(IntData object1, IntData object2) {
+      return new IntData();
     }
 
     private int[] add(int[] a1, int[] a2) {
       int[] ans = new int[a1.length];
       for (int i = 0; i < a1.length; i++) {
-        ans[i] = a1[i] + a2[i];
+        ans[i] = 2 * (a1[i] + a2[i]);
       }
       return ans;
+    }
+
+    private IntData add(IntData d1, IntData d2) {
+      IntData intData = new IntData();
+      long t1 = d1.getTime();
+      long t2 = d2.getTime();
+      int[] data = add(d1.getData(), d2.getData());
+      long t = (t1 + t2) / (long) 2.0;
+      intData.setData(data);
+      intData.setTime(t);
+      return intData;
+    }
+  }
+
+  protected static class ProcessFunctionIntImpl implements ProcessWindowedFunction<EventTimeData> {
+
+    @Override
+    public IWindowMessage<EventTimeData> process(IWindowMessage<EventTimeData> windowMessage) {
+      EventTimeData current = null;
+      List<IMessage<EventTimeData>> messages = new ArrayList<>(windowMessage.getWindow().size());
+      for (IMessage<EventTimeData> msg : windowMessage.getWindow()) {
+        EventTimeData value = msg.getContent();
+        if (current == null) {
+          current = value;
+        } else {
+          current = add(current, value);
+          messages.add(new TaskMessage<>(current));
+        }
+      }
+      WindowMessageImpl<EventTimeData> windowMessage1 = new WindowMessageImpl<>(messages);
+      return windowMessage1;
+    }
+
+    @Override
+    public IMessage<EventTimeData> processLateMessage(IMessage<EventTimeData> lateMessage) {
+      return null;
+    }
+
+    @Override
+    public EventTimeData onMessage(EventTimeData object1, EventTimeData object2) {
+      return add(object1, object2);
+    }
+
+    private int[] add(int[] a1, int[] a2) {
+      int[] ans = new int[a1.length];
+      for (int i = 0; i < a1.length; i++) {
+        ans[i] = 2 * (a1[i] + a2[i]);
+      }
+      return ans;
+    }
+
+    private EventTimeData add(EventTimeData d1, EventTimeData d2) {
+      EventTimeData eventTimeData = null;
+      long t1 = d1.getTime();
+      long t2 = d2.getTime();
+      int[] data = add(d1.getData(), d2.getData());
+      long t = (t1 + t2) / (long) 2.0;
+      eventTimeData = new EventTimeData(data, d1.getId(), t);
+      return eventTimeData;
     }
   }
 }
