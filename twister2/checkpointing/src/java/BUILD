@@ -9,7 +9,9 @@ t2_java_lib(
     deps = [
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",
+        "//twister2/data/src/main/java:data-java",
         "//twister2/proto:proto-java",
         "@com_google_protobuf_protobuf_java",
+        "@org_apache_hadoop_hadoop_common",
     ],
 )
