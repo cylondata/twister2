@@ -28,9 +28,14 @@ based on the number of elements per window. The other way is that you can say, y
 collect some elements per every 2 minutes. These are the ways that you can create a tumbling 
 window, based on time and based on the count. 
 
-![Count Based Tumbling Window](images/tumbling-window.png "Title")   
+![Count Based Tumbling Window](images/tumbling-count-window.png)   
+
+![Count Based Tumbling Window](images/tumbling-duration-window.png)
 
 ### Sliding 
+
+
+
 ### Session
 ### Global
 
