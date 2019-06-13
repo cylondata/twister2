@@ -231,6 +231,15 @@ public class WindowManager<T> implements IManager<T> {
     }
   }
 
+  /**
+   * This method is scanning the list of events falling under a given
+   * starting and end time stamp
+   *
+   * @param start the starting timestamp
+   * @param end the end time stamp
+   * @param slide the sliding interval count
+   * @return this list of events with time stamps
+   */
   public List<Long> getSlidingCountTimestamps(long start, long end, long slide) {
     List<Long> timestamps = new ArrayList<>();
     if (end > start) {
