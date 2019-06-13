@@ -11,10 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-public class IntData {
+import edu.iu.dsc.tws.task.api.window.api.ITimeStampedData;
+
+public class IntData implements ITimeStampedData {
   private int[] data;
 
   private int id;
+
+  private long time;
 
   public IntData(int[] data) {
     this.data = data;
@@ -37,5 +41,14 @@ public class IntData {
 
   public void setData(int[] data) {
     this.data = data;
+  }
+
+  @Override
+  public long getTime() {
+    return this.time;
+  }
+
+  public void setTime(long time) {
+    this.time = time;
   }
 }
