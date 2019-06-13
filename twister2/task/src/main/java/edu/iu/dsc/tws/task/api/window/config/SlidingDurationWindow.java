@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.api.window.config;
 
 import edu.iu.dsc.tws.task.api.window.api.BaseWindow;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
-import edu.iu.dsc.tws.task.api.window.strategy.count.SlidingCountWindowStratergy;
+import edu.iu.dsc.tws.task.api.window.strategy.duration.SlidingDurationWindowStratergy;
 
 public class SlidingDurationWindow extends BaseWindow {
 
@@ -23,7 +23,7 @@ public class SlidingDurationWindow extends BaseWindow {
 
   @Override
   public <T> IWindowStrategy<T> getWindowStrategy() {
-    return new SlidingCountWindowStratergy<>(this);
+    return new SlidingDurationWindowStratergy<>(this);
   }
 
   public static SlidingDurationWindow of(WindowConfig.Duration windowDuration,

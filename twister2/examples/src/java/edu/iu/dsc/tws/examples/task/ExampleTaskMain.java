@@ -39,6 +39,7 @@ import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowEventTimeExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
@@ -201,6 +202,9 @@ public class ExampleTaskMain {
           break;
         case "windowmpi":
           submitJob(config, workers, jobConfig, STWindowMPI.class.getName(), memory);
+          break;
+        case "windowt":
+          submitJob(config, workers, jobConfig, STWindowEventTimeExample.class.getName(), memory);
           break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName(), memory);

@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.streaming.windowing;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -18,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.config.SlidingCountWindow;
@@ -71,6 +73,18 @@ public class STWindowCustomExample extends BenchTaskWorker {
     @Override
     public boolean execute(IWindowMessage<int[]> windowMessage) {
       LOG.info(String.format("Items : %d ", windowMessage.getWindow().size()));
+      return true;
+    }
+
+    @Override
+    public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
+      return true;
+    }
+
+    @Override
+    public boolean getLateMessages(IMessage<int[]> lateMessage) {
+      LOG.info(String.format("Late Message : %s",
+          lateMessage.getContent() != null ? Arrays.toString(lateMessage.getContent()) : "null"));
       return true;
     }
   }
