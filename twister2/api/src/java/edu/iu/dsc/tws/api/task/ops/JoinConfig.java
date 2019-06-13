@@ -66,7 +66,7 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this;
   }
 
-  public JoinConfig withGroup(String g) {
+  public JoinConfig withTargetEdge(String g) {
     this.group = g;
     return this;
   }
