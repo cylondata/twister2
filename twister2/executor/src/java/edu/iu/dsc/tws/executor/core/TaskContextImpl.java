@@ -78,7 +78,7 @@ public class TaskContextImpl implements TaskContext {
   /**
    * The incoming edges and the tasks connected to them
    */
-  private Map<String, String> inputs;
+  private Map<String, Set<String>> inputs;
 
   private TaskSchedulePlan taskSchedulePlan;
 
@@ -110,7 +110,7 @@ public class TaskContextImpl implements TaskContext {
 
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId, Map<String, Object> configs,
-                         Map<String, String> inputs, TaskSchedulePlan taskSchedulePlan) {
+                         Map<String, Set<String>> inputs, TaskSchedulePlan taskSchedulePlan) {
     this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.inputs = inputs;
   }
@@ -128,7 +128,7 @@ public class TaskContextImpl implements TaskContext {
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId,
                          OutputCollection collection, Map<String, Object> configs,
-                         Map<String, String> inputs, Map<String, String> outEdges,
+                         Map<String, Set<String>> inputs, Map<String, String> outEdges,
                          TaskSchedulePlan taskSchedulePlan) {
     this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, collection,
         configs, outEdges, taskSchedulePlan);
@@ -238,7 +238,7 @@ public class TaskContextImpl implements TaskContext {
    *
    * @return a map with edge, and task connected to this edge
    */
-  public Map<String, String> getInputs() {
+  public Map<String, Set<String>> getInputs() {
     return inputs;
   }
 

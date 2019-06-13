@@ -130,7 +130,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
       if (tag == 0) {
         leftValues.put(target, it);
 
-        if (leftValues.containsKey(target)) {
+        if (rightValues.containsKey(target)) {
           bulkReceiver.receive(target, it);
         }
       } else {

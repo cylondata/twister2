@@ -112,7 +112,7 @@ public class MDSDataObjectSource extends BaseSource {
           }
         }
         inputSplit = null;
-        //inputSplit = source.getNextSplit(context.taskIndex()); TODO: Bug #429
+        //inputSplit = source.getNextSplit(context.taskIndex());
       } catch (Exception ioe) {
         throw new RuntimeException("IOException Occured:" + ioe.getMessage());
       }

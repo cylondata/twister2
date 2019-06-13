@@ -49,6 +49,8 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
   protected int[] thisDestinationsArray;
 
+  protected boolean calledReceive = false;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);

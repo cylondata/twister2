@@ -11,4 +11,6 @@ In the examples section, we discuss the following.
 * [Windowing](windowing/windowing.md)
 * [Machine Learning Examples](ml/README.md)
 * [Benchmark Suite](benchmark/benchmark.md)
+* [MDS](mds/mds.md)
+
 

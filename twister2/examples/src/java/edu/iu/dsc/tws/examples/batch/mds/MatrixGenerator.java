@@ -35,9 +35,8 @@ public class MatrixGenerator {
   private static int dataTypeSize = Short.BYTES;
   private int workerId;
 
-  public MatrixGenerator(Config cfg, int workerid) {
+  public MatrixGenerator(Config cfg) {
     this.config = cfg;
-    this.workerId = workerid;
   }
 
   /**

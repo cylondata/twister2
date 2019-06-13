@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.core.streaming;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -100,7 +101,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
   /**
    * The input edges
    */
-  protected Map<String, String> inEdges;
+  protected Map<String, Set<String>> inEdges;
   protected TaskSchedulePlan taskSchedulePlan;
 
   private CheckpointingClient checkpointingClient;
@@ -124,7 +125,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
+                               int wId, Map<String, Object> cfgs, Map<String, Set<String>> inEdges,
                                TaskSchedulePlan taskSchedulePlan,
                                CheckpointingClient checkpointingClient,
                                String taskGraphName, Long taskVersion) {
