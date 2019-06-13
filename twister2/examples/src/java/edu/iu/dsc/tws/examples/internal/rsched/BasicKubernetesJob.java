@@ -45,10 +45,10 @@ public final class BasicKubernetesJob {
   private static String convertToString(List<Map<String, List<String>>> outerList) {
 
     String allPairs = "";
-    for (Map<String, List<String>> map: outerList) {
-      for (String mapKey: map.keySet()) {
+    for (Map<String, List<String>> map : outerList) {
+      for (String mapKey : map.keySet()) {
         List<String> innerList = map.get(mapKey);
-        for (String listItem: innerList) {
+        for (String listItem : innerList) {
           allPairs += listItem + ": " + mapKey + "\n";
         }
       }

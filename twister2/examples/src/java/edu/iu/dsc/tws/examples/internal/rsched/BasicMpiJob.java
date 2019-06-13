@@ -19,6 +19,7 @@ public final class BasicMpiJob {
   private BasicMpiJob() {
 
   }
+
   public static void main(String[] args) throws MPIException {
 
 
@@ -36,7 +37,6 @@ public final class BasicMpiJob {
 
     next = (myrank + 1) % size;
     prev = (myrank + size - 1) % size;
-
 
 
     if (0 == myrank) {

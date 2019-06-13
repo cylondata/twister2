@@ -16,10 +16,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -42,10 +42,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
   private ResultsVerifier<int[], Tuple<Integer, int[]>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -58,7 +55,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
+    partition = new SKeyedPartition(workerEnv.getCommunicator(), taskPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new PartitionReceiver(), new HashingSelector());
 

@@ -133,24 +133,8 @@ public final class Utils {
    */
 
   public static TaskPlan createStageTaskPlan(WorkerEnv workerEnv, List<Integer> noOfTaskEachStage) {
-    return createStageTaskPlan(workerEnv.getConfig(), workerEnv.getWorkerId(), noOfTaskEachStage,
-        workerEnv.getWorkerList());
-  }
-
-  // todo: remove this signature
-  /**
-   * create task plan
-   * @param cfg
-   * @param workerID
-   * @param noOfTaskEachStage
-   * @param workerList
-   * @return
-   */
-  public static TaskPlan createStageTaskPlan(Config cfg, int workerID,
-                                             List<Integer> noOfTaskEachStage,
-                                             List<JobMasterAPI.WorkerInfo> workerList) {
-//    int workerID = workerEnv.getWorkerId();
-//    List<JobMasterAPI.WorkerInfo> workerList = workerEnv.getWorkerList();
+    int workerID = workerEnv.getWorkerId();
+    List<JobMasterAPI.WorkerInfo> workerList = workerEnv.getWorkerList();
 
     int noOfContainers = workerList.size();
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();

@@ -35,6 +35,7 @@ public class RandomString {
       + "Process Sun relicensed most of its Java technologies under the GNU General Public License"
       + "Others have also developed alternative implementations of these Sun technologies such "
       + "as the GNU Compiler for Java";
+
   /**
    * Generate a random string.
    */

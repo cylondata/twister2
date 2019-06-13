@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 
@@ -35,9 +35,7 @@ public class InputDataStreamer extends CommsWorker {
 
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        taskStages, workerList);
+  protected void execute(WorkerEnv workerEnv) {
     List<Integer> sources = new ArrayList<>();
     List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = taskStages.get(0);
@@ -49,7 +47,7 @@ public class InputDataStreamer extends CommsWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    direct = new BDirect(communicator, taskPlan, sources, targets,
+    direct = new BDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,
         new DirectReceiver(), MessageTypes.DOUBLE);
 
 
@@ -98,6 +96,11 @@ public class InputDataStreamer extends CommsWorker {
     return taskStages;
   }
 
+  @Override
+  protected void finishCommunication(int src) {
+    direct.finish(src);
+  }
+
   public class DirectReceiver implements BulkReceiver {
 
     @Override
@@ -121,10 +124,5 @@ public class InputDataStreamer extends CommsWorker {
       }
       return true;
     }
-  }
-
-  @Override
-  protected void finishCommunication(int src) {
-    direct.finish(src);
   }
 }

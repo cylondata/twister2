@@ -49,12 +49,12 @@ public final class WorkerEnv {
 
   private Communicator communicator;
   private TWSChannel channel;
+  private final List<JobMasterAPI.WorkerInfo> workerList;
 
   private static volatile WorkerEnv workerEnv;
 
-
   private WorkerEnv(Config config, int workerId, IWorkerController workerController,
-                   IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+                    IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.config = config;
     this.workerId = workerId;
     this.workerController = workerController;
@@ -63,6 +63,14 @@ public final class WorkerEnv {
 
     //initialize common thread pool
     CommonThreadPool.init(config);
+
+    //wait for the workers to join
+    try {
+      this.workerList = workerController.getAllWorkers();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      throw new RuntimeException("Unable to get the worker list", e);
+    }
 
     // create the channel
     this.channel = Network.initializeChannel(config, workerController);
@@ -83,12 +91,7 @@ public final class WorkerEnv {
   }
 
   public List<JobMasterAPI.WorkerInfo> getWorkerList() {
-    try {
-      return workerController.getAllWorkers();
-    } catch (TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      throw new RuntimeException("Unable to get the worker list", e);
-    }
+    return this.workerList;
   }
 
   public IWorkerController getWorkerController() {
