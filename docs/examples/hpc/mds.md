@@ -276,10 +276,7 @@ IsMemoryMapped = true
 ## Running MDS Application
 
 ```bash
- /home/kannan/twister2/bazel-bin/scripts/package/twister2-0.2.1/bin/twister2 submit standalone jar 
- target/mds-0.2.1-SNAPSHOT-jar-with-dependencies.jar edu.iu.dsc.tws.apps.MDSProgram -dinput /tmp/matrix 
- -filesys local -byteType big -config /N/u/gkannan83/twister2applications/twister2/mds/config.properties 
- -datainput generate -workers 2 -parallelism 2 -dsize 1000 -dim 1000
+ /home/kannan/twister2/bazel-bin/scripts/package/twister2-0.2.1/bin/twister2 submit standalone jar target/mds-0.2.1-SNAPSHOT-jar-with-dependencies.jar edu.iu.dsc.tws.apps.MDSProgram -dinput /tmp/matrix -filesys local -byteType big -config /home/kannan/twister2applications/twister2/mds/config.properties -datainput generate -workers 4 -parallelism 4 -dsize 1000 -dim 1000
 ```
 
 ### Sample Output 
@@ -295,41 +292,47 @@ Distance summary...
   Standard deviation=0.288553
   MissingDistPercentage=0.0
 
-Distance summary... 
-  Count=1000000
-  Max=0.999969
-  Sum=500482.041627
-  Sum of square=333744.962122
-  Average=0.500482
-  Standard deviation=0.288553
-  MissingDistPercentage=0.0
-
 Start of loop 216 Temperature (T_Cur) 0.0000
-  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31999
-End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31999
-Normalize1 = 6.4063e-07 Normalize2 = 2.5576e-06
-Average of Delta(original distance) = 0.50048
-  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31999
-End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31999
-Normalize1 = 6.4063e-07 Normalize2 = 2.5576e-06
-Average of Delta(original distance) = 0.50048
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+
 Finishing DAMDS run ...
-  Total Time: 0d:00H:00M:45S:680mS (45680 ms) Loop Time: 0d:00H:00M:45S:529mS (45529 ms)
-  Total Loops: 216
-  Total Iterations: 514
-  Total CG Iterations: 1139 Avg. CG Iterations: 2.2160
-  Final Stress:	0.3199931782936916
 Finishing DAMDS run ...
-  Total Time: 0d:00H:00M:45S:795mS (45795 ms) Loop Time: 0d:00H:00M:45S:556mS (45556 ms)
+  Total Time: 0d:00H:01M:12S:399mS (72399 ms) Loop Time: 0d:00H:01M:12S:193mS (72193 ms)
   Total Loops: 216
-  Total Iterations: 514
-  Total CG Iterations: 1139 Avg. CG Iterations: 2.2160
-  Final Stress:	0.3199931782936916
-[2019-06-13 13:20:29 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@57250572  
-[2019-06-13 13:20:29 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@7c83dc97  
-[2019-06-13 13:20:29 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Data Load time : 418
-Total Time : 46276Compute Time : 45858  
-[2019-06-13 13:20:29 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
-[2019-06-13 13:20:29 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
-[2019-06-13 13:20:29 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 2 workers have completed. JobMaster is stopping.
-```  
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress:	0.3189564742212961
+  Total Time: 0d:00H:01M:12S:384mS (72384 ms) Loop Time: 0d:00H:01M:12S:195mS (72195 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress:	0.3189564742212961
+Finishing DAMDS run ...
+  Total Time: 0d:00H:01M:12S:438mS (72438 ms) Loop Time: 0d:00H:01M:12S:193mS (72193 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress:	0.3189564742212961
+Finishing DAMDS run ...
+  Total Time: 0d:00H:01M:12S:540mS (72540 ms) Loop Time: 0d:00H:01M:12S:184mS (72184 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress:	0.3189564742212961
+[2019-06-13 13:23:14 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-2] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@7748410a  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Data Load time : 290
+Total Time : 72985Compute Time : 72695  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-2] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 2  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 3  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-06-13 13:23:14 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 4 workers have completed. JobMaster is stopping.  
+```
