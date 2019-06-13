@@ -78,6 +78,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-checkpointing",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -101,6 +102,7 @@ pack_tw2(
     package_dir = "twister2-core",
     version = T2_VERSION,
     deps = [
+        ":twister2-checkpointing",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -251,6 +253,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-bin",
+        ":twister2-checkpointing",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-dashboard",

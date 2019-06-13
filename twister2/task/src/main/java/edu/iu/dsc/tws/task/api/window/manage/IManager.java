@@ -19,6 +19,6 @@ public interface IManager<T> extends Serializable {
 
   void add(IMessage<T> message);
 
-  void onEvent();
+  boolean onEvent();
 
 }
