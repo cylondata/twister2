@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
-import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
@@ -70,7 +70,7 @@ public class BJoin {
     if (shuffle) {
       finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver(rcvr, comparator);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator);
     }
 
 
@@ -100,11 +100,13 @@ public class BJoin {
     int dest = destinationSelector.next(source, key, data);
 
     boolean send;
-    Tuple message = new Tuple(key, data, partitionLeft.getKeyType(),
-        partitionLeft.getDataType());
     if (tag == 0) {
+      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
+          partitionLeft.getDataType());
       send = partitionLeft.send(source, message, flags, dest);
     } else if (tag == 1) {
+      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
+          partitionRight.getDataType());
       send = partitionRight.send(source, message, flags, dest);
     } else {
       throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");

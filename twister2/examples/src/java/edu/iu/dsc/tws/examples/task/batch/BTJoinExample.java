@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -123,6 +124,8 @@ public class BTJoinExample extends BenchTaskWorker {
 
     private int iterations;
 
+    private Random random = new Random();
+
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
@@ -135,9 +138,11 @@ public class BTJoinExample extends BenchTaskWorker {
       if (count > iterations) {
         context.end(LEFT_EDGE);
         context.end(RIGHT_EDGE);
+        return;
       }
 
-      if (count % 2 == 1) {
+      int ran = random.nextInt();
+      if (ran % 2 == 1) {
         context.write(LEFT_EDGE, count, inputDataArray);
       } else {
         context.write(RIGHT_EDGE, count, inputDataArray);

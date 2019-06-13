@@ -94,7 +94,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   /**
    * the incoming edges
    */
-  private Map<String, String> inputEdges;
+  private Map<String, Set<String>> inputEdges;
 
   /**
    * Task schedule plan contains information about whole topology. This will be passed to
@@ -121,7 +121,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int taskId, int globalTaskId,
                            int tIndex, int parallel, int wId,
-                           Map<String, Object> cfgs, Map<String, String> inEdges,
+                           Map<String, Object> cfgs, Map<String, Set<String>> inEdges,
                            TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
                            String taskGraphName, Long taskVersion) {
     this.batchTask = batchTask;
