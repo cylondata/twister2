@@ -12,9 +12,11 @@
 package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
@@ -26,24 +28,32 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class JoinBatchOperation extends AbstractParallelOperation {
+  private static final Logger LOG = Logger.getLogger(JoinBatchOperation.class.getName());
+
   protected BJoin op;
 
+  private Edge leftEdge;
+
+  private Edge rightEdge;
+
+  private Set<Integer> finishedSources = new HashSet<>();
+
   public JoinBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                            Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                            Edge edge) {
-    super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
+                            Set<Integer> sources, Set<Integer> dests,
+                            Edge leftEdge, Edge rightEdge) {
+    super(config, network, tPlan, leftEdge.getTargetEdge());
+    this.leftEdge = leftEdge;
+    this.rightEdge = rightEdge;
 
     DestinationSelector destSelector;
-    if (edge.getPartitioner() != null) {
-      destSelector = new DefaultDestinationSelector(edge.getPartitioner());
+    if (leftEdge.getPartitioner() != null) {
+      destSelector = new DefaultDestinationSelector(leftEdge.getPartitioner());
     } else {
       destSelector = new HashingSelector();
     }
@@ -51,26 +61,30 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     boolean useDisk = false;
     Comparator keyComparator = null;
     try {
-      useDisk = (Boolean) edge.getProperty("use-disk");
-      keyComparator = (Comparator) edge.getProperty("key-comparator");
+      useDisk = (Boolean) leftEdge.getProperty("use-disk");
+      keyComparator = (Comparator) leftEdge.getProperty("key-comparator");
     } catch (Exception ex) {
       //ignore
     }
 
-    Communicator newComm = channel.newWithConfig(edge.getProperties());
+    Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
     op = new BJoin(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator);
-
-    communicationEdge = e.generate(edge.getName());
+        Utils.dataTypeToMessageType(leftEdge.getKeyType()),
+        Utils.dataTypeToMessageType(leftEdge.getDataType()),
+        Utils.dataTypeToMessageType(rightEdge.getDataType()),
+        new JoinRecvrImpl(), destSelector, useDisk, keyComparator);
   }
 
   @Override
   public boolean send(int source, IMessage message, int flags) {
     TaskMessage<Tuple> taskMessage = (TaskMessage) message;
-    return op.partition(source, taskMessage.getContent().getKey(),
-        taskMessage.getContent().getValue(), flags, 0);
+    if (message.edge().equals(leftEdge.getName())) {
+      return op.join(source, taskMessage.getContent().getKey(),
+          taskMessage.getContent().getValue(), flags, 0);
+    } else {
+      return op.join(source, taskMessage.getContent().getKey(),
+          taskMessage.getContent().getValue(), flags, 1);
+    }
   }
 
   @Override
@@ -78,15 +92,14 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     return op.progress() || op.hasPending();
   }
 
-  private class GatherRecvrImpl implements BulkReceiver {
+  private class JoinRecvrImpl implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
@@ -97,23 +110,28 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 
   @Override
   public void finish(int source) {
-    op.finish(source);
+    if (!finishedSources.contains(source)) {
+      op.finish(source);
+      finishedSources.add(source);
+    }
   }
 
   @Override
   public void close() {
     op.close();
+    finishedSources.clear();
   }
 
   @Override
   public void reset() {
     op.reset();
+    finishedSources.clear();
   }
 
   @Override

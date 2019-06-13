@@ -122,7 +122,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  private Map<String, String> inputEdges;
+  private Map<String, Set<String>> inputEdges;
 
   /**
    * Task context
@@ -173,7 +173,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int taskId, int globalTaskId, int tIndex, int parallel,
                            int wId, Map<String, Object> cfgs,
-                           Map<String, String> inEdges, Map<String, String> outEdges,
+                           Map<String, Set<String>> inEdges, Map<String, String> outEdges,
                            TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
                            String taskGraphName, long tasksVersion) {
     this.task = task;

@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -34,15 +33,12 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
   protected BAllReduce op;
 
   public AllReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                 Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                 Edge edge) {
+                                 Set<Integer> sources, Set<Integer>  dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BAllReduce(newComm, taskPlan, sources, dest,
         new ReduceFnImpl(edge.getFunction()),
         new FinalSingularReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -84,14 +80,13 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -32,11 +31,8 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
   protected SDirect op;
 
   public DirectStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                  Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                  Edge edge) {
+                                  Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
-
     if (srcs.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
     }
@@ -53,7 +49,6 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SDirect(newComm, taskPlan, sources, targets,
         Utils.dataTypeToMessageType(edge.getDataType()), new DirectReceiver());
-    communicationEdge = e.generate(edge.getName());
   }
 
   public boolean send(int source, IMessage message, int flags) {
@@ -70,14 +65,13 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     public boolean receive(int target, Object object) {
       BlockingQueue<IMessage> messages = outMessages.get(target);
 
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       return messages.offer(msg);
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

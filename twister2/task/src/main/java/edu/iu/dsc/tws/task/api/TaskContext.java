@@ -94,7 +94,7 @@ public interface TaskContext {
    *
    * @return a map with edge, Set<input task>
    */
-  Map<String, String> getInputs();
+  Map<String, Set<String>> getInputs();
 
   /**
    * Write a message with a key

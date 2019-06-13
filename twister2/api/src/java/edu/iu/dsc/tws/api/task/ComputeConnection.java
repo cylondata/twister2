@@ -137,14 +137,15 @@ public class ComputeConnection {
   }
 
   /**
-   * Create a join operation
+   * Create a join operation. The left source and right source can be the same source
    *
-   * @param source the source to connection
+   * @param leftSource the left source to connection
+   * @param rightSource the right source to connection
    * @return the {@link JoinConfig}
    */
-  public JoinConfig join(String source) {
-    JoinConfig joinConfig = new JoinConfig(source, this);
-    this.addToAutoConfig(source, joinConfig);
+  public JoinConfig join(String leftSource, String rightSource) {
+    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource, this);
+    this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }
 

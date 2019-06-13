@@ -14,21 +14,30 @@ package edu.iu.dsc.tws.api.task.ops;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.task.ComputeConnectionUtils;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
-  private boolean useDsk;
-
   private Comparator keyCompartor;
 
-  public JoinConfig(String parent,
+  private String rightSource;
+
+  private String rightEdgeName;
+
+  private DataType rightOpDataType = DataType.OBJECT;
+
+  private String group;
+
+  public JoinConfig(String leftParent, String rightParent,
                            ComputeConnection computeConnection) {
-    super(parent, OperationNames.JOIN, computeConnection);
+    super(leftParent, OperationNames.JOIN, computeConnection);
+    this.rightSource = rightParent;
+    this.withProperty("use-disk", false);
   }
 
   public JoinConfig useDisk(boolean useDisk) {
-    this.useDsk = useDisk;
     return this.withProperty("use-disk", useDisk);
   }
 
@@ -37,11 +46,74 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this.withProperty("key-comparator", keyComparator);
   }
 
+  public JoinConfig viaLeftEdge(String edge) {
+    this.edgeName = edge;
+    return this;
+  }
+
+  public JoinConfig viaRightEdge(String edge) {
+    this.rightEdgeName = edge;
+    return this;
+  }
+
+  public JoinConfig withRightDataType(DataType dataType) {
+    this.rightOpDataType = dataType;
+    return this;
+  }
+
+  public JoinConfig withLeftDataType(DataType dataType) {
+    this.opDataType = dataType;
+    return this;
+  }
+
+  public JoinConfig withTargetEdge(String g) {
+    this.group = g;
+    return this;
+  }
+
   @Override
   void validate() {
     if (this.keyCompartor == null) {
       failValidation("Join operation needs a key comparator.");
     }
+
+    if (this.rightEdgeName == null) {
+      failValidation("Right edge should have a name");
+    }
+  }
+
+  public ComputeConnection connect() {
+    Edge leftEdge = this.buildEdge();
+    leftEdge.setEdgeIndex(0);
+    leftEdge.setNumberOfEdges(2);
+
+    Edge rightEdge = this.buildRightEdge();
+    rightEdge.setEdgeIndex(1);
+    rightEdge.setNumberOfEdges(2);
+
+    // we generate the name
+    if (group == null) {
+      group = edgeName + "-" + rightEdgeName + "-" + source + "-" + rightSource;
+    }
+    leftEdge.setTargetEdge(group);
+    rightEdge.setTargetEdge(group);
+
+    ComputeConnectionUtils.connectEdge(this.computeConnection, this.source, leftEdge);
+    ComputeConnectionUtils.connectEdge(this.computeConnection, this.rightSource, rightEdge);
+    return this.computeConnection;
+  }
+
+  Edge buildRightEdge() {
+    this.runValidation();
+    Edge edge = new Edge(this.rightEdgeName, this.operationName);
+    edge.setDataType(rightOpDataType);
+    edge.addProperties(propertiesMap);
+    updateEdge(edge);
+
+    edge.setKeyed(true);
+    edge.setKeyType(opKeyType);
+    edge.setPartitioner(this.tPartitioner);
+    return edge;
   }
 
   @Override

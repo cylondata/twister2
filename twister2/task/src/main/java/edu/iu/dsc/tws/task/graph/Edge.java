@@ -62,6 +62,21 @@ public class Edge {
    */
   private Map<String, Object> properties = new HashMap<>();
 
+  /**
+   * Multiple edges may be in a single operation. We need to configure the group
+   */
+  private String targetEdge;
+
+  /**
+   * The edge index
+   */
+  private int edgeIndex;
+
+  /**
+   * Number of edges for a particular operation
+   */
+  private int numberOfEdges;
+
   public Edge() {
   }
 
@@ -234,5 +249,33 @@ public class Edge {
 
   public void setProperties(Map<String, Object> properties) {
     this.properties = properties;
+  }
+
+  /**
+   * Get the group name, if the group is set, multiple edges can belong to a same group
+   * @return the group
+   */
+  public String getTargetEdge() {
+    return targetEdge;
+  }
+
+  public void setTargetEdge(String targetEdge) {
+    this.targetEdge = targetEdge;
+  }
+
+  public void setEdgeIndex(int edgeIndex) {
+    this.edgeIndex = edgeIndex;
+  }
+
+  public void setNumberOfEdges(int numberOfEdges) {
+    this.numberOfEdges = numberOfEdges;
+  }
+
+  public int getEdgeIndex() {
+    return edgeIndex;
+  }
+
+  public int getNumberOfEdges() {
+    return numberOfEdges;
   }
 }

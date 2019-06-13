@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -32,8 +31,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   protected BAllGather op;
 
   public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     Edge edge) {
+                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -44,11 +42,9 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
       throw new IllegalArgumentException("Targets should have more than 0 elements");
     }
 
-    this.edgeGenerator = e;
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BAllGather(newComm, taskPlan, sources, dest,
         new FinalGatherReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -79,8 +75,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {
@@ -92,7 +87,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 
