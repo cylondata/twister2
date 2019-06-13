@@ -42,7 +42,7 @@ public final class CommonThreadPool {
   private ExecutorService executorService;
   private int threads;
 
-  public static void init(Config config) {
+  public static synchronized void init(Config config) {
     int threads = config.getIntegerValue(COMMON_POOL_THREADS, 1);
     int keepAlive = config.getIntegerValue(COMMON_POOL_KEEP_ALIVE, 10);
     if (commonThreadPool == null) {
