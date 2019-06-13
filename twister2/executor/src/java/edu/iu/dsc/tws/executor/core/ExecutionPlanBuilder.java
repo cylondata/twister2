@@ -96,6 +96,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
+  /**
+   * We need to keep the target based on in this list, because, we can connect it to multiple
+   * sources
+   */
+  private Map<String, Communication> targetParOpTable = new HashMap<>();
+
   public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
                               Communicator net, CheckpointingClient checkpointingClient) {
     this.workerId = workerID;
@@ -349,11 +355,18 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         comm.addEdge(e.getEdgeIndex(), e);
         comm.addSourceTask(e.getEdgeIndex(), parent.getName());
       } else {
-        Communication comm = new Communication(node.getName(),
-            srcTasks, tarTasks, e.getNumberOfEdges());
-        comm.addEdge(e.getEdgeIndex(), e);
-        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
-        parOpTable.put(parent.getName(), e.getTargetEdge(), comm);
+        if (!targetParOpTable.containsKey(e.getTargetEdge())) {
+          Communication comm = new Communication(node.getName(),
+              srcTasks, tarTasks, e.getNumberOfEdges());
+          comm.addEdge(e.getEdgeIndex(), e);
+          comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+          parOpTable.put(parent.getName(), e.getTargetEdge(), comm);
+          targetParOpTable.put(e.getTargetEdge(), comm);
+        } else {
+          Communication comm = targetParOpTable.get(e.getTargetEdge());
+          comm.addEdge(e.getEdgeIndex(), e);
+          comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+        }
       }
     }
   }
