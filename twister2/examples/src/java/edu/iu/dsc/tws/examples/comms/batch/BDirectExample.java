@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
@@ -49,17 +51,13 @@ public class BDirectExample extends BenchWorker {
       jobParameters.getTaskStages().set(1, min);
     }
 
-    List<Integer> sources = new ArrayList<>();
-    List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    List<Integer> sources =
+        IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toList());
 
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    List<Integer> targets =
+        IntStream.range(0, noOfTargetTasks).boxed().collect(Collectors.toList());
 
     // create the communication
     direct = new BDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,

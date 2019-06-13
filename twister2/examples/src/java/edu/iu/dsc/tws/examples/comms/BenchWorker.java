@@ -12,12 +12,9 @@
 package edu.iu.dsc.tws.examples.comms;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
@@ -44,19 +41,13 @@ public abstract class BenchWorker implements IWorker {
 
   protected int workerId;
 
-//  protected Config config;
-
   protected TaskPlan taskPlan;
 
   protected JobParameters jobParameters;
 
-//  protected Communicator communicator;
-
   protected final Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
 
   protected boolean sourcesDone = false;
-
-//  protected List<JobMasterAPI.WorkerInfo> workerList = null;
 
   protected ExperimentData experimentData;
 
@@ -86,20 +77,14 @@ public abstract class BenchWorker implements IWorker {
         workerID == 0
     );
 
-//    this.config = cfg;
     this.workerId = workerID;
 
     // create a worker environment
     this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
-//    this.workerList = workerEnv.getWorkerList();
-
     // lets create the task plan
     this.taskPlan = Utils.createStageTaskPlan(workerEnv, jobParameters.getTaskStages());
-
-    // create the communicator
-//    communicator = workerEnv.getCommunicator();
 
     //todo collect experiment data : will be removed
     experimentData = new ExperimentData();
@@ -194,10 +179,6 @@ public abstract class BenchWorker implements IWorker {
     } else {
       this.resultsRecorder.recordColumn("Verified", "Not Performed");
     }
-  }
-
-  protected Set<Integer> generateSet(int start, int end) {
-    return IntStream.range(start, end).boxed().collect(Collectors.toSet());
   }
 
   protected class MapWorker implements Runnable {

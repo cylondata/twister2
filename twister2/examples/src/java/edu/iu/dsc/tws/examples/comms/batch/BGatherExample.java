@@ -13,12 +13,13 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
@@ -47,12 +48,11 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnv workerEnv) {
-    Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
+
     int target = noOfSourceTasks;
+
     // create the communication
     gather = new BGather(workerEnv.getCommunicator(), taskPlan, sources, target,
         MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(), false);

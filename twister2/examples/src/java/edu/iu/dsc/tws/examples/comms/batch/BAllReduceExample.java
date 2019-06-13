@@ -15,6 +15,8 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
@@ -43,10 +45,11 @@ public class BAllReduceExample extends BenchWorker {
   @Override
   protected void execute(WorkerEnv workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    Set<Integer> sources = generateSet(0, noOfSourceTasks);
+    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
 
     int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = generateSet(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks);
+    Set<Integer> targets = IntStream.range(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks)
+        .boxed().collect(Collectors.toSet());
 
     // create the communication
     reduce = new BAllReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,

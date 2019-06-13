@@ -17,6 +17,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
@@ -48,7 +50,8 @@ public class BBroadcastExample extends BenchWorker {
     }
 
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = generateSet(1, noOfTargetTasks + 1);
+    Set<Integer> targets =
+        IntStream.range(1, noOfTargetTasks + 1).boxed().collect(Collectors.toSet());
 
     int source = 0;
 
