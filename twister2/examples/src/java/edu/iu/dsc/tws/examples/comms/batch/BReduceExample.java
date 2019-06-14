@@ -104,7 +104,7 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return sourcesDone && !reduce.hasPending();
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
