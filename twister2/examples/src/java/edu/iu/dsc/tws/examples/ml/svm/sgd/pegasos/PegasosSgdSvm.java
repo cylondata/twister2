@@ -30,13 +30,11 @@ import edu.iu.dsc.tws.examples.ml.svm.sgd.SgdSvm;
 public class PegasosSgdSvm extends SgdSvm implements Serializable {
 
   private static final long serialVersionUID = -8279454451787246995L;
-
+  private static final Logger LOG = Logger.getLogger(PegasosSgdSvm.class.getName());
   private static int epoch = 0;
   private double[] wa;
   private int features = 0;
   private double[] xyia;
-
-  private static final Logger LOG = Logger.getLogger(PegasosSgdSvm.class.getName());
 
   public PegasosSgdSvm(double[] x, double y, double alpha, int iterations) {
     super(x, y, alpha, iterations);
@@ -66,11 +64,9 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
 
   /**
    * This method is deprected
-   * @deprecated
-   * Use iterativeSGD for batch mode training
+   *
+   * @deprecated Use iterativeSGD for batch mode training
    * Use onlineSGD for streaming mode training
-   * @throws NullDataSetException
-   * @throws MatrixMultiplicationException
    */
   @Override
   @Deprecated
@@ -84,11 +80,10 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
 
   /**
    * This is the iterative Sgd based SVM for Linear Kernel
+   *
    * @param w initial weight vector with x.length dimension
    * @param x all data points x.length = samples x[0].length == w.length must be true
    * @param y all labels per each data point
-   * @throws NullDataSetException
-   * @throws MatrixMultiplicationException
    */
   @Override
   public void iterativeSgd(double[] w, double[][] x, double[] y)
@@ -116,11 +111,10 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
 
   /**
    * This is the Online Sgd based SVM for Linear Kernel
+   *
    * @param w initial weight vector with x.length dimension
    * @param x single data point x.length = 1 x.length == w.length must be true
    * @param y label of the data point
-   * @throws NullDataSetException
-   * @throws MatrixMultiplicationException
    */
   @Override
   public void onlineSGD(double[] w, double[] x, double y)

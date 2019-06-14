@@ -36,13 +36,9 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class SvmSgdRunner extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(SvmSgdRunner.class.getName());
-
-  private int dataStreamerParallelism = 4;
-
-  private int svmComputeParallelism = 4;
-
   private final int reduceParallelism = 1;
-
+  private int dataStreamerParallelism = 4;
+  private int svmComputeParallelism = 4;
   private int features = 10;
 
   private OperationMode operationMode;

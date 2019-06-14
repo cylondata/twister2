@@ -30,7 +30,7 @@ public class BinaryBatchModel extends Model {
 
   /**
    * All the labels of datapoints kept in memory
-   * */
+   */
 
   private double[] y;
 
@@ -109,9 +109,17 @@ public class BinaryBatchModel extends Model {
     return this.samples;
   }
 
+  public void setSamples(int samples) {
+    this.samples = samples;
+  }
+
   @Override
   public int getFeatures() {
     return this.features;
+  }
+
+  public void setFeatures(int features) {
+    this.features = features;
   }
 
   @Override
@@ -122,6 +130,10 @@ public class BinaryBatchModel extends Model {
   @Override
   public double[] getW() {
     return this.w;
+  }
+
+  public void setW(double[] w) {
+    this.w = w;
   }
 
   public double[][] getX() {
@@ -148,14 +160,6 @@ public class BinaryBatchModel extends Model {
     this.iterations = iterations;
   }
 
-  public void setFeatures(int features) {
-    this.features = features;
-  }
-
-  public void setSamples(int samples) {
-    this.samples = samples;
-  }
-
   @Override
   public double getAlpha() {
     return alpha;
@@ -164,10 +168,6 @@ public class BinaryBatchModel extends Model {
   @Override
   public void setAlpha(double alpha) {
     this.alpha = alpha;
-  }
-
-  public void setW(double[] w) {
-    this.w = w;
   }
 
   @Override

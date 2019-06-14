@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
@@ -62,6 +63,14 @@ public final class TaskEnvironment {
 
   }
 
+  private TaskEnvironment(WorkerEnv workerEnv) {
+    this.config = workerEnv.getConfig();
+    this.wController = workerEnv.getWorkerController();
+    this.communicator = workerEnv.getCommunicator();
+    this.taskExecutor = new TaskExecutor(workerEnv);
+  }
+
+
   /**
    * Use task executor for fine grained task graph manipulations. For single task graph builds,
    * use @buildAndExecute
@@ -95,6 +104,10 @@ public final class TaskEnvironment {
   public static TaskEnvironment init(Config config, int workerId,
                                      IWorkerController wController, IVolatileVolume vVolume) {
     return new TaskEnvironment(config, workerId, wController, vVolume);
+  }
+
+  public static TaskEnvironment init(WorkerEnv workerEnv) {
+    return new TaskEnvironment(workerEnv);
   }
 
   public void close() {

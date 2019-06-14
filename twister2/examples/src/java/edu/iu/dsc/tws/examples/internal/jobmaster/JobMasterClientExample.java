@@ -47,22 +47,21 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
 
-  private JobMasterClientExample() { }
+  private JobMasterClientExample() {
+  }
 
   /**
    * a test class to run JMWorkerAgent
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
-   *
+   * <p>
    * It reads config files from conf/kubernetes directory
    * It uses the first ComputeResource in that config file as the ComputeResource of this worker
    * Number of workers is the number of workers in the first ComputeResource
-   *
+   * <p>
    * When all workers joined, they get the full worker list
    * Then, each worker sends a barrier message
    * Then, each worker sends a completed message and closes
-   *
-   * @param args
    */
   public static void main(String[] args) {
 
@@ -144,7 +143,6 @@ public final class JobMasterClientExample {
 
   /**
    * construct a Config object
-   * @return
    */
   public static Config updateConfig(Config config) {
     return Config.newBuilder()
@@ -155,9 +153,6 @@ public final class JobMasterClientExample {
 
   /**
    * generate the additional requested ports for this worker
-   * @param config
-   * @param workerPort
-   * @return
    */
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
@@ -169,7 +164,7 @@ public final class JobMasterClientExample {
 
     HashMap<String, Integer> ports = new HashMap<>();
     int i = 1;
-    for (String portName: portNames) {
+    for (String portName : portNames) {
       ports.put(portName, workerPort + i++);
     }
 

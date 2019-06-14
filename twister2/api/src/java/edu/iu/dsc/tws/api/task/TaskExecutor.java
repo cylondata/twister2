@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
@@ -84,6 +85,14 @@ public class TaskExecutor {
     this.workerInfoList = workerInfoList;
     this.communicator = net;
     this.checkpointingClient = checkpointingClient;
+  }
+
+  public TaskExecutor(WorkerEnv workerEnv) {
+    this.config = workerEnv.getConfig();
+    this.workerID = workerEnv.getWorkerId();
+    this.workerInfoList = workerEnv.getWorkerList();
+    this.communicator = workerEnv.getCommunicator();
+    this.checkpointingClient = workerEnv.getWorkerController().getCheckpointingClient();
   }
 
   /**

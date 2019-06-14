@@ -13,16 +13,17 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -42,23 +43,20 @@ public class BBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+  protected void execute(WorkerEnv workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting no of senders to 1");
       jobParameters.getTaskStages().set(0, 1);
     }
 
-    Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 1; i < noOfTargetTasks + 1; i++) {
-      targets.add(i);
-    }
+    Set<Integer> targets =
+        IntStream.range(1, noOfTargetTasks + 1).boxed().collect(Collectors.toSet());
+
     int source = 0;
 
     // create the communication
-    bcast = new BBroadcast(communicator, taskPlan, source, targets,
+    bcast = new BBroadcast(workerEnv.getCommunicator(), taskPlan, source, targets,
         new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

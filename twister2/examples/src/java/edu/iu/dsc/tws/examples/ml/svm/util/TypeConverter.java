@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
 public final class TypeConverter {
-  private TypeConverter() { }
+  private TypeConverter() {
+  }
 
 }
