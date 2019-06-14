@@ -61,11 +61,6 @@ public class TargetPartialReceiver extends TargetReceiver {
   private int[] thisSourceArray;
 
   /**
-   * Target array for iterations
-   */
-  private int[] targetArray;
-
-  /**
    * This source array for iteration
    */
   private int[] sourceArray;
@@ -97,10 +92,10 @@ public class TargetPartialReceiver extends TargetReceiver {
     }));
     thisDestinations.addAll(op.getTargets());
 
-    this.targetArray = new int[thisDestinations.size()];
+    this.targets = new int[thisDestinations.size()];
     index = 0;
     for (int t : thisDestinations) {
-      targetArray[index++] = t;
+      targets[index++] = t;
     }
 
     for (int target : thisDestinations) {
@@ -155,14 +150,18 @@ public class TargetPartialReceiver extends TargetReceiver {
 
   @Override
   protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
     for (int i = 0; i < targets.length; i++) {
+      Queue<Object> msgQueue = messages.get(targets[i]);
+      if (msgQueue.size() > 0) {
+        return false;
+      }
+
       List<Object> queue = readyToSend.get(targets[i]);
       if (queue != null && queue.size() > 0) {
         return false;
       }
     }
-    return b;
+    return true;
   }
 
   @Override
@@ -230,8 +229,8 @@ public class TargetPartialReceiver extends TargetReceiver {
     for (int i = 0; i < thisSourceArray.length; i++) {
       int source = thisSourceArray[i];
       Set<Integer> finishedDestPerSource = syncSent.get(source);
-      for (int j = 0; j < targetArray.length; j++) {
-        int dest = targetArray[j];
+      for (int j = 0; j < targets.length; j++) {
+        int dest = targets[j];
         if (!finishedDestPerSource.contains(dest)) {
 
           byte[] message;
