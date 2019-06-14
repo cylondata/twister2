@@ -99,6 +99,17 @@ public class WatermarkDurationWindowPolicy<T> extends DurationWindowPolicy<T> {
     nextWindowEndTime = windowEndTimestamp;
   }
 
+  /**
+   * Computes the next consecutive window which is between two timestamps by scanning the
+   * events in the window and finds the next aligned windows between starting and ending timestamps.
+   * This calculated timestamp resembles the actual time to fire the window in the eviction policy.
+   *
+   * @param start
+   * @param end
+   * @return the end timestamp of the consecutive next aligned window or in case of no events to
+   * process it returns the end timestamp of the aligned window or the Long.MAX_VALUE in case of
+   * there are no more events to be processed.
+   */
   private long getNextAlignedWindowTimestamp(long start, long end) {
     long nextTimestamp = windowManager.getEarliestEventTimestamp(start, end);
     if (nextTimestamp == Long.MAX_VALUE || (nextTimestamp % slidingInterval == 0)) {
