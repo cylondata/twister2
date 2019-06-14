@@ -12,10 +12,10 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -24,17 +24,22 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.JoinedTuple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.comms.utils.JoinUtils;
+import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
-import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.api.typed.batch.BJoinCompute;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 
 public class BTJoinExample extends BenchTaskWorker {
 
@@ -60,13 +65,27 @@ public class BTJoinExample extends BenchTaskWorker {
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
         .withKeyType(keyType)
-        .withLeftDataType(dataType).withRightDataType(dataType).withComparator(
-            new Comparator<Integer>() {
-              @Override
-              public int compare(Integer o1, Integer o2) {
-                return o1 - o2;
-              }
-            });
+        .withLeftDataType(dataType).withRightDataType(dataType)
+        .withTaskPartitioner(new TaskPartitioner() {
+          private List<Integer> dst;
+
+          @Override
+          public void prepare(Set sources, Set destinations) {
+            this.dst = new ArrayList<>(destinations);
+            Collections.sort(this.dst);
+          }
+
+          @Override
+          public int partition(int source, Object data) {
+            return dst.get((Integer) data % dst.size());
+          }
+
+          @Override
+          public void commit(int source, int partition) {
+
+          }
+        })
+        .withComparator(Integer::compareTo);
     return taskGraphBuilder;
   }
 
@@ -75,7 +94,7 @@ public class BTJoinExample extends BenchTaskWorker {
 
     private static final long serialVersionUID = -254264903510284798L;
 
-    private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
+    private ResultsVerifier<int[], Iterator<JoinedTuple>> resultsVerifier;
     private boolean verified = true;
     private boolean timingCondition;
 
@@ -84,37 +103,46 @@ public class BTJoinExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-        Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
+        List<Integer> sinkIds = ctx.getTasksByName(SINK).stream()
             .map(TaskInstancePlan::getTaskIndex)
-            .filter(i -> (Math.abs(i.hashCode())) == ctx.taskIndex())
-            .collect(Collectors.toSet());
+            .sorted()
+            .collect(Collectors.toList());
 
-        List<int[]> dataFromEachTask = new ArrayList<>();
-        for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
-          dataFromEachTask.add(ints);
+        long sources = ctx.getTasksByName(SOURCE).stream()
+            .map(TaskInstancePlan::getTaskIndex)
+            .count();
+
+        List<Tuple> onLeftEdge = new ArrayList<>();
+        List<Tuple> onRightEdge = new ArrayList<>();
+
+        int iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
+        for (int i = 0; i < sources; i++) {
+          for (int key = 0; key < iterations; key++) {
+            if (sinkIds.get(key % sinkIds.size()) == ctx.taskIndex()) {
+              onLeftEdge.add(Tuple.of(key, inputDataArray));
+            }
+            if (sinkIds.get((key / 2) % sinkIds.size()) == ctx.taskIndex()) {
+              onRightEdge.add(Tuple.of(key / 2, inputDataArray));
+            }
+          }
         }
 
-        List<Tuple<Integer, Iterator<int[]>>> finalOutput = new ArrayList<>();
+        List objects = JoinUtils.innerJoin(onLeftEdge, onRightEdge,
+            new KeyComparatorWrapper(Comparator.naturalOrder()));
 
-        taskIds.forEach(key -> {
-          finalOutput.add(new Tuple<>(key, dataFromEachTask.iterator()));
-        });
-
-        return finalOutput.iterator();
+        return (Iterator<JoinedTuple>) objects.iterator();
       }, new IteratorComparator<>(
-          new TupleComparator<>(
-              (d1, d2) -> true, //return true for any key, since we
-              // can't determine this due to hash based selector
-              new IteratorComparator<>(
-                  IntArrayComparator.getInstance()
-              )
-          )
+          (d1, d2) -> d1.getKey().equals(d2.getKey())
       ));
     }
 
     @Override
     public boolean join(Iterator<JoinedTuple<Integer, int[], int[]>> content) {
       LOG.info("Received joined tuple");
+      Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, this.timingCondition);
+      BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
+      resultsRecorder.writeToCSV();
+      this.verified = verifyResults(resultsVerifier, content, null, verified);
       return true;
     }
   }
@@ -124,30 +152,40 @@ public class BTJoinExample extends BenchTaskWorker {
 
     private int iterations;
 
-    private Random random = new Random();
+    private boolean timingCondition;
+    private boolean endNotified;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
+      this.timingCondition = getTimingCondition(SOURCE, ctx);
+      sendersInProgress.incrementAndGet();
+    }
+
+    private void notifyEnd() {
+      if (endNotified) {
+        return;
+      }
+      sendersInProgress.decrementAndGet();
+      endNotified = true;
+      LOG.info(String.format("Source : %d done sending.", context.taskIndex()));
     }
 
     @Override
     public void execute() {
-      count++;
-      if (count > iterations) {
+      if (count < iterations) {
+        if (count == jobParameters.getWarmupIterations()) {
+          Timing.mark(TIMING_ALL_SEND, this.timingCondition);
+        }
+        context.write(LEFT_EDGE, count, inputDataArray);
+        context.write(RIGHT_EDGE, count / 2, inputDataArray);
+        count++;
+      } else if (!this.endNotified) {
         context.end(LEFT_EDGE);
         context.end(RIGHT_EDGE);
-        return;
-      }
-
-      int ran = random.nextInt();
-      if (ran % 2 == 1) {
-        context.write(LEFT_EDGE, count, inputDataArray);
-      } else {
-        context.write(RIGHT_EDGE, count, inputDataArray);
+        this.notifyEnd();
       }
     }
   }
-
 }
