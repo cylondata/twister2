@@ -268,6 +268,8 @@ public class WindowManager<T> implements IManager<T> {
   }
 
   /**
+   * This method returns the number of event count which has the timestamp lesser than the
+   * reference timestamp
    * @param referenceTime timestamp to which we compare the event time to filter them out
    * @return the number of event count which is less than or equal to the reference time
    */
