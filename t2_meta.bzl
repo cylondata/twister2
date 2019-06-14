@@ -1,1 +1,1 @@
-T2_VERSION = "0.2.1"
+T2_VERSION = "0.2.2"
