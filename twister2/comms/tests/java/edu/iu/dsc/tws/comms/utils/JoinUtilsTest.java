@@ -39,7 +39,7 @@ public class JoinUtilsTest {
     List<Tuple> left = new ArrayList<>();
     List<Tuple> right = new ArrayList<>();
     Random random = new Random();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10000; i++) {
       left.add(Tuple.of(random.nextInt(10), random.nextInt()));
       right.add(Tuple.of(random.nextInt(10), random.nextInt()));
     }

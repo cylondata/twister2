@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.core.streaming;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -139,7 +140,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  protected Map<String, String> inputEdges;
+  protected Map<String, Set<String>> inputEdges;
   private boolean checkpointable;
   private StateStore stateStore;
   private SnapshotImpl snapshot;
@@ -169,7 +170,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int taskId, int globalTaskId, int tIndex,
                                int parallel, int wId, Map<String, Object> cfgs,
-                               Map<String, String> inEdges, Map<String, String> outEdges,
+                               Map<String, Set<String>> inEdges, Map<String, String> outEdges,
                                TaskSchedulePlan taskSchedule,
                                CheckpointingClient checkpointingClient, String taskGraphName,
                                long tasksVersion) {

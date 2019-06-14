@@ -11,8 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.shuffle;
 
-import java.util.Iterator;
+public interface Restorable {
+  void createRestorePoint();
 
-public interface RestorableIterator<E> extends Iterator<E>, Restorable {
+  void restore();
 
+  boolean hasRestorePoint();
+
+  void clearRestorePoint();
 }

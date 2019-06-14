@@ -66,6 +66,7 @@
   * [Word Count](examples/wordcount/wordcount.md)
   * [Benchmarking](examples/benchmark/benchmark.md)
   * [Windowing](examples/windowing/windowing.md)
+  * [MDS](examples/mds/mds.md)
 * [Compatibility API's](compatibility/compatibility.md)  
   * [Apache Storm](compatibility/storm.md)
 * [Releases](release/README.md)  

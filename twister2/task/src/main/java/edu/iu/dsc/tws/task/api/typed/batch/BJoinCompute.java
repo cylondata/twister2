@@ -9,10 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.shuffle;
+package edu.iu.dsc.tws.task.api.typed.batch;
 
 import java.util.Iterator;
 
-public interface RestorableIterator<E> extends Iterator<E>, Restorable {
+import edu.iu.dsc.tws.comms.api.JoinedTuple;
+import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
+public abstract class BJoinCompute<K, L, R>
+    extends AbstractIterableDataCompute<JoinedTuple<K, L, R>> {
+
+  public abstract boolean join(Iterator<JoinedTuple<K, L, R>> content);
+
+  public boolean execute(IMessage<Iterator<JoinedTuple<K, L, R>>> content) {
+    return this.join(content.getContent());
+  }
 }

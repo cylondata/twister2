@@ -91,4 +91,11 @@ public class ControlledFileReaderFlags {
   public boolean hasMemMapLimitReached() {
     return this.memMappedCount > this.memMapLimit;
   }
+
+
+  public void reset() {
+    this.invertedMemMapQueue.clear();
+    this.memMappedCount = 0;
+    this.amountLoadedToMemory = 0;
+  }
 }
