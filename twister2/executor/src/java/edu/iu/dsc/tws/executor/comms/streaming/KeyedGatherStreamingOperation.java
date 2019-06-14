@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -35,11 +34,8 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
   private SKeyedGather op;
 
   public KeyedGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                       Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                       Edge edge) {
+                                       Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
-
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
       destSelector = new DefaultDestinationSelector(edge.getPartitioner());
@@ -51,7 +47,6 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
     op = new SKeyedGather(newComm, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(), destSelector);
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -73,8 +68,7 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);

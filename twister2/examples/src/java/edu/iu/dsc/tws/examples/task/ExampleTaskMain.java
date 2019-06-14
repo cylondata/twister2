@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTAllReduceExample;
 import edu.iu.dsc.tws.examples.task.batch.BTBroadCastExample;
 import edu.iu.dsc.tws.examples.task.batch.BTGatherExample;
+import edu.iu.dsc.tws.examples.task.batch.BTJoinExample;
 import edu.iu.dsc.tws.examples.task.batch.BTKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTKeyedReduceExample;
 import edu.iu.dsc.tws.examples.task.batch.BTPartitionExample;
@@ -39,6 +40,7 @@ import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowEventTimeExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
@@ -190,6 +192,9 @@ public class ExampleTaskMain {
         case "keyed-partition":
           submitJob(config, workers, jobConfig, BTPartitionKeyedExample.class.getName(), memory);
           break;
+        case "join":
+          submitJob(config, workers, jobConfig, BTJoinExample.class.getName(), memory);
+          break;
       }
     } else {
       switch (operation) {
@@ -201,6 +206,9 @@ public class ExampleTaskMain {
           break;
         case "windowmpi":
           submitJob(config, workers, jobConfig, STWindowMPI.class.getName(), memory);
+          break;
+        case "windowt":
+          submitJob(config, workers, jobConfig, STWindowEventTimeExample.class.getName(), memory);
           break;
         case "reduce":
           submitJob(config, workers, jobConfig, STReduceExample.class.getName(), memory);

@@ -201,6 +201,7 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
               targetMessagesRight.get(target), comparator);
           receiver.receive(target, results.iterator());
           targetDone.put(target, true);
+          receiver.sync(target, null);
         } else {
           needsFurtherProgress = true;
         }

@@ -7,7 +7,7 @@ if [ $em != $2 ]; then
 fi
 
 if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
-    profile=-agentpath:/home/supun/tools/jprofiler7/bin/linux-x64/libjprofilerti.so=port=8849,nowait
+    profile=-agentpath:/home/skamburu/tools/jprofiler10/bin/linux-x64/libjprofilerti.so=port=8849
     debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
 fi
 

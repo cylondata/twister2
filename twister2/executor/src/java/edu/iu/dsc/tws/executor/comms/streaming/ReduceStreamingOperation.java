@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -44,12 +43,9 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
   public ReduceStreamingOperation(Config config, Communicator network,
                                   TaskPlan tPlan, IFunction fnc,
-                                  Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                  Edge edge) {
+                                  Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
     this.function = fnc;
-    this.edgeGenerator = e;
-
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
     }
@@ -66,7 +62,6 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     op = new SReduce(newComm, taskPlan, sources, dests.iterator().next(),
         Utils.dataTypeToMessageType(edge.getDataType()),
         new ReduceFunctionImpl(function), new FinalSingularReceiver());
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -104,8 +99,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

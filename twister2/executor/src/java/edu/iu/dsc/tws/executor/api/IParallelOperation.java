@@ -36,7 +36,6 @@ public interface IParallelOperation {
    * @param source source
    * @param message the message
    */
-
   boolean send(int source, IMessage message, int flags);
 
   /**

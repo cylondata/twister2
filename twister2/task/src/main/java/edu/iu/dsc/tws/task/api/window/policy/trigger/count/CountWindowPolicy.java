@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.task.api.window.policy.trigger.count;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.task.api.window.api.DefaultEvictionContext;
 import edu.iu.dsc.tws.task.api.window.api.Event;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.manage.IManager;
@@ -51,6 +52,7 @@ public class CountWindowPolicy<T> implements IWindowingPolicy<T> {
   public void track(Event<T> event) {
     if (started && !event.isWatermark()) {
       if (currentCount.incrementAndGet() >= count) {
+        evictionPolicy.setContext(new DefaultEvictionContext(System.currentTimeMillis()));
         this.manager.onEvent();
       }
     }

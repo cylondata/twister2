@@ -37,12 +37,12 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
 
   private static final Logger LOG = Logger.getLogger(AbstractOpsConfig.class.getName());
 
-  private String source;
-  private String operationName;
-  private ComputeConnection computeConnection;
-  private String edgeName = TaskConfigurations.DEFAULT_EDGE;
-  private DataType opDataType = DataType.OBJECT;
-  private Map<String, Object> propertiesMap;
+  protected String source;
+  protected String operationName;
+  protected ComputeConnection computeConnection;
+  protected String edgeName = TaskConfigurations.DEFAULT_EDGE;
+  protected DataType opDataType = DataType.OBJECT;
+  protected Map<String, Object> propertiesMap;
 
   protected AbstractOpsConfig(String source,
                               String operationName,
@@ -87,7 +87,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
 
   abstract void validate();
 
-  private void runValidation() {
+  protected void runValidation() {
     if (this.source == null) {
       throw new OpConfigValidationFailedException("Parent can't be null");
     }
