@@ -1,4 +1,8 @@
-# Developer Environment
+---
+id: devenv
+title: Developer Environment
+sidebar_label: IDE's
+---
 
 We are using IntelliJ idea for development of the project. So it is well supported at the moment. We have recently added support for Eclipse. Please note that it is still being tested.
 

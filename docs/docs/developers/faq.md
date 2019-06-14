@@ -1,4 +1,8 @@
-# FAQ
+---
+id: faq
+title: FAQ
+sidebar_label: FAQ
+---
 
 ## How can I configure my IDE to work with Twister2
 

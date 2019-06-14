@@ -1,4 +1,8 @@
-# Contributing to Twister2
+---
+id: contributing
+title: Contributing
+sidebar_label: Contributing
+---
 
 ## Contributing Code Changes
 

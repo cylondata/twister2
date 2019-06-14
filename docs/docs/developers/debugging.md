@@ -1,4 +1,8 @@
-# Debugging Twister2
+---
+id: debugging
+title: Debugging Twister2
+sidebar_label: Debugging
+---
 
 Because Twister2 is a distributed framework debuging the code to pin point bugs can be challenging.
 The guide below describes how you can debug the Twister2 using a remote debugger. This guide is for

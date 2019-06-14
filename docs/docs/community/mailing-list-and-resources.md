@@ -1,4 +1,8 @@
-# Mailing List & Resources
+---
+id: mailing
+title: Mailing Lists
+sidebar_label: Mailing Lists
+---
 
 **Mailing list:** [Twister2 Google Group](mailto:twister2@googlegroups.com)
 

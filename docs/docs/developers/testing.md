@@ -1,4 +1,8 @@
-# Testing
+---
+id: tests
+title: Unit Tests
+sidebar_label: Unit Tests
+---
 
 For a developer, writing test cases is vital. In Twister2 development with bazel build, here is how
 to setup a test package in your module. 
