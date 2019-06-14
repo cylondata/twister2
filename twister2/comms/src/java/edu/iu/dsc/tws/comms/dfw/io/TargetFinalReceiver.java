@@ -47,8 +47,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
    */
   protected boolean stateCleared = false;
 
-  protected int[] thisDestinationsArray;
-
   protected boolean calledReceive = false;
 
   @Override
@@ -63,10 +61,10 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     }
 
     int index = 0;
-    thisDestinationsArray = new int[thisDestinations.size()];
+    targets = new int[thisDestinations.size()];
     for (int target : thisDestinations) {
       messages.put(target, new LinkedBlockingQueue<>());
-      thisDestinationsArray[index++] = target;
+      targets[index++] = target;
     }
   }
 
@@ -117,10 +115,21 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   }
 
   @Override
+  protected boolean isAllEmpty() {
+    for (int i = 0; i < targets.length; i++) {
+      Queue<Object> msgQueue = messages.get(targets[i]);
+      if (msgQueue.size() > 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @Override
   protected boolean sync() {
     boolean allSynced = true;
-    for (int i = 0; i < thisDestinationsArray.length; i++) {
-      int target = thisDestinationsArray[i];
+    for (int i = 0; i < targets.length; i++) {
+      int target = targets[i];
       // if we have synced no need to go forward
       if (targetStates.get(target) == ReceiverState.INIT
           || targetStates.get(target) == ReceiverState.SYNCED) {
