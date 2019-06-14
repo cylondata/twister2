@@ -1,0 +1,7 @@
+{
+  "docs": {
+    "Getting Started": ["introduction", "download", "quickstart"],
+    "Compiling": ["compiling/compile_overview", "compiling/linux", "compiling/macox", "compiling/compile-dashboard", "compiling/generate-maven"],
+    "Deployment": ["deployment/docker/docker", "deployment/kubernetes/kubernetes", "deployment/mesos/mesos", "deployment/slurm/slurm", "deployment/standalone/standalone", "deployment/job-submit", "deployment/dashboard", "deployment/logging"]
+  }
+}
