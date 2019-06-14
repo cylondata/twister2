@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public final class BasicMesosJob {
   private static final Logger LOG = Logger.getLogger(BasicMesosJob.class.getName());
+
   private BasicMesosJob() {
   }
 

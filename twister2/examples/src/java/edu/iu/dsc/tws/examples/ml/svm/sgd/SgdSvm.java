@@ -106,11 +106,10 @@ public abstract class SgdSvm implements Serializable {
 
   /**
    * This method is deprecated
+   *
    * @deprecated method
    * Use iterativeSGD for batch mode training
    * Use onlineSGD for streaming mode training
-   * @throws NullDataSetException
-   * @throws MatrixMultiplicationException
    */
   @Deprecated
   public abstract void sgd() throws NullDataSetException, MatrixMultiplicationException;

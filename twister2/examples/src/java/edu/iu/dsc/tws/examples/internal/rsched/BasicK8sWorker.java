@@ -200,9 +200,9 @@ public class BasicK8sWorker implements IWorker, JobListener {
   public void printWorkersPerNode(Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode) {
 
     StringBuffer toPrint = new StringBuffer();
-    for (String nodeIP: workersPerNode.keySet()) {
+    for (String nodeIP : workersPerNode.keySet()) {
       toPrint.append("\n" + nodeIP + ": ");
-      for (JobMasterAPI.WorkerInfo workerInfo: workersPerNode.get(nodeIP)) {
+      for (JobMasterAPI.WorkerInfo workerInfo : workersPerNode.get(nodeIP)) {
         toPrint.append(workerInfo.getWorkerID() + ", ");
       }
     }
@@ -237,7 +237,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
       LOG.info("Files in the directory: " + path.getName());
       int i = 0;
 
-      for (FileStatus fileStatus: fileSystem.listStatus(path)) {
+      for (FileStatus fileStatus : fileSystem.listStatus(path)) {
         LOG.info(i++ + ": " + fileStatus.getPath().toUri() + "\t" + fileStatus.getLen() + " bytes");
       }
       fileSystem.close();

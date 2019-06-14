@@ -30,7 +30,7 @@ public class SourceTaskDataLoaderMain {
   private static String dataSource = "";
 
   public static void main(String[] args) throws InvalidArguments {
-    if(args.length == 3 ) {
+    if (args.length == 3) {
       workers = Integer.parseInt(args[0]);
       parallelism = Integer.parseInt(args[1]);
       dataSource = args[2];
