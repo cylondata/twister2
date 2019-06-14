@@ -193,6 +193,11 @@ public class WindowManager<T> implements IManager<T> {
     return winMessage;
   }
 
+  /**
+   * This method bundles data into a IWindowMessage for creating non-expired IWindowMessages
+   * @param events list of elements that need to be passed into a window
+   * @return a bundled IWindowMessage considering a list of IMessages of a given data type
+   */
   public IWindowMessage<T> bundleNonExpiredWindowIMessage(List<IMessage<T>> events) {
     WindowMessageImpl winMessage = null;
     List<IMessage<T>> messages = new ArrayList<>();
@@ -203,6 +208,11 @@ public class WindowManager<T> implements IManager<T> {
     return winMessage;
   }
 
+  /**
+   * This method bundles data into a IWindowMessage for creating expired IWindowMessages
+   *@param events list of elements that need to be passed into a window
+   * @return a bundled IWindowMessage considering a list of IMessages of a given data type
+   */
   public IWindowMessage<T> bundleExpiredWindowIMessage(List<IMessage<T>> events) {
     WindowMessageImpl winMessage = null;
     List<IMessage<T>> messages = new ArrayList<>();
@@ -257,6 +267,10 @@ public class WindowManager<T> implements IManager<T> {
     return timestamps;
   }
 
+  /**
+   * @param referenceTime timestamp to which we compare the event time to filter them out
+   * @return the number of event count which is less than or equal to the reference time
+   */
   public long getEventCount(long referenceTime) {
     long eventCount = 0;
     for (Event<T> event : queue) {
@@ -267,6 +281,14 @@ public class WindowManager<T> implements IManager<T> {
     return eventCount;
   }
 
+  /**
+   * provides the event with earliest timestamp between end and start timestamps
+   * by scanning through the queue of messages.
+   *
+   * @param start starting timestamp (excluded for calculation)
+   * @param end ending timestamp (included for calculation)
+   * @return the minimum timestamp the queue between start and end
+   */
   public long getEarliestEventTimestamp(long start, long end) {
     long minTimestamp = Long.MAX_VALUE;
     for (Event<T> event : queue) {
