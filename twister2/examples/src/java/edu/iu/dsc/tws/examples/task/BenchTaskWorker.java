@@ -186,7 +186,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
       sendersInProgress.incrementAndGet();
     }
 
-    private void notifyEnd() {
+    protected void notifyEnd() {
       if (endNotified) {
         return;
       }
