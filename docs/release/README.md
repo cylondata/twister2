@@ -1,6 +1,6 @@
 # Twister2 Releases
 
-The current release of Twister2 is [0.2.1](twister2_release_0_2_1.md). (May 10, 2019)
+The current release of Twister2 is [0.2.2](twister2_release_0_2_2.md). (June 14, 2019)
 
 ## Previous Releases
 
