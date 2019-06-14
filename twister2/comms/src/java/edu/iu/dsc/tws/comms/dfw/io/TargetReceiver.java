@@ -239,7 +239,7 @@ public abstract class TargetReceiver implements MessageReceiver {
         allEmpty &= val.isEmpty();
       }
 
-      if (!allEmpty || !sync()) {
+      if (!allEmpty || !isAllEmpty() || !sync()) {
         needsFurtherProgress = true;
       }
     } finally {
@@ -261,16 +261,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    *
    * @return true if there is nothing to process
    */
-  protected boolean isAllEmpty() {
-    for (int i = 0; i < targets.length; i++) {
-      Queue<Object> queue = messages.get(targets[i]);
-      if (queue.size() > 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
+  protected abstract boolean isAllEmpty();
 
   /**
    * Clear all the buffers for the target, to ready for the next
