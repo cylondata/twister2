@@ -103,7 +103,7 @@ public class BPartitionExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return sourcesDone && !partition.hasPending();
   }
 
   @Override

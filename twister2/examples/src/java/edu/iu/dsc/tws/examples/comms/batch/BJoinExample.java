@@ -90,7 +90,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && !join.hasPending();
   }
 
   @Override
