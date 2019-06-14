@@ -1,4 +1,8 @@
-# Benchmarking Twister2
+---
+id: benchmark
+title: Benchmark
+sidebar_label: Benchmark
+---
 
 Twister2 has a basic benchmark suite to test and verify communication and task layers. Benchmark suite can be configured to automatically run twister2 examples with all possible combinations of a predefined set of parameters, which will be useful to perform performance tests. At the end of each iteration, it will generate a CSV report including all the observations including, configuration parameters, durations, output verification status etc.
 

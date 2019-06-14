@@ -1,3 +1,9 @@
+---
+id: wordcount
+title: Word Count
+sidebar_label: Word Count
+---
+
 ## Streaming WordCount Example
 
 In this section we will run a streaming word count example from Twister2. This example only uses communication layer and resource scheduling layer. The threads are managed by the program.

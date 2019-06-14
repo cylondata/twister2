@@ -1,3 +1,9 @@
+---
+id: mds
+title: MDS
+sidebar_label: MDS
+---
+
 # DA-MDS (Deterministic Annealing Multi-Dimensional Scaling)
 
 DA-MDS is the implementation of deterministic annealing multi-dimensional scaling algorithm. 

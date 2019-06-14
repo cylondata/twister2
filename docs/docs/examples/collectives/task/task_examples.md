@@ -1,4 +1,8 @@
-# Task Examples
+---
+id: task
+title: Task
+sidebar_label: Task
+---
 
 Task examples demonstrate the task API which has the capability of deploying tasks by abstracting 
 the communication logic to the API users. Basically, the task layer does the job of creating the 

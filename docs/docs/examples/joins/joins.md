@@ -1,4 +1,8 @@
-#Joins
+---
+id: join
+title: Join
+sidebar_label: Join
+---
 
 ## Introduction
 

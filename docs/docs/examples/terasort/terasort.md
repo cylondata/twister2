@@ -1,4 +1,8 @@
-# Tera Sort
+---
+id: terasort
+title: Tera Sort
+sidebar_label: Tera Sort
+---
 
 ## Introduction
 

@@ -1,4 +1,10 @@
-#Support Vector Machines
+---
+id: svm
+title: SVM
+sidebar_label: SVM
+---
+
+# Support Vector Machines
 
 Support Vector Machines (SVM) is a supervised learning algorithm which is mainly used for the
 purpose of classifying data. SVM algorithm is a light-weight classifier compared to Deep Neural
@@ -11,7 +17,7 @@ diverted towards using gradient descent based approaches to solve the problem. T
 that this method is highly efficient and accuracy is as high as the traditional SMO-based and
 matrix decomposition-based approaches. 
 
-##Background
+## Background
 
 Currently Twister2 supports SGD-based SVM binary classifier with Linear Kernel. Our objective 
 is to provide fully functional multi-class SVM classifier with multiple kernel support in a future
@@ -37,7 +43,7 @@ The weight vector updates takes as follows. Depending on the gradient of the obj
 
 ![Weight Update Equations](images/eq3.gif)
 
-##SVM-SGD Sequential Algorithm 
+## SVM-SGD Sequential Algorithm 
 
 Twister2:ML provides a basic Linear Kernel based SVM algorithm developed on top of stochastic
 gradient descent based approach. The sequential algorithm is shown in Figure  
@@ -51,11 +57,11 @@ vector we do a model synchronization. A preliminary research we did on this prov
 is highly efficient and accuracy of the algorithm doesn't dilute with the model synchronization 
 frequency.
 
-##Distributed SVM Batch Model - Task Example
+## Distributed SVM Batch Model - Task Example
 
 ![Twister2 Distributed SVM Batch Model](images/twister2_ml_simple_model_svm.png)
 
-####Components
+#### Components
  
 * **Training Data Source** : This is an input from a text file (supported format csv) {label,features}
 * **Testing Data Source** : This is an input from a text file (supported format csv) {label,features}
@@ -81,9 +87,9 @@ the number of processes (=no of data partitions) used in the testing process.
 * **Final Results** : Final results can be saved to disk and currently, Twister2 SVM shows time breakdown for 
 testing, training, accuracy and data set specific info. 
  
- ##Code
+## Code
  
- ### Data Loading
+### Data Loading
  
  Here is how we load data for training.
  
@@ -107,9 +113,9 @@ DataObject<Object> data = null;
         datapointsTaskGraph, firstGraphExecutionPlan, Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
 ```
  
- #### Code Explained
+#### Code Explained
  
- ######Note: Task Names, Edge Names are defined using constants
+###### Note: Task Names, Edge Names are defined using constants
  
  First you need to create a **DataSourceObject** which is an abstraction in Twister2 Data API.
  This way you can implicitly do the data loading in parallel and plug this in easily to the data
@@ -322,7 +328,7 @@ You can find the code to our SVM Implementation
 [here](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/ml/svm/job/SvmSgdAdvancedRunner.java).
 
 
- ## Run Batch SVM
+## Run Batch SVM
  
  Sample Execution
  
@@ -330,7 +336,7 @@ You can find the code to our SVM Implementation
  Our inbuilt splitter currently assumes this. And we will release a more dyanmic
  Data API to handle this in a near future release. 
  
- ### Data Format :
+### Data Format :
  
  ```csv
  label,feature_1,feature_2,...,feature_d
@@ -341,14 +347,14 @@ for the two classes. The data should be in CSV format with dense matrix represen
 If you're using LibSVM format data, first use a [LibSVM -> CSV converter](https://github.com/zygmuntz/phraug/blob/master/libsvm2csv.py)
 to convert data to the dense format. 
 
- ###Run SVM
+### Run SVM
  
  ```bash
  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances <no of instances> -alpha <learning rate>-C <hyper-parameter-in-constraint-function> -exp_name <experiment-name> -features <features> -samples <total-samples> -iterations <iterations> -training_data_dir <training-csv-file> -testing_data_dir <testing-csv-file> -parallelism <overall-parallelism> -workers <no of workers> -cpus <no of cpus> -threads <threds to be used in the scheduler>
 
 ```
  
- #### Sample Run
+#### Sample Run
  
  ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.ml.svm.SVMRunner -ram_mb 4096 -disk_gb 2 -instances 1 -alpha 0.1 -C 1.0 -exp_name test-svm -features 22 -samples 35000 -iterations 10 -training_data_dir <path-to-training-csv> -testing_data_dir <path-to-testing-csv> -parallelism 8 -workers 1 -cpus 1 -threads 4
@@ -368,8 +374,7 @@ Accuracy of the Trained Model 					= 88.904494382 %
 
 ```
 
-
-##Distributed SVM Batch Model - Tset Example
+## Distributed SVM Batch Model - Tset Example
 
 TSet is an abstraction for the Task API. The reason behind using TSet is to provide 
 much easier coding environment for API users. For developer level using Task Example

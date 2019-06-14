@@ -1,3 +1,9 @@
+---
+id: kmeans
+title: K-Means
+sidebar_label: K-Means
+---
+
 # K-Means Clustering 
 The need to process large am​​ounts of continuously arriving information has led to the exploration and application of big data analytics techniques. Likewise, the painstaking process of clustering numerous datasets containing large numbers of records with high dimensions calls for innovative methods. 
 Traditional sequential clustering algorithms are unable to handle it. They are not scalable in relation 

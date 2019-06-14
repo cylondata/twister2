@@ -1,4 +1,8 @@
-# Windowing
+---
+id: windowing
+title: Windowing
+sidebar_label: Windowing
+---
 
 Twister2 0.2.1 release includes an experimental windowing functionality. We are still working on 
 bringing this to a complete API with the state of the art windowing support. 
