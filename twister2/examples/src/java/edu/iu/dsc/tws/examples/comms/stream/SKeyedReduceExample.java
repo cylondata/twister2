@@ -17,11 +17,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
@@ -43,10 +43,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   private boolean reduceDone;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -58,7 +55,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    keyedReduce = new SKeyedReduce(communicator, taskPlan, sources, targets,
+    keyedReduce = new SKeyedReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());

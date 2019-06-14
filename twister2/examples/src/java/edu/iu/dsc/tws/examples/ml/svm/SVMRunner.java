@@ -129,7 +129,7 @@ public final class SVMRunner {
     options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
         true, "Iterations", false));
     options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants
-            .TESTING_SAMPLES, true, "Testing Samples", true));
+        .TESTING_SAMPLES, true, "Testing Samples", true));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);

@@ -16,10 +16,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.api.stream.SPartition;
 import edu.iu.dsc.tws.examples.Utils;
@@ -40,23 +40,22 @@ public class SPartitionExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+  protected void execute(WorkerEnv workerEnv) {
 
     Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
+
+    Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
     for (int i = 0; i < noOfTargetTasks; i++) {
       targets.add(noOfSourceTasks + i);
     }
 
     // create the communication
-    partition = new SPartition(communicator, taskPlan, sources, targets,
+    partition = new SPartition(workerEnv.getCommunicator(), taskPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new LoadBalanceSelector());
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,

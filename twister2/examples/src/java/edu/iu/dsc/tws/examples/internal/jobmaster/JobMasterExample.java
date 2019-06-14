@@ -44,20 +44,21 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
 
-  private JobMasterExample() { }
+  private JobMasterExample() {
+  }
 
   /**
    * this main method is for locally testing only
    * A JobMaster instance is started locally on the default port:
-   *   edu.iu.dsc.tws.master.JobMasterContext.JOB_MASTER_PORT_DEFAULT = 11011
-   *
+   * edu.iu.dsc.tws.master.JobMasterContext.JOB_MASTER_PORT_DEFAULT = 11011
+   * <p>
    * numberOfWorkers to join is expected as a parameter
-   *
+   * <p>
    * When all workers joined and all have sent completed messages,
    * this server also completes and exits
-   *
+   * <p>
    * En example usage of JobMaster can be seen in:
-   *    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+   * edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
    */
   public static void main(String[] args) {
 
@@ -97,7 +98,6 @@ public final class JobMasterExample {
 
   /**
    * construct a Config object
-   * @return
    */
   public static Config updateConfig(Config config) {
     return Config.newBuilder()

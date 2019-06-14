@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
 
-
 import org.junit.Test;
 
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;

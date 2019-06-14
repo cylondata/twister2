@@ -20,10 +20,10 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Iterators;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -47,10 +47,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -63,7 +60,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
     }
 
     // create the communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), false,
         Comparator.comparingInt(o -> (Integer) o));
