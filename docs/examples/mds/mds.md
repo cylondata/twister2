@@ -233,7 +233,7 @@ first setup the required input parameters to run the MDS application. Next, it r
 using the readWeights method. Then, it sends the corresponding distance matrix and weights
 to the calculate statistics method to run the MDS application. 
 
-##Prerequisites
+### Prerequisites
 
 The MDS application in Twister2 requires two external packages namely common and damds. Please 
 install those packages before running this application. 
