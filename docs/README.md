@@ -2,7 +2,7 @@
 
 This documentation is written using mark down files. These markdown files are converted into HTML and deployed on to github pages.
 
-In order to write documentation one has to be knowledgeable about markdown files. 
+In order to write documentation one has to be knowledgeable about markdown files.
 
 Documentation is built using [Docusaurus](https://docusaurus.io). Please refer its documentation on how to build.
 
@@ -61,7 +61,7 @@ GIT_USER=<GIT_USER> CURRENT_BRANCH=master USE_SSH=false yarn run publish-gh-page
 
 ## Writing Documentation
 
-You can add your documentation to the docs folder as a markdown file. 
+You can add your documentation to the docs folder as a markdown file.
 
 On top of the markdown file add a header like following to link the markdown file to other files and use it in the sidebar. The id is used to refer to the document in the sidebar.
 

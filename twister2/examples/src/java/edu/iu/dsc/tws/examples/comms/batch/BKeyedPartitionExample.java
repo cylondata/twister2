@@ -21,10 +21,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -51,10 +51,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -67,8 +64,9 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new BKeyedPartition(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.INTEGER_ARRAY, new PartitionReceiver(), new SimpleKeyBasedSelector());
+    partition = new BKeyedPartition(workerEnv.getCommunicator(), taskPlan, sources, targets,
+        MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
+        new SimpleKeyBasedSelector());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -121,7 +119,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return sourcesDone && !partition.hasPending();
   }
 
   @Override

@@ -25,98 +25,83 @@ import edu.iu.dsc.tws.data.utils.WorkerConstants;
 public final class SVMJobParameters implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(SVMJobParameters.class.getName());
-
-  private SVMJobParameters() { }
-
   /**
    * Number of features in a data point
    */
   private int features;
-
   /**
    * Number of data points
-   * */
+   */
   private int samples;
-
   /**
    * Number of testing data points
-   * */
+   */
   private int testingSamples;
-
-  /*
-  * A streaming or batch mode operation
-  * */
-
   private boolean isStreaming;
 
+  /*
+   * A streaming or batch mode operation
+   * */
   /**
    * Training data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String trainingDataDir;
-
   /**
    * Testing data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String testingDataDir;
-
   /**
    * Cross-Validation data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String crossValidationDataDir;
-
   /**
    * Saving trained model
    */
   private String modelSaveDir;
-
   /**
    * Iterations in training model
    * Stream mode , iterations = 1
    */
   private int iterations = 100;
-
   /**
    * Learning rate
    */
   private double alpha = 0.001;
-
-
   /**
    * Hyper Parameter ; default is 1.0
    */
   private double c = 1.0;
-
   /**
    * Is data split from a single source [training, cross-validation, testing]
    */
   private boolean isSplit = false;
-
-  /*
-  * Run using dummy data
-  * */
-
   private boolean isDummy = false;
 
   /*
-  * Runs the algorithm with the given parallelism
-  * */
-
+   * Run using dummy data
+   * */
   private int parallelism = 4;
 
-
+  /*
+   * Runs the algorithm with the given parallelism
+   * */
   /**
    * Experiment name == Job Name
-   * */
+   */
 
   private String experimentName = "";
 
+
+  private SVMJobParameters() {
+  }
+
   /**
    * Builds the Job Parameters relevant SVM Algorithm
+   *
    * @param cfg : this must be initialized where Job is initialized.
-   * @return
    */
   public static SVMJobParameters build(Config cfg) {
     SVMJobParameters svmJobParameters = new SVMJobParameters();
@@ -149,7 +134,7 @@ public final class SVMJobParameters implements Serializable {
     svmJobParameters.experimentName = cfg
         .getStringValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
 
-    return  svmJobParameters;
+    return svmJobParameters;
   }
 
   public int getFeatures() {

@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -42,10 +42,7 @@ public class SDirectExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     List<Integer> sources = new ArrayList<>();
     List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -58,7 +55,7 @@ public class SDirectExample extends BenchWorker {
     }
 
     // create the communication
-    direct = new SDirect(communicator, taskPlan, sources, targets,
+    direct = new SDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver());
 
     Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

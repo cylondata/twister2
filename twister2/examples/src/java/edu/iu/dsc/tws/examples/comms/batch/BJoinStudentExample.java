@@ -23,11 +23,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -49,10 +49,9 @@ public class BJoinStudentExample extends KeyedBenchWorker {
   private Lock lock = new ReentrantLock();
 
   @Override
-  protected void execute() {
+  protected void execute(WorkerEnv workerEnv) {
     //Setting up the task plan for the join operation
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
@@ -71,7 +70,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
 
     // create the join communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
         MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
         new SimpleKeyBasedSelector(), false,
         new Comparator<Object>() {
@@ -127,7 +126,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && !join.hasPending();
   }
 
   @Override

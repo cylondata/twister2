@@ -19,11 +19,11 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BReduce;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
@@ -37,17 +37,14 @@ public class SVMCommsReducer extends CommsWorker {
   private boolean reduceDone;
 
   @Override
-  protected void execute() {
-
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        taskStages, workerList);
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = svmJobParameters.getParallelism();
     for (int i = 0; i < noOfSourceTasks; i++) {
       sources.add(i);
     }
     int target = noOfSourceTasks;
-    reduce = new BReduce(communicator, taskPlan, sources, target,
+    reduce = new BReduce(workerEnv.getCommunicator(), taskPlan, sources, target,
         new ReduceOperationFunction(Op.SUM, MessageTypes.DOUBLE), new FinalSingularReceiver(),
         MessageTypes.DOUBLE);
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
@@ -96,6 +93,26 @@ public class SVMCommsReducer extends CommsWorker {
     return true;
   }
 
+  @Override
+  protected void finishCommunication(int src) {
+    reduce.finish(src);
+  }
+
+  @Override
+  public List<Integer> generateTaskStages() {
+    if (taskStages != null) {
+      taskStages.clear();
+    }
+
+    if (taskStages == null) {
+      taskStages = new ArrayList<>(2);
+    }
+
+    taskStages.add(0, this.svmJobParameters.getParallelism());
+    taskStages.add(1, 1);
+    return taskStages;
+  }
+
   public class FinalSingularReceiver implements SingularReceiver {
 
     @Override
@@ -115,25 +132,5 @@ public class SVMCommsReducer extends CommsWorker {
       reduceDone = true;
       return true;
     }
-  }
-
-  @Override
-  protected void finishCommunication(int src) {
-    reduce.finish(src);
-  }
-
-  @Override
-  public List<Integer> generateTaskStages() {
-    if (taskStages != null) {
-      taskStages.clear();
-    }
-
-    if (taskStages == null) {
-      taskStages = new ArrayList<>(2);
-    }
-
-    taskStages.add(0, this.svmJobParameters.getParallelism());
-    taskStages.add(1, 1);
-    return taskStages;
   }
 }

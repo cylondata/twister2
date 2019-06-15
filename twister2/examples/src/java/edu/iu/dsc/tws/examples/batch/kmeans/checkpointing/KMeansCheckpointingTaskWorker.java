@@ -144,10 +144,5 @@ public class KMeansCheckpointingTaskWorker extends CheckpointingTaskWorker {
   }
 
 
-
-
-
-
-
 }
 

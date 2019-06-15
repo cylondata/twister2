@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.data.fs.Path;
 
 /**
  * Generate a data set
- *
+ * <p>
  * 1. We can generate in each worker
  * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */

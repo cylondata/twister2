@@ -23,16 +23,14 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Submitter;
 import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
@@ -46,11 +44,7 @@ public class SortJob implements IWorker {
 
   private BKeyedPartition partition;
 
-  private Communicator channel;
-
   private static final int NO_OF_TASKS = 4;
-
-  private Config config;
 
   private int workerId;
 
@@ -59,14 +53,18 @@ public class SortJob implements IWorker {
   private TaskPlan taskPlan;
   private List<Integer> taskStages = new ArrayList<>();
   private Set<RecordSource> recordSources = new HashSet<>();
+  private WorkerEnv workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    this.config = cfg;
     this.workerId = workerID;
+
+    // create a worker environment & setup the network
+    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+        volatileVolume);
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
@@ -78,14 +76,12 @@ public class SortJob implements IWorker {
       return;
     }
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID, taskStages, workerList);
+    this.taskPlan = Utils.createStageTaskPlan(workerEnv, taskStages);
 
-    // setup the network
-    setupNetwork(workerController);
     // set up the tasks
     setupTasks();
 
-    partition = new BKeyedPartition(channel, taskPlan, sources, destinations,
+    partition = new BKeyedPartition(workerEnv.getCommunicator(), taskPlan, sources, destinations,
         MessageTypes.INTEGER, MessageTypes.BYTE_ARRAY,
         new RecordSave(), new HashingSelector(), new IntegerComparator());
 
@@ -120,11 +116,6 @@ public class SortJob implements IWorker {
     }
   }
 
-  private void setupNetwork(IWorkerController controller) {
-    TWSChannel twsChannel = Network.initializeChannel(config, controller);
-    this.channel = new Communicator(config, twsChannel);
-  }
-
   private class IntegerComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {
@@ -140,7 +131,7 @@ public class SortJob implements IWorker {
     while (!done) {
       done = true;
       // communicationProgress the channel
-      channel.getChannel().progress();
+      workerEnv.getChannel().progress();
 
       // we should communicationProgress the communication directive
       boolean needsProgress = partition.progress();
