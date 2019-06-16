@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -93,7 +94,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   /**
    * the incoming edges
    */
-  private Map<String, String> inputEdges;
+  private Map<String, Set<String>> inputEdges;
 
   /**
    * Task schedule plan contains information about whole topology. This will be passed to
@@ -107,11 +108,22 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   private Set<String> syncReceived = new HashSet<>();
   private TaskContextImpl context;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
   public SinkBatchInstance(ICompute batchTask, BlockingQueue<IMessage> batchInQueue, Config config,
                            String tName, int taskId, int globalTaskId,
                            int tIndex, int parallel, int wId,
-                           Map<String, Object> cfgs, Map<String, String> inEdges,
-                           TaskSchedulePlan taskSchedule) {
+                           Map<String, Object> cfgs, Map<String, Set<String>> inEdges,
+                           TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
+                           String taskGraphName, Long taskVersion) {
     this.batchTask = batchTask;
     this.batchInQueue = batchInQueue;
     this.config = config;
@@ -130,7 +142,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     this.context.reset();
     state = new InstanceState(InstanceState.INIT);
     if (batchTask instanceof Closable) {
-      ((Closable) batchTask).refresh();
+      ((Closable) batchTask).reset();
     }
   }
 
@@ -138,6 +150,19 @@ public class SinkBatchInstance implements INodeInstance, ISync {
     context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
         parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
     batchTask.prepare(cfg, context);
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[batchInParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inputEdges.size()];
+    index = 0;
+    for (String e : inputEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
   }
 
   public boolean execute() {
@@ -154,7 +179,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       boolean needsFurther = progressCommunication();
 
       // we don't have incoming and our inqueue in empty
-      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
+      if ((state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty())
+          || (batchInQueue.isEmpty() && state.isSet(InstanceState.SYNCED))) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
@@ -196,8 +222,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
    */
   public boolean progressCommunication() {
     boolean allDone = true;
-    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
-      if (e.getValue().progress()) {
+    for (int i = 0; i < intOpArray.length; i++) {
+      if (intOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -207,8 +233,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   @Override
   public boolean isComplete() {
     boolean complete = true;
-    for (Map.Entry<String, IParallelOperation> e : batchInParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < intOpArray.length; i++) {
+      if (!intOpArray[i].isComplete()) {
         complete = false;
       }
     }

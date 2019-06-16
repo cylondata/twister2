@@ -18,10 +18,10 @@ import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 
 public final class Matrix {
 
+  private static final Logger LOG = Logger.getLogger(Matrix.class.getName());
+
   private Matrix() {
   }
-
-  private static final Logger LOG = Logger.getLogger(Matrix.class.getName());
 
   public static double[] scalarMultiply(double[] x, double y) {
     double[] result = new double[x.length];

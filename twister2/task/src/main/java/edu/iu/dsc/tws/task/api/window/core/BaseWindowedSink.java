@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.api.window.core;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.common.config.Config;
@@ -19,19 +23,25 @@ import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.api.window.IWindowCompute;
+import edu.iu.dsc.tws.task.api.window.api.GlobalStreamId;
 import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
 import edu.iu.dsc.tws.task.api.window.api.IWindow;
 import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
 import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
 import edu.iu.dsc.tws.task.api.window.exceptions.InvalidWindow;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
 import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.count.WatermarkCountEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.DurationEvictionPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.WatermarkDurationEvictionPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.count.WatermarkCountWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
+import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.WatermarkDurationWindowPolicy;
 import edu.iu.dsc.tws.task.api.window.strategy.IWindowStrategy;
 import edu.iu.dsc.tws.task.api.window.util.WindowParameter;
 import edu.iu.dsc.tws.task.api.window.util.WindowUtils;
@@ -41,7 +51,21 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private static final Logger LOG = Logger.getLogger(BaseWindowedSink.class.getName());
 
-  public abstract IWindowMessage<T> execute(IWindowMessage<T> windowMessage);
+  public abstract boolean execute(IWindowMessage<T> windowMessage);
+
+  public abstract boolean getExpire(IWindowMessage<T> expiredMessages);
+
+  public abstract boolean getLateMessages(IMessage<T> lateMessages);
+
+  private static final long DEFAULT_WATERMARK_INTERVAL = 1000; // 1s
+
+  private static final long DEFAULT_MAX_LAG = 0; // 0s
+
+  private long maxLagMs = 0;
+
+  private WindowConfig.Duration watermarkInterval = null;
+
+  private WindowConfig.Duration allowedLateness = null;
 
   private WindowManager<T> windowManager;
 
@@ -57,21 +81,25 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   private T collectiveOutput;
 
-  private ReduceWindowedFunction<T> reduceWindowedFunction;
-
   private IWindowMessage<T> collectiveEvents;
+
+  private ITimestampExtractor<T> iTimestampExtractor;
+
+  private WatermarkEventGenerator<T> watermarkEventGenerator;
+
 
   protected BaseWindowedSink() {
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
     this.windowLifeCycleListener = newWindowLifeCycleListener();
     this.windowManager = new WindowManager(this.windowLifeCycleListener);
-    initialize();
+    initialize(ctx);
   }
 
-  public void initialize() {
+  public void initialize(TaskContext context) {
     try {
       if (this.iWindow == null) {
         this.iWindow = WindowUtils.getWindow(this.windowParameter.getWindowCountSize(),
@@ -79,12 +107,28 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
             this.windowParameter.getWindowDurationSize(),
             this.windowParameter.getSldingDurationSize());
       }
-      IWindowStrategy<T> windowStrategy = this.iWindow.getWindowStrategy();
-      this.evictionPolicy = windowStrategy.getEvictionPolicy();
-      this.windowingPolicy = windowStrategy.getWindowingPolicy(this.windowManager,
-          this.evictionPolicy);
-      this.windowManager.setEvictionPolicy(this.evictionPolicy);
-      this.windowManager.setWindowingPolicy(this.windowingPolicy);
+
+      if (iTimestampExtractor != null) {
+        // TODO : handle delayed Stream
+
+        long watermarkInt = 1;
+        // TODO : handle this from a config param
+        if (this.watermarkInterval != null) {
+          watermarkInt = this.watermarkInterval.value;
+        } else {
+          watermarkInt = DEFAULT_WATERMARK_INTERVAL;
+        }
+
+        if (this.allowedLateness != null) {
+          maxLagMs = this.allowedLateness.value;
+        } else {
+          maxLagMs = DEFAULT_MAX_LAG;
+        }
+
+        watermarkEventGenerator = new WatermarkEventGenerator(this.windowManager,
+            maxLagMs, watermarkInt, getComponentStreams(context));
+      }
+      setPolicies(this.iWindow.getWindowStrategy());
       start();
     } catch (InvalidWindow invalidWindow) {
       invalidWindow.printStackTrace();
@@ -93,7 +137,22 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
 
   @Override
   public boolean execute(IMessage<T> message) {
-    this.windowManager.add(message);
+    if (isTimestamped()) {
+      long time = iTimestampExtractor.extractTimestamp(message.getContent());
+      GlobalStreamId streamId = new GlobalStreamId(message.edge());
+      if (watermarkEventGenerator.track(streamId, time)) {
+        this.windowManager.add(message, time);
+      } else {
+        // TODO : handle the late tuple stream a delayed message won't be handled unless a
+        //  late stream
+        // TODO : Here another latemessage function can be called or we can bundle the late messages
+        //  with the next windowing message
+        getLateMessages(message);
+      }
+    } else {
+      this.windowManager.add(message);
+    }
+
     return true;
   }
 
@@ -123,6 +182,26 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     return this;
   }
 
+  public BaseWindowedSink<T> withCustomTimestampExtractor(ITimestampExtractor timestampExtractor) {
+    this.iTimestampExtractor = timestampExtractor;
+    return this;
+  }
+
+  public BaseWindowedSink<T> withTimestampExtractor() {
+    this.iTimestampExtractor = null;
+    return this;
+  }
+
+  public BaseWindowedSink<T> withAllowedLateness(long lateness, TimeUnit timeUnit) {
+    this.allowedLateness = new WindowConfig.Duration(lateness, timeUnit);
+    return this;
+  }
+
+  public BaseWindowedSink<T> withWatermarkInterval(long watermarkInt, TimeUnit timeUnit) {
+    this.watermarkInterval = new WindowConfig.Duration(watermarkInt, timeUnit);
+    return this;
+  }
+
   public BaseWindowedSink<T> withWindow(IWindow window) {
     this.iWindow = window;
     return this;
@@ -134,13 +213,14 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
       @Override
       public void onExpiry(IWindowMessage<T> events) {
         // TODO : design the logic
+        getExpire(events);
       }
 
       @Override
       public void onActivation(IWindowMessage<T> events, IWindowMessage<T> newEvents,
                                IWindowMessage<T> expired) {
         collectiveEvents = events;
-        execute(events);
+        execute(collectiveEvents);
       }
     };
   }
@@ -165,35 +245,105 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
     }
   }
 
+  public void setPolicies(IWindowStrategy<T> windowStrategy) {
+    // Setting Eviction Policies
+    IEvictionPolicy<T> eviPolicy = windowStrategy.getEvictionPolicy();
+    if (isTimestamped()) {
+      if (eviPolicy instanceof CountEvictionPolicy) {
+        LOG.info(String.format("WatermarkCountEvictionPolicy selected"));
+        this.evictionPolicy = new WatermarkCountEvictionPolicy(this.windowParameter
+            .getWindowCountSize().value);
+      }
+      if (eviPolicy instanceof DurationEvictionPolicy) {
+        LOG.info(String.format("WatermarkDurationEvictionPolicy selected"));
+        this.evictionPolicy = new WatermarkDurationEvictionPolicy(this.windowParameter
+            .getWindowDurationSize().value, maxLagMs);
+      }
+    } else {
+      this.evictionPolicy = eviPolicy;
+    }
+
+    // Setting Windowing Policies
+    IWindowingPolicy<T> winPolicy = windowStrategy
+        .getWindowingPolicy(this.windowManager, this.evictionPolicy);
+    if (isTimestamped()) {
+      if (winPolicy instanceof CountWindowPolicy) {
+        LOG.info(String.format("WatermarkCountWindowingPolicy selected"));
+        this.windowingPolicy = new WatermarkCountWindowPolicy(this.windowParameter
+            .getSlidingCountSize().value, this.windowManager, this.evictionPolicy,
+            this.windowManager);
+      }
+      if (winPolicy instanceof DurationWindowPolicy) {
+        LOG.info(String.format("WatermarkDurationWindowingPolicy selected"));
+        this.windowingPolicy = new WatermarkDurationWindowPolicy(this.windowParameter
+            .getSldingDurationSize().value, this.windowManager, this.windowManager,
+            this.evictionPolicy);
+      }
+    } else {
+      this.windowingPolicy = winPolicy;
+    }
+    this.windowManager.setEvictionPolicy(this.evictionPolicy);
+    this.windowManager.setWindowingPolicy(this.windowingPolicy);
+  }
+
+
   public void start() {
+    if (watermarkEventGenerator != null) {
+      LOG.info("Starting WatermarkGenerator");
+      LOG.log(Level.FINE, "Starting watermark generator");
+      watermarkEventGenerator.start();
+    }
+    LOG.log(Level.FINE, "Starting windowing policy");
     this.windowingPolicy.start();
   }
 
   @Override
   public void close() {
+    if (watermarkEventGenerator != null) {
+      watermarkEventGenerator.shutdown();
+    }
     this.windowManager.shutdown();
   }
 
   @Override
-  public void refresh() {
+  public void reset() {
 
   }
 
+  private boolean isTimestamped() {
+    return iTimestampExtractor != null;
+  }
 
-//  public BaseWindowedSink<T> reduce(ReduceWindowedFunction<T> reduceFunction) {
-////    List<IMessage<T>> msgs = collectiveEvents.getWindow();
-////    T current = null;
-////    for (IMessage<T> m : msgs) {
-////      T val = m.getContent();
-////      if (current == null) {
-////        current = val;
-////      } else {
-////        current = reduceWindowedFunction.reduce(current, val);
-////      }
-////    }
-////    this.collectiveOutput = current;
-//    return this;
-//  }
+  private static class WindowedLateOutputCollector<T> {
+    private final List<IMessage<T>> messageList;
+    private IWindowMessage<T> iWindowMessage = null;
 
+    WindowedLateOutputCollector(List<IMessage<T>> list) {
+      messageList = list;
+    }
+
+
+  }
+
+  private Set<GlobalStreamId> getComponentStreams(TaskContext context) {
+    Set<GlobalStreamId> streams = new HashSet<>();
+    //TODO : Handle the checkpointing edge
+    streams = wrapGlobalStreamId(context);
+    return streams;
+  }
+
+  /**
+   * Get the edges connected to this task
+   * @param context
+   * @return
+   */
+  private Set<GlobalStreamId> wrapGlobalStreamId(TaskContext context) {
+    Set<GlobalStreamId> streams = new HashSet<>();
+    for (String s : context.getInputs().keySet()) {
+      GlobalStreamId globalStreamId = new GlobalStreamId(s);
+      streams.add(globalStreamId);
+    }
+    return streams;
+  }
 
 }

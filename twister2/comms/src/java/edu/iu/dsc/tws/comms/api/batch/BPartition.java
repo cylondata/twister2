@@ -63,7 +63,7 @@ public class BPartition {
     MessageReceiver finalRcvr;
     if (shuffle) {
       finalRcvr = new DPartitionBatchFinalReceiver(
-          rcvr, false, shuffleDirs, null);
+          rcvr, false, shuffleDirs, null, true);
     } else {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
@@ -135,7 +135,7 @@ public class BPartition {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    partition.clean();
+  public void reset() {
+    partition.reset();
   }
 }

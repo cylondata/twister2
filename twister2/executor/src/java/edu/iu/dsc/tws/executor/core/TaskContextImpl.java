@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.task.api.OutputCollection;
 import edu.iu.dsc.tws.task.api.TaskContext;
@@ -77,7 +78,7 @@ public class TaskContextImpl implements TaskContext {
   /**
    * The incoming edges and the tasks connected to them
    */
-  private Map<String, String> inputs;
+  private Map<String, Set<String>> inputs;
 
   private TaskSchedulePlan taskSchedulePlan;
 
@@ -85,6 +86,11 @@ public class TaskContextImpl implements TaskContext {
    * Names of out edges
    */
   private Set<String> outEdgeNames = new HashSet<>();
+
+  /**
+   * Return weather all edges have finished
+   */
+  private boolean allEdgedFinished;
 
   private TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                           int parallelism, int wId,
@@ -98,12 +104,13 @@ public class TaskContextImpl implements TaskContext {
     this.workerId = wId;
     this.configs = configs;
     this.taskSchedulePlan = taskSchedulePlan;
+    this.allEdgedFinished = false;
   }
 
 
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId, Map<String, Object> configs,
-                         Map<String, String> inputs, TaskSchedulePlan taskSchedulePlan) {
+                         Map<String, Set<String>> inputs, TaskSchedulePlan taskSchedulePlan) {
     this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
     this.inputs = inputs;
   }
@@ -121,7 +128,7 @@ public class TaskContextImpl implements TaskContext {
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId,
                          OutputCollection collection, Map<String, Object> configs,
-                         Map<String, String> inputs, Map<String, String> outEdges,
+                         Map<String, Set<String>> inputs, Map<String, String> outEdges,
                          TaskSchedulePlan taskSchedulePlan) {
     this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, collection,
         configs, outEdges, taskSchedulePlan);
@@ -143,6 +150,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public void reset() {
     this.isDone = new HashMap<>();
+    this.allEdgedFinished = false;
   }
 
   /**
@@ -230,7 +238,7 @@ public class TaskContextImpl implements TaskContext {
    *
    * @return a map with edge, and task connected to this edge
    */
-  public Map<String, String> getInputs() {
+  public Map<String, Set<String>> getInputs() {
     return inputs;
   }
 
@@ -268,6 +276,12 @@ public class TaskContextImpl implements TaskContext {
     return collection.collect(edge, new TaskMessage<>(message, edge, globalTaskId));
   }
 
+  @Override
+  public boolean writeBarrier(String edge, Object message) {
+    return collection.collect(edge, new TaskMessage(message,
+        MessageFlags.SYNC_BARRIER, edge, globalTaskId));
+  }
+
   /**
    * Write the last message
    *
@@ -277,6 +291,7 @@ public class TaskContextImpl implements TaskContext {
   public boolean writeEnd(String edge, Object message) {
     boolean writeSuccess = this.write(edge, message);
     isDone.put(edge, true);
+    checkAllEdgesFinished();
     return writeSuccess;
   }
 
@@ -292,7 +307,23 @@ public class TaskContextImpl implements TaskContext {
     boolean collect = collection.collect(edge, new TaskMessage<>(
         Tuple.of(key, message), edge, globalTaskId));
     isDone.put(edge, true);
+
+    checkAllEdgesFinished();
     return collect;
+  }
+
+  /**
+   * Check weather all the edges are finished
+   */
+  private void checkAllEdgesFinished() {
+    boolean finished = true;
+    for (String e : outEdgeNames) {
+      if (!isDone.containsKey(e)) {
+        finished = false;
+        break;
+      }
+    }
+    allEdgedFinished = finished;
   }
 
   /**
@@ -302,6 +333,7 @@ public class TaskContextImpl implements TaskContext {
    */
   public void end(String edge) {
     isDone.put(edge, true);
+    checkAllEdgesFinished();
   }
 
   /**
@@ -312,5 +344,13 @@ public class TaskContextImpl implements TaskContext {
    */
   public boolean isDone(String edge) {
     return isDone.containsKey(edge) && isDone.get(edge);
+  }
+
+  /**
+   * Weather all the edges are finished
+   * @return true if all the edges are finished
+   */
+  public boolean allEdgedFinished() {
+    return allEdgedFinished;
   }
 }

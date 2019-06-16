@@ -33,13 +33,9 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class InputDataStreamer extends BaseSource implements Receptor {
 
   private static final Logger LOG = Logger.getLogger(InputDataStreamer.class.getName());
-
-  private int features = 10;
-
-  private OperationMode operationMode;
-
   private final double[] labels = {-1, +1};
-
+  private int features = 10;
+  private OperationMode operationMode;
   private boolean isDummy = false;
 
   private BinaryBatchModel binaryBatchModel;

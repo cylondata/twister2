@@ -178,13 +178,13 @@ public class AllGather implements DataFlowOperation {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (gather != null) {
-      gather.clean();
+      gather.reset();
     }
 
     if (broadcast != null) {
-      broadcast.clean();
+      broadcast.reset();
     }
   }
 

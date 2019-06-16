@@ -42,19 +42,20 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 public final class ZKWorkerControllerExample {
   public static final Logger LOG = Logger.getLogger(ZKWorkerControllerExample.class.getName());
 
-  private ZKWorkerControllerExample() { }
+  private ZKWorkerControllerExample() {
+  }
 
   /**
    * example usage of ZKWorkerController class
    * Two actions supported:
-   *   join: join a Job znode
-   *   delete: delete a Job znode
-   *
+   * join: join a Job znode
+   * delete: delete a Job znode
+   * <p>
    * First parameter is the ZooKeeper server address
    * Second parameter is the requested action
    * Third parameter is the numberOfWorkers to join the job
    * Third parameter is used for join, not for delete
-   *
+   * <p>
    * Sometimes, two workers may finish almost at the same time
    * in that case, both worker caches may not be updated
    * therefore, both think that they are not the last ones
@@ -85,7 +86,6 @@ public final class ZKWorkerControllerExample {
 
   /**
    * construct a test Config object
-   * @return
    */
   public static Config buildTestConfig(String zkAddresses, String jobName) {
 
@@ -115,9 +115,6 @@ public final class ZKWorkerControllerExample {
 
   /**
    * an example usage of ZKWorkerController class
-   * @param jobName
-   * @param numberOfWorkers
-   * @param cnfg
    */
   public static void simulateWorker(String jobName, int numberOfWorkers, Config cnfg) {
     int port = 1000 + (int) (Math.random() * 1000);

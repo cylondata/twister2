@@ -42,15 +42,6 @@ public abstract class BaseSerializer implements MessageSerializer {
    */
   protected KryoSerializer serializer;
 
-  protected int executor;
-
-
-  public BaseSerializer(KryoSerializer serializer, int executor) {
-    this.serializer = serializer;
-    this.executor = executor;
-    LOG.fine("Initializing serializer on worker: " + executor);
-  }
-
   @Override
   public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
     this.sendBuffers = buffers;

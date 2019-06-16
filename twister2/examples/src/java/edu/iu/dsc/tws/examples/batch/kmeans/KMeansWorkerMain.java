@@ -58,6 +58,7 @@ public class KMeansWorkerMain {
     options.addOption(Utils.createOption(DataObjectConstants.FILE_SYSTEM,
         true, "file system", true));
 
+    @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 

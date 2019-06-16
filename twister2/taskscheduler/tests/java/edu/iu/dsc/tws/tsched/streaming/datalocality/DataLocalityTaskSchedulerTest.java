@@ -123,7 +123,7 @@ public class DataLocalityTaskSchedulerTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
@@ -167,7 +167,9 @@ public class DataLocalityTaskSchedulerTest {
     taskGraphBuilder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
         parallel);
-    computeConnection.direct("source", "direct-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("direct-edge")
+        .withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -182,7 +184,9 @@ public class DataLocalityTaskSchedulerTest {
     taskGraphBuilder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
         parallel);
-    computeConnection.direct("source", "direct-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("direct-edge")
+        .withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -204,8 +208,14 @@ public class DataLocalityTaskSchedulerTest {
     ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
         "sink", testSink, parallel);
 
-    computeConnection.direct("source", "cdirect-edge", DataType.OBJECT);
-    sinkComputeConnection.direct("compute", "sdirect-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("cdirect-edge")
+        .withDataType(DataType.OBJECT);
+
+    sinkComputeConnection.direct("compute")
+        .viaEdge("sdirect-edge")
+        .withDataType(DataType.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");

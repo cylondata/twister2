@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -39,10 +38,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   protected BKeyedGather op;
 
   public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   Edge edge) {
+                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
@@ -53,10 +50,11 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     boolean useDisk = false;
     Comparator keyComparator = null;
+    boolean groupByKey = true;
     try {
+      groupByKey = (Boolean) edge.getProperty("group-by-key");
       useDisk = (Boolean) edge.getProperty("use-disk");
       keyComparator = (Comparator) edge.getProperty("key-comparator");
-      LOG.info("Configuring disk based batch operation");
     } catch (Exception ex) {
       //ignore
     }
@@ -65,9 +63,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     op = new BKeyedGather(newComm, taskPlan, sources, dests,
         Utils.dataTypeToMessageType(edge.getKeyType()),
         Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator);
-
-    communicationEdge = e.generate(edge.getName());
+        destSelector, useDisk, keyComparator, groupByKey);
   }
 
   @Override
@@ -89,8 +85,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
@@ -101,7 +96,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 
@@ -117,7 +112,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

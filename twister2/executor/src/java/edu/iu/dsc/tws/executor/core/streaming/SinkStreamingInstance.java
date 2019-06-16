@@ -11,13 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core.streaming;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
+import edu.iu.dsc.tws.checkpointing.api.StateStore;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 import edu.iu.dsc.tws.task.api.Closable;
 import edu.iu.dsc.tws.task.api.ICompute;
@@ -25,74 +36,99 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
-public class SinkStreamingInstance implements INodeInstance {
+public class SinkStreamingInstance implements INodeInstance, ISync {
+
+  private static final Logger LOG = Logger.getLogger(SinkStreamingInstance.class.getName());
+
+  private final boolean checkpointable;
+
   /**
    * The actual streamingTask executing
    */
-  private ICompute streamingTask;
+  protected ICompute streamingTask;
 
   /**
    * All the inputs will come through a single queue, otherwise we need to look
    * at different queues for messages
    */
-  private BlockingQueue<IMessage> streamingInQueue;
+  protected BlockingQueue<IMessage> streamingInQueue;
 
   /**
    * Inward parallel operations
    */
-  private Map<String, IParallelOperation> streamingInParOps = new HashMap<>();
+  protected Map<String, IParallelOperation> streamingInParOps = new HashMap<>();
 
   /**
    * The configuration
    */
-  private Config config;
+  protected Config config;
 
   /**
    * The globally unique streamingTask id
    */
-  private int globalTaskId;
+  protected int globalTaskId;
 
   /**
    * The task id
    */
-  private int taskId;
+  protected int taskId;
 
   /**
    * Task index that goes from 0 to parallism - 1
    */
-  private int streamingTaskIndex;
+  protected int streamingTaskIndex;
 
   /**
    * Number of parallel tasks
    */
-  private int parallelism;
+  protected int parallelism;
 
   /**
    * Name of the streamingTask
    */
-  private String taskName;
+  protected String taskName;
 
   /**
    * Node configurations
    */
-  private Map<String, Object> nodeConfigs;
+  protected Map<String, Object> nodeConfigs;
 
   /**
    * The worker id
    */
-  private int workerId;
+  protected int workerId;
 
   /**
    * The input edges
    */
-  private Map<String, String> inEdges;
-  private TaskSchedulePlan taskSchedulePlan;
+  protected Map<String, Set<String>> inEdges;
+  protected TaskSchedulePlan taskSchedulePlan;
+
+  private CheckpointingClient checkpointingClient;
+  private String taskGraphName;
+  private Long taskVersion;
+  private StateStore stateStore;
+  private SnapshotImpl snapshot;
+  private PendingCheckpoint pendingCheckpoint;
+
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
                                int globalTaskID, int tIndex, int parallel,
-                               int wId, Map<String, Object> cfgs, Map<String, String> inEdges,
-                               TaskSchedulePlan taskSchedulePlan) {
+                               int wId, Map<String, Object> cfgs, Map<String, Set<String>> inEdges,
+                               TaskSchedulePlan taskSchedulePlan,
+                               CheckpointingClient checkpointingClient,
+                               String taskGraphName, Long taskVersion) {
     this.streamingTask = streamingTask;
     this.streamingInQueue = streamingInQueue;
     this.taskId = taskId;
@@ -105,11 +141,60 @@ public class SinkStreamingInstance implements INodeInstance {
     this.taskName = tName;
     this.inEdges = inEdges;
     this.taskSchedulePlan = taskSchedulePlan;
+    this.checkpointingClient = checkpointingClient;
+    this.taskGraphName = taskGraphName;
+    this.taskVersion = taskVersion;
+    this.checkpointable = this.streamingTask instanceof CheckpointableTask
+        && CheckpointingConfigurations.isCheckpointingEnabled(config);
+    this.snapshot = new SnapshotImpl();
+
   }
 
+  /**
+   * Preparing sink task
+   *
+   * @param cfg configuration
+   */
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[streamingInParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inEdges.size()];
+    index = 0;
+    for (String e : inEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
+
+    if (this.checkpointable) {
+      this.stateStore = CheckpointUtils.getStateStore(config);
+      this.stateStore.init(config, this.taskGraphName, String.valueOf(globalTaskId));
+
+      this.pendingCheckpoint = new PendingCheckpoint(
+          this.taskGraphName,
+          (CheckpointableTask) this.streamingTask,
+          this.globalTaskId,
+          this.intOpArray,
+          this.inEdges.size(),
+          this.checkpointingClient,
+          this.stateStore,
+          this.snapshot
+      );
+
+      TaskCheckpointUtils.restore(
+          (CheckpointableTask) this.streamingTask,
+          this.snapshot,
+          this.stateStore,
+          this.taskVersion,
+          globalTaskId
+      );
+    }
   }
 
   public boolean execute() {
@@ -120,8 +205,15 @@ public class SinkStreamingInstance implements INodeInstance {
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : streamingInParOps.entrySet()) {
-      e.getValue().progress();
+    for (int i = 0; i < intOpArray.length; i++) {
+      intOpArray[i].progress();
+    }
+
+    if (this.checkpointable && this.streamingInQueue.isEmpty()) {
+      long checkpointedBarrierId = this.pendingCheckpoint.execute();
+      if (checkpointedBarrierId != -1) {
+        ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
+      }
     }
 
     return true;
@@ -143,7 +235,19 @@ public class SinkStreamingInstance implements INodeInstance {
     streamingInParOps.put(edge, op);
   }
 
-  public BlockingQueue<IMessage> getstreamingInQueue() {
+  public BlockingQueue<IMessage> getStreamingInQueue() {
     return streamingInQueue;
+  }
+
+  @Override
+  public boolean sync(String edge, byte[] value) {
+    if (this.checkpointable) {
+      ByteBuffer wrap = ByteBuffer.wrap(value);
+      long barrierId = wrap.getLong();
+      LOG.fine(() -> "Barrier received to " + this.globalTaskId
+          + " with id " + barrierId + " from " + edge);
+      this.pendingCheckpoint.schedule(edge, barrierId);
+    }
+    return true;
   }
 }

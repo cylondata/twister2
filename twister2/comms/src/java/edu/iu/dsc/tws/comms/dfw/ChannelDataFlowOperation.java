@@ -29,10 +29,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -119,13 +117,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   /**
    * Pending send messages
    */
-  private Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
-      pendingSendMessagesPerSource;
+  private Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource;
 
   /**
    * Pending receives in case the receives are not ready
    */
-  private Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource;
+  private Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource;
 
   /**
    * Pending deserialization
@@ -167,9 +164,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
                    MessageType kType, MessageType rcvKeyType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
-                       pendingSendPerSource,
-                   Map<Integer, Queue<Pair<Object, InMessage>>> pRMPS,
+                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
+                   Map<Integer, Queue<InMessage>> pRMPS,
                    Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
                    Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
@@ -216,9 +212,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   public void init(Config cfg, MessageType messageType, TaskPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
-                       pendingSendPerSource,
-                   Map<Integer, Queue<Pair<Object, InMessage>>> pRMPS,
+                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
+                   Map<Integer, Queue<InMessage>> pRMPS,
                    Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
                    Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
@@ -289,7 +284,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   protected boolean sendMessagePartial(int source, Object message, int target,
                                        int flags, RoutingParameters routingParameters) {
     // for partial sends we use minus value to find the correct queue
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
+    ArrayBlockingQueue<OutMessage> pendingSendMessages =
         pendingSendMessagesPerSource.get(source * -1 - 1);
     return offerForSend(source, message, target, flags,
         routingParameters, pendingSendMessages);
@@ -307,8 +302,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   public boolean sendMessage(int source, Object message, int target,
                              int flags, RoutingParameters routingParameters) {
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(source);
+    ArrayBlockingQueue<OutMessage> pendingSendMessages = pendingSendMessagesPerSource.get(source);
     if (pendingSendMessages == null) {
       throw new RuntimeException(String.format("%d No send messages %d", executor, source));
     }
@@ -329,9 +323,17 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (currentMessage == null) {
       MessageHeader header = messageDeSerializer.get(source).buildHeader(buffer, e);
 
-      currentMessage = new InMessage(id, receiveDataType, this, header);
+      MessageType recvDType = receiveDataType;
+      MessageType recvKType = receiveKeyType;
+
+      if ((header.getFlags() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        recvDType = MessageTypes.BYTE_ARRAY;
+        recvKType = MessageTypes.EMPTY;
+      }
+
+      currentMessage = new InMessage(id, recvDType, this, header);
       if (isKeyed) {
-        currentMessage.setKeyType(receiveKeyType);
+        currentMessage.setKeyType(recvKType);
       }
       if (!currentMessage.addBufferAndCalculate(buffer)) {
         currentMessages.put(source, currentMessage);
@@ -353,14 +355,14 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * Weather we have more data to complete
    */
   public boolean isComplete() {
-    for (Map.Entry<Integer, Queue<Pair<Object, InMessage>>> e
+    for (Map.Entry<Integer, Queue<InMessage>> e
         : pendingReceiveMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
         return false;
       }
     }
 
-    for (Map.Entry<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> e
+    for (Map.Entry<Integer, ArrayBlockingQueue<OutMessage>> e
         : pendingSendMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
         return false;
@@ -397,7 +399,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           receiveDeserializeProgress(msgQueue, deserializeId);
         }
 
-        Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+        Queue<InMessage> pendingReceiveMessages =
             pendingReceiveMessagesPerSource.get(deserializeId);
         if (pendingReceiveMessages != null) {
           receiveProgress(pendingReceiveMessages);
@@ -420,7 +422,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private boolean offerForSend(int source, Object message, int target, int flags,
                                RoutingParameters routingParameters,
-                               ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages) {
+                               ArrayBlockingQueue<OutMessage> pendingSendMessages) {
     if (pendingSendMessages.remainingCapacity() > 0) {
       int path = DEFAULT_PATH;
       if (routingParameters.getExternalRoutes().size() > 0) {
@@ -429,11 +431,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
       OutMessage sendMessage = new OutMessage(source, edge,
           path, target, flags, routingParameters.getInternalRoutes(),
-          routingParameters.getExternalRoutes(), dataType, keyType, this);
+          routingParameters.getExternalRoutes(), dataType, keyType, this, message);
 
       // now try to put this into pending
-      return pendingSendMessages.offer(
-          new ImmutablePair<>(message, sendMessage));
+      return pendingSendMessages.offer(sendMessage);
     }
     return false;
   }
@@ -444,14 +445,13 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * @param pendingSendMessages the pending message queue
    * @param sendId send target
    */
-  private void sendProgress(Queue<Pair<Object, OutMessage>> pendingSendMessages, int sendId) {
+  private void sendProgress(Queue<OutMessage> pendingSendMessages, int sendId) {
     boolean canProgress = true;
 
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
-      Pair<Object, OutMessage> pair = pendingSendMessages.peek();
-      OutMessage outMessage = pair.getValue();
-      Object data = pair.getKey();
+      OutMessage outMessage = pendingSendMessages.peek();
+      Object data = outMessage.getData();
 
       // first lets send the message to internal destinations
       canProgress = sendInternally(outMessage, data);
@@ -465,7 +465,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         Queue<ChannelMessage> channelMessages = outMessage.getChannelMessages();
         // at this point lets build the message
         ChannelMessage serializeMessage = (ChannelMessage)
-            messageSerializer.get(sendId).build(pair.getKey(), outMessage);
+            messageSerializer.get(sendId).build(outMessage.getData(), outMessage);
         if (serializeMessage != null) {
           // we are incrementing the reference count here
           channelMessages.offer(serializeMessage);
@@ -567,12 +567,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
     if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT
         || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING) {
-      Object object = DataFlowContext.EMPTY_OBJECT;
 
       if (currentMessage.getReceivedState() == InMessage.ReceivedState.INIT) {
-        Queue<Pair<Object, InMessage>> pendingReceiveMessages =
+        Queue<InMessage> pendingReceiveMessages =
             pendingReceiveMessagesPerSource.get(currentMessage.getHeader().getSourceId());
-        if (!pendingReceiveMessages.offer(new ImmutablePair<>(object, currentMessage))) {
+        if (!pendingReceiveMessages.offer(currentMessage)) {
           throw new RuntimeException(executor + " We should have enough space: "
               + pendingReceiveMessages.size());
         }
@@ -598,11 +597,10 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  private void receiveProgress(Queue<Pair<Object, InMessage>> pendingReceiveMessages) {
+  private void receiveProgress(Queue<InMessage> pendingReceiveMessages) {
     boolean canProgress = true;
     while (pendingReceiveMessages.size() > 0 && canProgress) {
-      Pair<Object, InMessage> pair = pendingReceiveMessages.peek();
-      InMessage currentMessage = pair.getRight();
+      InMessage currentMessage = pendingReceiveMessages.peek();
 
       lock.lock();
       try {

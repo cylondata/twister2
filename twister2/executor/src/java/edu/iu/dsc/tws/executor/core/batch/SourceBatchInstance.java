@@ -14,7 +14,9 @@ package edu.iu.dsc.tws.executor.core.batch;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -27,10 +29,10 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.INode;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceBatchInstance implements INodeInstance, ISync {
+  private static final Logger LOG = Logger.getLogger(SourceBatchInstance.class.getName());
 
   /**
    * The actual task executing
@@ -100,7 +102,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   /**
    * The task context
    */
-  private TaskContext taskContext;
+  private TaskContextImpl taskContext;
 
   /**
    * The output edges
@@ -122,11 +124,23 @@ public class SourceBatchInstance implements INodeInstance, ISync {
    */
   private TaskSchedulePlan taskSchedule;
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public SourceBatchInstance(ISource task, BlockingQueue<IMessage> outQueue,
                              Config config, String tName, int taskId,
                              int globalTaskId, int tIndex, int parallel,
                              int wId, Map<String, Object> cfgs, Map<String, String> outEdges,
-                             TaskSchedulePlan taskSchedule) {
+                             TaskSchedulePlan taskSchedule,
+                             CheckpointingClient checkpointingClient, String taskGraphName,
+                             long tasksVersion) {
     this.batchTask = task;
     this.outBatchQueue = outQueue;
     this.config = config;
@@ -149,6 +163,19 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     taskContext = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, batchTaskName,
         parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
     batchTask.prepare(cfg, taskContext);
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outBatchParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outputEdges.size()];
+    index = 0;
+    for (String e : outputEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
   }
 
   /**
@@ -160,50 +187,42 @@ public class SourceBatchInstance implements INodeInstance, ISync {
       state.addState(InstanceState.EXECUTING);
     }
 
-    if (batchTask != null) {
-      // if we are in executing state we can run
-      if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)
-          && outBatchQueue.size() < lowWaterMark) {
+    if (state.isSet(InstanceState.EXECUTING) && state.isNotSet(InstanceState.EXECUTION_DONE)) {
+      // we loop until low watermark is reached or all edges are done
+      while (outBatchQueue.size() < lowWaterMark) {
+        // if we are in executing state we can run
         batchTask.execute();
-      }
 
-      // now check the context
-      boolean isDone = true;
-      for (String e : outputEdges.keySet()) {
-        if (!taskContext.isDone(e)) {
-          // we are done with execution
-          isDone = false;
+        // if all the edges are done
+        if (taskContext.allEdgedFinished()) {
+          state.addState(InstanceState.EXECUTION_DONE);
           break;
         }
       }
-      // if all the edges are done
-      if (isDone) {
-        state.addState(InstanceState.EXECUTION_DONE);
-      }
+    }
 
-      // now check the output queue
-      while (!outBatchQueue.isEmpty()) {
-        IMessage message = outBatchQueue.peek();
-        if (message != null) {
-          String edge = message.edge();
-          IParallelOperation op = outBatchParOps.get(edge);
-          if (op.send(globalTaskId, message, 0)) {
-            outBatchQueue.poll();
-          } else {
-            // no point in progressing further
-            break;
-          }
+    // now check the output queue
+    while (!outBatchQueue.isEmpty()) {
+      IMessage message = outBatchQueue.peek();
+      if (message != null) {
+        String edge = message.edge();
+        IParallelOperation op = outBatchParOps.get(edge);
+        if (op.send(globalTaskId, message, 0)) {
+          outBatchQueue.poll();
+        } else {
+          // no point in progressing further
+          break;
         }
       }
+    }
 
-      // if execution is done and outqueue is emput, we have put everything to communication
-      if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
-          && state.isNotSet(InstanceState.OUT_COMPLETE)) {
-        for (IParallelOperation op : outBatchParOps.values()) {
-          op.finish(globalTaskId);
-        }
-        state.addState(InstanceState.OUT_COMPLETE);
+    // if execution is done and outqueue is emput, we have put everything to communication
+    if (state.isSet(InstanceState.EXECUTION_DONE) && outBatchQueue.isEmpty()
+        && state.isNotSet(InstanceState.OUT_COMPLETE)) {
+      for (IParallelOperation op : outBatchParOps.values()) {
+        op.finish(globalTaskId);
       }
+      state.addState(InstanceState.OUT_COMPLETE);
     }
 
     // lets progress the communication
@@ -213,7 +232,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
       state.addState(InstanceState.SENDING_DONE);
     }
 
-    return !state.isEqual(InstanceState.FINISH);
+    boolean equal = state.isEqual(InstanceState.FINISH);
+    return !equal;
   }
 
   public boolean sync(String edge, byte[] value) {
@@ -234,7 +254,7 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   @Override
   public void reset() {
     if (batchTask instanceof Closable) {
-      ((Closable) batchTask).refresh();
+      ((Closable) batchTask).reset();
     }
     taskContext.reset();
     state = new InstanceState(InstanceState.INIT);
@@ -254,8 +274,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
    */
   public boolean progressCommunication() {
     boolean allDone = true;
-    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
-      if (e.getValue().progress()) {
+    for (int i = 0; i < outOpArray.length; i++) {
+      if (outOpArray[i].progress()) {
         allDone = false;
       }
     }
@@ -265,8 +285,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
   @Override
   public boolean isComplete() {
     boolean complete = true;
-    for (Map.Entry<String, IParallelOperation> e : outBatchParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < outOpArray.length; i++) {
+      if (!outOpArray[i].isComplete()) {
         complete = false;
       }
     }

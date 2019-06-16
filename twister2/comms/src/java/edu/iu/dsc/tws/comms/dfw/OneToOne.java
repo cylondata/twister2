@@ -23,10 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -34,8 +31,8 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
@@ -107,6 +104,11 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> sourceSet;
 
   /**
+   * Keep targets as a set to return
+   */
+  private Set<Integer> targetSet;
+
+  /**
    * The sources which are pending for finish
    */
   private Set<Integer> pendingFinishSources;
@@ -142,6 +144,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.type = t;
     this.sourceSet = new HashSet<>(sources);
+    this.targetSet = new HashSet<>(target);
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
     // the sources to targets mapping
@@ -174,10 +177,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
    * Initialize
    */
   private void init() {
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
-        = new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
@@ -188,8 +190,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(),
-          taskPlan.getThisExecutor(), type));
+      serializerMap.put(s, new DataSerializer());
     }
 
     for (int tar : thisTargets) {
@@ -199,8 +200,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
 
-      MessageDeSerializer messageDeSerializer = new AKeyedDeserializer(
-          taskPlan.getThisExecutor(), type);
+      MessageDeSerializer messageDeSerializer = new DataDeserializer();
       deSerializerMap.put(tar, messageDeSerializer);
     }
 
@@ -312,7 +312,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (finalReceiver != null) {
       finalReceiver.clean();
     }
@@ -384,7 +384,17 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     return routingParameters;
   }
 
+  @Override
+  public MessageType getDataType() {
+    return type;
+  }
+
   public Set<Integer> getSources() {
     return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }

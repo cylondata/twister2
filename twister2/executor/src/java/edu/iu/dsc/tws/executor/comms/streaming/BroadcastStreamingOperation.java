@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -30,8 +29,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   private SBroadCast op;
 
   public BroadcastStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                     Edge edge) {
+                                     Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (dests.size() == 0) {
@@ -43,10 +41,8 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    this.edgeGenerator = e;
     op = new SBroadCast(newComm, taskPlan, sources.iterator().next(), dests,
         Utils.dataTypeToMessageType(edge.getDataType()), new BcastReceiver());
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -66,9 +62,13 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     }
 
     @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(inEdge, message);
+    }
+
+    @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
@@ -84,7 +84,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

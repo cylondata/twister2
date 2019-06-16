@@ -63,6 +63,9 @@ public class Context {
   public static final ConfigEntry AURORA_SCRIPT = new ConfigEntry(
       "twister2.resource.scheduler.aurora.script", "${TWISTER2_CONF}/twister2.aurora");
 
+  public static final ConfigEntry CHECKPOINT_YAML = new ConfigEntry(
+      "twister2.config.file.checkpoint.yaml", "${TWISTER2_CONF}/checkpoint.yaml");
+
   public static final ConfigEntry DATA_YAML = new ConfigEntry(
       "twister2.config.file.data.yaml", "${TWISTER2_CONF}/data.yaml");
 
@@ -71,6 +74,7 @@ public class Context {
 
   public static final String JOB_NAME = "twister2.job.name";
   public static final String JOB_OBJECT = "twister2.job.object";
+  public static final String JOB_ID = "twister2.job.id";
 
   // an internal property to represent the container id
   public static final String TWISTER2_CONTAINER_ID = "twister2.container.id";
@@ -83,9 +87,11 @@ public class Context {
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
 
-  public static final String TWISTER2_VERSION = "0.2.1";
+  public static final String TWISTER2_VERSION = "0.2.2";
 
   public static final String TWISTER2_DIRECT_EDGE = "direct";
+
+  public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"
 
   public static final String TWISTER2_PARTITION_EDGE = "partition";
 
@@ -130,6 +136,7 @@ public class Context {
     defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
     defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
+    defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
     defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
   }
 
@@ -164,8 +171,16 @@ public class Context {
     return cfg.getStringValue(JOB_NAME);
   }
 
+  public static String jobId(Config cfg) {
+    return cfg.getStringValue(JOB_ID);
+  }
+
   public static String dataConfigurationFile(Config cfg) {
     return cfg.getStringValue(DATA_YAML);
+  }
+
+  public static String checkpointCofigurationFile(Config cfg) {
+    return cfg.getStringValue(CHECKPOINT_YAML);
   }
 
   public static String clusterType(Config cfg) {
@@ -198,6 +213,10 @@ public class Context {
 
   public static String twister2Home(Config cfg) {
     return cfg.getStringValue(TWISTER2_HOME);
+  }
+
+  public static String checkpointConfigurationFile(Config cfg) {
+    return cfg.getStringValue(CHECKPOINT_YAML);
   }
 
   public static int workerInstances(Config cfg) {

@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -42,8 +43,9 @@ public class STBroadCastExample extends BenchTaskWorker {
     ISink r = new BroadCastSinkTask();
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.broadcast(SOURCE, edge);
+    taskGraphBuilder.addSink(SINK, r, sinkParallelism)
+        .broadcast(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+
     return taskGraphBuilder;
   }
 

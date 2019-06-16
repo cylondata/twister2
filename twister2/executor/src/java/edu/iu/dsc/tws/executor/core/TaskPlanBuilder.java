@@ -63,8 +63,7 @@ public final class TaskPlanBuilder {
       Set<Integer> instances = new HashSet<>();
 
       for (TaskInstancePlan tPlan : tSet) {
-        instances.add(idGenerator.generateGlobalTaskId(tPlan.getTaskName(),
-            tPlan.getTaskId(), tPlan.getTaskIndex()));
+        instances.add(idGenerator.generateGlobalTaskId(tPlan.getTaskId(), tPlan.getTaskIndex()));
       }
       containersToTasks.put(c.getContainerId(), instances);
     }

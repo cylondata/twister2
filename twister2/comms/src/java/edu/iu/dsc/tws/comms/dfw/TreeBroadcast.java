@@ -28,7 +28,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -36,10 +35,10 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.BinaryTreeRouter;
@@ -60,6 +59,11 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
    * Keep sources as a set to return
    */
   private Set<Integer> sourceSet;
+
+  /**
+   * Keep sources as a set to return
+   */
+  private Set<Integer> targetSet;
 
   /**
    * The sources which are pending for finish
@@ -87,7 +91,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private int executor;
   private int edge;
   private MessageType type;
-  private Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>>
+  private Map<Integer, ArrayBlockingQueue<OutMessage>>
       pendingSendMessagesPerSource = new HashMap<>();
   private Lock lock = new ReentrantLock();
 
@@ -111,6 +115,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -126,6 +131,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
     this.sourceSet = new HashSet<>();
     sourceSet.add(src);
+    this.targetSet = new HashSet<>(dests);
 
     this.pendingFinishSources = new HashSet<>();
     this.finishedSources = new HashSet<>();
@@ -140,7 +146,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (finalReceiver != null) {
       finalReceiver.clean();
     }
@@ -236,8 +242,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         source, destinations, router.sendQueueIds()));
     thisSources = TaskPlanUtils.getTasksOfThisWorker(tPlan, sourceSet);
 
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource =
-        new HashMap<>();
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
@@ -245,15 +250,13 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-              DataFlowContext.sendPendingMax(cfg));
+      ArrayBlockingQueue<OutMessage> pendingSendMessages =
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (keyType == null) {
-        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), executor, type));
+        serializerMap.put(s, new DataSerializer());
       } else {
-        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(),
-            executor, keyType, type));
+        serializerMap.put(s, new KeyedDataSerializer());
       }
     }
 
@@ -265,16 +268,13 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<>(
-              capacity);
+      Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
       if (keyType == null) {
-        deSerializerMap.put(source, new AKeyedDeserializer(executor, type));
+        deSerializerMap.put(source, new DataDeserializer());
       } else {
-        deSerializerMap.put(source, new KeyedDeSerializer(new KryoSerializer(),
-            executor, keyType, type));
+        deSerializerMap.put(source, new KeyedDataDeSerializer());
       }
     }
 
@@ -284,10 +284,17 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       routingParametersCache.put(s, sendRoutingParameters(s, 0));
     }
 
-    delegate.init(cfg, t, tPlan, ed,
-        router.receivingExecutors(), this,
-        pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+    if (this.keyType != null) {
+      delegate.init(cfg, t, t, keyType, keyType, tPlan, ed,
+          router.receivingExecutors(), this,
+          pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+          pendingReceiveDeSerializations, serializerMap, deSerializerMap, true);
+    } else {
+      delegate.init(cfg, t, tPlan, ed,
+          router.receivingExecutors(), this,
+          pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+          pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+    }
   }
 
   @Override
@@ -398,8 +405,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
     }
 
-    ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-        pendingSendMessagesPerSource.get(src);
+    ArrayBlockingQueue<OutMessage> pendingSendMessages = pendingSendMessagesPerSource.get(src);
 
     // create a send message to keep track of the serialization at the initial stage
     // the sub-edge is 0
@@ -411,7 +417,8 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         currentMessage.getHeader().getEdge(),
         di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes(), type, null, delegate);
+        routingParameters.getExternalRoutes(), type, null, delegate,
+        DataFlowContext.EMPTY_OBJECT);
     sendMessage.getChannelMessages().offer(currentMessage);
 
     // we need to update here
@@ -423,8 +430,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     sendMessage.setSendState(OutMessage.SendState.SERIALIZED);
 
     // now try to put this into pending
-    return pendingSendMessages.offer(
-        new ImmutablePair<>(DataFlowContext.EMPTY_OBJECT, sendMessage));
+    return pendingSendMessages.offer(sendMessage);
   }
 
   private RoutingParameters sendRoutingParameters(int s, int path) {
@@ -468,6 +474,16 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   public Map<Integer, List<Integer>> receiveExpectedTaskIds() {
     return router.receiveExpectedTaskIds();
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sourceSet;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targetSet;
   }
 }
 

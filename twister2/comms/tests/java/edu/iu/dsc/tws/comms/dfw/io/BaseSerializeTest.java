@@ -18,7 +18,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
@@ -32,10 +31,9 @@ public class BaseSerializeTest {
                                       MessageType type, MessageType keyType) {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, null, null);
+        null, type, null, null, data);
 
-    KeyedSerializer serializer = new KeyedSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataSerializer serializer = new KeyedDataSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -46,8 +44,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDeSerializer deserializer = new KeyedDeSerializer(new KryoSerializer(), 0,
-        keyType, type);
+    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -69,10 +66,9 @@ public class BaseSerializeTest {
     BlockingQueue<DataBuffer> bufferQueue = createDataQueue(numBuffers, size);
 
     OutMessage outMessage = new OutMessage(0, 1, -1, 10, 0, null,
-        null, type, keyType, null);
+        null, type, keyType, null, data);
 
-    KeyedSerializer serializer = new KeyedSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataSerializer serializer = new KeyedDataSerializer();
     serializer.init(Config.newBuilder().build(), bufferQueue, true);
 
     List<ChannelMessage> messages = new ArrayList<>();
@@ -82,8 +78,7 @@ public class BaseSerializeTest {
       messages.add(ch);
     }
 
-    KeyedDeSerializer deserializer = new KeyedDeSerializer(
-        new KryoSerializer(), 0, keyType, type);
+    KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
     deserializer.init(Config.newBuilder().build(), true);
 
     MessageHeader header = deserializer.buildHeader(
@@ -109,31 +104,31 @@ public class BaseSerializeTest {
   }
 
   public Object createDataObject(int size, MessageType dataType) {
-    if (dataType == MessageTypes.INTEGER) {
+    if (dataType == MessageTypes.INTEGER_ARRAY) {
       int[] vals = new int[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (dataType == MessageTypes.LONG) {
+    } else if (dataType == MessageTypes.LONG_ARRAY) {
       long[] vals = new long[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (dataType == MessageTypes.DOUBLE) {
+    } else if (dataType == MessageTypes.DOUBLE_ARRAY) {
       double[] vals = new double[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = i;
       }
       return vals;
-    } else if (dataType == MessageTypes.SHORT) {
+    } else if (dataType == MessageTypes.SHORT_ARRAY) {
       short[] vals = new short[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (short) i;
       }
       return vals;
-    } else if (dataType == MessageTypes.BYTE) {
+    } else if (dataType == MessageTypes.BYTE_ARRAY) {
       byte[] vals = new byte[size];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
@@ -150,6 +145,20 @@ public class BaseSerializeTest {
     }
   }
 
+  public Object createKeyObject(MessageType dataType, int size) {
+    if (dataType == MessageTypes.BYTE_ARRAY) {
+      byte[] vals = new byte[size];
+      for (int i = 0; i < vals.length; i++) {
+        vals[i] = (byte) i;
+      }
+      return vals;
+    } else if (dataType == MessageTypes.INTEGER) {
+      return 1;
+    } else {
+      return null;
+    }
+  }
+
   public Object createKeyObject(MessageType dataType) {
     if (dataType == MessageTypes.INTEGER) {
       return 1;
@@ -159,7 +168,7 @@ public class BaseSerializeTest {
       return 1.0;
     } else if (dataType == MessageTypes.SHORT) {
       return (short) 1;
-    } else if (dataType == MessageTypes.BYTE) {
+    } else if (dataType == MessageTypes.BYTE_ARRAY) {
       byte[] vals = new byte[8];
       for (int i = 0; i < vals.length; i++) {
         vals[i] = (byte) i;
@@ -173,6 +182,12 @@ public class BaseSerializeTest {
   public Object createKeyedData(int size, MessageType dataType, MessageType keyType) {
     Object data = createDataObject(size, dataType);
     Object key = createKeyObject(keyType);
+    return new Tuple(key, data, keyType, dataType);
+  }
+
+  public Object createKeyedData(int size, MessageType dataType, int keySize, MessageType keyType) {
+    Object data = createDataObject(size, dataType);
+    Object key = createKeyObject(keyType, keySize);
     return new Tuple(key, data, keyType, dataType);
   }
 }

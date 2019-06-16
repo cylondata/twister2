@@ -20,6 +20,10 @@ public abstract class AggregateWindow<T> extends BaseWindowedSink<T> {
 
   public abstract boolean aggregate(T message);
 
+  public abstract boolean aggregateLateMessages(T message);
+
+
+
   private AggregateWindowedFunction<T> aggregateWindowedFunction;
 
   public AggregateWindow(AggregateWindowedFunction aggregateWindowedFunction) {
@@ -27,7 +31,7 @@ public abstract class AggregateWindow<T> extends BaseWindowedSink<T> {
   }
 
   @Override
-  public IWindowMessage<T> execute(IWindowMessage<T> windowMessage) {
+  public boolean execute(IWindowMessage<T> windowMessage) {
     if (windowMessage != null) {
       T current = null;
       for (IMessage<T> msg : windowMessage.getWindow()) {
@@ -40,6 +44,17 @@ public abstract class AggregateWindow<T> extends BaseWindowedSink<T> {
       }
       aggregate(current);
     }
-    return windowMessage;
+    return true;
+  }
+
+  @Override
+  public boolean getLateMessages(IMessage<T> lateMessages) {
+
+    return aggregateLateMessages(lateMessages.getContent());
+  }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
   }
 }

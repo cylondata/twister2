@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.partition;
 
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +36,8 @@ import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+
 /**
  * A receiver that goes to disk
  */
@@ -50,7 +52,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Sort mergers for each target
    */
-  private Map<Integer, Shuffle> sortedMergers = new HashMap<>();
+  private Int2ObjectOpenHashMap<Shuffle> sortedMergers = new Int2ObjectOpenHashMap<>();
 
   /**
    * weather we need to sort the records according to key
@@ -80,12 +82,12 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Finished workers per target (target -> finished workers)
    */
-  private Map<Integer, Set<Integer>> finishedSources = new HashMap<>();
+  private Int2ObjectOpenHashMap<Set<Integer>> finishedSources = new Int2ObjectOpenHashMap<>();
 
   /**
    * After all the sources finished for a target we add to this set
    */
-  private Set<Integer> finishedTargets = new HashSet<>();
+  private List<Integer> finishedTargets = new ArrayList<>();
 
   /**
    * We add to this set after calling receive
@@ -101,6 +103,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    * The directory in which we will be saving the shuffle objects
    */
   private List<String> shuffleDirectories;
+  private boolean groupByKey;
 
   /**
    * Keep a refresh count to make the directories when refreshed
@@ -115,38 +118,52 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   /**
    * Keep state about the targets
    */
-  protected Map<Integer, ReceiverState> targetStates = new HashMap<>();
+  protected Int2ObjectOpenHashMap<ReceiverState> targetStates = new Int2ObjectOpenHashMap<>();
+
+  /**
+   * We use a target array to iterator
+   */
+  private int[] targetsArray;
 
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
-                                      List<String> shuffleDirs, Comparator<Object> com) {
+                                      List<String> shuffleDirs,
+                                      Comparator<Object> com,
+                                      boolean groupByKey) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
     this.comparator = com;
     this.shuffleDirectories = shuffleDirs;
+    this.groupByKey = groupByKey;
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
     long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     long maxFileSize = DataFlowContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
+
     expIds = expectedIds;
     thisWorker = op.getTaskPlan().getThisExecutor();
-    finishedSources = new HashMap<>();
+    finishedSources = new Int2ObjectOpenHashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
     targets = new HashSet<>(expectedIds.keySet());
-    initMergers(maxBytesInMemory, maxRecordsInMemory, maxFileSize);
+    initMergers(maxBytesInMemory, maxRecordsInMemory, maxFileSize, parallelIOAllowance);
     this.bulkReceiver.init(cfg, expectedIds.keySet());
 
+    int index = 0;
+    targetsArray = new int[expectedIds.keySet().size()];
     for (Integer target : expectedIds.keySet()) {
       targetStates.put(target, ReceiverState.INIT);
+      targetsArray[index++] = target;
     }
   }
 
   /**
    * Initialize the mergers, this happens after each refresh
    */
-  private void initMergers(long maxBytesInMemory, long maxRecordsInMemory, long maxFileSize) {
+  private void initMergers(long maxBytesInMemory, long maxRecordsInMemory, long maxFileSize,
+                           int parallelIOAllowance) {
     for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
           partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
@@ -158,7 +175,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         if (sorted) {
           sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory, maxFileSize,
               shuffleDirectory, DFWIOUtils.getOperationName(target, partition, refresh),
-              partition.getKeyType(), partition.getDataType(), comparator, target);
+              partition.getKeyType(), partition.getDataType(), comparator, target,
+              groupByKey, parallelIOAllowance);
         } else {
           sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
               DFWIOUtils.getOperationName(target, partition, refresh), partition.getKeyType(),
@@ -235,13 +253,14 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public synchronized boolean progress() {
-    for (Shuffle sorts : sortedMergers.values()) {
-      sorts.run();
-    }
-
     boolean needFurtherProgress = false;
-    for (Map.Entry<Integer, ReceiverState> e : targetStates.entrySet()) {
-      if (e.getValue() != ReceiverState.INIT) {
+    for (int i = 0; i < targetsArray.length; i++) {
+      int target = targetsArray[i];
+      Shuffle sorts = sortedMergers.get(target);
+      sorts.run();
+
+      ReceiverState state = targetStates.get(target);
+      if (state != ReceiverState.INIT) {
         needFurtherProgress = true;
       }
     }
@@ -250,16 +269,17 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       return needFurtherProgress;
     }
 
-    for (int i : finishedTargets) {
-      if (!finishedTargetsCompleted.contains(i) && partition.isDelegateComplete()) {
-        finishTarget(i);
-        targetStates.put(i, ReceiverState.SYNCED);
-        onSyncEvent(i, null);
-        finishedTargetsCompleted.add(i);
+    for (int i = 0; i < finishedTargets.size(); i++) {
+      int target = finishedTargets.get(i);
+      if (!finishedTargetsCompleted.contains(target) && partition.isDelegateComplete()) {
+        finishTarget(target);
+        targetStates.put(target, ReceiverState.SYNCED);
+        onSyncEvent(target, null);
+        finishedTargetsCompleted.add(target);
       }
     }
 
-    return !finishedTargets.equals(targets);
+    return finishedTargets.size() != targets.size();
   }
 
   private void finishTarget(int target) {

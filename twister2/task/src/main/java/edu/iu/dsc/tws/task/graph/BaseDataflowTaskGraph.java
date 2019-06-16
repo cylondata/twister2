@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * methods to add the task vertices, task edges, create the directed edges, finds out the inward
  * and outward task edges, incoming and outgoing task edges.
  */
-public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
+public abstract class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   private LinkedHashSet<TV> vertices;
   private Set<DirectedEdge<TV, TE>> directedEdges;
 
@@ -310,9 +310,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   public boolean containsTaskEdge(TV sourceTaskVertex, TV targetTaskVertex, TE taskEdge) {
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (edgeComparator.compare(de.getTaskEdge(), taskEdge) == 0
-          && vertexComparator.compare(de.getSourceVertex(), sourceTaskVertex) == 0
-          && vertexComparator.compare(de.getTargetVertex(), targetTaskVertex) == 0
-      ) {
+          && vertexComparator.compare(de.getSourceVertex(), sourceTaskVertex) == 0) {
         return true;
       }
     }
@@ -394,7 +392,7 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
     for (DirectedEdge<TV, TE> de : directedEdges) {
       if (de.getSourceVertex().equals(de.getTargetVertex())) {
         throw new RuntimeException(String.format("Self-loop detected for the task graph in edge "
-            + "%s between %s and %s", de.getTaskEdge(), de.getSourceVertex(),
+                + "%s between %s and %s", de.getTaskEdge(), de.getSourceVertex(),
             de.getTargetVertex()));
       }
     }
@@ -454,6 +452,5 @@ public class BaseDataflowTaskGraph<TV, TE> implements ITaskGraph<TV, TE> {
   /**
    * Build the internal structures of the graph, so that it can be searched
    */
-  public void build() {
-  }
+  public abstract void build();
 }

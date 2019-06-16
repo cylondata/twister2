@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -31,8 +30,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   protected SAllGather op;
 
   public AllGatherStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     Edge edge) {
+                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -44,10 +42,8 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    this.edgeGenerator = e;
     op = new SAllGather(newComm, taskPlan, sources, dest,
         new FinalReduceReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -68,8 +64,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {
@@ -87,7 +82,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override

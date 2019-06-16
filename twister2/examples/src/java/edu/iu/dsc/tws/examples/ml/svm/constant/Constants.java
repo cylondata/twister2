@@ -13,7 +13,8 @@ package edu.iu.dsc.tws.examples.ml.svm.constant;
 
 public final class Constants {
 
-  private Constants() { }
+  private Constants() {
+  }
 
   public abstract class SimpleGraphConfig {
 

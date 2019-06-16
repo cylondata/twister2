@@ -61,8 +61,10 @@ public final class HelloExample {
       graphBuilderX.addSource("source1", firstSource, 4);
       ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
-      reduceConn.reduce("source1", "all-reduce", new Aggregator(),
-          DataType.OBJECT);
+      reduceConn.reduce("source1")
+          .viaEdge("all-reduce")
+          .withReductionFunction(new Aggregator())
+          .withDataType(DataType.OBJECT);
 
       graphBuilderX.setMode(OperationMode.BATCH);
       DataFlowTaskGraph batchGraph = graphBuilderX.build();
@@ -88,7 +90,7 @@ public final class HelloExample {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+      LOG.log(Level.INFO, "Received Message: " + context.getWorkerId()
           + ":" + context.globalTaskId() + message.getContent());
       return true;
     }

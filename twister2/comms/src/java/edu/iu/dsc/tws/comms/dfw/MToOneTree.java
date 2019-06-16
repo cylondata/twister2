@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -25,10 +26,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
 import edu.iu.dsc.tws.comms.api.DataFlowOperation;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -36,10 +34,10 @@ import edu.iu.dsc.tws.comms.api.MessageReceiver;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.AKeyedSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
+import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
@@ -53,6 +51,11 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
    * the source tasks
    */
   protected Set<Integer> sources;
+
+  /**
+   * The targets
+   */
+  private Set<Integer> targets;
 
   /**
    * The target tast
@@ -79,7 +82,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
    */
   private MessageReceiver partialReceiver;
 
-  private int index = 0;
+  private int index;
 
   private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
 
@@ -106,6 +109,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
+    this.targets = new HashSet<>();
+    this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
@@ -122,6 +127,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = keyed;
     this.keyType = kType;
     this.dataType = dType;
+    this.targets = new HashSet<>();
+    this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
@@ -267,9 +274,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     LOG.log(Level.FINE, String.format("%d reduce sources %s dest %d send tasks: %s",
         workerId, sources, destination, router.sendQueueIds()));
 
-    Map<Integer, ArrayBlockingQueue<Pair<Object, OutMessage>>> pendingSendMessagesPerSource =
+    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
-    Map<Integer, Queue<Pair<Object, InMessage>>> pendingReceiveMessagesPerSource
+    Map<Integer, Queue<InMessage>> pendingReceiveMessagesPerSource
         = new HashMap<>();
     Map<Integer, Queue<InMessage>> pendingReceiveDeSerializations = new HashMap<>();
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
@@ -278,15 +285,13 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     Set<Integer> srcs = router.sendQueueIds();
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
-      ArrayBlockingQueue<Pair<Object, OutMessage>> pendingSendMessages =
-          new ArrayBlockingQueue<Pair<Object, OutMessage>>(
-              DataFlowContext.sendPendingMax(cfg));
+      ArrayBlockingQueue<OutMessage> pendingSendMessages =
+          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       if (isKeyed) {
-        serializerMap.put(s, new KeyedSerializer(new KryoSerializer(), workerId,
-            keyType, dataType));
+        serializerMap.put(s, new KeyedDataSerializer());
       } else {
-        serializerMap.put(s, new AKeyedSerializer(new KryoSerializer(), workerId, dataType));
+        serializerMap.put(s, new DataSerializer());
       }
     }
 
@@ -298,16 +303,13 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     Set<Integer> execs = router.getReceiveSources();
     for (int e : execs) {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
-      Queue<Pair<Object, InMessage>> pendingReceiveMessages =
-          new ArrayBlockingQueue<>(
-              capacity);
+      Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
       if (isKeyed) {
-        deSerializerMap.put(e, new KeyedDeSerializer(new KryoSerializer(),
-            workerId, keyType, dataType));
+        deSerializerMap.put(e, new KeyedDataDeSerializer());
       } else {
-        deSerializerMap.put(e, new AKeyedDeserializer(workerId, dataType));
+        deSerializerMap.put(e, new DataDeserializer());
       }
     }
 
@@ -371,7 +373,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public void clean() {
+  public void reset() {
     if (partialReceiver != null) {
       partialReceiver.clean();
     }
@@ -407,5 +409,15 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   @Override
   public String getUniqueId() {
     return String.valueOf(edgeValue);
+  }
+
+  @Override
+  public Set<Integer> getSources() {
+    return sources;
+  }
+
+  @Override
+  public Set<Integer> getTargets() {
+    return targets;
   }
 }

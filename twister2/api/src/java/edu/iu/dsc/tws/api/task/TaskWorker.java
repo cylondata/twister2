@@ -99,7 +99,8 @@ public abstract class TaskWorker implements IWorker {
     // create the communicator
     communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList,
+        communicator, wController.getCheckpointingClient());
     // call execute
     execute();
     // wait for the sync

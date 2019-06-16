@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
 import edu.iu.dsc.tws.comms.api.MessageType;
@@ -84,7 +84,7 @@ public class OutMessage {
   /**
    * Channel messages created for sending this message through network
    */
-  private Queue<ChannelMessage> channelMessages = new LinkedBlockingQueue<>();
+  private Queue<ChannelMessage> channelMessages = new LinkedList<>();
 
   /**
    * Keep track of the send state
@@ -111,10 +111,12 @@ public class OutMessage {
    */
   private MessageHeader header;
 
+  private Object data;
+
   public OutMessage(int src, int edge, int path, int target, int flags,
                     Set<Integer> intSends, Set<Integer> extSends,
                     MessageType dataType, MessageType keyType,
-                    ChannelMessageReleaseCallback releaseCallback) {
+                    ChannelMessageReleaseCallback releaseCallback, Object data) {
     this.source = src;
     this.edge = edge;
     this.path = path;
@@ -126,6 +128,11 @@ public class OutMessage {
     this.dataType = dataType;
     this.keyType = keyType;
     this.releaseCallback = releaseCallback;
+    this.data = data;
+  }
+
+  public Object getData() {
+    return data;
   }
 
   public SendState getSendState() {

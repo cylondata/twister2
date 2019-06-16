@@ -54,7 +54,9 @@ public class IterativeJob extends TaskWorker {
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
-    computeConnection.partition("source", "partition", DataType.OBJECT);
+    computeConnection.partition("source")
+        .viaEdge("partition")
+        .withDataType(DataType.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();
@@ -98,7 +100,7 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void refresh() {
+    public void reset() {
       count = 0;
     }
   }
@@ -124,7 +126,7 @@ public class IterativeJob extends TaskWorker {
     }
 
     @Override
-    public void refresh() {
+    public void reset() {
       count = 0;
     }
 

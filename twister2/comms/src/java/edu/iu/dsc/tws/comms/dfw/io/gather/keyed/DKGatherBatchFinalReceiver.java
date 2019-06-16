@@ -65,12 +65,14 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
    * weather we need to sort the records according to key
    */
   private boolean sorted;
+  private boolean groupByKey;
 
 
   public DKGatherBatchFinalReceiver(BulkReceiver receiver, boolean srt, int limitPerKey,
-                                    String shuffleDir, Comparator com) {
+                                    String shuffleDir, Comparator com, boolean groupByKey) {
     this.bulkReceiver = receiver;
     this.sorted = srt;
+    this.groupByKey = groupByKey;
     this.limitPerKey = limitPerKey;
     //Setting this to false since we want keep the data kept in memory limited, since this is the
     //disk based implementation
@@ -86,6 +88,7 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
     long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
     long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
     long maxBytesToFile = DataFlowContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
 
     for (Integer target : expectedIds.keySet()) {
 
@@ -93,7 +96,8 @@ public class DKGatherBatchFinalReceiver extends KeyedReceiver {
       if (sorted) {
         sortedMerger = new FSKeyedSortedMerger2(maxBytesInMemory,
             maxBytesToFile, shuffleDirectory, getOperationName(target),
-            dataFlowOperation.getKeyType(), dataFlowOperation.getDataType(), comparator, target);
+            dataFlowOperation.getKeyType(), dataFlowOperation.getDataType(), comparator, target,
+            this.groupByKey, parallelIOAllowance);
       } else {
         sortedMerger = new FSKeyedMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,
             getOperationName(target), dataFlowOperation.getKeyType(),

@@ -22,12 +22,14 @@ public abstract class ReduceWindow<T> extends BaseWindowedSink<T> {
 
   public abstract boolean reduce(T content);
 
+  public abstract boolean reduceLateMessage(T content);
+
   public ReduceWindow(ReduceWindowedFunction<T> reduceWindowedFunction) {
     this.reduceWindowedFunction = reduceWindowedFunction;
   }
 
   @Override
-  public IWindowMessage<T> execute(IWindowMessage<T> windowMessage) {
+  public boolean execute(IWindowMessage<T> windowMessage) {
     if (windowMessage != null) {
       T current = null;
       for (IMessage<T> msg : windowMessage.getWindow()) {
@@ -40,6 +42,20 @@ public abstract class ReduceWindow<T> extends BaseWindowedSink<T> {
       }
       reduce(current);
     }
-    return windowMessage;
+    return true;
+  }
+
+  @Override
+  public boolean getLateMessages(IMessage<T> lateMessages) {
+    T lateMsg = lateMessages.getContent();
+    if (lateMsg != null) {
+      return reduceLateMessage(this.reduceWindowedFunction.reduceLateMessage(lateMsg));
+    }
+    return false;
+  }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
   }
 }

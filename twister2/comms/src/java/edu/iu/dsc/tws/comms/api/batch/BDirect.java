@@ -100,7 +100,7 @@ public class BDirect {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    direct.clean();
+  public void reset() {
+    direct.reset();
   }
 }

@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -32,10 +31,8 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   private BDirect op;
 
   public DirectBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                              Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                              Edge edge) {
+                              Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
 
     // we assume a uniform task id association, so this will work
     ArrayList<Integer> sources = new ArrayList<>(srcs);
@@ -46,7 +43,6 @@ public class DirectBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BDirect(newComm, taskPlan, sources, targets,
         new PartitionReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
-    communicationEdge = e.generate(edge.getName());
   }
 
   public void send(int source, IMessage message) {
@@ -64,14 +60,13 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 
@@ -97,6 +92,6 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 }

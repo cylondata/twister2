@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.comms.api.MessageHeader;
@@ -37,12 +37,12 @@ public class InMessage {
   /**
    * The channels built
    */
-  private Queue<ChannelMessage> builtMessages = new LinkedBlockingQueue<>();
+  private Queue<ChannelMessage> builtMessages = new LinkedList<>();
 
   /**
    * The buffers added to this message
    */
-  private Queue<DataBuffer> buffers = new LinkedBlockingQueue<>();
+  private Queue<DataBuffer> buffers = new LinkedList<>();
 
   /**
    * We call this to release the buffers
@@ -287,6 +287,8 @@ public class InMessage {
           keyType, dataType));
     }
     unPkNumberObjects++;
+    this.setUnPkCurrentObjectLength(-1);
+    this.setUnPkCurrentKeyLength(-1);
   }
 
 
@@ -298,6 +300,7 @@ public class InMessage {
       ((List<Object>) deserializedData).add(value);
     }
     unPkNumberObjects++;
+    this.setUnPkCurrentObjectLength(-1);
   }
 
   public void addBuiltMessage(ChannelMessage channelMessage) {

@@ -51,7 +51,7 @@ public class BKeyedGather {
                       MessageType kType, MessageType dType,
                       BulkReceiver rcvr, DestinationSelector destSelector) {
     this(comm, plan, sources, destinations, kType, dType, rcvr,
-        destSelector, false, null);
+        destSelector, false, null, true);
   }
 
   /**
@@ -63,7 +63,9 @@ public class BKeyedGather {
                       Set<Integer> sources, Set<Integer> destinations,
                       MessageType kType, MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector,
-                      boolean useDisk, Comparator<Object> comparator) {
+                      boolean useDisk,
+                      Comparator<Object> comparator,
+                      boolean groupByKey) {
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
@@ -74,11 +76,11 @@ public class BKeyedGather {
     MessageReceiver finalReceiver;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
     if (!useDisk) {
-      finalReceiver = new KGatherBatchFinalReceiver(rcvr, 100);
+      finalReceiver = new KGatherBatchFinalReceiver(rcvr, groupByKey);
     } else {
       receiveDataType = MessageTypes.BYTE_ARRAY;
       finalReceiver = new DPartitionBatchFinalReceiver(
-          rcvr, true, comm.getPersistentDirectories(), comparator);
+          rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
@@ -124,7 +126,7 @@ public class BKeyedGather {
   /**
    * Clean the operation, this doesn't close it
    */
-  public void refresh() {
-    keyedGather.clean();
+  public void reset() {
+    keyedGather.reset();
   }
 }

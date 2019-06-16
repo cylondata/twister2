@@ -55,7 +55,10 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     ISink r = new KeyedReduceSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
+    computeConnection.keyedReduce(SOURCE)
+        .viaEdge(edge)
+        .withOperation(operation, dataType)
+        .withKeyType(keyType);
     return taskGraphBuilder;
   }
 

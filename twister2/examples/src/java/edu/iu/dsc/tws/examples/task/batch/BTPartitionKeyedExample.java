@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
+import edu.iu.dsc.tws.examples.utils.partitioners.DeterministicTaskPartitioner;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
@@ -46,14 +47,18 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER;
-    DataType keyType = DataType.INTEGER_ARRAY;
+    DataType keyType = DataType.INTEGER;
+    DataType dataType = DataType.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new BKeyedPartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
+    computeConnection.keyedPartition(SOURCE)
+        .viaEdge(edge)
+        .withKeyType(keyType)
+        .withTaskPartitioner(new DeterministicTaskPartitioner())
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

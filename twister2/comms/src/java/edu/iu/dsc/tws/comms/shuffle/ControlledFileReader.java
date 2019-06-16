@@ -16,7 +16,6 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -27,7 +26,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
-public class ControlledFileReader implements Iterator, Comparable<ControlledFileReader> {
+public class ControlledFileReader implements RestorableIterator, Comparable<ControlledFileReader> {
 
   private static final Logger LOG = Logger.getLogger(ControlledFileReader.class.getName());
 
@@ -48,6 +47,8 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
   private long mappedTill = 0;
 
   private boolean inMemory = false;
+
+  private RestorePoint restorePoint;
 
   public ControlledFileReader(ControlledFileReaderFlags meta,
                               String filePath,
@@ -225,5 +226,56 @@ public class ControlledFileReader implements Iterator, Comparable<ControlledFile
     // deliberately not checking null. If we are getting null here, check the code of this class and
     // FSKeyedSortedMerger class.
     return this.keyComparator.compare(this.nextKey(), o.nextKey());
+  }
+
+  private static final String RP_KEYED_Q = "KEYED_Q";
+  private static final String RP_VALUES_Q = "VALUES_Q";
+  private static final String RP_VALUE_SIZE_Q = "VALUE_SIZE_Q";
+  private static final String RP_MAPPED_TILL = "MAPPED_TILL";
+  private static final String RP_KEEP_OPEN = "KEEP_OPEN";
+
+  @Override
+  public void createRestorePoint() {
+    this.restorePoint = new RestorePoint();
+    this.restorePoint.put(RP_KEYED_Q, new LinkedList<>(this.keysQ));
+    this.restorePoint.put(RP_VALUES_Q, new LinkedList<>(this.valuesQ));
+    this.restorePoint.put(RP_VALUE_SIZE_Q, new LinkedList<>(this.valueSizeQ));
+    int bufferPosition = 0;
+    if (this.buffer != null) {
+      bufferPosition = this.buffer.position();
+    }
+    this.restorePoint.put(RP_MAPPED_TILL, this.mappedTill + bufferPosition);
+    this.restorePoint.put(RP_KEEP_OPEN, this.buffer != null);
+  }
+
+  @Override
+  public void restore() {
+    if (!this.hasRestorePoint()) {
+      throw new RuntimeException("Couldn't find a restore point to restore from.");
+    }
+
+    boolean shouldKeepOpen = (boolean) this.restorePoint.getOrDefault(RP_KEEP_OPEN,
+        false);
+
+    this.releaseResources(); // release if this is already open
+
+    this.keysQ = (Queue<Object>) this.restorePoint.get(RP_KEYED_Q);
+    this.valuesQ = (Queue<Object>) this.restorePoint.get(RP_VALUES_Q);
+    this.valueSizeQ = (Queue<Integer>) this.restorePoint.get(RP_VALUE_SIZE_Q);
+    this.mappedTill = (long) this.restorePoint.get(RP_MAPPED_TILL);
+
+    if (shouldKeepOpen) {
+      this.open();
+    }
+  }
+
+  @Override
+  public void clearRestorePoint() {
+    this.restorePoint = null;
+  }
+
+  @Override
+  public boolean hasRestorePoint() {
+    return restorePoint != null;
   }
 }

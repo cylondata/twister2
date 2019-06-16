@@ -70,6 +70,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       IterableMapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
       AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> {
+
         double[][] newCentroids = new double[t1.length]
             [t1[0].length];
         for (int j = 0; j < t1.length; j++) {

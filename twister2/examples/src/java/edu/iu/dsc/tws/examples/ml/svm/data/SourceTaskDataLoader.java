@@ -74,8 +74,10 @@ public class SourceTaskDataLoader extends TaskWorker {
     taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
     ComputeConnection computeConnection = taskGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelism);
-    computeConnection.allreduce("kmeanssource", "all-reduce",
-        new SimpleDataAggregator(), DataType.OBJECT);
+    computeConnection.allreduce("kmeanssource")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new SimpleDataAggregator())
+        .withDataType(DataType.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph simpleTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);
@@ -88,7 +90,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 //    DataObject<Object> dataSet = taskExecutor.getOutput(simpleTaskGraph, plan, "kmeanssink");
 //    DataPartition<Object> values = dataSet.getPartitions()[0];
 //    Object lastObject = values.getConsumer().next();
-//    LOG.info(String.format("Last Object : %s", lastObject.getClass().getName()));
+//    LOG.info(String.format("Last Object : %s", lastObject.getClass().getGraphName()));
 
   }
 
@@ -98,6 +100,24 @@ public class SourceTaskDataLoader extends TaskWorker {
     dataSource = config.getStringValue(MLDataObjectConstants.TRAINING_DATA_DIR, "");
   }
 
+  private static class SimpleDataAllReduceTask extends BaseSink {
+
+    private static final long serialVersionUID = 5705351508072337994L;
+
+    private Object object;
+
+//    @Override
+//    public DataPartition<Object> get() {
+//      return new EntityPartition<>(context.taskIndex(), object);
+//    }
+
+    @Override
+    public boolean execute(IMessage content) {
+      object = content.getContent();
+      LOG.info(String.format("Object Instance : %s", object.getClass().getName()));
+      return true;
+    }
+  }
 
   private class DataSourceTask extends BaseSource {
     private static final long serialVersionUID = -1836625523925581215L;
@@ -142,25 +162,6 @@ public class SourceTaskDataLoader extends TaskWorker {
       return allObjects.get(0);
     }
 
-  }
-
-  private static class SimpleDataAllReduceTask extends BaseSink {
-
-    private static final long serialVersionUID = 5705351508072337994L;
-
-    private Object object;
-
-//    @Override
-//    public DataPartition<Object> get() {
-//      return new EntityPartition<>(context.taskIndex(), object);
-//    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      object = (Object) content.getContent();
-      LOG.info(String.format("Object Instance : %s", object.getClass().getName()));
-      return true;
-    }
   }
 
   public class SimpleDataAggregator implements IFunction {

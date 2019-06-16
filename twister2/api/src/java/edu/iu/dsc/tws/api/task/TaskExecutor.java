@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -62,6 +64,7 @@ public class TaskExecutor {
    * The network communicator
    */
   private Communicator communicator;
+  private CheckpointingClient checkpointingClient;
 
   /**
    * The executor used by this task executor
@@ -76,11 +79,20 @@ public class TaskExecutor {
    * @param net communicator
    */
   public TaskExecutor(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                      Communicator net) {
+                      Communicator net, CheckpointingClient checkpointingClient) {
     this.config = cfg;
     this.workerID = wId;
     this.workerInfoList = workerInfoList;
     this.communicator = net;
+    this.checkpointingClient = checkpointingClient;
+  }
+
+  public TaskExecutor(WorkerEnv workerEnv) {
+    this.config = workerEnv.getConfig();
+    this.workerID = workerEnv.getWorkerId();
+    this.workerInfoList = workerEnv.getWorkerList();
+    this.communicator = workerEnv.getCommunicator();
+    this.checkpointingClient = workerEnv.getWorkerController().getCheckpointingClient();
   }
 
   /**
@@ -103,7 +115,7 @@ public class TaskExecutor {
     //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
-        workerID, workerInfoList, communicator);
+        workerID, workerInfoList, communicator, this.checkpointingClient);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
 
@@ -162,6 +174,7 @@ public class TaskExecutor {
 
   /**
    * Wait for the execution to complete
+   *
    * @param plan the dataflow graph
    * @param graph the task graph
    */

@@ -75,21 +75,23 @@ We have started working on our next major release that will connect the core com
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
 
-### Next release (End of June 2019)
+### Next release - 0.3.0 (July 2019)
 
-1. Connected DataFlow
-2. Fault tolerance
+We would like to complete following features 
+
+1. Streaming windowing support (add to the TSet API)
+2. Fault tolerance (Automatic restart of failed workers)
 3. Supporting more API's including Beam  
-4. Python API
-6. More resource managers - Pilot Jobs, Yarn
-7. More example applications
+4. More resource managers - Pilot Jobs, Yarn
+5. More example applications
 
 ### Beyond next release
 
 1. Implementing core parts of Twister2 with C/C++ for high performance 
+2. Python API
 3. Direct use of RDMA
-5. SQL interface 
-6. Native MPI support for cloud deployments
+4. SQL interface 
+5. Native MPI support for cloud deployments
 
 ## Important Links
 

@@ -11,18 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
 import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
@@ -35,8 +43,8 @@ import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
-import edu.iu.dsc.tws.executor.core.streaming.window.SinkStreamingWindowingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
+import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.INode;
@@ -44,8 +52,6 @@ import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.ISource;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.window.IWindowCompute;
-import edu.iu.dsc.tws.task.api.window.api.IWindowedSink;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.Edge;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -59,6 +65,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * Worker id
    */
   private int workerId;
+  private CheckpointingClient checkpointingClient;
 
   /**
    * Communications list
@@ -82,24 +89,25 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   private Table<String, Integer, SinkStreamingInstance> streamingSinkInstances
       = HashBasedTable.create();
 
-  private Table<String, Integer, SinkStreamingWindowingInstance> streamingSinkWindowingInstances
-      = HashBasedTable.create();
-
 
   private Communicator network;
 
   private TaskIdGenerator taskIdGenerator;
 
-  private EdgeGenerator edgeGenerator;
-
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
+  /**
+   * We need to keep the target based on in this list, because, we can connect it to multiple
+   * sources
+   */
+  private Map<String, Communication> targetParOpTable = new HashMap<>();
+
   public ExecutionPlanBuilder(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                              Communicator net) {
+                              Communicator net, CheckpointingClient checkpointingClient) {
     this.workerId = workerID;
+    this.checkpointingClient = checkpointingClient;
     this.taskIdGenerator = new TaskIdGenerator();
     this.workerInfoList = workerInfoList;
-    this.edgeGenerator = new EdgeGenerator();
     this.network = net;
   }
 
@@ -109,8 +117,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     // we need to build the task plan
     TaskPlan taskPlan =
         TaskPlanBuilder.build(workerId, workerInfoList, taskSchedule, taskIdGenerator);
-    ParallelOperationFactory opFactory = new ParallelOperationFactory(
-        cfg, network, taskPlan, edgeGenerator);
+    ParallelOperationFactory opFactory = new ParallelOperationFactory(cfg, network, taskPlan);
 
     Map<Integer, ContainerPlan> containersMap = taskSchedule.getContainersMap();
     ContainerPlan conPlan = containersMap.get(workerId);
@@ -122,17 +129,48 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     ExecutionPlan execution = new ExecutionPlan();
 
     Set<TaskInstancePlan> instancePlan = conPlan.getTaskInstances();
+
+    long tasksVersion = 0L;
+
+    if (CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+      Set<Integer> globalTasks = Collections.emptySet();
+      if (workerId == 0) {
+        globalTasks = containersMap.values().stream()
+            .flatMap(containerPlan -> containerPlan.getTaskInstances().stream())
+            .filter(ip -> taskGraph.vertex(ip.getTaskName())
+                .getTask() instanceof CheckpointableTask)
+            .map(ip -> taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
+            .collect(Collectors.toSet());
+      }
+
+      try {
+        Checkpoint.FamilyInitializeResponse familyInitializeResponse =
+            this.checkpointingClient.initFamily(
+                workerId,
+                containersMap.size(),
+                taskGraph.getGraphName(),
+                globalTasks
+            );
+
+        tasksVersion = familyInitializeResponse.getVersion();
+      } catch (BlockingSendException e) {
+        throw new RuntimeException("Failed to register tasks with Checkpoint Manager", e);
+      }
+
+      LOG.info("Tasks will start with version " + tasksVersion);
+    }
+
     // for each task we are going to create the communications
     for (TaskInstancePlan ip : instancePlan) {
       Vertex v = taskGraph.vertex(ip.getTaskName());
-      Map<String, String> inEdges = new HashMap<>();
+      Map<String, Set<String>> inEdges = new HashMap<>();
       Map<String, String> outEdges = new HashMap<>();
       if (v == null) {
         throw new RuntimeException("Non-existing task scheduled: " + ip.getTaskName());
       }
 
       INode node = v.getTask();
-      if (node instanceof ICompute || node instanceof ISource || node instanceof IWindowCompute) {
+      if (node instanceof ICompute || node instanceof ISource) {
         // lets get the communication
         Set<Edge> edges = taskGraph.outEdges(v);
         // now lets create the communication object
@@ -144,16 +182,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(child.getName(),
               getTaskIdOfTask(child.getName(), taskSchedule), taskGraph);
 
-          if (!parOpTable.contains(v.getName(), e.getName())) {
-            parOpTable.put(v.getName(), e.getName(),
-                new Communication(e, v.getName(), child.getName(), srcTasks, tarTasks));
-          }
+          createCommunication(child, e, v, srcTasks, tarTasks);
           outEdges.put(e.getName(), child.getName());
         }
       }
 
-      if (node instanceof ICompute || node instanceof ISink || node instanceof IWindowedSink
-          || node instanceof IWindowCompute) {
+      if (node instanceof ICompute || node instanceof ISink) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -164,72 +198,100 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           Set<Integer> tarTasks = taskIdGenerator.getTaskIds(v.getName(),
               ip.getTaskId(), taskGraph);
 
-          if (!parOpTable.contains(parent.getName(), e.getName())) {
-            parOpTable.put(parent.getName(), e.getName(),
-                new Communication(e, parent.getName(), v.getName(), srcTasks, tarTasks));
+          createCommunication(v, e, parent, srcTasks, tarTasks);
+          // if we are a grouped edge, we have to use the group name
+          String inEdge;
+          if (e.getTargetEdge() == null) {
+            inEdge = e.getName();
+          } else {
+            inEdge = e.getTargetEdge();
           }
-          inEdges.put(e.getName(), parent.getName());
+
+          Set<String> parents = inEdges.get(inEdge);
+          if (parents == null) {
+            parents = new HashSet<>();
+          }
+          parents.add(inEdge);
         }
       }
 
       // lets create the instance
-      INodeInstance iNodeInstance = createInstances(cfg, ip, v, taskGraph.getOperationMode(),
-          inEdges, outEdges,
-          taskSchedule);
+      INodeInstance iNodeInstance = createInstances(cfg, taskGraph.getGraphName(),
+          ip, v, taskGraph.getOperationMode(), inEdges, outEdges, taskSchedule, tasksVersion);
       // add to execution
       execution.addNodes(v.getName(), taskIdGenerator.generateGlobalTaskId(
-          v.getName(), ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
+          ip.getTaskId(), ip.getTaskIndex()), iNodeInstance);
     }
 
     // now lets create the queues and start the execution
     for (Table.Cell<String, String, Communication> cell : parOpTable.cellSet()) {
       Communication c = cell.getValue();
-
       // lets create the communication
       OperationMode operationMode = taskGraph.getOperationMode();
-      IParallelOperation op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(),
-          operationMode);
+      IParallelOperation op;
+
+      assert c != null;
+      c.build();
+      if (c.getEdge().size() == 1) {
+        op = opFactory.build(c.getEdge(0), c.getSourceTasks(), c.getTargetTasks(),
+            operationMode);
+      } else if (c.getEdge().size() > 1) {
+        op = opFactory.build(c.getEdge(), c.getSourceTasks(), c.getTargetTasks(), operationMode);
+      } else {
+        throw new RuntimeException("Cannot have communication with 0 edges");
+      }
+
       // now lets check the sources and targets that are in this executor
       Set<Integer> sourcesOfThisWorker = intersectionOfTasks(conPlan, c.getSourceTasks());
       Set<Integer> targetsOfThisWorker = intersectionOfTasks(conPlan, c.getTargetTasks());
 
+      // we use the target edge as the group name
+      String targetEdge;
+      if (c.getEdge().size() > 1) {
+        targetEdge = c.getEdge(0).getTargetEdge();
+      } else {
+        targetEdge = c.getEdge(0).getName();
+      }
+
       // set the parallel operation to the instance
-      //let's separate the execution instance generation based on the Operation Mode
+      // let's separate the execution instance generation based on the Operation Mode
       // support to windows need to decide the type of instance that has to be initialized
       // so along with the operation mode, the windowing mode must be tested
-
-
       if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
-          if (streamingTaskInstances.contains(c.getSourceTask(), i)) {
-            TaskStreamingInstance taskStreamingInstance
-                = streamingTaskInstances.get(c.getSourceTask(), i);
-            taskStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-          } else if (streamingSourceInstances.contains(c.getSourceTask(), i)) {
-            SourceStreamingInstance sourceStreamingInstance
-                = streamingSourceInstances.get(c.getSourceTask(), i);
-            sourceStreamingInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-          } else {
-            throw new RuntimeException("Not found: " + c.getSourceTask());
+          // we can have multiple source tasks for an operation
+          for (int sIndex = 0; sIndex < c.getSourceTask().size(); sIndex++) {
+            String sourceTask = c.getSourceTask().get(sIndex);
+
+            if (streamingTaskInstances.contains(sourceTask, i)) {
+              TaskStreamingInstance taskStreamingInstance
+                  = streamingTaskInstances.get(sourceTask, i);
+              taskStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+              op.registerSync(i, taskStreamingInstance);
+            } else if (streamingSourceInstances.contains(sourceTask, i)) {
+              SourceStreamingInstance sourceStreamingInstance
+                  = streamingSourceInstances.get(sourceTask, i);
+              sourceStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+            } else {
+              throw new RuntimeException("Not found: " + c.getSourceTask());
+            }
           }
         }
 
+        // we only have one target task always
         for (Integer i : targetsOfThisWorker) {
           if (streamingTaskInstances.contains(c.getTargetTask(), i)) {
             TaskStreamingInstance taskStreamingInstance
                 = streamingTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskStreamingInstance.getInQueue());
-            taskStreamingInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            taskStreamingInstance.registerInParallelOperation(targetEdge, op);
+            op.registerSync(i, taskStreamingInstance);
           } else if (streamingSinkInstances.contains(c.getTargetTask(), i)) {
             SinkStreamingInstance streamingSinkInstance
                 = streamingSinkInstances.get(c.getTargetTask(), i);
-            streamingSinkInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            op.register(i, streamingSinkInstance.getstreamingInQueue());
-          } else if (streamingSinkWindowingInstances.contains(c.getTargetTask(), i)) {
-            SinkStreamingWindowingInstance sinkStreamingWindowingInstance
-                = streamingSinkWindowingInstances.get(c.getTargetTask(), i);
-            sinkStreamingWindowingInstance.registerInParallelOperation(c.getEdge().getName(), op);
-            op.register(i, sinkStreamingWindowingInstance.getstreamingInQueue());
+            streamingSinkInstance.registerInParallelOperation(targetEdge, op);
+            op.register(i, streamingSinkInstance.getStreamingInQueue());
+            op.registerSync(i, streamingSinkInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
@@ -239,15 +301,19 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       if (operationMode == OperationMode.BATCH) {
         for (Integer i : sourcesOfThisWorker) {
-          if (batchTaskInstances.contains(c.getSourceTask(), i)) {
-            TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getSourceTask(), i);
-            taskBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-          } else if (batchSourceInstances.contains(c.getSourceTask(), i)) {
-            SourceBatchInstance sourceBatchInstance
-                = batchSourceInstances.get(c.getSourceTask(), i);
-            sourceBatchInstance.registerOutParallelOperation(c.getEdge().getName(), op);
-          } else {
-            throw new RuntimeException("Not found: " + c.getSourceTask());
+          // we can have multiple source tasks for an operation
+          for (int sIndex = 0; sIndex < c.getSourceTask().size(); sIndex++) {
+            String sourceTask = c.getSourceTask().get(sIndex);
+            if (batchTaskInstances.contains(sourceTask, i)) {
+              TaskBatchInstance taskBatchInstance = batchTaskInstances.get(sourceTask, i);
+              taskBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+            } else if (batchSourceInstances.contains(sourceTask, i)) {
+              SourceBatchInstance sourceBatchInstance
+                  = batchSourceInstances.get(sourceTask, i);
+              sourceBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+            } else {
+              throw new RuntimeException("Not found: " + c.getSourceTask());
+            }
           }
         }
 
@@ -255,11 +321,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           if (batchTaskInstances.contains(c.getTargetTask(), i)) {
             TaskBatchInstance taskBatchInstance = batchTaskInstances.get(c.getTargetTask(), i);
             op.register(i, taskBatchInstance.getInQueue());
-            taskBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            taskBatchInstance.registerInParallelOperation(targetEdge, op);
             op.registerSync(i, taskBatchInstance);
           } else if (batchSinkInstances.contains(c.getTargetTask(), i)) {
             SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(c.getTargetTask(), i);
-            sinkBatchInstance.registerInParallelOperation(c.getEdge().getName(), op);
+            sinkBatchInstance.registerInParallelOperation(targetEdge, op);
             op.register(i, sinkBatchInstance.getBatchInQueue());
             op.registerSync(i, sinkBatchInstance);
           } else {
@@ -270,6 +336,39 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
     }
     return execution;
+  }
+
+  private void createCommunication(Vertex node, Edge e, Vertex parent,
+                                   Set<Integer> srcTasks, Set<Integer> tarTasks) {
+    if (e.getTargetEdge() == null) {
+      if (!parOpTable.contains(parent.getName(), e.getName())) {
+        Communication comm = new Communication(node.getName(),
+            srcTasks, tarTasks, e.getNumberOfEdges());
+        comm.addEdge(e.getEdgeIndex(), e);
+        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+        parOpTable.put(parent.getName(), e.getName(), comm);
+      }
+    } else {
+      // check if this is a grouped one
+      if (parOpTable.contains(parent.getName(), e.getTargetEdge())) {
+        Communication comm = parOpTable.get(parent.getName(), e.getTargetEdge());
+        comm.addEdge(e.getEdgeIndex(), e);
+        comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+      } else {
+        if (!targetParOpTable.containsKey(e.getTargetEdge())) {
+          Communication comm = new Communication(node.getName(),
+              srcTasks, tarTasks, e.getNumberOfEdges());
+          comm.addEdge(e.getEdgeIndex(), e);
+          comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+          parOpTable.put(parent.getName(), e.getTargetEdge(), comm);
+          targetParOpTable.put(e.getTargetEdge(), comm);
+        } else {
+          Communication comm = targetParOpTable.get(e.getTargetEdge());
+          comm.addEdge(e.getEdgeIndex(), e);
+          comm.addSourceTask(e.getEdgeIndex(), parent.getName());
+        }
+      }
+    }
   }
 
   private Set<Integer> intersectionOfTasks(ContainerPlan cp,
@@ -286,16 +385,17 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
    * @param ip instance plan
    * @param vertex vertex
    */
-  private INodeInstance createInstances(Config cfg, TaskInstancePlan ip,
+  private INodeInstance createInstances(Config cfg,
+                                        String taskGraphName,
+                                        TaskInstancePlan ip,
                                         Vertex vertex, OperationMode operationMode,
-                                        Map<String, String> inEdges,
+                                        Map<String, Set<String>> inEdges,
                                         Map<String, String> outEdges,
-                                        TaskSchedulePlan taskSchedule) {
+                                        TaskSchedulePlan taskSchedule, long tasksVersion) {
     // lets add the task
     byte[] taskBytes = Utils.serialize(vertex.getTask());
     INode newInstance = (INode) Utils.deserialize(taskBytes);
-    int taskId = taskIdGenerator.generateGlobalTaskId(vertex.getName(),
-        ip.getTaskId(), ip.getTaskIndex());
+    int taskId = taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex());
 
     if (operationMode.equals(OperationMode.BATCH)) {
       if (newInstance instanceof ICompute) {
@@ -303,7 +403,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkBatchInstance v = new SinkBatchInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(), ip.getTaskId(),
               taskId, ip.getTaskIndex(), vertex.getParallelism(),
-              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule);
+              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule,
+              this.checkpointingClient, taskGraphName, tasksVersion);
           batchSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -312,7 +413,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
               vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
-              inEdges, outEdges, taskSchedule);
+              inEdges, outEdges, taskSchedule, this.checkpointingClient,
+              taskGraphName, tasksVersion);
           batchTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -320,7 +422,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges, taskSchedule);
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
+            taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
         batchSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
@@ -332,7 +435,8 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
           SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
               new LinkedBlockingQueue<>(), cfg, vertex.getName(),
               ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-              vertex.getConfig().toMap(), inEdges, taskSchedule);
+              vertex.getConfig().toMap(), inEdges, taskSchedule,
+              this.checkpointingClient, taskGraphName, tasksVersion);
           streamingSinkInstances.put(vertex.getName(), taskId, v);
           return v;
         } else {
@@ -341,26 +445,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               new LinkedBlockingQueue<>(), cfg,
               vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
               vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule);
-          streamingTaskInstances.put(vertex.getName(), taskId, v);
-          return v;
-        }
-      } else if (newInstance instanceof IWindowCompute) {
-        if (newInstance instanceof IWindowedSink) {
-          SinkStreamingWindowingInstance v =
-              new SinkStreamingWindowingInstance((IWindowCompute) newInstance,
-                  new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-                  ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-                  vertex.getConfig().toMap(), inEdges, taskSchedule);
-          streamingSinkWindowingInstances.put(vertex.getName(), taskId, v);
-          return v;
-        } else {
-          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(),
-              new LinkedBlockingQueue<>(), cfg,
-              vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule);
+              outEdges, taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
           streamingTaskInstances.put(vertex.getName(), taskId, v);
           return v;
         }
@@ -369,7 +454,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             new LinkedBlockingQueue<>(), cfg,
             vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
             vertex.getParallelism(), workerId, vertex.getConfig().toMap(), outEdges,
-            taskSchedule);
+            taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
         streamingSourceInstances.put(vertex.getName(), taskId, v);
         return v;
       } else {
@@ -394,19 +479,32 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   private class Communication {
-    private Edge edge;
+    private List<Edge> edge = new ArrayList<>();
     private Set<Integer> sourceTasks;
     private Set<Integer> targetTasks;
-    private String sourceTask;
+    private List<String> sourceTask = new ArrayList<>();
     private String targetTask;
+    private int numberOfEdges;
+    private Map<Integer, Edge> edgeMap = new HashMap<>();
+    private Map<Integer, String> sourceTaskMap = new HashMap<>();
 
-    Communication(Edge e, String srcTask, String tarTast,
-                  Set<Integer> srcTasks, Set<Integer> tarTasks) {
-      this.edge = e;
+    Communication(String tarTast, Set<Integer> srcTasks,
+                  Set<Integer> tarTasks, int numberOfEdges) {
       this.targetTasks = tarTasks;
       this.sourceTasks = srcTasks;
-      this.sourceTask = srcTask;
       this.targetTask = tarTast;
+      this.numberOfEdges = numberOfEdges;
+    }
+
+    void build() {
+      for (int i = 0; i < edgeMap.size(); i++) {
+        edge.add(edgeMap.get(i));
+        sourceTask.add(sourceTaskMap.get(i));
+      }
+    }
+
+    void addEdge(int index, Edge e) {
+      edgeMap.put(index, e);
     }
 
     Set<Integer> getSourceTasks() {
@@ -417,16 +515,28 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       return targetTasks;
     }
 
-    public Edge getEdge() {
-      return edge;
+    Edge getEdge(int index) {
+      return edge.get(index);
     }
 
-    String getSourceTask() {
+    void addSourceTask(int index, String source) {
+      sourceTaskMap.put(index, source);
+    }
+
+    List<String> getSourceTask() {
       return sourceTask;
     }
 
     String getTargetTask() {
       return targetTask;
+    }
+
+    List<Edge> getEdge() {
+      return edge;
+    }
+
+    int getNumberOfEdges() {
+      return numberOfEdges;
     }
   }
 }

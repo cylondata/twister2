@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -19,10 +20,10 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Iterators;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -38,7 +39,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
-    while (!join.partition(task, key, data, flag, tag)) {
+    while (!join.join(task, key, data, flag, tag)) {
       // lets wait a litte and try again
       join.progress();
     }
@@ -46,10 +47,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -62,8 +60,10 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
     }
 
     // create the communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.INTEGER_ARRAY, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
+        MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
+        new JoinReceiver(), new SimpleKeyBasedSelector(), false,
+        Comparator.comparingInt(o -> (Integer) o));
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -90,7 +90,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && !join.hasPending();
   }
 
   @Override
@@ -119,7 +119,6 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
-    join.finish(src, 0);
-    join.finish(src, 1);
+    join.finish(src);
   }
 }

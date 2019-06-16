@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.executor.api.INodeInstance;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
@@ -121,7 +122,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  private Map<String, String> inputEdges;
+  private Map<String, Set<String>> inputEdges;
 
   /**
    * Task context
@@ -148,12 +149,33 @@ public class TaskBatchInstance implements INodeInstance, ISync {
    */
   private Set<String> syncReceived = new HashSet<>();
 
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] intOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] inEdgeArray;
+
+  /**
+   * Keep an array for iteration
+   */
+  private IParallelOperation[] outOpArray;
+
+  /**
+   * Keep an array out out edges for iteration
+   */
+  private String[] outEdgeArray;
+
   public TaskBatchInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int taskId, int globalTaskId, int tIndex, int parallel,
                            int wId, Map<String, Object> cfgs,
-                           Map<String, String> inEdges, Map<String, String> outEdges,
-                           TaskSchedulePlan taskSchedule) {
+                           Map<String, Set<String>> inEdges, Map<String, String> outEdges,
+                           TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
+                           String taskGraphName, long tasksVersion) {
     this.task = task;
     this.inQueue = inQueue;
     this.outQueue = outQueue;
@@ -177,6 +199,32 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
     task.prepare(cfg, taskContext);
+
+    /// we will use this array for iteration
+    this.outOpArray = new IParallelOperation[outParOps.size()];
+    int index = 0;
+    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
+      this.outOpArray[index++] = e.getValue();
+    }
+
+    this.outEdgeArray = new String[outputEdges.size()];
+    index = 0;
+    for (String e : outputEdges.keySet()) {
+      this.outEdgeArray[index++] = e;
+    }
+
+    /// we will use this array for iteration
+    this.intOpArray = new IParallelOperation[inParOps.size()];
+    index = 0;
+    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
+      this.intOpArray[index++] = e.getValue();
+    }
+
+    this.inEdgeArray = new String[inputEdges.size()];
+    index = 0;
+    for (String e : inputEdges.keySet()) {
+      this.inEdgeArray[index++] = e;
+    }
   }
 
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
@@ -200,9 +248,10 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // for compute we don't have to have the context done as when the inputs finish and execution
       // is done, we are done executing
       // progress in communication
-      boolean needsFurther = progressCommunication(inParOps);
+      boolean needsFurther = progressCommunication(intOpArray);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty()) {
+      if ((state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty())
+          || (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED))) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
@@ -235,7 +284,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     }
 
     // lets progress the communication
-    boolean needsFurther = progressCommunication(outParOps);
+    boolean needsFurther = progressCommunication(outOpArray);
     // after we have put everything to communication and no progress is required, lets finish
     if (state.isSet(InstanceState.OUT_COMPLETE)) {
       state.addState(InstanceState.SENDING_DONE);
@@ -257,10 +306,10 @@ public class TaskBatchInstance implements INodeInstance, ISync {
    *
    * @return true if further progress is needed
    */
-  public boolean progressCommunication(Map<String, IParallelOperation> ops) {
+  public boolean progressCommunication(IParallelOperation[] ops) {
     boolean allDone = true;
-    for (Map.Entry<String, IParallelOperation> e : ops.entrySet()) {
-      if (e.getValue().progress()) {
+    for (int i = 0; i < ops.length; i++) {
+      if (ops[i].progress()) {
         allDone = false;
       }
     }
@@ -270,14 +319,14 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   @Override
   public boolean isComplete() {
     boolean complete = true;
-    for (Map.Entry<String, IParallelOperation> e : outParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < outOpArray.length; i++) {
+      if (outOpArray[i].progress()) {
         complete = false;
       }
     }
 
-    for (Map.Entry<String, IParallelOperation> e : inParOps.entrySet()) {
-      if (!e.getValue().isComplete()) {
+    for (int i = 0; i < intOpArray.length; i++) {
+      if (!intOpArray[i].isComplete()) {
         complete = false;
       }
     }
@@ -306,7 +355,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public void reset() {
     this.taskContext.reset();
     if (task instanceof Closable) {
-      ((Closable) task).refresh();
+      ((Closable) task).reset();
     }
     state = new InstanceState(InstanceState.INIT);
   }
