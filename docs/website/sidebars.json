@@ -5,7 +5,7 @@
     "Application Development": ["concepts/api_overview", "guides/developing_twister2", "concepts/tset_api", "concepts/task_api", "concepts/op_api", "concepts/windowing/windowing_api"],
     "Deployment": ["deployment/docker/docker", "deployment/kubernetes/kubernetes", "deployment/mesos/mesos", "deployment/slurm/slurm", "deployment/standalone/standalone", "deployment/job-submit", "deployment/dashboard", "deployment/logging"],
     "Examples": ["examples/wordcount/wordcount", "examples/collectives/comms/comm", "examples/collectives/task/task", "examples/benchmark/benchmark", "examples/joins/join", "examples/terasort/terasort", "examples/windowing/windowing", "examples/ml/kmeans/kmeans", "examples/ml/svm/svm"],
-    "Concepts": ["concepts/distributed_runtime", "concepts/concept_operators", "concepts/task-system/concept_task"],
+    "Concepts": ["concepts/distributed_runtime", "concepts/concept_ops", "concepts/task-system/concept_task"],
     "Developer Resources": ["developers/debugging", "developers/devenv", "developers/faq", "developers/tests"],
     "Community": ["community/contributing", "community/mailing"],
     "Publications": ["publications"]

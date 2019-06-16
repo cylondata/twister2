@@ -12,7 +12,7 @@ Twister2 is in Alpha stage and we believe with the July release it will move ont
 
 Twister2 consists of several core components that provide the essential features of a data analytics platform.
 
-### Resource provisioning component to bring up and manage parallel workers in cluster environments
+### Resource provisioning component 
 
 The primary responsibility of this component is job submission and management. It provides abstractions 
 to acquire resources and manage the life cycle of a parallel job. We have developed links to the 
@@ -44,6 +44,7 @@ performance while users can use low-level APIs to program high-performance appli
 can use both socket based or MPI based (ISent/IRecv) to communicate allowing it to perform well on advanced hardware.
 
 ### Task System
+
 This component provides the abstractions to hide the execution details and an easy to program API for parallel applications. A user can create a streaming task graph or a batch task graph to analyze data. The abstractions have similarities to Storm and Hadoop APIs. Task system consists of the following major components.
 
 Task Graph - Create dataflow graphs for streaming and batch analysis including iterative computations
