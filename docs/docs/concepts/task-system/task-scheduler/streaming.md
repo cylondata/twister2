@@ -14,7 +14,7 @@ allocation of task instances \(task instance plan\) on those containers. The siz
 \(memory, disk, and cpu\) and the task instances \(memory, disk, and cpu\) are homogeneous in nature
 is shown in Fig.1.
 
-![Round Robin Allocation](../../../images/roundrobin_taskscheduler.png)
+![Round Robin Allocation](assets/roundrobin_taskscheduler.png)
 
 First, it will allocate the task instances into the logical container values and then it will 
 calculate the required ram, disk, and cpu values for the task instances and the logical containers 
@@ -47,7 +47,7 @@ container 0. If the container has reached its maximum limit then it will allocat
 instance 1 will go to container 1. The size of the container (memory, disk, and cpu) and the task 
 instances (memory, disk, and cpu) are heterogeneous in nature is shown in Fig.2.
 
-![First Fit Allocation](../../../images/firstfit_taskscheduler.png)
+![First Fit Allocation](assets/firstfit_taskscheduler.png)
 
 The initialize() method in the FirstFitStreamingTaskScheduler first initialize the task instance ram, 
 disk, and cpu values with default task instance values specified in the TaskSchedulerContext. Next, 
@@ -76,7 +76,7 @@ the task instances and the logical containers which is based on the task configu
 the allocated worker values respectively. The allocation of task instances (task instance plan) based 
 on the data locality based task scheduling is shown in Fig. 3.
                                           
-![Data Locality Aware Allocation](../../../images/datalocality_taskscheduler.png)
+![Data Locality Aware Allocation](assets/datalocality_taskscheduler.png)
 
 
 The DataLocalityStreamingTaskScheduler first initialize the ram, disk, and cpu values with default 

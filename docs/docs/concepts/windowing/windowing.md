@@ -13,7 +13,7 @@ Apache Flink, the key based and non-key based support is discussed for windowing
 we have inbuilt communication functions built for keyed and non-keyed operations. So when user is 
 creating a workflow, it can be created using keyed or non-keyed streaming pipelines. 
 
-![The Tree of Windowing](images/windowing-flow.png "Title")  
+![The Tree of Windowing](assets/windowing-flow.png "Title")  
 
 ---
 **NOTE**
@@ -33,7 +33,7 @@ also known as fixed windows.
 For example, you can say you need to collect 4 elements per window and this can be a window
 based on the number of elements per window.  
 
-![Count Based Tumbling Window](images/tumbling-count-window-1.png)   
+![Count Based Tumbling Window](assets/tumbling-count-window-1.png)   
 
 ```java
     BaseWindowedSink dw = new DirectWindowedReceivingTask()
@@ -42,7 +42,7 @@ based on the number of elements per window.
 
 The other way is that you can say, you need to collect some elements per every 2 minutes.
 
-![Duration Based Tumbling Window](images/tumbling-duration-window-1.png)
+![Duration Based Tumbling Window](assets/tumbling-duration-window-1.png)
 
 ```java
     BaseWindowedSink dwDuration = new DirectWindowedReceivingTask()
@@ -60,7 +60,7 @@ than the window length. This can be present in terms of both count and duration.
 For example, you can say you need to collect 4 elements per window and this can be a window
 based on the number of elements per window.  
 
-![Count Based Tumbling Window](images/sliding-count-window.png)   
+![Count Based Tumbling Window](assets/sliding-count-window.png)   
 
 ```java
 BaseWindowedSink sdw = new DirectWindowedReceivingTask()
@@ -70,7 +70,7 @@ BaseWindowedSink sdw = new DirectWindowedReceivingTask()
 
 The other way is that you can say, you need to collect some elements per every 2 minutes.
 
-![Duration Based Tumbling Window](images/sliding-duration-window.png)
+![Duration Based Tumbling Window](assets/sliding-duration-window.png)
 
 ```java
     BaseWindowedSink sdwDuration = new DirectWindowedReceivingTask()

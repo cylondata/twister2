@@ -2,7 +2,7 @@
 
 Twister2 provides set of layered components and APIs to build distributed data processing applications.
 
-![Twister2 Concepts](../images/api_levels.png)
+![Twister2 Concepts](assets/api_levels.png)
 
 The lower APIs are harder to program and provides the best flexibility along with the highest performance.
 The higher APIs are easier to program with less performance and flexibility.

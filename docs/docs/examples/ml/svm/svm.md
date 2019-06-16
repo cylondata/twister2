@@ -28,20 +28,20 @@ Here S is a sample space where x<sub>i</sub> and y<sub>i</sub>,
 S with n samples,x<sub>i</sub> refers to a d-dimensional feature vector and y<sub>i</sub> 
 is  the  label  of  the i<sup>th</sup> sample.  
 
-![Sample Space Definition](images/eq1.gif)
+![Sample Space Definition](assets/eq1.gif)
 
 J<sup>t</sup> refers to the quadratic objective function which is minimized in the algorithm 
 to obtain the convergence in the algorithm. 
 
-![Objective Function](images/eq2.gif)
+![Objective Function](assets/eq2.gif)
 
 This is the constraint of the objective function 
 
-![Constraint Definition In Objective Function](images/eq4.gif)
+![Constraint Definition In Objective Function](assets/eq4.gif)
 
 The weight vector updates takes as follows. Depending on the gradient of the objective function,
 
-![Weight Update Equations](images/eq3.gif)
+![Weight Update Equations](assets/eq3.gif)
 
 ## SVM-SGD Sequential Algorithm 
 
@@ -49,7 +49,7 @@ Twister2:ML provides a basic Linear Kernel based SVM algorithm developed on top 
 gradient descent based approach. The sequential algorithm is shown in Figure  
 
 
-![Sequential Algorithm](images/seq_sgd_svm_algo.png)
+![Sequential Algorithm](assets/seq_sgd_svm_algo.png)
 
 In the distributed algorithm, we model a data-parallel algorithm where each model work on a separate
 data set (subset of full dataset). After each model is done with calculating the final weight 
@@ -59,7 +59,7 @@ frequency.
 
 ## Distributed SVM Batch Model - Task Example
 
-![Twister2 Distributed SVM Batch Model](images/twister2_ml_simple_model_svm.png)
+![Twister2 Distributed SVM Batch Model](assets/twister2_ml_simple_model_svm.png)
 
 #### Components
  

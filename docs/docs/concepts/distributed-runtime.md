@@ -19,7 +19,7 @@ The task system is on top of the DataFlow operators. They provide a Task Graph, 
 an Executor. At the runtime, the user graph is converted to an execution graph and scheduled onto
 different workers. This graph is then executed by the executor using Threads. 
 
-![Twister2 Runtime](../images/runtime.png)
+![Twister2 Runtime](assets/runtime.png)
 
 Twister2 spawns several processes when running a job. 
 
@@ -29,7 +29,7 @@ Twister2 spawns several processes when running a job.
 4. Job Master - One job master for each job
 5. Dashboard - A web service hosting the UI 
 
-![Twister2 Process View](../images/runtime-process.png)
+![Twister2 Process View](assets/runtime-process.png)
 
 ## The Job Life-Cycle
 

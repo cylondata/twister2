@@ -47,7 +47,7 @@ in Fig.1 whereas in undirected task graph, the edges in the task graph that conn
 vertexes have no direction as shown in Fig 2. The present task system supports only directed dataflow 
 task graph.
 
-![Directed Graph](../../../images/directed.png)  ![UnDirected Graph](../../../images/undirected.png)
+![Directed Graph](assets/directed.png)  ![UnDirected Graph](assets/undirected.png)
 
 ## Streaming Task Graph
 

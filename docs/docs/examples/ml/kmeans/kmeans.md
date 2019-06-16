@@ -4,7 +4,6 @@ title: K-Means
 sidebar_label: K-Means
 ---
 
-# K-Means Clustering 
 The need to process large am​​ounts of continuously arriving information has led to the exploration and application of big data analytics techniques. Likewise, the painstaking process of clustering numerous datasets containing large numbers of records with high dimensions calls for innovative methods. 
 Traditional sequential clustering algorithms are unable to handle it. They are not scalable in relation 
 to larger sizes of data sets, and they are most often computationally expensive in memory space and time complexities. Yet, the parallelization of data clustering algorithms is paramount when dealing 
@@ -15,7 +14,7 @@ and aggregate the results which reduce the processing time of K-Means Clustering
 
 The implementation details of k-means clustering in Twister2 is pictorially represented in Fig.1.
 
-![K-Means Implementation](../../../images/kmeans.png)
+![K-Means Implementation](assets/kmeans.png)
 
 ### DataObjectConstants
 

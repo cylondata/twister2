@@ -65,7 +65,7 @@ How each task is assigned to workers will not be explained in this section. We a
 assignments are in place. The tree structure that is used by the reduce operation will take into account the task-worker
 assignments to optimize the operation. The diagram below show the assignments and the paths of communication
 
-![Reduce Operation Tree](../../images/reduce_op_example.png)
+![Reduce Operation Tree](assets/reduce_op_example.png)
 
 Black arrows in the diagram show the paths in which communication happens in the reduce operation. The inverted
 binary tress structure is more clear if you look at the red arrow. This structure allows the reduce operation to scale
