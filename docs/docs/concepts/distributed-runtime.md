@@ -1,4 +1,8 @@
-# Distributed Runtime
+---
+id: distributed_runtime
+title: Distributed Runtime
+sidebar_label: Distributed Runtime
+---
 
 Each Twister2 job runs in isolation without any interference from other jobs. Because of this 
 the distributed runtime of Twister2 is relevant to each job.

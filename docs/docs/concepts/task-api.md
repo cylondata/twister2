@@ -1,4 +1,8 @@
-# Task API
+---
+id: task_api
+title: Task API
+sidebar_label: Task API
+---
 
 The Task API is the middle tier API that provides both flexibility and performance. A user directly
 models an application as a graph and program it using the Task Graph API.  

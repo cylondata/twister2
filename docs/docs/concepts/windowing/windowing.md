@@ -1,4 +1,8 @@
-# Windowing
+---
+id: windowing_api
+title: Windowing API
+sidebar_label: Windowing API
+---
 
 Twister2 Streaming API supports the discretization of a data stream via windowing.
 Our Windowing API was developed supporting functionalities in Apache Storm and Apache Flink. 

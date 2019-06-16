@@ -1,4 +1,8 @@
-# Operator API
+---
+id: op_api
+title: Operator API
+sidebar_label: Operator API
+---
 
 This is the lowest level of API provided by Twister2. It provides the basic parallel operators required
 by a parallel programs in terms of both Bulk Synchronous Parallel (BSP) and DataFlow API. 

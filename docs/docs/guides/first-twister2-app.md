@@ -1,4 +1,8 @@
-# Developing a Twister2 Application
+---
+id: developing_twister2
+title: Developing a Twister2 Applications
+sidebar_label: Developing Applications
+---
 
 This guide walks you through creating a simple application using Twister2.
 

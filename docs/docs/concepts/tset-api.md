@@ -1,4 +1,8 @@
-# TSet API
+---
+id: tset_api
+title: TSet API
+sidebar_label: TSet API
+---
 
 The TSet API is similar to Spark RDD, Flink DataSet or Heron Streamlet APIs. It provides a typed 
 functional style API for programming a distributed application. The user program is written as a 
