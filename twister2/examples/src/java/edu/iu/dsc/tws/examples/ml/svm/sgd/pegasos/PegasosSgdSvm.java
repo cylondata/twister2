@@ -109,6 +109,30 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
     this.setW(currentW);
   }
 
+  @Override
+  public void iterativeTaskSgd(double[] w1, double[][] x1, double[] y1)
+      throws NullDataSetException, MatrixMultiplicationException {
+    double[] currentW = w;
+
+    for (int j = 0; j < x1.length; j++) {
+      double condition = y1[j] * Matrix.dot(x1[j], currentW);
+      double[] newW;
+      if (condition < 1) {
+        this.xyia = new double[x1.length];
+        this.xyia = Matrix.scalarMultiply(Matrix
+            .subtract(currentW, Matrix.scalarMultiply(x1[j], y1[j])), alpha);
+        newW = Matrix.subtract(currentW, xyia);
+      } else {
+        wa = new double[x1.length];
+        wa = Matrix.scalarMultiply(currentW, alpha);
+        newW = Matrix.subtract(currentW, wa);
+      }
+      currentW = newW;
+    }
+
+    this.setW(currentW);
+  }
+
   /**
    * This is the Online Sgd based SVM for Linear Kernel
    *
