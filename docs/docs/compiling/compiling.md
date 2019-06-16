@@ -4,7 +4,7 @@ title: Overview
 sidebar_label: Overview
 ---
 
-Twister2 relies on the [Bazel build](https://bazel.build/) system to provide a flexible and fast build. Twister2 has been tested on Bazel 0.18.1 version and it is recommended to use it for building.
+Twister2 relies on the [Bazel build](https://bazel.build/) system. It is tested on Bazel 0.18.1 version and it is recommended to use it for building.
 
 Twister2 developers are mainly working on Ubuntu 16.04, Ubuntu 18.04, and MacOS. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.
 
@@ -13,15 +13,15 @@ Refer the specific guides for details on different platforms.
 * [Compiling on Linux](linux.md)
 * [Compiling MacOS](macos.md)
 
-## Overview
+### General Build Instructions
 
-Twister2 can be compiled with the following general command
+Twister2 can be compiled with the following command
 
 ```bash
 bazel build --config=<platform> twister2/...
 ```
 
-The platform can be ubuntu or darwin (for macos).
+Here platform argument can be ubuntu or darwin (for macos).
 
 In order to run twister2 jobs, we need to create a tar package. To create the tar package we can use
 the following command.
@@ -38,7 +38,7 @@ bazel-bin/scripts/package/twister2-[verson].tar.gz
 
 We need to extract this package to run a twister2 job.
 
-## Running unit test cases
+### Running unit test cases
 
 We can run twister2 test cases with the following command
 
@@ -52,7 +52,7 @@ In order to run a specific test we can use the following command, where we need 
 bazel test --config=ubuntu //twister2/comms/tests/java:BinaryTreeTest
 ```
 
-## Compiling OpenMPI
+### Compiling OpenMPI
 
 When you compile Twister2 it will automatically download and compile OpenMPI 3.1.2 with it. If you don't like this version of OpenMPI and wants to use your own version, you can compile OpenMPI using following instructions.
 
@@ -84,9 +84,9 @@ When you compile Twister2 it will automatically download and compile OpenMPI 3.1
  ```text
   mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
  ```
-## Generating Maven Artifacts
+### Generating Maven Artifacts
 
-Although twister2 use bazel as its build system, it has an option to generate maven artifacts for each twister2 module.
+Although twister2 uses bazel as its build system, it has an option to generate maven artifacts for each twister2 module.
 
 To generate and install maven artifacts to your local repository, run following command at the root of twister2 source.
 
@@ -94,7 +94,47 @@ To generate and install maven artifacts to your local repository, run following 
 
 For more details refer the section [Generate Maven Artifacts](generate-maven.md).
 
-## FAQ
+### Compiling Dashboard
+
+Twister2 dashboard has two components.
+
+1. Front End Web application; A [ReactJS](https://reactjs.org/) based web application
+2. Web server; A [spring boot application](https://spring.io/projects/spring-boot), which exposes a RESTful Web Service (JAX-RS)
+
+Even though (2) Embedded web server, has been included in the main bazel build, (1) Front End Web application should be build separately.
+
+#### Prerequisites to build web application
+
+* Node 6 or later : [Download](https://nodejs.org/en/download/)
+* NPM 5.2 or later : [How to Setup](https://www.npmjs.com/get-npm)
+* SASS : [How to setup](https://sass-lang.com/install)
+
+#### Compiling web application
+
+Having all above prerequisites ready, navigate to the root folder of dashboard client.
+
+```cd dashboard/client```
+
+#### Building SCSS
+
+Now build SCSS files to produce CSS files with following command
+
+```npm run build-css```
+
+#### Building React app
+
+Use below command to build the react application.
+
+```npm run build```
+
+This will create an optimized production build in ```{twister2_root}/dashboard/server/src/main/resources/static``` directory.
+
+#### Building Dashboard
+
+As the final step, [run the main twister2 build](compiling.md), to generate all the binaries including dashboard.
+
+
+### FAQ
 
 1. Build fails with ompi java binding errors
 

@@ -4,19 +4,18 @@ title: Quickstart
 sidebar_label: Quickstart
 ---
 
+Lets look at how to setup Twister2 and run few examples. Lets start with the simplest possible Twister2 job where we spawn set of parallel workers and print a log.
 
-Lets look at how to setup Twister2 and run few examples. Twister2 is designed as in incremental distributed system to make it adaptable to different environments. Lets start with the simplest possible Twister2 job where we spawn set of workers and print a log.
-
-## Building Twister2
+### Building Twister2
 
 First we need to build Twister2. [Compiling Twister2](compiling/compiling.md) explains how to build it. After building the code and
-following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/compiling/linux#twister2-distribution) you should have a extracted folder named `twister2-0.2.1`, this would be your twister2 home folder.
+following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/compiling/linux#twister2-distribution) you should have a extracted folder named `twister2-0.2.2`, this would be your twister2 home folder.
 
-## Starting parallel workers
+### Starting parallel workers
 
-At the base of Twister2 is a resource manager that allocates resources for jobs. Unlike many big data projects that mixes all sorts of capabilities here, Twister2 resource manager only allocate resources and spawn set of parallel processes. It is upto the user to do anything with those parallel processes after they are spawned.
+At the base of Twister2 is a resource manager that allocates resources for jobs. Unlike other big data projects that mixes different capabilities here, Twister2 resource manager only allocate resources and spawn set of parallel processes. 
 
-Okay lets exactly that and see how it works. There is a example called HelloWorld.java included with Twister2 examples package. Note that it implements the IWorker interface, which is the entry point to any Twister2 job. In the main method of this class we submit a job to Twister2 with this HelloWorld class as the job class.
+There is an example called HelloWorld.java included with Twister2 examples package. Note that it implements the IWorker interface, which is the entry point to any Twister2 job. In the main method of this class we submit a job to Twister2 with this HelloWorld class as the job class.
 
 ```java
 package edu.iu.dsc.tws.examples.basic;
@@ -95,8 +94,8 @@ public class HelloWorld implements IWorker {
 }
 ```
 
-Now lets run this class. Lets go inside the twister2 distribution and execute the following command from twister2 root directory. The Twister2 root directory would be the `twister2-0.2.1` folder that we got during the building of the source code. Go into the
-`twister2-0.2.1` directory before executing the commands below.
+Now lets run this class using command line. Lets go inside the twister2 distribution and execute the following command from twister2 root directory. Go into the
+`twister2-0.2.2` directory before executing the commands below.
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
@@ -110,7 +109,9 @@ When this runs it will print a logs like this in to the console.
 
 It is that simple!
 
-## Communicating between workers
+The above command submits a job class using the standalone mode. The command accepts the jar file containing the main class and the class name to run.
+
+### Communicating between workers
 
 Okay, the next step is to communicate between the workers we have created. There are many examples in Twister2 that use communication among workers and some of these can be found inside the directory
 
@@ -126,7 +127,7 @@ You can run them with a simple command such as
 
 Now, lets focus on a simple communication example where we try to do a word count.
 
-## Word Count Example
+### Word Count Example
 
 Lets look at a word count example. This is a standard example in every other big data system. The code related to example can be found in
 

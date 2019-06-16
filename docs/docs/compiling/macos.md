@@ -4,7 +4,7 @@ title: MacOS
 sidebar_label: MacOS
 ---
 
-## MacOS Prerequisites
+## Prerequisites
 
 Twister2 build needs several software installed on your system.
 
@@ -48,7 +48,7 @@ Twister2 build needs several software installed on your system.
    export PATH="$PATH:$HOME/bin"
    ```
 
-## Compiling Twister2 on MacOS
+## Compiling Twister2 
 
 Now lets get a clone of the source code.
 

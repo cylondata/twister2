@@ -4,7 +4,7 @@ title: Linux
 sidebar_label: Linux
 ---
 
-## Linux Prerequisites
+## Prerequisites
 
 Twister2 build needs several software installed on your system.
 
@@ -60,7 +60,7 @@ Extract this to a directory called maven configure the environmental variables
    export PATH=$PATH:~/bin
    ```
 
-## Compiling Twister2 on Linux
+## Compiling Twister2
 
 Now lets get a clone of the source code.
 

@@ -20,6 +20,8 @@ const users = [
   },
 ];
 
+const baseUrl = '/';
+
 const siteConfig = {
   title: 'Twister2', // Title for your website.
   tagline: 'High Performance Data Analytics',
@@ -44,7 +46,7 @@ const siteConfig = {
   ],
 
   // If you have users set above, you add it here:
-  users,
+  users: [],
 
   /* path to images for header/footer */
   headerIcon: 'img/favicon.ico',
@@ -76,20 +78,35 @@ const siteConfig = {
 
   highlight: {
     // Highlight.js theme to use for syntax highlighting in code blocks.
-    theme: 'default',
+    theme: 'atom-one-dark',
   },
 
   // Add custom scripts here that would be placed in <script> tags.
-  scripts: ['https://buttons.github.io/buttons.js'],
+  // Add custom scripts here that would be placed in <script> tags
+  scripts: [
+    'https://buttons.github.io/buttons.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js',
+    `${baseUrl}js/code-blocks-buttons.js`
+  ],
+  stylesheets: [
+    `${baseUrl}css/code-blocks-buttons.css`
+  ],
 
   // On page navigation for the current documentation page.
   onPageNav: 'separate',
   // No .html extensions for paths.
   cleanUrl: true,
 
+  disableHeaderTitle: false,
+
   // Open Graph and Twitter card images.
   ogImage: 'img/undraw_online.svg',
   twitterImage: 'img/undraw_tweetstorm.svg',
+
+  projectDescription: `
+    Twister2 is a high performance data analytics platform for data pipelines, analytics and streaming
+  `,
+
 
   // Show documentation's last contributor's name.
   // enableUpdateBy: true,
