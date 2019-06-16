@@ -1,4 +1,9 @@
-### Data Access
+---
+id: data_access
+title: Data Access
+sidebar_label: Data Access
+--- 
+
 
 Data access abstracts out various data sources including files and streaming sources to simplify the
 job of an application developer. Twister2 includes a lower level API for data access in addition to 

@@ -1,5 +1,5 @@
 ---
-id: concept_ops
+id: par_ops
 title: Parallel Operators
 sidebar_label: Parallel Operators
 --- 
