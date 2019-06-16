@@ -4,6 +4,9 @@ title: Contributing
 sidebar_label: Contributing
 ---
 
+**Mailing list:** [Twister2 Google Group](mailto:twister2@googlegroups.com)
+
+
 ## Contributing Code Changes
 
 Please review the preceding section before proposing a code change. This section documents how to do so.
@@ -35,4 +38,24 @@ When you contribute code, you affirm that the contribution is your original work
 5. Reviewers can indicate that a change looks suitable for merging with a comment such as: “I think this patch looks good”. 
 6. Sometimes, other changes will be merged which conflict with your pull request’s changes. The PR can’t be merged until the conflict is resolved. 
 7. Try to be responsive to the discussion rather than let days pass between replies
+
+## Contributors
+
+Here are the current contributors to the project
+
+* Supun Kamburugamuve \(@supunkamburugamuve\) (Indiana University)
+* Kannan Govindarajan \(@kannang83\) (Indiana University)
+* Pulasthi Supun Wickramasinghe \(@pulasthi\) (Indiana University)
+* Vibhatha Abeykoon \(@vibhatha\) (Indiana University)
+* Ahmet Uyar \(@ahmet-uyar\) (Indiana University)
+* Gurhan Gunduz \(@gurhangunduz\) (Indiana University)
+* Chathura Widanage \(@chathurawidanage\) (Indiana University)
+* Saliya Ekanayake \(@esaliya\) (Berkley National Lab)
+* Niranda Perera \(@nirandaperera\) (Indiana University)
+* Selahattin AKKAŞ (Indiana University)
+* Arunan Sugunakumar (University of Moratuwa)
+* Thuvarakan Tharmarajasingham \(@thuva4\) (University of Moratuwa)
+* Isham \(@JMIsham\) (University of Moratuwa)
+* Inthirakumaaran \(@inthirakumaaran\) (University of Moratuwa)
+
 
