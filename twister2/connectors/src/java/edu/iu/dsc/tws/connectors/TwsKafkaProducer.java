@@ -25,11 +25,12 @@ import org.slf4j.LoggerFactory;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 import edu.iu.dsc.tws.connectors.config.KafkaProducerConfig;
+import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.checkpoint.SinkCheckpointableTask;
 
-public class TwsKafkaProducer<T> extends SinkCheckpointableTask {
+public class TwsKafkaProducer<T> extends BaseSink {
+
   private static final long serialVersionUID = -264264120110286749L;
   private static Logger log = LoggerFactory.getLogger(TwsKafkaProducer.class);
   private Properties kafkaConfigs;
