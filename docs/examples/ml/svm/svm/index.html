@@ -402,7 +402,7 @@ of partitions considering the total data size.</p>
 <p>Here the data loader has to load the data considering training and testing data sizes.
 So the source path and data sizes are different. The data size means the number of
 lines in your file (it must be in csv format as mentioned in the task example section).
-Currently that field is not implicitly handled in the current release (0.2.1).</p>
+Currently that field is not implicitly handled in the current release (0.2.2).</p>
 <p><strong>DataLoadingTask</strong> extends the <strong>BaseSource</strong>, so the expected data type can be defined.
 The overriden <strong>next()</strong> method uses the Twister2 Data API to load the data.</p>
 <pre><code class="hljs css language-java">  <span class="hljs-keyword">public</span> <span class="hljs-keyword">double</span>[][] next() {

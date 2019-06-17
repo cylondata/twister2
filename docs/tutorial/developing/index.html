@@ -22,8 +22,8 @@ sudo docker run -it twister2tutorial/twister2:standalone bash
 </code></pre>
 <p><img src="pics/docker_image.png" alt="Content of Docker"></p>
 <p>Docker image has Twister2 installed and you can run examples.</p>
-<p>You should go into twister2-0.2.1 directory first.</p>
-<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1/
+<p>You should go into twister2-0.2.2 directory first.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.2/
 
 ls
 </code></pre>
@@ -68,7 +68,7 @@ Echo cluster consists of four nodes. Each node in this cluster consists of 24 CP
 </code></pre>
 <p>Twister2 is installed under twister2 directory.</p>
 <p>Go to the directory:</p>
-<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.2
 </code></pre>
 <p>Then, to run an example you can use the <code>twister2 submit</code> command.</p>
 <p>You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
@@ -108,7 +108,7 @@ You can submit jobs to chosen resource scheduler by using Twister2 executable;</
 <p>If you are using our testbed cluster “Echo”,</p>
 <ol>
 <li>Login to your account in Echo</li>
-<li>Change you directory to  <code>twister2-0.2.1</code></li>
+<li>Change you directory to  <code>twister2-0.2.2</code></li>
 <li>Run the command above.</li>
 </ol>
 <p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
@@ -190,7 +190,7 @@ Fixed number of words are generated and the global counts of words are calculate
 <pre><code class="hljs css language-bash">twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
 </code></pre>
 <p>In order to run the example go to the following directory</p>
-<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.2
 </code></pre>
 <p>And run the command below  using kubernetes resource scheduler</p>
 <pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
@@ -227,7 +227,7 @@ It is a continuously running job,  processing an unbounded stream of data</p>
 <pre><code class="hljs css language-bash">twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
 </code></pre>
 <p>In order to run the example go to the following directory</p>
-<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.2
 </code></pre>
 <p>And run the command below  using kubernetes resource scheduler</p>
 <pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
