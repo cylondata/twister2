@@ -133,7 +133,7 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     if (weightVectorEntityPartition != null) {
       DataObject<?> weightVectorObjectLocal
           = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
-      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObjectLocal);
+      weightVector = getWeightVectorObject(taskIndex, weightVectorObjectLocal);
     }
     return weightVector;
   }
@@ -149,6 +149,17 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     return items;
   }
 
+  public Object getWeightVectorObject(int taskIndex, DataObject<?> weightObj) {
+    Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
+        weightObj.getPartitions(taskIndex).getConsumer().next();
+    List<Object> items = new ArrayList<>();
+    while (arrayListIterator.hasNext()) {
+      Object object = arrayListIterator.next();
+      items.add(object);
+    }
+    return items;
+  }
+
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
     this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
@@ -156,12 +167,11 @@ public class IterativeDataStream extends BaseSource implements Receptor {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
     this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
-    this.weightVectorArray = DataUtils.getDataPointsFromDataObject(this.weightVector);
-
+    this.weightVectorArray = DataUtils.getWeightVectorFromDataObject(this.weightVector);
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapointArray.length));
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
-        this.weightVectorArray.length));
+        weightVectorArray[0].length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 
@@ -206,7 +216,10 @@ public class IterativeDataStream extends BaseSource implements Receptor {
       initializeBatchMode();
       compute();
       this.context.writeEnd(Constants.SimpleGraphConfig.REDUCE_EDGE, computedWeightVector);
+    } else {
+      LOG.info(String.format("Real data stream got stuck!"));
     }
+
   }
 
   public void compute() {

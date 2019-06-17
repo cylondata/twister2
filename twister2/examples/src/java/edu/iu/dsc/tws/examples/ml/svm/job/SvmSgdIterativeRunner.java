@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
@@ -55,6 +56,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private TaskGraphBuilder trainingBuilder;
   private TaskGraphBuilder testingBuilder;
   private InputDataStreamer dataStreamer;
+  private IterativeDataStream iterativeDataStream;
   private SVMCompute svmCompute;
   private IterativeSVMCompute iterativeSVMCompute;
   private SVMReduce svmReduce;
@@ -116,12 +118,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
 
   public DataFlowTaskGraph builtSvmSgdIterativeTaskGraph(int parallelism, Config conf) {
-    IterativeDataStream iterativeDataStream
-        = new IterativeDataStream(this.svmJobParameters.getFeatures(),
+    iterativeDataStream = new IterativeDataStream(this.svmJobParameters.getFeatures(),
         this.operationMode, this.svmJobParameters.isDummy(), this.binaryBatchModel);
     svmReduce = new SVMReduce(this.operationMode);
-
-    trainingBuilder = TaskGraphBuilder.newBuilder(conf);
 
     trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_DATASTREAMER_SOURCE,
         iterativeDataStream, parallelism);
@@ -182,7 +181,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
    */
   public DataObject<Object> executeWeightVectorLoadingTaskGraph() {
     DataObject<Object> data = null;
-    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+    DataFileReplicatedReadSource sourceTask
+        = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
         this.svmJobParameters.getWeightVectorDataDir());
     DataObjectSink sinkTask = new DataObjectSink();
     trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
@@ -258,10 +258,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           Constants.SimpleGraphConfig.ITERATIVE_DATASTREAMER_SOURCE,
           Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputWeightVector);
 
+      taskExecutor.itrExecute(svmTaskGraph, svmExecutionPlan);
+
       inputWeightVector = taskExecutor.getOutput(svmTaskGraph, svmExecutionPlan,
           Constants.SimpleGraphConfig.SVM_REDUCE);
-
-      taskExecutor.itrExecute(svmTaskGraph, svmExecutionPlan);
     }
     taskExecutor.waitFor(svmTaskGraph, svmExecutionPlan);
   }
