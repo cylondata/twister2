@@ -116,7 +116,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     dataLoadingTime = (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
     t1 = System.nanoTime();
-    trainedWeightVector = executeIterativeTrainingGraph();
+    trainedWeightVector = executeTrainingGraph();
     trainingTime = (double) (System.nanoTime() - t1) / NANO_TO_SEC;
 
     t1 = System.nanoTime();
@@ -303,6 +303,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     taskExecutor.addInput(
         graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
         Constants.SimpleGraphConfig.INPUT_DATA, trainingData);
+    taskExecutor.addInput(graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+        Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputWeightVector);
 
     taskExecutor.execute(graph, plan);
 

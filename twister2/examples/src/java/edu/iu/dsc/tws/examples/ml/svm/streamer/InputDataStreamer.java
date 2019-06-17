@@ -187,6 +187,7 @@ public class InputDataStreamer extends BaseSource implements Receptor {
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
     this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
+
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }

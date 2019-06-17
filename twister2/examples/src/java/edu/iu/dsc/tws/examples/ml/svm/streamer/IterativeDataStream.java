@@ -230,6 +230,8 @@ public class IterativeDataStream extends BaseSource implements Receptor {
   public void initializeBatchMode() {
     this.initializeBinaryModel(this.datapointArray);
     this.binaryBatchModel.setW(this.weightVectorArray[0]);
+    LOG.info(String.format("Features in X : %d, Features in W : %d",
+        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
         this.binaryBatchModel.getY(), this.binaryBatchModel.getAlpha(),
         this.binaryBatchModel.getIterations(), this.binaryBatchModel.getFeatures());
