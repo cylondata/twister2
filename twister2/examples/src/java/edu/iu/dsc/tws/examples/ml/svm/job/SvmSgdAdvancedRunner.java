@@ -200,7 +200,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
         Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
     firstGraphComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE)
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(DataType.OBJECT);
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(MessageTypes.OBJECT);
     trainingBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.build();
@@ -347,7 +347,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)
         .viaEdge(Constants.SimpleGraphConfig.DATA_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 //    svmReduceConnection
 //        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
 //            new ReduceAggregator(), DataType.OBJECT);
@@ -355,7 +355,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .allreduce(Constants.SimpleGraphConfig.SVM_COMPUTE)
         .viaEdge(Constants.SimpleGraphConfig.REDUCE_EDGE)
         .withReductionFunction(new ReduceAggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     trainingBuilder.setMode(operationMode);
     DataFlowTaskGraph graph = trainingBuilder.build();

@@ -153,7 +153,7 @@ public final class DataUtils {
           }
         }
       } else {
-        LOG.severe(String.format("Something Went Wrong"));
+        LOG.severe(String.format("Update Model: Something Went Wrong"));
       }
     }
     return binaryBatchModel;
@@ -188,6 +188,8 @@ public final class DataUtils {
           LOG.info(String.format("Data Type : %s", o.getClass().getName()));
         }
       }
+    } else {
+      LOG.info(String.format(""));
     }
     return res;
   }

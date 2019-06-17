@@ -36,6 +36,8 @@ public final class Constants {
 
     public static final String DATA_OBJECT_SOURCE = "data_source";
 
+    public static final String DATA_OBJECT_COMPUTE = "data_compute";
+
     public static final String DATA_OBJECT_SINK = "data_sink";
 
     public static final String INPUT_TESTING_DATA = "input_testing_data";

@@ -131,9 +131,18 @@ public class IterativeDataStream extends BaseSource implements Receptor {
         = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
 
     if (weightVectorEntityPartition != null) {
-      DataObject<?> weightVectorObjectLocal
-          = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
-      weightVector = getWeightVectorObject(taskIndex, weightVectorObjectLocal);
+      Object o = weightVectorEntityPartition.getConsumer().next();
+      DataObject<?> weightVectorObjectLocal = null;
+      if (o instanceof DataObject<?>) {
+        weightVectorObjectLocal = (DataObject<?>) o;
+        weightVector = getWeightVectorObject(taskIndex, weightVectorObjectLocal);
+      }
+
+      if (o instanceof double[]) {
+        weightVector = null;
+        weightVectorArray[0] = (double[]) o;
+      }
+
     }
     return weightVector;
   }
@@ -163,11 +172,16 @@ public class IterativeDataStream extends BaseSource implements Receptor {
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
     this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
+
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
     this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
-    this.weightVectorArray = DataUtils.getWeightVectorFromDataObject(this.weightVector);
+
+    if (this.weightVector != null) {
+      this.weightVectorArray = DataUtils.getWeightVectorFromDataObject(this.weightVector);
+    }
+
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapointArray.length));
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
@@ -234,6 +248,7 @@ public class IterativeDataStream extends BaseSource implements Receptor {
       e.printStackTrace();
     }
     computedWeightVector = pegasosSgdSvm.getW();
+
   }
 
   /**
