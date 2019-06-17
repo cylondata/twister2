@@ -7,7 +7,6 @@ t2_java_lib(
     srcs = glob(["**/*.java"]),
     artifact_name = "Twiter2 API",
     deps = [
-        "//third_party:harp_collective",
         "//third_party:ompi_javabinding_java",
         "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/common/src/java:common-java",

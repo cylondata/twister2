@@ -39,6 +39,7 @@ common_deps_files = [
     "@com_fasterxml_jackson_core_jackson_databind//:com_fasterxml_jackson_core_jackson_databind",
     "//third_party:harp_collective",
     "//twister2/compatibility/storm:twister2-storm",
+    "//twister2/compatibility/harp:twister2-harp",
 ]
 
 t2_java_lib(
