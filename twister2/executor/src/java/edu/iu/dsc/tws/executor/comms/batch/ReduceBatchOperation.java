@@ -23,7 +23,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -43,7 +42,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BReduce(newComm, taskPlan, sources, dests.iterator().next(),
         new ReduceFnImpl(edge.getFunction()),
-        new FinalSingularReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
+        new FinalSingularReceiver(), edge.getDataType());
   }
 
   @Override

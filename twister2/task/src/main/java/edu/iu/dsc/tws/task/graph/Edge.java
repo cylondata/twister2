@@ -14,7 +14,8 @@ package edu.iu.dsc.tws.task.graph;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
@@ -45,12 +46,12 @@ public class Edge {
   /**
    * The data type that is flowing through the edge
    */
-  private DataType dataType = DataType.OBJECT;
+  private MessageType dataType = MessageTypes.OBJECT;
 
   /**
    * The key type flowing through the edge
    */
-  private DataType keyType = DataType.OBJECT;
+  private MessageType keyType = MessageTypes.OBJECT;
 
   /**
    * Weather we are a keyed
@@ -94,7 +95,7 @@ public class Edge {
     this.function = function;
   }
 
-  public Edge(String name, String operation, DataType dataType) {
+  public Edge(String name, String operation, MessageType dataType) {
     this.name = name;
     this.operation = operation;
     this.dataType = dataType;
@@ -106,7 +107,7 @@ public class Edge {
     this.operation = operation;
   }
 
-  public Edge(String name, String operation, DataType dataType, DataType keyType) {
+  public Edge(String name, String operation, MessageType dataType, MessageType keyType) {
     this.name = name;
     this.operation = operation;
     this.dataType = dataType;
@@ -114,8 +115,8 @@ public class Edge {
     this.keyed = true;
   }
 
-  public Edge(String name, String operation, DataType dataType,
-              DataType keyType, IFunction function) {
+  public Edge(String name, String operation, MessageType dataType,
+              MessageType keyType, IFunction function) {
     this.name = name;
     this.function = function;
     this.operation = operation;
@@ -124,15 +125,15 @@ public class Edge {
     this.keyed = true;
   }
 
-  public Edge(String name, String operation, DataType dataType, IFunction function) {
+  public Edge(String name, String operation, MessageType dataType, IFunction function) {
     this.name = name;
     this.function = function;
     this.operation = operation;
     this.dataType = dataType;
   }
 
-  public Edge(String name, String operation, DataType dataType,
-              DataType keyType, IFunction function, TaskPartitioner part) {
+  public Edge(String name, String operation, MessageType dataType,
+              MessageType keyType, IFunction function, TaskPartitioner part) {
     this.name = name;
     this.function = function;
     this.operation = operation;
@@ -166,14 +167,14 @@ public class Edge {
   /**
    * To get the datatype
    */
-  public DataType getDataType() {
+  public MessageType getDataType() {
     return dataType;
   }
 
   /**
    * To get the keytype
    */
-  public DataType getKeyType() {
+  public MessageType getKeyType() {
     return keyType;
   }
 
@@ -183,6 +184,7 @@ public class Edge {
 
   /**
    * Add a property to the edge
+   *
    * @param key key of the property
    * @param value value
    */
@@ -192,6 +194,7 @@ public class Edge {
 
   /**
    * Get the property with a specific key
+   *
    * @param key name of the property
    * @return property if exists and null if not
    */
@@ -201,6 +204,7 @@ public class Edge {
 
   /**
    * Add the properties to the edge
+   *
    * @param props properties
    */
   public void addProperties(Map<String, Object> props) {
@@ -209,6 +213,7 @@ public class Edge {
 
   /**
    * Get the partitioner
+   *
    * @return partitioner
    */
   public TaskPartitioner getPartitioner() {
@@ -231,11 +236,11 @@ public class Edge {
     this.operation = operation;
   }
 
-  public void setDataType(DataType dataType) {
+  public void setDataType(MessageType dataType) {
     this.dataType = dataType;
   }
 
-  public void setKeyType(DataType keyType) {
+  public void setKeyType(MessageType keyType) {
     this.keyType = keyType;
   }
 
@@ -253,6 +258,7 @@ public class Edge {
 
   /**
    * Get the group name, if the group is set, multiple edges can belong to a same group
+   *
    * @return the group
    */
   public String getTargetEdge() {

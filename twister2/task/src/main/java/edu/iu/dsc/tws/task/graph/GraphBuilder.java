@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.task.api.ICompute;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.ISink;
@@ -94,7 +94,8 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name, String operation, IFunction task) {
+  public GraphBuilder connect(String t1, String t2, String name,
+                              String operation, IFunction task) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -109,7 +110,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType, DataType keyType) {
+                              MessageType dataType, MessageType keyType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -124,7 +125,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              IFunction function, DataType dataType, DataType keyType) {
+                              IFunction function, MessageType dataType, MessageType keyType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -139,7 +140,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              IFunction function, DataType dataType, DataType keyType,
+                              IFunction function, MessageType dataType, MessageType keyType,
                               TaskPartitioner partitioner) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
@@ -156,7 +157,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType) {
+                              MessageType dataType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);

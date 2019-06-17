@@ -30,7 +30,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.ComputeConnectionUtils;
 import edu.iu.dsc.tws.api.task.TaskConfigurations;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
@@ -41,7 +42,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
   protected String operationName;
   protected ComputeConnection computeConnection;
   protected String edgeName = TaskConfigurations.DEFAULT_EDGE;
-  protected DataType opDataType = DataType.OBJECT;
+  protected MessageType opDataType = MessageTypes.OBJECT;
   protected Map<String, Object> propertiesMap;
 
   protected AbstractOpsConfig(String source,
@@ -68,7 +69,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     return (T) this;
   }
 
-  public T withDataType(DataType dataType) {
+  public T withDataType(MessageType dataType) {
     this.opDataType = dataType;
     return (T) this;
   }
@@ -81,7 +82,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     return edgeName;
   }
 
-  protected DataType getOpDataType() {
+  protected MessageType getOpDataType() {
     return opDataType;
   }
 

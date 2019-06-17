@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -57,8 +56,8 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       destSelector = new HashingSelector();
     }
 
-    MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
-    MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
+    MessageType dataType = edge.getDataType();
+    MessageType keyType = edge.getKeyType();
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedReduce(newComm, taskPlan, sources, dests, keyType, dataType,

@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -69,9 +68,9 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
     op = new BJoin(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(leftEdge.getKeyType()),
-        Utils.dataTypeToMessageType(leftEdge.getDataType()),
-        Utils.dataTypeToMessageType(rightEdge.getDataType()),
+        leftEdge.getKeyType(),
+        leftEdge.getDataType(),
+        rightEdge.getDataType(),
         new JoinRecvrImpl(), destSelector, useDisk, keyComparator);
   }
 

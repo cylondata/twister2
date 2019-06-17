@@ -43,8 +43,8 @@ import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
@@ -181,8 +181,8 @@ public class TeraSort extends TaskWorker {
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE)
         .viaEdge(EDGE)
-        .withDataType(DataType.BYTE_ARRAY)
-        .withKeyType(DataType.BYTE_ARRAY)
+        .withDataType(MessageTypes.BYTE_ARRAY)
+        .withKeyType(MessageTypes.BYTE_ARRAY)
         .withTaskPartitioner(taskPartitioner)
         .useDisk(true)
         .sortBatchByKey(true, ByteArrayComparator.getInstance())

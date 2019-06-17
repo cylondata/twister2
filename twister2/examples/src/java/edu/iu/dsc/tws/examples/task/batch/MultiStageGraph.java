@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -47,7 +47,7 @@ public class MultiStageGraph extends TaskWorker {
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source")
         .viaEdge("partition-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     ComputeConnection rc = builder.addSink("sink", rt, 1);
     rc.reduce("compute")
         .viaEdge("compute-edge")

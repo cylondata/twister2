@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.math.MathUtils;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -51,7 +51,7 @@ public class STWindowMPI extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
-    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }

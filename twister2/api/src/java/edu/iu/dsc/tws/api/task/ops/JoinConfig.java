@@ -15,7 +15,8 @@ import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.ComputeConnectionUtils;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.graph.Edge;
 
@@ -26,12 +27,12 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
 
   private String rightEdgeName;
 
-  private DataType rightOpDataType = DataType.OBJECT;
+  private MessageType rightOpDataType = MessageTypes.OBJECT;
 
   private String group;
 
   public JoinConfig(String leftParent, String rightParent,
-                           ComputeConnection computeConnection) {
+                    ComputeConnection computeConnection) {
     super(leftParent, OperationNames.JOIN, computeConnection);
     this.rightSource = rightParent;
     this.withProperty("use-disk", false);
@@ -56,12 +57,12 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this;
   }
 
-  public JoinConfig withRightDataType(DataType dataType) {
+  public JoinConfig withRightDataType(MessageType dataType) {
     this.rightOpDataType = dataType;
     return this;
   }
 
-  public JoinConfig withLeftDataType(DataType dataType) {
+  public JoinConfig withLeftDataType(MessageType dataType) {
     this.opDataType = dataType;
     return this;
   }

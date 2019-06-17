@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -45,8 +44,7 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedGather(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(), destSelector);
+        edge.getKeyType(), edge.getDataType(), new GatherRecvrImpl(), destSelector);
   }
 
   @Override

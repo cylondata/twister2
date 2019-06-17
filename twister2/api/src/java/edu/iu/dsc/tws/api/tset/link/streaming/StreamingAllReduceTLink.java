@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 /**
  * Represent a data set create by a all reduce opration
@@ -74,7 +74,7 @@ public class StreamingAllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.Bas
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
+    MessageType dataType = TSetUtils.getDataType(getType());
 
     connection.allreduce(parent.getName())
         .viaEdge(Constants.DEFAULT_EDGE)
