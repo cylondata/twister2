@@ -192,6 +192,8 @@ public final class DataUtils {
     return res;
   }
 
+
+
   public static double[] getWeightVectorFromWeightVectorObject(Object object) {
     double[] weightVector = null;
 

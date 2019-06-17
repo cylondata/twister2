@@ -24,18 +24,23 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
+import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class InputDataStreamer extends BaseSource implements Receptor {
+public class IterativeDataStream extends BaseSource implements Receptor {
 
-  private static final Logger LOG = Logger.getLogger(InputDataStreamer.class.getName());
+  private static final Logger LOG = Logger.getLogger(IterativeDataStream.class.getName());
+
   private final double[] labels = {-1, +1};
   private int features = 10;
   private OperationMode operationMode;
+
   private boolean isDummy = false;
 
   private BinaryBatchModel binaryBatchModel;
@@ -52,85 +57,32 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   private double[][] weightVectorArray = null;
 
+  private double[] computedWeightVector = null;
+
+  private PegasosSgdSvm pegasosSgdSvm = null;
+
   private boolean debug = false;
 
-  public InputDataStreamer(OperationMode operationMode) {
+  public IterativeDataStream(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
 
-  public InputDataStreamer(int features, OperationMode operationMode) {
+  public IterativeDataStream(int features, OperationMode operationMode) {
     this.features = features;
     this.operationMode = operationMode;
   }
 
-  public InputDataStreamer(OperationMode operationMode, boolean isDummy,
-                           BinaryBatchModel binaryBatchModel) {
+  public IterativeDataStream(int features, OperationMode operationMode, boolean isDummy,
+                             BinaryBatchModel binaryBatchModel) {
+    this.features = features;
     this.operationMode = operationMode;
     this.isDummy = isDummy;
     this.binaryBatchModel = binaryBatchModel;
   }
 
   @Override
-  public void execute() {
-
-    if (this.isDummy) {
-      try {
-        dummyDataStreamer();
-      } catch (InputDataFormatException e) {
-        e.printStackTrace();
-      }
-    } else {
-      realDataStreamer();
-    }
-
-  }
-
-  @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-  }
-
-  /**
-   * This method is used to deal with dummy data based data stream generation
-   * Here data points are generated using a Gaussian Distribution and labels are assigned
-   * +1 or -1 randomly for a given data point.
-   */
-  public void dummyDataStreamer() throws InputDataFormatException {
-    if (this.operationMode.equals(OperationMode.STREAMING)) {
-      double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
-      Random random = new Random();
-      int index = random.nextInt(2);
-      double label = labels[index];
-      double[] data = DataUtils.combineLabelAndData(x, label);
-      if (!(data.length == this.binaryBatchModel.getFeatures() + 1)) {
-        throw
-            new InputDataFormatException(String
-                .format("Input Data Format Exception : [data length : %d, feature length +1 : %d]",
-                    data.length, this.binaryBatchModel.getFeatures() + 1));
-      }
-      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
-    }
-
-    if (this.operationMode.equals(OperationMode.BATCH)) {
-      double[][] data = DataUtils.generateDummyDataPoints(this.binaryBatchModel.getSamples(),
-          this.binaryBatchModel.getFeatures());
-      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
-      this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
-    }
-
-  }
-
-  /**
-   * This method is used to retrieve real data from
-   * Data Source Task
-   */
-  public void realDataStreamer() {
-    // do real data streaming
-    if (this.operationMode.equals(OperationMode.BATCH)) {
-      getData();
-      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, this.datapointArray);
-      this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
-    }
   }
 
   @Override
@@ -145,6 +97,19 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
     if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
       this.weightVectorObject = data;
+    }
+  }
+
+  @Override
+  public void execute() {
+    if (this.isDummy) {
+      try {
+        dummyDataStreamer();
+      } catch (InputDataFormatException e) {
+        e.printStackTrace();
+      }
+    } else {
+      realDataStreamer();
     }
   }
 
@@ -199,4 +164,96 @@ public class InputDataStreamer extends BaseSource implements Receptor {
         this.weightVectorArray.length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
+
+  /**
+   * This method is used to deal with dummy data based data stream generation
+   * Here data points are generated using a Gaussian Distribution and labels are assigned
+   * +1 or -1 randomly for a given data point.
+   */
+  public void dummyDataStreamer() throws InputDataFormatException {
+    if (this.operationMode.equals(OperationMode.STREAMING)) {
+      double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
+      Random random = new Random();
+      int index = random.nextInt(2);
+      double label = labels[index];
+      double[] data = DataUtils.combineLabelAndData(x, label);
+      if (!(data.length == this.binaryBatchModel.getFeatures() + 1)) {
+        throw
+            new InputDataFormatException(String
+                .format("Input Data Format Exception : [data length : %d, feature length +1 : %d]",
+                    data.length, this.binaryBatchModel.getFeatures() + 1));
+      }
+      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
+    }
+
+    if (this.operationMode.equals(OperationMode.BATCH)) {
+      double[][] data = DataUtils.generateDummyDataPoints(this.binaryBatchModel.getSamples(),
+          this.binaryBatchModel.getFeatures());
+      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
+      this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
+    }
+
+  }
+
+  /**
+   * This method is used to retrieve real data from
+   * Data Source Task
+   */
+  public void realDataStreamer() {
+    // do real data streaming
+    if (this.operationMode.equals(OperationMode.BATCH)) {
+      getData();
+      initializeBatchMode();
+      compute();
+      this.context.writeEnd(Constants.SimpleGraphConfig.REDUCE_EDGE, computedWeightVector);
+    }
+  }
+
+  public void compute() {
+    double[][] X = this.binaryBatchModel.getX();
+    double[] w = this.binaryBatchModel.getW();
+    double[] y = this.binaryBatchModel.getY();
+    try {
+      pegasosSgdSvm.iterativeTaskSgd(w, X, y);
+    } catch (NullDataSetException e) {
+      e.printStackTrace();
+    } catch (MatrixMultiplicationException e) {
+      e.printStackTrace();
+    }
+    computedWeightVector = pegasosSgdSvm.getW();
+  }
+
+  /**
+   * This method initializes the parameters needed to run the batch mode algorithm
+   * This method is called per a received batch
+   */
+  public void initializeBatchMode() {
+    this.initializeBinaryModel(this.datapointArray);
+    this.binaryBatchModel.setW(this.weightVectorArray[0]);
+    pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
+        this.binaryBatchModel.getY(), this.binaryBatchModel.getAlpha(),
+        this.binaryBatchModel.getIterations(), this.binaryBatchModel.getFeatures());
+  }
+
+  /**
+   * Binary Model is updated with received batch data
+   *
+   * @param xy data points included with label and features
+   */
+  public void initializeBinaryModel(double[][] xy) {
+    if (binaryBatchModel == null) {
+      throw new NullPointerException("Binary Batch Model is Null !!!");
+    }
+    if (debug) {
+      LOG.info("Binary Batch Model Before Updated : " + this.binaryBatchModel.toString());
+    }
+    this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, xy);
+    if (debug) {
+      LOG.info("Binary Batch Model After Updated : " + this.binaryBatchModel.toString());
+      LOG.info(String.format("Updated Data [%d,%d] ",
+          this.binaryBatchModel.getX().length, this.binaryBatchModel.getX()[0].length));
+    }
+
+  }
+
 }

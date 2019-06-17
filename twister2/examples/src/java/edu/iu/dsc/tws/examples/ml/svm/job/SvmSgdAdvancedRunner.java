@@ -61,6 +61,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
   private IterativeSVMCompute iterativeSVMCompute;
   private SVMReduce svmReduce;
   private DataObject<Object> trainingData;
+  private DataObject<Object> inputWeightVector;
   private DataObject<Object> testingData;
   private DataObject<Object> testingResults;
   private DataObject<double[]> trainedWeightVector;
@@ -107,6 +108,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;
+
+    inputWeightVector = executeWeightVectorLoadingTaskGraph();
 
     Long t1 = System.nanoTime();
     trainingData = executeTrainingDataLoadingTaskGraph();
@@ -174,6 +177,40 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         datapointsTaskGraph, firstGraphExecutionPlan, Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
     if (data == null) {
       throw new NullPointerException("Something Went Wrong in Loading Training Data");
+    } else {
+      LOG.info("Training Data Total Partitions : " + data.getPartitions().length);
+    }
+    return data;
+  }
+
+  /**
+   * This method loads the training data in a distributed mode
+   * dataStreamerParallelism is the amount of parallelism used
+   * in loaded the data in parallel.
+   *
+   * @return twister2 DataObject containing the training data
+   */
+  public DataObject<Object> executeWeightVectorLoadingTaskGraph() {
+    DataObject<Object> data = null;
+    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        this.svmJobParameters.getWeightVectorDataDir());
+    DataObjectSink sinkTask = new DataObjectSink();
+    trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
+        sourceTask, dataStreamerParallelism);
+    ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
+        Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
+    firstGraphComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE)
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(DataType.OBJECT);
+    trainingBuilder.setMode(OperationMode.BATCH);
+
+    DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.build();
+    datapointsTaskGraph.setGraphName("weight-vector-loading-graph");
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+    data = taskExecutor.getOutput(
+        datapointsTaskGraph, firstGraphExecutionPlan, Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+    if (data == null) {
+      throw new NullPointerException("Something Went Wrong in Loading Weight Vector");
     } else {
       LOG.info("Training Data Total Partitions : " + data.getPartitions().length);
     }
@@ -327,11 +364,17 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
     // iteration is being decoupled from the computation task
     for (int i = 0; i < this.binaryBatchModel.getIterations(); i++) {
+
       taskExecutor.addInput(
           graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
           Constants.SimpleGraphConfig.INPUT_DATA, trainingData);
-      taskExecutor.itrExecute(graph, plan);
+      taskExecutor.addInput(graph, plan, Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
+          Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputWeightVector);
 
+      inputWeightVector = taskExecutor.getOutput(graph, plan,
+          Constants.SimpleGraphConfig.SVM_REDUCE);
+
+      taskExecutor.itrExecute(graph, plan);
 
     }
     taskExecutor.waitFor(graph, plan);

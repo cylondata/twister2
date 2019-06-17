@@ -104,7 +104,9 @@ public final class SVMRunner {
     options.addOption(Utils.createOption(MLDataObjectConstants.TESTING_DATA_DIR,
         true, "Testing data directory", false));
     options.addOption(Utils.createOption(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR,
-        true, "Training data directory", false));
+        true, "Cross-Validation data directory", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR,
+        true, "Weight Vector data directory", true));
     options.addOption(Utils.createOption(MLDataObjectConstants.MODEL_SAVE_PATH,
         true, "Model Save Directory", false));
 
@@ -160,6 +162,8 @@ public final class SVMRunner {
         cmd.getOptionValue(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR));
     jobConfig.put(MLDataObjectConstants.MODEL_SAVE_PATH,
         cmd.getOptionValue(MLDataObjectConstants.MODEL_SAVE_PATH));
+    jobConfig.put(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR,
+        cmd.getOptionValue(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR));
 
 
     jobConfig.put(MLDataObjectConstants.DUMMY, cmd.hasOption(MLDataObjectConstants.DUMMY));

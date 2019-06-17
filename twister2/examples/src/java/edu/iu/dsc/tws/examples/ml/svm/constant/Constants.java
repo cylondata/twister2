@@ -24,11 +24,15 @@ public final class Constants {
 
     public static final String DATASTREAMER_SOURCE = "datastreamer_source";
 
+    public static final String ITERATIVE_DATASTREAMER_SOURCE = "iterative_datastreamer_source";
+
     public static final String SVM_COMPUTE = "svm_compute";
 
     public static final String SVM_REDUCE = "svm_reduce";
 
     public static final String INPUT_DATA = "input_data";
+
+    public static final String INPUT_WEIGHT_VECTOR = "input_weight_vector";
 
     public static final String DATA_OBJECT_SOURCE = "data_source";
 
