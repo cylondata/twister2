@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Tera Sort · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h2&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;introduction&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#introduction&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Introduction&lt;/h2&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Tera Sort · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h2&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;introduction&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#introduction&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Introduction&lt;/h2&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Examples</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Application Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Tera Sort</h1></header><article><div><span><h2><a class="anchor" aria-hidden="true" id="introduction"></a><a href="#introduction" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Introduction</h2>
+<p>Tera Sort is a common benchmark to measure and compare high performance big data frameworks such as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.</p>
+<p>In twister2, when terasort is running in non file based mode, we generate a batch of tuples, each having a random byte array as the key and a byte array of configurable length as the value. These tuples will be sent from multiple sources to a single sinks with keyed gather operation applied as the connection. Keyed Gather operation is configured with a comparator to sort by key.</p>
+<p>Tera sort benchmark can be spawned as follows.</p>
+<p><code>./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -keySeed 1000 -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20</code></p>
+<p>Instead of using a random data source, TeraSort can be configured to run with a file data source as follows.</p>
+<p><code>./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -valueSize 90 -keySize 10 -inputFile /path/to/file-%d -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20</code></p>
+<h3><a class="anchor" aria-hidden="true" id="tera-sort-parameters"></a><a href="#tera-sort-parameters" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Tera Sort parameters</h3>
+<h4><a class="anchor" aria-hidden="true" id="data-configuration-file-based-mode"></a><a href="#data-configuration-file-based-mode" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Configuration - File Based mode</h4>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Description</th><th>Default Value</th></tr>
+</thead>
+<tbody>
+<tr><td>inputFile</td><td>Path to the input file. This path can contain, %d which will be replaced with the task index at runtime. For example, if file is specified as input-%d, when executing task with index 0, it will search for file input-0.</td><td>Mandatory</td></tr>
+<tr><td>valueSize</td><td>Size of the value component of the tuple in bytes</td><td>Mandatory</td></tr>
+<tr><td>keySize</td><td>Size of the value component of the tuple in bytes</td><td>Mandatory</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="data-configuration-non-file-based-mode"></a><a href="#data-configuration-non-file-based-mode" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Configuration - Non File Based mode</h4>
+<p>Terasort will switch to non file based mode, if filePath is not specified.</p>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Description</th><th>Default Value</th></tr>
+</thead>
+<tbody>
+<tr><td>size</td><td>Total size of data generated by sources.</td><td>Mandatory</td></tr>
+<tr><td>valueSize</td><td>Size of the value component of the tuple in bytes</td><td>Mandatory</td></tr>
+<tr><td>keySize</td><td>Size of the value component of the tuple in bytes</td><td>Mandatory</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="resource-configuration"></a><a href="#resource-configuration" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Resource Configuration</h4>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Description</th><th>Default Value</th></tr>
+</thead>
+<tbody>
+<tr><td>instances</td><td>No of twister2 worker instances</td><td>Mandatory</td></tr>
+<tr><td>instanceCpus</td><td>No of CPUs to allocate per each instance(Might not be applicable for all twister2 modes)</td><td>Mandatory</td></tr>
+<tr><td>instanceMemory</td><td>Amount of memory to allocate in MB for each instance</td><td>Mandatory</td></tr>
+<tr><td>sources</td><td>No. of sources to generate data. This will multiply the data size of your current configuration. For example, if you have specified, 512GB as the data size and 4 as the No. of sources, twister2 will produce and sort 1TB of data in total</td><td>Mandatory</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="tuneup-parameters"></a><a href="#tuneup-parameters" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Tuneup Parameters</h4>
+<table>
+<thead>
+<tr><th>Parameter</th><th>Description</th><th>Default Value</th></tr>
+</thead>
+<tbody>
+<tr><td>memoryBytesLimit</td><td>Maximum amount of random access memory(in bytes) to utilize to hold incoming tuples. Tuples will be written to the disk, once this limit is exceeded.</td><td>6400</td></tr>
+<tr><td>memoryRecordsLimit</td><td>Maximum amount of tuples to keep in RAM.</td><td>64</td></tr>
+</tbody>
+</table>
+<h3><a class="anchor" aria-hidden="true" id="generating-data-files"></a><a href="#generating-data-files" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Generating data files</h3>
+<p><a href="http://www.ordinal.com/gensort.html">gensort Data Generator</a> can be used to generate data files.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/examples/joins/join"><span class="arrow-prev">← </span><span>Join</span></a><a class="docs-next button" href="/twister2/docs/examples/windowing/windowing"><span>Windowing</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#introduction">Introduction</a><ul class="toc-headings"><li><a href="#tera-sort-parameters">Tera Sort parameters</a></li><li><a href="#generating-data-files">Generating data files</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

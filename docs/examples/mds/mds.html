@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>MDS · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;da-mds-deterministic-annealing-multi-dimensional-scaling&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#da-mds-deterministic-annealing-multi-dimensional-scaling&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;DA-MDS (Deterministic Annealing Multi-Dimensional Scaling)&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="MDS · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;da-mds-deterministic-annealing-multi-dimensional-scaling&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#da-mds-deterministic-annealing-multi-dimensional-scaling&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;DA-MDS (Deterministic Annealing Multi-Dimensional Scaling)&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">MDS</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="da-mds-deterministic-annealing-multi-dimensional-scaling"></a><a href="#da-mds-deterministic-annealing-multi-dimensional-scaling" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DA-MDS (Deterministic Annealing Multi-Dimensional Scaling)</h1>
+<p>DA-MDS is the implementation of deterministic annealing multi-dimensional scaling algorithm.
+The clustering process pick a subset of sequences which is defined as sample sequence set.
+First, perform the pairwise alignment on and produce a distance matrix. Second, perform the pairwise
+clustering and multidimensional scaling on the distance matrix and produce a three dimensional view
+of the sample sequences with different coloring on clusters found from pairwise clustering algorithm.
+Third, it refine the clusters found from the previous step to form spatially compact regions known as
+Mega-regions. Then, assign each remaining sequence approximately to a Mega-region which is based on
+the pairwise distance between the sequence and the sequence representing the centers of nodes of
+decomposed tree. For each obtained mega-region, run pairwise alignment and produce the distance matrix.</p>
+<h2><a class="anchor" aria-hidden="true" id="mds-implementation-details"></a><a href="#mds-implementation-details" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDS Implementation Details</h2>
+<p>The implementation details of DA-MDS application is explained below which consists of two parts namely
+data processing and compute processing. The data processing uses the Twister2 file system to partition
+and read the partitioned data points based on the task parallelism. The compute processing purely
+depends on the MPI to perform the computation.</p>
+<h3><a class="anchor" aria-hidden="true" id="dataobjectconstants-used-by-da-mds"></a><a href="#dataobjectconstants-used-by-da-mds" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DataObjectConstants Used by DA-MDS</h3>
+<p>The constants which are used by the DA-MDS algorithm to specify the number of workers, parallelism,
+dimension, size of matrix (dsize X dim), byte type (either &quot;short&quot; or &quot;big&quot;),
+file system, datainput (&quot;generate&quot; or &quot;read&quot;), and config directory. The datainput option is used to
+specify the system whether the user wants to generate the input data or else the system has to read
+the data from the user specified input directory.</p>
+<pre><code class="hljs css language-java">  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String WORKERS = <span class="hljs-string">"workers"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DIMENSIONS = <span class="hljs-string">"dim"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String PARALLELISM_VALUE = <span class="hljs-string">"parallelism"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DSIZE = <span class="hljs-string">"dsize"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DINPUT_DIRECTORY = <span class="hljs-string">"dinput"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String FILE_SYSTEM = <span class="hljs-string">"filesys"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String BYTE_TYPE = <span class="hljs-string">"byteType"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String CONFIG_FILE = <span class="hljs-string">"config"</span>;
+  <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String DATA_INPUT = <span class="hljs-string">"datainput"</span>; <span class="hljs-comment">//"generate" or "read"</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="mdsworker"></a><a href="#mdsworker" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSWorker</h3>
+<p>It is the main class for the DA-MDS which consists of the following tasks namely generation of datapoints,
+partition and read the partitioned data points, and perform the distance calculation between the
+datapoints.  First, it parses the command line parameters submitted by the user for running the DA-MDS
+algorithm. It first sets the submitted variables in the JobConfig object and put the JobConfig object
+into the Twister2Job Builder, set the worker class (MDSWorker.java in this example) and submit the job.</p>
+<pre><code class="hljs css language-java">edu.iu.dsc.tws.examples.batch.mds.MDSWorker
+</code></pre>
+<p>It extends the TaskWorker class which has the execute() method, the execute() method
+first invokes the MatrixGenerator class to generate the datapoints in their respective filesystem and
+their directories. Then, the execute() method of MDSWorker invokes &quot;MDSDataProcessingGraph&quot;, and
+&quot;MDSComputeProcessingGraph&quot; subsequently. We will briefly discuss the functionalities of each task
+graph defined in the MDSWorker.</p>
+<h3><a class="anchor" aria-hidden="true" id="mdsdataprocessinggraph"></a><a href="#mdsdataprocessinggraph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSDataProcessingGraph</h3>
+<p>This is the first task graph to partition and read the partitioned data points.</p>
+<pre><code class="hljs css language-java">    <span class="hljs-comment">/* First Graph to partition and read the partitioned data points **/</span>
+    MDSDataObjectSource mdsDataObjectSource = <span class="hljs-keyword">new</span> MDSDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
+        directory, datasize);
+    MDSDataObjectSink mdsDataObjectSink = <span class="hljs-keyword">new</span> MDSDataObjectSink(matrixColumLength);
+    TaskGraphBuilder mdsDataProcessingGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    mdsDataProcessingGraphBuilder.setTaskGraphName(<span class="hljs-string">"MDSDataProcessing"</span>);
+</code></pre>
+<p>First, add the source and sink tasks to the task graph builder for the first task graph. Then, create
+the communication edges between the tasks for the first task graph.</p>
+<pre><code class="hljs css language-java">    mdsDataProcessingGraphBuilder.addSource(<span class="hljs-string">"dataobjectsource"</span>, mdsDataObjectSource, parallel);
+    ComputeConnection dataObjectComputeConnection = mdsDataProcessingGraphBuilder.addSink(
+           <span class="hljs-string">"dataobjectsink"</span>, mdsDataObjectSink, parallel);
+    dataObjectComputeConnection.direct(<span class="hljs-string">"dataobjectsource"</span>)
+           .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+           .withDataType(DataType.OBJECT);
+    mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
+</code></pre>
+<p>Next, invoke the taskGraphBuilder to build the data processing task graph, get the task schedule plan
+and execution plan for the dataprocessing task graph, and call the execute() method to execute the
+dataprocessing task graph. Once the execution is finished, the output values are retrieved in the
+&quot;dataobjectsink&quot;.</p>
+<pre><code class="hljs css language-java">      DataFlowTaskGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
+      <span class="hljs-comment">//Get the execution plan for the first task graph</span>
+      ExecutionPlan plan = taskExecutor.plan(dataObjectTaskGraph);
+   
+      <span class="hljs-comment">//Actual execution for the first taskgraph</span>
+      taskExecutor.execute(dataObjectTaskGraph, plan);
+   
+       <span class="hljs-comment">//Retrieve the output of the first task graph</span>
+       DataObject&lt;Object&gt; dataPointsObject = taskExecutor.getOutput(dataObjectTaskGraph, plan, <span class="hljs-string">"dataobjectsink"</span>);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="mdsdataobjectsource"></a><a href="#mdsdataobjectsource" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSDataObjectSource</h4>
+<p>This class partition the datapoints which is based on the task parallelism value. In this example,
+we are generating the binary data which uses the &quot;BinaryInputPartitioner&quot; to partition the datapoints.
+Finally, write the partitioned datapoints into their respective edges. The BinaryInputPartitioner
+partition the datapoints based on the data input block.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">prepare</span><span class="hljs-params">(Config cfg, TaskContext context)</span> </span>{
+    <span class="hljs-keyword">super</span>.prepare(cfg, context);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    <span class="hljs-keyword">this</span>.source = runtime.createInput(cfg, context, <span class="hljs-keyword">new</span> BinaryInputPartitioner(
+        <span class="hljs-keyword">new</span> Path(getDataDirectory()), getDataSize() * Short.BYTES));
+  }
+</code></pre>
+<p>In the execute method, we are creating the bytebuffer array object which is twice the size of the
+datasize. We get the input split for the corresponding task indexes and get the record from each
+input split and convert it as a short array and write the short array using context.write to the
+sink task.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">()</span> </span>{
+    Buffer buffer;
+    <span class="hljs-keyword">byte</span>[] line = <span class="hljs-keyword">new</span> <span class="hljs-keyword">byte</span>[getDataSize() * <span class="hljs-number">2</span>];
+    ByteBuffer byteBuffer = ByteBuffer.allocate(getDataSize() * <span class="hljs-number">2</span>);
+    byteBuffer.order(ByteOrder.BIG_ENDIAN);
+    InputSplit inputSplit = source.getNextSplit(context.taskIndex());
+    <span class="hljs-keyword">while</span> (inputSplit != <span class="hljs-keyword">null</span>) {
+      <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">while</span> (!inputSplit.reachedEnd()) {
+          <span class="hljs-keyword">while</span> (inputSplit.nextRecord(line) != <span class="hljs-keyword">null</span>) {
+            byteBuffer.clear();
+            byteBuffer.put(line);
+            byteBuffer.flip();
+            buffer = byteBuffer.asShortBuffer();
+            <span class="hljs-keyword">short</span>[] shortArray = <span class="hljs-keyword">new</span> <span class="hljs-keyword">short</span>[getDataSize()];
+            ((ShortBuffer) buffer).get(shortArray);
+            context.write(getEdgeName(), shortArray);
+          }
+        }
+        inputSplit = <span class="hljs-keyword">null</span>;
+      } <span class="hljs-keyword">catch</span> (Exception ioe) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">"IOException Occured:"</span> + ioe.getMessage());
+      }
+    }
+    context.end(getEdgeName());
+  }
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="mdsdataobjectdirectsink"></a><a href="#mdsdataobjectdirectsink" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSDataObjectDirectSink</h4>
+<p>This class receives the message object from the MDSDataObjectSource and write into their respective
+task index values. First, it store the iterator values into the array list then it convert the array
+list values into short array values.</p>
+<pre><code class="hljs css language-java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">execute</span><span class="hljs-params">(IMessage content)</span> </span>{
+    List&lt;<span class="hljs-keyword">short</span>[]&gt; values = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;();
+    <span class="hljs-keyword">while</span> (((Iterator) content.getContent()).hasNext()) {
+      values.add((<span class="hljs-keyword">short</span>[]) ((Iterator) content.getContent()).next());
+    }
+    LOG.info(<span class="hljs-string">"Distance Matrix (Row X Column):"</span> + values.size() + <span class="hljs-string">"\tX\t"</span> + values.get(<span class="hljs-number">0</span>).length);
+    dataPoints = <span class="hljs-keyword">new</span> <span class="hljs-keyword">short</span>[values.size() * columnLength];
+    <span class="hljs-keyword">int</span> k = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">short</span>[] value : values) {
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">short</span> aValue : value) {
+        dataPoints[k] = aValue;
+        k = k + <span class="hljs-number">1</span>;
+      }
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
+}
+</code></pre>
+<p>Finally, write the appropriate data points into their respective task index values with the entity
+partition values.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+   <span class="hljs-keyword">public</span> DataPartition&lt;<span class="hljs-keyword">short</span>[]&gt; get() {
+     <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> EntityPartition&lt;&gt;(context.taskIndex(), dataPoints);
+   }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="mdscomputeprocessinggraph"></a><a href="#mdscomputeprocessinggraph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSComputeProcessingGraph</h3>
+<p>The MDS Compute Processing depends on DAMDS and Common package so we have the complete application
+written in Twister2Applications whereas Twister2 example has only data processing part and
+retrieving the output of the data processing. If you want to see the complete example, please go to
+the Twister2Applications project in this location.</p>
+<pre><code class="hljs">https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/DSC-SPIDAL/</span>twister2applications
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="mdssourcetask"></a><a href="#mdssourcetask" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSSourceTask</h3>
+<p>The MDSSourceTask receive the datapoints object from the MDSDataProcessingGraph and assign the points
+into the DataObject. The execute method get the datapoints as a short array corresponding to the task
+indexes and send those datapoints to the executeMDS method.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-meta">@Override</span>
+ <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">()</span> </span>{
+    DataPartition&lt;?&gt; dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    datapoints = (<span class="hljs-keyword">short</span>[]) dataPartition.getConsumer().next();
+    executeMds(datapoints);
+    context.writeEnd(Context.TWISTER2_DIRECT_EDGE, <span class="hljs-string">"MDS_Execution"</span>);
+ }
+</code></pre>
+<p>The executeMDS method invoke the MDSProgramWorker which passes the corresponding data points along
+with the required values such as ParallelOps.threadComm, mdsconfig, byteOrder, BlockSize, and
+mainTimer.</p>
+<pre><code class="hljs css language-java"> <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">executeMds</span><span class="hljs-params">(<span class="hljs-keyword">short</span>[] datapoints)</span> </span>{
+     Stopwatch mainTimer = Stopwatch.createStarted();
+     MDSProgramWorker mdsProgramWorker = <span class="hljs-keyword">new</span> MDSProgramWorker(<span class="hljs-number">0</span>, ParallelOps.threadComm,
+             mdsconfig, byteOrder, BlockSize, mainTimer, <span class="hljs-keyword">null</span>, datapoints);
+     <span class="hljs-keyword">try</span> {
+         mdsProgramWorker.run();
+     } <span class="hljs-keyword">catch</span> (IOException e) {
+         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> RuntimeException(<span class="hljs-string">"IOException Occured:"</span> + e.getMessage());
+        }
+     }
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="mdsprogramworker"></a><a href="#mdsprogramworker" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>MDSProgramWorker</h3>
+<p>The MDSProgramWorker is the one which actually performs the MDS. The run method in the MDSProgramWorker
+first setup the required input parameters to run the MDS application. Next, it read the weights
+using the readWeights method. Then, it sends the corresponding distance matrix and weights
+to the calculate statistics method to run the MDS application.</p>
+<h3><a class="anchor" aria-hidden="true" id="prerequisites"></a><a href="#prerequisites" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Prerequisites</h3>
+<p>The MDS application in Twister2 requires two external packages namely common and damds. Please
+install those packages before running this application.</p>
+<pre><code class="hljs">https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/DSC-SPIDAL/</span>damds
+
+https:<span class="hljs-regexp">//gi</span>thub.com<span class="hljs-regexp">/DSC-SPIDAL/</span>common
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="configproperties"></a><a href="#configproperties" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Config.Properties</h2>
+<p>The config.properties is required for running the MDS application. The user has to just leave the
+&quot;DistanceMatrixFile&quot; as blank and specify the pointsfile, timing file, and summary file. Also, the
+user has to specify the number of datapoints considered for the test (for example: in this case it
+is 1000).</p>
+<pre><code class="hljs css language-text">DistanceMatrixFile =
+WeightMatrixFile =
+LabelFile =
+InitialPointsFile =
+PointsFile = /tmp/matrix/damds-points.txt
+TimingFile = /tmp/matrix/damds-timing.txt
+SummaryFile = /tmp/matrix/damds-summary.txt
+NumberDataPoints = 1000
+TargetDimension = 3
+DistanceTransform = 1.0
+Threshold = 0.000001 
+Alpha = 0.95
+TminFactor = 0.5
+StressIterations = 1000
+CGIterations = 100
+CGErrorThreshold = 0.00001
+IsSammon = false
+IsBigEndian = true
+IsMemoryMapped = true
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="running-mds-application"></a><a href="#running-mds-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running MDS Application</h2>
+<pre><code class="hljs css language-bash"> /home/kannan/twister2/bazel-bin/scripts/package/twister2-0.2.1/bin/twister2 submit standalone jar target/mds-0.2.1-SNAPSHOT-jar-with-dependencies.jar edu.iu.dsc.tws.apps.MDSProgram -dinput /tmp/matrix -filesys <span class="hljs-built_in">local</span> -byteType big -config /home/kannan/twister2applications/twister2/mds/config.properties -datainput generate -workers 4 -parallelism 4 -dsize 1000 -dim 1000
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="sample-output"></a><a href="#sample-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h3>
+<pre><code class="hljs css language-text">
+Distance summary... 
+  Count=1000000
+  Max=0.999969
+  Sum=500482.041627
+  Sum of square=333744.962122
+  Average=0.500482
+  Standard deviation=0.288553
+  MissingDistPercentage=0.0
+
+Start of loop 216 Temperature (T_Cur) 0.0000
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+  Loop 216 Iteration 0 Avg CG count 2.0000 Stress 0.31896
+End of loop 216 Total Iterations 1 Avg CG count 2.0000 Stress 0.31896
+
+Finishing DAMDS run ...
+Finishing DAMDS run ...
+  Total Time: 0d:00H:01M:12S:399mS (72399 ms) Loop Time: 0d:00H:01M:12S:193mS (72193 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress: 0.3189564742212961
+  Total Time: 0d:00H:01M:12S:384mS (72384 ms) Loop Time: 0d:00H:01M:12S:195mS (72195 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress: 0.3189564742212961
+Finishing DAMDS run ...
+  Total Time: 0d:00H:01M:12S:438mS (72438 ms) Loop Time: 0d:00H:01M:12S:193mS (72193 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress: 0.3189564742212961
+Finishing DAMDS run ...
+  Total Time: 0d:00H:01M:12S:540mS (72540 ms) Loop Time: 0d:00H:01M:12S:184mS (72184 ms)
+  Total Loops: 216
+  Total Iterations: 727
+  Total CG Iterations: 1599 Avg. CG Iterations: 2.1994
+  Final Stress: 0.3189564742212961
+[2019-06-13 13:23:14 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-2] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@5609159b  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Received message:java.util.ArrayList$Itr@7748410a  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.apps.mds.MDSWorker: Data Load time : 290
+Total Time : 72985Compute Time : 72695  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-2] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 2  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 3  
+[2019-06-13 13:23:14 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-06-13 13:23:14 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 4 workers have completed. JobMaster is stopping.  
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#mds-implementation-details">MDS Implementation Details</a><ul class="toc-headings"><li><a href="#dataobjectconstants-used-by-da-mds">DataObjectConstants Used by DA-MDS</a></li><li><a href="#mdsworker">MDSWorker</a></li><li><a href="#mdsdataprocessinggraph">MDSDataProcessingGraph</a></li><li><a href="#mdscomputeprocessinggraph">MDSComputeProcessingGraph</a></li><li><a href="#mdssourcetask">MDSSourceTask</a></li><li><a href="#mdsprogramworker">MDSProgramWorker</a></li><li><a href="#prerequisites">Prerequisites</a></li></ul></li><li><a href="#configproperties">Config.Properties</a></li><li><a href="#running-mds-application">Running MDS Application</a><ul class="toc-headings"><li><a href="#sample-output">Sample Output</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

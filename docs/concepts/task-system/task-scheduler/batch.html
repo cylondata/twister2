@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>concepts/task-system/task-scheduler/batch · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;batch-schedulers&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#batch-schedulers&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Batch Schedulers&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="concepts/task-system/task-scheduler/batch · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;batch-schedulers&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#batch-schedulers&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Batch Schedulers&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">concepts/task-system/task-scheduler/batch</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="batch-schedulers"></a><a href="#batch-schedulers" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Batch Schedulers</h1>
+<h2><a class="anchor" aria-hidden="true" id="round-robin-batch-task-scheduler"></a><a href="#round-robin-batch-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Round Robin Batch Task Scheduler</h2>
+<p>RoundRobinBatchTaskScheduler allocates the task instances of the task graph in a round robin fashion
+which is similar to the Round Robin Task Scheduler for batch tasks. However, the primary difference
+between the streaming and batch task scheduling is, the streaming tasks has been considered as a
+complete task graph whereas the taskgraph for batch tasks has been divided into batches based on the
+level and the dependency of the tasks in the taskgraph. The sample batch taskgraph example is given
+below.</p>
+<pre><code class="hljs css language-text">      Source (Task 1)
+       |
+       |
+       V
+    Task 2 (Two Outgoing Edges)
+    |     |
+    |     |
+    V     V
+  Task 3  Task 4
+       |
+       |
+       V
+     Target (Task 5)
+</code></pre>
+<p>For the above task graph example, the tasks are divided into the following batches and scheduled into
+the available workers as given below:</p>
+<pre><code class="hljs css language-text">**Schedule Batches**
+
+1st batch --> Task 1 (Source)
+2nd batch --> Task 2
+3rd batch --> Task 3 & Task 4
+4th batch --> Task 5 (Target)
+</code></pre>
+<p>For example, if there are 2 containers and 4 batches of tasks (dependency tasks) with a task
+parallelism value of 2, in the first batch, task instance 0 of 1st task (Task 1) will go to
+container 0 and task instance 1 of 1st task will go to container 1. In the second batch, task instance
+0 of 2nd task will go to container 0 and task instance 1 of 2nd will go to container 1. In the third
+batch, task instance 0 of 3rd task will go to container 0, task instance 1 of 3rd task will go to
+container 1, task instance 0 of 4th task will go to container 0 and task instance 1 of 4th task will
+go to container 1. In the fourth batch, task instance 0 of 5th task will go to container 0, task
+instance 1 of 5th task will go to container 1.</p>
+<p>It generates the task schedule plan which consists of multiple containers (container plan) and the
+allocation of task instances (task instance plan) on those containers. The size of the container
+(memory, disk, and cpu) and the task instances (memory, disk, and cpu) are homogeneous in nature.
+First, it will allocate the task instances into the logical container values and then it will calculate
+the required ram, disk, and cpu values for the task instances and the logical containers which is based
+on the task configuration values and the allocated worker values respectively.</p>
+<p>The algorithm first parses the task vertex set of the task graph and identify the source, parent,
+child, and target tasks and store the identified batch of tasks in a separate set. Next, it allocates
+the logical container size based on the default ram, disk, and cpu values specified in the TaskScheduler
+Context. The schedule method unwraps the roundrobincontainer instance map and finds out the task
+instances allocated to each container. Based on the required ram, disk, and cpu of the required task
+instances it creates the required container object. If the worker has required ram, disk, and cpu value
+then it assigns those values to the containers otherwise, it will assign the calculated value of
+required ram, disk, and cpu value to the containers. Finally, the schedule method pack the task
+instance plan and the container plan into the task schedule plan and return the same.</p>
+<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/batch/roundrobin/RoundRobinBatchTaskScheduler.java">Round Robin Batch Task Scheduler Source Code</a></p>
+<h2><a class="anchor" aria-hidden="true" id="data-locality-batch-task-scheduler"></a><a href="#data-locality-batch-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Locality Batch Task Scheduler</h2>
+<p>DataLocality Aware Task Scheduler allocates the task instances of the streaming task graph based on
+the locality of data. It calculates the distance between the worker nodes and the data nodes and
+allocate the batch task instances to the worker nodes which are closer to the data nodes i.e. it
+takes lesser time to transfer/access the input data file. The data transfer time is calculated based
+on the network parameters such as bandwidth, latency, and size of the input file. It generates the
+task schedule plan which consists of the containers (container plan) and the allocation of task
+instances (task instance plan) on those containers. The size of the container (memory, disk, and cpu)
+and the task instances (memory, disk, and cpu) are homogeneous in nature. First, it computes the
+distance between the worker node and the datanodes and allocate the task instances into the logical
+container values and then it will calculate the required ram, disk, and cpu values for the task
+instances and the logical containers which is based on the task configuration values and the
+allocated worker values respectively.</p>
+<p>The algorithm first calculate the total number of task instances could be allocated to the container.
+Next, the algorithm retrieve the total number of task instances from the Task Attributes for the
+particular task. Based on the max TaskInstancesPerContainer value, the algorithm allocates the task
+instances into the respective container.</p>
+<p>The algorithm send the task vertex and the distance calculation map to find out the best worker node
+which is calculated between the worker nodes and the data nodes and store it in the map. Then, it
+allocate the task instances of the task vertex to the worker (which has minimal distance),
+if the container/worker has reached the maximum number of task instances then it will allocate the
+remaining task instances to the next container. Finally, the algorithm returns the
+datalocalityawareallocation map object which consists of container and its task instance allocation.</p>
+<p>The DataLocalityBatchTaskScheduler assign the logical container size which is based on the default
+ram, disk, and cpu values specified in the TaskScheduler Context. Then, the algorithm unwraps the
+datalocalityawarecontainer instance map and finds out the task instances allocated to each container.
+Based on the task instances required ram, disk, and cpu it creates the required container object.
+If the worker has required ram, disk, and cpu value then it assigns those values to the containers
+otherwise, it will assign the calculated value of required ram, disk, and cpu value to the containers.
+Finally, the algorithm pack the task instance plan and the container plan into the task schedule plan
+and return the same.</p>
+<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/batch/datalocalityaware/DataLocalityBatchTaskScheduler.java">Data Locality Batch Task Scheduler Source Code</a></p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#round-robin-batch-task-scheduler">Round Robin Batch Task Scheduler</a></li><li><a href="#data-locality-batch-task-scheduler">Data Locality Batch Task Scheduler</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

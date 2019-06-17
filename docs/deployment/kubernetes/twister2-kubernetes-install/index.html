@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>deployment/kubernetes/twister2-kubernetes-install · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;installing-twister2-on-kubernetes&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#installing-twister2-on-kubernetes&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Installing Twister2 on Kubernetes&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="deployment/kubernetes/twister2-kubernetes-install · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;installing-twister2-on-kubernetes&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#installing-twister2-on-kubernetes&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Installing Twister2 on Kubernetes&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">deployment/kubernetes/twister2-kubernetes-install</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="installing-twister2-on-kubernetes"></a><a href="#installing-twister2-on-kubernetes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installing Twister2 on Kubernetes</h1>
+<p>First, you can install Kubernetes project to a machine on your cluster or your personal machine. You need to have kubectl running on the machine you installed the project.</p>
+<p>To compile  and install Twister2 on a machine, please follow the steps in <a href="/twister2/docs/compiling/compile_overview">compiling document</a>.
+You may also check <a href="/twister2/docs/developers/devenv">developer document</a> for setting up IDEs.</p>
+<p>Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters:</p>
+<ul>
+<li><strong>Authorization of Pods</strong>: This is a required step to run any Twister2 job on Kubernetes clusters.</li>
+<li><strong>Deploying Twister2 Dashboard</strong>: This is a recommended step to monitor Twister2 jobs on Kubernetes clusters.</li>
+<li><strong>Persistent Storage Settings</strong>: This is optional. You can set up persistent storage only if you want to use.</li>
+<li><strong>Generating Secret Object for OpenMPI Jobs</strong>: This is required if you are going to run OpenMPI jobs.</li>
+<li><strong>Providing Rack and Datacenter information</strong>: This is required only if you want Twister2 to perform rack and data center aware scheduling.</li>
+<li><strong>Job Package Uploader Settings</strong>: This is required only if you want to upload the job package through a web server.</li>
+</ul>
+<p><strong>Requirement</strong>: Twister2 requires Kubernetes version v1.10 or higher.</p>
+<h2><a class="anchor" aria-hidden="true" id="authorization-of-pods"></a><a href="#authorization-of-pods" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Authorization of Pods</h2>
+<p>Twister2 Worker pods need to watch Job Master pod and get its IP address.
+In addition, Job Master needs to be able to delete used resources after the job has completed.
+Therefore, before submitting a job, a Role and a RoleBinding object need to be created.
+We prepared the following YAML file: twister2-auth.yaml.</p>
+<p>If you are going to use the default namespace, then execute the following command:</p>
+<pre><code class="hljs css language-bash">    $ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-auth.yaml
+</code></pre>
+<p>If you are not going to use the default namespace, download the above yaml file,
+change the namespace field value to a namespace value that your users will use to submit Twister2 jobs.
+Then, execute the following command:</p>
+<pre><code class="hljs css language-bash">    $ kubectl create -f /path/to/file/twister2-auth.yaml
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="deploying-twister2-dashboard"></a><a href="#deploying-twister2-dashboard" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Deploying Twister2 Dashboard</h2>
+<p>Twister2 Dashboard enables users to monitor their jobs through a web browser.
+Although it is not mandatory, it is highly recommended.
+A single instance of the Dashboard runs in each cluster.</p>
+<p>There are two versions of Dashboard. One version saves Dashboard state in a persistent storage.
+Another version does not use persistent storage. It looses its content if its pod restarts.</p>
+<p>If you are using default namespace, then you can deploy Dashboard without persistent storage as:</p>
+<pre><code class="hljs css language-bash">    $ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-wo-ps.yaml
+</code></pre>
+<p>You can deploy Dashboard with persistent storage as:</p>
+<pre><code class="hljs css language-bash">    $ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-with-ps.yaml
+</code></pre>
+<p>If you are using another namespace, or would like to change a parameter of Dashboard,
+then you can download one of these files,
+change the desired parameter value in them and execute the create command on modified file.</p>
+<h3><a class="anchor" aria-hidden="true" id="accessing-dashboard"></a><a href="#accessing-dashboard" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Accessing Dashboard</h3>
+<p>You can access the Dashboard from any machine that has kubectl installed and
+has the credentials to connect to the kubernetes cluster.</p>
+<p>First run the following command in your workstation to create a secure channel:</p>
+<pre><code class="hljs css language-bash">    $ kubectl proxy
+</code></pre>
+<p>Then, access Dashboard at the following URL:</p>
+<pre><code class="hljs css language-text">    http://localhost:8001/api/v1/namespaces/default/services/http:twister2-dashboard:/proxy/#/
+</code></pre>
+<p>If you are using a namespace other than the default, change namespace value in the URL.</p>
+<h3><a class="anchor" aria-hidden="true" id="running-dashboard-as-a-standalone-web-server"></a><a href="#running-dashboard-as-a-standalone-web-server" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running Dashboard as a standalone web server</h3>
+<p>You can also run Dashboard as a standalone webserver in your cluster.
+All pods should be able to access the machine that is running Dashboard to be able to feed their status data.</p>
+<p>Run Dashboard server with the following command:</p>
+<pre><code class="hljs css language-bash">    $ bin/twister2 dash
+</code></pre>
+<p>Dashboard runs at the port 8080.</p>
+<p>You need to give the address of Dashboard at the configuration file: conf/kubernetes/system.yaml
+You should set the value of following parameter:</p>
+<pre><code class="hljs css language-text">    twister2.dashboard.host: "http://<host-address>:8080"
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="persistent-storage-settings"></a><a href="#persistent-storage-settings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Persistent Storage Settings</h2>
+<p>To enable persistent storage in Twister2, either a Persistent Storage Provisioner or statically configured PersistentVolume must exist in the cluster. Persistent storage class needs to be specified in the client.yaml configuration file. Configuration parameter is:</p>
+<pre><code class="hljs css language-text">    kubernetes.persistent.storage.class
+</code></pre>
+<p>We used the default storage class value as &quot;twister2-nfs-storage&quot;. Please set your persistent storage class name in your provisioner and in the client.yaml config file.</p>
+<p>We tested with NFS-Client provisioner from: <a href="https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client">https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client</a></p>
+<p>NFS-Client provisioner is used if you already have an NFS server. Otherwise you may use the NFS provisioner that does not require to have an NFS server: <a href="https://github.com/kubernetes-incubator/external-storage/tree/master/nfs">https://github.com/kubernetes-incubator/external-storage/tree/master/nfs</a></p>
+<h2><a class="anchor" aria-hidden="true" id="generating-secret-object-for-openmpi-jobs"></a><a href="#generating-secret-object-for-openmpi-jobs" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Generating Secret Object for OpenMPI Jobs</h2>
+<p>When using OpenMPI communications in Twister2, pods need to have password-free SSH access among them. This is accomplished by first generating an SSH key pair and deploying them as a Kubernetes Secret on the cluster.</p>
+<p>First, generate an SSH key pair by using:</p>
+<pre><code class="hljs css language-bash">    $ ssh-keygen
+</code></pre>
+<p>Second, create a Kubernetes Secret object for the namespace of Twister2 users with the already generated key pairs. Execute the following command by specifying generated key files. Last parameter is the namespace. If you are using a namespace other than default, please change that.</p>
+<pre><code class="hljs css language-bash">    $ kubectl create secret generic twister2-openmpi-ssh-key --from-file=id_rsa=/path/to/.ssh/id_rsa --from-file=id_rsa.pub=/path/to/.ssh/id_rsa.pub --from-file=authorized_keys=/path/to/.ssh/id_rsa.pub --namespace=default
+</code></pre>
+<p>The fifth parameter (twister2-openmpi-ssh-key) is the name of the Secret object to be generated. That has to match the following configuration parameter in the network.yaml file:</p>
+<pre><code class="hljs css language-text">    kubernetes.secret.name
+</code></pre>
+<p>You can retrieve the created Secret object in YAML form by executing the following command:</p>
+<pre><code class="hljs css language-bash">    $ kubectl get secret &lt;secret-name&gt; -o=yaml
+</code></pre>
+<p>Another possibility for deploying the Secret object is to use the <a href="https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/docs/architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml">YAML file template</a>. You can edit that secret.yaml file. You can put the public and private keys to the corresponding fields. You can set the name and the namespace values. Then, you can create the Secret object by using kubectl method as:</p>
+<pre><code class="hljs css language-bash">    $ kubectl create secret -f /path/to/file/secret.yaml
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="providing-rack-and-datacenter-information-to-twister2"></a><a href="#providing-rack-and-datacenter-information-to-twister2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Providing Rack and Datacenter information to Twister2</h2>
+<p>Twister2 can use rack names and data center names of the nodes when scheduling tasks. There are two ways administrators and users can provide this information.</p>
+<p><strong>Through Configuration Files</strong>:<br>
+Users can provide the IP addresses of nodes in racks in their clusters. In addition, they can provide the list of data centers with rack data in them.</p>
+<p>Here is an example configuration:</p>
+<pre><code class="hljs css language-text">    kubernetes.datacenters.list:
+    - dc1: ['blue-rack', 'green-rack']
+    - dc2: ['rack01', 'rack02']
+
+    kubernetes.racks.list:
+    - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
+    - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+    - rack01: ['node51.ip', 'node52.ip', 'node53.ip']
+    - rack02: ['node61.ip', 'node62.ip', 'node63.ip']
+</code></pre>
+<p>Put these lists to client.yaml file. Then, assign the following configuration parameter in client.yaml as true:</p>
+<pre><code class="hljs css language-text">    kubernetes.node.locations.from.config
+</code></pre>
+<p><strong>Labelling Nodes With Rack and Data Center Information</strong>:<br>
+Administrators can label their nodes in the cluster for their rack and datacenter information. Each node in the cluster must be labelled once. When users submit a Twister2 job, submitting client first queries Kubernetes master for the labels of nodes. It provides this list to all workers in the job.</p>
+<p><strong>Note</strong>: For this solution to work, job submitting users must have admin privileges.</p>
+<p><strong>Example Labelling Commands</strong>: Administrators can use kubectl command to label the nodes in the cluster. The format of the label creation command is as follows:</p>
+<pre><code class="hljs css language-text">    $ kubectl label node <node-name> <label-key>=<label-value>
+</code></pre>
+<p>Then, used rack and data center labels must be provided in the configuration files. These configuration parameters are:</p>
+<pre><code class="hljs css language-text">    rack.labey.key
+    datacenter.labey.key
+</code></pre>
+<p>To get the rack and datacenter information from Kubernetes master using labels, the value of the following configuration parameter has to be specified as false in client.yaml file:</p>
+<pre><code class="hljs css language-text">    kubernetes.node.locations.from.config
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="job-package-uploader-settings"></a><a href="#job-package-uploader-settings" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Job Package Uploader Settings</h2>
+<p>When users submit a Twister2 job in Kubernetes cluster, submitting client program need to transfer the job package to workers. Submitting client first packs all job related files into a tar file. This archive files needs to be transferred to each worker that will be started.</p>
+<p>We provide <a href="/twister2/docs/architecture/resource-schedulers/kubernetes/twister2-on-kubernetes">two methods</a>:</p>
+<ul>
+<li>Job Package Transfer Using kubectl file copy</li>
+<li>Job Package Transfer Through a Web Server</li>
+</ul>
+<p>By default, we use the first method to transfer the job package. This method does not require any installations. It transfers the job package from client to workers directly by using kubectl copy method.
+Just make sure that the value of following configuration parameter in uploader.yaml file is true:</p>
+<pre><code class="hljs css language-text">   twister2.kubernetes.client.to.pods.uploading
+</code></pre>
+<p>Second method transfers the job package once to a web server running in the cluster. Workers download the job package from this web server.
+This method is more efficient since it transfers the job package only once from client machine to a web server.
+If the submitting clients are running on the cluster machines, this may not be important.
+However, if the submitting clients are running on machines outside the cluster with limited bandwidth, then this can be important.</p>
+<p>First, the client to pods uploading parameter has to be disabled by assigning false in uploader.yaml file:</p>
+<pre><code class="hljs css language-text">   twister2.kubernetes.client.to.pods.uploading
+</code></pre>
+<p>For the transfer through a web server to work, a web server must exist in the cluster and submitting client must have write permission to that directory.
+Then, you need to specify the web server directory and address information for the following configuration parameters in uploader.yaml file:</p>
+<pre><code class="hljs css language-text">   twister2.uploader.scp.command.connection: user@host
+   twister2.uploader.directory: "/path/to/web-server/directory/"
+   twister2.download.directory: "http://host:port/web-server-directory"
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#authorization-of-pods">Authorization of Pods</a></li><li><a href="#deploying-twister2-dashboard">Deploying Twister2 Dashboard</a><ul class="toc-headings"><li><a href="#accessing-dashboard">Accessing Dashboard</a></li><li><a href="#running-dashboard-as-a-standalone-web-server">Running Dashboard as a standalone web server</a></li></ul></li><li><a href="#persistent-storage-settings">Persistent Storage Settings</a></li><li><a href="#generating-secret-object-for-openmpi-jobs">Generating Secret Object for OpenMPI Jobs</a></li><li><a href="#providing-rack-and-datacenter-information-to-twister2">Providing Rack and Datacenter information to Twister2</a></li><li><a href="#job-package-uploader-settings">Job Package Uploader Settings</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

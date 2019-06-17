@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>architecture/resource-schedulers/mesos/open-mpi-support · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;&lt;strong&gt;Open MPI Support&lt;/strong&gt;&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="architecture/resource-schedulers/mesos/open-mpi-support · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;&lt;strong&gt;Open MPI Support&lt;/strong&gt;&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">architecture/resource-schedulers/mesos/open-mpi-support</h1></header><article><div><span><p><strong>Open MPI Support</strong></p>
+<p>In order to support OpenMPI jobs on twister2, Mesos needs to use
+containerizers. The regular way of running jobs will not work with
+OpenMPI jobs.  We thought the most feasible solution would be using
+docker containers since kubernetes is also using it. Mesos needs the
+following features in order to run OpenMPI jobs;</p>
+<ul>
+<li><p>Necessary libraries installed on Dockers</p></li>
+<li><p>Docker swarm installation for overlay network among containers</p></li>
+<li><p>Password-free SSH access enabled among Dockers</p></li>
+<li><p>Hostfile generation on MPI master before starting the job</p></li>
+<li><p>MPI command run on MPI master</p></li>
+</ul>
+<p><strong>Extra Libraries in Pods</strong></p>
+<p>OpenMPI and OpenSSh libraries are installed in the Docker containers
+that we use.</p>
+<p><strong>Open mpi install</strong></p>
+<pre><code class="hljs css language-bash"> wget https://www.open-mpi.org/software/ompi/v3.0/downloads/openmpi-3.0.0.tar.gz
+ 
+ tar -zxvf openmpi-3.0.0.tar.gz -C
+ 
+ ENV OMPI\_BUILD=<span class="hljs-string">"/openmpi-build"</span>
+ 
+ ENV OMPI\_300=<span class="hljs-string">"/openmpi-3.0.0"</span>
+ 
+ ENV PATH=<span class="hljs-string">"<span class="hljs-variable">${OMPI\_BUILD}</span>/bin:<span class="hljs-variable">${PATH}</span>"</span>
+ 
+ ENV LD\_LIBRARY\_PATH=<span class="hljs-string">"<span class="hljs-variable">${OMPI\_BUILD}</span>/lib:<span class="hljs-variable">${LD\_LIBRARY\_PATH}</span>"</span>
+ 
+ <span class="hljs-built_in">export</span> OMPI\_BUILD OMPI\_300 PATH LD\_LIBRARY\_PATH
+</code></pre>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /openmpi-3.0.0 &amp;&amp; ls -la &amp;&amp; ./configure --prefix=<span class="hljs-variable">$OMPI</span>\_BUILD
+    --<span class="hljs-built_in">enable</span>-mpi-java --<span class="hljs-built_in">enable</span>-mpirun-prefix-by-default
+    --<span class="hljs-built_in">enable</span>-orterun-prefix-by-default &amp;&amp; make;make install
+rm openmpi-3.0.0.tar.gz
+</code></pre>
+<p><strong>OpenSSH install</strong></p>
+<p>Set root password and change it</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">'root:screencast'</span> | chpasswd
+sed -i <span class="hljs-string">'s/PermitRootLogin prohibit-password/PermitRootLogin yes/'</span> /etc/ssh/sshd_config
+</code></pre>
+<p>SSH login fix. Otherwise user is kicked off after login</p>
+<pre><code class="hljs css language-bash">sed <span class="hljs-string">'s@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g'</span> -i /etc/pam.d/sshd
+</code></pre>
+<p>Install ssh and basic dependencies</p>
+<pre><code class="hljs css language-bash">apt-get update &amp;&amp; \
+apt-get install -yq --no-install-recommends \
+locales wget ca-certificates ssh build-essential &amp;&amp; \
+apt-get install -y g++ &amp;&amp; \
+apt-get install -y maven &amp;&amp; \
+apt-get clean &amp;&amp; apt-get purge &amp;&amp; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+</code></pre>
+<p><strong>Password-free SSH Among containers</strong></p>
+<p>In order to run OpenMPI jobs on Docker containers, password-free SSH
+communication should be enabled.</p>
+<p><strong>Hostfile Generation</strong></p>
+<p>OpenMPI needs the host IP addresses, which should be listed in a special
+file called the hostfile. Therefore we need to create the host file
+before running the OpenMPI run command. This file is created in the
+class called MesosMPIMasterStarter.</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.rsched.schedulers.Mesos.mpi.MesosMPIMasterStarter
+</code></pre>
+<p><em>Getting the IP addresses of Workers</em></p>
+<p>Workers are register with the Zookeeper as we have explained it before.
+When the workers register with the zookeeper, it will know the IP
+addresses and the port numbers of the workers. For this reason, we use
+Zookeeper to get the necessary information to create the host file on
+MPI master.</p>
+<p><strong>Starting MPI Job</strong></p>
+<p>MPI command is generated on the worker which runs as a MPI master. This
+command is;</p>
+<pre><code class="hljs css language-text">String[] command = {"mpirun", "-allow-run-as-root", "-npernode",
+        "1", "--mca", "btl_tcp_if_include", "eth0",
+        "--hostfile", "/twister2/hostFile", "java", "-cp",
+        "twister2-job/libexamples-java.jar:twister2-core/lib/*",
+        mpiClassNameToRun, mpiMaster.jobName, jobMasterIP};
+</code></pre>
+<p>Meaning of some of the parameters;</p>
+<p>-npernode &quot;x&quot;: defines the number of mpi workers run on each mesos
+workers.</p>
+<p>&quot;--mca&quot;, &quot;btl_tcp_if_include&quot;, &quot;eth0&quot; : states mpi to use
+specific network. We need this since Mesos needs an overlay network to
+run OpenMPI jobs as explained before.</p>
+<p>mpiClassNameToRun: This parameter is used to state the name of the class
+to run in MPI. In our case this class is &quot;MesosMPIWorkerStarter&quot;. We
+start the MPI job in this class as explained below.</p>
+<p><strong>MesosMPIWorkerStarter Class</strong></p>
+<p>This class is used to run an MPI job on each MPI worker. MPI
+initialization and getting the ranking for the workers are done here.</p>
+<pre><code class="hljs css language-text">MPI.Init(args);
+workerID = MPI.COMM_WORLD.getRank();
+</code></pre>
+<p>After the initialization, logging and jobmaster client are initialized.
+The last thing is the starting MPI job by creating the resource plan and
+calling the init method of the MPI job class.</p>
+<p><strong>Configuration Parameters</strong></p>
+<p>The following configuration parameters are needed to be set in order to
+run open mpi jobs.</p>
+<p>The parameters are:</p>
+<p>In resource.yaml;</p>
+<pre><code class="hljs css language-yaml"><span class="hljs-comment">#overlay network name for docker containers</span>
+<span class="hljs-string">twister2.mesos.overlay.network.name:</span> <span class="hljs-string">"mesos-overlay"</span>
+
+<span class="hljs-comment">#Docker image name</span>
+<span class="hljs-string">twister2.docker.image.name:</span> <span class="hljs-string">"twister2/twister2-mesos:docker-mpi"</span>
+</code></pre>
+<p>In client.yaml;</p>
+<pre><code class="hljs css language-yaml"><span class="hljs-comment">#Mesos will use docker container if the value is true.</span>
+<span class="hljs-string">twister2.use_docker_container:</span> <span class="hljs-string">"true"</span>
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

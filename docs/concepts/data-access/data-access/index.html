@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>concepts/data-access/data-access · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;id: data_access&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="concepts/data-access/data-access · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;id: data_access&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">concepts/data-access/data-access</h1></header><article><div><span><p>id: data_access
+title: Data Access
+sidebar_label: Data Access</p>
+<hr>
+<p>Data access abstracts out various data sources including files and streaming sources to simplify the
+job of an application developer. Twister2 includes a lower level API for data access in addition to
+a higher level abstraction. For example, the abstraction of a File System allows Twister2 to support
+NFS, local file system, and HDFS which enables the developer to store and read data from any file by
+specifying only the URL.</p>
+<p>The important role of the data access layer is to handle data partitioning and data locality in an
+efficient manner. An unbalanced set of data partitions will create stragglers, which will increase
+the execution time of the application. The data access layer is responsible for providing the developer
+with appropriate information regarding data locality. Data locality directly affects the execution
+time since unnecessary data movements will degrade the efficiency of the application. In addition
+to the built-in functions of Twister2, the developer is given the option to plug in custom logic to
+handle data partitioning and locality.</p>
+<p>For more details, please refer the manuscript</p>
+<p><a href="https://onlinelibrary.wiley.com/doi/epdf/10.1002/cpe.5189">https://onlinelibrary.wiley.com/doi/epdf/10.1002/cpe.5189</a></p>
+<h3><a class="anchor" aria-hidden="true" id="main-components-of-data-access-layer"></a><a href="#main-components-of-data-access-layer" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Main components of data access layer</h3>
+<p>The data access layer consists of the following main components namely</p>
+<ol>
+<li>Input Split</li>
+<li>Input Partitioner or Input Formatter</li>
+<li>Input Split Assigner</li>
+<li>OutputWriter</li>
+<li>FileSystem</li>
+<li>Dataset</li>
+</ol>
+<p>We will briefly discuss the functionality of each components as below.</p>
+<h4><a class="anchor" aria-hidden="true" id="input-split"></a><a href="#input-split" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Input Split</h4>
+<p>The input split provides information on a particular part of a file, possibly located or hosted
+on a distributed file system and replicated among several hosts.</p>
+<p>Twister2 supports the following type of input splits namely</p>
+<ol>
+<li>FileInputSplit - It is abstracted from LocatableInputSplit in which input split refers to split
+located on one or more hosts.</li>
+<li>TextInputSplit - It is abstracted from DelimitedInputSplit in which input split refers to split
+based on the delimited values.</li>
+<li>CSVInputSplit - It is also abstracted from DelimitedInputSplit mainly used to split the CSV file.</li>
+<li>BinaryInputSplit - It is abstracted from FileInputSplit mainly used to split the binary file.</li>
+</ol>
+<h4><a class="anchor" aria-hidden="true" id="input-partitioner"></a><a href="#input-partitioner" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Input Partitioner</h4>
+<p>The input partitioner describes</p>
+<ul>
+<li>how the input data is partitioned based on the task parallelism value</li>
+<li>how to read the records from the input split</li>
+</ul>
+<p>Twister2 supports the various types of input partitioners or formatters namely</p>
+<ol>
+<li><p>FileInputPartitioner - It is the abstraction for the file input partitioner. It create the split
+of the input files which is based on the number of total number of bytes divided by the task
+parallelism value.</p></li>
+<li><p>FixedInputPartitioner - It is really useful if the user exactly know the number of lines
+available in the input data file. It split or partition the files which is based on the total
+number of lines divided by the task parallelism value.</p></li>
+<li><p>CompleteFileInputPartitioner - It is the abstraction for partitioning and reading the complete
+file without creating the splits.</p></li>
+<li><p>BinaryInputPartitioner - It is used to split the binary input file.</p></li>
+</ol>
+<h4><a class="anchor" aria-hidden="true" id="input-split-assigner"></a><a href="#input-split-assigner" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Input Split Assigner</h4>
+<p>The input split assigner distributes the input splits among the task instances of the data source
+exists. It also return the next input split that shall be consumed. The consumer's host is passed as
+a parameter to allow localized assignments. Twister2 supports two types of input split assigners
+namely</p>
+<ol>
+<li>OrderedInputSplitAssigner - It assigns the input splits based on the partitions and key value.</li>
+<li>LocatableInputSplitAssigner - It assigns to each host splits that are local, before assigning
+splits that are not local.</li>
+</ol>
+<h4><a class="anchor" aria-hidden="true" id="outputwriter"></a><a href="#outputwriter" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>OutputWriter</h4>
+<p>The output writer is mainly responsible for writing the output to the file. Twister2 has the
+TextOutputWriter which abstracts from the FileOutputWriter for writing the data to the local file
+system or to the distributed file system(HDFS).</p>
+<h4><a class="anchor" aria-hidden="true" id="filesystem"></a><a href="#filesystem" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>FileSystem</h4>
+<p>The file system is an abstraction of generic file system which can be extended to support both
+distributed file system or a local file system. Twister2 file system supports the following
+operations namely</p>
+<ol>
+<li>File I/O Operations for both HDFS and local file system</li>
+<li>BlockLocation for both HDFS and local file system</li>
+<li>FileStatus for both HDFS and local file system</li>
+<li>File Path operations for both HDFS and local file system</li>
+</ol>
+<h4><a class="anchor" aria-hidden="true" id="dataset"></a><a href="#dataset" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DataSet</h4>
+<p>It represents the distributed data set. It has the partition of a distributed data set. Also, it
+has the functionality to split and retrieve the partition of a distributed data set.</p>
+<h4><a class="anchor" aria-hidden="true" id="twister2-and-hdfs"></a><a href="#twister2-and-hdfs" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Twister2 and HDFS</h4>
+<p>The Hadoop Distributed File System (HDFS) (<a href="https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html">https://hadoop.apache.org/docs/r1.2.1/hdfs_design.html</a>)
+is a high fault-tolerant distributed file system. It provides high throughput access to the data
+which is suitable for the applications require large datasets. It supports the master/slave architecture
+which consists of namenode and datanode. Twister2 has the interface to connect the HDFS using
+the Hadoop/HDFS API's.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

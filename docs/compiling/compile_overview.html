@@ -1,0 +1,158 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Overview · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;Twister2 relies on the &lt;a href=&quot;https://bazel.build/&quot;&gt;Bazel build&lt;/a&gt; system. It is tested on Bazel 0.18.1 version and it is recommended to use it for building.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Overview · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;Twister2 relies on the &lt;a href=&quot;https://bazel.build/&quot;&gt;Bazel build&lt;/a&gt; system. It is tested on Bazel 0.18.1 version and it is recommended to use it for building.&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Compiling</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Application Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Overview</h1></header><article><div><span><p>Twister2 relies on the <a href="https://bazel.build/">Bazel build</a> system. It is tested on Bazel 0.18.1 version and it is recommended to use it for building.</p>
+<p>Twister2 developers are mainly working on Ubuntu 16.04, Ubuntu 18.04, and MacOS. So it is recommended to use those platforms with the early versions and we would like to expand our system to different platforms in the future.</p>
+<p>Refer the specific guides for details on different platforms.</p>
+<ul>
+<li><a href="/twister2/docs/compiling/linux">Compiling on Linux</a></li>
+<li><a href="/twister2/docs/compiling/macos">Compiling MacOS</a></li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="general-build-instructions"></a><a href="#general-build-instructions" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>General Build Instructions</h3>
+<p>Twister2 can be compiled with the following command</p>
+<pre><code class="hljs css language-bash">bazel build --config=&lt;platform&gt; twister2/...
+</code></pre>
+<p>Here platform argument can be ubuntu or darwin (for macos).</p>
+<p>In order to run twister2 jobs, we need to create a tar package. To create the tar package we can use
+the following command.</p>
+<pre><code class="hljs css language-bash">bazel build --config=&lt;platform&gt; //scripts/package:tarpkgs
+</code></pre>
+<p>This command builds a tar file inside the directory with the current version.</p>
+<pre><code class="hljs css language-bash">bazel-bin/scripts/package/twister2-[verson].tar.gz
+</code></pre>
+<p>We need to extract this package to run a twister2 job.</p>
+<h3><a class="anchor" aria-hidden="true" id="running-unit-test-cases"></a><a href="#running-unit-test-cases" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running unit test cases</h3>
+<p>We can run twister2 test cases with the following command</p>
+<pre><code class="hljs css language-bash">bazel <span class="hljs-built_in">test</span> --config=ubuntu twister2/...
+</code></pre>
+<p>In order to run a specific test we can use the following command, where we need to specify a target.</p>
+<pre><code class="hljs css language-bash">bazel <span class="hljs-built_in">test</span> --config=ubuntu //twister2/comms/tests/java:BinaryTreeTest
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="compiling-openmpi"></a><a href="#compiling-openmpi" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Compiling OpenMPI</h3>
+<p>When you compile Twister2 it will automatically download and compile OpenMPI 3.1.2 with it. If you don't like this version of OpenMPI and wants to use your own version, you can compile OpenMPI using following instructions.</p>
+<ul>
+<li><p>We recommend using <code>OpenMPI 3.1.2</code></p></li>
+<li><p>Download OpenMPI 3.0.0 from <a href="https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz">https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz</a></p></li>
+<li><p>Extract the archive to a folder named <code>openmpi-3.1.2</code></p></li>
+<li><p>Also create a directory named <code>build</code> in some location. We will use this to install OpenMPI</p></li>
+<li><p>Set the following environment variables</p>
+<pre><code class="hljs css language-text">BUILD=<path-to-build-directory>
+OMPI_312=<path-to-openmpi-3.1.2-directory>
+PATH=$BUILD/bin:$PATH
+LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
+export BUILD OMPI_312 PATH LD_LIBRARY_PATH
+</code></pre></li>
+<li><p>The instructions to build OpenMPI depend on the platform. Therefore, we highly recommend looking into the <code>$OMPI_1101/INSTALL</code> file. Platform specific build files are available in <code>$OMPI_1101/contrib/platform</code> directory.</p></li>
+<li><p>In general, please specify <code>--prefix=$BUILD</code> and <code>--enable-mpi-java</code> as arguments to <code>configure</code> script. If Infiniband is available (highly recommended) specify <code>--with-verbs=&lt;path-to-verbs-installation&gt;</code>. Usually, the path to verbs installation is <code>/usr</code>. In summary, the following commands will build OpenMPI for a Linux system.</p>
+<pre><code class="hljs css language-text">cd $OMPI_312
+./configure --prefix=$BUILD --enable-mpi-java
+make -j 8;make install
+</code></pre></li>
+<li><p>If everything goes well <code>mpirun --version</code> will show <code>mpirun (Open MPI) 3.1.2</code>. Execute the following command to instal <code>$OMPI_312/ompi/mpi/java/java/mpi.jar</code> as a Maven artifact.</p></li>
+</ul>
+<pre><code class="hljs css language-text"> mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="generating-maven-artifacts"></a><a href="#generating-maven-artifacts" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Generating Maven Artifacts</h3>
+<p>Although twister2 uses bazel as its build system, it has an option to generate maven artifacts for each twister2 module.</p>
+<p>To generate and install maven artifacts to your local repository, run following command at the root of twister2 source.</p>
+<p><code>./util/mvn/install-local-snapshot.sh</code></p>
+<p>For more details refer the section <a href="generate-maven.md">Generate Maven Artifacts</a>.</p>
+<h3><a class="anchor" aria-hidden="true" id="compiling-dashboard"></a><a href="#compiling-dashboard" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Compiling Dashboard</h3>
+<p>Twister2 dashboard has two components.</p>
+<ol>
+<li>Front End Web application; A <a href="https://reactjs.org/">ReactJS</a> based web application</li>
+<li>Web server; A <a href="https://spring.io/projects/spring-boot">spring boot application</a>, which exposes a RESTful Web Service (JAX-RS)</li>
+</ol>
+<p>Even though (2) Embedded web server, has been included in the main bazel build, (1) Front End Web application should be build separately.</p>
+<h4><a class="anchor" aria-hidden="true" id="prerequisites-to-build-web-application"></a><a href="#prerequisites-to-build-web-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Prerequisites to build web application</h4>
+<ul>
+<li>Node 6 or later : <a href="https://nodejs.org/en/download/">Download</a></li>
+<li>NPM 5.2 or later : <a href="https://www.npmjs.com/get-npm">How to Setup</a></li>
+<li>SASS : <a href="https://sass-lang.com/install">How to setup</a></li>
+</ul>
+<h4><a class="anchor" aria-hidden="true" id="compiling-web-application"></a><a href="#compiling-web-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Compiling web application</h4>
+<p>Having all above prerequisites ready, navigate to the root folder of dashboard client.</p>
+<p><code>cd dashboard/client</code></p>
+<h4><a class="anchor" aria-hidden="true" id="building-scss"></a><a href="#building-scss" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Building SCSS</h4>
+<p>Now build SCSS files to produce CSS files with following command</p>
+<p><code>npm run build-css</code></p>
+<h4><a class="anchor" aria-hidden="true" id="building-react-app"></a><a href="#building-react-app" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Building React app</h4>
+<p>Use below command to build the react application.</p>
+<p><code>npm run build</code></p>
+<p>This will create an optimized production build in <code>{twister2_root}/dashboard/server/src/main/resources/static</code> directory.</p>
+<h4><a class="anchor" aria-hidden="true" id="building-dashboard"></a><a href="#building-dashboard" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Building Dashboard</h4>
+<p>As the final step, <a href="/twister2/docs/compiling/compile_overview">run the main twister2 build</a>, to generate all the binaries including dashboard.</p>
+<h3><a class="anchor" aria-hidden="true" id="faq"></a><a href="#faq" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>FAQ</h3>
+<ol>
+<li>Build fails with ompi java binding errors</li>
+</ol>
+<p>Try to do one of these things</p>
+<p>Note: If you get an error while compiling or building Twister2 saying &quot;Java bindings requested but no Java support found&quot; please execute the following command to install Java using apt-get command</p>
+<pre><code class="hljs css language-bash">  sudo apt install openjdk-8-jdk
+</code></pre>
+<p>Or change line 385 of</p>
+<pre><code class="hljs css language-bash">third_party/ompi3/ompi.BUILD
+</code></pre>
+<p>From</p>
+<pre><code class="hljs css language-bash"><span class="hljs-string">'./configure --prefix=$$INSTALL_DIR --enable-mpi-java'</span>
+</code></pre>
+<p>to</p>
+<pre><code class="hljs css language-bash"><span class="hljs-string">'./configure --prefix=$$INSTALL_DIR --enable-mpi-java --with-jdk-bindir=&lt;path-to-jdk&gt;/bin --with-jdk-headers=&lt;path-to-jdk&gt;/include'</span>,
+</code></pre>
+<p>Please replace 'path-to-jdk' with your jdk location.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/quickstart"><span class="arrow-prev">← </span><span>Quickstart</span></a><a class="docs-next button" href="/twister2/docs/compiling/linux"><span>Linux</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

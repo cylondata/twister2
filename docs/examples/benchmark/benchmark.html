@@ -1,0 +1,381 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Benchmark · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;Twister2 has a basic benchmark suite to test and verify communication and task layers. Benchmark suite can be configured to automatically run twister2 examples with all possible combinations of a predefined set of parameters, which will be useful to perform performance tests. At the end of each iteration, it will generate a CSV report including all the observations including, configuration parameters, durations, output verification status etc.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Benchmark · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;Twister2 has a basic benchmark suite to test and verify communication and task layers. Benchmark suite can be configured to automatically run twister2 examples with all possible combinations of a predefined set of parameters, which will be useful to perform performance tests. At the end of each iteration, it will generate a CSV report including all the observations including, configuration parameters, durations, output verification status etc.&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Examples</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Application Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Benchmark</h1></header><article><div><span><p>Twister2 has a basic benchmark suite to test and verify communication and task layers. Benchmark suite can be configured to automatically run twister2 examples with all possible combinations of a predefined set of parameters, which will be useful to perform performance tests. At the end of each iteration, it will generate a CSV report including all the observations including, configuration parameters, durations, output verification status etc.</p>
+<p>The benchmark suite is located at <code>util/test</code> folder and you can define your own benchmarks inside the <code>util/test/tests</code> directory.</p>
+<h2><a class="anchor" aria-hidden="true" id="running-benchmarks"></a><a href="#running-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running benchmarks</h2>
+<p>You can start benchmark suite as follows.</p>
+<p><code>python launcher.py</code></p>
+<p>This will analyze <code>util/test/tests</code> for predefined benchmarks (.json files) and spawn twister2 standalone mode with different parameter configurations to record timing etc.</p>
+<h2><a class="anchor" aria-hidden="true" id="running-a-selected-set-of-benchmarks"></a><a href="#running-a-selected-set-of-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running a selected set of benchmarks</h2>
+<p>Instead of running everything, you may also run a selected set of benchmarks as follows</p>
+<p><code>python launcher.py benchmark_id1,benchmark_id2</code></p>
+<p>This will execute only the definitions having id <code>benchmark_id1</code> and <code>benchmark_id2</code></p>
+<h2><a class="anchor" aria-hidden="true" id="configuring-benchmarks"></a><a href="#configuring-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring Benchmarks</h2>
+<h3><a class="anchor" aria-hidden="true" id="basejson"></a><a href="#basejson" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>base.json</h3>
+<p>This file holds the main configuration parameters and entry points.</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"jarRootDir"</span>: <span class="hljs-string">"Root Directory to search for JAR containing the twister2 job "</span>,
+  <span class="hljs-attr">"t2Bin"</span>: <span class="hljs-string">"pointer to twister2 bin/twister2 executable"</span>,
+  <span class="hljs-attr">"jdk"</span>: <span class="hljs-string">"pointer to jdk or jvm"</span>
+}
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="defining-benchmarks"></a><a href="#defining-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Defining Benchmarks</h3>
+<p>The format of a benchmark definition file is as follows.</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span>: <span class="hljs-string">"communication_base"</span>,
+  <span class="hljs-attr">"directory"</span>: {
+    <span class="hljs-attr">"relativeToRoot"</span>: <span class="hljs-literal">true</span>,
+    <span class="hljs-attr">"path"</span>: <span class="hljs-string">""</span>
+  },
+  <span class="hljs-attr">"jar"</span>: <span class="hljs-string">"libexamples-java.jar"</span>,
+  <span class="hljs-attr">"className"</span>: <span class="hljs-string">"edu.iu.dsc.tws.examples.comms.ExampleMain"</span>,
+  <span class="hljs-attr">"args"</span>: [
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"itr"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Iterations"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+        <span class="hljs-attr">"value"</span>: <span class="hljs-number">500</span>
+      }
+    },
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"workers"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Workers"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+        <span class="hljs-attr">"value"</span>: <span class="hljs-number">4</span>
+      }
+    },
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"size"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Data Size"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"steps"</span>,
+        <span class="hljs-attr">"from"</span>: <span class="hljs-number">128</span>,
+        <span class="hljs-attr">"to"</span>: <span class="hljs-number">8192</span>,
+        <span class="hljs-attr">"step"</span>: <span class="hljs-number">128</span>
+      }
+    },
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"warmupitr"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Warmup Iterations"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+        <span class="hljs-attr">"value"</span>: <span class="hljs-number">10</span>
+      }
+    },
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"stream"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Stream"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"none"</span>
+      }
+    }
+  ]
+}
+</code></pre>
+<table>
+<thead>
+<tr><th>Attribute</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>id</td><td>Each definition file should have a globally unique ID</td></tr>
+<tr><td>directory</td><td>Directory for the JAR file. If <code>relativeToRoot</code> is set to <code>true</code>, the location will be considered relative to the <code>jarRootDir</code> from base.json</td></tr>
+<tr><td>jar</td><td>Name of the jar file</td></tr>
+<tr><td>className</td><td>Name of the main class</td></tr>
+<tr><td>args</td><td>Set of arguments to pass into the main method of the main class</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="format-of-args"></a><a href="#format-of-args" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Format of Args</h4>
+<p>Arguments can be defined as a json object.</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span>: <span class="hljs-string">"itr"</span>,
+  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Iterations"</span>,
+  <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">"values"</span>: {
+    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+    <span class="hljs-attr">"value"</span>: <span class="hljs-number">500</span>
+   }
+}
+</code></pre>
+<table>
+<thead>
+<tr><th>Attribute</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td>id</td><td>Each argument should has a unique id relative the current benchmark definition. This will be used as an argument flag when invoking jar file. For example, above abutment will be passed as  <code>java -jar jarfile.jar -itr 500</code></td></tr>
+<tr><td>name</td><td>This name will be used as the column of the final CSV file</td></tr>
+<tr><td>optional</td><td>Indicate whether this argument is optional or not. If an argument is optional, suite will run a set of iterations with all possible values for this argument, and also it will run another set of iterations without this argument</td></tr>
+<tr><td>values</td><td>Definition of possible values for this argument</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="format-of-values-object"></a><a href="#format-of-values-object" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Format of values object</h4>
+<p>Possible values for an argument can be defined as json object as follows.</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+  <span class="hljs-attr">"value"</span>: <span class="hljs-number">500</span>
+}
+</code></pre>
+<h5><a class="anchor" aria-hidden="true" id="types-of-values"></a><a href="#types-of-values" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Types of values</h5>
+<p>Currently twister2 benchmark suite supports following types of argument values definitions.</p>
+<ol>
+<li>fixed</li>
+</ol>
+<p>In fixed type, this argument will be always passed as a constant to the jar.</p>
+<ol start="2">
+<li>array</li>
+</ol>
+<pre><code class="hljs css language-json">{
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"stages"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Stages"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+        <span class="hljs-attr">"array"</span>: [
+          <span class="hljs-string">"1,8"</span>
+        ]
+      }
+    }
+</code></pre>
+<p>In array type, you may define a set of possible values as shown in above example.</p>
+<ol start="3">
+<li>Steps</li>
+</ol>
+<pre><code class="hljs css language-json">{
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"size"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Data Size"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"steps"</span>,
+        <span class="hljs-attr">"from"</span>: <span class="hljs-number">0</span>,
+        <span class="hljs-attr">"to"</span>: <span class="hljs-number">15</span>,
+        <span class="hljs-attr">"step"</span>: <span class="hljs-number">5</span>
+      }
+    }
+</code></pre>
+<p>In steps type, benchmark suite will generate a set of possible values based on the <code>from,to and step</code> defined. For example, for above configuration, the possible values will be <code>0,5,10,15</code>.</p>
+<ol start="4">
+<li>None</li>
+</ol>
+<pre><code class="hljs css language-json">{
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"verify"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Verify"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"none"</span>
+      }
+    }
+</code></pre>
+<p>In none type, argument will be specified without any value. For example, above argument will be passed as follows.</p>
+<pre><code class="hljs css language-bash">java -jar jarname.jar -verify -anotherFlag 1200
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="defining-child-benchmarks"></a><a href="#defining-child-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Defining child benchmarks</h3>
+<p>You can define a child benchmark as follows to inherit all the properties from it's parent.</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span>: <span class="hljs-string">"one_to_many_base"</span>,
+  <span class="hljs-attr">"parent"</span>: <span class="hljs-string">"communication_base"</span>,
+  <span class="hljs-attr">"args"</span>: [
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"stages"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Stages"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"array"</span>,
+        <span class="hljs-attr">"array"</span>: [
+          <span class="hljs-string">"1,8"</span>
+        ]
+      }
+    }
+  ]
+}
+</code></pre>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span>: <span class="hljs-string">"comms_bcast"</span>,
+  <span class="hljs-attr">"parent"</span>: <span class="hljs-string">"one_to_many_base"</span>,
+  <span class="hljs-attr">"resultsFile"</span>: <span class="hljs-string">"comms_bcast.csv"</span>,
+  <span class="hljs-attr">"args"</span>: [
+    {
+      <span class="hljs-attr">"id"</span>: <span class="hljs-string">"op"</span>,
+      <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Operation"</span>,
+      <span class="hljs-attr">"optional"</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-attr">"values"</span>: {
+        <span class="hljs-attr">"type"</span>: <span class="hljs-string">"fixed"</span>,
+        <span class="hljs-attr">"value"</span>: <span class="hljs-string">"\"bcast\""</span>
+      }
+    }
+  ]
+}
+</code></pre>
+<p>In above example, <code>one_to_many_base</code> inherits everything from it's parent and define an additional argument <code>stages</code>. Similarly <code>comms_bcast</code> inherits all the properties from both <code>one_to_many_base</code>  and <code>communication_base</code>.</p>
+<p><strong>If benchmark suite detects a json configuration as a parent for another definition, it won't run it. Only the root or child definitions will be executed.</strong></p>
+<h3><a class="anchor" aria-hidden="true" id="benchmark-report"></a><a href="#benchmark-report" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Benchmark Report</h3>
+<p>Benchmark suits generates a CSV report file including a summary of results as follows</p>
+<pre><code class="hljs css language-csv">Verified,Workers,Data Size,Stages,Warmup Iterations,Stream,Operation,Total Time (ns),Iterations,Average Time (ns),
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">4.5086668E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">53795.60888</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">2.81520047E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">33020.64082</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">256</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">3.68366037E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">50965.56262</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">4.99461148E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">71344.79224</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">2.59625461E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">37043.11802</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">3.98053658E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">50565.40946</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">256</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">4.30750903E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">46554.4231</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">384</span>,<span class="hljs-number">1</span>/<span class="hljs-number">8</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">4.36714506E8</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">57960.8657</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.6876045679E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1269817.83494</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">128</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">2.3365182376E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1814343.599</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">256</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.1952036204E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">970323.24592</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">384</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.9385305632E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1499072.71986</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">512</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">3.7422337696E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">2900719.07566</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">640</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">2.9975160264E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">2347069.67854</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">768</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.8697905574E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1455182.97132</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">896</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">2.2884656927E10</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1800624.62124</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1024</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.73158645221E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.336154577186E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1152</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.89358183229E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.449971312012E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1280</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.73612895419E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.33740494506E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1408</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.83786012116E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.39499546007E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1536</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.76920346997E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.353325271198E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1664</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.69401352936E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.293049998288E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1792</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.74388799268E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.341673140952E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">1920</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.76224134556E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.347409234638E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2048</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.75166737863E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.339366238642E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2176</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.7915152928E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.38268006356E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2304</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.77446562244E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.350657902412E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2432</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.85446124998E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.409667511456E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2560</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.69902418899E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.307200768156E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2688</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71713292617E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.32171850037E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2816</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.82236393547E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.394721483284E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">2944</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.73751822497E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.333692961452E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3072</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.72964932955E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.328497429018E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3200</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71224095728E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.3114826647E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3328</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.70843410688E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.310339248622E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3456</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.7150750965E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.314770285628E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3584</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.74626979591E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.336732442114E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3712</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.80190296977E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.375548090648E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3840</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.79574792176E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.383994504508E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">3968</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.79097113554E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.367853750884E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4096</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.74005847105E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.34263681024E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4224</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.69580633743E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.300204078868E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4352</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.76287896741E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.354152601874E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4480</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.77422663273E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.359743743042E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4608</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.81560221177E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.374463961932E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4736</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.70653419718E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.321157439444E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4864</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.90143780921E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.456616376296E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">4992</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.79797283787E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.376495798572E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5120</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.82882980189E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.403814442386E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5248</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71194273169E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.31500986017E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5376</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.85176077644E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.416959453758E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5504</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.75630636979E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.344816410238E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5632</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.7688980708E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.361641127542E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5760</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.85891226524E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.41107273382E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">5888</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.66559523798E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.290325805284E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6016</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.696966135E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.310402980322E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6144</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71307400657E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.319417248508E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6272</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.81544589866E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.394469652278E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6400</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.73488839245E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.332507358708E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6528</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.7253211491E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.331324542574E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6656</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71052421773E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.321165804286E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6784</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.79829879959E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.373182876798E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">6912</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.77407712583E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.367942826112E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7040</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.80916317835E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.387490513422E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7168</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71001136418E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.315990850176E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7296</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71847101521E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.30961725418E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7424</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.70631525264E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.316232779922E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7552</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.7076477131E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.311049186548E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7680</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.71493613448E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.325231329484E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7808</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.8272220511E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.402612898148E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">7936</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.67156797644E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.292076095258E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">8064</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.81723512055E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.395780516188E7</span>,
+Not Performed,<span class="hljs-number">128</span>,<span class="hljs-number">8192</span>,<span class="hljs-number">1</span>/<span class="hljs-number">128</span>,<span class="hljs-number">10000</span>,<span class="hljs-literal">true</span>,bcast,<span class="hljs-number">1.76410927699E11</span>,<span class="hljs-number">50000</span>,<span class="hljs-number">1.365974788318E7</span>,
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="timing-your-benchmarks"></a><a href="#timing-your-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Timing your benchmarks</h2>
+<p>If you want to write your own benchmark, you can use twister's timing utilities as follows.</p>
+<p>Before recording anything, initialize the timers with the proffered unit.</p>
+<pre><code class="hljs css language-java">Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
+</code></pre>
+<p>You can either use nano seconds or mili seconds to track running durations.</p>
+<p>To mark the time at a certain point, call <code>Timing.mark()</code> as follows.</p>
+<pre><code class="hljs css language-java">Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, timingCondition);
+</code></pre>
+<p><code>timingCondition</code> is a boolean shortcut to avoid unnecessary if else statements. For example, if you only need to record timing in worker 0, instead of doing,</p>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">if</span>(workerId ==<span class="hljs-number">0</span>){
+  <span class="hljs-comment">//mark timing</span>
+}
+</code></pre>
+<p>you may simply pass that to the timing condition.</p>
+<pre><code class="hljs css language-java">Timing.mark(BenchmarkConstants.TIMING_ALL_RECV, workerId==<span class="hljs-number">0</span>);
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="taking-the-differences-and-averages-of-times"></a><a href="#taking-the-differences-and-averages-of-times" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Taking the differences and averages of times</h3>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">for</span>(<span class="hljs-keyword">int</span> i=<span class="hljs-number">0</span>;i&lt;<span class="hljs-number">10</span>;i++){
+  Timing.mark(<span class="hljs-string">"start"</span>, timingCondition);
+  <span class="hljs-comment">//time consuming operation</span>
+  Timing.mark(<span class="hljs-string">"end"</span>, timingCondition);
+}
+</code></pre>
+<p>Since both <code>start</code> and <code>end</code> flags will be recorded for 10 times, you can take the average runtime for a single iteration as follows.</p>
+<pre><code class="hljs css language-java">Timing.averageDiff(<span class="hljs-string">"start"</span>, <span class="hljs-string">"end"</span>, timingCondition)
+</code></pre>
+<p>If you need the values of each individual iteration, you may use <code>diffs()</code> method which returns a List of differences.</p>
+<pre><code class="hljs css language-java">Timing.diffs(<span class="hljs-string">"start"</span>, <span class="hljs-string">"end"</span>, timingCondition)
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="recording-the-results-of-benchmarks"></a><a href="#recording-the-results-of-benchmarks" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Recording the results of benchmarks</h2>
+<p>To record and write the results of your benchmark, you may use <code>edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder</code>. For more usage examples, refer twister2 communication and tasks examples.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/examples/collectives/task/task"><span class="arrow-prev">← </span><span>Task</span></a><a class="docs-next button" href="/twister2/docs/examples/joins/join"><span>Join</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#running-benchmarks">Running benchmarks</a></li><li><a href="#running-a-selected-set-of-benchmarks">Running a selected set of benchmarks</a></li><li><a href="#configuring-benchmarks">Configuring Benchmarks</a><ul class="toc-headings"><li><a href="#basejson">base.json</a></li><li><a href="#defining-benchmarks">Defining Benchmarks</a></li><li><a href="#defining-child-benchmarks">Defining child benchmarks</a></li><li><a href="#benchmark-report">Benchmark Report</a></li></ul></li><li><a href="#timing-your-benchmarks">Timing your benchmarks</a><ul class="toc-headings"><li><a href="#taking-the-differences-and-averages-of-times">Taking the differences and averages of times</a></li></ul></li><li><a href="#recording-the-results-of-benchmarks">Recording the results of benchmarks</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>tutorial/developing · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;developing-big-data-solutions-in-twister2&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#developing-big-data-solutions-in-twister2&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Developing Big Data Solutions in Twister2&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="tutorial/developing · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;developing-big-data-solutions-in-twister2&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#developing-big-data-solutions-in-twister2&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Developing Big Data Solutions in Twister2&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">tutorial/developing</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="developing-big-data-solutions-in-twister2"></a><a href="#developing-big-data-solutions-in-twister2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Developing Big Data Solutions in Twister2</h1>
+<p>In this section, you will learn how to run  the chosen examples and
+will get an idea on how to write your own code to run on twister2.</p>
+<p>We will first give the instructions
+for using the Docker image prepared for standalone twister2 environment.
+The second option is using a twister2-ready cluster on one of our systems, called Echo. We will explain how to use Echo systems to run your jobs.
+We will start with a simple Hello World example and then continue with more complex example.</p>
+<ul>
+<li><a href="/twister2/docs/tutorial/developing#docker-image">Docker image</a></li>
+<li><a href="/twister2/docs/tutorial/developing#echo-cluster">Using Echo cluster</a></li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="docker-image"></a><a href="#docker-image" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Docker Image</h2>
+<p>We have created a Docker container for you to easily run jobs on twister2.
+This container has all the necessary software installed in order to run
+twister2 jobs using standalone resource scheduler.</p>
+<p>Execute the two commands to pull the docker image and launch a container instance.</p>
+<pre><code class="hljs css language-bash">sudo docker pull twister2tutorial/twister2:standalone
+
+sudo docker run -it twister2tutorial/twister2:standalone bash
+</code></pre>
+<p><img src="pics/docker_image.png" alt="Content of Docker"></p>
+<p>Docker image has Twister2 installed and you can run examples.</p>
+<p>You should go into twister2-0.2.1 directory first.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1/
+
+ls
+</code></pre>
+<p><img src="pics/twister2_ls.png" alt="Twister2 Directory"></p>
+<p>Then, to run an example you can use the <code>twister2 submit</code> command with <code>standlone</code> as the cluster.</p>
+<p>For example;</p>
+<p>To run hello world example;</p>
+<pre><code class="hljs css language-bash">  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld
+</code></pre>
+<p>To run batch word count example</p>
+<pre><code class="hljs css language-bash">  ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
+</code></pre>
+<p>To run streaming word count example</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+</code></pre>
+<p>To run K-means example</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys <span class="hljs-built_in">local</span> -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
+</code></pre>
+<p>To run joins example</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op <span class="hljs-string">"joinstudent"</span> -stages 8,1 2&gt;&amp;1 | tee out.txt
+</code></pre>
+<p>Here are some useful docker commands</p>
+<pre><code class="hljs css language-bash"><span class="hljs-comment"># Remove useless docker images</span>
+sudo docker image rm &lt;useless-docker-image&gt;
+<span class="hljs-comment"># Remove exited containers</span>
+sudo docker rm $(sudo docker ps -a -f status=exited -q)
+<span class="hljs-comment"># Clean up all dangling cache</span>
+sudo docker system prune
+</code></pre>
+<p>Find the docker container ID</p>
+<pre><code class="hljs css language-bash">sudo docker ps
+</code></pre>
+<p>and log into the docker</p>
+<pre><code class="hljs css language-bash">sudo docker <span class="hljs-built_in">exec</span> -it &lt;container_id&gt; bash
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="echo-cluster"></a><a href="#echo-cluster" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Echo Cluster</h2>
+<p>This option will utilize the already running Twister2 systems including the resource schedulers; Kubernetes and Mesos.
+Echo cluster consists of four nodes. Each node in this cluster consists of 24 CPU cores, 384 GB of memory and 2.3 TB of disk.</p>
+<p>Please follow the instructions below to run jobs on Echo cluster.</p>
+<p>Use SSH to login to following Echo machine by using the username and password given to you.</p>
+<pre><code class="hljs css language-bash">ssh username@149.165.150.84
+</code></pre>
+<p>Twister2 is installed under twister2 directory.</p>
+<p>Go to the directory:</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+</code></pre>
+<p>Then, to run an example you can use the <code>twister2 submit</code> command.</p>
+<p>You can check the status of the submitted job through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="examples"></a><a href="#examples" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Examples</h2>
+<p>We have five examples for you.</p>
+<ul>
+<li><a href="/twister2/docs/tutorial/developing#hello-world-example">Hello world example</a></li>
+<li><a href="/twister2/docs/tutorial/developing#batch-wordcount-example">Batch wordcount example</a></li>
+<li><a href="/twister2/docs/tutorial/developing#streaming-wordcount-example">Streaming wordcount example</a></li>
+<li><a href="/twister2/docs/tutorial/developing#machine-learning-example-kmeans">Machine learning example K-Means</a></li>
+<li><a href="/twister2/docs/tutorial/developing#joins-example">Joins example</a></li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="hello-world-example"></a><a href="#hello-world-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Hello World Example</h2>
+<p>In this part we will explain how the HelloWorld example runs.
+You will get an idea how to write a simple twister2 job,
+submit it and then check the output.</p>
+<p>In order to run these examples, you should have a running Kubernetes or a Mesos cluster, configured as stated on Twister2 website.
+You can submit jobs to chosen resource scheduler by using Twister2 executable;</p>
+<pre><code class="hljs css language-bash">./bin/twister2
+</code></pre>
+<p>When submitting jobs to Kubernetes clusters, you need to specify the cluster name as &quot;kubernetes&quot;.  Likewise this parameter should be “mesos” if submitting to a Mesos cluster.</p>
+<p>You can submit HelloWorld job in examples package with 8 workers as;</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+</code></pre>
+<p>If you are using our testbed cluster “Echo”,</p>
+<ol>
+<li>Login to your account in Echo</li>
+<li>Change you directory to  <code>twister2-0.2.1</code></li>
+<li>Run the command above.</li>
+</ol>
+<p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<p>HelloWorld job runs for 1 minute. After 1 minute, the job becomes COMPLETED if everything is fine.</p>
+<p>Lets check the code; In the main method;</p>
+<ul>
+<li>First set the number of workers by using the arguments passed by the command line. If there is no arguments then the default value is 4</li>
+<li>Then we load the configurations from command line and config files(yaml files) and put it in a JobConfig object.</li>
+</ul>
+<pre><code class="hljs css language-java"> Config config = ResourceAllocator.loadConfig(<span class="hljs-keyword">new</span> HashMap&lt;&gt;());
+    JobConfig jobConfig = <span class="hljs-keyword">new</span> JobConfig();
+    jobConfig.put(<span class="hljs-string">"hello-key"</span>, <span class="hljs-string">"Twister2-Hello"</span>);
+</code></pre>
+<p>We then create the Twister2 job object by the following code.</p>
+<pre><code class="hljs css language-java">  Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName(<span class="hljs-string">"hello-world-job"</span>)
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(<span class="hljs-number">2</span>, <span class="hljs-number">1024</span>, numberOfWorkers)
+        .setConfig(jobConfig)
+        .build();
+</code></pre>
+<p>Last thing we do is submitting the job</p>
+<pre><code class="hljs css language-java">   Twister2Submitter.submitJob(twister2Job, config);
+</code></pre>
+<p>After the submission execute method of this HelloWorld class will be called on each worker. So that means the code in the execute method will be run on every worker</p>
+<pre><code class="hljs css language-java">   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID,
+      IWorkerController workerController,
+      IPersistentVolume persistentVolume,
+      IVolatileVolume volatileVolume)</span></span>;
+</code></pre>
+<p>In our case the rest of the code writes hello message from each worker including their IDs, total number of workers and the message and then sleeps for one minute</p>
+<pre><code class="hljs css language-java">  <span class="hljs-comment">// lets retrieve the configuration set in the job config</span>
+  String helloKeyValue = config.getStringValue(<span class="hljs-string">"hello-key"</span>);
+  
+  <span class="hljs-comment">// lets do a log to indicate we are running</span>
+  LOG.log(Level.INFO, String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
+          + <span class="hljs-string">"and I got a message: %s"</span>, workerID,
+      workerController.getNumberOfWorkers(), helloKeyValue));
+  
+  List&lt;JobMasterAPI.WorkerInfo&gt; workerList = <span class="hljs-keyword">null</span>;
+  <span class="hljs-keyword">try</span> {
+    workerList = workerController.getAllWorkers();
+  } <span class="hljs-keyword">catch</span> (TimeoutException timeoutException) {
+    LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    <span class="hljs-keyword">return</span>;
+  }
+  String workersStr = WorkerInfoUtils.workerListAsString(workerList);
+  LOG.info(<span class="hljs-string">"All workers have joined the job. Worker list: \n"</span> + workersStr);
+  
+  <span class="hljs-keyword">try</span> {
+    LOG.info(<span class="hljs-string">"I am sleeping for 1 minute and then exiting."</span>);
+    Thread.sleep(<span class="hljs-number">60</span> * <span class="hljs-number">1000</span>);
+    LOG.info(<span class="hljs-string">"I am done sleeping. Exiting."</span>);
+  } <span class="hljs-keyword">catch</span> (InterruptedException e) {
+    LOG.severe(<span class="hljs-string">"Thread sleep interrupted."</span>);
+  }
+</code></pre>
+<p>You can access to the presentation using the link below</p>
+<p><a href="https://docs.google.com/presentation/d/1ZMeO5aofZZNKwoR66N6b4hzSJqlGlbWgZLOq8Ie6vl0/edit#slide=id.p">Hello Word example</a></p>
+<h2><a class="anchor" aria-hidden="true" id="batch-wordcount-example"></a><a href="#batch-wordcount-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Batch WordCount Example</h2>
+<p>In this section we will run a batch word count example from Twister2.
+After checking this example, you will have an idea on how to write a batch processing example on Twister2.</p>
+<p>Job terminates after processing finite amount of input data
+Fixed number of words are generated and the global counts of words are calculated</p>
+<p>It uses communication layer and resource scheduling layer</p>
+<p>The example code can be found in</p>
+<pre><code class="hljs css language-bash">twister2/examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task/
+</code></pre>
+<p>In order to run the example go to the following directory</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+</code></pre>
+<p>And run the command below  using kubernetes resource scheduler</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
+</code></pre>
+<p>It will run 4 executors with 8 tasks</p>
+<ul>
+<li>Each executor will have two tasks</li>
+<li>At the first phase tasks 0-3 running on each executor will generate words</li>
+<li>After the words are generated, task 5-8 will consume those words and count.</li>
+</ul>
+<p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<p>You can access to the presentation using the link below</p>
+<p><a href="https://docs.google.com/presentation/d/1hpBcy_-m5AuVJJxPdhX_5hnIVB4vUkiB6My0STp-dLA/edit#slide=id.p">Batch Processing Example</a></p>
+<h2><a class="anchor" aria-hidden="true" id="streaming-wordcount-example"></a><a href="#streaming-wordcount-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Streaming WordCount Example</h2>
+<p>In this section we will introduce a streaming word count example from Twister2.
+After checking this example, you will have an idea on how to write a streaming example on Twister2.</p>
+<p>This example is a streaming word count job.
+It is a continuously running job,  processing an unbounded stream of data</p>
+<p>Fixed number of words are generated and the global counts of words are calculated</p>
+<p>It uses communication layer and resource scheduling layer</p>
+<p>The example code can be found in</p>
+<pre><code class="hljs css language-bash">twister2/examples/src/java/edu/iu/dsc/tws/examples/streaming.wordcount/task/
+</code></pre>
+<p>In order to run the example go to the following directory</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> twister2-0.2.1
+</code></pre>
+<p>And run the command below  using kubernetes resource scheduler</p>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob
+</code></pre>
+<p>It will run 4 executors with 8 tasks</p>
+<ul>
+<li>Each executor will have two tasks</li>
+<li>Uses key based gather communication between source and sink tasks</li>
+<li>The tasks in the first two executors will generate words</li>
+<li>The tasks in the last two executors will keep word count.</li>
+</ul>
+<p>After running the example, you will see an output like the following;</p>
+<pre><code class="hljs css language-bash">[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word wA count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word 4 count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 2 Word lJx count 1
+[2019-01-09 09:50:52 +0000] [INFO] edu.iu.dsc.tws.examples.streaming.wordcount.task.WordCountJob: 0 Word gxsn count 1
+</code></pre>
+<p>At this point you should manually stop the process (CTRL+C)</p>
+<p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<p>You can access to the presentation using the link below</p>
+<p><a href="https://docs.google.com/presentation/d/17uDBBlQxqzLx3m_inOM9svYvANCEwF2nN1KUYDoqInM/edit#slide=id.p">Streaming Processing Example</a></p>
+<h2><a class="anchor" aria-hidden="true" id="machine-learning-example-kmeans"></a><a href="#machine-learning-example-kmeans" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Machine Learning Example KMeans</h2>
+<p>K-Means clustering algorithm is one of the simplest and popular machine learning algorithms. We have implemented it on Twister2.</p>
+<h3><a class="anchor" aria-hidden="true" id="k-means-clustering"></a><a href="#k-means-clustering" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>K-Means Clustering</h3>
+<p>The need to process large amounts of continuously arriving information has led to the exploration and application of big data analytics techniques. Likewise, the painstaking process of clustering numerous datasets containing large numbers of records with high dimensions calls for innovative methods. Traditional sequential clustering algorithms are unable to handle it. They are not scalable in relation to larger sizes of data sets, and they are most often computationally expensive in memory space and time complexities. Yet, the parallelization of data clustering algorithms is paramount when dealing with big data. K-Means clustering is an iterative algorithm hence, it requires a large number of iterative steps to find an optimal solution, and this procedure increases the processing time of clustering. Twister2 provides a dataflow task graph based approach to distribute the tasks in a parallel manner and aggregate the results which reduces the processing time of K-Means Clustering process.</p>
+<h3><a class="anchor" aria-hidden="true" id="to-run-k-means"></a><a href="#to-run-k-means" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>To run K-Means</h3>
+<p>This command generate and write the datapoints and centroids in the local filesystem and run the K-Means algorithm.</p>
+<h4><a class="anchor" aria-hidden="true" id="kubernetes"></a><a href="#kubernetes" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Kubernetes</h4>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys <span class="hljs-built_in">local</span> -pseedvalue 100 -cseedvalue 500 -input generate -parallelism 4
+
+</code></pre>
+<p>This command generate and write the datapoints and centroids in the HDFS and run the K-Means algorithm.</p>
+<h4><a class="anchor" aria-hidden="true" id="kubernetes-1"></a><a href="#kubernetes-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Kubernetes</h4>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.kmeans.KMeansJobMain -workers 4 -iter 2 -dim 2 -clusters 4 -fname /tmp/output.txt -pointsfile /tmp/kinput.txt -centersfile /tmp/kcentroid.txt -points 100 -filesys hdfs -pseedvalue 100 -cseedvalue 200 -input generate -parallelism 4
+</code></pre>
+<p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="implementation-details"></a><a href="#implementation-details" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Implementation Details</h3>
+<h4><a class="anchor" aria-hidden="true" id="kmeansconstants"></a><a href="#kmeansconstants" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansConstants</h4>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_WORKERS = <span class="hljs-string">"workers"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_ITR = <span class="hljs-string">"iter"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_FNAME = <span class="hljs-string">"fname"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_POINTS = <span class="hljs-string">"pointsfile"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_CENTERS = <span class="hljs-string">"centersfile"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_DIMENSIONS = <span class="hljs-string">"dim"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_CLUSTERS = <span class="hljs-string">"clusters"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_NUMBER_OF_POINTS = <span class="hljs-string">"points"</span>;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_FILESYSTEM = <span class="hljs-string">"filesys"</span>; <span class="hljs-comment">// "local" or "hdfs"</span>
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_POINTS_SEED_VALUE = <span class="hljs-string">"pseedvalue"</span>; <span class="hljs-comment">//range for random data points generation</span>
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_CENTERS_SEED_VALUE = <span class="hljs-string">"cseedvalue"</span>; <span class="hljs-comment">//range for centroids generation</span>
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_DATA_INPUT = <span class="hljs-string">"input"</span>; <span class="hljs-comment">//"generate" or "read"</span>
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> String ARGS_PARALLELISM_VALUE = <span class="hljs-string">"parallelism"</span>;
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="kmeansmainjob"></a><a href="#kmeansmainjob" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansMainJob</h4>
+<p>The entry point for the K-Means clustering algorithm is implemented in KMeansMainJob</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.examples.batch.kmeans.KMeansMainJob
+</code></pre>
+<p>It retrieves and parses the command line parameters submitted by the user for running the K-Means Clustering algorithm. It sets the submitted variables in the Configuration object and put the object into the JobConfig and submit it to KMeansJob class.</p>
+<h4><a class="anchor" aria-hidden="true" id="kmeansjob"></a><a href="#kmeansjob" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansJob</h4>
+<p>It is the main class for the K-Means clustering which has the following classes namely KMeansSource, KMeansAllReduceTask, and CentroidAggregator. First, the execute method in KMeansJob invokes the KMeansDataGenerator to generate the datapoints file and centroid file, if the user has specified the option ARGS_DATA_INPUT as &quot;generate&quot;. Next, it will invoke the KMeansDataGenerator class and store the generated datapoints and centroids in each worker (locally) or in the distributed file system which is based on the option ARGS_FILESYSTEM as &quot;local&quot; or &quot;hdfs&quot;. Then, it will invoke the KMeansFileReader to read the input datafile/centroid file either from locally or HDFS.</p>
+<p>Next, the datapoints are stored in DataSet (0th object) and centroids are stored in DataSet (1st object) and call the executor as given below:</p>
+<pre><code class="hljs css language-java">taskExecutor.addInput(graph, plan, <span class="hljs-string">"source"</span>, <span class="hljs-string">"points"</span>, datapoints);
+
+taskExecutor.addInput(graph, plan, <span class="hljs-string">"source"</span>, <span class="hljs-string">"centroids"</span>, centroids);
+
+taskExecutor.execute(graph, plan);
+</code></pre>
+<p>This process repeats for ‘N’ number of iterations as specified in the KMeansConstants . For every iteration, the new centroid value is calculated and the calculated value is distributed across all the task instances.</p>
+<pre><code class="hljs css language-java">DataSet&lt;Object&gt; dataSet = taskExecutor.getOutput(graph, plan, <span class="hljs-string">"sink"</span>);
+
+Set&lt;Object&gt; values = dataSet.getData();
+
+<span class="hljs-keyword">for</span> (Object value : values) {
+  KMeansCenters kMeansCenters = (KMeansCenters) value;
+ centroid = kMeansCenters.getCenters();
+}
+</code></pre>
+<p>At the end of every iteration, the centroid value is updated and the iteration continues with the new centroid value.</p>
+<pre><code class="hljs css language-java">datapoints.addPartition(<span class="hljs-number">0</span>, dataPoint);
+
+centroids.addPartition(<span class="hljs-number">1</span>, centroid);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="kmeanssourcetask"></a><a href="#kmeanssourcetask" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansSourceTask</h4>
+<p>The KMeansSourceTask retrieve the input data file and centroid file name, it first calculate the start index and end index which is based on the total data points and the parallelism value as given below:</p>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">int</span> startIndex = context.taskIndex() * datapoints.length / context.getParallelism();
+
+<span class="hljs-keyword">int</span> endIndex = startIndex + datapoints.length / context.getParallelism();
+</code></pre>
+<p>Then, it calls the KMeansCalculator class to calculate and get the centroid value for the task instance.</p>
+<pre><code class="hljs css language-java">kMeansCalculator = <span class="hljs-keyword">new</span> KMeansCalculator(datapoints, centroid,
+        context.taskIndex(), <span class="hljs-number">2</span>, startIndex, endIndex);
+
+KMeansCenters kMeansCenters = kMeansCalculator.calculate();
+</code></pre>
+<p>Finally, each task instance write their calculated centroids value as given below:</p>
+<pre><code class="hljs css language-java">context.writeEnd(<span class="hljs-string">"all-reduce"</span>, kMeansCenters);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="kmeansallreduce-task"></a><a href="#kmeansallreduce-task" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>KMeansAllReduce Task</h4>
+<p>The KMeansAllReduceTask retrieve the calculated centroid value in the execute method</p>
+<pre><code class="hljs css language-java">  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">boolean</span> <span class="hljs-title">execute</span><span class="hljs-params">(IMessage message)</span> </span>{
+   centroids = ((KMeansCenters) message.getContent()).getCenters();
+  }
+</code></pre>
+<p>and write the calculated centroid value without the number of datapoints fall into the particular cluster as given below:</p>
+<pre><code class="hljs css language-java">  <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> Partition&lt;Object&gt; <span class="hljs-title">get</span><span class="hljs-params">()</span> </span>{
+   <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Partition&lt;&gt;(context.taskIndex(), <span class="hljs-keyword">new</span> KMeansCenters().setCenters(newCentroids));
+  }
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="centroidaggregator"></a><a href="#centroidaggregator" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>CentroidAggregator</h4>
+<p>The CentroidAggregator implements the IFunction and the function OnMessage which accepts two objects as an argument.</p>
+<pre><code class="hljs css language-java"><span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">onMessage</span><span class="hljs-params">(Object object1, Object object2)</span>
+</span></code></pre>
+<p>It sums the corresponding centroid values and return the same.</p>
+<pre><code class="hljs css language-java">ret.setCenters(newCentroids);
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="sample-output"></a><a href="#sample-output" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Sample Output</h4>
+<pre><code class="hljs css language-text">[2018-10-05 10:44:18 -0400] [INFO] edu.iu.dsc.tws.examples.batch.kmeans.KMeansJob: %%% Final Centroid Values Received: %%%[[0.6476253753699173, 0.8468354813977953], [0.2687721020384673, 0.5083954227865372], [0.7860664115708306, 0.5381449347446825], [0.6675069260759725, 0.17798022472253153]]
+</code></pre>
+<p>You can access to the presentation using the link below</p>
+<p><a href="https://docs.google.com/presentation/d/1-AZXo3KjPEk7E-k7_Z5lSKdPk_9R4D8w9PgNrijQeUU/edit#slide=id.p">K-Means example</a></p>
+<h2><a class="anchor" aria-hidden="true" id="joins-example"></a><a href="#joins-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Joins Example</h2>
+<p>Joins are an important operation that is widely used in big data applications. Since joins can be
+very expensive operation it is important to have a efficient join operation. Twister2 supports join operations through its optimized communication layer.</p>
+<p>The following join example showcases how a join operation can be performed using the Twister2 communication API. Since this example is presented at the communication level the complexity of the code is a little high. Since the code needs to handle other aspects such as task management and execution within the example code. Using joins at the task layer and data layer will gradually reduce this complexity because each layer hides complexities from the end user. However it is usefull to understand operations at the communication layer since it gives you the
+most freedom to optimize according to your needs.</p>
+<h2><a class="anchor" aria-hidden="true" id="data"></a><a href="#data" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data</h2>
+<p>The data set used for this example is pretty simple and straightforward. This example joins two data sets, the first one has a set of student id's and the corresponding first names for each student id. And the second data set has student id's and the corresponding courses that students have taken.</p>
+<h4><a class="anchor" aria-hidden="true" id="data-set-1"></a><a href="#data-set-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Set 1</h4>
+<table>
+<thead>
+<tr><th style="text-align:center">Student Id</th><th style="text-align:center">First Name</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:center">1</td><td style="text-align:center">John</td></tr>
+<tr><td style="text-align:center">2</td><td style="text-align:center">Matt</td></tr>
+<tr><td style="text-align:center">3</td><td style="text-align:center">Kara</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="data-set-2"></a><a href="#data-set-2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Set 2</h4>
+<table>
+<thead>
+<tr><th style="text-align:center">Student Id</th><th style="text-align:center">Course Id</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:center">1</td><td style="text-align:center">E101</td></tr>
+<tr><td style="text-align:center">2</td><td style="text-align:center">E351</td></tr>
+<tr><td style="text-align:center">3</td><td style="text-align:center">E403</td></tr>
+<tr><td style="text-align:center">1</td><td style="text-align:center">E403</td></tr>
+</tbody>
+</table>
+<h4><a class="anchor" aria-hidden="true" id="resulting-data-set"></a><a href="#resulting-data-set" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Resulting Data set</h4>
+<table>
+<thead>
+<tr><th style="text-align:center">Student Id</th><th style="text-align:center">First Name</th><th style="text-align:center">Course Id</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:center">1</td><td style="text-align:center">John</td><td style="text-align:center">E101, E403</td></tr>
+<tr><td style="text-align:center">2</td><td style="text-align:center">Matt</td><td style="text-align:center">E351</td></tr>
+<tr><td style="text-align:center">3</td><td style="text-align:center">Kara</td><td style="text-align:center">E403</td></tr>
+</tbody>
+</table>
+<h2><a class="anchor" aria-hidden="true" id="running-join-example"></a><a href="#running-join-example" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running join example</h2>
+<p>The join example is added in the Twister2 code as a communication example. The code has comments explaining each step of the example to explain what each section of the code does. You can use the following command to execute the join example.</p>
+<p>Full Code example - <a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BJoinStudentExample.java">Student Join Example</a></p>
+<h3><a class="anchor" aria-hidden="true" id="kubernetes-2"></a><a href="#kubernetes-2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Kubernetes</h3>
+<pre><code class="hljs css language-bash">./bin/twister2 submit kubernetes jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -workers 8 -op <span class="hljs-string">"joinstudent"</span> -stages 8,1 2&gt;&amp;1 | tee out.txt
+</code></pre>
+<p>As a result at the end of the run the following will be printed which show the joined results. Please note that the results generated are based on the values in the example, which are different from the simple example provided above.</p>
+<pre><code class="hljs css language-bash">Key 1 : Value [John, E342, E247, E333]  
+Key 2 : Value [Peter, E542]  
+Key 3 : Value [Tedd, E242, E101]  
+Key 4 : Value [Jake, E342]  
+Key 5 : Value [Matt, E347, E541]  
+Key 6 : Value [Adam, E347]  
+Key 7 : Value [Max, E101]  
+Key 8 : Value [Roger, E241]  
+</code></pre>
+<p>You can check the status of the submitted job on Kubernetes through the dashboard provided by the resource scheduler.  For our Echo Cluster the address is;</p>
+<pre><code class="hljs css language-text">Kubernetes ---> http://149.165.150.81:8080/#/jobs
+</code></pre>
+<p>If you want to see the logs on Kubernetes, you need to get the list of the pods first;</p>
+<pre><code class="hljs css language-bash">kubectl get pods
+</code></pre>
+<p>Then check the logs with the following command</p>
+<pre><code class="hljs css language-bash">kubectl logs -f &lt;pod-name&gt;
+</code></pre>
+<p>You can also check the logs under the NFS directory. In order to do that you should go to the following directory. You will see the logs for job master and each worker there.</p>
+<pre><code class="hljs css language-bash"><span class="hljs-built_in">cd</span> /nfs/shared/<span class="hljs-string">"archived job directory"</span>/logs
+archived job directory = <span class="hljs-string">"archived-default-twister2-storage-"</span> + <span class="hljs-string">"job name"</span> + <span class="hljs-string">"-pvc-"</span> + <span class="hljs-string">"random code"</span>  
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="how-it-works-underneath"></a><a href="#how-it-works-underneath" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How it works underneath.</h2>
+<p>The join is implemented using two keyed partition operations, The framework shuffles the data to sink tasks based on the key values such that data entries with the same key values are collected at a single sink task. Then the appropriate join operation is executed based on the keys and values in both data sets and the combined results are sent back to the user.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#docker-image">Docker Image</a></li><li><a href="#echo-cluster">Echo Cluster</a></li><li><a href="#examples">Examples</a></li><li><a href="#hello-world-example">Hello World Example</a></li><li><a href="#batch-wordcount-example">Batch WordCount Example</a></li><li><a href="#streaming-wordcount-example">Streaming WordCount Example</a></li><li><a href="#machine-learning-example-kmeans">Machine Learning Example KMeans</a><ul class="toc-headings"><li><a href="#k-means-clustering">K-Means Clustering</a></li><li><a href="#to-run-k-means">To run K-Means</a></li><li><a href="#implementation-details">Implementation Details</a></li></ul></li><li><a href="#joins-example">Joins Example</a></li><li><a href="#data">Data</a></li><li><a href="#running-join-example">Running join example</a><ul class="toc-headings"><li><a href="#kubernetes-2">Kubernetes</a></li></ul></li><li><a href="#how-it-works-underneath">How it works underneath.</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

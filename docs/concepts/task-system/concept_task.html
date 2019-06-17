@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Task System · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Task System · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Concepts</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Application Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Task System</h1></header><article><div><span><p>The task layer provides a higher-level abstraction on top of the communication layer to hide the details of execution
+and communication from the user, while still delegating data management to the user. At this layer, computations are modeled as task graphs which
+can be created either statically as a complete graph or dynamically as the application progresses. The task system comprises
+of task graph, execution graph, and task scheduling process.</p>
+<h2><a class="anchor" aria-hidden="true" id="task-graph"></a><a href="#task-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Task Graph</h2>
+<p>The task graph is the preferred choice for the processing of large-scale data. It simplifies the
+process of task parallelism and has the ability to dynamically determine the dependency between
+those tasks. The nodes in the task graph consist of task vertices and edges in which task vertices
+represent the computational units of an application and edges represent the communication edges
+between those computational units. In other words, it describes the details about how the data is
+consumed between those units. Each node in the task graph holds the information about the input and
+its output. The task graph is converted into an execution graph once the actual execution takes place.</p>
+<h3><a class="anchor" aria-hidden="true" id="task-graph-in-twister2"></a><a href="#task-graph-in-twister2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Task Graph in Twister2</h3>
+<p>The task layer provides a higher-level abstraction on top of the communication layer to hide the
+underlying details of the execution and communication from the user. Computations are modeled as
+task graphs in the task layer which could be created either statically or dynamically. A node in
+the task graph represents a task whereas an edge represents the communication link between the vertices.
+Each node in the task graph holds the information about the input and its output. A task could be
+long-running (streaming graph) or short-running (dataflow graph without loops) depending on the type
+of application. A task graph 'TG' generally consists of set of Task Vertices'TV' and Task Edges (TE) which is
+mathematically denoted as Task Graph</p>
+<pre><code class="hljs css language-text">(TG) -> (TV, TE)
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="static-and-dynamic-task-graphs"></a><a href="#static-and-dynamic-task-graphs" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Static and Dynamic Task Graphs</h3>
+<p>The task graphs can be defined in two ways namely static and dynamic task graph.</p>
+<ul>
+<li>Static task graph - the structure of the complete task graph is known at compile time.</li>
+<li>Dynamic task graph - the structure of the task graph does not know at compile time and the program
+dynamically define the structure of the task graph during run time.</li>
+</ul>
+<p>The following three essential points should be considered while creating and scheduling the task
+instances of the task graph.</p>
+<ol>
+<li>Task Decomposition - Identify independent tasks which can execute concurrently</li>
+<li>Group tasks - Group the tasks based on the dependency of other tasks.</li>
+<li>Order tasks - Order the tasks which will satisfy the constraints of other tasks.</li>
+</ol>
+<p>(Reference: Patterns for Parallel Programming, Chapter 3 (2) &amp;
+<a href="https://patterns.eecs.berkeley.edu/?page_id=609">https://patterns.eecs.berkeley.edu/?page_id=609</a>)</p>
+<h3><a class="anchor" aria-hidden="true" id="directed-task-graph-and-undirected-task-graph"></a><a href="#directed-task-graph-and-undirected-task-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Directed Task Graph and Undirected Task Graph</h3>
+<p>There are two types of task graphs namely directed task graph and undirected task graph. In directed
+task graph, the edges in the task graph that connects the task vertexes have a direction as shown
+in Fig.1 whereas in undirected task graph, the edges in the task graph that connects the task
+vertexes have no direction as shown in Fig 2. The present task system supports only directed dataflow
+task graph.</p>
+<p><img src="/twister2/docs/assets/directed.png" alt="Directed Graph">  <img src="/twister2/docs/assets/undirected.png" alt="UnDirected Graph"></p>
+<h3><a class="anchor" aria-hidden="true" id="streaming-task-graph"></a><a href="#streaming-task-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Streaming Task Graph</h3>
+<p>Stream refers the process of handling unbounded sequence of data units. The streaming application
+that can continuosly consumes input stream units and produces the output stream units. The streaming
+task graph is mainly responsible for building and executing the streaming applications.</p>
+<h3><a class="anchor" aria-hidden="true" id="batch-task-graph"></a><a href="#batch-task-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Batch Task Graph</h3>
+<p>Batch processing refers the process of handling bounded sequence of data units. Batch applications
+mainly consumes bounded data units and produces the data units. The batch task graph is mainly
+responsible for building and executing the batch applications.</p>
+<h3><a class="anchor" aria-hidden="true" id="task-graph-in-twister2-1"></a><a href="#task-graph-in-twister2-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Task Graph in Twister2</h3>
+<ul>
+<li><p>The task graph system in Twister2 is mainly aimed to support the directed dataflow task graph
+which consists of task vertices and task edges.</p>
+<ul>
+<li>The task vertices represent the source and target task vertex</li>
+<li>The task edge represent the edges to connect the task vertices</li>
+</ul></li>
+<li><p>The task graph in Twister2</p>
+<ul>
+<li>supports iterative data processing - For example, in K-Means clustering algorithm, at the end of
+every iteration, data points and centroids are stored in the DataSet which will be used for the
+next iteration</li>
+<li>It doesn’t allow loops or self-loops or cycles</li>
+</ul></li>
+<li><p>It describes the details about how the data is consumed between the task vertices.</p>
+<ul>
+<li>Source Task - It extends the BaseSource and implements the Receptor interface which is given below.</li>
+<li>Compute Task - It implements the IFunction interface which is given below.</li>
+<li>Sink Task - It extends the BaseSink and implements the Collector interface.</li>
+</ul></li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="task-scheduling"></a><a href="#task-scheduling" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Task Scheduling</h2>
+<p>Task Scheduling is the process of scheduling the tasks into the cluster resources in a manner that
+minimizes the task completion time and utilizes the resources effectively. The other main functional
+requirements of task scheduling are scalability, dynamism, time and cost efficiency, handling different
+types of processing models, data, and jobs, etc. The main objective of the task scheduling is scheduling
+the task instances in an appropriate order to suitable/appropriate cluster nodes. The task scheduling
+algorithms are broadly classified into two types namely static task scheduling algorithms and dynamic
+task scheduling algorithms. The task scheduler in twister2 is designed in a way such that it is able
+to handle both streaming and batch tasks. It supports the following task scheduling algorithms namely
+RoundRobin, FirstFit, and DataLocality.</p>
+<p><strong>RoundRobin Task Scheduling &amp; DataLocality Aware Task Scheduling</strong></p>
+<ul>
+<li>Homogeneous Containers -&gt; Homogeneous Task Instances</li>
+</ul>
+<p><strong>FirstFit Task Scheduling</strong></p>
+<ul>
+<li>Heterogeneous Containers -&gt; Heterogeneous Task Instances</li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="implementation"></a><a href="#implementation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Implementation</h3>
+<p>The task scheduler has the main class named TaskScheduler which implements the base interface ITaskScheduler
+that consists of two main methods namely initialize and schedule methods to initialize the taskgraph
+configuration and schedule the taskgraph based on the workers information available in the resource plan.</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler
+</code></pre>
+<p>has the following methods namely</p>
+<pre><code class="hljs css language-text">initialize (Config config)
+
+schedule(DataflowTaskGraph graph, WorkerPlan plan)
+</code></pre>
+<p>The TaskScheduler is responsible for invoking the respective schedulers based on the type of task
+and the scheduling mode. If it is a streaming task, it will invoke the scheduleStreamingTask method
+whereas if it is a batch task it will invoke the scheduleBatchTask method.</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler
+</code></pre>
+<p>has the following methods such as</p>
+<pre><code class="hljs css language-text">scheduleStreamingTask()
+
+scheduleBatchTask()
+
+generateTaskSchedulePlan(String classname)
+</code></pre>
+<p>The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePlan with the scheduling
+class name as an argument which is specified in the task.yaml. The generateTaskSchedulePlan dynamically
+load the respective task schedulers (roundrobin, firstfit, or datalocalityaware) and access the
+initialize and schedule methods in the task schedulers to generate the task schedule plan.</p>
+<h3><a class="anchor" aria-hidden="true" id="proto-file"></a><a href="#proto-file" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Proto file</h3>
+<p>The task scheduler has the protobuf file named taskscheduleplan.proto in the proto directory. It
+considers both the soft (CPU, disk) and hard (RAM) constraints which generates the task schedule plan
+in the format of Google Protobuf object. The proto file consists of the following details as follows.
+The resource object represents the values of cpu, memory, and disk of the resources. The task instance
+plan holds the task id, task name, task index, and container object. The container plan consists of
+container id, task instance plan, required and scheduled resource of the container. The task schedule
+plan holds the jobid or the taskgraph id and the container plan. The task schedule plan list is mainly
+responsible for holding the taskschedule of the batch tasks.</p>
+<p>``bash message Resource { double availableCPU = 1; double availableMemory = 2; double availableDisk = 3; }</p>
+<pre><code class="hljs css language-text">message TaskInstancePlan {
+   int32 taskid = 1;
+   string taskname = 2;
+   int32 taskindex = 3;
+   Resource resource = 4;
+}
+
+message ContainerPlan {
+   int32 containerid = 1;
+   repeated TaskInstancePlan taskinstanceplan = 2;
+   Resource requiredresource = 3;
+   Resource scheduledresource = 4;
+}
+
+message TaskSchedulePlan {
+   int32 jobid = 1;
+   repeated ContainerPlan containerplan = 2;
+}
+
+message TaskSchedulePlanList {
+   int32 jobid = 1;
+   repeated TaskSchedulePlan taskscheduleplan = 2;
+}
+</code></pre>
+<p>``</p>
+<h3><a class="anchor" aria-hidden="true" id="yaml-file"></a><a href="#yaml-file" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>YAML file</h3>
+<p>The task scheduler has task.yaml in the config directory. The task scheduler mode represents either
+'roundrobin' or 'firstfit' or 'datalocalityaware'. The default task instances represents the default
+memory, disk, and cpu values assigned to the task instances. The default container padding values
+represents the percentage of values to be added to each container. The default container instance
+values represents the default size of memory, disk, and cpu of the container. The task parallelism
+represents the default parallelism value assigned to each task instance. The task type represents
+the streaming or batch task.The task scheduler dynamically loads the respective streaming and batch
+task schedulers based on the configuration values specified in the task.yaml.</p>
+<p>``yaml</p>
+<pre><code class="hljs css language-text">#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
+twister2.streaming.taskscheduler: "roundrobin"
+
+#Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+twister2.batch.taskscheduler: "roundrobin"
+
+#Batch Task Scheduler Class
+twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+
+#Default Task Instance Values
+twister2.task.instances: 2
+twister2.task.instance.ram: 512.0
+twister2.task.instance.disk: 500.0
+twister2.task.instance.cpu: 2.0
+
+#Default Container Padding Values
+twister2.ram.padding.container: 2.0
+twister2.disk.padding.container: 12.0
+twister2.cpu.padding.container: 1.0
+twister2.container.padding.percentage: 2
+
+#Default Container Instance Values
+twister2.container.instance.ram: 2048.0
+twister2.container.instance.disk: 2000.0
+twister2.container.instance.cpu: 4.0
+
+#Default Task Parallelism Value
+twister2.task.parallelism: 2
+
+#Default Task Type "streaming" or "batch"
+twister2.task.type: "streaming"
+</code></pre>
+<p>``</p>
+<h3><a class="anchor" aria-hidden="true" id="user-defined-task-scheduler"></a><a href="#user-defined-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>User-Defined Task Scheduler</h3>
+<p>The task scheduler in Twister2 supports the user-defined task scheduler. The user-defined task
+scheduler has to implement the ITaskScheduler interface. The user has to specify the task scheduler
+as &quot;user-defined&quot; with the corresponding &quot;user-defined&quot; task scheduler class name.</p>
+<p>``yaml</p>
+<pre><code class="hljs css language-text">#User-defined Streaming Task Scheduler
+twister2.streaming.taskscheduler: "user-defined"
+
+#User-defined Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
+</code></pre>
+<p>``</p>
+<h3><a class="anchor" aria-hidden="true" id="other-task-schedulers-and-their-respective-class-names"></a><a href="#other-task-schedulers-and-their-respective-class-names" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Other task schedulers and their respective class names</h3>
+<p>The other task schedulers and their respective class names are given below. The user have to specify
+the respective scheduler mode and their corresponding class names.</p>
+<p>``yaml</p>
+<pre><code class="hljs css language-text">#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
+twister2.streaming.taskscheduler: "roundrobin"
+
+#Streaming Task Scheduler Class
+twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+
+#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
+#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+#twister2.batch.taskscheduler: "roundrobin"
+twister2.batch.taskscheduler: "datalocalityaware"
+
+#Batch Task Scheduler Class
+twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
+#twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+</code></pre>
+<p>``</p>
+<h2><a class="anchor" aria-hidden="true" id="execution"></a><a href="#execution" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Execution</h2>
+<p>Task executor is the component which is responsible for executing the task graph. A process model or
+a hybrid model with threads can be used for execution which is based on the system specification.
+It is important to handle both I/O and task execution within a single execution module so that the
+framework can achieve the best possible performance by overlapping I/O and computations. The
+execution is responsible for managing the scheduled tasks and activating them with data coming from
+the message layer. Unlike in MPI based applications where threads are created equal to the number of
+CPU cores, big data systems typically employ more threads than the cores available to facilitate I/O
+operations.</p>
+<ul>
+<li>Task Executor is the component which is responsible for executing the tasks that are submitted
+through the task scheduler in each worker
+<ul>
+<li>It uses threads to execute a given task plan.</li>
+<li>It allows to run one or more executors run on each worker node</li>
+<li>It will queue the tasks and execute the tasks based on the submitted order.</li>
+</ul></li>
+<li>The task executor will receive the tasks as serialized objects and it will deserialize the objects
+before processing them.</li>
+<li>A thread pool will be maintained by the task executors to manage the core in an optimal manner.
+<ul>
+<li>The size of the thread pool will be determined by the number of cores that are available to the executor.</li>
+</ul></li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="types-of-task-executors"></a><a href="#types-of-task-executors" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Types of Task Executors</h3>
+<ul>
+<li>Task Executor is implemented with two types of executors namely
+<ul>
+<li>Batch Sharing Task Executor</li>
+<li>Streaming Sharing Task Executor</li>
+</ul></li>
+<li>Task Executor invokes the appropriate task executors based on the type of the task graph.</li>
+<li>Batch Sharing Task Executor terminate after the computation ends whereas Streaming Sharing Task
+Executor runs continuously.</li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="task-executor-call"></a><a href="#task-executor-call" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Task Executor Call</h3>
+<pre><code class="hljs css language-text">public Executor(Config cfg, int wId, ExecutionPlan executionPlan, TWSChannel channel, 
+OperationMode operationMode)
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="execution-graph"></a><a href="#execution-graph" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Execution Graph</h3>
+<ul>
+<li>Execution graph is a transformation of the user-defined task graph created by the framework to be
+executed on the cluster.</li>
+<li>Execution graph will be scheduled to the available resource by the task scheduler.</li>
+</ul>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/concepts/par_ops"><span class="arrow-prev">← </span><span>Previous</span></a><a class="docs-next button" href="/twister2/docs/concepts/data-access/data_access"><span>Next</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#task-graph">Task Graph</a><ul class="toc-headings"><li><a href="#task-graph-in-twister2">Task Graph in Twister2</a></li><li><a href="#static-and-dynamic-task-graphs">Static and Dynamic Task Graphs</a></li><li><a href="#directed-task-graph-and-undirected-task-graph">Directed Task Graph and Undirected Task Graph</a></li><li><a href="#streaming-task-graph">Streaming Task Graph</a></li><li><a href="#batch-task-graph">Batch Task Graph</a></li><li><a href="#task-graph-in-twister2-1">Task Graph in Twister2</a></li></ul></li><li><a href="#task-scheduling">Task Scheduling</a><ul class="toc-headings"><li><a href="#implementation">Implementation</a></li><li><a href="#proto-file">Proto file</a></li><li><a href="#yaml-file">YAML file</a></li><li><a href="#user-defined-task-scheduler">User-Defined Task Scheduler</a></li><li><a href="#other-task-schedulers-and-their-respective-class-names">Other task schedulers and their respective class names</a></li></ul></li><li><a href="#execution">Execution</a><ul class="toc-headings"><li><a href="#types-of-task-executors">Types of Task Executors</a></li><li><a href="#task-executor-call">Task Executor Call</a></li><li><a href="#execution-graph">Execution Graph</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

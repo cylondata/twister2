@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>deployment/mesos/twister2-mesos-install · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;&lt;strong&gt;Twister2 Mesos Installation&lt;/strong&gt;&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="deployment/mesos/twister2-mesos-install · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;&lt;strong&gt;Twister2 Mesos Installation&lt;/strong&gt;&lt;/p&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">deployment/mesos/twister2-mesos-install</h1></header><article><div><span><p><strong>Twister2 Mesos Installation</strong></p>
+<p>In order to use Mesos, you have to install it on the machines that you
+want to use. One of the nodes will be the Mesos master and the others
+will be Mesos agents. In order to run Mesos in your cluster, you need to
+have Zookeeper running somewhere. Please refer to Mesos and Zookeeper
+webpages for more information on installing them.</p>
+<p>To compile  and install Twister2 on a machine, please follow the steps
+in <a href="/twister2/docs/compiling/compile_overview">compiling document</a>.
+You may also check <a href="/twister2/docs/developers/devenv">developer
+document</a> for
+setting up IDEs.</p>
+<p>Here are the few things you need to do to run Twister2 jobs on Mesos
+clusters.</p>
+<p><strong>Persistent Storage Settings</strong></p>
+<p>Twister2 expects that either a Persistent Storage Provisioner or
+statically configured PersistentVolume exists in the cluster.  Our Mesos
+system uses NFS for persistent storage to store logs and outputs of
+twister2 jobs.</p>
+<p>You have to set the following parameters in client.yaml config file in
+order to use NFS.</p>
+<pre><code class="hljs"># nfs server address
+nfs.server.address: &quot;149.165.150.81&quot;
+
+# nfs server path
+nfs.server.path: &quot;/nfs/shared-mesos/twister2&quot;
+</code></pre>
+<p><strong>Job Package Uploader Settings</strong></p>
+<p>When users submit a job to Mesos master, they first need to transfer the
+job package to workers. Submitting client packs all job related files
+into a tar file. This archive files needs to be transferred to each
+worker that will be started. This transfer is done through a web server
+in Mesos.</p>
+<p>To do this there should be a web server running in the cluster. In
+addition, job submitting client must have write permission to that
+directory. Workers download the job package from this web server. You
+need to specify the web server directory and address information
+the uploader.yaml file.</p>
+<pre><code class="hljs"># the directory where the file will be uploaded, make sure the user has the necessary permissions
+# to upload the file here.
+twister2.uploader.directory: &quot;/var/www/html/twister2/mesos/&quot;
+twister2.uploader.directory.repository: &quot;/var/www/html/twister2/mesos/&quot;
+# This is the scp command options that will be used by the uploader, this can be used to
+# specify custom options such as the location of ssh keys.
+twister2.uploader.scp.command.options: &quot;--chmod=+rwx&quot;
+# The scp connection string sets the remote user name and host used by the uploader.
+twister2.uploader.scp.command.connection: &quot;root@149.165.150.81&quot;
+# The ssh command options that will be used when connecting to the uploading host to execute
+# command such as delete files, make directories.
+twister2.uploader.ssh.command.options: &quot;&quot;
+# The ssh connection string sets the remote user name and host used by the uploader.
+twister2.uploader.ssh.command.connection: &quot;root@149.165.150.81&quot;
+</code></pre>
+<p><strong>Enabling Docker Support</strong></p>
+<p>You need to enable Docker support on Mesos to use this container. Run
+the following command to enable Docker support on agents.</p>
+<pre><code class="hljs">sh -c &quot;echo 'docker,mesos' &gt; /etc/mesos-slave/containerizers&quot;
+</code></pre>
+<p>**Docker setup **</p>
+<pre><code class="hljs">sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   &quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable&quot;
+sudo apt-get update
+sudo apt-get install docker-ce
+</code></pre>
+<p>The following is an example init file for the Docker container.</p>
+<pre><code class="hljs">cd twister2
+wget 149.165.150.81:8082/twister2/mesos/twister2-core.tar.gz
+wget 149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz
+
+echo &quot;starting sshd&quot;
+/usr/sbin/sshd -D &amp;
+
+if [ ! -f twister2-core.tar.gz ]; then 
+    echo &quot;file not found. Probably could not download the file&quot;
+else
+    tar xvf twister2-core.tar.gz
+    tar xvf twister2-job.tar.gz
+    echo &quot;files fetched and unpacked&quot;
+    java -cp twister2-core/lib/*:twister2-job/libexamples-java.jar:/customJars/* $CLASS_NAME
+fi
+
+sleep infinity
+return_code=$?
+
+echo -n &quot;$return_code&quot; &gt; /dev/termination-log
+exit $return_code
+</code></pre>
+<p><strong>Docker Swarm Installation</strong></p>
+<p>Make sure the Docker Engine daemon is started on the host machines.</p>
+<p>Open a terminal and ssh into the machine where you want to run your
+manager node. This tutorial uses a machine named manager1. If you use
+Docker Machine, you can connect to it via SSH using the following
+command:</p>
+<p><code>$ docker-machine ssh manager1</code></p>
+<p>Run the following command to create a new swarm:</p>
+<p><code>docker swarm init --advertise-addr &lt;MANAGER-IP&gt;</code></p>
+<p><strong>Note:</strong> If you are using Docker for Mac or Docker for Windows to test
+single-node swarm, simply run docker swarm init with no arguments. There
+is no need to specify --advertise-addr in this case.</p>
+<p>The following command creates a swarm on the manager1 machine:</p>
+<p><code>$ docker swarm init --advertise-addr 192.168.99.100</code></p>
+<p>Swarm initialized: current node (dxn1zf6l61qsb1josjja83ngz) is now a
+manager.</p>
+<p>To add a worker to this swarm, run the following command:</p>
+<pre><code class="hljs">docker swarm join \
+    --token SWMTKN-1-49nj1cmql0jkz5s954yi3oex3nedyz0fb0xx14ie39trti4wxv-8vxv8rssmk743ojnwacrr2e7c \
+    192.168.99.100:2377
+</code></pre>
+<p>To add a manager to this swarm, run \'docker swarm join-token manager\'
+and follow the instructions.</p>
+<p>To check joined node:</p>
+<p><code>docker node ls</code></p>
+<p><img src="dockernode.png" alt="docker node"></p>
+<p><strong>Creating Overlay Network on Docker Swarm</strong></p>
+<p>To create an overlay network on Swarm, following command should be
+runned on swarm master.</p>
+<p><code>docker network create -d overlay --attachable &lt;network-name&gt;</code></p>
+<p>To see Docker networks:</p>
+<p><code>docker network ls</code></p>
+<p><img src="dockernetwork.png" alt="docker network"></p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

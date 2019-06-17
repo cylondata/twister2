@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>architecture/controller/zk-based-job-master-discovery · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;zookeeper-based-job-master-discovery&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#zookeeper-based-job-master-discovery&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;ZooKeeper Based Job Master Discovery&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="architecture/controller/zk-based-job-master-discovery · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;zookeeper-based-job-master-discovery&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#zookeeper-based-job-master-discovery&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;ZooKeeper Based Job Master Discovery&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">architecture/controller/zk-based-job-master-discovery</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="zookeeper-based-job-master-discovery"></a><a href="#zookeeper-based-job-master-discovery" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>ZooKeeper Based Job Master Discovery</h1>
+<p>When a Twister2 job is submitted, a Job Master is created in addition to workers. Workers need to know the Job Master IP address and the port number to be able to connect to it. Some resource schedulers such as Kubernetes provides some means for workers to discover the Job Master. However, there might be resource schedulers that do not provide such discovery mechanisms such as Nomad scheduler. In that case, ZooKeeper server can be used to discover the Job Master address.</p>
+<h2><a class="anchor" aria-hidden="true" id="main-idea"></a><a href="#main-idea" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Main Idea</h2>
+<p>When a Twister2 job is submitted:</p>
+<ul>
+<li>one Job Master</li>
+<li>possibly many workers</li>
+</ul>
+<p>started in the cluster.</p>
+<p><strong>When the Job Master starts:</strong></p>
+<ul>
+<li>It registers its IP address and the port number with the ZooKeeper server.</li>
+</ul>
+<p><strong>When the workers start:</strong></p>
+<ul>
+<li>They get the address of the Job Master from the ZooKeeper server.</li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="assumptions"></a><a href="#assumptions" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Assumptions</h2>
+<p>We assume that:</p>
+<ul>
+<li><p>Each Twister2 job has a unique name.</p>
+<p>There can not be more than one Twister2 job running in the cluster with the same name simultaneously.</p>
+<p>When we submit a job, if there is already a running job with the same name, that job submission fails.</p></li>
+<li><p>Each Twister2 job is composed of one Job Master and possibly many workers.</p></li>
+<li><p>Job Master knows its own IP address and its port number when it starts.</p></li>
+<li><p>Both the Job Master and the workers know the IP address and the port number of the ZooKeeper server.</p></li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="implementation"></a><a href="#implementation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Implementation</h2>
+<p><strong>We implemented two classes:</strong></p>
+<ul>
+<li>edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar</li>
+<li>edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder</li>
+</ul>
+<p>ZKJobMasterRegistrar class is used to register the Job Master address with the ZooKeeper server.<br>
+ZKJobMasterFinder class is used to get the Job Master address from the ZooKeeper server.</p>
+<p><strong>ZNode Creation</strong>  <br>
+When the Job Master registers its address on the ZooKeeper server, an ephemeral znode is created. The name of this znode will be:</p>
+<pre><code class="hljs css language-text">/twister2/<job-name>-<job-master>  
+</code></pre>
+<p>assuming the root znode is twister2.</p>
+<p>Job Master IP address and the port number is put as the payload in this znode as a String in the form of:</p>
+<pre><code class="hljs css language-text">ip:port 
+</code></pre>
+<p><strong>ZNode Deletion</strong>  <br>
+When the job completes, the ZKJobMasterRegistrar should delete the znode from the ZooKeeper server explicitly by calling its close method. If the job master is prematurely shut down, the znode will be deleted automatically, since the znode is ephemeral. However, it takes 30 seconds for the ZooKeeper to delete ephemeral nodes in premature shut downs. If the user wants to submit another job during this time period with the same name, then the remaining znode from the previous job needs to be deleted first.</p>
+<p>ZKJobMasterRegistrar class has two methods to check the existence of the znode for that job and delete it:</p>
+<ul>
+<li>sameZNodeExist()</li>
+<li>deleteJobMasterZNode()</li>
+</ul>
+<p>These methods can be used to clear the previously remaining znodes. However, care needs to be taken, because another user may have been submitted a job with the same name. Before deleting the job master znode, the user needs to be sure that, that znode is its znode from previous job submission.</p>
+<p><strong>Discovering the Job Master Address</strong>  <br>
+When the workers start, they query the job master znode. If the znode already created, they get the content and parse the ip:port pair. If the znode has not been created yet, we create a NodeCache object. It gets all changes to the Job master node in a local cache. We get the Job Master address from this cache when the znode is created on the server. NodeCache works event based. So, we avoid polling the ZooKeeper server continually.</p>
+<h2><a class="anchor" aria-hidden="true" id="usage"></a><a href="#usage" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Usage</h2>
+<p><strong>Registering the Job Master</strong>  <br>
+Job Master is started by a separate program in each cluster. For example, in Kubernetes it is started by the class:</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+</code></pre>
+<p>When this class starts the Job Master, it also needs to start the ZKJobMasterRegistrar. When the ZKJobMasterRegistrar is constructed, its initialize method needs to be called to register. It returns a boolean value to show the result of the registration.</p>
+<p>When the job completes, it needs to call the close method of the ZKJobMasterRegistrar class to delete the job znode and close the connection to the ZooKeeper server.</p>
+<p><strong>Getting the Job Master Address</strong>  <br>
+Similar to Job Master, Twister2 workers are also started by a separate program in each cluster. For example, in Kubernetes clusters, they are started by:</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerStarter  
+</code></pre>
+<p>Before starting the worker, this program should start ZKJobMasterFinder. After initializing, it can get the Job Master address by calling the method:</p>
+<pre><code class="hljs css language-text">getJobMasterIPandPort().
+</code></pre>
+<p>If this method returns null, it means that the Job Master has not registered yet. In that case, it can call the method</p>
+<pre><code class="hljs css language-text">waitAndGetJobMasterIPandPort(long timeLimit)
+</code></pre>
+<p>This method will wait for the Job Master znode to be registered until the timeLimit has been reached.</p>
+<p><strong>Example Code</strong>  <br>
+A sample usage of ZKJobMasterRegistrar is provided in the example class:</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterRegistrarExample.java
+</code></pre>
+<p>Its corresponding sample usage of ZKJobMasterFinder is provided in the example class:</p>
+<pre><code class="hljs css language-text">edu.iu.dsc.tws.examples.internal.bootstrap.ZKJobMasterFinderExample.java
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#main-idea">Main Idea</a></li><li><a href="#assumptions">Assumptions</a></li><li><a href="#implementation">Implementation</a></li><li><a href="#usage">Usage</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>concepts/task-system/task-scheduler/streaming · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;streaming-schedulers&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#streaming-schedulers&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Streaming Schedulers&lt;/h1&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="concepts/task-system/task-scheduler/streaming · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;h1&gt;&lt;a class=&quot;anchor&quot; aria-hidden=&quot;true&quot; id=&quot;streaming-schedulers&quot;&gt;&lt;/a&gt;&lt;a href=&quot;#streaming-schedulers&quot; aria-hidden=&quot;true&quot; class=&quot;hash-link&quot;&gt;&lt;svg class=&quot;hash-link-icon&quot; aria-hidden=&quot;true&quot; height=&quot;16&quot; version=&quot;1.1&quot; viewBox=&quot;0 0 16 16&quot; width=&quot;16&quot;&gt;&lt;path fill-rule=&quot;evenodd&quot; d=&quot;M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z&quot;&gt;&lt;/path&gt;&lt;/svg&gt;&lt;/a&gt;Streaming Schedulers&lt;/h1&gt;
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">concepts/task-system/task-scheduler/streaming</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="streaming-schedulers"></a><a href="#streaming-schedulers" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Streaming Schedulers</h1>
+<h2><a class="anchor" aria-hidden="true" id="round-robin-task-scheduler"></a><a href="#round-robin-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Round Robin Task Scheduler</h2>
+<p>RoundRobin Task Scheduler allocates the task instances of the task graph in a round robin fashion.
+For example, if there are 2 containers and 2 tasks with a task parallelism value of 4, task instance
+0 of 1st task will go to container 1, task instance 1 of 1st task will go to container 2, task instance
+3 of 1st task will go to container 1 and task instance 4 of 1st task will go to container 2. Similarly,
+task instance 0 of 2nd task will go to container 1, task instance 1 of 2nd task will go to container 2,
+task instance 3 of 1st task will go to container 1 and task instance 4 of 1st task will go to container 2</p>
+<p>It generates the task schedule plan which consists of the containers (container plan) and the
+allocation of task instances (task instance plan) on those containers. The size of the container
+(memory, disk, and cpu) and the task instances (memory, disk, and cpu) are homogeneous in nature
+is shown in Fig.1.</p>
+<p><img src="/twister2/docs/assets/roundrobin_taskscheduler.png" alt="Round Robin Allocation"></p>
+<p>First, it will allocate the task instances into the logical container values and then it will
+calculate the required ram, disk, and cpu values for the task instances and the logical containers
+which is based on the task configuration values and the allocated worker values respectively.</p>
+<p>The algorithm first gets the task vertex set of the taskgraph and send that task vertex set and the number
+of workers to the roundRobinSchedulingAlgorithm method for the logical allocation of the task instances
+to the logical container in a round robin fashion. Next, it assign the logical container size based
+on the default ram, disk, and cpu values specified in the TaskScheduler Context. Then, the algorithm
+unwraps the container instance map and finds out the task instances allocated to each container.
+Based on the task instances required ram, disk, and cpu it creates the required container object.
+If the worker has required ram, disk, and cpu value then it assigns those values to the containers
+otherwise, it will assign the calculated value of required ram, disk, and cpu value to the containers.
+Finally, the algorithm method pack the task instance plan and the container plan into the task
+schedule plan and return the same.</p>
+<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/roundrobin/RoundRobinTaskScheduler.java">Round Robin Streaming Task Scheduler Source Code</a></p>
+<h2><a class="anchor" aria-hidden="true" id="first-fit-streaming-task-scheduler"></a><a href="#first-fit-streaming-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>First Fit Streaming Task Scheduler</h2>
+<p>FirstFit Task Scheduler allocates the task instances of the task graph in a heuristic manner.
+The main objective of the task scheduler is to reduce the total number of containers and support the
+heterogeneous containers and task instances allocation.</p>
+<p>For example, if there are two tasks with parallelism value of 4, 1st task -&gt; instance 0 will go
+to container 0, 1st task -&gt; instance 1 will go to container 0, 2nd task -&gt; instance 0 will go
+to container 0 (if the total task instance required values doesn't reach the maximum size of
+container 0. If the container has reached its maximum limit then it will allocate the 2nd task -&gt;
+instance 1 will go to container 1. The size of the container (memory, disk, and cpu) and the task
+instances (memory, disk, and cpu) are heterogeneous in nature is shown in Fig.2.</p>
+<p><img src="/twister2/docs/assets/firstfit_taskscheduler.png" alt="First Fit Allocation"></p>
+<p>The initialize() method in the FirstFitStreamingTaskScheduler first initialize the task instance ram,
+disk, and cpu values with default task instance values specified in the TaskSchedulerContext. Next,
+it assign the logical container size based on the default ram, disk, and cpu values specified in the
+TaskScheduler Context. The schedule() method invokes the firstfitTaskScheduling method for the logical
+allocation of the task instances to the logical container. The assignInstancesToContainers() method
+receive the parallel task map and it first sorts the task map based on the requirements of the ram value.
+It allocates the task instances into the first container which has enough resources otherwise, it will
+allocate a new container to allocate the task instances.</p>
+<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/firstfit/FirstFitStreamingTaskScheduler.java">First Fit Streaming Task Scheduler Source Code</a></p>
+<h2><a class="anchor" aria-hidden="true" id="data-locality-streaming-task-scheduler"></a><a href="#data-locality-streaming-task-scheduler" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Data Locality Streaming Task Scheduler</h2>
+<p>DataLocality Aware Task Scheduler allocates the task instances of the streaming task graph based on
+the locality of data. It calculates the distance between the worker nodes and the data nodes and
+allocate the streaming task instances to the worker nodes which are closer to the data nodes i.e.
+it takes lesser time to transfer/access the input data file. The data transfer time is calculated
+based on the network parameters such as bandwidth, latency, and size of the input file. It generates
+the task schedule plan which consists of the containers (container plan) and the allocation of
+task instances (task instance plan) on those containers. The size of the container (memory, disk,
+and cpu) and the task instances (memory, disk, and cpu) are homogeneous in nature. First, it
+computes the distance between the worker node and the datanodes and allocate the task instances into
+the logical container values and then it will calculate the required ram, disk, and cpu values for
+the task instances and the logical containers which is based on the task configuration values and
+the allocated worker values respectively. The allocation of task instances (task instance plan) based
+on the data locality based task scheduling is shown in Fig. 3.</p>
+<p><img src="/twister2/docs/assets/datalocality_taskscheduler.png" alt="Data Locality Aware Allocation"></p>
+<p>The DataLocalityStreamingTaskScheduler first initialize the ram, disk, and cpu values with default
+task instance values specified in the TaskSchedulerContext. The schedule() method invokes the
+DataLocalityStreamingTaskScheduling algorithm to perform the data locality based task scheduling
+algorithm. It first calculates three important parameters namely maximum task instances per
+container, container capacity, and total task instances in the task graph.</p>
+<pre><code class="hljs css language-text">int maxTaskInstancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
+
+int containerCapacity = maxTaskInstancesPerContainer * numberOfContainers;
+
+int totalTask = taskAttributes.getTotalNumberOfInstances(taskVertexSet);
+</code></pre>
+<p>The first parameter represents the total number of task instances could be allocated to the container.
+The second parameter represents the total capacity of the capacity (number of available containers
+and the task instances to be allocated to the container). The third parameter represents the total
+number of task instances in the task graph (which is based on the number of total tasks and its
+parallelism). If the container capacity value is greater than total task instances, it is possible
+to schedule the task instances else, it will throw the task schedule exception and the task
+instances couldn't be scheduled to the available containers. The DataNodeLocatorUtils is a helper
+class which is implemented in</p>
+<pre><code class="hljs css language-text"> edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils
+</code></pre>
+<p>which is responsible for getting the datanode location of the input files in the Hadoop Distributed
+File System (HDFS). If the index value is 0, the algorithm first calculate the distance between
+the worker nodes and the data nodes and store it in the map. Next, the algorithm send the task
+vertex and the distance calculation map to find out the best worker node which is based on the
+calculated distance. The distancecalculation() method in the algorithm get the network parameters
+(such as bandwidth and latency) from the workers property (if the network property is not null)
+else, the default value is assigned from the TaskScheduler Context. Then, it will allocate the task
+instances of the task vertex to the worker (which has minimal distance), if the container/worker
+has reached the maximum number of task instances it will allocate the remaining task instances to
+the next container. Once the container has reached its maximum task instance value, then the container
+is added in the allocated workers list (which represents that container has reached their maximum
+capacity and we can't any more task instances into the container). The procedure is same if the
+index value is greater than 0, but, the only difference is it has to calculate the distance between
+the worker nodes (which are not in the allocated workers list) and the datanodes. Finally, the
+algorithm returns the datalocalityawareallocation map object which consists of container and the
+task instance assignment details.</p>
+<p>The DataLocalityStreamingTaskScheduler assign the logical container size based on the default ram,
+disk, and cpu values specified in the TaskScheduler Context. Then, the schedule() method unwraps the
+datalocalityawarecontainer instance map and finds out the task instances allocated to each container.
+Based on the task instances required ram, disk, and cpu it creates the required container object.
+If the worker has required ram, disk, and cpu value then it assigns those values to the containers
+otherwise, it will assign the calculated value of required ram, disk, and cpu value to the containers.
+Finally, the schedule method pack the task instance plan and the container plan into the task schedule
+plan and return the same.</p>
+<p><a href="https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/streaming/datalocalityaware/DataLocalityStreamingTaskScheduler.java">Data Locality Streaming Task Scheduler Source Code</a></p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#round-robin-task-scheduler">Round Robin Task Scheduler</a></li><li><a href="#first-fit-streaming-task-scheduler">First Fit Streaming Task Scheduler</a></li><li><a href="#data-locality-streaming-task-scheduler">Data Locality Streaming Task Scheduler</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
