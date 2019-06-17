@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BAllGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -31,7 +30,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   protected BAllGather op;
 
   public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
+                                 Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -44,7 +43,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BAllGather(newComm, taskPlan, sources, dest,
-        new FinalGatherReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
+        new FinalGatherReceive(), edge.getDataType());
   }
 
   @Override

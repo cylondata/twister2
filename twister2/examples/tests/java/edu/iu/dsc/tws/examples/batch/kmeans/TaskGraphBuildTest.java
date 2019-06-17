@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.task.TaskConfigurations;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.BaseSource;
@@ -62,12 +62,12 @@ public class TaskGraphBuildTest {
     ComputeConnection computeConnection = taskGraphBuilder.addCompute(
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     DataFlowTaskGraph graph = taskGraphBuilder.build();
     return graph;
   }

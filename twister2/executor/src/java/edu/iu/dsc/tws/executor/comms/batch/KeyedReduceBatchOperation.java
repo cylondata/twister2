@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -54,8 +53,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedReduce(newComm, taskPlan, sources, dests,
         new ReduceFunctionImpl(edge.getFunction()),
-        new BulkReceiverImpl(), Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), destSelector);
+        new BulkReceiverImpl(), edge.getKeyType(), edge.getDataType(), destSelector);
   }
 
   @Override

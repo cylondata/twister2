@@ -39,7 +39,7 @@ import org.apache.storm.topology.twister2.Twister2StormNode;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class TopologyBuilder implements Serializable {
@@ -84,7 +84,7 @@ public class TopologyBuilder implements Serializable {
           LOG.info("Adding direct grouping : " + grouping);
           computeConnection.direct(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case SHUFFLE:
           LOG.info("Adding shuffle grouping : " + grouping
@@ -92,13 +92,13 @@ public class TopologyBuilder implements Serializable {
               + this.generateEdgeName(grouping, nodeId));
           computeConnection.partition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case FIELD:
           computeConnection.keyedPartition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT)
-              .withKeyType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT)
+              .withKeyType(MessageTypes.OBJECT);
           nodes.get(grouping.getComponentId()).setKeyedOutEdges(
               grouping.getStreamId(),
               grouping.getGroupingKey()
@@ -108,7 +108,7 @@ public class TopologyBuilder implements Serializable {
           computeConnection.broadcast(
               grouping.getComponentId()
           ).viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         default:
           throw new UnsupportedOperationException(

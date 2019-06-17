@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
@@ -169,7 +169,7 @@ public class DataLocalityTaskSchedulerTest {
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -186,7 +186,7 @@ public class DataLocalityTaskSchedulerTest {
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -210,11 +210,11 @@ public class DataLocalityTaskSchedulerTest {
 
     computeConnection.direct("source")
         .viaEdge("cdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkComputeConnection.direct("compute")
         .viaEdge("sdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 

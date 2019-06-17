@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.FileStatus;
@@ -61,7 +61,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalTextInputPartitioner localTextInputPartitioner = new
@@ -96,7 +96,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalFixedInputPartitioner localFixedInputPartitioner = new

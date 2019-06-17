@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
@@ -60,7 +60,7 @@ public class STWindowCustomExample extends BenchTaskWorker {
     computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
     computeConnection.direct(SOURCE)
         .viaEdge(edge)
-        .withDataType(DataType.INTEGER);
+        .withDataType(MessageTypes.INTEGER);
 
     return taskGraphBuilder;
   }

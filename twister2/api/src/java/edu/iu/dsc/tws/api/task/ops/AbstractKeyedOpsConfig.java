@@ -12,14 +12,15 @@
 package edu.iu.dsc.tws.api.task.ops;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.Edge;
 
 public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
     extends AbstractOpsConfig<T> {
 
-  protected DataType opKeyType = DataType.OBJECT;
+  protected MessageType opKeyType = MessageTypes.OBJECT;
   protected TaskPartitioner tPartitioner;
 
   protected AbstractKeyedOpsConfig(String parent,
@@ -38,7 +39,7 @@ public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
     return (T) this;
   }
 
-  public T withKeyType(DataType keyType) {
+  public T withKeyType(MessageType keyType) {
     this.opKeyType = keyType;
     return (T) this;
   }

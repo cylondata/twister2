@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.BaseSink;
@@ -53,12 +52,12 @@ public class CheckpointingTaskExample implements IWorker {
     taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
     taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
-        .direct("source").viaEdge("so-c").withDataType(DataType.INTEGER);
+        .direct("source").viaEdge("so-c").withDataType(MessageTypes.INTEGER);
 
     taskGraphBuilder.addSink("sink", new SinkTask(), parallelism)
         .direct("compute")
         .viaEdge("c-si")
-        .withDataType(DataType.INTEGER);
+        .withDataType(MessageTypes.INTEGER);
 
     taskEnvironment.buildAndExecute(taskGraphBuilder);
     taskEnvironment.close();

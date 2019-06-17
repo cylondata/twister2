@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
   private BaseTSet<T> parent;
@@ -94,7 +94,7 @@ public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
+    MessageType dataType = TSetUtils.getDataType(getType());
 
     connection.broadcast(parent.getName())
         .viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType).connect();
