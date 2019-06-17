@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -47,8 +46,8 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     Collections.sort(targets);
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SDirect(newComm, taskPlan, sources, targets,
-        Utils.dataTypeToMessageType(edge.getDataType()), new DirectReceiver());
+    op = new SDirect(newComm, taskPlan, sources, targets, edge.getDataType(),
+        new DirectReceiver());
   }
 
   public boolean send(int source, IMessage message, int flags) {

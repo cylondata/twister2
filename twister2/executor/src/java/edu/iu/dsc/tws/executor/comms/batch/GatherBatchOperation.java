@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -44,8 +43,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BGather(newComm, taskPlan, srcs, dests.iterator().next(),
-        Utils.dataTypeToMessageType(edge.getDataType()),
-        new FinalGatherReceiver(), shuffle);
+        edge.getDataType(), new FinalGatherReceiver(), shuffle);
   }
 
   @Override

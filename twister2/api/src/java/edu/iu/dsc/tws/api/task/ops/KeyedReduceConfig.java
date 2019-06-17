@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.api.task.ops;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -43,7 +43,7 @@ public class KeyedReduceConfig extends AbstractKeyedOpsConfig<KeyedReduceConfig>
     return this;
   }
 
-  public KeyedReduceConfig withOperation(Op operation, DataType dataType) {
+  public KeyedReduceConfig withOperation(Op operation, MessageType dataType) {
     this.op = operation;
     return this.withDataType(dataType);
   }

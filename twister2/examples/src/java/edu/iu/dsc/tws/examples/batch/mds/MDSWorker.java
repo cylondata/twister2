@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -85,7 +85,7 @@ public class MDSWorker extends TaskWorker {
         "dataobjectsink", mdsDataObjectSink, parallel);
     dataObjectComputeConnection.direct("dataobjectsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
@@ -110,7 +110,7 @@ public class MDSWorker extends TaskWorker {
         receiverTask, parallel);
     computeConnection.direct("generator")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     mdsComputeProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();

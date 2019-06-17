@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -156,10 +156,10 @@ public class KMeansWorker extends TaskWorker {
     //Creating the communication edges between the tasks for the second task graph
     datapointComputeConnection.direct("datapointsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     firstGraphComputeConnection.direct("datapointcompute")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
@@ -190,10 +190,10 @@ public class KMeansWorker extends TaskWorker {
     //Creating the communication edges between the tasks for the second task graph
     centroidComputeConnection.direct("centroidsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     secondGraphComputeConnection.direct("centroidcompute")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
     centroidsTaskGraphBuilder.setTaskGraphName("centTG");
 
@@ -217,7 +217,7 @@ public class KMeansWorker extends TaskWorker {
     kMeanscomputeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
         .withReductionFunction(new CentroidAggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
 
     kmeansTaskGraphBuilder.setTaskGraphName("kmeansTG");

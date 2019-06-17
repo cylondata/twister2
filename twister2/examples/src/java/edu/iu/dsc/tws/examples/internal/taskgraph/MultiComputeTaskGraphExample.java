@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -121,21 +121,21 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     firstComputeConnection.direct("source")
         .viaEdge("fdirect")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     secondComputeConnection.direct("source")
         .viaEdge("sdirect")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     reduceConnection.allreduce("firstcompute")
         .viaEdge("freduce")
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT)
+        .withDataType(MessageTypes.OBJECT)
         .connect()
         .allreduce("secondcompute")
         .viaEdge("sreduce")
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 

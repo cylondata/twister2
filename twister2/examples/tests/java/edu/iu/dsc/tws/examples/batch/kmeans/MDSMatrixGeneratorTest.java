@@ -19,9 +19,8 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -30,6 +29,8 @@ import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSink;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSource;
 import edu.iu.dsc.tws.examples.batch.mds.MatrixGenerator;
 import edu.iu.dsc.tws.task.graph.OperationMode;
+
+//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 
 public class MDSMatrixGeneratorTest {
 
@@ -53,7 +54,7 @@ public class MDSMatrixGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     BinaryInputPartitioner binaryInputPartitioner =

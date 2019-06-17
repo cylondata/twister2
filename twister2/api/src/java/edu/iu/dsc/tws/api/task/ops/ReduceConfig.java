@@ -13,10 +13,9 @@ package edu.iu.dsc.tws.api.task.ops;
 
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.core.OperationNames;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.graph.Edge;
 
@@ -51,14 +50,14 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
     return this;
   }
 
-  public ReduceConfig withOperation(Op operation, DataType dataType) {
+  public ReduceConfig withOperation(Op operation, MessageType dataType) {
     this.op = operation;
     return this.withDataType(dataType);
   }
 
   public static void validateReduce(IFunction reductionFunction,
                                     Op operation,
-                                    DataType dataType) {
+                                    MessageType dataType) {
     if (reductionFunction == null && operation == null) {
       failValidation("Either reduction function or Operation "
           + "should be specified when declaring reduce operations.");
@@ -73,7 +72,7 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
       failValidation("Data type should specified for a reduce operation with an Op.");
     }
 
-    if (operation != null && !Utils.dataTypeToMessageType(dataType).isPrimitive()) {
+    if (operation != null && !dataType.isPrimitive()) {
       failValidation("Reduce operations are only applicable to primitive types.");
     }
   }
@@ -84,7 +83,7 @@ public class ReduceConfig extends AbstractOpsConfig<ReduceConfig> {
   }
 
   public static void updateReduceEdge(Edge reduceEdge, IFunction reductionFunction,
-                                      Op operation, DataType dataType) {
+                                      Op operation, MessageType dataType) {
     if (reductionFunction != null) {
       reduceEdge.setFunction(reductionFunction);
     } else if (operation != null) {
