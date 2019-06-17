@@ -131,9 +131,9 @@ public class IterativeDataStream extends BaseSource implements Receptor {
         = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
 
     if (weightVectorEntityPartition != null) {
-      DataObject<?> weightVectorObject
+      DataObject<?> weightVectorObjectLocal
           = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
-      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObject);
+      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObjectLocal);
     }
     return weightVector;
   }
@@ -210,11 +210,11 @@ public class IterativeDataStream extends BaseSource implements Receptor {
   }
 
   public void compute() {
-    double[][] X = this.binaryBatchModel.getX();
+    double[][] x = this.binaryBatchModel.getX();
     double[] w = this.binaryBatchModel.getW();
     double[] y = this.binaryBatchModel.getY();
     try {
-      pegasosSgdSvm.iterativeTaskSgd(w, X, y);
+      pegasosSgdSvm.iterativeTaskSgd(w, x, y);
     } catch (NullDataSetException e) {
       e.printStackTrace();
     } catch (MatrixMultiplicationException e) {

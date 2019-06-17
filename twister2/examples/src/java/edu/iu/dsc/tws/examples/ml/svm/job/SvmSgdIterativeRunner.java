@@ -88,9 +88,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   public DataFlowTaskGraph builtSvmSgdIterativeTaskGraph(int parallelism, Config conf) {
-    IterativeDataStream iterativeDataStream = new IterativeDataStream(this.svmJobParameters.getFeatures(),
+    IterativeDataStream iterativeDataStream
+        = new IterativeDataStream(this.svmJobParameters.getFeatures(),
         this.operationMode, this.svmJobParameters.isDummy(), this.binaryBatchModel);
-    SVMReduce svmReduce = new SVMReduce(this.operationMode);
+    svmReduce = new SVMReduce(this.operationMode);
 
     TaskGraphBuilder svmIterativeTaskGraph = TaskGraphBuilder.newBuilder(conf);
 

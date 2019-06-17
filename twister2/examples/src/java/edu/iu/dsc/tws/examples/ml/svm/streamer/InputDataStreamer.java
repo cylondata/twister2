@@ -166,9 +166,9 @@ public class InputDataStreamer extends BaseSource implements Receptor {
         = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
 
     if (weightVectorEntityPartition != null) {
-      DataObject<?> weightVectorObject
+      DataObject<?> weightVectorObjectLocal
           = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
-      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObject);
+      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObjectLocal);
     }
     return weightVector;
   }
