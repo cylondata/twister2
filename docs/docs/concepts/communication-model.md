@@ -1,8 +1,8 @@
 ---
 id: par_ops
-title: Parallel Operators
-sidebar_label: Parallel Operators
---- 
+title: Operator API
+sidebar_label: Operators
+---
 
 Twister2 supports a DataFlow model for operators. A DataFlow program models a computation as a graph with nodes of the graph doing user-defined computations and edges representing the communication links between the nodes. The data flowing through this graph is termed as events or messages. It is important to note that even though by definition dataflow programming means data is flowing through a graph, it may not necessarily be the case physically, especially in batch applications. Big data systems employ different APIs for creating the dataflow graph. For example, Flink and Spark provide distributed dataset-based APIs for creating the graph while systems such as Storm and Hadoop provide task-level APIs.
 
@@ -111,71 +111,6 @@ Notice that the results are similar to the reduce operation.
 
 ### AllReduce
 
-The operation AllReduce is a version of the reduce operation where the results are sent to multiple destination tasks.
-The semantics of the AllReduce operation is similar to the reduce operation, The AllReduce operation performs a reduce operation
-and then internally executes and broadcast operation to send the results to all the destinations. The two step method of using
-an reduce and the a broadcast is efficient than performing seperate reduce operations to each destination.
+The BSP APIs are provided by Harp and MPI specification (OpenMPI).
 
-### AllGather
-
-The operation AllGather is a version of gather operation where the results are sent to multiple destination tasks.
-Similar to AllReduce the AllGather operation first performs a gather operation and then performs an broadcast to all the 
-destination tasks.
-
-### Partition
-
-The partition operation as the name implies partitions data. The operation will break data into smaller
-units and divide them among tasks that are involved in the partition communication. For each partition
-the operation will select an destination based on the destination selector. The destination selector can be user specified or
-the user can select an internal destination selector such as the "LoadBalanceSelector" which makes sure the data is
-evenly distributed. 
-
-Unlike in the reduce communication where a complex tree structure is used to perform the communication
-the partition operations performs direct communications between tasks. That is if task `0` wants to send a parition to task 
-`4` it will be sent directly to task `4`. (The direct communication between tasks is only a logical link, the 
-actual communication happens at worker level and messages are internally passed-down to the correct task)
-
-Example:
-
-In this example we assume that there are 4 source tasks with logical is from `0` to `3` and 4 sink tasks with logical ids
-from `4` to `7`. Lets assume that task `0` generates the following set of data arrays.
-
-`{0,1,2}`  
-`{1,2,3}`  
-`{2,3,4}`  
-`{3,4,5}`  
-
-If the partition operation is using the "LoadBalanceSelector" for destination selection then each of the 
-sink tasks will receive a single data array. The assigment of data arrays will depend on how the "LoadBalanceSelector"
-distributes the data. And example assigment might look as follows.
-
-`{0,1,2}` -> `4`  
-`{1,2,3}` -> `5`  
-`{2,3,4}` -> `6`  
-`{3,4,5}` -> `7`  
-
-### Broadcast
-
-The broadcast operation sends out messages from a single task to 1 or more tasks. Messages are send directly to each
-receiving task. 
-
-### KeyedReduce
-
-The values are grouped according to a user specified key first. For each key all the values are reduced to a single value.
-The keys determine the receiving task of the operators (this can be configured by used).
-
-### KeyedGather
-
-The values are grouped according to a user specified key first. For each key all the values are gathered. 
-The keys determine the receiving task of the operators (this can be configured by used).
-
-### KeyedPartition
-
-The keys determine the receiving task of the operators (this can be configured by used). Keyed partition 
-only sends the data to the destination according to key and no further operations are performed.
-
-
-## Shuffle Engine
-
-In case of in-sufficient memory, we can persist the data to disk.
-
+The DataFlow operators are implemented by Twister2 as a Twister:Net library. 
