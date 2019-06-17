@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
@@ -90,13 +90,13 @@ public class SvmSgdRunner extends TaskWorker {
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)
         .viaEdge(Constants.SimpleGraphConfig.DATA_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     svmReduceConnection
         .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE)
         .viaEdge(Constants.SimpleGraphConfig.REDUCE_EDGE)
         .withReductionFunction(new ReduceAggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(operationMode);
     DataFlowTaskGraph graph = builder.build();

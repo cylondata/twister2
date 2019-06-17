@@ -18,12 +18,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.Communicator;
+import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BPartition;
 import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -36,7 +35,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   public PartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
                                  Set<Integer> sources, Set<Integer> targets, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    DataType dataType = edge.getDataType();
+    MessageType dataType = edge.getDataType();
     String edgeName = edge.getName();
     boolean shuffle = false;
 
@@ -48,7 +47,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
 
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(newComm, taskPlan, sources, targets,
-        Utils.dataTypeToMessageType(dataType), new PartitionReceiver(),
+        dataType, new PartitionReceiver(),
         new LoadBalanceSelector(), shuffle);
   }
 

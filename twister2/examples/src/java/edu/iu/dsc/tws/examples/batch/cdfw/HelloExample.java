@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -64,7 +64,7 @@ public final class HelloExample {
       reduceConn.reduce("source1")
           .viaEdge("all-reduce")
           .withReductionFunction(new Aggregator())
-          .withDataType(DataType.OBJECT);
+          .withDataType(MessageTypes.OBJECT);
 
       graphBuilderX.setMode(OperationMode.BATCH);
       DataFlowTaskGraph batchGraph = graphBuilderX.build();

@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -42,7 +41,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SBroadCast(newComm, taskPlan, sources.iterator().next(), dests,
-        Utils.dataTypeToMessageType(edge.getDataType()), new BcastReceiver());
+        edge.getDataType(), new BcastReceiver());
   }
 
   @Override

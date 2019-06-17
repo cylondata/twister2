@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -77,7 +77,7 @@ public class SourceTaskDataLoader extends TaskWorker {
     computeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
         .withReductionFunction(new SimpleDataAggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph simpleTaskGraph = taskGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);

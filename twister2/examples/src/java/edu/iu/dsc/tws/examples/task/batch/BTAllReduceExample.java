@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.batch.verifiers.ReduceVerifier;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -46,7 +46,7 @@ public class BTAllReduceExample extends BenchTaskWorker {
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE)
         .viaEdge(edge)
-        .withOperation(Op.SUM, DataType.INTEGER_ARRAY);
+        .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
     return taskGraphBuilder;
   }
 

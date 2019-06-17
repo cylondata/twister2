@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -60,8 +59,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SReduce(newComm, taskPlan, sources, dests.iterator().next(),
-        Utils.dataTypeToMessageType(edge.getDataType()),
-        new ReduceFunctionImpl(function), new FinalSingularReceiver());
+        edge.getDataType(), new ReduceFunctionImpl(function), new FinalSingularReceiver());
   }
 
   @Override
