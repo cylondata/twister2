@@ -40,6 +40,12 @@ public final class Constants {
 
     public static final String DATA_OBJECT_SINK = "data_sink";
 
+    public static final String WEIGHT_VECTOR_OBJECT_SOURCE = "weight_vector_source";
+
+    public static final String WEIGHT_VECTOR_OBJECT_COMPUTE = "weight_vector_compute";
+
+    public static final String WEIGHT_VECTOR_OBJECT_SINK = "weight_vector_sink";
+
     public static final String INPUT_TESTING_DATA = "input_testing_data";
 
     public static final String DATA_OBJECT_SOURCE_TESTING = "data_source_test";

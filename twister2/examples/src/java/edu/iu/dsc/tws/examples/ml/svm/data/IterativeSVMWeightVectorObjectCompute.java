@@ -19,9 +19,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public class IterativeSVMDataObjectCompute extends BaseCompute {
+public class IterativeSVMWeightVectorObjectCompute extends BaseCompute {
 
-  private static final Logger LOG = Logger.getLogger(IterativeSVMDataObjectCompute.class.getName());
+  private static final Logger LOG = Logger.getLogger(IterativeSVMDataObjectDirectSink.class
+      .getName());
 
   private static final long serialVersionUID = -254264120110286748L;
 
@@ -50,7 +51,7 @@ public class IterativeSVMDataObjectCompute extends BaseCompute {
    */
   private double[][] dataPointsLocal;
 
-  public IterativeSVMDataObjectCompute(String edgeName, int parallelism, int datasize,
+  public IterativeSVMWeightVectorObjectCompute(String edgeName, int parallelism, int datasize,
                                        int features) {
     this.edgeName = edgeName;
     this.parallelism = parallelism;
@@ -58,7 +59,7 @@ public class IterativeSVMDataObjectCompute extends BaseCompute {
     this.features = features;
   }
 
-  public IterativeSVMDataObjectCompute(String edgeName, int datasize, int features) {
+  public IterativeSVMWeightVectorObjectCompute(String edgeName, int datasize, int features) {
     this.edgeName = edgeName;
     this.datasize = datasize;
     this.features = features;
@@ -103,12 +104,12 @@ public class IterativeSVMDataObjectCompute extends BaseCompute {
       values.add(String.valueOf(((Iterator) message.getContent()).next()));
     }
     // features + 1 due to the label in the dataset
-    dataPointsLocal = new double[values.size()][this.features + 1];
+    dataPointsLocal = new double[values.size()][this.features];
     String line;
     for (int i = 0; i < values.size(); i++) {
       line = values.get(i);
       String[] data = line.split(",");
-      for (int j = 0; j < this.features + 1; j++) {
+      for (int j = 0; j < this.features; j++) {
         this.dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
       }
       context.write(getEdgeName(), this.dataPointsLocal);

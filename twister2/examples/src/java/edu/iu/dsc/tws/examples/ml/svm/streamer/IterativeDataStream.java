@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.streamer;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,7 +18,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
@@ -49,15 +46,11 @@ public class IterativeDataStream extends BaseSource implements Receptor {
 
   private DataObject<?> weightVectorObject = null;
 
-  private Object datapoints = null;
+  private double[][] datapoints = null;
 
-  private Object weightVector = null;
+  private double[][] weightVector = null;
 
-  private double[][] datapointArray = null;
-
-  private double[][] weightVectorArray = null;
-
-  private double[] computedWeightVector = null;
+  private double[][] computedWeightVector = new double[1][];
 
   private PegasosSgdSvm pegasosSgdSvm = null;
 
@@ -113,79 +106,21 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     }
   }
 
-  public Object getDataPointsByTaskIndex(int taskIndex) {
-    EntityPartition<Object> datapointsEntityPartition
-        = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
-
-    if (datapointsEntityPartition != null) {
-      DataObject<?> dataObject
-          = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
-      datapoints = getDataPointsByDataObject(taskIndex, dataObject);
-    }
-
-    return datapoints;
-  }
-
-  public Object getWeightVectorByTaskIndex(int taskIndex) {
-    EntityPartition<Object> weightVectorEntityPartition
-        = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
-
-    if (weightVectorEntityPartition != null) {
-      Object o = weightVectorEntityPartition.getConsumer().next();
-      DataObject<?> weightVectorObjectLocal = null;
-      if (o instanceof DataObject<?>) {
-        weightVectorObjectLocal = (DataObject<?>) o;
-        weightVector = getWeightVectorObject(taskIndex, weightVectorObjectLocal);
-      }
-
-      if (o instanceof double[]) {
-        weightVector = null;
-        weightVectorArray[0] = (double[]) o;
-      }
-
-    }
-    return weightVector;
-  }
-
-  public Object getDataPointsByDataObject(int taskIndex, DataObject<?> datapointsDataObject) {
-    Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-        datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
-    List<Object> items = new ArrayList<>();
-    while (arrayListIterator.hasNext()) {
-      Object object = arrayListIterator.next();
-      items.add(object);
-    }
-    return items;
-  }
-
-  public Object getWeightVectorObject(int taskIndex, DataObject<?> weightObj) {
-    Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-        weightObj.getPartitions(taskIndex).getConsumer().next();
-    List<Object> items = new ArrayList<>();
-    while (arrayListIterator.hasNext()) {
-      Object object = arrayListIterator.next();
-      items.add(object);
-    }
-    return items;
-  }
-
   public void getData() {
-    this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
-    this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
+    DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    this.datapoints = (double[][]) dataPartition.getConsumer().next();
+    DataPartition<?> weightVectorPartition = weightVectorObject.getPartitions(context.taskIndex());
+    this.weightVector = (double[][]) weightVectorPartition.getConsumer().next();
 
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
-    this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
 
-    if (this.weightVector != null) {
-      this.weightVectorArray = DataUtils.getWeightVectorFromDataObject(this.weightVector);
-    }
 
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
-        this.datapointArray.length));
+        this.datapoints.length));
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
-        weightVectorArray[0].length));
+        weightVector.length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 
@@ -247,7 +182,7 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
-    computedWeightVector = pegasosSgdSvm.getW();
+    computedWeightVector[0] = pegasosSgdSvm.getW();
 
   }
 
@@ -256,8 +191,8 @@ public class IterativeDataStream extends BaseSource implements Receptor {
    * This method is called per a received batch
    */
   public void initializeBatchMode() {
-    this.initializeBinaryModel(this.datapointArray);
-    this.binaryBatchModel.setW(this.weightVectorArray[0]);
+    this.initializeBinaryModel(this.datapoints);
+    this.binaryBatchModel.setW(this.weightVector[0]);
     LOG.info(String.format("Features in X : %d, Features in W : %d",
         this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),

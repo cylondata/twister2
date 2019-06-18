@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
 import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.graph.OperationMode;
@@ -25,7 +26,7 @@ public class IterativeSVMReduce extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(IterativeSVMReduce.class.getName());
 
-  private double[] object;
+  private double[][] newWeightVector;
 
   private boolean debug = false;
 
@@ -33,13 +34,27 @@ public class IterativeSVMReduce extends BaseSink implements Collector {
 
   private OperationMode operationMode;
 
-  @Override
-  public DataPartition<?> get() {
-    return null;
+  public IterativeSVMReduce(OperationMode operationMode) {
+    this.operationMode = operationMode;
   }
 
   @Override
-  public boolean execute(IMessage content) {
-    return false;
+  public DataPartition<?> get() {
+    return new EntityPartition<>(context.taskIndex(), newWeightVector);
+  }
+
+  @Override
+  public boolean execute(IMessage message) {
+
+    if (message.getContent() == null) {
+      LOG.info("Something Went Wrong !!!");
+      this.status = false;
+    } else {
+
+      if (message.getContent() instanceof double[][]) {
+        this.newWeightVector = (double[][]) message.getContent();
+      }
+    }
+    return true;
   }
 }
