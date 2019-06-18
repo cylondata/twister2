@@ -107,17 +107,17 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
 
-    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
-        this.datapoints.length));
-    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
-        weightVector.length));
+//    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
+//        this.datapoints.length));
+//    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
+//        weightVector.length));
   }
 
   public void initializeBatchModel() {
     this.initializeBinaryModel(this.datapoints);
     this.binaryBatchModel.setW(this.weightVector[0]);
-    LOG.info(String.format("Features in X : %d, Features in W : %d",
-        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
+//    LOG.info(String.format("Features in X : %d, Features in W : %d",
+//        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
         this.binaryBatchModel.getY(), this.binaryBatchModel.getAlpha(),
         this.binaryBatchModel.getIterations(), this.binaryBatchModel.getFeatures());

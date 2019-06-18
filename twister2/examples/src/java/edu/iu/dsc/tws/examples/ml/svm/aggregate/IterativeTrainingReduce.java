@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.aggregate;
 
-import java.util.Arrays;
 
 public class IterativeTrainingReduce implements ISvmIterativeReduceFunction<double[][]> {
   @Override
@@ -20,7 +19,6 @@ public class IterativeTrainingReduce implements ISvmIterativeReduceFunction<doub
     for (int i = 0; i < res[0].length; i++) {
       res[0][i] = object1[0][i] + object2[0][i];
     }
-    System.out.println(Arrays.toString(res[0]));
     return res;
   }
 }

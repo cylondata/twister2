@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.job;
 
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
@@ -138,8 +137,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     int dtrlength = trainingDataPointObject.getPartitionCount();
     int plength = inputweightvectorObject.getPartitionCount();
     int dtslength = testingDataPointObject.getPartitionCount();
-    LOG.info(String.format("Weight Partitions %d, Data Partitions Tr : %d, Ts : %d",
-        plength, dtrlength, dtslength));
+//    LOG.info(String.format("Weight Partitions %d, Data Partitions Tr : %d, Ts : %d",
+//        plength, dtrlength, dtslength));
 
     executeIterativeTrainingGraph();
 
@@ -148,8 +147,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE);
     double[] wInitial = retrieveWeightVector(weightVectorTaskGraph, weightVectorExecutionPlan,
         Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
-    LOG.info(String.format("Initial Weight Vector : %s", Arrays.toString(wInitial)));
-    LOG.info(String.format("Final Weight Vector : %s", Arrays.toString(wFinal)));
+//    LOG.info(String.format("Initial Weight Vector : %s", Arrays.toString(wInitial)));
+//    LOG.info(String.format("Final Weight Vector : %s", Arrays.toString(wFinal)));
 
     executeIterativeTestingGraph();
 
