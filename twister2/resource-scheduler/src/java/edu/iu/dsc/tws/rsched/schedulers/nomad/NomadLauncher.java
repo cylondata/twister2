@@ -69,7 +69,7 @@ public class NomadLauncher implements ILauncher {
     NomadMasterStarter master = new NomadMasterStarter();
     master.initialize(job, config);
     boolean start = master.launch();
-     // now we need to terminate the job
+    // now we need to terminate the job
     if (!terminateJob(job.getJobName())) {
       LOG.log(Level.INFO, "Failed to terminate job: " + job.getJobName());
     }
