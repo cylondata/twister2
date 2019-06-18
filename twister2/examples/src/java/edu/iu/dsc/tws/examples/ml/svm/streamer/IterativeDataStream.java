@@ -183,7 +183,6 @@ public class IterativeDataStream extends BaseSource implements Receptor {
       e.printStackTrace();
     }
     computedWeightVector[0] = pegasosSgdSvm.getW();
-
   }
 
   /**
