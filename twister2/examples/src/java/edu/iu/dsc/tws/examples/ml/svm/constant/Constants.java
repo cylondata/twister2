@@ -30,6 +30,8 @@ public final class Constants {
 
     public static final String SVM_REDUCE = "svm_reduce";
 
+    public static final String ITERATIVE_SVM_REDUCE = "itr_svm_reduce";
+
     public static final String INPUT_DATA = "input_data";
 
     public static final String INPUT_WEIGHT_VECTOR = "input_weight_vector";
@@ -49,6 +51,8 @@ public final class Constants {
     public static final String INPUT_TESTING_DATA = "input_testing_data";
 
     public static final String DATA_OBJECT_SOURCE_TESTING = "data_source_test";
+
+    public static final String DATA_OBJECT_COMPUTE_TESTING = "data_compute_test";
 
     public static final String DATA_OBJECT_SINK_TESTING = "data_sink_test";
 
