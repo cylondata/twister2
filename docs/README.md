@@ -1,5 +1,7 @@
 # Documentation Guide
 
+# We have moved the documentation to [https://dsc-spidal.github.io/twister2](https://dsc-spidal.github.io/twister2)
+
 This documentation is written using mark down files. These markdown files are converted into HTML and deployed on to github pages.
 
 In order to write documentation one has to be knowledgeable about markdown files.
