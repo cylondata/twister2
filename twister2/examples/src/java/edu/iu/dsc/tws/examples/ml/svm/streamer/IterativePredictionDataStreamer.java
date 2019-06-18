@@ -11,28 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.streamer;
 
-import java.util.Random;
-import java.util.logging.Level;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
-import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
-import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
+import edu.iu.dsc.tws.examples.ml.svm.test.Predict;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class IterativeDataStream extends BaseSource implements Receptor {
-
-  private static final Logger LOG = Logger.getLogger(IterativeDataStream.class.getName());
+public class IterativePredictionDataStreamer extends BaseSource implements Receptor {
+  private static final Logger LOG = Logger.getLogger(IterativePredictionDataStreamer.class
+      .getName());
 
   private final double[] labels = {-1, +1};
   private int features = 10;
@@ -56,38 +52,24 @@ public class IterativeDataStream extends BaseSource implements Receptor {
 
   private boolean debug = false;
 
-  public IterativeDataStream(OperationMode operationMode) {
+  public IterativePredictionDataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
 
-  public IterativeDataStream(int features, OperationMode operationMode) {
-    this.features = features;
-    this.operationMode = operationMode;
-  }
-
-  public IterativeDataStream(int features, OperationMode operationMode, boolean isDummy,
-                             BinaryBatchModel binaryBatchModel) {
+  public IterativePredictionDataStreamer(int features, OperationMode operationMode,
+                                         boolean isDummy, BinaryBatchModel binaryBatchModel) {
     this.features = features;
     this.operationMode = operationMode;
     this.isDummy = isDummy;
     this.binaryBatchModel = binaryBatchModel;
   }
 
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
-  }
 
   @Override
   public void add(String name, DataObject<?> data) {
-    if (debug) {
-      LOG.log(Level.INFO, String.format("Received input: %s ", name));
-    }
-
-    if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
+    if (Constants.SimpleGraphConfig.TEST_DATA.equals(name)) {
       this.dataPointsObject = data;
     }
-
     if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
       this.weightVectorObject = data;
     }
@@ -95,14 +77,23 @@ public class IterativeDataStream extends BaseSource implements Receptor {
 
   @Override
   public void execute() {
-    if (this.isDummy) {
-      try {
-        dummyDataStreamer();
-      } catch (InputDataFormatException e) {
-        e.printStackTrace();
-      }
-    } else {
+    // do prediction on real data
+    if (!this.isDummy) {
       realDataStreamer();
+    } else {
+      LOG.info(String.format("Dummy Data Training Doesn't support prediction"));
+    }
+  }
+
+  public void realDataStreamer() {
+    if (this.operationMode.equals(OperationMode.BATCH)) {
+      getData();
+      initializeBatchModel();
+      compute();
+    }
+
+    if (this.operationMode.equals(OperationMode.STREAMING)) {
+      // TODO : implement online data streaming
     }
   }
 
@@ -116,80 +107,13 @@ public class IterativeDataStream extends BaseSource implements Receptor {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
 
-
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapoints.length));
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
         weightVector.length));
-    //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 
-  /**
-   * This method is used to deal with dummy data based data stream generation
-   * Here data points are generated using a Gaussian Distribution and labels are assigned
-   * +1 or -1 randomly for a given data point.
-   */
-  public void dummyDataStreamer() throws InputDataFormatException {
-    if (this.operationMode.equals(OperationMode.STREAMING)) {
-      double[] x = DataUtils.seedDoubleArray(this.binaryBatchModel.getFeatures());
-      Random random = new Random();
-      int index = random.nextInt(2);
-      double label = labels[index];
-      double[] data = DataUtils.combineLabelAndData(x, label);
-      if (!(data.length == this.binaryBatchModel.getFeatures() + 1)) {
-        throw
-            new InputDataFormatException(String
-                .format("Input Data Format Exception : [data length : %d, feature length +1 : %d]",
-                    data.length, this.binaryBatchModel.getFeatures() + 1));
-      }
-      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
-    }
-
-    if (this.operationMode.equals(OperationMode.BATCH)) {
-      double[][] data = DataUtils.generateDummyDataPoints(this.binaryBatchModel.getSamples(),
-          this.binaryBatchModel.getFeatures());
-      this.context.write(Constants.SimpleGraphConfig.DATA_EDGE, data);
-      this.context.end(Constants.SimpleGraphConfig.DATA_EDGE);
-    }
-
-  }
-
-  /**
-   * This method is used to retrieve real data from
-   * Data Source Task
-   */
-  public void realDataStreamer() {
-    // do real data streaming
-    if (this.operationMode.equals(OperationMode.BATCH)) {
-      getData();
-      initializeBatchMode();
-      compute();
-      this.context.writeEnd(Constants.SimpleGraphConfig.REDUCE_EDGE, computedWeightVector);
-    } else {
-      LOG.info(String.format("Real data stream got stuck!"));
-    }
-
-  }
-
-  public void compute() {
-    double[][] x = this.binaryBatchModel.getX();
-    double[] w = this.binaryBatchModel.getW();
-    double[] y = this.binaryBatchModel.getY();
-    try {
-      pegasosSgdSvm.iterativeTaskSgd(w, x, y);
-    } catch (NullDataSetException e) {
-      e.printStackTrace();
-    } catch (MatrixMultiplicationException e) {
-      e.printStackTrace();
-    }
-    computedWeightVector[0] = DataUtils.average(pegasosSgdSvm.getW(), context.getParallelism());
-  }
-
-  /**
-   * This method initializes the parameters needed to run the batch mode algorithm
-   * This method is called per a received batch
-   */
-  public void initializeBatchMode() {
+  public void initializeBatchModel() {
     this.initializeBinaryModel(this.datapoints);
     this.binaryBatchModel.setW(this.weightVector[0]);
     LOG.info(String.format("Features in X : %d, Features in W : %d",
@@ -220,4 +144,21 @@ public class IterativeDataStream extends BaseSource implements Receptor {
 
   }
 
+  public void compute() {
+    double[][] x = this.binaryBatchModel.getX();
+    double[] w = this.binaryBatchModel.getW();
+    double[] y = this.binaryBatchModel.getY();
+    double accuracy = 0.0;
+    Predict predict = new Predict(this.binaryBatchModel.getX(), this.binaryBatchModel.getY(), w);
+    try {
+      accuracy = predict.predict();
+    } catch (MatrixMultiplicationException e) {
+      e.printStackTrace();
+    }
+    LOG.info(String.format("Accuracy : %f, Context Id : %d, Weight Vector : %s, Data Size : %d",
+        accuracy, context.taskIndex(), Arrays.toString(w), x.length));
+
+    this.context.writeEnd(Constants.SimpleGraphConfig
+        .PREDICTION_EDGE, accuracy / (double) context.getParallelism());
+  }
 }

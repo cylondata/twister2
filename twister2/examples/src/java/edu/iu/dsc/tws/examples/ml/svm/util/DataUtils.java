@@ -228,8 +228,6 @@ public final class DataUtils {
   }
 
 
-
-
   public static double[][] getDataObjectToDoubleArray(DataObject<Object> dataPointsObject1) {
     double[][] d = null;
     LOG.info(String.format("Which Type %s", dataPointsObject1.getClass().getName()));
@@ -247,6 +245,13 @@ public final class DataUtils {
       w[i] = Integer.parseInt(ws[i]);
     }
     return w;
+  }
+
+  public static double[] average(double[] a, int processes) {
+    for (int i = 0; i < a.length; i++) {
+      a[i] /= (double) processes;
+    }
+    return a;
   }
 
 
