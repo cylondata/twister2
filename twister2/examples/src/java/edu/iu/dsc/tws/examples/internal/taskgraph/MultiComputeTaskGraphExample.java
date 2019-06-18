@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -119,10 +119,23 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
         "secondcompute", secondComputeTask, parallel);
     ComputeConnection reduceConnection = builder.addSink("sink", reduceTask, parallel);
 
-    firstComputeConnection.direct("source", "fdirect", DataType.OBJECT);
-    secondComputeConnection.direct("source", "sdirect", DataType.OBJECT);
-    reduceConnection.allreduce("firstcompute", "freduce", new Aggregator(), DataType.OBJECT);
-    reduceConnection.allreduce("secondcompute", "sreduce", new Aggregator(), DataType.OBJECT);
+    firstComputeConnection.direct("source")
+        .viaEdge("fdirect")
+        .withDataType(MessageTypes.OBJECT);
+
+    secondComputeConnection.direct("source")
+        .viaEdge("sdirect")
+        .withDataType(MessageTypes.OBJECT);
+
+    reduceConnection.allreduce("firstcompute")
+        .viaEdge("freduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(MessageTypes.OBJECT)
+        .connect()
+        .allreduce("secondcompute")
+        .viaEdge("sreduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 

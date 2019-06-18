@@ -11,22 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
@@ -34,7 +31,6 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
@@ -45,21 +41,13 @@ public abstract class BenchWorker implements IWorker {
 
   protected int workerId;
 
-  protected Config config;
-
   protected TaskPlan taskPlan;
 
   protected JobParameters jobParameters;
 
-  protected TWSChannel channel;
-
-  protected Communicator communicator;
-
   protected final Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
 
   protected boolean sourcesDone = false;
-
-  protected List<JobMasterAPI.WorkerInfo> workerList = null;
 
   protected ExperimentData experimentData;
 
@@ -71,6 +59,8 @@ public abstract class BenchWorker implements IWorker {
   protected BenchmarkResultsRecorder resultsRecorder;
 
   private long streamWait = 0;
+
+  private WorkerEnv workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -87,23 +77,14 @@ public abstract class BenchWorker implements IWorker {
         workerID == 0
     );
 
-    this.config = cfg;
     this.workerId = workerID;
-    try {
-      this.workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+
+    // create a worker environment
+    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+        volatileVolume);
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID,
-        jobParameters.getTaskStages(), workerList);
-
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
-    // create the communicator
-    communicator = new Communicator(cfg, channel);
+    this.taskPlan = Utils.createStageTaskPlan(workerEnv, jobParameters.getTaskStages());
 
     //todo collect experiment data : will be removed
     experimentData = new ExperimentData();
@@ -123,7 +104,7 @@ public abstract class BenchWorker implements IWorker {
     //todo above will be removed
 
     // now lets execute
-    execute();
+    execute(workerEnv);
     // now communicationProgress
     progress();
     // wait for the sync
@@ -135,10 +116,10 @@ public abstract class BenchWorker implements IWorker {
     // let allows the specific example to close
     close();
     // lets terminate the communicator
-    communicator.close();
+    workerEnv.close();
   }
 
-  protected abstract void execute();
+  protected abstract void execute(WorkerEnv wEnv);
 
   protected void progress() {
     // we need to progress the communication
@@ -162,7 +143,7 @@ public abstract class BenchWorker implements IWorker {
         streamWait = 0;
       }
       // communicationProgress the channel
-      channel.progress();
+      workerEnv.getChannel().progress();
       // we should communicationProgress the communication directive
       needProgress = progressCommunication();
     }

@@ -15,10 +15,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -40,13 +40,11 @@ public class SBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
+  protected void execute(WorkerEnv workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting task stages to 1");
       jobParameters.getTaskStages().set(0, 1);
     }
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
 
     Set<Integer> targets = new HashSet<>();
     Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
@@ -56,7 +54,7 @@ public class SBroadcastExample extends BenchWorker {
     int source = 0;
 
     // create the communication
-    bcast = new SBroadCast(communicator, taskPlan, source, targets,
+    bcast = new SBroadCast(workerEnv.getCommunicator(), taskPlan, source, targets,
         MessageTypes.INTEGER_ARRAY, new BCastReceiver());
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,

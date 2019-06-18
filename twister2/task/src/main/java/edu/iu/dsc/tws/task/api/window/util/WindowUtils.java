@@ -58,21 +58,24 @@ public final class WindowUtils {
         // tumbling window
         if (buffer == WindowBuffer.Count) {
           // tumbling count window
+          LOG.info(String.format("Selecting Tumbling Count Window"));
           window = new TumblingCountWindow(windowLength);
         }
         if (buffer == WindowBuffer.Duration) {
           // tumbling duration window
-          LOG.info(String.format("Duration TumblingWindow"));
+          LOG.info(String.format("Selecting Tumbling Duration Window"));
           window = new TumblingDurationWindow(windowLength);
         }
 
       } else if (windowLength > slidingLength) {
         // sliding window
         if (buffer == WindowBuffer.Count) {
+          LOG.info(String.format("Selecting Sliding Count Window"));
           window = new SlidingCountWindow(windowLength, slidingLength);
         }
 
         if (buffer == WindowBuffer.Duration) {
+          LOG.info(String.format("Selecting Sliding Duration Window"));
           window = new SlidingDurationWindow(windowLength, slidingLength);
         }
         //throw new RuntimeException("Not Implemented");

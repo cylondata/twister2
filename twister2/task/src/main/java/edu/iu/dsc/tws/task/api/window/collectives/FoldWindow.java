@@ -20,6 +20,8 @@ public abstract class FoldWindow<T, K> extends BaseWindowedSink<T> {
 
   public abstract boolean fold(K content);
 
+  public abstract boolean foldLateMessage(K lateMessage);
+
   private FoldWindowedFunction<T, K> foldWindowedFunction;
 
   public FoldWindow(FoldWindowedFunction<T, K> foldWindowedFunction) {
@@ -43,5 +45,27 @@ public abstract class FoldWindow<T, K> extends BaseWindowedSink<T> {
       }
     }
     return true;
+  }
+
+  @Override
+  public boolean getLateMessages(IMessage<T> lateMessages) {
+    T message = lateMessages.getContent();
+    K outMessage = null;
+    /**
+     * User can create a custom output logic for late messages by extending this class
+     * For example CustomFoldWindow can keep the last received late tuple and compare it
+     * with the new late message and do a computation
+     * */
+    if (message != null) {
+      T newMessage = foldWindowedFunction.onMessage(null, message);
+      outMessage = foldWindowedFunction.computeFold();
+      foldLateMessage(outMessage);
+    }
+    return true;
+  }
+
+  @Override
+  public boolean getExpire(IWindowMessage<T> expiredMessages) {
+    return false;
   }
 }

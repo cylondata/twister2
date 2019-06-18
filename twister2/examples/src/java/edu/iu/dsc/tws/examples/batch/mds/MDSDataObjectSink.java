@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class MDSDataObjectSink  extends BaseSink implements Collector {
+public class MDSDataObjectSink extends BaseSink implements Collector {
 
   private static final Logger LOG = Logger.getLogger(MDSDataObjectSink.class.getName());
 

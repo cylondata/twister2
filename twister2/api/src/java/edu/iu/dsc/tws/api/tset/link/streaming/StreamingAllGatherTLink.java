@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 /**
  * Represent a data set created by an all gather operation
@@ -69,8 +69,8 @@ public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
-    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    MessageType dataType = TSetUtils.getDataType(getType());
+    connection.allgather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   @Override

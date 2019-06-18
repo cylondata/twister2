@@ -27,37 +27,28 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.net.Network;
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.worker.IPersistentVolume;
 import edu.iu.dsc.tws.common.worker.IVolatileVolume;
 import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
   private BKeyedReduce keyGather;
 
-  private Communicator channel;
-
   private static final int NO_OF_TASKS = 8;
-
-  private Config config;
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
@@ -68,40 +59,39 @@ public class WordCountWorker implements IWorker {
   private WordAggregator wordAggregator;
   private List<Integer> taskStages = new ArrayList<>();
   private int workerId;
+  private WorkerEnv workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    this.config = cfg;
     this.workerId = workerID;
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
 
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+    // create a worker environment
+    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+        volatileVolume);
+
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(cfg, workerID, taskStages, workerList);
+    this.taskPlan = Utils.createStageTaskPlan(workerEnv, taskStages);
 
     setupTasks();
-    setupNetwork(workerController);
 
     // create the communication
     wordAggregator = new WordAggregator();
-    keyGather = new BKeyedReduce(channel, taskPlan, sources, destinations,
+    keyGather = new BKeyedReduce(workerEnv.getCommunicator(), taskPlan, sources, destinations,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         wordAggregator, MessageTypes.OBJECT, MessageTypes.INTEGER, new HashingSelector());
     // assign the task ids to the workers, and run them using threads
     scheduleTasks();
     // progress the communication
     progress();
+
+    // close communication
+    workerEnv.close();
   }
 
   private void setupTasks() {
@@ -115,11 +105,6 @@ public class WordCountWorker implements IWorker {
     }
     LOG.fine(String.format("%d sources %s destinations %s",
         taskPlan.getThisExecutor(), sources, destinations));
-  }
-
-  private void setupNetwork(IWorkerController controller) {
-    TWSChannel twsChannel = Network.initializeChannel(config, controller);
-    this.channel = new Communicator(config, twsChannel);
   }
 
   private void scheduleTasks() {
@@ -141,7 +126,7 @@ public class WordCountWorker implements IWorker {
     while (!done) {
       done = true;
       // communicationProgress the channel
-      channel.getChannel().progress();
+      workerEnv.getChannel().progress();
 
       // we should communicationProgress the communication directive
       boolean needsProgress = keyGather.progress();

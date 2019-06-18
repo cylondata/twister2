@@ -22,10 +22,10 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
@@ -51,10 +51,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+  protected void execute(WorkerEnv workerEnv) {
 
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -67,7 +64,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
     // create the communication
-    keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
+    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o), true);
@@ -144,7 +141,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !keyedGather.hasPending();
+    return sourcesDone && !keyedGather.hasPending();
   }
 
   @Override

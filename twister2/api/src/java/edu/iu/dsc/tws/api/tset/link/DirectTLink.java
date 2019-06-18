@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class DirectTLink<T> extends BaseTLink<T> {
   private BaseTSet<T> parent;
@@ -64,8 +64,8 @@ public class DirectTLink<T> extends BaseTLink<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    MessageType dataType = TSetUtils.getDataType(getType());
+    connection.direct(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   @Override

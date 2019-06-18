@@ -43,11 +43,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private long maxBytesToKeepInMemory;
 
   /**
-   * Maximum number of records in memory. We will choose lesser of two maxes to write to disk
-   */
-  private long maxRecordsInMemory;
-
-  /**
    * Maximum bytes in a single file to write
    */
   private long maxBytesFile;
@@ -106,6 +101,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
   private ComparatorWrapper comparatorWrapper;
 
+  private int parallelIOAllowance;
+  private volatile Semaphore concurrentIOs;
+  private final Object exclusiveAccess = new Object();
   private volatile Semaphore fileWriteLock = new Semaphore(1);
 
   /**
@@ -128,7 +126,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   public FSKeyedSortedMerger2(long maxBytesInMemory, long maxBytesToAFile,
                               String dir, String opName, MessageType kType,
                               MessageType dType, Comparator kComparator,
-                              int tar, boolean groupByKey) {
+                              int tar, boolean groupByKey, int parallelIOAllowance) {
     this.maxBytesToKeepInMemory = maxBytesInMemory;
     this.maxBytesFile = maxBytesToAFile;
     this.groupByKey = groupByKey;
@@ -143,6 +141,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.dataType = dType;
     this.keyComparator = kComparator;
     this.comparatorWrapper = new ComparatorWrapper(keyComparator);
+    this.parallelIOAllowance = parallelIOAllowance;
+
+    this.concurrentIOs = new Semaphore(parallelIOAllowance);
 
     this.target = tar;
     LOG.info("Disk merger configured. Folder : " + folder
@@ -175,11 +176,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   public synchronized void switchToReading() {
     LOG.info("Switching to read...");
     try {
+      //wait if there are ongoing disk IOs
       fileWriteLock.acquire();
-    } catch (InterruptedException iex) {
-      LOG.log(Level.SEVERE, "Couldn't switch to reading", iex);
-    }
-    try {
+
       LOG.info(String.format("Reading from %d files", noOfFileWritten));
       status = FSStatus.READING;
       // add the objects that are destined to disk, to memory
@@ -194,6 +193,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
       long start = System.currentTimeMillis();
       recordsInMemory.sort(this.comparatorWrapper);
       LOG.info("Memory sorting time: " + (System.currentTimeMillis() - start));
+    } catch (InterruptedException iex) {
+      LOG.log(Level.SEVERE, "Couldn't switch to reading", iex);
+      throw new RuntimeException(iex);
     } finally {
       fileWriteLock.release();
     }
@@ -269,26 +271,43 @@ public class FSKeyedSortedMerger2 implements Shuffle {
    * This method saves the data to file system
    */
   public synchronized void run() {
+    // if not writing to disk return
+    if (status != FSStatus.WRITING_DISK) {
+      return;
+    }
+
     // it is time to write
     if (numOfBytesInMemory >= maxBytesFile) {
       //create references to existing data
       ArrayList<Tuple> referenceToRecordsInMemory = null;
-      if (this.fileWriteLock.availablePermits() == 0) {
-        LOG.warning("Communication thread blocks on disk IO thread!");
+      if (this.concurrentIOs.availablePermits() == 0) {
+        LOG.fine("Communication thread will block on disk IO thread, "
+            + "since " + this.parallelIOAllowance + " io operations are already ongoing.");
       }
-      int noOfFiles = 0;
-      long memoryBytes = 0;
+      int noOfFiles;
+      long memoryBytes;
       try {
-        this.fileWriteLock.acquire(); // allow 1 parallel write to disk
-
-        // if not writing to disk return
-        if (status != FSStatus.WRITING_DISK) {
-          return;
+        synchronized (this.exclusiveAccess) {
+          this.fileWriteLock.tryAcquire(); // try, but okay to fail.
+          // Fails only if there is an ongoing IO operation
         }
+
+        this.concurrentIOs.acquire(); // allow only 'concurrentIOAllowance' parallel writes to disk
 
         referenceToRecordsInMemory = this.recordsToDisk;
         noOfFiles = noOfFileWritten;
         memoryBytes = numOfBytesInMemory;
+
+        if (referenceToRecordsInMemory != null) {
+          // save the bytes to disk
+          FileSaveWorker fileSaveWorker = new FileSaveWorker(
+              referenceToRecordsInMemory, noOfFiles, memoryBytes);
+          if (CommonThreadPool.isActive()) {
+            CommonThreadPool.getExecutor().execute(fileSaveWorker);
+          } else {
+            fileSaveWorker.run();
+          }
+        }
 
         //making previous things garbage collectible
         this.recordsToDisk = new ArrayList<>();
@@ -296,14 +315,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         numOfBytesInMemory = 0;
       } catch (InterruptedException e) {
         LOG.log(Level.SEVERE, "Couldn't write to the file", e);
-      } finally {
-        fileWriteLock.release();
-      }
-
-      if (referenceToRecordsInMemory != null) {
-        // save the bytes to disk
-        CommonThreadPool.getExecutor().execute(
-            new FileSaveWorker(referenceToRecordsInMemory, noOfFiles, memoryBytes));
+        concurrentIOs.release();
       }
     }
   }
@@ -330,19 +342,63 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           referenceToRecordsInMemory, bytesInMemory, fileName, keyType);
       //todo get inside set?
       largestTupleSizeRecorded.set(Math.max(largestTupleSizeRecorded.get(), largestTupleWritten));
+
+      concurrentIOs.release();
+
+      synchronized (exclusiveAccess) {
+        if (concurrentIOs.availablePermits() == parallelIOAllowance) {
+          fileWriteLock.release();
+        }
+      }
     }
   }
 
   /**
    * This method gives the values
    */
-  public Iterator<Object> readIterator() {
+  public RestorableIterator<Object> readIterator() {
     try {
-      return new Iterator<Object>() {
+      return new RestorableIterator<Object>() {
+
+        private static final String RP_NEXT_TUPLE = "NEXT_TUPLE";
+        private static final String RP_IT_OF_CURR_KEY = "IT_OF_CURR_KEY";
 
         private FSIterator fsIterator = new FSIterator();
         private Tuple nextTuple = fsIterator.hasNext() ? fsIterator.next() : null;
         private Iterator itOfCurrentKey = null;
+
+        private RestorePoint restorePoint;
+
+        @Override
+        public void createRestorePoint() {
+          this.restorePoint = new RestorePoint();
+          this.restorePoint.put(RP_NEXT_TUPLE, this.nextTuple);
+          if (groupByKey) {
+            this.restorePoint.put(RP_IT_OF_CURR_KEY, this.itOfCurrentKey);
+          }
+          this.fsIterator.createRestorePoint();
+        }
+
+        @Override
+        public void restore() {
+          if (!this.hasRestorePoint()) {
+            throw new RuntimeException("Couldn't find a valid restore point to restore from.");
+          }
+          this.nextTuple = (Tuple) this.restorePoint.get(RP_NEXT_TUPLE);
+          this.itOfCurrentKey = (Iterator) this.restorePoint.get(RP_IT_OF_CURR_KEY);
+          this.fsIterator.restore();
+        }
+
+        @Override
+        public boolean hasRestorePoint() {
+          return this.restorePoint != null;
+        }
+
+        @Override
+        public void clearRestorePoint() {
+          this.restorePoint = null;
+          this.fsIterator.clearRestorePoint();
+        }
 
         private void skipKeys() {
           //user is trying to skip keys. For now, we are iterating over them internally
@@ -410,15 +466,21 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     }
   }
 
-  private class FSIterator implements Iterator<Object> {
+  private class FSIterator implements RestorableIterator<Object> {
 
+    private static final String RP_SAME_KEY_READER = "SAME_KEY_READER";
+    private static final String RP_FILE_READERS = "FILE_READERS";
 
     private PriorityQueue<ControlledFileReader> controlledFileReaders
         = new PriorityQueue<>(1 + noOfFileWritten);
     private ControlledFileReader sameKeyReader;
 
+    private RestorePoint restorePoint;
+
+    private ControlledFileReaderFlags meta;
+
     FSIterator() {
-      ControlledFileReaderFlags meta = new ControlledFileReaderFlags(
+      this.meta = new ControlledFileReaderFlags(
           Math.max(numOfBytesInMemory, largestTupleSizeRecorded.get()),
           keyComparator
       );
@@ -472,6 +534,54 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         fr.releaseResources();
       }
       return nextTuple;
+    }
+
+    @Override
+    public void createRestorePoint() {
+      this.restorePoint = new RestorePoint();
+
+      if (this.sameKeyReader != null) {
+        this.sameKeyReader.createRestorePoint();
+        this.restorePoint.put(RP_SAME_KEY_READER, this.sameKeyReader);
+      }
+
+      List<ControlledFileReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
+      fileReaderList.forEach(ControlledFileReader::createRestorePoint);
+
+      this.restorePoint.put(RP_FILE_READERS, fileReaderList);
+    }
+
+    @Override
+    public void restore() {
+      if (!this.hasRestorePoint()) {
+        throw new RuntimeException("Couldn't find a valid restore point to restore from.");
+      }
+      this.meta.reset();
+      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get(RP_SAME_KEY_READER);
+      if (this.sameKeyReader != null) {
+        this.sameKeyReader.restore();
+      }
+
+      this.controlledFileReaders.clear();
+      List<ControlledFileReader> fileReaderList =
+          (List<ControlledFileReader>) this.restorePoint.get(RP_FILE_READERS);
+
+      fileReaderList.forEach(fr -> {
+        fr.restore();
+        controlledFileReaders.add(fr);
+      });
+    }
+
+    @Override
+    public boolean hasRestorePoint() {
+      return this.restorePoint != null;
+    }
+
+    @Override
+    public void clearRestorePoint() {
+      this.restorePoint = null;
+      this.controlledFileReaders.iterator()
+          .forEachRemaining(ControlledFileReader::clearRestorePoint);
     }
   }
 

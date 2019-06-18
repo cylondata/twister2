@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,11 +23,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.BulkReceiver;
 import edu.iu.dsc.tws.comms.api.MessageFlags;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.batch.BJoin;
 import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -48,10 +49,9 @@ public class BJoinStudentExample extends KeyedBenchWorker {
   private Lock lock = new ReentrantLock();
 
   @Override
-  protected void execute() {
+  protected void execute(WorkerEnv workerEnv) {
     //Setting up the task plan for the join operation
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
@@ -70,8 +70,18 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
 
     // create the join communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
-        MessageTypes.OBJECT, new JoinReceiver(), new SimpleKeyBasedSelector(), false);
+    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
+        MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
+        new SimpleKeyBasedSelector(), false,
+        new Comparator<Object>() {
+          @Override
+          public int compare(Object o1, Object o2) {
+            if (o1 instanceof String && o2 instanceof String) {
+              return ((String) o1).compareTo((String) o2);
+            }
+            return 0;
+          }
+        });
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);
@@ -88,6 +98,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   /**
    * Messages that are sent to the join operation are sent to the communication layer
+   *
    * @param task task id
    * @param key the key of the message
    * @param data the data for this message
@@ -96,7 +107,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * @return true, this method will wait till the message is accepted by the communication layer
    */
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
-    while (!join.partition(task, key, data, flag, tag)) {
+    while (!join.join(task, key, data, flag, tag)) {
       // lets wait a litte and try again
       join.progress();
     }
@@ -115,7 +126,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && !join.hasPending();
   }
 
   @Override
@@ -209,7 +220,6 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
-    join.finish(src, 0);
-    join.finish(src, 1);
+    join.finish(src);
   }
 }

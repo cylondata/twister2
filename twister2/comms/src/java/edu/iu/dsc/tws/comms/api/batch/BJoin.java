@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.comms.api.MessageType;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
+import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
@@ -56,35 +56,34 @@ public class BJoin {
    * @param sources source tasks
    * @param targets target tasks
    * @param rcvr receiver
-   * @param dataType data type
+   * @param leftDataType data type
    * @param destSelector destination selector
    */
   public BJoin(Communicator comm, TaskPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
-               MessageType dataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle) {
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver(
-          rcvr, shuffleDirs, new IntegerComparator());
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver(rcvr);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator);
     }
 
 
     this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        dataType, keyType);
+        leftDataType, keyType);
 
     this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        dataType, keyType);
+        rightDataType, keyType);
 
-    this.partitionLeft.init(comm.getConfig(), dataType, plan, comm.nextEdge());
-    this.partitionRight.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, comm.nextEdge());
+    this.partitionRight.init(comm.getConfig(), rightDataType, plan, comm.nextEdge());
     this.destinationSelector.prepare(comm, sources, targets);
   }
 
@@ -97,15 +96,17 @@ public class BJoin {
    * @param flags data flag
    * @return true if the data is accepted
    */
-  public boolean partition(int source, Object key, Object data, int flags, int tag) {
+  public boolean join(int source, Object key, Object data, int flags, int tag) {
     int dest = destinationSelector.next(source, key, data);
 
     boolean send;
-    Tuple message = new Tuple(key, data, partitionLeft.getKeyType(),
-        partitionLeft.getDataType());
     if (tag == 0) {
+      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
+          partitionLeft.getDataType());
       send = partitionLeft.send(source, message, flags, dest);
     } else if (tag == 1) {
+      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
+          partitionRight.getDataType());
       send = partitionRight.send(source, message, flags, dest);
     } else {
       throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
@@ -131,14 +132,9 @@ public class BJoin {
    *
    * @param source the source that is ending
    */
-  public void finish(int source, int tag) {
-    if (tag == 0) {
-      partitionLeft.finish(source);
-    } else if (tag == 1) {
-      partitionRight.finish(source);
-    } else {
-      throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");
-    }
+  public void finish(int source) {
+    partitionLeft.finish(source);
+    partitionRight.finish(source);
   }
 
   /**

@@ -284,10 +284,17 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       routingParametersCache.put(s, sendRoutingParameters(s, 0));
     }
 
-    delegate.init(cfg, t, tPlan, ed,
-        router.receivingExecutors(), this,
-        pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+    if (this.keyType != null) {
+      delegate.init(cfg, t, t, keyType, keyType, tPlan, ed,
+          router.receivingExecutors(), this,
+          pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+          pendingReceiveDeSerializations, serializerMap, deSerializerMap, true);
+    } else {
+      delegate.init(cfg, t, tPlan, ed,
+          router.receivingExecutors(), this,
+          pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
+          pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
+    }
   }
 
   @Override

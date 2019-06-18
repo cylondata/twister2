@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -170,7 +170,9 @@ public class RoundRobinTaskSchedulerTest {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
+    c.reduce("source")
+        .viaEdge("edge")
+        .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
     return builder.build();
   }
@@ -182,7 +184,7 @@ public class RoundRobinTaskSchedulerTest {
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection c = builder.addSink("sink", testSink, parallel);
-    c.reduce("source", "edge", Op.SUM, DataType.INTEGER_ARRAY);
+    c.reduce("source").viaEdge("edge").withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "16");
@@ -204,8 +206,14 @@ public class RoundRobinTaskSchedulerTest {
     ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
         "sink", testSink, parallel);
 
-    computeConnection.direct("source", "cdirect-edge", DataType.OBJECT);
-    sinkComputeConnection.direct("compute", "sdirect-edge", DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge("cdirect-edge")
+        .withDataType(MessageTypes.OBJECT);
+
+    sinkComputeConnection.direct("compute")
+        .viaEdge("sdirect-edge")
+        .withDataType(MessageTypes.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "24");

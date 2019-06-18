@@ -44,57 +44,31 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(SvmSgdTsetRunner.class.getName());
-
-  private int dataStreamerParallelism = 4;
-
-  private int svmComputeParallelism = 4;
-
-  private final int reduceParallelism = 1;
-
-  private int features = 10;
-
-  private OperationMode operationMode;
-
-  private SVMJobParameters svmJobParameters;
-
-  private BinaryBatchModel binaryBatchModel;
-
-  private TaskGraphBuilder trainingBuilder;
-
-  private TaskGraphBuilder testingBuilder;
-
-  private InputDataStreamer dataStreamer;
-
-  private SVMCompute svmCompute;
-
-  private SVMReduce svmReduce;
-
-  private DataObject<Object> testingResults;
-
-  private DataObject<double[]> trainedWeightVector;
-
-  private PredictionSourceTask predictionSourceTask;
-
-  private PredictionReduceTask predictionReduceTask;
-
-  private PredictionAggregator predictionAggregator;
-
-  private double dataLoadingTime = 0;
-
-  private double trainingTime = 0;
-
-  private double testingTime = 0;
-
-  private double accuracy = 0;
-
-  private boolean debug = false;
-
-  private String experimentName = "";
-
   private static final double NANO_TO_SEC = 1000000000;
-
   private static final double B2MB = 1024.0 * 1024.0;
-
+  private final int reduceParallelism = 1;
+  private int dataStreamerParallelism = 4;
+  private int svmComputeParallelism = 4;
+  private int features = 10;
+  private OperationMode operationMode;
+  private SVMJobParameters svmJobParameters;
+  private BinaryBatchModel binaryBatchModel;
+  private TaskGraphBuilder trainingBuilder;
+  private TaskGraphBuilder testingBuilder;
+  private InputDataStreamer dataStreamer;
+  private SVMCompute svmCompute;
+  private SVMReduce svmReduce;
+  private DataObject<Object> testingResults;
+  private DataObject<double[]> trainedWeightVector;
+  private PredictionSourceTask predictionSourceTask;
+  private PredictionReduceTask predictionReduceTask;
+  private PredictionAggregator predictionAggregator;
+  private double dataLoadingTime = 0;
+  private double trainingTime = 0;
+  private double testingTime = 0;
+  private double accuracy = 0;
+  private boolean debug = false;
+  private String experimentName = "";
   private TwisterBatchContext twisterBatchContext;
 
   private boolean testStatus = false;

@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
   private ReduceFunction<V> reduceFn;
@@ -92,11 +92,13 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
   }
 
   public void buildConnection(ComputeConnection connection) {
-    DataType keyType = TSetUtils.getDataType(getClassK());
-    DataType dataType = TSetUtils.getDataType(getClassV());
-    connection.keyedReduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<>(reduceFn), keyType, dataType,
-        new TaskPartitionFunction<K>(partitionFunction));
+    MessageType keyType = TSetUtils.getDataType(getClassK());
+    MessageType dataType = TSetUtils.getDataType(getClassV());
+    connection.keyedReduce(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withReductionFunction(new ReduceOpFunction<>(reduceFn))
+        .withKeyType(keyType).withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

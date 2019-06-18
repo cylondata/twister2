@@ -122,7 +122,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   /**
    * Input edges
    */
-  private Map<String, String> inputEdges;
+  private Map<String, Set<String>> inputEdges;
 
   /**
    * Task context
@@ -173,7 +173,7 @@ public class TaskBatchInstance implements INodeInstance, ISync {
                            BlockingQueue<IMessage> outQueue, Config config, String tName,
                            int taskId, int globalTaskId, int tIndex, int parallel,
                            int wId, Map<String, Object> cfgs,
-                           Map<String, String> inEdges, Map<String, String> outEdges,
+                           Map<String, Set<String>> inEdges, Map<String, String> outEdges,
                            TaskSchedulePlan taskSchedule, CheckpointingClient checkpointingClient,
                            String taskGraphName, long tasksVersion) {
     this.task = task;
@@ -250,7 +250,8 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // progress in communication
       boolean needsFurther = progressCommunication(intOpArray);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty()) {
+      if ((state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty())
+          || (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED))) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }

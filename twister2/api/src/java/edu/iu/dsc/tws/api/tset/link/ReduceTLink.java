@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class ReduceTLink<T> extends BaseTLink<T> {
   private ReduceFunction<T> reduceFn;
@@ -91,10 +91,12 @@ public class ReduceTLink<T> extends BaseTLink<T> {
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
+    MessageType dataType = TSetUtils.getDataType(getType());
 
-    connection.reduce(parent.getName(), Constants.DEFAULT_EDGE,
-        new ReduceOpFunction<>(getReduceFn()), dataType);
+    connection.reduce(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withReductionFunction(new ReduceOpFunction<>(getReduceFn()))
+        .withDataType(dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {

@@ -28,8 +28,8 @@ import edu.iu.dsc.tws.api.job.Twister2Job;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.api.IComputableSink;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -59,10 +59,11 @@ public class StormBenchmark extends TaskWorker {
 
     if ("reduce".equals(config.get(PARAM_OPERATION))) {
       taskGraphBuilder.addSink("sink", dataSink)
-          .reduce("generator", "edge", Op.SUM, DataType.DOUBLE_ARRAY);
+          .reduce("generator").viaEdge("edge").withOperation(Op.SUM,
+          MessageTypes.DOUBLE_ARRAY);
     } else {
       taskGraphBuilder.addSink("sink", dataSink)
-          .gather("generator", "edge");
+          .gather("generator").viaEdge("edge");
     }
 
     taskGraphBuilder.setMode(OperationMode.STREAMING);

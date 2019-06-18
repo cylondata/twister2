@@ -35,7 +35,15 @@ public interface IMessage<T> {
    */
   int getFlag();
 
+  /**
+   * Get the source of the message
+   * @return source id
+   */
   int sourceTask();
 
+  /**
+   * Set a flag to the message
+   * @param barrier barrier message
+   */
   void setFlag(int barrier);
 }

@@ -26,9 +26,9 @@ import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.api.task.function.ReduceFn;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -61,8 +61,12 @@ public class WordCountJob extends TaskWorker {
     // build the graph
     TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
-    builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
-        new ReduceFn(Op.SUM, DataType.INTEGER_ARRAY), DataType.OBJECT, DataType.INTEGER_ARRAY);
+    builder.addSink("word-aggregator", counter, 4)
+        .keyedReduce("word-source")
+        .viaEdge(EDGE)
+        .withReductionFunction(new ReduceFn(Op.SUM, MessageTypes.INTEGER_ARRAY))
+        .withKeyType(MessageTypes.OBJECT)
+        .withDataType(MessageTypes.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
 
     // execute the graph

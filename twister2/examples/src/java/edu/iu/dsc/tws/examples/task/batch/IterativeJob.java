@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.DataPartition;
@@ -54,7 +54,9 @@ public class IterativeJob extends TaskWorker {
     TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
-    computeConnection.partition("source", "partition", DataType.OBJECT);
+    computeConnection.partition("source")
+        .viaEdge("partition")
+        .withDataType(MessageTypes.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = graphBuilder.build();

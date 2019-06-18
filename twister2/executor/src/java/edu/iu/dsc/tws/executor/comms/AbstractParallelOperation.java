@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.comms.api.Communicator;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.executor.api.IParallelOperation;
 import edu.iu.dsc.tws.executor.api.ISync;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
 import edu.iu.dsc.tws.task.api.IMessage;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
@@ -34,18 +33,14 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected TaskPlan taskPlan;
 
-  protected EdgeGenerator edgeGenerator;
-
-  protected int communicationEdge;
-
-  protected String edge;
+  protected String inEdge;
 
   public AbstractParallelOperation(Config config, Communicator network,
                                    TaskPlan tPlan, String edge) {
     this.config = config;
     this.taskPlan = tPlan;
     this.channel = network;
-    this.edge = edge;
+    this.inEdge = edge;
   }
 
   public void registerSync(int targetTask, ISync sink) {

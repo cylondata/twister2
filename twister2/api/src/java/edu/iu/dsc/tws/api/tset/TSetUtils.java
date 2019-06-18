@@ -22,7 +22,8 @@ import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public final class TSetUtils {
@@ -82,39 +83,39 @@ public final class TSetUtils {
     }
   }
 
-  public static DataType getDataType(Class type) {
+  public static MessageType getDataType(Class type) {
     if (type == int[].class) {
-      return DataType.INTEGER_ARRAY;
+      return MessageTypes.INTEGER_ARRAY;
     } else if (type == double[].class) {
-      return DataType.DOUBLE_ARRAY;
+      return MessageTypes.DOUBLE_ARRAY;
     } else if (type == short[].class) {
-      return DataType.SHORT_ARRAY;
+      return MessageTypes.SHORT_ARRAY;
     } else if (type == byte[].class) {
-      return DataType.BYTE_ARRAY;
+      return MessageTypes.BYTE_ARRAY;
     } else if (type == long[].class) {
-      return DataType.LONG_ARRAY;
+      return MessageTypes.LONG_ARRAY;
     } else if (type == char[].class) {
-      return DataType.CHAR_ARRAY;
+      return MessageTypes.CHAR_ARRAY;
     } else {
-      return DataType.OBJECT;
+      return MessageTypes.OBJECT;
     }
   }
 
-  public static DataType getKeyType(Class type) {
+  public static MessageType getKeyType(Class type) {
     if (type == Integer.class) {
-      return DataType.INTEGER_ARRAY;
+      return MessageTypes.INTEGER_ARRAY;
     } else if (type == Double.class) {
-      return DataType.DOUBLE_ARRAY;
+      return MessageTypes.DOUBLE_ARRAY;
     } else if (type == Short.class) {
-      return DataType.SHORT_ARRAY;
+      return MessageTypes.SHORT_ARRAY;
     } else if (type == Byte.class) {
-      return DataType.BYTE_ARRAY;
+      return MessageTypes.BYTE_ARRAY;
     } else if (type == Long.class) {
-      return DataType.LONG_ARRAY;
+      return MessageTypes.LONG_ARRAY;
     } else if (type == Character.class) {
-      return DataType.CHAR_ARRAY;
+      return MessageTypes.CHAR_ARRAY;
     } else {
-      return DataType.OBJECT;
+      return MessageTypes.OBJECT;
     }
   }
 }

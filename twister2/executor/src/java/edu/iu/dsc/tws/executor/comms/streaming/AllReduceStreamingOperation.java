@@ -24,8 +24,6 @@ import edu.iu.dsc.tws.comms.api.SingularReceiver;
 import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
@@ -36,8 +34,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
   public AllReduceStreamingOperation(Config config, Communicator network,
                                      TaskPlan tPlan, IFunction function,
-                                     Set<Integer> sources, Set<Integer>  dest, EdgeGenerator e,
-                                     Edge edge) {
+                                     Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -52,11 +49,8 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    this.edgeGenerator = e;
-    op = new SAllReduce(newComm, taskPlan, sources, dest,
-        Utils.dataTypeToMessageType(edge.getDataType()), new ReduceFnImpl(function),
-        new FinalSingularReceive());
-    communicationEdge = e.generate(edge.getName());
+    op = new SAllReduce(newComm, taskPlan, sources, dest, edge.getDataType(),
+        new ReduceFnImpl(function), new FinalSingularReceive());
   }
 
   @Override
@@ -92,8 +86,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Object object) {
-      TaskMessage msg = new TaskMessage<>(object,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(object, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         if (messages.offer(msg)) {

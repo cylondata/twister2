@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
 import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
@@ -126,7 +126,10 @@ public class RoundRobinBatchTaskSchedulerTest {
     builder.addSource("source", testSource, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    sinkConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    sinkConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
     builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -135,7 +138,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
   private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
-    TaskSchedulerClassTest.TestSource testSource = new  TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -144,8 +147,14 @@ public class RoundRobinBatchTaskSchedulerTest {
     ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
-    computeConnection.direct("source", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-    sinkConnection.direct("compute", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+    computeConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
+    sinkConnection.direct("compute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");

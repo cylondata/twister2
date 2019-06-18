@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.dataset.DataObject;
@@ -49,8 +49,11 @@ public class TaskWorkerDataLoader extends TaskWorker {
     taskGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
     ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
         "datapointsink", sinkTask, parallelism);
-    firstGraphComputeConnection.direct("datapointsource",
-        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
+
+    firstGraphComputeConnection.direct("datapointsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();

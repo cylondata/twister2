@@ -15,11 +15,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.worker.WorkerEnv;
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.api.Op;
 import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
 import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
 import edu.iu.dsc.tws.examples.Utils;
@@ -45,10 +45,7 @@ public class SAllReduceExample extends BenchWorker {
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnv workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -60,10 +57,9 @@ public class SAllReduceExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageTypes.INTEGER_ARRAY,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
+    reduce = new SAllReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,
+        MessageTypes.INTEGER_ARRAY, new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver());
-
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
         jobParameters.getTaskStages(), 0);

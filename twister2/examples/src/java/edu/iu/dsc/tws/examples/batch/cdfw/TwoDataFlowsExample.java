@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -140,7 +140,7 @@ public final class TwoDataFlowsExample {
   }
 
   private static void runFirstJob(Config config, CDFWEnv cdfwEnv,
-                                          int parallelism, DafaFlowJobConfig jobConfig) {
+                                  int parallelism, DafaFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
@@ -148,7 +148,9 @@ public final class TwoDataFlowsExample {
     graphBuilderX.addSource("source1", firstSourceTask, parallelism);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelism);
-    partitionConnection.partition("source1", "partition", DataType.OBJECT);
+    partitionConnection.partition("source1")
+        .viaEdge("partition")
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
@@ -167,7 +169,10 @@ public final class TwoDataFlowsExample {
     TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelism);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
-    reduceConn.reduce("source1", "reduce", new Aggregator(), DataType.OBJECT);
+    reduceConn.reduce("source1")
+        .viaEdge("reduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();

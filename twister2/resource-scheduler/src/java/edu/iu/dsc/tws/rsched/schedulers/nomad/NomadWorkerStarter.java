@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
-//import java.nio.file.Paths;
-//import java.nio.file.Paths;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -196,7 +197,11 @@ public final class NomadWorkerStarter {
     JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
     String workerClass = SchedulerContext.workerClass(config);
-
+    try {
+      LOG.log(Level.INFO, "Worker IP..:" + Inet4Address.getLocalHost().getHostAddress());
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
     try {
       List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
@@ -238,8 +243,8 @@ public final class NomadWorkerStarter {
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    //String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    //int jobMasterPort = JobMasterContext.jobMasterPort(config);
 
     String jobName = NomadContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
@@ -254,6 +259,32 @@ public final class NomadWorkerStarter {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
             computeResource, ports);
+
+    //find the jobmaster
+
+/*    ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+    finder.initialize();
+
+    String jobMasterIPandPort = finder.getJobMasterIPandPort();
+    if (jobMasterIPandPort == null) {
+      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
+      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    } else {
+      LOG.info("Job Master address: " + jobMasterIPandPort);
+    }
+
+    finder.close();
+
+    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
+    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
+    String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));*/
+
+
+    String jobMasterIP = JobMasterContext.jobMasterIP(config);
+    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+//    String jobMasterIP = JobMasterContext.jobMasterIP(config);
+//    int jobMasterPort = JobMasterContext.jobMasterPort(config);
 
     this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);
@@ -270,7 +301,8 @@ public final class NomadWorkerStarter {
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
+
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
@@ -364,4 +396,5 @@ public final class NomadWorkerStarter {
     masterClient.sendWorkerCompletedMessage();
     masterClient.close();
   }
+
 }

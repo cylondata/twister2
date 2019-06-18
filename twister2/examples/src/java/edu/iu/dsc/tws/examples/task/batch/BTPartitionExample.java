@@ -18,7 +18,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -40,13 +41,15 @@ public class BTPartitionExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new PartitionSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.partition(SOURCE, edge, dataType);
+    computeConnection.partition(SOURCE)
+        .viaEdge(edge)
+        .withDataType(dataType);
     return taskGraphBuilder;
   }
 

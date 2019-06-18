@@ -17,8 +17,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.verifiers.GatherVerifier;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -39,13 +40,13 @@ public class STGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.gather(SOURCE, edge, dataType);
+    computeConnection.gather(SOURCE).viaEdge(edge).withDataType(dataType);
     return taskGraphBuilder;
   }
 

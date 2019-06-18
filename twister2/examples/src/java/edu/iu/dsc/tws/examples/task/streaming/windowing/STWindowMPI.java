@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.math.MathUtils;
 import edu.iu.dsc.tws.task.api.IMessage;
@@ -51,7 +51,7 @@ public class STWindowMPI extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
-    computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }
@@ -84,7 +84,7 @@ public class STWindowMPI extends BenchTaskWorker {
         int[] res = MathUtils.sumList(newMessages);
         Arrays.fill(res, context.taskIndex());
         LOG.info(String.format("Win Size : [%d] ,Rank[%d], Worker Id[%d] , Before Reduce : "
-            + "Array = %s", newMessages.size(), worldRank, context.getWorkerId(),
+                + "Array = %s", newMessages.size(), worldRank, context.getWorkerId(),
             Arrays.toString(res)));
 
         int[] globalSum = new int[res.length];
@@ -102,5 +102,14 @@ public class STWindowMPI extends BenchTaskWorker {
       return true;
     }
 
+    @Override
+    public boolean getExpire(IWindowMessage<int[]> expiredMessages) {
+      return false;
+    }
+
+    @Override
+    public boolean getLateMessages(IMessage<int[]> lateMessages) {
+      return true;
+    }
   }
 }

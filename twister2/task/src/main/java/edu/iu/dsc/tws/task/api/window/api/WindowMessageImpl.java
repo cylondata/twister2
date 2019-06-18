@@ -26,6 +26,7 @@ public class WindowMessageImpl<T> implements IWindowMessage<T> {
     this.currentWindow = currentWindow;
   }
 
+
   public WindowMessageImpl(List<IMessage<T>> currentWindow, List<IMessage<T>> expiredWindow) {
     this.currentWindow = currentWindow;
     this.expiredWindow = expiredWindow;

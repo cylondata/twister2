@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 /**
  * Represent a data set created by an all gather operation
@@ -69,8 +69,10 @@ public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
 
   @Override
   public void buildConnection(ComputeConnection connection) {
-    DataType dataType = TSetUtils.getDataType(getType());
-    connection.allgather(parent.getName(), Constants.DEFAULT_EDGE, dataType);
+    MessageType dataType = TSetUtils.getDataType(getType());
+    connection.allgather(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withDataType(dataType);
   }
 
   @Override

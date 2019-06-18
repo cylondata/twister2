@@ -27,8 +27,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -39,10 +37,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   protected BKeyedGather op;
 
   public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                   Set<Integer> sources, Set<Integer> dests, EdgeGenerator e,
-                                   Edge edge) {
+                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
@@ -64,11 +60,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedGather(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
+        edge.getKeyType(), edge.getDataType(), new GatherRecvrImpl(),
         destSelector, useDisk, keyComparator, groupByKey);
-
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -90,8 +83,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       BlockingQueue<IMessage> messages = outMessages.get(target);
       if (messages != null) {
         return messages.offer(msg);
@@ -102,7 +94,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

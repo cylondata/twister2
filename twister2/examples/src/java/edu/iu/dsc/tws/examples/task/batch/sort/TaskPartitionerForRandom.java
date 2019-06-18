@@ -18,7 +18,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.task.api.TaskPartitioner;
 
-public class TaskPartitionerForRandom implements TaskPartitioner {
+public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
 
   protected int keysToOneTask;
   protected List<Integer> destinationsList;
@@ -40,8 +40,8 @@ public class TaskPartitionerForRandom implements TaskPartitioner {
   }
 
   @Override
-  public int partition(int source, Object data) {
-    return this.destinationsList.get(this.getIndex((byte[]) data));
+  public int partition(int source, byte[] data) {
+    return this.destinationsList.get(this.getIndex(data));
   }
 
   @Override

@@ -24,8 +24,6 @@ import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.core.EdgeGenerator;
-import edu.iu.dsc.tws.executor.util.Utils;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskMessage;
 import edu.iu.dsc.tws.task.graph.Edge;
@@ -34,10 +32,8 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   private BKeyedPartition op;
 
   public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                      Set<Integer> srcs, Set<Integer> dests, EdgeGenerator e,
-                                      Edge edge) {
+                                      Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
-    this.edgeGenerator = e;
 
     DestinationSelector destSelector;
     if (edge.getPartitioner() != null) {
@@ -48,10 +44,8 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedPartition(newComm, taskPlan, srcs, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()),
+        edge.getKeyType(), edge.getDataType(),
         new PartitionReceiver(), destSelector);
-    communicationEdge = e.generate(edge.getName());
   }
 
   @Override
@@ -78,14 +72,13 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
-      TaskMessage msg = new TaskMessage<>(it,
-          edgeGenerator.getStringMapping(communicationEdge), target);
+      TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
 
     @Override
     public boolean sync(int target, byte[] message) {
-      return syncs.get(target).sync(edge, message);
+      return syncs.get(target).sync(inEdge, message);
     }
   }
 

@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.sets.NestedIterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.NestedIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageType;
 
 public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
   private BaseTSet<V> parent;
@@ -92,10 +92,13 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
   }
 
   public void buildConnection(ComputeConnection connection) {
-    DataType keyType = TSetUtils.getDataType(getClassK());
-    DataType dataType = TSetUtils.getDataType(getClassV());
-    connection.keyedGather(parent.getName(), Constants.DEFAULT_EDGE, keyType, dataType,
-        new TaskPartitionFunction<>(partitionFunction));
+    MessageType keyType = TSetUtils.getDataType(getClassK());
+    MessageType dataType = TSetUtils.getDataType(getClassV());
+    connection.keyedGather(parent.getName())
+        .viaEdge(Constants.DEFAULT_EDGE)
+        .withKeyType(keyType)
+        .withDataType(dataType)
+        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
   }
 
   @Override

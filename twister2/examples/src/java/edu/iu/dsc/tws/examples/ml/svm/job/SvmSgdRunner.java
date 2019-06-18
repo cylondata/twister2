@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
@@ -36,13 +36,9 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class SvmSgdRunner extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(SvmSgdRunner.class.getName());
-
-  private int dataStreamerParallelism = 4;
-
-  private int svmComputeParallelism = 4;
-
   private final int reduceParallelism = 1;
-
+  private int dataStreamerParallelism = 4;
+  private int svmComputeParallelism = 4;
   private int features = 10;
 
   private OperationMode operationMode;
@@ -92,11 +88,15 @@ public class SvmSgdRunner extends TaskWorker {
         .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
 
     svmComputeConnection
-        .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE,
-            Constants.SimpleGraphConfig.DATA_EDGE, DataType.OBJECT);
+        .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)
+        .viaEdge(Constants.SimpleGraphConfig.DATA_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
     svmReduceConnection
-        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE, Constants.SimpleGraphConfig.REDUCE_EDGE,
-            new ReduceAggregator(), DataType.OBJECT);
+        .reduce(Constants.SimpleGraphConfig.SVM_COMPUTE)
+        .viaEdge(Constants.SimpleGraphConfig.REDUCE_EDGE)
+        .withReductionFunction(new ReduceAggregator())
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(operationMode);
     DataFlowTaskGraph graph = builder.build();

@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
 import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -55,8 +55,15 @@ public class DataflowNodeExperiment extends TaskWorker {
     builder.addSource("source", sourceTask, parallel);
     ComputeConnection computeConnection = builder.addCompute("compute", computeTask, parallel);
     ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
-    computeConnection.direct("source", "direct", DataType.OBJECT);
-    rc.allreduce("compute", "all-reduce", new Aggregator(), DataType.OBJECT);
+
+    computeConnection.direct("source")
+        .viaEdge("direct")
+        .withDataType(MessageTypes.OBJECT);
+
+    rc.allreduce("compute")
+        .viaEdge("all-reduce")
+        .withReductionFunction(new Aggregator())
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();

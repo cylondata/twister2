@@ -74,7 +74,7 @@ public class HDFSReaderWriter {
         hadoopDataOutputStream = hadoopFileSystem.create(path);
         for (int i = 0; i < 20; i++) {
           hadoopDataOutputStream.write(
-                  "Hello, writing to Data Output Stream\n".getBytes(DEFAULT_CHARSET));
+              "Hello, writing to Data Output Stream\n".getBytes(DEFAULT_CHARSET));
         }
       }
     } catch (IOException ioe) {
