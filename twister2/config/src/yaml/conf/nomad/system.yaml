@@ -79,11 +79,11 @@ twister2.job.master.ip: "149.165.150.81"
 
 # amount of timeout for all workers to join the job
 # in milli seconds
-twister2.worker.controller.max.wait.time.for.all.workers.to.join: 100000
+twister2.worker.controller.max.wait.time.for.all.workers.to.join: 1000000
 
 # amount of timeout on barriers for all workers to arrive
 # in milli seconds
-twister2.worker.controller.max.wait.time.on.barrier: 100000
+twister2.worker.controller.max.wait.time.on.barrier: 1000000
 
 ###################################################################
 # Dashboard related settings

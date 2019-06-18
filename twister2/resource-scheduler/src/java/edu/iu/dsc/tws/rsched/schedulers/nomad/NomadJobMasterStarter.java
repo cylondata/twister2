@@ -11,12 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
+//import java.net.Inet4Address;
 import java.io.File;
 import java.net.Inet4Address;
+//import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,41 +29,28 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
+import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+//import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
-public final class NomadWorkerStarter {
-  private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
-  private static int startingPort = 30000;
-  private NomadController controller;
-  /**
-   * The jobmaster client
-   */
-  private JMWorkerAgent masterClient;
 
-  /**
-   * Configuration
-   */
+public final class NomadJobMasterStarter {
+  private static final Logger LOG = Logger.getLogger(NomadJobMasterStarter.class.getName());
+
+  private JobAPI.Job job;
   private Config config;
-
-  /**
-   * The worker controller
-   */
-  private IWorkerController workerController;
-
-  private NomadWorkerStarter(String[] args) {
+  private NomadController controller;
+  public NomadJobMasterStarter(String[] args) {
     Options cmdOptions = null;
     try {
       cmdOptions = setupOptions();
@@ -86,22 +72,6 @@ public final class NomadWorkerStarter {
       throw new RuntimeException("Error parsing command line options: ", e);
     }
   }
-
-  public static void main(String[] args) {
-    NomadWorkerStarter starter = new NomadWorkerStarter(args);
-    starter.run();
-  }
-
-  public void run() {
-    // normal worker
-    try {
-      startWorker();
-    } finally {
-      // now close the worker
-      closeWorker();
-    }
-  }
-
   /**
    * Setup the command line options for the MPI process
    * @return cli options
@@ -156,7 +126,6 @@ public final class NomadWorkerStarter {
 
     return options;
   }
-
   private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
@@ -177,7 +146,7 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
+    job = JobUtils.readJobFile(null, jobDescFile);
     job.getNumberOfWorkers();
 
     Config updatedConfig = JobUtils.overrideConfigs(job, cfg);
@@ -189,49 +158,45 @@ public final class NomadWorkerStarter {
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
-
-  private void startWorker() {
-    LOG.log(Level.INFO, "A worker process is starting...");
-    // lets create the resource plan
-    this.workerController = createWorkerController();
-    JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
-
-    String workerClass = SchedulerContext.workerClass(config);
-    try {
-      LOG.log(Level.INFO, "Worker IP..:" + Inet4Address.getLocalHost().getHostAddress());
-    } catch (UnknownHostException e) {
-      e.printStackTrace();
-    }
-    try {
-      List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    try {
-      Object object = ReflectionUtils.newInstance(workerClass);
-      if (object instanceof IWorker) {
-        IWorker container = (IWorker) object;
-        // now initialize the container
-        container.execute(config, workerNetworkInfo.getWorkerID(), workerController, null, null);
-      } else {
-        throw new RuntimeException("Job is not of time IWorker: " + object.getClass().getName());
-      }
-      LOG.log(Level.FINE, "loaded worker class: " + workerClass);
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      LOG.log(Level.SEVERE, String.format("failed to load the worker class %s",
-          workerClass), e);
-      throw new RuntimeException(e);
-    }
+  public void initialize(JobAPI.Job jb, Config cfg) {
+    job = jb;
+    config = cfg;
   }
 
+  public static void main(String[] args) {
+    NomadJobMasterStarter starter = new NomadJobMasterStarter(args);
+    starter.run();
+  }
+  public void run() {
+    // normal worker
+    try {
+      launch();
+    } finally {
+      // now close the worker
+      //closeWorker();
+    }
+  }
   /**
-   * Create the resource plan
-   * @return
+   * launch the job master
+   * @return false if setup fails
    */
-  private IWorkerController createWorkerController() {
-    // first get the worker id
+  public boolean launch() {
+    // get the job working directory
+/*    String jobWorkingDirectory = NomadContext.workingDirectory(config);
+    LOG.log(Level.INFO, "job working directory ....." + jobWorkingDirectory);
+
+    if (NomadContext.sharedFileSystem(config)) {
+      if (!setupWorkingDirectory(job, jobWorkingDirectory)) {
+        throw new RuntimeException("Failed to setup the directory");
+      }
+    }
+
+    Config newConfig = Config.newBuilder().putAll(config).put(
+        SchedulerContext.WORKING_DIRECTORY, jobWorkingDirectory).build();
+    // now start the controller, which will get the resources from
+    // slurm and start the job
+    //IController controller = new NomadController(true);
+    controller.initialize(newConfig);*/
     String indexEnv = System.getenv("NOMAD_ALLOC_INDEX");
     String idEnv = System.getenv("NOMAD_ALLOC_ID");
 
@@ -239,98 +204,111 @@ public final class NomadWorkerStarter {
 
     initLogger(config, workerID);
     LOG.log(Level.INFO, String.format("Worker id = %s and index = %d", idEnv, workerID));
+    ZKJobMasterRegistrar registrar = null;
+    int port = JobMasterContext.jobMasterPort(config);
+    String hostAddress = null;
+    try {
+      hostAddress = Inet4Address.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
+    try {
+      registrar = new ZKJobMasterRegistrar(config,
+          hostAddress, port);
+      LOG.info("JobMaster REGISTERED..:" + hostAddress);
+    } catch (Exception e) {
+      LOG.info("JobMaster CAN NOT BE REGISTERED:");
+      e.printStackTrace();
+    }
+    boolean initialized = registrar.initialize();
+    if (!initialized) {
+      LOG.info("CAN NOT INITIALIZE");
+    }
+    if (!initialized && registrar.sameZNodeExist()) {
+      registrar.deleteJobMasterZNode();
+      registrar.initialize();
+    }
+    // start the Job Master locally
+    JobMaster jobMaster = null;
+    JobMasterAPI.NodeInfo jobMasterNodeInfo = NomadContext.getNodeInfo(config, hostAddress);
+    IScalerPerCluster clusterScaler = null;
+    Thread jmThread = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      //if you want to set it manually
+      //if (JobMasterContext.jobMasterIP(config) != null) {
+      //  hostAddress = JobMasterContext.jobMasterIP(config);
+      //}
+      LOG.log(Level.INFO, String.format("Starting the Job Master: %s:%d", hostAddress, port));
+      jobMaster = new JobMaster(
+          config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+      jobMaster.addShutdownHook(true);
+      jobMaster.startJobMasterBlocking();
+      //jmThread = jobMaster.startJobMasterThreaded();
 
-    Map<String, Integer> ports = getPorts(config);
-    Map<String, String> localIps = getIPAddress(ports);
-
-    //String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    //int jobMasterPort = JobMasterContext.jobMasterPort(config);
-
-    String jobName = NomadContext.jobName(config);
-    String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
-    JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
-    int numberOfWorkers = job.getNumberOfWorkers();
-    JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
-    //Map<String, Integer> additionalPorts =
-    //    NomadContext.generateAdditionalPorts(config, startingPort);
-    int port = ports.get("worker");
-    String host = localIps.get("worker");
-    JobMasterAPI.NodeInfo nodeInfo = NomadContext.getNodeInfo(config, host);
-    JobMasterAPI.WorkerInfo workerInfo =
-        WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
-            computeResource, ports);
-
-    //find the jobmaster
-
-/*    ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
-    finder.initialize();
-
-    String jobMasterIPandPort = finder.getJobMasterIPandPort();
-    if (jobMasterIPandPort == null) {
-      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
-      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
-      LOG.info("Job Master address: " + jobMasterIPandPort);
     } else {
-      LOG.info("Job Master address: " + jobMasterIPandPort);
+      jobMaster =
+          new JobMaster(config, hostAddress,
+              new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+      LOG.info("JobMaster host address...:" + hostAddress);
+      jobMaster.addShutdownHook(true);
+      //jmThread = jobMaster.startJobMasterThreaded();
+      jobMaster.startJobMasterBlocking();
     }
 
-    finder.close();
+    waitIndefinitely();
+    registrar.deleteJobMasterZNode();
+    registrar.close();
 
-    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
-    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
-    String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));*/
-
-
-    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-//    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-//    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-
-    this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
-        workerInfo, numberOfWorkers);
-
-    return masterClient.getJMWorkerController();
+    boolean start = controller.start(job);
+    // now lets wait on client
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      try {
+        if (jmThread != null) {
+          jmThread.join();
+        }
+      } catch (InterruptedException ignore) {
+      }
+    }
+    return start;
   }
 
   /**
-   * Create the job master client to get information about the workers
+   * a method to make the job master wait indefinitely
    */
-  private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
-                                          JobMasterAPI.WorkerInfo workerInfo,
-                                          int numberContainers) {
-    // we start the job master client
-    JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
+  public static void waitIndefinitely() {
 
-    jobMasterAgent.startThreaded();
-    // No need for sending workerStarting message anymore
-    // that is called in startThreaded method
-
-    // now lets send the starting message
-    jobMasterAgent.sendWorkerRunningMessage();
-
-    return jobMasterAgent;
-  }
-
-  /**
-   * Get the ports from the environment variable
-   * @param cfg the configuration
-   * @return port name -> port map
-   */
-  private Map<String, Integer> getPorts(Config cfg) {
-    String portNamesConfig = NomadContext.networkPortNames(cfg);
-    String[] portNames = portNamesConfig.split(",");
-    Map<String, Integer> ports = new HashMap<>();
-    // now lets get these ports
-    for (String pName : portNames) {
-      String portNumber = System.getenv("NOMAD_PORT_" + pName);
-      int port = Integer.valueOf(portNumber);
-      ports.put(pName, port);
+    while (true) {
+      try {
+        LOG.info("JobMasterStarter thread waiting indefinitely. Sleeping 100sec. "
+            + "Time: " + new java.util.Date());
+        Thread.sleep(100000);
+      } catch (InterruptedException e) {
+        LOG.warning("Thread sleep interrupted.");
+      }
     }
-    return ports;
   }
-
+  /**
+   * setup the working directory mainly it downloads and extracts the heron-core-release
+   * and job package to the working directory
+   * @return false if setup fails
+   */
+  private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
+    // get the path of core release URI
+    String corePackage = NomadContext.corePackageFileName(config);
+    String jobPackage = NomadContext.jobPackageFileName(config);
+    LOG.log(Level.INFO, "Core Package is ......: " + corePackage);
+    LOG.log(Level.INFO, "Job Package is ......: " + jobPackage);
+    // Form the job package's URI
+    String jobPackageURI = NomadContext.jobPackageUri(config).toString();
+    LOG.log(Level.INFO, "Job Package URI is ......: " + jobPackageURI);
+    // copy the files to the working directory
+    return ResourceSchedulerUtils.setupWorkingDirectory(
+        jb.getJobName(),
+        jobWorkingDirectory,
+        corePackage,
+        jobPackageURI,
+        Context.verbose(config));
+  }
   /**
    * Initialize the loggers to log into the task local directory
    * @param cfg the configuration
@@ -372,29 +350,6 @@ public final class NomadWorkerStarter {
       }
     }
     LoggingHelper.setupLogging(cfg, logDir, "worker-" + workerID);
-  }
-
-  private String getTaskDirectory() {
-    return System.getenv("NOMAD_TASK_DIR");
-  }
-
-  private Map<String, String> getIPAddress(Map<String, Integer> ports) {
-    Map<String, String> ips = new HashMap<>();
-    for (Map.Entry<String, Integer> e : ports.entrySet()) {
-      ips.put(e.getKey(), System.getenv("NOMAD_IP_" + e.getKey()));
-    }
-    return ips;
-  }
-
-  /**
-   * last method to call to close the worker
-   */
-  public void closeWorker() {
-
-    // send worker completed message to the Job Master and finish
-    // Job master will delete the StatefulSet object
-    masterClient.sendWorkerCompletedMessage();
-    masterClient.close();
   }
 
 }
