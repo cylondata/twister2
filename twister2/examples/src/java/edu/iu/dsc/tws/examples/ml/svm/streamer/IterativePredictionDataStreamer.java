@@ -52,6 +52,8 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
 
   private boolean debug = false;
 
+  private double[][] finalAccuracy = new double[1][1];
+
   public IterativePredictionDataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
@@ -157,8 +159,9 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
     }
     LOG.info(String.format("Accuracy : %f, Context Id : %d, Weight Vector : %s, Data Size : %d",
         accuracy, context.taskIndex(), Arrays.toString(w), x.length));
-
-    this.context.writeEnd(Constants.SimpleGraphConfig
-        .PREDICTION_EDGE, accuracy / (double) context.getParallelism());
+    finalAccuracy[0][0] = accuracy / (double) context.getParallelism();
+    this.context.write(Constants.SimpleGraphConfig
+        .PREDICTION_EDGE, finalAccuracy);
+    this.context.end(Constants.SimpleGraphConfig.PREDICTION_EDGE);
   }
 }

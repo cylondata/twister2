@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMReduce;
-import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeTestingReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeTrainingReduce;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeSVMCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
@@ -70,6 +69,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private IterativeSVMReduce iterativeSVMReduce;
   private DataObject<Object> trainingDataPointObject;
   private DataObject<Object> inputweightvectorObject;
+  private DataObject<double[][]> finalAccuracyObject;
   private DataObject<double[][]> finalweightvectorObject;
   private DataObject<Object> testingDataPointObject;
   private DataObject<Object> testingResults;
@@ -191,7 +191,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
     svmComputeConnection.allreduce(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK)
         .viaEdge(Constants.SimpleGraphConfig.PREDICTION_EDGE)
-        .withReductionFunction(new IterativeTestingReduce())
+        .withReductionFunction(new IterativeTrainingReduce())
         .withDataType(MessageTypes.OBJECT);
 
     testingBuilder.setMode(operationMode);
@@ -337,7 +337,11 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK,
         Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputweightvectorObject);
     taskExecutor.execute(iterativeSVMTestingTaskGraph, iterativeSVMTestingExecutionPlan);
-
+    finalAccuracyObject = taskExecutor.getOutput(iterativeSVMTestingTaskGraph,
+        iterativeSVMTestingExecutionPlan,
+        Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK);
+    accuracy = finalAccuracyObject.getPartitions()[0].getConsumer().next()[0][0];
+    LOG.info(String.format("Final Accuracy : %f ", accuracy));
 
   }
 
