@@ -242,7 +242,17 @@ public final class DataUtils {
     String[] ws = s.split(",");
     w = new double[ws.length];
     for (int i = 0; i < w.length; i++) {
-      w[i] = Integer.parseInt(ws[i]);
+      w[i] = Double.parseDouble(ws[i]);
+    }
+    return w;
+  }
+
+  public static double[] arrayFromString(String s, String delemiter) {
+    double[] w = null;
+    String[] ws = s.split(delemiter);
+    w = new double[ws.length];
+    for (int i = 0; i < w.length; i++) {
+      w[i] = Double.parseDouble(ws[i]);
     }
     return w;
   }

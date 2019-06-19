@@ -28,10 +28,10 @@ import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeTrainingReduce;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeSVMCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectCompute;
-import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryWeightVectorObjectCompute;
-import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectCompute;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectCompute1;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectDirectSink1;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.test.PredictionAggregator;
@@ -322,11 +322,11 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
         this.svmJobParameters.getWeightVectorDataDir());
-    IterativeSVMWeightVectorObjectCompute weightVectorObjectCompute
-        = new IterativeSVMWeightVectorObjectCompute(Context.TWISTER2_DIRECT_EDGE, 1,
+    IterativeSVMWeightVectorObjectCompute1 weightVectorObjectCompute
+        = new IterativeSVMWeightVectorObjectCompute1(Context.TWISTER2_DIRECT_EDGE, 1,
         this.svmJobParameters.getFeatures());
-    IterativeSVMDataObjectDirectSink weightVectorObjectSink
-        = new IterativeSVMDataObjectDirectSink();
+    IterativeSVMWeightVectorObjectDirectSink1 weightVectorObjectSink
+        = new IterativeSVMWeightVectorObjectDirectSink1();
     TaskGraphBuilder weightVectorTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     weightVectorTaskGraphBuilder
