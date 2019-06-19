@@ -257,6 +257,21 @@ public final class DataUtils {
     return w;
   }
 
+  public static double[] arrayFromString(String s, String delemiter, boolean trim) {
+    double[] w = null;
+    String[] ws = s.split(delemiter);
+    w = new double[ws.length];
+    for (int i = 0; i < w.length; i++) {
+      if (trim) {
+        w[i] = Double.parseDouble(ws[i].trim());
+      } else {
+        w[i] = Double.parseDouble(ws[i]);
+      }
+    }
+    return w;
+  }
+
+
   public static double[] average(double[] a, int processes) {
     for (int i = 0; i < a.length; i++) {
       a[i] /= (double) processes;

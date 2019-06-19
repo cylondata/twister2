@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.SVMDataObjectSource;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMDataObjectCompute1;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectCompute1;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectDirectSink1;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
@@ -51,6 +52,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(SvmSgdIterativeRunner.class.getName());
 
+  private static final String DELIMITER = ",";
   private static final double NANO_TO_SEC = 1000000000;
   private static final double B2MB = 1024.0 * 1024.0;
   private final int reduceParallelism = 1;
@@ -73,8 +75,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private IterativeSVMCompute iterativeSVMCompute;
   private IterativeSVMReduce iterativeSVMReduce;
   private DataObject<Object> trainingDataPointObject;
+  private DataObject<double[][]> trainingDoubleDataPointObject;
   private DataObject<Object> inputweightvectorObject;
-  private DataObject<double[]> inputdoubleWeightvectorObject;
+  private DataObject<double[]> inputDoubleWeightvectorObject;
   private DataObject<double[][]> finalAccuracyObject;
   private DataObject<double[][]> finalweightvectorObject;
   private DataObject<Object> testingDataPointObject;
@@ -122,10 +125,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     weightVectorTaskGraph = buildTestWeightVectorTG();
     weightVectorExecutionPlan = taskExecutor.plan(weightVectorTaskGraph);
     taskExecutor.execute(weightVectorTaskGraph, weightVectorExecutionPlan);
-    inputdoubleWeightvectorObject = taskExecutor
+    inputDoubleWeightvectorObject = taskExecutor
         .getOutput(weightVectorTaskGraph, weightVectorExecutionPlan,
             Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
-    double[] w = inputdoubleWeightvectorObject.getPartitions()[0].getConsumer().next();
+    double[] w = inputDoubleWeightvectorObject.getPartitions()[0].getConsumer().next();
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }
 
@@ -272,9 +275,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         this.svmJobParameters.getTrainingDataDir());
-    IterativeSVMDataObjectCompute dataObjectCompute
-        = new IterativeSVMDataObjectCompute(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
-        this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures());
+    IterativeSVMDataObjectCompute1 dataObjectCompute
+        = new IterativeSVMDataObjectCompute1(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
+        this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures(), DELIMITER);
     IterativeSVMPrimaryDataObjectDirectSink iterativeSVMPrimaryDataObjectDirectSink
         = new IterativeSVMPrimaryDataObjectDirectSink();
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
