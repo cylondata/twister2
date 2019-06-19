@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
@@ -118,7 +119,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   /**
-   * initializing test execution
+   * *******************************************************************************************
+   * Start: initializing test execution
+   * *******************************************************************************************
    */
 
   public void testGenericWeightVectorLoad() {
@@ -136,13 +139,22 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     DataFlowTaskGraph trainingDatapointsTaskGraph = buildTestGenricTrainingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(trainingDatapointsTaskGraph);
     taskExecutor.execute(trainingDatapointsTaskGraph, datapointsExecutionPlan);
-    trainingDataPointObject = taskExecutor
+    trainingDoubleDataPointObject = taskExecutor
         .getOutput(trainingDatapointsTaskGraph, datapointsExecutionPlan,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
 
-    Object o = trainingDataPointObject.getPartitions()[0].getConsumer().next();
-    LOG.info(String.format("O : %s", o.getClass().getName()));
+    double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[0].getConsumer().next();
+    LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0].length));
+    int randomIndex = new Random().nextInt(this.svmJobParameters.getSamples() - 2);
+    LOG.info(String.format("Random DataPoint : %s",
+        Arrays.toString(datapoints[randomIndex])));
   }
+
+  /**
+   * *******************************************************************************************
+   * END : initializing test execution
+   * *******************************************************************************************
+   */
 
   /**
    * Initializing Execute
