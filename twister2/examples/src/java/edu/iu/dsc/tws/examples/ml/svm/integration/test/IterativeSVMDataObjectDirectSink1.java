@@ -20,22 +20,28 @@ import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.ISink;
 import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
 
-public class IterativeSVMWeightVectorObjectDirectSink1
-    extends AbstractIterableDataCompute<double[]> implements ISink, ICollector<double[]> {
+public class IterativeSVMDataObjectDirectSink1
+    extends AbstractIterableDataCompute<double[][]> implements ISink, ICollector<double[][]> {
 
-  private static final Logger LOG = Logger.getLogger(IterativeSVMWeightVectorObjectDirectSink1
-      .class.getName());
+  private static final long serialVersionUID = 556286022242885874L;
 
-  private static final long serialVersionUID = -1L;
+  private static final Logger LOG = Logger.getLogger(IterativeSVMDataObjectDirectSink1.class
+      .getName());
 
-  private double[] dataPointsLocal;
+  private double[][] dataPointsLocal;
+
 
   @Override
-  public boolean execute(IMessage<Iterator<double[]>> message) {
-    Iterator<double[]> itr = message.getContent();
+  public DataPartition<double[][]> get() {
+    return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+  @Override
+  public boolean execute(IMessage<Iterator<double[][]>> message) {
+    Iterator<double[][]> itr = message.getContent();
     if (itr != null) {
       if (itr.hasNext()) {
-        double[] d = itr.next();
+        double[][] d = itr.next();
         if (d != null) {
           this.dataPointsLocal = d;
         } else {
@@ -43,13 +49,7 @@ public class IterativeSVMWeightVectorObjectDirectSink1
           LOG.severe(String.format("Something went wrong, Data Point is null"));
         }
       }
-
     }
     return true;
-  }
-
-  @Override
-  public DataPartition<double[]> get() {
-    return new EntityPartition<>(context.taskIndex(), this.dataPointsLocal);
   }
 }

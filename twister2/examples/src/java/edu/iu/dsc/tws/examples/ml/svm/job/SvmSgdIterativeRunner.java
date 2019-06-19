@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryDataObjectDirectSi
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.SVMDataObjectSource;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMDataObjectCompute1;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMDataObjectDirectSink1;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectCompute1;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.IterativeSVMWeightVectorObjectDirectSink1;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
@@ -135,6 +136,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }
 
+  // TODO : note the size of the datapoint array [samples/parallelism or samples] ???
   public void testGenericTrainingDataLoad() {
     DataFlowTaskGraph trainingDatapointsTaskGraph = buildTestGenricTrainingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(trainingDatapointsTaskGraph);
@@ -145,9 +147,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
     double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[0].getConsumer().next();
     LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0].length));
-    int randomIndex = new Random().nextInt(this.svmJobParameters.getSamples() - 2);
-    LOG.info(String.format("Random DataPoint : %s",
-        Arrays.toString(datapoints[randomIndex])));
+    int randomIndex = new Random()
+        .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
+    LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
+        .toString(datapoints[randomIndex])));
   }
 
   /**
@@ -290,8 +293,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     IterativeSVMDataObjectCompute1 dataObjectCompute
         = new IterativeSVMDataObjectCompute1(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
         this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures(), DELIMITER);
-    IterativeSVMPrimaryDataObjectDirectSink iterativeSVMPrimaryDataObjectDirectSink
-        = new IterativeSVMPrimaryDataObjectDirectSink();
+    IterativeSVMDataObjectDirectSink1 iterativeSVMPrimaryDataObjectDirectSink
+        = new IterativeSVMDataObjectDirectSink1();
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     datapointsTaskGraphBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE, sourceTask,
         dataStreamerParallelism);

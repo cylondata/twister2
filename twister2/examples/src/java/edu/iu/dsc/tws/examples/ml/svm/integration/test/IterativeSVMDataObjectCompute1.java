@@ -59,7 +59,9 @@ public class IterativeSVMDataObjectCompute1 extends AbstractIterableDataCompute<
     this.datasize = datasize;
     this.features = features;
     this.delemiter = del;
-    this.dataPointsLocal = new double[this.datasize][this.features + 1];
+    int size = this.datasize % this.parallelism == 0
+        ? (this.datasize / parallelism) + 1 : (this.datasize / parallelism);
+    this.dataPointsLocal = new double[size][this.features + 1];
   }
 
   public IterativeSVMDataObjectCompute1(String edgeName, int datasize, int features, String del) {
@@ -67,7 +69,9 @@ public class IterativeSVMDataObjectCompute1 extends AbstractIterableDataCompute<
     this.datasize = datasize;
     this.features = features;
     this.delemiter = del;
-    this.dataPointsLocal = new double[this.datasize][this.features + 1];
+    int size = this.datasize % this.parallelism == 0
+        ? (this.datasize / parallelism) + 1 : (this.datasize / parallelism);
+    this.dataPointsLocal = new double[size][this.features + 1];
   }
 
   public String getEdgeName() {
