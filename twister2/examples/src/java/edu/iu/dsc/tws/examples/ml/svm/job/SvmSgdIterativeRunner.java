@@ -29,6 +29,8 @@ import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeSVMCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectDirectSink;
+import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryDataObjectDirectSink;
+import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
@@ -102,17 +104,30 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     this.binaryBatchModel.setSamples(this.svmJobParameters.getSamples());
     this.binaryBatchModel.setW(DataUtils.seedDoubleArray(this.svmJobParameters.getFeatures()));
     LOG.info(this.binaryBatchModel.toString());
-  }
-
-  /**
-   * initializing execution
-   */
-  public void initializeExecute() {
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;
     trainingBuilder = TaskGraphBuilder.newBuilder(config);
     testingBuilder = TaskGraphBuilder.newBuilder(config);
 
+  }
+
+  /**
+   * initializing test execution
+   */
+
+  public void testInitializeExecute() {
+    weightVectorTaskGraph = buildTestWeightVectorTG();
+    weightVectorExecutionPlan = taskExecutor.plan(weightVectorTaskGraph);
+    taskExecutor.execute(weightVectorTaskGraph, weightVectorExecutionPlan);
+    inputweightvectorObject = taskExecutor
+        .getOutput(weightVectorTaskGraph, weightVectorExecutionPlan,
+            Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
+  }
+
+  /**
+   * Initializing Execute
+   */
+  public void initializeExecute() {
     DataFlowTaskGraph trainingDatapointsTaskGraph = buildTrainingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(trainingDatapointsTaskGraph);
     taskExecutor.execute(trainingDatapointsTaskGraph, datapointsExecutionPlan);
@@ -210,8 +225,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     IterativeSVMDataObjectCompute dataObjectCompute
         = new IterativeSVMDataObjectCompute(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
         this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures());
-    IterativeSVMDataObjectDirectSink iterativeSVMDataObjectDirectSink
-        = new IterativeSVMDataObjectDirectSink();
+    IterativeSVMPrimaryDataObjectDirectSink iterativeSVMPrimaryDataObjectDirectSink
+        = new IterativeSVMPrimaryDataObjectDirectSink();
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     datapointsTaskGraphBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE, sourceTask,
         dataStreamerParallelism);
@@ -219,7 +234,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         = datapointsTaskGraphBuilder.addCompute(Constants.SimpleGraphConfig.DATA_OBJECT_COMPUTE,
         dataObjectCompute, dataStreamerParallelism);
     ComputeConnection computeConnectionSink = datapointsTaskGraphBuilder
-        .addSink(Constants.SimpleGraphConfig.DATA_OBJECT_SINK, iterativeSVMDataObjectDirectSink,
+        .addSink(Constants.SimpleGraphConfig.DATA_OBJECT_SINK,
+            iterativeSVMPrimaryDataObjectDirectSink,
             dataStreamerParallelism);
     datapointComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -241,8 +257,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     IterativeSVMDataObjectCompute dataObjectCompute
         = new IterativeSVMDataObjectCompute(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
         this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures());
-    IterativeSVMDataObjectDirectSink iterativeSVMDataObjectDirectSink
-        = new IterativeSVMDataObjectDirectSink();
+    IterativeSVMPrimaryDataObjectDirectSink iterativeSVMPrimaryDataObjectDirectSink
+        = new IterativeSVMPrimaryDataObjectDirectSink();
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
     datapointsTaskGraphBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING,
         sourceTask,
@@ -253,7 +269,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         dataObjectCompute, dataStreamerParallelism);
     ComputeConnection computeConnectionSink = datapointsTaskGraphBuilder
         .addSink(Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING,
-            iterativeSVMDataObjectDirectSink,
+            iterativeSVMPrimaryDataObjectDirectSink,
             dataStreamerParallelism);
     datapointComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -270,6 +286,39 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   public DataFlowTaskGraph buildWeightVectorTG() {
+    DataFileReplicatedReadSource dataFileReplicatedReadSource
+        = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
+        this.svmJobParameters.getWeightVectorDataDir());
+    IterativeSVMPrimaryWeightVectorObjectCompute weightVectorObjectCompute
+        = new IterativeSVMPrimaryWeightVectorObjectCompute(Context.TWISTER2_DIRECT_EDGE, 1,
+        this.svmJobParameters.getFeatures());
+    IterativeSVMPrimaryDataObjectDirectSink weightVectorObjectSink
+        = new IterativeSVMPrimaryDataObjectDirectSink();
+    TaskGraphBuilder weightVectorTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+
+    weightVectorTaskGraphBuilder
+        .addSource(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SOURCE,
+            dataFileReplicatedReadSource, dataStreamerParallelism);
+    ComputeConnection weightVectorComputeConnection = weightVectorTaskGraphBuilder
+        .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE,
+            weightVectorObjectCompute, dataStreamerParallelism);
+    ComputeConnection weightVectorSinkConnection = weightVectorTaskGraphBuilder
+        .addSink(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
+            dataStreamerParallelism);
+
+    weightVectorComputeConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SOURCE)
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    weightVectorSinkConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE)
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    weightVectorTaskGraphBuilder.setMode(operationMode);
+    weightVectorTaskGraphBuilder.setTaskGraphName("weight-vector-task-graph");
+
+    return weightVectorTaskGraphBuilder.build();
+  }
+
+  public DataFlowTaskGraph buildTestWeightVectorTG() {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
         this.svmJobParameters.getWeightVectorDataDir());
@@ -295,9 +344,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .withDataType(MessageTypes.OBJECT);
     weightVectorSinkConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
+        .withDataType(MessageTypes.DOUBLE_ARRAY);
     weightVectorTaskGraphBuilder.setMode(operationMode);
-    weightVectorTaskGraphBuilder.setTaskGraphName("weight-vector-task-graph");
+    weightVectorTaskGraphBuilder.setTaskGraphName("weight-vector-test-task-graph");
 
     return weightVectorTaskGraphBuilder.build();
   }
@@ -364,6 +413,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   @Override
   public void execute() {
     initializeParameters();
-    initializeExecute();
+    //initializeExecute();
+    testInitializeExecute();
   }
 }

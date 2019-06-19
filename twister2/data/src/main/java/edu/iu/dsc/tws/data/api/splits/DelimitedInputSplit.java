@@ -340,9 +340,9 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
         }
         readPos++;
       }
-      if (readPos == limit) {
-        this.end = true;
-      }
+//      if (readPos == limit) {
+//        this.end = true;
+//      }
       // check why we dropped out
       if (delimPos == this.delimiter.length) {
         // we found a delimiter

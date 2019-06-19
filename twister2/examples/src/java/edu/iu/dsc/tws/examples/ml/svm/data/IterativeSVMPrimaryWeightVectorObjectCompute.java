@@ -11,16 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.data;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.task.api.BaseCompute;
 import edu.iu.dsc.tws.task.api.IMessage;
 
-public class IterativeSVMWeightVectorObjectCompute extends BaseCompute {
-  private static final Logger LOG = Logger.getLogger(IterativeSVMWeightVectorObjectCompute.class
-      .getName());
+public class IterativeSVMPrimaryWeightVectorObjectCompute extends BaseCompute {
 
+  private static final Logger LOG = Logger.getLogger(IterativeSVMPrimaryDataObjectDirectSink.class
+      .getName());
 
   private static final long serialVersionUID = -254264120110286748L;
 
@@ -47,22 +49,21 @@ public class IterativeSVMWeightVectorObjectCompute extends BaseCompute {
   /**
    * Datapoints array
    */
-  private double[] dataPointsLocal;
+  private double[][] dataPointsLocal;
 
-  public IterativeSVMWeightVectorObjectCompute(String edgeName, int parallelism, int datasize,
-                                               int features) {
+  public IterativeSVMPrimaryWeightVectorObjectCompute(String edgeName, int parallelism,
+                                                      int datasize,
+                                                      int features) {
     this.edgeName = edgeName;
     this.parallelism = parallelism;
     this.datasize = datasize;
     this.features = features;
-    this.dataPointsLocal = new double[this.features];
   }
 
-  public IterativeSVMWeightVectorObjectCompute(String edgeName, int datasize, int features) {
+  public IterativeSVMPrimaryWeightVectorObjectCompute(String edgeName, int datasize, int features) {
     this.edgeName = edgeName;
     this.datasize = datasize;
     this.features = features;
-    this.dataPointsLocal = new double[this.features];
   }
 
   public String getEdgeName() {
@@ -99,25 +100,21 @@ public class IterativeSVMWeightVectorObjectCompute extends BaseCompute {
 
   @Override
   public boolean execute(IMessage message) {
-    Object o = message.getContent();
-    if (o != null) {
-      Iterator<?> itr = (Iterator) o;
-      if (itr.hasNext()) {
-        String s = (String) itr.next();
-        String[] splits = s.split(",");
-        if (features == splits.length) {
-          for (int i = 0; i < splits.length; i++) {
-            this.dataPointsLocal[i] = Double.parseDouble(splits[i]);
-          }
-        } else {
-          LOG.severe(String.format("The weight vector and feature size doesn't match"));
-        }
-      }
-      context.writeEnd(getEdgeName(), dataPointsLocal);
-    } else {
-      LOG.info(String.format("Something Went Wrong <Null Message>"));
+    List<String> values = new ArrayList<>();
+    while (((Iterator) message.getContent()).hasNext()) {
+      values.add(String.valueOf(((Iterator) message.getContent()).next()));
     }
-
+    dataPointsLocal = new double[values.size()][this.features];
+    String line;
+    for (int i = 0; i < values.size(); i++) {
+      line = values.get(i);
+      String[] data = line.split(",");
+      for (int j = 0; j < this.features; j++) {
+        this.dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
+      }
+      context.write(getEdgeName(), this.dataPointsLocal);
+    }
+    context.end(getEdgeName());
     return true;
   }
 }

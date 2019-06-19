@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.data;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.Collector;
@@ -22,15 +24,18 @@ import edu.iu.dsc.tws.task.api.BaseSink;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
 
-public class IterativeSVMDataObjectDirectSink extends BaseSink implements Collector {
+public class IterativeSVMPrimaryDataObjectDirectSink extends BaseSink implements Collector {
 
-  private static final Logger LOG = Logger.getLogger(IterativeSVMDataObjectDirectSink.class
+  private static final Logger LOG = Logger.getLogger(IterativeSVMPrimaryDataObjectDirectSink.class
       .getName());
 
   private static final long serialVersionUID = -1L;
 
-  private double[] dataPointsLocal;
+  private double[][] dataPointsLocal;
 
+  /**
+   * This method add the received message from the DataObject Source into the data objects.
+   */
   @Override
   public DataPartition<?> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
@@ -38,9 +43,14 @@ public class IterativeSVMDataObjectDirectSink extends BaseSink implements Collec
 
   @Override
   public boolean execute(IMessage message) {
-    Object o = message.getContent();
-    Iterator itr = (Iterator) o;
-    dataPointsLocal = (double[]) itr.next();
+    List<double[][]> values = new ArrayList<>();
+    while (((Iterator) message.getContent()).hasNext()) {
+      values.add((double[][]) ((Iterator) message.getContent()).next());
+    }
+    dataPointsLocal = new double[values.size()][];
+    for (double[][] value : values) {
+      dataPointsLocal = value;
+    }
     return true;
   }
 

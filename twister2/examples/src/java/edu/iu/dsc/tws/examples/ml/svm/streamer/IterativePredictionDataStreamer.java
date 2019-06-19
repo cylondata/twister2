@@ -46,8 +46,6 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
 
   private double[][] weightVector = null;
 
-  private double[][] computedWeightVector = new double[1][];
-
   private PegasosSgdSvm pegasosSgdSvm = null;
 
   private boolean debug = false;
