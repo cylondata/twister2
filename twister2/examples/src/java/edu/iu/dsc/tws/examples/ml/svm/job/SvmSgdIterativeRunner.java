@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeWeightVectorReduceFunct
 import edu.iu.dsc.tws.examples.ml.svm.config.DataPartitionType;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.IterativeSVMConstants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.data.DataPartitioner;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectDirectSink;
@@ -50,11 +51,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   private static final Logger LOG = Logger.getLogger(SvmSgdIterativeRunner.class.getName());
 
-
-
   private static final String DELIMITER = ",";
-  private static final double NANO_TO_SEC = 1000000000;
-  private static final double B2MB = 1024.0 * 1024.0;
   private int dataStreamerParallelism = 4;
   private int svmComputeParallelism = 4;
   private int features = 10;
@@ -77,13 +74,39 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private DataObject<double[][]> testingDoubleDataPointObject;
   private DataObject<double[]> inputDoubleWeightvectorObject;
   private DataObject<Double> finalAccuracyDoubleObject;
-  private double dataLoadingTime = 0;
-  private double trainingTime = 0;
-  private double testingTime = 0;
-  private double accuracy = 0;
+  private long initializingTime = 0L;
+  private long dataLoadingTime = 0L;
+  private long trainingTime = 0L;
+  private long testingTime = 0L;
+  private double initializingDTime = 0L;
+  private double dataLoadingDTime = 0L;
+  private double trainingDTime = 0L;
+  private double testingDTime = 0L;
+  private double totalDTime = 0L;
+  private double accuracy = 0L;
   private boolean debug = false;
   private String experimentName = "";
 
+
+  @Override
+  public void execute() {
+    // method 1
+//    initializeParameters();
+//    testDataPartitionLogic();
+//    loadWeightVector();
+//    loadTrainingData();
+//    loadTestingData();
+//    runTrainingGraph();
+//    runPredictionGraph();
+//    generateSummary();
+
+    // method 2
+    this.initialize()
+        .loadData()
+        .train()
+        .predict()
+        .summary();
+  }
 
   /**
    * This method initializes the parameters in running SVM
@@ -110,39 +133,54 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   /**
    * *******************************************************************************************
-   * Start: initializing test execution
+   * Start
    * *******************************************************************************************
    */
 
   public SvmSgdIterativeRunner initialize() {
+    long t1 = System.nanoTime();
     initializeParameters();
+    this.initializingTime = System.nanoTime() - t1;
     return this;
   }
 
   public SvmSgdIterativeRunner loadData() {
+    long t1 = System.nanoTime();
     loadTrainingData();
     loadTestingData();
+    this.dataLoadingTime = System.nanoTime() - t1;
     return this;
   }
 
   public SvmSgdIterativeRunner withWeightVector() {
+    long t1 = System.nanoTime();
     loadWeightVector();
+    this.dataLoadingTime += System.nanoTime() - t1;
     return this;
   }
 
   public SvmSgdIterativeRunner train() {
     withWeightVector();
+    long t1 = System.nanoTime();
     runTrainingGraph();
+    this.trainingTime = System.nanoTime() - t1;
     return this;
   }
 
   public SvmSgdIterativeRunner predict() {
+    long t1 = System.nanoTime();
     runPredictionGraph();
+    this.testingTime = System.nanoTime() - t1;
+    return this;
+  }
+
+  public SvmSgdIterativeRunner summary() {
+    generateSummary();
     return this;
   }
 
   // TODO: Bundle this with the data partition logic in data API
-  public void testDataPartitionLogic() {
+  private void testDataPartitionLogic() {
     HashMap<Integer, Integer> mapOfTaskIndexAndDatapoints = new DataPartitioner()
         .withParallelism(this.dataStreamerParallelism)
         .withSamples(this.svmJobParameters.getSamples())
@@ -154,7 +192,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     LOG.info(String.format("Map Info : %s", mapOfTaskIndexAndDatapoints.toString()));
   }
 
-  public void loadWeightVector() {
+  private void loadWeightVector() {
     weightVectorTaskGraph = buildWeightVectorTG();
     weightVectorExecutionPlan = taskExecutor.plan(weightVectorTaskGraph);
     taskExecutor.execute(weightVectorTaskGraph, weightVectorExecutionPlan);
@@ -184,7 +222,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     }
   }
 
-  public void loadTestingData() {
+  private void loadTestingData() {
     DataFlowTaskGraph testingDatapointsTaskGraph = buildTestingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(testingDatapointsTaskGraph);
     taskExecutor.execute(testingDatapointsTaskGraph, datapointsExecutionPlan);
@@ -204,7 +242,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   }
 
-  public DataFlowTaskGraph buildTrainingDataPointsTG() {
+  private DataFlowTaskGraph buildTrainingDataPointsTG() {
     return generateGenericDataPointLoader(this.svmJobParameters.getSamples(),
         this.dataStreamerParallelism, this.svmJobParameters.getFeatures(),
         this.svmJobParameters.getTrainingDataDir(),
@@ -215,7 +253,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   }
 
-  public DataFlowTaskGraph buildTestingDataPointsTG() {
+  private DataFlowTaskGraph buildTestingDataPointsTG() {
     return generateGenericDataPointLoader(this.svmJobParameters.getTestingSamples(),
         this.dataStreamerParallelism, this.svmJobParameters.getFeatures(),
         this.svmJobParameters.getTestingDataDir(),
@@ -226,13 +264,13 @@ public class SvmSgdIterativeRunner extends TaskWorker {
 
   }
 
-  public DataFlowTaskGraph generateGenericDataPointLoader(int samples, int parallelism,
-                                                          int numOfFeatures,
-                                                          String dataSourcePathStr,
-                                                          String dataObjectSourceStr,
-                                                          String dataObjectComputeStr,
-                                                          String dataObjectSinkStr,
-                                                          String graphName) {
+  private DataFlowTaskGraph generateGenericDataPointLoader(int samples, int parallelism,
+                                                           int numOfFeatures,
+                                                           String dataSourcePathStr,
+                                                           String dataObjectSourceStr,
+                                                           String dataObjectComputeStr,
+                                                           String dataObjectSinkStr,
+                                                           String graphName) {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataSourcePathStr);
@@ -266,7 +304,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
 
-  public DataFlowTaskGraph buildWeightVectorTG() {
+  private DataFlowTaskGraph buildWeightVectorTG() {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
         this.svmJobParameters.getWeightVectorDataDir());
@@ -300,7 +338,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     return weightVectorTaskGraphBuilder.build();
   }
 
-  public void runTrainingGraph() {
+  private void runTrainingGraph() {
     iterativeSVMTrainingTaskGraph = buildSvmSgdIterativeTrainingTG();
     iterativeSVMTrainingExecutionPlan = taskExecutor.plan(iterativeSVMTrainingTaskGraph);
 
@@ -323,7 +361,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     taskExecutor.waitFor(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
   }
 
-  public DataFlowTaskGraph buildSvmSgdIterativeTrainingTG() {
+  private DataFlowTaskGraph buildSvmSgdIterativeTrainingTG() {
     iterativeDataStream = new IterativeDataStream(this.svmJobParameters.getFeatures(),
         this.operationMode, this.svmJobParameters.isDummy(), this.binaryBatchModel);
     iterativeSVMRiterativeSVMWeightVectorReduce
@@ -347,7 +385,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     return trainingBuilder.build();
   }
 
-  public void runPredictionGraph() {
+  private void runPredictionGraph() {
     iterativeSVMTestingTaskGraph = buildSvmSgdTestingTG();
     iterativeSVMTestingExecutionPlan = taskExecutor.plan(iterativeSVMTestingTaskGraph);
 
@@ -363,10 +401,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK);
     accuracy = finalAccuracyDoubleObject.getPartitions()[0].getConsumer().next();
     LOG.info(String.format("Final Accuracy : %f ", accuracy));
-
   }
 
-  public DataFlowTaskGraph buildSvmSgdTestingTG() {
+  private DataFlowTaskGraph buildSvmSgdTestingTG() {
     iterativePredictionDataStreamer
         = new IterativePredictionDataStreamer(this.svmJobParameters.getFeatures(),
         this.operationMode, this.svmJobParameters.isDummy(), this.binaryBatchModel);
@@ -389,27 +426,36 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     return testingBuilder.build();
   }
 
+  private void generateSummary() {
+    convert2Seconds();
+    totalDTime = initializingDTime + dataLoadingDTime + trainingDTime + testingDTime;
+    String s = "\n\n";
+    s += "======================================================================================\n";
+    s += "\t\t\tIterative SVM Task Summary : [" + this.experimentName + "]\n";
+    s += "======================================================================================\n";
+    s += "Training Dataset [" + this.svmJobParameters.getTrainingDataDir() + "] \n";
+    s += "Testing  Dataset [" + this.svmJobParameters.getTestingDataDir() + "] \n";
+    s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
+        dataLoadingDTime) + "  s \n";
+    s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingDTime) + "  s \n";
+    s += "Testing Time  \t\t\t\t\t\t\t= " + String.format("%3.9f", testingDTime) + "  s \n";
+    s += "Total Time (Data Loading Time + Training Time + Testing Time) \t="
+        + String.format(" %.9f", totalDTime) + "  s \n";
+    s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
+    s += "======================================================================================\n";
+    LOG.info(String.format(s));
+  }
+
+  private void convert2Seconds() {
+    this.initializingDTime = this.initializingTime / TimingConstants.NANO_TO_SEC;
+    this.dataLoadingDTime = this.dataLoadingTime / TimingConstants.NANO_TO_SEC;
+    this.trainingDTime = this.trainingTime / TimingConstants.NANO_TO_SEC;
+    this.testingDTime = this.testingTime / TimingConstants.NANO_TO_SEC;
+  }
+
   /**
    * *******************************************************************************************
-   * END : initializing test execution
+   * END
    * *******************************************************************************************
    */
-
-
-
-  @Override
-  public void execute() {
-    //method 1
-//    initializeParameters();
-//    testDataPartitionLogic();
-//    loadWeightVector();
-//    loadTrainingData();
-//    loadTestingData();
-//    runTrainingGraph();
-//    runPredictionGraph();
-    this.initialize()
-        .loadData()
-        .train()
-        .predict();
-  }
 }
