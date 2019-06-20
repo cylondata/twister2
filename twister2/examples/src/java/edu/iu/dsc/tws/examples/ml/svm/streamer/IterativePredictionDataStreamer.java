@@ -9,16 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.streamer;
 
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Receptor;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IReceptor;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
 import edu.iu.dsc.tws.examples.ml.svm.test.Predict;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
@@ -26,7 +38,9 @@ import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class IterativePredictionDataStreamer extends BaseSource implements Receptor {
+public class IterativePredictionDataStreamer extends BaseSource implements IReceptor<Double> {
+  private static final long serialVersionUID = -5619263102396811849L;
+
   private static final Logger LOG = Logger.getLogger(IterativePredictionDataStreamer.class
       .getName());
 
@@ -38,19 +52,19 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
 
   private BinaryBatchModel binaryBatchModel;
 
-  private DataObject<?> dataPointsObject = null;
+  private DataObject<double[][]> dataPointsObject = null;
 
-  private DataObject<?> weightVectorObject = null;
+  private DataObject<double[]> weightVectorObject = null;
 
   private double[][] datapoints = null;
 
-  private double[][] weightVector = null;
+  private double[] weightVector = null;
 
   private PegasosSgdSvm pegasosSgdSvm = null;
 
   private boolean debug = false;
 
-  private double[][] finalAccuracy = new double[1][1];
+  private double finalAccuracy = 0.0;
 
   public IterativePredictionDataStreamer(OperationMode operationMode) {
     this.operationMode = operationMode;
@@ -64,14 +78,13 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
     this.binaryBatchModel = binaryBatchModel;
   }
 
-
   @Override
   public void add(String name, DataObject<?> data) {
     if (Constants.SimpleGraphConfig.TEST_DATA.equals(name)) {
-      this.dataPointsObject = data;
+      this.dataPointsObject = (DataObject<double[][]>) data;
     }
     if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
-      this.weightVectorObject = data;
+      this.weightVectorObject = (DataObject<double[]>) data;
     }
   }
 
@@ -98,15 +111,15 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
   }
 
   public void getData() {
-    DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
-    this.datapoints = (double[][]) dataPartition.getConsumer().next();
-    DataPartition<?> weightVectorPartition = weightVectorObject.getPartitions(context.taskIndex());
-    this.weightVector = (double[][]) weightVectorPartition.getConsumer().next();
+    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    this.datapoints = dataPartition.getConsumer().next();
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+        .taskIndex());
+    this.weightVector =  weightVectorPartition.getConsumer().next();
 
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
-
 //    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
 //        this.datapoints.length));
 //    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
@@ -115,7 +128,7 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
 
   public void initializeBatchModel() {
     this.initializeBinaryModel(this.datapoints);
-    this.binaryBatchModel.setW(this.weightVector[0]);
+    this.binaryBatchModel.setW(this.weightVector);
 //    LOG.info(String.format("Features in X : %d, Features in W : %d",
 //        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
@@ -157,7 +170,7 @@ public class IterativePredictionDataStreamer extends BaseSource implements Recep
     }
     LOG.info(String.format("Accuracy : %f, Context Id : %d, Weight Vector : %s, Data Size : %d",
         accuracy, context.taskIndex(), Arrays.toString(w), x.length));
-    finalAccuracy[0][0] = accuracy / (double) context.getParallelism();
+    finalAccuracy = accuracy / (double) context.getParallelism();
     this.context.write(Constants.SimpleGraphConfig
         .PREDICTION_EDGE, finalAccuracy);
     this.context.end(Constants.SimpleGraphConfig.PREDICTION_EDGE);

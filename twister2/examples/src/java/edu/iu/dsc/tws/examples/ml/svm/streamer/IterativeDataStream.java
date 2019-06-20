@@ -9,30 +9,40 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.streamer;
 
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
+import edu.iu.dsc.tws.examples.ml.svm.integration.test.IReceptor;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class IterativeDataStream extends BaseSource implements Receptor {
-
+public class IterativeDataStream extends BaseSource implements IReceptor<double[][]> {
   private static final Logger LOG = Logger.getLogger(IterativeDataStream.class.getName());
+  private static final long serialVersionUID = 6672551932831677547L;
 
   private final double[] labels = {-1, +1};
   private int features = 10;
@@ -42,15 +52,15 @@ public class IterativeDataStream extends BaseSource implements Receptor {
 
   private BinaryBatchModel binaryBatchModel;
 
-  private DataObject<?> dataPointsObject = null;
+  private DataObject<double[][]> dataPointsObject = null;
 
-  private DataObject<?> weightVectorObject = null;
+  private DataObject<double[]> weightVectorObject = null;
 
   private double[][] datapoints = null;
 
-  private double[][] weightVector = null;
+  private double[] weightVector = null;
 
-  private double[][] computedWeightVector = new double[1][];
+  private double[] computedWeightVector = null;
 
   private PegasosSgdSvm pegasosSgdSvm = null;
 
@@ -73,10 +83,6 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     this.binaryBatchModel = binaryBatchModel;
   }
 
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
-  }
 
   @Override
   public void add(String name, DataObject<?> data) {
@@ -85,11 +91,11 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     }
 
     if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
-      this.dataPointsObject = data;
+      this.dataPointsObject = (DataObject<double[][]>) data;
     }
 
     if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
-      this.weightVectorObject = data;
+      this.weightVectorObject = (DataObject<double[]>) data;
     }
   }
 
@@ -107,10 +113,11 @@ public class IterativeDataStream extends BaseSource implements Receptor {
   }
 
   public void getData() {
-    DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
-    this.datapoints = (double[][]) dataPartition.getConsumer().next();
-    DataPartition<?> weightVectorPartition = weightVectorObject.getPartitions(context.taskIndex());
-    this.weightVector = (double[][]) weightVectorPartition.getConsumer().next();
+    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    this.datapoints = dataPartition.getConsumer().next();
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+        .taskIndex());
+    this.weightVector = weightVectorPartition.getConsumer().next();
 
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
@@ -182,7 +189,7 @@ public class IterativeDataStream extends BaseSource implements Receptor {
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
-    computedWeightVector[0] = DataUtils.average(pegasosSgdSvm.getW(), context.getParallelism());
+    computedWeightVector = DataUtils.average(pegasosSgdSvm.getW(), context.getParallelism());
   }
 
   /**
@@ -191,7 +198,7 @@ public class IterativeDataStream extends BaseSource implements Receptor {
    */
   public void initializeBatchMode() {
     this.initializeBinaryModel(this.datapoints);
-    this.binaryBatchModel.setW(this.weightVector[0]);
+    this.binaryBatchModel.setW(this.weightVector);
     LOG.info(String.format("Features in X : %d, Features in W : %d",
         this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
