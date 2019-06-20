@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -29,7 +30,9 @@ import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeTrainingReduce;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeSVMCompute;
+import edu.iu.dsc.tws.examples.ml.svm.config.DataPartitionType;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.data.DataPartitioner;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMPrimaryWeightVectorObjectCompute;
@@ -125,6 +128,16 @@ public class SvmSgdIterativeRunner extends TaskWorker {
    * *******************************************************************************************
    */
 
+  public void testDataPartitionLogic() {
+    HashMap<Integer, Integer> mapOfTaskIndexAndDatapoints = new DataPartitioner()
+        .withParallelism(this.dataStreamerParallelism)
+        .withSamples(this.svmJobParameters.getParallelism())
+        .withPartitionType(DataPartitionType.DEFAULT)
+        .withImbalancePartitionId(1)
+        .partition()
+        .getDataPartitionMap();
+  }
+
   public void testGenericWeightVectorLoad() {
     weightVectorTaskGraph = buildTestWeightVectorTG();
     weightVectorExecutionPlan = taskExecutor.plan(weightVectorTaskGraph);
@@ -136,7 +149,6 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }
 
-  // TODO : note the size of the datapoint array [samples/parallelism or samples] ???
   public void testGenericTrainingDataLoad() {
     DataFlowTaskGraph trainingDatapointsTaskGraph = buildTestGenricTrainingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(trainingDatapointsTaskGraph);
