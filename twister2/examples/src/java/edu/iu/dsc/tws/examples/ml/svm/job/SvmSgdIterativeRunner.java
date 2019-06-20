@@ -81,6 +81,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private IterativeSVMReduce iterativeSVMReduce;
   private DataObject<Object> trainingDataPointObject;
   private DataObject<double[][]> trainingDoubleDataPointObject;
+  private DataObject<double[][]> testingDoubleDataPointObject;
   private DataObject<Object> inputweightvectorObject;
   private DataObject<double[]> inputDoubleWeightvectorObject;
   private DataObject<double[][]> finalAccuracyObject;
@@ -168,19 +169,23 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   public void testGenericTestingDataLoad() {
-    DataFlowTaskGraph testingDatapointsTaskGraph = buildTestGenericTrainingDataPointsTG();
+    DataFlowTaskGraph testingDatapointsTaskGraph = buildTestTestingDataPointsTG();
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(testingDatapointsTaskGraph);
     taskExecutor.execute(testingDatapointsTaskGraph, datapointsExecutionPlan);
-    trainingDoubleDataPointObject = taskExecutor
+    testingDoubleDataPointObject = taskExecutor
         .getOutput(testingDatapointsTaskGraph, datapointsExecutionPlan,
-            Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+            Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING);
 
-    double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[0].getConsumer().next();
-    LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0].length));
-    int randomIndex = new Random()
-        .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
-    LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
-        .toString(datapoints[randomIndex])));
+    for (int i = 0; i < testingDoubleDataPointObject.getPartitions().length; i++) {
+      double[][] datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
+      LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
+          datapoints[0].length));
+      int randomIndex = new Random()
+          .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
+      LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
+          .toString(datapoints[randomIndex])));
+    }
+
   }
 
   public DataFlowTaskGraph buildTestGenericTrainingDataPointsTG() {
@@ -216,42 +221,50 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   public DataFlowTaskGraph buildTestTestingDataPointsTG() {
+    return generateGenericDataPointLoader(this.svmJobParameters.getTestingSamples(),
+        this.dataStreamerParallelism, this.svmJobParameters.getFeatures(),
+        this.svmJobParameters.getTestingDataDir(),
+        Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING,
+        Constants.SimpleGraphConfig.DATA_OBJECT_COMPUTE_TESTING,
+        Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING);
+
+  }
+
+  public DataFlowTaskGraph generateGenericDataPointLoader(int samples, int parallelism,
+                                                          int numOfFeatures,
+                                                          String dataSourcePathStr,
+                                                          String dataObjectSourceStr,
+                                                          String dataObjectComputeStr,
+                                                          String dataObjectSinkStr) {
     SVMDataObjectSource sourceTask = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        this.svmJobParameters.getTestingDataDir());
+        dataSourcePathStr);
     IterativeSVMDataObjectCompute1 dataObjectCompute
-        = new IterativeSVMDataObjectCompute1(Context.TWISTER2_DIRECT_EDGE, dataStreamerParallelism,
-        this.svmJobParameters.getSamples(), this.svmJobParameters.getFeatures(), DELIMITER);
+        = new IterativeSVMDataObjectCompute1(Context.TWISTER2_DIRECT_EDGE, parallelism,
+        samples, numOfFeatures, DELIMITER);
     IterativeSVMDataObjectDirectSink1 iterativeSVMPrimaryDataObjectDirectSink
         = new IterativeSVMDataObjectDirectSink1();
     TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    datapointsTaskGraphBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING,
+    datapointsTaskGraphBuilder.addSource(dataObjectSourceStr,
         sourceTask,
-        dataStreamerParallelism);
+        parallelism);
     ComputeConnection datapointComputeConnection
-        = datapointsTaskGraphBuilder.addCompute(Constants.SimpleGraphConfig
-            .DATA_OBJECT_COMPUTE_TESTING,
-        dataObjectCompute, dataStreamerParallelism);
+        = datapointsTaskGraphBuilder.addCompute(dataObjectComputeStr,
+        dataObjectCompute, parallelism);
     ComputeConnection computeConnectionSink = datapointsTaskGraphBuilder
-        .addSink(Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING,
+        .addSink(dataObjectSinkStr,
             iterativeSVMPrimaryDataObjectDirectSink,
-            dataStreamerParallelism);
-    datapointComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING)
+            parallelism);
+    datapointComputeConnection.direct(dataObjectSourceStr)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    computeConnectionSink.direct(Constants.SimpleGraphConfig.DATA_OBJECT_COMPUTE_TESTING)
+    computeConnectionSink.direct(dataObjectComputeStr)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     datapointsTaskGraphBuilder.setMode(this.operationMode);
 
-    datapointsTaskGraphBuilder.setTaskGraphName("testingDatapointsTG");
+    datapointsTaskGraphBuilder.setTaskGraphName("test-testingDatapointsTG");
     //Build the first taskgraph
     return datapointsTaskGraphBuilder.build();
-
-  }
-
-  public DataFlowTaskGraph generateGenericDataPointLoader() {
-
-    return null;
   }
 
 
@@ -552,8 +565,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   public void execute() {
     initializeParameters();
     //initializeExecute();
-    testGenericWeightVectorLoad();
+    //testGenericWeightVectorLoad();
     //testGenericTrainingDataLoad();
+    testGenericTestingDataLoad();
     //testDataPartitionLogic();
   }
 }
