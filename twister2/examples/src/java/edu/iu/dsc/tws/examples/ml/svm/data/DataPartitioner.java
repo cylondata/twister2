@@ -85,24 +85,24 @@ public class DataPartitioner implements IDataPartitionFunction {
   }
 
   @Override
-  public HashMap<Integer, Integer> getDataDistribution(int parallelism, int samples,
-                                                       DataPartitionType dataPartitionType) {
-    checkData(parallelism, samples);
-    if (dataPartitionType.equals(DataPartitionType.EQUI_LOAD)) {
+  public HashMap<Integer, Integer> getDataDistribution(int par, int count,
+                                                       DataPartitionType partitionType) {
+    checkData(par, count);
+    if (partitionType.equals(DataPartitionType.EQUI_LOAD)) {
       doEquiLoad();
     }
-    if (dataPartitionType.equals(DataPartitionType.WEIGHTED_LOAD)) {
+    if (partitionType.equals(DataPartitionType.WEIGHTED_LOAD)) {
       doWeightedLoad();
     }
-    if (dataPartitionType.equals(DataPartitionType.DEFAULT)) {
+    if (partitionType.equals(DataPartitionType.DEFAULT)) {
       doDefaultLoad();
     }
     return dataPartitionMap;
   }
 
   public void doEquiLoad() {
-    int numOfEquiSizePointsPerPartition = samples / parallelism;
-    int remainder = samples - (numOfEquiSizePointsPerPartition * parallelism);
+    int numOfEquiSizePointsPerPartition = this.samples / this.parallelism;
+    int remainder = this.samples - (numOfEquiSizePointsPerPartition * this.parallelism);
     for (int i = 0; i < this.parallelism; i++) {
       this.dataPartitionMap.put(i, numOfEquiSizePointsPerPartition);
     }
@@ -129,11 +129,11 @@ public class DataPartitioner implements IDataPartitionFunction {
     }
   }
 
-  public void checkData(int parallelism, int samples) {
-    if (samples <= parallelism) {
+  public void checkData(int para, int count) {
+    if (count <= para) {
       LOG.severe(String.format("Warning: Too small dataset"));
     }
-    if (samples == 0 || parallelism == 0) {
+    if (count == 0 || para == 0) {
       throw new RuntimeException("Samples Size or Parallelism is invalid!");
     }
   }

@@ -17,6 +17,6 @@ import edu.iu.dsc.tws.examples.ml.svm.config.DataPartitionType;
 
 public interface IDataPartitionFunction {
 
-  HashMap<Integer,Integer> getDataDistribution(int parallelism, int samples,
-                                               DataPartitionType dataPartitionType);
+  HashMap<Integer, Integer> getDataDistribution(int parallelism, int samples,
+                                                DataPartitionType dataPartitionType);
 }
