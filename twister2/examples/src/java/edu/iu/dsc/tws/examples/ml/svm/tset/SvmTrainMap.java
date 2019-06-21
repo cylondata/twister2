@@ -53,7 +53,8 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
         this.binaryBatchModel.getAlpha(), this.binaryBatchModel.getIterations(),
         this.binaryBatchModel.getFeatures());
     try {
-      this.pegasosSgdSvm.iterativeSgd(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
+      this.pegasosSgdSvm.iterativeTaskSgd(this.binaryBatchModel.getW(),
+          this.binaryBatchModel.getX(),
           this.binaryBatchModel.getY());
     } catch (NullDataSetException e) {
       e.printStackTrace();
