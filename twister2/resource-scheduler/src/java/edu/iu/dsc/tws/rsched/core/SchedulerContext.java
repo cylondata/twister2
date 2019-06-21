@@ -34,6 +34,9 @@ public class SchedulerContext extends Context {
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
+  public static final String JOB_PACKAGE_URL = "twister2.job.package.url";
+  public static final String CORE_PACKAGE_URL = "twister2.core.package.url";
+
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
 
   /**
@@ -109,6 +112,13 @@ public class SchedulerContext extends Context {
 
   public static URI jobPackageUri(Config cfg) {
     return (URI) cfg.get(JOB_PACKAGE_URI);
+  }
+
+  public static String jobPackageUrl(Config cfg) {
+    return cfg.get(JOB_PACKAGE_URL).toString();
+  }
+  public static String corePackageUrl(Config cfg) {
+    return cfg.get(CORE_PACKAGE_URL).toString();
   }
 
   public static String corePackageFileName(Config cfg) {
