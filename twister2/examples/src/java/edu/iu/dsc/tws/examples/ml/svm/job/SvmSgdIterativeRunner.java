@@ -427,6 +427,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   }
 
   private void generateSummary() {
+    double totalMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
+    double maxMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
     convert2Seconds();
     totalDTime = initializingDTime + dataLoadingDTime + trainingDTime + testingDTime;
     String s = "\n\n";
@@ -435,6 +437,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     s += "======================================================================================\n";
     s += "Training Dataset [" + this.svmJobParameters.getTrainingDataDir() + "] \n";
     s += "Testing  Dataset [" + this.svmJobParameters.getTestingDataDir() + "] \n";
+    s += "Total Memory [ " + totalMemory + " MB] \n";
+    s += "Maximum Memory [ " + maxMemory + " MB] \n";
     s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
         dataLoadingDTime) + "  s \n";
     s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingDTime) + "  s \n";

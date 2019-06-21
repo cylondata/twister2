@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.examples.ml.svm.aggregate.SVMReduce;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeSVMCompute;
 import edu.iu.dsc.tws.examples.ml.svm.compute.SVMCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.InputDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.test.PredictionAggregator;
 import edu.iu.dsc.tws.examples.ml.svm.test.PredictionReduceTask;
@@ -507,12 +508,16 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
   }
 
   public void printTaskSummary() {
+    double totalMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
+    double maxMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
     String s = "\n\n";
     s += "======================================================================================\n";
     s += "\t\t\tSVM Task Summary : [" + this.experimentName + "]\n";
     s += "======================================================================================\n";
     s += "Training Dataset [" + this.svmJobParameters.getTrainingDataDir() + "] \n";
     s += "Testing  Dataset [" + this.svmJobParameters.getTestingDataDir() + "] \n";
+    s += "Total Memory [ " + totalMemory + " MB] \n";
+    s += "Maximum Memory [ " + maxMemory + " MB] \n";
     s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
         dataLoadingTime) + "  s \n";
     s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingTime) + "  s \n";

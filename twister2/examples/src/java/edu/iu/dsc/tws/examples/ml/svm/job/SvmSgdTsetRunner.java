@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.examples.ml.svm.tset.AccuracyAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.DataLoadingTask;
 import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTestMap;
 import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTrainMap;
+import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorLoad;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
@@ -52,9 +54,15 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
   private CachedTSet<double[]> trainedWeightVector;
   private CachedTSet<double[][]> trainingData;
   private CachedTSet<double[][]> testingData;
-  private double dataLoadingTime = 0;
-  private double trainingTime = 0;
-  private double testingTime = 0;
+  private long dataLoadingTime = 0L;
+  private long initializingTime = 0L;
+  private double initializingDTime = 0;
+  private long trainingTime = 0L;
+  private long testingTime = 0L;
+  private double dataLoadingDTime = 0L;
+  private double trainingDTime = 0L;
+  private double testingDTime = 0L;
+  private double totalTime = 0;
   private double accuracy = 0;
   private boolean debug = false;
   private String experimentName = "";
@@ -62,20 +70,31 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 
   private boolean testStatus = false;
 
+  private void executeAll() {
+    this
+        .initialize()
+        .loadData()
+        .train()
+        .predict()
+        .summary()
+        .save();
+  }
 
   @Override
   public void execute(TwisterBatchContext tc) {
     this.twisterBatchContext = tc;
-    initializeParameters();
-    trainingData = loadTrainingData();
-    testingData = loadTestingData();
-    trainedWeightVector = loadWeightVector();
-    TSetUtils.printCachedTset(trainedWeightVector, new IPrintFunction<double[]>() {
-      @Override
-      public void print(double[] doubles) {
-        System.out.println(Arrays.toString(doubles));
-      }
-    });
+//    Method 1
+//    initializeParameters();
+//    trainingData = loadTrainingData();
+//    testingData = loadTestingData();
+//    trainedWeightVector = loadWeightVector();
+//    TSetUtils.printCachedTset(trainedWeightVector,
+//        doubles -> System.out.println(Arrays.toString(doubles)));
+//    executeTraining();
+//    executePredict();
+
+//    Method 2
+    executeAll();
 
   }
 
@@ -120,95 +139,108 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     return weightVector;
   }
 
-  private void executeTrain() {
+  private void executeTraining() {
     long time = System.nanoTime();
-//    for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
-//
-//    }
-    IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
-        .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
-
-    AllReduceTLink<double[]> allReduceTLink = svmTrainTset.allReduce((t1, t2) -> {
-      double[] w1 = new double[t1.length];
-      try {
-        w1 = Matrix.add(t1, t2);
-      } catch (MatrixMultiplicationException e) {
-        e.printStackTrace();
+    this.binaryBatchModel.setW(this.trainedWeightVector.getPartitionData(0));
+    for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
+      LOG.info(String.format("Iteration %d", i));
+      IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
+          .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
+      svmTrainTset.addInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, trainedWeightVector);
+      AllReduceTLink<double[]> reduceTLink = svmTrainTset.allReduce((t1, t2) -> {
+        double[] newWeightVector = new double[t1.length];
+        try {
+          newWeightVector = Matrix.add(t1, t2);
+        } catch (MatrixMultiplicationException e) {
+          e.printStackTrace();
+        }
+        return newWeightVector;
+      });
+      trainedWeightVector = reduceTLink
+          .map(new WeightVectorAverager(this.dataStreamerParallelism),
+              this.dataStreamerParallelism)
+          .cache();
+      //TODO : Think
+      // TDirectLink is not serializable or any of the super classes are not serializable
+      // so this is hard to do without that support. Config class is also not serializable
+//      trainedWeightVector = reduceTLink
+//          .map((MapFunction<double[], double[]> & Serializable)
+//              doubles -> Matrix.scalarDivide(doubles, (double) dataStreamerParallelism),
+//              dataStreamerParallelism)
+//          .cache();
+    }
+    this.trainingTime = System.nanoTime() - time;
+    TSetUtils.printCachedTset(trainedWeightVector, new IPrintFunction<double[]>() {
+      @Override
+      public void print(double[] doubles) {
+        System.out.println(Arrays.toString(doubles));
       }
-      return w1;
     });
-    // sink must be there to execute the Map task
-    allReduceTLink.sink(value -> {
-      return true;
-    }, this.svmJobParameters.getParallelism());
-
-
-    this.trainingTime = ((double) (System.nanoTime() - time)) / TimingConstants.NANO_TO_SEC;
-//    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d => Array Size : [%d,%d]",
-//        this.workerId,
-//        trainingData.getData().size(), trainingData.getData().get(0).length,
-//        trainingData.getData().get(0)[0].length));
-    // TODO :: Handle the worker 0 senario for getOutput
-    LOG.info(String.format("Rank[%d][%d] Total Memory %f MB, Max Memory %f MB, Training Completed! "
-            + "=> Data Loading Time %f , Training Time : %f ", workerId,
-        trainingData.getData().get(0).length,
-        ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB,
-        ((double) Runtime.getRuntime().maxMemory()) / TimingConstants.B2MB, dataLoadingTime,
-        trainingTime));
   }
 
   private void executeSummary() {
     if (workerId == 0) {
-//      CachedTSet<double[]> finalW = reduceTLink
-//          .map(new ModelAverager(this.svmJobParameters.getParallelism())).cache();
-//      double[] wFinal = finalW.getData().get(0);
-//      this.binaryBatchModel.setW(wFinal);
-//
-//      LOG.info(String.format("Data : %s", Arrays.toString(wFinal)));
-      try {
-        saveResults();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      generateSummary();
     }
   }
 
   private void executePredict() {
-    if (testStatus) {
-      IterableMapTSet<double[][], Double> svmTestTset = testingData
-          .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
-      ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
-        double t = t1 + t2;
-        return t;
-      });
-      CachedTSet<Double> finalAcc = reduceTestLink
-          .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
-      double acc = finalAcc.getData().get(0);
-      LOG.info(String.format("Training Accuracy : %f ", acc));
-    }
+    assert this.trainedWeightVector.getPartitionData(0) != null : "Partition is null";
+    this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0));
+    IterableMapTSet<double[][], Double> svmTestTset = testingData
+        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
+      double t = t1 + t2;
+      return t;
+    });
+    CachedTSet<Double> finalAcc = reduceTestLink
+        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+    accuracy = finalAcc.getData().get(0);
+    LOG.info(String.format("Training Accuracy : %f ", accuracy));
   }
 
+  private SvmSgdTsetRunner initialize() {
+    long t1 = System.nanoTime();
+    initializeParameters();
+    this.initializingTime = System.nanoTime() - t1;
+    return this;
+  }
 
   private SvmSgdTsetRunner train() {
-
+    long t1 = System.nanoTime();
+    executeTraining();
+    this.trainingTime = System.nanoTime() - t1;
     return this;
   }
 
   private SvmSgdTsetRunner predict() {
-
+    long t1 = System.nanoTime();
+    executePredict();
+    this.testingTime = System.nanoTime() - t1;
     return this;
   }
 
   private SvmSgdTsetRunner summary() {
-
+    executeSummary();
     return this;
   }
 
 
   private SvmSgdTsetRunner loadData() {
+    long t1 = System.nanoTime();
     trainingData = loadTrainingData();
     testingData = loadTestingData();
     trainedWeightVector = loadWeightVector();
+    this.dataLoadingTime = System.nanoTime() - t1;
+    return this;
+  }
+
+  private SvmSgdTsetRunner save() {
+    try {
+      saveResults();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     return this;
   }
 
@@ -220,11 +252,34 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
     resultsSaver.save();
   }
 
-  private void executeAll() {
-    this
-        .loadData()
-        .train()
-        .predict()
-        .summary();
+  private void generateSummary() {
+    convert2Seconds();
+    totalTime = initializingDTime + dataLoadingDTime + trainingDTime + testingDTime;
+    double totalMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
+    double maxMemory = ((double) Runtime.getRuntime().totalMemory()) / TimingConstants.B2MB;
+    String s = "\n\n";
+    s += "======================================================================================\n";
+    s += "\t\t\tIterative SVM Task Summary : [" + this.experimentName + "]\n";
+    s += "======================================================================================\n";
+    s += "Training Dataset [" + this.svmJobParameters.getTrainingDataDir() + "] \n";
+    s += "Testing  Dataset [" + this.svmJobParameters.getTestingDataDir() + "] \n";
+    s += "Total Memory [ " + totalMemory + " MB] \n";
+    s += "Maximum Memory [ " + maxMemory + " MB] \n";
+    s += "Data Loading Time (Training + Testing) \t\t\t\t= " + String.format("%3.9f",
+        dataLoadingDTime) + "  s \n";
+    s += "Training Time \t\t\t\t\t\t\t= " + String.format("%3.9f", trainingDTime) + "  s \n";
+    s += "Testing Time  \t\t\t\t\t\t\t= " + String.format("%3.9f", testingDTime) + "  s \n";
+    s += "Total Time (Data Loading Time + Training Time + Testing Time) \t="
+        + String.format(" %.9f", totalTime) + "  s \n";
+    s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
+    s += "======================================================================================\n";
+    LOG.info(String.format(s));
+  }
+
+  private void convert2Seconds() {
+    this.initializingDTime = this.initializingTime / TimingConstants.NANO_TO_SEC;
+    this.dataLoadingDTime = this.dataLoadingTime / TimingConstants.NANO_TO_SEC;
+    this.trainingDTime = this.trainingTime / TimingConstants.NANO_TO_SEC;
+    this.testingDTime = this.testingTime / TimingConstants.NANO_TO_SEC;
   }
 }
