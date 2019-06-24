@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public abstract class TSetBatchWorker extends TaskWorker implements Serializable {
 

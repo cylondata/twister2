@@ -23,8 +23,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.squareup.okhttp.Response;
 
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
 
 import io.kubernetes.client.ApiClient;

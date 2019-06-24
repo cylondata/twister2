@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.comms.dfw.io.gather;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 
 public class GatherBatchFinalReceiver extends BaseGatherBatchReceiver {

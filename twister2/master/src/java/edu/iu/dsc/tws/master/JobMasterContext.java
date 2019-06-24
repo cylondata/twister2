@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * Configuration parameters for JobMaster

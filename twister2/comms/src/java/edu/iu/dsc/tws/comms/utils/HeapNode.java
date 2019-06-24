@@ -25,7 +25,7 @@ package edu.iu.dsc.tws.comms.utils;
 
 import java.util.Comparator;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 public class HeapNode<K, V> implements Comparable<HeapNode<K, V>> {
 

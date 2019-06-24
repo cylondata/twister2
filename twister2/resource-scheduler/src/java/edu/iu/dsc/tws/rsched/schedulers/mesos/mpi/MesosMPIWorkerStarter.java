@@ -17,12 +17,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;

@@ -18,9 +18,9 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.SourceReceiver;
 
 public abstract class ReduceStreamingReceiver extends SourceReceiver {

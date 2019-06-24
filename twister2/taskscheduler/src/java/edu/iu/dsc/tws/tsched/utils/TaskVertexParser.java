@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
 
 /**
  * This class acts as a helper class for the batch task scheduling algorithms to parse the simple

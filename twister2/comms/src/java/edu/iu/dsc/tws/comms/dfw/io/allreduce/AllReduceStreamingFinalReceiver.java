@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allreduce;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingReceiver;

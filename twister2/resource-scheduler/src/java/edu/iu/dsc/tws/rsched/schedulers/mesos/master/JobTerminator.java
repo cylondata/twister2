@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos.master;
 import java.io.File;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosContext;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;

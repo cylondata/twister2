@@ -25,9 +25,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class FSKeyedMergerTest {

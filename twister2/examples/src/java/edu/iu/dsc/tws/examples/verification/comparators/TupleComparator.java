@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.verification.comparators;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.examples.verification.ResultsComparator;
 
 public class TupleComparator<K, V> implements ResultsComparator<Tuple<K, V>> {

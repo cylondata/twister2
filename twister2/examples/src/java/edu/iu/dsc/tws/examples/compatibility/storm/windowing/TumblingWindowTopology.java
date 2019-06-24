@@ -56,10 +56,10 @@ import org.apache.storm.tuple.Values;
 import org.apache.storm.windowing.TupleWindow;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 /**
  * This is an example of count based tumbling windows on Twister2

@@ -13,18 +13,18 @@ package edu.iu.dsc.tws.examples.task;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
 
 public abstract class BenchWindowTaskWorker extends TaskWorker {
 

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 
 public class ReduceStreamingPartialReceiver extends ReduceStreamingReceiver {

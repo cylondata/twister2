@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   private SingularReceiver singularReceiver;

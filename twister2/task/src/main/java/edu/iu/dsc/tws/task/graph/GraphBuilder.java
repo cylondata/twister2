@@ -11,18 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
+import edu.iu.dsc.tws.api.task.nodes.ISource;
 
 /**
  * This class is responsible for building the task graph and the configuration values required for
  * each task in the task graph.
  */
 public final class GraphBuilder {
+
   private DataFlowTaskGraph graph;
 
   private GraphBuilder() {

@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
 
 public final class HadoopDataInputStream extends FSDataInputStream {
 

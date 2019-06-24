@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.data.api;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * Output writer to write a output

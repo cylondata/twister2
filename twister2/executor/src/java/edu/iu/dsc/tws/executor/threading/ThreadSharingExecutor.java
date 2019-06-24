@@ -17,13 +17,13 @@ import java.util.logging.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
-import edu.iu.dsc.tws.executor.api.IExecutor;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.task.executor.IExecution;
+import edu.iu.dsc.tws.api.task.executor.IExecutor;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
 /**
  * Abstract class for thread sharing executors

@@ -31,10 +31,10 @@ import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 
 /**
@@ -137,7 +137,7 @@ public final class WordCountTopology extends Twister2StormWorker {
       parallelism = Integer.parseInt(args[1]);
     }
 
-    edu.iu.dsc.tws.common.config.Config config = ResourceAllocator.loadConfig(
+    edu.iu.dsc.tws.api.config.Config config = ResourceAllocator.loadConfig(
         Collections.emptyMap()
     );
 

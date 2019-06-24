@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
 public class CollectionPartition<T> implements DataPartition<T> {
   private List<T> dataList = new ArrayList<>();

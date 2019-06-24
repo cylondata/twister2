@@ -58,12 +58,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.harp.client.SyncClient;
 import edu.iu.harp.collective.Communication;

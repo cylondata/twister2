@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -37,10 +39,8 @@ import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.api.tset.sink.CacheSink;
 import edu.iu.dsc.tws.api.tset.sources.CacheSource;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   private static final Logger LOG = Logger.getLogger(CachedTSet.class.getName());

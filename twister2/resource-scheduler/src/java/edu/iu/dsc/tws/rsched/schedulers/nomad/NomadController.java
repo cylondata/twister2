@@ -38,10 +38,10 @@ import com.hashicorp.nomad.javasdk.NomadApiConfiguration;
 import com.hashicorp.nomad.javasdk.NomadException;
 import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.IController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class NomadController implements IController {

@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.comms.dfw;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * Read the configuration options

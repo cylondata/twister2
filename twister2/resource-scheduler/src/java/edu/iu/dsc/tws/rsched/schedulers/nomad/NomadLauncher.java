@@ -15,12 +15,12 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.IController;
+import edu.iu.dsc.tws.api.scheduler.ILauncher;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.interfaces.IController;
-import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.master.NomadMasterStarter;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;

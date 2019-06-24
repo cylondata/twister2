@@ -20,15 +20,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.BlockLocation;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.BlockLocation;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * The fixed input partitioner is really useful if the user exactly knows the number of lines
@@ -89,7 +90,7 @@ public abstract class FixedInputPartitioner<OT>
     List<FileStatus> files = new ArrayList<>();
 
     long totalLength = 0;
-    final FileSystem fs = path.getFileSystem(config);
+    final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {
@@ -191,7 +192,7 @@ public abstract class FixedInputPartitioner<OT>
 
   long sumFilesInDir(Path path, List<FileStatus> files, boolean logExcludedFiles)
       throws IOException {
-    final FileSystem fs = path.getFileSystem();
+    final FileSystem fs = FileSystemUtils.get(path);
     long length = 0;
 
     for (FileStatus file : fs.listFiles(path)) {

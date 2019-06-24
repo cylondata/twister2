@@ -13,10 +13,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class TwsKafkaConsumer<T> extends BaseSource {
   private static final long serialVersionUID = -264264120110286748L;

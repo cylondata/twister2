@@ -15,7 +15,7 @@ import java.util.List;
 
 import com.google.protobuf.Any;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**

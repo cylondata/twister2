@@ -12,7 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -28,8 +29,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
   private ReduceFunction<V> reduceFn;

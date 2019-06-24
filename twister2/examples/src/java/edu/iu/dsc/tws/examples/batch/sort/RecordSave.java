@@ -19,9 +19,9 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Ordering;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class RecordSave implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(RecordSave.class.getName());

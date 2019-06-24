@@ -10,18 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
 package org.apache.storm;
 
 import java.util.HashMap;
@@ -33,9 +21,9 @@ import org.apache.storm.generated.StormTopology;
 import org.apache.storm.topology.twister2.Twister2StormWorker;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 /**
  * Use this class to submit storm topologies to run on the twister2 cluster.
@@ -58,7 +46,7 @@ public final class StormSubmitter {
       String name,
       Map stormConfig,
       StormTopology topology) {
-    edu.iu.dsc.tws.common.config.Config config = ResourceAllocator.loadConfig(new HashMap<>());
+    edu.iu.dsc.tws.api.config.Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
