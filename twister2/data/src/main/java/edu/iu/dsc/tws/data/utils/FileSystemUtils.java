@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.ConfigConstants;
+import edu.iu.dsc.tws.api.data.DataConstants;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
@@ -73,7 +73,7 @@ public final class FileSystemUtils {
       if (curUri.getScheme() == null) {
         try {
           if (defaultScheme == null) {
-            defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+            defaultScheme = new URI(DataConstants.DEFAULT_FILESYSTEM_SCHEME);
           }
 
           curUri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
@@ -147,7 +147,7 @@ public final class FileSystemUtils {
       if (curUri.getScheme() == null) {
         try {
           if (defaultScheme == null) {
-            defaultScheme = new URI(ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+            defaultScheme = new URI(DataConstants.DEFAULT_FILESYSTEM_SCHEME);
           }
 
           curUri = new URI(defaultScheme.getScheme(), null, defaultScheme.getHost(),
@@ -210,8 +210,8 @@ public final class FileSystemUtils {
   public static void setDefaultScheme(Config config) throws IOException {
     synchronized (SYNCHRONIZATION_OBJECT) {
       if (defaultScheme == null) {
-        String stringifiedUri = config.getStringValue(ConfigConstants.FILESYSTEM_SCHEME,
-            ConfigConstants.DEFAULT_FILESYSTEM_SCHEME);
+        String stringifiedUri = config.getStringValue(DataConstants.FILESYSTEM_SCHEME,
+            DataConstants.DEFAULT_FILESYSTEM_SCHEME);
         try {
           defaultScheme = new URI(stringifiedUri);
         } catch (URISyntaxException e) {

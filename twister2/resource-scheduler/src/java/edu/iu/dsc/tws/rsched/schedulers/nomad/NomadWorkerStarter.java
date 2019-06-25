@@ -28,22 +28,23 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
+//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
 public final class NomadWorkerStarter {
   private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
@@ -104,6 +105,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -228,7 +230,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Create the resource plan
-   * @return
    */
   private IWorkerController createWorkerController() {
     // first get the worker id
@@ -315,6 +316,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Get the ports from the environment variable
+   *
    * @param cfg the configuration
    * @return port name -> port map
    */
@@ -333,6 +335,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */

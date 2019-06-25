@@ -21,31 +21,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.common.examples.utils;
+package edu.iu.dsc.tws.api.data;
 
-public class IntData {
-  private int[] data;
+/**
+ * Class that holds common config constants and there default values
+ */
+public final class DataConstants {
 
-  public IntData(int[] data) {
-    this.data = data;
-  }
+  /**
+   * The default filesystem to be used, if no other scheme is specified in the
+   * user-provided URI (= local filesystem)
+   */
+  public static final String DEFAULT_FILESYSTEM_SCHEME = "file:///";
 
-  public IntData() {
-  }
+  public static final String DEFAULT_HDFS_FILESYSTEM_SCHEME = "hdfs:///";
 
-  public IntData(int size) {
-    int[] d = new int[size];
-    for (int i = 0; i < size; i++) {
-      d[i] = i;
-    }
-    this.data = d;
-  }
 
-  public int[] getData() {
-    return data;
-  }
+  /**
+   * Key to specify the default filesystem to be used by a job. In the case of
+   * <code>file:///</code>, which is the default (see {@link DataConstants#DEFAULT_FILESYSTEM_SCHEME}),
+   * the local filesystem is going to be used to resolve URIs without an explicit scheme.
+   */
+  public static final String FILESYSTEM_SCHEME = "fs.default-scheme";
 
-  public void setData(int[] data) {
-    this.data = data;
+  public static final String HDFS_FILESYSTEM_SCHEME = "hdfs.default-scheme";
+
+
+  private DataConstants() {
+
   }
 }
