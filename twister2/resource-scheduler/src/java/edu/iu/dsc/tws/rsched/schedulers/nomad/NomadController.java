@@ -265,6 +265,7 @@ public class NomadController implements IController {
   }
 
   private String[] workerProcessCommand(String workingDirectory, JobAPI.Job job) {
+
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     //String configDirectoryName = Paths.get(workingDirectory,
     //    job.getJobName(), SchedulerContext.clusterType(config)).toString();
@@ -280,6 +281,13 @@ public class NomadController implements IController {
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
+
+    mpiCommand.add(SchedulerContext.jobPackageUrl(config));
+    //mpiCommand.add("http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz");
+    mpiCommand.add(SchedulerContext.corePackageUrl(config));
+    //mpiCommand.add("http://149.165.150.81:8082/twister2/mesos/twister2-core-0.2.2.tar.gz");
+
+
     LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 
     String[] array = new String[mpiCommand.size()];

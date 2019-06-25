@@ -25,15 +25,17 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 
 public class MesosScheduler implements Scheduler {
   public static final Logger LOG = Logger.getLogger(MesosScheduler.class.getName());
   private final String jobName;
+  private final String jobId;
   private int taskIdCounter = 0;
   private Config config;
   private MesosController controller;
@@ -53,7 +55,8 @@ public class MesosScheduler implements Scheduler {
     totalTaskCount = MesosContext.numberOfContainers(config);
     this.job = myJob;
     this.jobName = myJob.getJobName();
-
+    Config configCopy = JobUtils.resolveJobId(config, jobName);
+    this.jobId = configCopy.getStringValue(Context.JOB_ID);
   }
 
   @Override
@@ -176,6 +179,9 @@ public class MesosScheduler implements Scheduler {
               Protos.Parameter computeResourceParam = Protos.Parameter.newBuilder().setKey("env")
                   .setValue("COMPUTE_RESOURCE_INDEX=" + resourceIndex).build();
 
+              Protos.Parameter jobIdParam = Protos.Parameter.newBuilder().setKey("env")
+                  .setValue("JOB_ID=" + jobId).build();
+
               Protos.Parameter classNameParam = null;
 
               Protos.Parameter downloadMethod = Protos.Parameter.newBuilder().setKey("env")
@@ -226,6 +232,7 @@ public class MesosScheduler implements Scheduler {
               dockerInfoBuilder.addParameters(jobNameParam);
               dockerInfoBuilder.addParameters(workerIdParam);
               dockerInfoBuilder.addParameters(computeResourceParam);
+              dockerInfoBuilder.addParameters(jobIdParam);
               dockerInfoBuilder.addParameters(classNameParam);
               dockerInfoBuilder.addParameters(frameworkIdParam);
               dockerInfoBuilder.addParameters(downloadMethod);
