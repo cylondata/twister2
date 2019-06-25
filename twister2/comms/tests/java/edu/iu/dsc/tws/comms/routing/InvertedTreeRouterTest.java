@@ -15,8 +15,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.createTaskPlan;
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.destinations;
 

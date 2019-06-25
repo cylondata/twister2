@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.createTaskPlan;
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.destinations;
 

@@ -20,12 +20,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
