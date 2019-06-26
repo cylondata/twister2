@@ -19,8 +19,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopDataOutputStream;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 import edu.iu.dsc.tws.data.utils.HdfsUtils;

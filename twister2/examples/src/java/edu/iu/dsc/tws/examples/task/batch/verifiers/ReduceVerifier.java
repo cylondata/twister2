@@ -23,11 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch.verifiers;
 
+import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class ReduceVerifier extends ResultsVerifier<int[], int[]> {
 

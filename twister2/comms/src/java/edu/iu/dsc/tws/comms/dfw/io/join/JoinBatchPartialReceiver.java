@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.comms.dfw.io.join;
 import java.util.List;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * Final receiver for partitions in join operations, each Join final receiver forwards the messages

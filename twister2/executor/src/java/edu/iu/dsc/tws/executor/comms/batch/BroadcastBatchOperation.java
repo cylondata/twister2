@@ -15,21 +15,21 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.batch.BBroadcast;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class BroadcastBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(BroadcastBatchOperation.class.getName());
   private BBroadcast op;
 
-  public BroadcastBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public BroadcastBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                                  Set<Integer> sources, Set<Integer> targets, Edge edge) {
     super(config, network, tPlan, edge.getName());
     if (targets.size() == 0) {
@@ -41,7 +41,8 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BBroadcast(newComm, taskPlan, sources.iterator().next(), targets, new BcastReceiver(),
+    op = new BBroadcast(newComm, logicalPlan, sources.iterator().next(), targets,
+        new BcastReceiver(),
         edge.getDataType());
   }
 

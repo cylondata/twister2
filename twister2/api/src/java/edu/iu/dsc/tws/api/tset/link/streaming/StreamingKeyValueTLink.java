@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class StreamingKeyValueTLink<T, K> extends BaseTLink<T> {
   public StreamingKeyValueTLink(Config cfg, TSetEnv tSetEnv) {

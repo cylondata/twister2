@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 /**

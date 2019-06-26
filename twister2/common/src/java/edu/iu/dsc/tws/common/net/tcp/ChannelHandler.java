@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.net.tcp;
 
 import java.nio.channels.SocketChannel;
 
+import edu.iu.dsc.tws.api.net.StatusCode;
+
 /**
  * Listen to channel events
  */

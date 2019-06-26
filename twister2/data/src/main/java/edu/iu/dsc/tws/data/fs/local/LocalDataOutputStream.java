@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
 
 /**
  * The <code>LocalDataOutputStream</code> class is a wrapper class for a data

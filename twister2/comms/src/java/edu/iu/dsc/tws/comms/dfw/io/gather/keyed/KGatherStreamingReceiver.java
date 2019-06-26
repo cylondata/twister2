@@ -18,10 +18,10 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Abstract class that is extended by keyed reduce batch receivers

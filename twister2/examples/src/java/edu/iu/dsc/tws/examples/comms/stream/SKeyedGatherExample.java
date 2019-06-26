@@ -18,12 +18,12 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -54,11 +54,11 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    keyedGather = new SKeyedGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    keyedGather = new SKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.OBJECT, MessageTypes.OBJECT,
         new GatherBulkReceiver(), new LoadBalanceSelector());
 
-    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : sourceTasks) {
       finishedSources.put(t, false);
@@ -67,7 +67,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
 
     LOG.log(Level.INFO, String.format("Worker[%d], Source Tasks %s , Sink Tasks %s",

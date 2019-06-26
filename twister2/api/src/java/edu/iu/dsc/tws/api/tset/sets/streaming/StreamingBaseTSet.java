@@ -27,6 +27,7 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
@@ -41,7 +42,6 @@ import edu.iu.dsc.tws.api.tset.link.streaming.StreamingReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   private static final Logger LOG = Logger.getLogger(StreamingBaseTSet.class.getName());

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 
 /**
  * Keyed reduce partial receiver for streaming  mode

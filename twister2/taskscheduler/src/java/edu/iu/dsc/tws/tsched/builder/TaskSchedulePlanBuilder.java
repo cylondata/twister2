@@ -27,12 +27,12 @@ import java.util.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstanceId;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
 /**
@@ -205,9 +205,9 @@ public class TaskSchedulePlanBuilder {
    */
   public TaskSchedulePlan build() {
     assertResourceSettings();
-    Set<ContainerPlan> containerPlans = buildContainerPlans(
+    Set<WorkerSchedulePlan> workerSchedulePlans = buildContainerPlans(
         this.containers, this.taskRamMap, this.instanceDefaultResourceValue);
-    return new TaskSchedulePlan(id, containerPlans);
+    return new TaskSchedulePlan(id, workerSchedulePlans);
   }
 
   /**
@@ -284,11 +284,11 @@ public class TaskSchedulePlanBuilder {
     }
   }
 
-  private Set<ContainerPlan> buildContainerPlans(Map<Integer, Container> containerValue,
-                                                 Map<String, Double> taskramMap,
-                                                 Resource instdefaultresourcevalue) {
+  private Set<WorkerSchedulePlan> buildContainerPlans(Map<Integer, Container> containerValue,
+                                                      Map<String, Double> taskramMap,
+                                                      Resource instdefaultresourcevalue) {
 
-    Set<ContainerPlan> containerPlans = new LinkedHashSet<>();
+    Set<WorkerSchedulePlan> workerSchedulePlans = new LinkedHashSet<>();
     try {
       for (Integer containerId : containerValue.keySet()) {
         Container container = containerValue.get(containerId);
@@ -303,12 +303,12 @@ public class TaskSchedulePlanBuilder {
 
         for (TaskInstancePlan taskInstancePlan : container.getTaskInstances()) {
 
-          TaskInstanceId instanceId = new TaskInstanceId(taskInstancePlan.getTaskName(),
+          TaskInstanceId taskInstanceId = new TaskInstanceId(taskInstancePlan.getTaskName(),
               taskInstancePlan.getTaskId(), taskInstancePlan.getTaskIndex());
 
           double instanceRAMValue;
-          if (taskramMap.containsKey(instanceId.getTaskName())) {
-            instanceRAMValue = taskramMap.get(instanceId.getTaskName());
+          if (taskramMap.containsKey(taskInstanceId.getTaskName())) {
+            instanceRAMValue = taskramMap.get(taskInstanceId.getTaskName());
           } else {
             instanceRAMValue = instdefaultresourcevalue.getRam();
           }
@@ -324,8 +324,8 @@ public class TaskSchedulePlanBuilder {
               + "Cpu Value:" + containerCPUValue + "\t" + "Disk Value:" + containerDiskValue);
 
           Resource resource = new Resource(instanceRAMValue, instanceDiskValue, instanceCPUValue);
-          taskInstancePlans.add(new TaskInstancePlan(instanceId.getTaskName(),
-              instanceId.getTaskId(), instanceId.getTaskIndex(), resource));
+          taskInstancePlans.add(new TaskInstancePlan(taskInstanceId.getTaskName(),
+              taskInstanceId.getTaskId(), taskInstanceId.getTaskIndex(), resource));
         }
 
         containerCPUValue += (requestedContainerPadding * containerCPUValue) / 100;
@@ -333,14 +333,14 @@ public class TaskSchedulePlanBuilder {
         containerDiskValue += containerDiskValue + requestedContainerPadding;
 
         Resource resource = new Resource(containerRAMValue, containerDiskValue, containerCPUValue);
-        ContainerPlan containerPlan =
-            new ContainerPlan(containerId, taskInstancePlans, resource);
-        containerPlans.add(containerPlan);
+        WorkerSchedulePlan workerSchedulePlan =
+            new WorkerSchedulePlan(containerId, taskInstancePlans, resource);
+        workerSchedulePlans.add(workerSchedulePlan);
       }
     } catch (TaskSchedulerException ne) {
       throw new RuntimeException("Exception Occured" + ne.getMessage());
     }
-    return containerPlans;
+    return workerSchedulePlans;
   }
 
   /**
@@ -351,10 +351,10 @@ public class TaskSchedulePlanBuilder {
 
     Map<Integer, Container> containerMap = new HashMap<>();
     Resource resource = previoustaskschedulePlan.getMaxContainerResources();
-    for (ContainerPlan currentContainerPlan : previoustaskschedulePlan.getContainers()) {
-      Container container = new Container(currentContainerPlan.getContainerId(), resource,
+    for (WorkerSchedulePlan currentWorkerSchedulePlan : previoustaskschedulePlan.getContainers()) {
+      Container container = new Container(currentWorkerSchedulePlan.getContainerId(), resource,
           requestedContainerPadding);
-      for (TaskInstancePlan instancePlan : currentContainerPlan.getTaskInstances()) {
+      for (TaskInstancePlan instancePlan : currentWorkerSchedulePlan.getTaskInstances()) {
         try {
           addToContainer(container, instancePlan, taskIndexes, taskIds);
         } catch (TaskSchedulerException e) {
@@ -363,7 +363,7 @@ public class TaskSchedulePlanBuilder {
               instancePlan, container), e);
         }
       }
-      containerMap.put(currentContainerPlan.getContainerId(), container);
+      containerMap.put(currentWorkerSchedulePlan.getContainerId(), container);
     }
     return containerMap;
   }
@@ -382,10 +382,10 @@ public class TaskSchedulePlanBuilder {
 
     Map<Integer, Container> containerMap = new HashMap<>();
     Resource resource = previoustaskschedulePlan.getMaxContainerResources();
-    for (ContainerPlan currentContainerPlan : previoustaskschedulePlan.getContainers()) {
-      Container container = new Container(currentContainerPlan.getContainerId(), resource,
+    for (WorkerSchedulePlan currentWorkerSchedulePlan : previoustaskschedulePlan.getContainers()) {
+      Container container = new Container(currentWorkerSchedulePlan.getContainerId(), resource,
           containerPadding);
-      for (TaskInstancePlan instancePlan : currentContainerPlan.getTaskInstances()) {
+      for (TaskInstancePlan instancePlan : currentWorkerSchedulePlan.getTaskInstances()) {
         try {
           addToContainer(container, instancePlan, taskindexes, taskids);
         } catch (TaskSchedulerException e) {
@@ -394,7 +394,7 @@ public class TaskSchedulePlanBuilder {
               instancePlan, container), e);
         }
       }
-      containerMap.put(currentContainerPlan.getContainerId(), container);
+      containerMap.put(currentWorkerSchedulePlan.getContainerId(), container);
     }
     return containerMap;
   }

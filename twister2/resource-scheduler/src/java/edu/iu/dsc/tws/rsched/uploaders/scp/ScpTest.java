@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.rsched.uploaders.scp;
 
 import java.net.URI;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 public final class ScpTest {
 

@@ -17,15 +17,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * This class invokes the appropriate task schedulers based on the 'streaming' or 'batch' task types
@@ -127,13 +127,13 @@ public class TaskScheduler implements ITaskScheduler {
     }
 
     if (taskSchedulePlan != null) {
-      Map<Integer, ContainerPlan> containersMap
+      Map<Integer, WorkerSchedulePlan> containersMap
           = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
         Integer integer = entry.getKey();
-        ContainerPlan containerPlan = entry.getValue();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
-            = containerPlan.getTaskInstances();
+            = workerSchedulePlan.getTaskInstances();
         LOG.fine("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
           LOG.fine("Task Id:" + ip.getTaskId()

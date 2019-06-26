@@ -20,12 +20,12 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Iterators;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BJoin;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.batch.BJoin;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
@@ -60,12 +60,13 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
     }
 
     // create the communication
-    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
 

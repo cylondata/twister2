@@ -15,12 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.api.ISync;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.task.executor.ISync;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;
@@ -31,14 +31,14 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
 
   protected Map<Integer, ISync> syncs = new HashMap<>();
 
-  protected TaskPlan taskPlan;
+  protected LogicalPlan logicalPlan;
 
   protected String inEdge;
 
   public AbstractParallelOperation(Config config, Communicator network,
-                                   TaskPlan tPlan, String edge) {
+                                   LogicalPlan tPlan, String edge) {
     this.config = config;
-    this.taskPlan = tPlan;
+    this.logicalPlan = tPlan;
     this.channel = network;
     this.inEdge = edge;
   }

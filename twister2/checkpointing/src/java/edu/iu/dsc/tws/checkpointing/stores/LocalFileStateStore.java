@@ -69,8 +69,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.checkpointing.api.StateStore;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class LocalFileStateStore implements StateStore {
 

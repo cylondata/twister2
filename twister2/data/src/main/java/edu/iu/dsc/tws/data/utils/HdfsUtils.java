@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
 /**

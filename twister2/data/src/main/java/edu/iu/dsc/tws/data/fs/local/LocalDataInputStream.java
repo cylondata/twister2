@@ -17,7 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
 
 /**
  * The <code>LocalDataInputStream</code> class is a wrapper class for a data

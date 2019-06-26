@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset.impl;
 
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
 public class EntityPartition<T> implements DataPartition<T> {
   private int id;

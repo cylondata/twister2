@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TFunction;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Iterable Keyed flat map function

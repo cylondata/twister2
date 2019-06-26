@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.memory.lmdb;
 
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * Created by pulasthi on 12/26/17.

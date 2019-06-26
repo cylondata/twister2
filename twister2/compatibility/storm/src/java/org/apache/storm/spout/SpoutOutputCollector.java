@@ -32,7 +32,7 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Twister2TupleWrapper;
 import org.apache.storm.utils.Utils;
 
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.task.TaskContext;
 
 public class SpoutOutputCollector implements ISpoutOutputCollector {
 

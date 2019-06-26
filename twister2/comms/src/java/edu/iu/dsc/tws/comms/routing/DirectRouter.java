@@ -19,14 +19,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
 
 public class DirectRouter {
   private static final Logger LOG = Logger.getLogger(DirectRouter.class.getName());
   // destinations
   private List<Integer> destination;
   // task plan
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
   // task -> (path -> tasks)
   private Map<Integer, Set<Integer>> externalSendTasks;
   // task -> (path -> tasks)
@@ -39,14 +39,14 @@ public class DirectRouter {
   /**
    * Create a direct router
    */
-  public DirectRouter(TaskPlan plan, List<Integer> srscs, List<Integer> dest) {
+  public DirectRouter(LogicalPlan plan, List<Integer> srscs, List<Integer> dest) {
     this.destination = dest;
-    this.taskPlan = plan;
+    this.logicalPlan = plan;
 
     this.externalSendTasks = new HashMap<>();
     this.internalSendTasks = new HashMap<>();
 
-    Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    Set<Integer> myTasks = logicalPlan.getChannelsOfExecutor(logicalPlan.getThisExecutor());
     if (myTasks != null) {
       for (int i = 0; i < srscs.size(); i++) {
         // for each source we have a fixed target
@@ -79,8 +79,8 @@ public class DirectRouter {
         this.upstream.put(tar, sources);
 
         // get the executor of source
-        int executor = taskPlan.getExecutorForChannel(src);
-        if (executor != taskPlan.getThisExecutor()) {
+        int executor = logicalPlan.getExecutorForChannel(src);
+        if (executor != logicalPlan.getThisExecutor()) {
           receiveExecutors.add(executor);
         }
       }
@@ -88,7 +88,7 @@ public class DirectRouter {
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.fine(taskPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
+    LOG.fine(logicalPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -102,7 +102,7 @@ public class DirectRouter {
    * @return true
    */
   public boolean isLastReceiver() {
-    Set<Integer> tasksOfThisExecutor = taskPlan.getTasksOfThisExecutor();
+    Set<Integer> tasksOfThisExecutor = logicalPlan.getTasksOfThisExecutor();
     for (int t : destination) {
       // now check if destination is in this worker
       if (tasksOfThisExecutor != null && tasksOfThisExecutor.contains(t)) {

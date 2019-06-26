@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.api.tset.ops;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class CollectorImpl<T> implements Collector<T> {
   private boolean closed;

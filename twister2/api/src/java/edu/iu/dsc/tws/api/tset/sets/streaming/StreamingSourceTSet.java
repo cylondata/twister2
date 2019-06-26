@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import java.util.Random;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
   private Source<T> source;

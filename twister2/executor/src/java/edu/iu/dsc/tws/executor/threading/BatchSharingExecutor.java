@@ -22,13 +22,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.ExecutionState;
-import edu.iu.dsc.tws.executor.api.IExecution;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.executor.ExecutionState;
+import edu.iu.dsc.tws.api.task.executor.IExecution;
+import edu.iu.dsc.tws.api.task.executor.INodeInstance;
+import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
 
 public class BatchSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor.class.getName());

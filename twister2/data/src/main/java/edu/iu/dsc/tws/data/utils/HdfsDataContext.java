@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.utils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.config.TokenSub;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.TokenSub;
 
 public final class HdfsDataContext extends Context {
 

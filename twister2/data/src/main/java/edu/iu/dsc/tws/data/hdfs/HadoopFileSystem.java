@@ -18,10 +18,10 @@ import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 
-import edu.iu.dsc.tws.data.fs.BlockLocation;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.BlockLocation;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import static edu.iu.dsc.tws.data.utils.PreConditions.checkNotNull;
 
 public class HadoopFileSystem extends FileSystem implements Closeable {
@@ -35,12 +35,6 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
       org.apache.hadoop.conf.Configuration hadoopConfig,
       org.apache.hadoop.fs.FileSystem hadoopfileSystem) {
 
-    this.conf = checkNotNull(hadoopConfig, "hadoopConfig");
-    this.hadoopFileSystem = checkNotNull(hadoopfileSystem, "fileSystem");
-  }
-
-  public void initialize(org.apache.hadoop.conf.Configuration hadoopConfig,
-                         org.apache.hadoop.fs.FileSystem hadoopfileSystem) {
     this.conf = checkNotNull(hadoopConfig, "hadoopConfig");
     this.hadoopFileSystem = checkNotNull(hadoopfileSystem, "fileSystem");
   }
@@ -96,9 +90,8 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
 
   /**
    * It returns the status of the file respective to the path given by the user.
+   *
    * @param f The path we want information from
-   * @return
-   * @throws IOException
    */
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
@@ -110,7 +103,7 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
   @Override
   public BlockLocation[] getFileBlockLocations(final FileStatus file,
                                                final long start, final long len)
-                                               throws IOException {
+      throws IOException {
     if (!(file instanceof HadoopFileStatus)) {
       throw new IOException("file is not an instance of DistributedFileStatus");
     }
@@ -135,9 +128,8 @@ public class HadoopFileSystem extends FileSystem implements Closeable {
 
   /**
    * This method open and return the input stream object respective to the path
+   *
    * @param f Open an data input stream at the indicated path
-   * @return
-   * @throws IOException
    */
   @Override
   public HadoopDataInputStream open(final Path f) throws IOException {

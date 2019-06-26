@@ -18,19 +18,19 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class RoundRobinTaskSchedulerTest {
@@ -52,10 +52,10 @@ public class RoundRobinTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> map2 = plan2.getContainersMap();
-      for (ContainerPlan containerPlan : plan1.getContainers()) {
-        ContainerPlan p2 = map2.get(containerPlan.getContainerId());
-        Assert.assertTrue(containerEquals(containerPlan, p2));
+      Map<Integer, WorkerSchedulePlan> map2 = plan2.getContainersMap();
+      for (WorkerSchedulePlan workerSchedulePlan : plan1.getContainers()) {
+        WorkerSchedulePlan p2 = map2.get(workerSchedulePlan.getContainerId());
+        Assert.assertTrue(containerEquals(workerSchedulePlan, p2));
       }
     }
   }
@@ -76,11 +76,11 @@ public class RoundRobinTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> map2 = plan2.getContainersMap();
-      for (ContainerPlan containerPlan : plan1.getContainers()) {
-        ContainerPlan p2 = map2.get(containerPlan.getContainerId());
+      Map<Integer, WorkerSchedulePlan> map2 = plan2.getContainersMap();
+      for (WorkerSchedulePlan workerSchedulePlan : plan1.getContainers()) {
+        WorkerSchedulePlan p2 = map2.get(workerSchedulePlan.getContainerId());
 
-        Assert.assertTrue(containerEquals(containerPlan, p2));
+        Assert.assertTrue(containerEquals(workerSchedulePlan, p2));
       }
     }
   }
@@ -96,11 +96,11 @@ public class RoundRobinTaskSchedulerTest {
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
 
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
           graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
@@ -118,19 +118,19 @@ public class RoundRobinTaskSchedulerTest {
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
 
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(), Integer.parseInt(
           graph.getGraphConstraints().get(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
     }
   }
 
-  private boolean containerEquals(ContainerPlan p1,
-                                  ContainerPlan p2) {
+  private boolean containerEquals(WorkerSchedulePlan p1,
+                                  WorkerSchedulePlan p2) {
     if (p1.getContainerId() != p2.getContainerId()) {
       return false;
     }

@@ -1,0 +1,142 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.api.task.graph;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.nodes.INode;
+
+/**
+ * Users develop ITask object and when it is added to the graph we need additional information
+ * including the name, runtime configuration etc.
+ */
+public class Vertex {
+
+  /**
+   * Represents task name
+   */
+  private String name;
+
+  /**
+   * Represents task
+   */
+  private INode task;
+
+  /**
+   * Represents task cpu requirement
+   */
+  private int cpu;
+
+  /**
+   * Represents task memory requirement
+   */
+  private int memory;
+
+  /**
+   * Represents task ram requirement
+   */
+  private int ram;
+
+  /**
+   * Represents task parallelism value
+   */
+  private int parallelism = 1;
+
+  /**
+   * Config value for the task vertex
+   */
+  private Map<String, Object> config;
+
+  public Vertex() {
+  }
+
+  public Vertex(String n, INode t) {
+    this.name = n;
+    this.task = t;
+    config = new HashMap<>();
+  }
+
+  public Vertex(String name, INode task, int parallelism) {
+    this.name = name;
+    this.task = task;
+    this.parallelism = parallelism;
+    config = new HashMap<>();
+  }
+
+  public int getRam() {
+    return ram;
+  }
+
+  public void setRam(int ram) {
+    this.ram = ram;
+  }
+
+  public INode getTask() {
+    return task;
+  }
+
+  public Config getConfig() {
+    return Config.newBuilder().putAll(config).build();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public int getCpu() {
+    return cpu;
+  }
+
+  public int getMemory() {
+    return memory;
+  }
+
+  public int getParallelism() {
+    return parallelism;
+  }
+
+  public void setCpu(int cpu) {
+    this.cpu = cpu;
+  }
+
+  public void setMemory(int memory) {
+    this.memory = memory;
+  }
+
+  public void setParallelism(int parallelism) {
+    this.parallelism = parallelism;
+  }
+
+  public void setConfig(Map<String, Object> config) {
+    this.config = config;
+  }
+
+  public void addConfiguration(String key, Object val) {
+    this.config.put(key, val);
+  }
+
+}
+

@@ -16,9 +16,9 @@ import java.util.List;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTLink<T> implements TLink<T> {
 

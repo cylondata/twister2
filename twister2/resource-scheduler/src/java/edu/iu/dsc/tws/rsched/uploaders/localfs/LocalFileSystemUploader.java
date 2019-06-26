@@ -19,9 +19,9 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
-import edu.iu.dsc.tws.rsched.interfaces.IUploader;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
+import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.rsched.utils.FileUtils;
 
 public class LocalFileSystemUploader implements IUploader {

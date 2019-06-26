@@ -19,13 +19,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.batch.BReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.batch.BReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 
 public class SVMCommsReducer extends CommsWorker {
@@ -44,10 +44,10 @@ public class SVMCommsReducer extends CommsWorker {
       sources.add(i);
     }
     int target = noOfSourceTasks;
-    reduce = new BReduce(workerEnv.getCommunicator(), taskPlan, sources, target,
+    reduce = new BReduce(workerEnv.getCommunicator(), logicalPlan, sources, target,
         new ReduceOperationFunction(Op.SUM, MessageTypes.DOUBLE), new FinalSingularReceiver(),
         MessageTypes.DOUBLE);
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         taskStages, 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -56,7 +56,7 @@ public class SVMCommsReducer extends CommsWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
 

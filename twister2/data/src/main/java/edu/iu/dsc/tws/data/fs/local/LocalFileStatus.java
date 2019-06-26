@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.data.fs.local;
 
 import java.io.File;
 
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 
 /**
  * The class <code>LocalFileStatus</code> provides an implementation of the {@link FileStatus}

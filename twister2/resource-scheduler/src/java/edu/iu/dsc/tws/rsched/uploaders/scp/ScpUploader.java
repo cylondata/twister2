@@ -14,13 +14,12 @@ package edu.iu.dsc.tws.rsched.uploaders.scp;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
-import edu.iu.dsc.tws.rsched.interfaces.IUploader;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
+import edu.iu.dsc.tws.api.scheduler.UploaderException;
 
 
 public class ScpUploader implements IUploader {

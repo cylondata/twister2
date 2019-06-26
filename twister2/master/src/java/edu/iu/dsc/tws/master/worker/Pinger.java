@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
+import edu.iu.dsc.tws.api.net.request.MessageHandler;
+import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class Pinger implements MessageHandler {
