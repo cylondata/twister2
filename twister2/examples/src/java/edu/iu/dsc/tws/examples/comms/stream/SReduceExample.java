@@ -15,13 +15,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.stream.SReduce;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.stream.SReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -51,12 +51,12 @@ public class SReduceExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    reduce = new SReduce(workerEnv.getCommunicator(), taskPlan, sources, target,
+    reduce = new SReduce(workerEnv.getCommunicator(), logicalPlan, sources, target,
         MessageTypes.INTEGER_ARRAY, new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver()
     );
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -64,7 +64,7 @@ public class SReduceExample extends BenchWorker {
 
     sourcesDone = tasksOfExecutor.size() == 0;
 
-    reduceDone = !taskPlan.getChannelsOfExecutor(workerId).contains(target);
+    reduceDone = !logicalPlan.getChannelsOfExecutor(workerId).contains(target);
 
     //generating the expectedIterations results at the end
 

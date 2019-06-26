@@ -23,20 +23,20 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
@@ -96,27 +96,27 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
     int taskSchedulePlanId = 0;
 
     //Allocate the task instances into the containers/workers
-    Set<ContainerPlan> containerPlans = new LinkedHashSet<>();
+    Set<WorkerSchedulePlan> workerSchedulePlans = new LinkedHashSet<>();
 
     //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
     //Allocate the task instances into the logical containers.
-    Map<Integer, List<InstanceId>> userDefinedContainerInstanceMap =
+    Map<Integer, List<TaskInstanceId>> userDefinedContainerInstanceMap =
         userDefinedSchedulingAlgorithm(graph, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
-    Map<Integer, Map<InstanceId, Double>> instancesRamMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesRamMap =
         instanceMapCalculation.getInstancesRamMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
-    Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesDiskMap =
         instanceMapCalculation.getInstancesDiskMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
-    Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesCPUMap =
         instanceMapCalculation.getInstancesCPUMapInContainer(userDefinedContainerInstanceMap,
             taskVertexSet);
 
@@ -126,10 +126,10 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
       double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
-      List<InstanceId> taskInstanceIds = userDefinedContainerInstanceMap.get(containerId);
-      Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+      List<TaskInstanceId> taskTaskInstanceIds = userDefinedContainerInstanceMap.get(containerId);
+      Map<TaskInstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
-      for (InstanceId id : taskInstanceIds) {
+      for (TaskInstanceId id : taskTaskInstanceIds) {
 
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
@@ -162,12 +162,12 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
       }
 
       //Schedule the task instance plan into the task container plan.
-      ContainerPlan taskContainerPlan =
-          new ContainerPlan(containerId,
+      WorkerSchedulePlan taskWorkerSchedulePlan =
+          new WorkerSchedulePlan(containerId,
               new HashSet<>(taskInstancePlanMap.values()), containerResource);
-      containerPlans.add(taskContainerPlan);
+      workerSchedulePlans.add(taskWorkerSchedulePlan);
     }
-    return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
+    return new TaskSchedulePlan(taskSchedulePlanId, workerSchedulePlans);
   }
 
   /**
@@ -178,10 +178,10 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * The user could write their own type of allocations into the available workers using their
    * own scheduling algorithm.
    */
-  private static Map<Integer, List<InstanceId>> userDefinedSchedulingAlgorithm(
+  private static Map<Integer, List<TaskInstanceId>> userDefinedSchedulingAlgorithm(
       DataFlowTaskGraph graph, int numberOfContainers) {
 
-    Map<Integer, List<InstanceId>> userDefinedAllocation = new LinkedHashMap<>();
+    Map<Integer, List<TaskInstanceId>> userDefinedAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
       userDefinedAllocation.put(i, new ArrayList<>());
     }
@@ -209,7 +209,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
           containerIndex = i % numberOfContainers;
           if (maxTaskInstancesPerContainer < instancesPerWorker) {
             userDefinedAllocation.get(containerIndex).add(
-                new InstanceId(vertex.getName(), globalTaskIndex, i));
+                new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
             ++maxTaskInstancesPerContainer;
           } else {
             throw new ScheduleException("Task Scheduling couldn't be possible for the present"
@@ -222,7 +222,8 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {
           containerIndex = i % numberOfContainers;
-          userDefinedAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+          userDefinedAllocation.get(containerIndex).add(
+              new TaskInstanceId(task, globalTaskIndex, i));
         }
       }
       globalTaskIndex++;

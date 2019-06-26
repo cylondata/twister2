@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -22,7 +23,6 @@ import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * We need to keep variable static as this class is serialized

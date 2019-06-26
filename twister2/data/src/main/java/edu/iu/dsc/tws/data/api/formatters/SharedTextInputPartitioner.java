@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
-import edu.iu.dsc.tws.data.fs.Path;
 
 public class SharedTextInputPartitioner extends FileInputPartitioner<String> {
   private static final long serialVersionUID = 1L;

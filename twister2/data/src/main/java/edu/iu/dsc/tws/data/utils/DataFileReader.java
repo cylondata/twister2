@@ -16,11 +16,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 
 /**
  * This class acts as an interface for reading the input datapoints and centroid values from
@@ -49,7 +49,7 @@ public class DataFileReader {
     double[][] datapoints = new double[datasize][dimension];
     final FileStatus pathFile;
     try {
-      final FileSystem fs = path.getFileSystem(config);
+      final FileSystem fs = FileSystemUtils.get(path);
       if ("hdfs".equals(fileSystem)) {
         pathFile = fs.getFileStatus(path);
         this.fdis = fs.open(pathFile.getPath());

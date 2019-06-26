@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
-import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.task.api.IFunction;
 
 public class ReduceOpFunction<T> implements IFunction, Receptor {
   private static final long serialVersionUID = -4344592105191874L;

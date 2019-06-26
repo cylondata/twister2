@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.dataset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.api.OutputWriter;
 
 /**

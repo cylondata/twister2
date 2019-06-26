@@ -12,9 +12,9 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 //import java.net.Inet4Address;
+
 import java.io.File;
 import java.net.Inet4Address;
-//import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,9 +27,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -38,10 +39,11 @@ import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-//import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
+
+//import java.net.InetAddress;
+//import edu.iu.dsc.tws.rsched.interfaces.IController;
 
 
 public final class NomadJobMasterStarter {
@@ -50,6 +52,7 @@ public final class NomadJobMasterStarter {
   private JobAPI.Job job;
   private Config config;
   private NomadController controller;
+
   public NomadJobMasterStarter(String[] args) {
     Options cmdOptions = null;
     try {
@@ -72,8 +75,10 @@ public final class NomadJobMasterStarter {
       throw new RuntimeException("Error parsing command line options: ", e);
     }
   }
+
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -126,6 +131,7 @@ public final class NomadJobMasterStarter {
 
     return options;
   }
+
   private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
@@ -158,6 +164,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
+
   public void initialize(JobAPI.Job jb, Config cfg) {
     job = jb;
     config = cfg;
@@ -167,6 +174,7 @@ public final class NomadJobMasterStarter {
     NomadJobMasterStarter starter = new NomadJobMasterStarter(args);
     starter.run();
   }
+
   public void run() {
     // normal worker
     try {
@@ -176,8 +184,10 @@ public final class NomadJobMasterStarter {
       //closeWorker();
     }
   }
+
   /**
    * launch the job master
+   *
    * @return false if setup fails
    */
   public boolean launch() {
@@ -287,9 +297,11 @@ public final class NomadJobMasterStarter {
       }
     }
   }
+
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
@@ -309,8 +321,10 @@ public final class NomadJobMasterStarter {
         jobPackageURI,
         Context.verbose(config));
   }
+
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */

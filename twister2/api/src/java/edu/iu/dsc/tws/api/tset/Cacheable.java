@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.api.tset;
 import java.io.Serializable;
 import java.util.List;
 
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 
 /**
  * All Tsets that are cachable need to implement this interface

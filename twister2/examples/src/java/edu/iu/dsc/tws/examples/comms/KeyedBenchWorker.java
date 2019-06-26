@@ -17,15 +17,15 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
@@ -44,7 +44,7 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   protected int workerId;
 
-  protected TaskPlan taskPlan;
+  protected LogicalPlan logicalPlan;
 
   protected JobParameters jobParameters;
 
@@ -85,7 +85,7 @@ public abstract class KeyedBenchWorker implements IWorker {
         volatileVolume);
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(workerEnv, jobParameters.getTaskStages());
+    this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, jobParameters.getTaskStages());
 
     this.inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 

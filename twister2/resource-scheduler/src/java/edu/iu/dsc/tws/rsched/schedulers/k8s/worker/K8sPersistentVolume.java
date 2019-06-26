@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 
-import edu.iu.dsc.tws.common.worker.FSPersistentVolume;
+import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 
 public class K8sPersistentVolume extends FSPersistentVolume {

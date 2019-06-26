@@ -16,18 +16,18 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.config.SlidingCountWindow;
-import edu.iu.dsc.tws.task.api.window.config.SlidingDurationWindow;
-import edu.iu.dsc.tws.task.api.window.config.TumblingCountWindow;
-import edu.iu.dsc.tws.task.api.window.config.TumblingDurationWindow;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.config.SlidingCountWindow;
+import edu.iu.dsc.tws.task.window.config.SlidingDurationWindow;
+import edu.iu.dsc.tws.task.window.config.TumblingCountWindow;
+import edu.iu.dsc.tws.task.window.config.TumblingDurationWindow;
+import edu.iu.dsc.tws.task.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 
 public class STWindowCustomExample extends BenchTaskWorker {
 

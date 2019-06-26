@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.comms.dfw.io.reduce.keyed;
 
 import java.util.Queue;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
 
 /**
  * Keyed reduce final receiver for streaming  mode

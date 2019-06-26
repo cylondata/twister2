@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
 
 public final class RoutingTestUtils {
   private RoutingTestUtils() {
@@ -31,7 +31,7 @@ public final class RoutingTestUtils {
     return s;
   }
 
-  public static TaskPlan createTaskPlan(int workers, int taskPerWorker, int thisExec) {
+  public static LogicalPlan createTaskPlan(int workers, int taskPerWorker, int thisExec) {
     Map<Integer, Set<Integer>> execs = new HashMap<>();
     int taskIndex = 0;
     for (int i = 0; i < workers; i++) {
@@ -51,6 +51,6 @@ public final class RoutingTestUtils {
       e.add(i);
       groups.put(i, e);
     }
-    return new TaskPlan(execs, groups, Collections.emptyMap(), thisExec);
+    return new LogicalPlan(execs, groups, Collections.emptyMap(), thisExec);
   }
 }

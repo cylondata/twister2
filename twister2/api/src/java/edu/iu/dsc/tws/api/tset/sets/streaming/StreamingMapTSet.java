@@ -13,7 +13,7 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
   private BaseTLink<P> parent;

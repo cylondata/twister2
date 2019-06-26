@@ -30,11 +30,11 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
+import edu.iu.dsc.tws.api.net.request.MessageHandler;
+import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
 import edu.iu.dsc.tws.proto.checkpoint.Checkpoint;
 
 /**

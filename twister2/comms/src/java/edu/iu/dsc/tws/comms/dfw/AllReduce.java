@@ -15,14 +15,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.bcast.BcastBatchFinalReceiver;
@@ -78,7 +78,7 @@ public class AllReduce implements DataFlowOperation {
   /**
    * The task plan
    */
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
   /**
    * The reduce function
@@ -90,7 +90,7 @@ public class AllReduce implements DataFlowOperation {
    */
   private boolean streaming;
 
-  public AllReduce(Config config, TWSChannel chnl, TaskPlan instancePlan,
+  public AllReduce(Config config, TWSChannel chnl, LogicalPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
                    ReduceFunction reduceFn,
                    SingularReceiver finalRecv, MessageType t,
@@ -108,8 +108,8 @@ public class AllReduce implements DataFlowOperation {
     init(config, t, instancePlan);
   }
 
-  private void init(Config config, MessageType t, TaskPlan instancePlan) {
-    this.taskPlan = instancePlan;
+  private void init(Config config, MessageType t, LogicalPlan instancePlan) {
+    this.logicalPlan = instancePlan;
 
     MessageReceiver finalRcvr;
     if (streaming) {
@@ -198,8 +198,8 @@ public class AllReduce implements DataFlowOperation {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
-    return taskPlan;
+  public LogicalPlan getLogicalPlan() {
+    return logicalPlan;
   }
 
   @Override

@@ -21,6 +21,7 @@ import java.util.Set;
  * We will keep track of the edges used in the framework and
  */
 public class EdgeGenerator {
+
   private int currentEdge = 0;
 
   private Map<String, Integer> edges = new HashMap<>();

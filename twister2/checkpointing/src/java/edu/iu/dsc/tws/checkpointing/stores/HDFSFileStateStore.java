@@ -19,12 +19,13 @@ import java.net.URI;
 
 import org.apache.hadoop.io.IOUtils;
 
-import edu.iu.dsc.tws.checkpointing.api.StateStore;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 public class HDFSFileStateStore implements StateStore {
 
@@ -41,7 +42,7 @@ public class HDFSFileStateStore implements StateStore {
         config.getStringValue(CHECKPOINTING_STORE_HDFS_DIR), String.join(File.separator, path));
     this.parentPath = finalPath;
     try {
-      this.hdfs = FileSystem.get(URI.create(finalPath), config);
+      this.hdfs = FileSystemUtils.get(URI.create(finalPath), config);
       this.hdfs.mkdirs(new Path(finalPath));
     } catch (IOException e) {
       throw new RuntimeException("Couldn't initial HDFS Store. "

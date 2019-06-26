@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.master.worker;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.common.worker.IWorkerMessenger;
+import edu.iu.dsc.tws.api.resource.IWorkerMessenger;
 
 public class JMWorkerMessenger implements IWorkerMessenger {
 

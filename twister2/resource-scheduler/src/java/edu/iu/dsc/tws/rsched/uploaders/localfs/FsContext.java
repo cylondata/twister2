@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.localfs;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.config.TokenSub;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.TokenSub;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public class FsContext extends SchedulerContext {
   public static final String UPLOAD_DIRECTORY = "twister2.uploader.directory";

@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 public class Heap<K, V> {
 

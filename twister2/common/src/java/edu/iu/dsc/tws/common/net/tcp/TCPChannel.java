@@ -21,7 +21,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 
 /**

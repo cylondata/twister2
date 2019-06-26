@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.data.fs.local;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.data.fs.BlockLocation;
+import edu.iu.dsc.tws.api.data.BlockLocation;
 
 
 /**

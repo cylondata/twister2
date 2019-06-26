@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.stream.SDirect;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.stream.SDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -55,10 +55,10 @@ public class SDirectExample extends BenchWorker {
     }
 
     // create the communication
-    direct = new SDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    direct = new SDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver());
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {
@@ -70,7 +70,7 @@ public class SDirectExample extends BenchWorker {
       }
     }
 
-    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,

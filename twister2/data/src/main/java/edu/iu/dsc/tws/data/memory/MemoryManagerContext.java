@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.charset.Charset;
 
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * Created by pulasthi on 1/5/18.

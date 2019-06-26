@@ -46,11 +46,11 @@ import org.apache.storm.tuple.Twister2TupleWrapper;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.Utils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
 
 public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
 
@@ -171,9 +171,9 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
     } else if (messageContent instanceof List) {
       List valuesList = (List) messageContent;
       for (Object values : valuesList) {
-        if (values instanceof edu.iu.dsc.tws.comms.dfw.io.Tuple) {
+        if (values instanceof edu.iu.dsc.tws.api.comms.structs.Tuple) {
           this.createAndFireTuple(
-              ((edu.iu.dsc.tws.comms.dfw.io.Tuple) values).getValue(),
+              ((edu.iu.dsc.tws.api.comms.structs.Tuple) values).getValue(),
               message
           );
         } else {
@@ -183,9 +183,9 @@ public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
           );
         }
       }
-    } else if (messageContent instanceof edu.iu.dsc.tws.comms.dfw.io.Tuple) {
+    } else if (messageContent instanceof edu.iu.dsc.tws.api.comms.structs.Tuple) {
       this.createAndFireTuple(
-          ((edu.iu.dsc.tws.comms.dfw.io.Tuple) messageContent).getValue(),
+          ((edu.iu.dsc.tws.api.comms.structs.Tuple) messageContent).getValue(),
           message
       );
     } else if (messageContent instanceof Twister2TupleWrapper) {

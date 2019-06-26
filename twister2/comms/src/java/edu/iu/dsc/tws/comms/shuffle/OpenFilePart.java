@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 /**
  * Represent an open file part.

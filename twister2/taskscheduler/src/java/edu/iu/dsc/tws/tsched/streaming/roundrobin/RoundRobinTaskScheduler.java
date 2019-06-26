@@ -22,20 +22,20 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
@@ -94,27 +94,27 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
 
     //Allocate the task instances into the containers/workers
-    Set<ContainerPlan> containerPlans = new LinkedHashSet<>();
+    Set<WorkerSchedulePlan> workerSchedulePlans = new LinkedHashSet<>();
 
     //To get the vertex set from the taskgraph
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
 
     //Allocate the task instances into the logical containers.
-    Map<Integer, List<InstanceId>> roundRobinContainerInstanceMap =
+    Map<Integer, List<TaskInstanceId>> roundRobinContainerInstanceMap =
         roundRobinSchedulingAlgorithm(dataFlowTaskGraph, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
-    Map<Integer, Map<InstanceId, Double>> instancesRamMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesRamMap =
         instanceMapCalculation.getInstancesRamMapInContainer(roundRobinContainerInstanceMap,
             taskVertexSet);
 
-    Map<Integer, Map<InstanceId, Double>> instancesDiskMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesDiskMap =
         instanceMapCalculation.getInstancesDiskMapInContainer(roundRobinContainerInstanceMap,
             taskVertexSet);
 
-    Map<Integer, Map<InstanceId, Double>> instancesCPUMap =
+    Map<Integer, Map<TaskInstanceId, Double>> instancesCPUMap =
         instanceMapCalculation.getInstancesCPUMapInContainer(roundRobinContainerInstanceMap,
             taskVertexSet);
 
@@ -124,10 +124,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
-      List<InstanceId> taskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
-      Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+      List<TaskInstanceId> taskTaskInstanceIds = roundRobinContainerInstanceMap.get(containerId);
+      Map<TaskInstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
-      for (InstanceId id : taskInstanceIds) {
+      for (TaskInstanceId id : taskTaskInstanceIds) {
 
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
@@ -156,12 +156,12 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
       }
 
       //Schedule the task instance plan into the task container plan.
-      ContainerPlan taskContainerPlan =
-          new ContainerPlan(containerId,
+      WorkerSchedulePlan taskWorkerSchedulePlan =
+          new WorkerSchedulePlan(containerId,
               new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
-      containerPlans.add(taskContainerPlan);
+      workerSchedulePlans.add(taskWorkerSchedulePlan);
     }
-    return new TaskSchedulePlan(0, containerPlans);
+    return new TaskSchedulePlan(0, workerSchedulePlans);
   }
 
 
@@ -170,10 +170,10 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * vertex set. Then, it will allocate the instances into the number of containers allocated for
    * the task in a round robin fashion.
    */
-  private Map<Integer, List<InstanceId>> roundRobinSchedulingAlgorithm(
+  private Map<Integer, List<TaskInstanceId>> roundRobinSchedulingAlgorithm(
       DataFlowTaskGraph graph, int numberOfContainers) throws ScheduleException {
 
-    Map<Integer, List<InstanceId>> roundrobinAllocation = new LinkedHashMap<>();
+    Map<Integer, List<TaskInstanceId>> roundrobinAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
       roundrobinAllocation.put(i, new ArrayList<>());
     }
@@ -201,7 +201,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
           containerIndex = i % numberOfContainers;
           if (maxTaskInstancesPerContainer < instancesPerWorker) {
             roundrobinAllocation.get(containerIndex).add(
-                new InstanceId(vertex.getName(), globalTaskIndex, i));
+                new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
             ++maxTaskInstancesPerContainer;
           } else {
             throw new ScheduleException("Task Scheduling couldn't be possible for the present"
@@ -214,7 +214,8 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {
           containerIndex = i % numberOfContainers;
-          roundrobinAllocation.get(containerIndex).add(new InstanceId(task, globalTaskIndex, i));
+          roundrobinAllocation.get(containerIndex).add(
+              new TaskInstanceId(task, globalTaskIndex, i));
         }
       }
       globalTaskIndex++;
