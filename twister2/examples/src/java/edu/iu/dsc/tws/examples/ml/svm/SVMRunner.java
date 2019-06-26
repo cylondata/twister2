@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.examples.ml.svm.comms.InputDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdAdvancedRunner;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdIterativeRunner;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdOnlineRunner;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdTsetRunner;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.core.SchedulerContext;
@@ -216,6 +217,9 @@ public final class SVMRunner {
     }
     if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.ITERATIVE_TASK_RUNNER)) {
       jobBuilder.setWorkerClass(SvmSgdIterativeRunner.class.getName());
+    }
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.ITERATIVE_TASK_STREAMING_RUNNER)) {
+      jobBuilder.setWorkerClass(SvmSgdOnlineRunner.class.getName());
     }
 
     jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);

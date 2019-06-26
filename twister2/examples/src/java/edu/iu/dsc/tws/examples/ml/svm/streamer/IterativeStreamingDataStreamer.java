@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
-public class IterativeStreamingDataStreamer extends BaseSource implements IReceptor<double[]> {
+public class IterativeStreamingDataStreamer extends BaseSource implements IReceptor<double[][]> {
   private static final long serialVersionUID = -5845248990437663713L;
   private static final Logger LOG = Logger.getLogger(IterativeStreamingDataStreamer.class
       .getName());
@@ -48,6 +48,9 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
 
   private boolean debug = false;
 
+  private int count = 0;
+
+  private boolean isDataLoaded = false;
 
   @Override
   public void execute() {
@@ -58,6 +61,7 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
         e.printStackTrace();
       }
     } else {
+      loadData();
       realDataStreamer();
     }
   }
@@ -96,24 +100,25 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
   }
 
 
-  public void getData() {
-    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+  private void prepareDataPoints() {
+    DataPartition<double[][]> dataPartition = this.dataPointsObject
+        .getPartitions(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
-    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
-        .taskIndex());
-    this.weightVector = weightVectorPartition.getConsumer().next();
-
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
-
-
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapoints.length));
+  }
+
+  private void prepareWeightVector() {
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+        .taskIndex());
+    this.weightVector = weightVectorPartition.getConsumer().next();
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
         weightVector.length));
-    //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
+
 
   /**
    * This method is used to deal with dummy data based data stream generation
@@ -152,16 +157,26 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
   public void realDataStreamer() {
     // do real data streaming
     if (this.operationMode.equals(OperationMode.STREAMING)) {
-      getData();
       streamData();
     } else {
       LOG.info(String.format("This Data Source only supports for streaming tasks"));
     }
   }
 
+  private void loadData() {
+    if (count == 0) {
+      this.prepareDataPoints();
+      this.prepareWeightVector();
+    }
+  }
+
   public void streamData() {
-    for (int i = 0; i < this.datapoints.length; i++) {
-      this.context.writeEnd(Constants.SimpleGraphConfig.REDUCE_EDGE, this.datapoints[i]);
+    if (count < this.datapoints.length) {
+      this.context.write(Constants.SimpleGraphConfig.STREAMING_EDGE, this.datapoints[count++]);
+    }
+
+    if (count == this.datapoints.length) {
+      this.context.end(Constants.SimpleGraphConfig.STREAMING_EDGE);
     }
   }
 }

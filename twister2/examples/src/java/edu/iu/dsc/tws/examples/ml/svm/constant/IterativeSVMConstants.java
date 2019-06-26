@@ -20,6 +20,8 @@ public final class IterativeSVMConstants {
   public static final String TESTING_DATA_LOADING_TASK_GRAPH = "testing-data-loading-task-graph";
   public static final String WEIGHT_VECTOR_LOADING_TASK_GRAPH = "weight-vector-loading-task-graph";
   public static final String ITERATIVE_TRAINING_TASK_GRAPH = "iterative-training-task-graph";
+  public static final String ITERATIVE_STREAMING_TRAINING_TASK_GRAPH = "iterative-streaming-"
+      + "training-task-graph";
   public static final String ITERATIVE_PREDICTION_TASK_GRAPH = "iterative-prediction-task-graph";
 
 }

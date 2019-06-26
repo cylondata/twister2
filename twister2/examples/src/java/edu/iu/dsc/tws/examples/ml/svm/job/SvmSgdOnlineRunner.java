@@ -15,15 +15,21 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.ComputeConnection;
 import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
 import edu.iu.dsc.tws.api.task.TaskWorker;
+import edu.iu.dsc.tws.comms.api.MessageTypes;
 import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMAccuracyReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMWeightVectorReduce;
+import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeWeightVectorReduceFunction;
+import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeStreamingCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.IterativeSVMConstants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
+import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeStreamingDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
@@ -52,12 +58,15 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   private DataFlowTaskGraph weightVectorTaskGraph;
   private ExecutionPlan weightVectorExecutionPlan;
   private IterativeDataStream iterativeDataStream;
+  private IterativeStreamingDataStreamer iterativeStreamingDataStreamer;
+  private IterativeStreamingCompute iterativeStreamingCompute;
   private IterativePredictionDataStreamer iterativePredictionDataStreamer;
   private IterativeSVMAccuracyReduce iterativeSVMAccuracyReduce;
   private IterativeSVMWeightVectorReduce iterativeSVMRiterativeSVMWeightVectorReduce;
   private DataObject<double[][]> trainingDoubleDataPointObject;
   private DataObject<double[][]> testingDoubleDataPointObject;
   private DataObject<double[]> inputDoubleWeightvectorObject;
+  private DataObject<double[]> currentDataPoint;
   private DataObject<Double> finalAccuracyDoubleObject;
   private long initializingTime = 0L;
   private long dataLoadingTime = 0L;
@@ -70,6 +79,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   private double totalDTime = 0L;
   private double accuracy = 0L;
   private boolean debug = false;
+  private static int count = 0;
   private String experimentName = "";
 
   @Override
@@ -77,7 +87,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     // method 2
     this.initialize()
         .loadData()
-        .summary();
+        .stream();
   }
 
   /**
@@ -127,6 +137,12 @@ public class SvmSgdOnlineRunner extends TaskWorker {
 
   public SvmSgdOnlineRunner summary() {
     generateSummary();
+    return this;
+  }
+
+  public SvmSgdOnlineRunner stream() {
+    this.withWeightVector();
+    streamData();
     return this;
   }
 
@@ -212,6 +228,48 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     this.dataLoadingDTime = this.dataLoadingTime / TimingConstants.NANO_TO_SEC;
     this.trainingDTime = this.trainingTime / TimingConstants.NANO_TO_SEC;
     this.testingDTime = this.testingTime / TimingConstants.NANO_TO_SEC;
+  }
+
+  private void streamData() {
+    DataFlowTaskGraph streamingTrainingTG = buildStreamingTrainingTG();
+    ExecutionPlan executionPlan = taskExecutor.plan(streamingTrainingTG);
+    taskExecutor.addInput(
+        streamingTrainingTG, executionPlan,
+        Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
+        Constants.SimpleGraphConfig.INPUT_DATA, trainingDoubleDataPointObject);
+    taskExecutor.addInput(streamingTrainingTG, executionPlan,
+        Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
+        Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputDoubleWeightvectorObject);
+
+    taskExecutor.execute(streamingTrainingTG, executionPlan);
+//    currentDataPoint = taskExecutor.getOutput(streamingTrainingTG,
+//        executionPlan,
+//        Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE);
+//    double[] dp = currentDataPoint.getPartitions(0).getConsumer().next();
+//    LOG.info(String.format("DataPoint[%d] : %s", count++, Arrays.toString(dp)));
+  }
+
+  private DataFlowTaskGraph buildStreamingTrainingTG() {
+    iterativeStreamingDataStreamer = new IterativeStreamingDataStreamer(this.svmJobParameters
+        .getFeatures(), OperationMode.STREAMING, this.svmJobParameters.isDummy(),
+        this.binaryBatchModel);
+    iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING);
+    trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
+        iterativeStreamingDataStreamer, dataStreamerParallelism);
+    ComputeConnection svmComputeConnection = trainingBuilder
+        .addSink(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE,
+            iterativeStreamingCompute,
+            dataStreamerParallelism);
+
+    svmComputeConnection.allreduce(Constants.SimpleGraphConfig
+        .ITERATIVE_STREAMING_DATASTREAMER_SOURCE)
+        .viaEdge(Constants.SimpleGraphConfig.STREAMING_EDGE)
+        .withReductionFunction(new IterativeWeightVectorReduceFunction())
+        .withDataType(MessageTypes.DOUBLE_ARRAY);
+
+    trainingBuilder.setMode(OperationMode.STREAMING);
+    trainingBuilder.setTaskGraphName(IterativeSVMConstants.ITERATIVE_STREAMING_TRAINING_TASK_GRAPH);
+    return trainingBuilder.build();
   }
 
 }
