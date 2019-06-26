@@ -23,9 +23,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
-
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -44,6 +41,8 @@ import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   private static final Logger LOG = Logger.getLogger(MToNSimple.class.getName());
@@ -110,13 +109,14 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   /**
    * Routing parameters are cached
    */
-  private Table<Integer, Integer, RoutingParameters> routingParamCache = HashBasedTable.create();
+  private Int2ObjectOpenHashMap<Int2ObjectOpenHashMap<RoutingParameters>> routingParamCache
+      = new Int2ObjectOpenHashMap<>();
 
   /**
    * Routing parameters are cached
    */
-  private Table<Integer, Integer, RoutingParameters> partialRoutingParamCache
-      = HashBasedTable.create();
+  private Int2ObjectOpenHashMap<RoutingParameters> partialRoutingParamCache
+      = new Int2ObjectOpenHashMap<>();
 
   /**
    * Lock for progressing the communication
@@ -292,6 +292,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     }
 
     for (int src : srcs) {
+      routingParamCache.put(src, new Int2ObjectOpenHashMap<>());
       for (int dest : destinations) {
         sendRoutingParameters(src, dest);
       }
@@ -307,14 +308,14 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   public boolean sendPartial(int source, Object message, int flags) {
     int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
     return delegete.sendMessagePartial(source, message, 0,
-        newFlags, sendPartialRoutingParameters(source, 0));
+        newFlags, sendPartialRoutingParameters(0));
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
     int newFlags = flags | MessageFlags.ORIGIN_PARTIAL;
     return delegete.sendMessagePartial(source, message, target, newFlags,
-        sendPartialRoutingParameters(source, target));
+        sendPartialRoutingParameters(target));
   }
 
   @Override
@@ -393,20 +394,21 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   }
 
   private RoutingParameters sendRoutingParameters(int source, int path) {
-    if (routingParamCache.contains(source, path)) {
-      return routingParamCache.get(source, path);
+    Int2ObjectOpenHashMap p = routingParamCache.get(source);
+    if (p.containsKey(path)) {
+      return (RoutingParameters) p.get(path);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       routingParameters.setDestinationId(path);
       routingParameters.addInteranlRoute(source);
-      routingParamCache.put(source, path, routingParameters);
+      p.put(path, routingParameters);
       return routingParameters;
     }
   }
 
-  private RoutingParameters sendPartialRoutingParameters(int source, int destination) {
-    if (partialRoutingParamCache.contains(source, destination)) {
-      return partialRoutingParamCache.get(source, destination);
+  private RoutingParameters sendPartialRoutingParameters(int destination) {
+    if (partialRoutingParamCache.containsKey(destination)) {
+      return partialRoutingParamCache.get(destination);
     } else {
       RoutingParameters routingParameters = new RoutingParameters();
       routingParameters.setDestinationId(destination);
@@ -415,7 +417,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       } else {
         routingParameters.addInteranlRoute(destination);
       }
-      partialRoutingParamCache.put(source, destination, routingParameters);
+      partialRoutingParamCache.put(destination, routingParameters);
       return routingParameters;
     }
   }
