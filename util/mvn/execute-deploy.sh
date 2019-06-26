@@ -154,4 +154,11 @@ deploy_proto_library \
   twister2/proto/pom.xml \
   twister2/proto/libproto-speed.jar
 
+deploy_library \
+  twister2/proto/utils/libproto-utils-java.jar \
+  twister2/proto/utils/pom.xml
+
+deploy_library \
+  twister2/compatibility/harp/libtwister2-harp.jar \
+  twister2/compatibility/harp/pom.xml
 
