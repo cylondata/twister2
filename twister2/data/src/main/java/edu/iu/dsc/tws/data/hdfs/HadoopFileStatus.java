@@ -11,7 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.hdfs;
 
-import edu.iu.dsc.tws.data.fs.FileStatus;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.Path;
 
 public final class HadoopFileStatus implements FileStatus {
 
@@ -80,8 +81,8 @@ public final class HadoopFileStatus implements FileStatus {
    * @return
    */
   @Override
-  public edu.iu.dsc.tws.data.fs.Path getPath() {
-    return new edu.iu.dsc.tws.data.fs.Path(fileStatus.getPath().toString());
+  public Path getPath() {
+    return new Path(fileStatus.getPath().toString());
   }
 
   /**

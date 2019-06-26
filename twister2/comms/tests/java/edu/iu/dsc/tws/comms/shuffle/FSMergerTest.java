@@ -25,8 +25,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 public class FSMergerTest {
   private static final Logger LOG = Logger.getLogger(FSMergerTest.class.getName());

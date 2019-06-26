@@ -21,9 +21,9 @@ import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -68,14 +68,14 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(), op.getSources());
     int index = 0;
     thisSourceArray = new int[thisSources.size()];
     for (int s : thisSources) {
       this.thisSourceArray[index++] = s;
     }
 
-    Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(),
+    Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(),
         op.getTargets());
     // we are going to send the sync to worker target at last, this will ensure that we are not
     // going to start sorting before we send the syncs to other nodes

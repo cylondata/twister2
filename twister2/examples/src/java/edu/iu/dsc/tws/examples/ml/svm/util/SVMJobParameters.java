@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.ml.svm.util;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 

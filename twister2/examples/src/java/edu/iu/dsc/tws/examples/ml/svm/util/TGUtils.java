@@ -11,12 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
-import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.IterativeSVMConstants;
@@ -25,8 +24,9 @@ import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.SVMDataObjectSource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public final class TGUtils {
 
@@ -37,14 +37,14 @@ public final class TGUtils {
   }
 
   public static DataFlowTaskGraph generateGenericDataPointLoader(int samples, int parallelism,
-                                                          int numOfFeatures,
-                                                          String dataSourcePathStr,
-                                                          String dataObjectSourceStr,
-                                                          String dataObjectComputeStr,
-                                                          String dataObjectSinkStr,
-                                                          String graphName,
-                                                          Config config,
-                                                          OperationMode opMode) {
+                                                                 int numOfFeatures,
+                                                                 String dataSourcePathStr,
+                                                                 String dataObjectSourceStr,
+                                                                 String dataObjectComputeStr,
+                                                                 String dataObjectSinkStr,
+                                                                 String graphName,
+                                                                 Config config,
+                                                                 OperationMode opMode) {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataSourcePathStr);

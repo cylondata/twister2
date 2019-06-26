@@ -20,12 +20,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BPartition;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.batch.BPartition;
+import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -57,7 +57,7 @@ public class BPartitionExample extends BenchWorker {
     }
 
     // create the communication
-    partition = new BPartition(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    partition = new BPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
         new LoadBalanceSelector(), false);
 
@@ -81,7 +81,7 @@ public class BPartitionExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
     for (int t : tasksOfExecutor) {

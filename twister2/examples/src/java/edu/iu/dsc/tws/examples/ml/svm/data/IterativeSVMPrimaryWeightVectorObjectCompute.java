@@ -16,8 +16,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 
 public class IterativeSVMPrimaryWeightVectorObjectCompute extends BaseCompute {
 

@@ -32,8 +32,7 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.api.tset.BaseSource;
 import edu.iu.dsc.tws.api.tset.Selector;
@@ -46,6 +45,7 @@ import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(TSetSimpleWordCount.class.getName());

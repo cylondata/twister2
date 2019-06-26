@@ -19,7 +19,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class FixedBufferChannel extends BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(FixedBufferChannel.class.getName());

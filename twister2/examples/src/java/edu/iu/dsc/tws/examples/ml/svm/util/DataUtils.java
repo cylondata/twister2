@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 
 public final class DataUtils {

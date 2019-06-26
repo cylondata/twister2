@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public final class MesosWorkerUtils {
   private static final Logger LOG = Logger.getLogger(MesosWorkerUtils.class.getName());

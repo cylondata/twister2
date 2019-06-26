@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class WordCountUtils {
@@ -36,10 +36,10 @@ public final class WordCountUtils {
    *
    * @return task plan
    */
-  public static TaskPlan createWordCountPlan(Config cfg,
-                                             int workerID,
-                                             List<JobMasterAPI.WorkerInfo> workerInfoList,
-                                             int noOfTasks) {
+  public static LogicalPlan createWordCountPlan(Config cfg,
+                                                int workerID,
+                                                List<JobMasterAPI.WorkerInfo> workerInfoList,
+                                                int noOfTasks) {
     int noOfProcs = workerInfoList.size();
 //    LOG.log(Level.INFO, "No of containers: " + noOfProcs);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
@@ -88,7 +88,7 @@ public final class WordCountUtils {
         workerID, groupsToExeuctors));
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors,
+    return new LogicalPlan(executorToGraphNodes, groupsToExeuctors,
         Collections.emptyMap(), thisExecutor);
   }
 }

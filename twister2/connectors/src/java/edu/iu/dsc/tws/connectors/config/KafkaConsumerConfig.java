@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.connectors.config;
 import java.util.List;
 import java.util.Properties;
 
-
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 public abstract class KafkaConsumerConfig {

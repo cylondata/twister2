@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.data.fs.io;
 import java.io.IOException;
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * This interface must be implemented by all kind of input splits that

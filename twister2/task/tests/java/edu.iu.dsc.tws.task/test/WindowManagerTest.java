@@ -22,25 +22,26 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.window.api.Event;
-import edu.iu.dsc.tws.task.api.window.api.IEvictionPolicy;
-import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.api.WindowLifeCycleListener;
-import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.constant.Action;
-import edu.iu.dsc.tws.task.api.window.event.WatermarkEvent;
-import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
-import edu.iu.dsc.tws.task.api.window.policy.eviction.count.CountEvictionPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.eviction.count.WatermarkCountEvictionPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.eviction.duration.WatermarkDurationEvictionPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.IWindowingPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.count.CountWindowPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.count.WatermarkCountWindowPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.DurationWindowPolicy;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.duration.WatermarkDurationWindowPolicy;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.task.window.api.Event;
+import edu.iu.dsc.tws.task.window.api.IEvictionPolicy;
+import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.api.WindowLifeCycleListener;
+import edu.iu.dsc.tws.task.window.api.WindowMessageImpl;
+import edu.iu.dsc.tws.task.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.window.constant.Action;
+import edu.iu.dsc.tws.task.window.event.WatermarkEvent;
+import edu.iu.dsc.tws.task.window.manage.WindowManager;
+import edu.iu.dsc.tws.task.window.policy.eviction.count.CountEvictionPolicy;
+import edu.iu.dsc.tws.task.window.policy.eviction.count.WatermarkCountEvictionPolicy;
+import edu.iu.dsc.tws.task.window.policy.eviction.duration.WatermarkDurationEvictionPolicy;
+import edu.iu.dsc.tws.task.window.policy.trigger.IWindowingPolicy;
+import edu.iu.dsc.tws.task.window.policy.trigger.count.CountWindowPolicy;
+import edu.iu.dsc.tws.task.window.policy.trigger.count.WatermarkCountWindowPolicy;
+import edu.iu.dsc.tws.task.window.policy.trigger.duration.DurationWindowPolicy;
+import edu.iu.dsc.tws.task.window.policy.trigger.duration.WatermarkDurationWindowPolicy;
+
 import static org.junit.Assert.*;
 
 public class WindowManagerTest {
@@ -52,17 +53,17 @@ public class WindowManagerTest {
 
   private static class Listener implements WindowLifeCycleListener<Integer> {
     private IWindowMessage<Integer> onExpiryEvents
-        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-        new ArrayList<IMessage<Integer>>());
+        = new WindowMessageImpl<>(new ArrayList<>(),
+        new ArrayList<>());
     private IWindowMessage<Integer> onActivationEvents
-        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-        new ArrayList<IMessage<Integer>>());
+        = new WindowMessageImpl<>(new ArrayList<>(),
+        new ArrayList<>());
     private IWindowMessage<Integer> onActivationNewEvents
-        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-        new ArrayList<IMessage<Integer>>());
+        = new WindowMessageImpl<>(new ArrayList<>(),
+        new ArrayList<>());
     private IWindowMessage<Integer> onActivationExpiredEvents
-        = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-        new ArrayList<IMessage<Integer>>());
+        = new WindowMessageImpl<>(new ArrayList<>(),
+        new ArrayList<>());
 
     // all events since last clear
     private List<IWindowMessage<Integer>> allOnExpiryEvents = new ArrayList<>();
@@ -71,14 +72,14 @@ public class WindowManagerTest {
     private List<IWindowMessage<Integer>> allOnActivationExpiredEvents = new ArrayList<>();
 
     public void clear() {
-      onExpiryEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-          new ArrayList<IMessage<Integer>>());
-      onActivationEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-          new ArrayList<IMessage<Integer>>());
-      onActivationNewEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-          new ArrayList<IMessage<Integer>>());
-      onActivationExpiredEvents = new WindowMessageImpl<>(new ArrayList<IMessage<Integer>>(),
-          new ArrayList<IMessage<Integer>>());
+      onExpiryEvents = new WindowMessageImpl<>(new ArrayList<>(),
+          new ArrayList<>());
+      onActivationEvents = new WindowMessageImpl<>(new ArrayList<>(),
+          new ArrayList<>());
+      onActivationNewEvents = new WindowMessageImpl<>(new ArrayList<>(),
+          new ArrayList<>());
+      onActivationExpiredEvents = new WindowMessageImpl<>(new ArrayList<>(),
+          new ArrayList<>());
 
       allOnExpiryEvents.clear();
       allOnActivationEvents.clear();
@@ -572,9 +573,9 @@ public class WindowManagerTest {
 //    windowingPolicy.start();
 
     //init 2
-    IEvictionPolicy<Integer> evictionPolicy = new CountEvictionPolicy<Integer>(5);
+    IEvictionPolicy<Integer> evictionPolicy = new CountEvictionPolicy<>(5);
     IWindowingPolicy<Integer> windowingPolicy
-        = new DurationWindowPolicy<Integer>(
+        = new DurationWindowPolicy<>(
         new WindowConfig
             .Duration(1, TimeUnit.HOURS).value, windowManager, evictionPolicy);
     windowManager.setEvictionPolicy(evictionPolicy);
@@ -600,21 +601,12 @@ public class WindowManagerTest {
     List<IMessage<Integer>> seqM = mockList.subList(0, threshold - windowLength);
     System.out.println("---------------");
     System.out.println();
-    printIMessageList(seqM, new IOutputFunction<Integer>() {
-      @Override
-      public void print(Integer integer) {
-        System.out.print(integer + " ");
-      }
-    });
+    printIMessageList(seqM, integer -> System.out.print(integer + " "));
     System.out.println();
     System.out.println("---------------");
     System.out.println();
-    printIMessageList(listener.onExpiryEvents.getExpiredWindow(), new IOutputFunction<Integer>() {
-      @Override
-      public void print(Integer integer) {
-        System.out.print(integer + " ");
-      }
-    });
+    printIMessageList(listener.onExpiryEvents.getExpiredWindow(),
+        integer -> System.out.print(integer + " "));
     System.out.println();
     System.out.println("---------------");
     assertEquals(seqM, listener.onExpiryEvents.getExpiredWindow());

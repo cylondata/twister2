@@ -16,21 +16,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.net.Network;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.net.Network;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
 public class WordCountWorker implements IWorker {
@@ -50,7 +50,7 @@ public class WordCountWorker implements IWorker {
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -65,7 +65,7 @@ public class WordCountWorker implements IWorker {
     setupNetwork(workerController);
 
     // create the communication
-    keyGather = new SKeyedReduce(channel, taskPlan, sources, destinations,
+    keyGather = new SKeyedReduce(channel, logicalPlan, sources, destinations,
         MessageTypes.OBJECT, MessageTypes.INTEGER,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         new WordAggregate(), new HashingSelector());
@@ -76,7 +76,7 @@ public class WordCountWorker implements IWorker {
 
   private void setupTasks(IWorkerController workerController) {
     try {
-      taskPlan = WordCountUtils.createWordCountPlan(config, id,
+      logicalPlan = WordCountUtils.createWordCountPlan(config, id,
           workerController.getAllWorkers(), NO_OF_TASKS);
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
@@ -92,7 +92,7 @@ public class WordCountWorker implements IWorker {
       destinations.add(NO_OF_TASKS / 2 + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
-        taskPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisExecutor(), sources, destinations));
   }
 
   private void setupNetwork(IWorkerController controller) {

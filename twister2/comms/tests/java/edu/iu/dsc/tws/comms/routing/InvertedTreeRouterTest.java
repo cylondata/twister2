@@ -15,15 +15,16 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.createTaskPlan;
 import static edu.iu.dsc.tws.comms.routing.RoutingTestUtils.destinations;
 
 public class InvertedTreeRouterTest {
   @Test
   public void testUniqueTrees() {
-    TaskPlan p = createTaskPlan(256, 1, 0);
+    LogicalPlan p = createTaskPlan(256, 1, 0);
 
     Set<Integer> s = destinations(256, 1);
     InvertedBinaryTreeRouter router = new InvertedBinaryTreeRouter(Config.newBuilder().build(),

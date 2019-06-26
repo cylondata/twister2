@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyValueTLink;
 import edu.iu.dsc.tws.api.tset.ops.KIterableFlatMapOp;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class KIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
   private KeyValueTLink<K, V> parent;

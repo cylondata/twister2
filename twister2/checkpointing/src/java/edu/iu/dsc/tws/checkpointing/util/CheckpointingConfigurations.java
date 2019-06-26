@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.checkpointing.util;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore;
-import edu.iu.dsc.tws.common.config.Config;
 
 public final class CheckpointingConfigurations {
 

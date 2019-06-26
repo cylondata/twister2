@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class InvertedBinaryTreeRouter {
@@ -45,7 +45,7 @@ public class InvertedBinaryTreeRouter {
    * @param root root id
    * @param dests destinations
    */
-  public InvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
+  public InvertedBinaryTreeRouter(Config cfg, LogicalPlan plan,
                                   int root, Set<Integer> dests, int index) {
     int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);

@@ -32,11 +32,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public final class TaskPlanBuilder {
   private TaskPlanBuilder() {
@@ -49,16 +49,16 @@ public final class TaskPlanBuilder {
    * @param idGenerator global task id generator
    * @return the task plan
    */
-  public static TaskPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                               TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
-    Set<ContainerPlan> cPlanList = schedulePlan.getContainers();
+  public static LogicalPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                                  TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
+    Set<WorkerSchedulePlan> cPlanList = schedulePlan.getContainers();
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToTasks = new HashMap<>();
 
     // we need to sort to keep the order
     workerInfoList.sort(Comparator.comparingInt(JobMasterAPI.WorkerInfo::getWorkerID));
 
-    for (ContainerPlan c : cPlanList) {
+    for (WorkerSchedulePlan c : cPlanList) {
       Set<TaskInstancePlan> tSet = c.getTaskInstances();
       Set<Integer> instances = new HashSet<>();
 
@@ -98,6 +98,6 @@ public final class TaskPlanBuilder {
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, nodeToTasks, workerID);
+    return new LogicalPlan(containersToTasks, groupsToTasks, nodeToTasks, workerID);
   }
 }

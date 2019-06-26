@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.data.api.formatters;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
-import edu.iu.dsc.tws.data.fs.Path;
 
 public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
 

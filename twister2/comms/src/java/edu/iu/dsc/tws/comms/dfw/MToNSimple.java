@@ -26,20 +26,21 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -80,7 +81,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   /**
    * Task plan
    */
-  private TaskPlan instancePlan;
+  private LogicalPlan instancePlan;
 
   /**
    * Receive message type, we can receive messages as just bytes
@@ -171,7 +172,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
   }
 
-  public MToNSimple(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+  public MToNSimple(Config cfg, TWSChannel channel, LogicalPlan tPlan, Set<Integer> srcs,
                     Set<Integer> dests, MessageReceiver finalRcvr,
                     MessageReceiver partialRcvr,
                     MessageType dType, MessageType rcvType,
@@ -181,7 +182,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = false;
   }
 
-  public MToNSimple(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> srcs,
+  public MToNSimple(Config cfg, TWSChannel channel, LogicalPlan tPlan, Set<Integer> srcs,
                     Set<Integer> dests, MessageReceiver finalRcvr,
                     MessageReceiver partialRcvr,
                     MessageType dType, MessageType rcvType,
@@ -210,24 +211,24 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int ed) {
+  public void init(Config cfg, MessageType t, LogicalPlan logicalPlan, int ed) {
     this.edge = ed;
 
-    Set<Integer> thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
-    int executor = taskPlan.getThisExecutor();
+    Set<Integer> thisSources = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sources);
+    int executor = logicalPlan.getThisExecutor();
     LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
-        taskPlan.getThisExecutor(), sources, destinations));
-    this.router = new PartitionRouter(taskPlan, sources, destinations);
+        logicalPlan.getThisExecutor(), sources, destinations));
+    this.router = new PartitionRouter(logicalPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks();
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks();
-    this.instancePlan = taskPlan;
+    this.instancePlan = logicalPlan;
     this.dataType = t;
     if (this.receiveType == null) {
       this.receiveType = dataType;
     }
 
     LOG.log(Level.FINE, String.format("%d adding internal/external routing",
-        taskPlan.getThisExecutor()));
+        logicalPlan.getThisExecutor()));
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
@@ -239,12 +240,12 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
         this.externalDestinations.addAll(integerSetMap1);
       }
       LOG.fine(String.format("%d adding internal/external routing %d",
-          taskPlan.getThisExecutor(), s));
+          logicalPlan.getThisExecutor(), s));
       break;
     }
 
     LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
-        taskPlan.getThisExecutor()));
+        logicalPlan.getThisExecutor()));
     this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     this.partialReceiver.init(cfg, this, router.partialExpectedTaskIds());
 
@@ -256,8 +257,8 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
-    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    Set<Integer> srcs = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sources);
+    Set<Integer> tempsrcs = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sources);
 
     //need to set minus tasks as well
     for (Integer src : tempsrcs) {
@@ -296,7 +297,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       }
     }
 
-    delegete.init(cfg, dataType, receiveType, keyType, receiveKeyType, taskPlan, edge,
+    delegete.init(cfg, dataType, receiveType, keyType, receiveKeyType, logicalPlan, edge,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -382,7 +383,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
+  public LogicalPlan getLogicalPlan() {
     return instancePlan;
   }
 

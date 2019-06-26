@@ -17,9 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.StringPacker;
+import edu.iu.dsc.tws.api.checkpointing.Snapshot;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
+import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
+import edu.iu.dsc.tws.api.comms.packing.types.StringPacker;
 
 /**
  * This class implements {@link Snapshot} and will have some additional methods to

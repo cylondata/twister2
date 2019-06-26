@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public class BinaryTreeRouter {
@@ -44,7 +44,7 @@ public class BinaryTreeRouter {
    * @param root
    * @param dests
    */
-  public BinaryTreeRouter(Config cfg, TaskPlan plan,
+  public BinaryTreeRouter(Config cfg, LogicalPlan plan,
                                   int root, Set<Integer> dests) {
     int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);

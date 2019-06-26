@@ -21,20 +21,20 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
+import edu.iu.dsc.tws.api.net.StatusCode;
+import edu.iu.dsc.tws.api.net.request.ConnectHandler;
+import edu.iu.dsc.tws.api.net.request.MessageHandler;
+import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
-import edu.iu.dsc.tws.common.net.tcp.StatusCode;
-import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 /**
  * JMWorkerAgent class

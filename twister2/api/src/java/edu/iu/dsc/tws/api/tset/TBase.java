@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * All classes that are part of the TSet API need to implement this interface if they are
@@ -26,7 +26,6 @@ public interface TBase<T> {
 
   /**
    * method to be called to build self
-   * @return
    */
   boolean baseBuild();
 

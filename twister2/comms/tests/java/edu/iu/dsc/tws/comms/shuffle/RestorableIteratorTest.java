@@ -17,10 +17,10 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.threading.CommonThreadPool;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 public class RestorableIteratorTest {
 

@@ -22,13 +22,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.batch.BKeyedGather;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -64,12 +64,12 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
     // create the communication
-    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o), true);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     for (int t : tasksOfExecutor) {
@@ -81,7 +81,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
     gatherDone = true;
     for (int target : targets) {
-      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+      if (logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
         gatherDone = false;
       }
     }

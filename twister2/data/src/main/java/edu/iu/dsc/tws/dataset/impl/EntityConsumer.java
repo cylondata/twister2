@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset.impl;
 
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
 public class EntityConsumer<T> implements DataPartitionConsumer<T> {
   private T value;

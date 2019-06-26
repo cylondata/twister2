@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.aggregate;
 
-import edu.iu.dsc.tws.task.api.IFunction;
+import edu.iu.dsc.tws.api.task.IFunction;
 
 public interface ISvmIterativeReduceFunction<T> extends IFunction<T> {
 

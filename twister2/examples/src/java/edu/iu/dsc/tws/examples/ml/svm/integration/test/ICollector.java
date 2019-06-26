@@ -11,8 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.integration.test;
 
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.dataset.DataPartition;
+
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.task.modifiers.Collector;
 
 public interface ICollector<T> extends Collector {
   /**

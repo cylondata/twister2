@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
@@ -25,7 +26,6 @@ import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   private static final Logger LOG = Logger.getLogger(BatchBaseTSet.class.getName());

@@ -18,10 +18,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * Generate a data set
@@ -60,7 +61,7 @@ public final class KMeansDataGenerator {
   private static void generateText(Path directory, int numOfFiles, int sizeOfFile,
                                    int sizeMargin, int dimension, Config config)
       throws IOException {
-    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
     if (fs.exists(directory)) {
       fs.delete(directory, true);
     }
@@ -104,7 +105,7 @@ public final class KMeansDataGenerator {
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
                                   int sizeMargin, int dimension, Config config) throws IOException {
 
-    FileSystem fs = FileSystem.get(directory.toUri(), config);
+    FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
     if (fs.exists(directory)) {
       fs.delete(directory, true);
     }

@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 
 import com.google.common.primitives.Ints;
 
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.memory.lmdb.LMDBMemoryManager;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 

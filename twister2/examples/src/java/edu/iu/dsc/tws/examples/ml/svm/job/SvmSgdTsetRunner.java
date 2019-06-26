@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
@@ -38,7 +39,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.IPrintFunction;
 import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.examples.ml.svm.util.TSetUtils;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+
 
 public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 

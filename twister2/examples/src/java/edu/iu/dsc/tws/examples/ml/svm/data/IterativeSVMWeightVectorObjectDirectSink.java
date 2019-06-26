@@ -26,12 +26,13 @@ package edu.iu.dsc.tws.examples.ml.svm.data;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.ICollector;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.AbstractIterableDataCompute;
+import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
+
 
 public class IterativeSVMWeightVectorObjectDirectSink
     extends AbstractIterableDataCompute<double[]> implements ISink, ICollector<double[]> {

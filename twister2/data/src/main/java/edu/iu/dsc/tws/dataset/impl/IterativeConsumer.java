@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.dataset.impl;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
 public class IterativeConsumer<T> implements DataPartitionConsumer<T> {
   private Iterator<T> iterator;
