@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,7 +61,6 @@ import edu.iu.dsc.tws.task.api.BaseSource;
 import edu.iu.dsc.tws.task.api.IFunction;
 import edu.iu.dsc.tws.task.api.IMessage;
 import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
 import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.OperationMode;
 
@@ -70,6 +68,8 @@ public class PageRankWorker extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(PageRankWorker.class.getName());
 
   private static int graphsize = 0;
+
+//  private static double danglingNodeValues;
 
 
   @Override
@@ -198,20 +198,24 @@ public class PageRankWorker extends TaskWorker {
 
     taskGraphBuilder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph pageranktaskgraph = taskGraphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(pageranktaskgraph);
 
-    /* the out of the first graph would like below
-    * task Id: 0
-    {1=[3, 4], 2=[3, 4, 5]}*/
-
-    taskExecutor.addInput(pageranktaskgraph, plan,
-        "pageranksource", "graphData", graphPartitionData);
 
 
 
 
 //Perform the iterations from 0 to 'n' number of iterations
     for (int i = 0; i < iterations; i++) {
+
+      /* the out of the first graph would like below
+    * task Id: 0
+    {1=[3, 4], 2=[3, 4, 5]}*/
+
+      ExecutionPlan plan = taskExecutor.plan(pageranktaskgraph);
+
+
+      taskExecutor.addInput(pageranktaskgraph, plan,
+          "pageranksource", "graphData", graphPartitionData);
+
       taskExecutor.addInput(pageranktaskgraph, plan,
           "pageranksource", "graphInitialPagerankValue", graphInitialPagerankValue);
 
@@ -222,14 +226,18 @@ public class PageRankWorker extends TaskWorker {
 
       taskExecutor.execute(pageranktaskgraph, plan);
 
+
       graphInitialPagerankValue = taskExecutor.getOutput(pageranktaskgraph, plan,
           "pageranksink");
+
+
 
     }
 
 
     if (workerId == 0) {
       Writer output = null;
+      double finalDanlingTotal = 0.0;
       File toptenurllist = new File("/home/anushan/Documents/dinput/output");
       try {
         output = new BufferedWriter(new FileWriter(toptenurllist));
@@ -247,25 +255,30 @@ public class PageRankWorker extends TaskWorker {
       int num = 0;
       while (it.hasNext()) {
         Map.Entry pair = (Map.Entry) it.next();
-        System.out.print("Vertex Id: " + pair.getKey());
-        System.out.printf(" and it's pagerank value: %.15f \n", (double) pair.getValue());
+        if (!pair.getKey().equals("danglingValues")) {
+          System.out.print("Vertex Id: " + pair.getKey());
+          System.out.printf(" and it's pagerank value: %.15f \n", (double) pair.getValue());
 
-        try {
-          output.write("Vertex Id: " + pair.getKey()
-              + " and it's pagerank value: "
-              + String.format("%.15f", (double) pair.getValue()) + "\n");
+          try {
+            output.write("Vertex Id: " + pair.getKey()
+                + " and it's pagerank value: "
+                + String.format("%.15f", (double) pair.getValue()) + "\n");
 
-        } catch (IOException e) {
-          e.printStackTrace();
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          cummulativepagerankvalue += (double) pair.getValue();
+          num += 1;
+        } else {
+          finalDanlingTotal = (double) pair.getValue();
         }
-        cummulativepagerankvalue += (double) pair.getValue();
-        num += 1;
-
-
-
         it.remove(); // avoids a ConcurrentModificationException
       }
-      System.out.println(cummulativepagerankvalue + (graphsize - num) * ((double) 1 / graphsize));
+      System.out.println(num);
+      System.out.println(cummulativepagerankvalue);
+      System.out.println(cummulativepagerankvalue
+          + ((graphsize - num) * ((((double) 1 / graphsize) * 0.15)
+          + (0.85 * (finalDanlingTotal / graphsize)))));
 
     }
 
@@ -280,6 +293,10 @@ public class PageRankWorker extends TaskWorker {
     private DataObject<?> graphObjectvalues = null;
 
     private int count = 0;
+    private double danglingValueLocal;
+
+
+
 
     @Override
     public void execute() {
@@ -295,21 +312,43 @@ public class PageRankWorker extends TaskWorker {
         for (int i = 0; i < graphData.size(); i++) {
           Object key = graphData.keySet().toArray()[i];
           Double value = graphPageRankValue.get(key);
-
+          Double recievedDanglingvalue = graphPageRankValue.get("danglingvalues");
           ArrayList<String> arrayList = graphData.get(key);
+          Double valueAndDanglingValue;
+
+          if (recievedDanglingvalue != null && value != null) {
+            valueAndDanglingValue = value + ((0.85 * recievedDanglingvalue) / graphsize);
+          } else {
+            valueAndDanglingValue = value;
+          }
+
+          if (arrayList.size() == 0) {
+
+            danglingValueLocal += valueAndDanglingValue;
+          }
 
           if (value != null) {
+
             for (int j = 0; j < arrayList.size(); j++) {
-              Double newvalue = value / arrayList.size();
+              Double newvalue = valueAndDanglingValue / arrayList.size();
               context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
 
             }
-          } else {
-            if (arrayList.size() != 0) {
-              for (int j = 0; j < arrayList.size(); j++) {
-                Double newvalue = ((double) 1 / graphsize) / arrayList.size();
-                context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
 
+          } else {
+
+            if (arrayList.size() != 0) {
+              if (recievedDanglingvalue != 0.0) {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue = ((((double) 1 / graphsize) * 0.15)
+                      + (0.85 * (recievedDanglingvalue / graphsize))) / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
+              } else {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue = (((double) 1 / graphsize) * 0.15) / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
               }
             }
 
@@ -319,9 +358,11 @@ public class PageRankWorker extends TaskWorker {
 
         }
       } else {
-        context.writeEnd("keyedreduce", "teskEnd", new double[]{0.0});
+        context.writeEnd("keyedreduce", "danglingvalues", new double[]{danglingValueLocal});
 
       }
+
+
 
 
 
@@ -346,6 +387,8 @@ public class PageRankWorker extends TaskWorker {
 
     @Override
     public boolean execute(IMessage content) {
+
+
       Iterator<Object> it;
       if (content.getContent() instanceof Iterator) {
         it = (Iterator<Object>) content.getContent();
@@ -354,19 +397,22 @@ public class PageRankWorker extends TaskWorker {
           Object next = it.next();
           if (next instanceof Tuple) {
             Tuple kc = (Tuple) next;
-            if (!kc.getKey().equals("teskEnd")) {
 
-
-
+            if (!kc.getKey().equals("danglingvalues")) {
               double value = ((double[]) kc.getValue())[0];
-              double pagerankValue  = 0.15 / graphsize + 0.85 * value;
+              double pagerankValue  = (0.15 / graphsize) + (0.85 * value);
 
               output.put((String) kc.getKey(), pagerankValue);
+              context.write("all-reduce", output);
+            } else {
+              double danglingValue = ((double[]) kc.getValue())[0];
+              output.put((String) kc.getKey(), danglingValue);
               context.write("all-reduce", output);
             }
 
           }
         }
+
       }
 
       context.end("all-reduce");
@@ -401,6 +447,7 @@ public class PageRankWorker extends TaskWorker {
       super.prepare(cfg, context);
       this.datapoints = new DataObjectImpl<>(config);
     }
+
   }
 
   private static class Aggregate implements IFunction {
@@ -420,22 +467,6 @@ public class PageRankWorker extends TaskWorker {
     }
   }
 
-  private static class TaskPartitionerClass implements TaskPartitioner {
 
-    @Override
-    public void prepare(Set<Integer> sources, Set<Integer> destinations) {
-
-    }
-
-    @Override
-    public int partition(int source, Object data) {
-      return 0;
-    }
-
-    @Override
-    public void commit(int source, int partition) {
-
-    }
-  }
 
 }

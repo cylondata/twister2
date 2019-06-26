@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.graphapi.vertex;
 
 import edu.iu.dsc.tws.graphapi.edge.Edge;
-import edu.iu.dsc.tws.graphapi.edge.MutableEdge;
 
 /**
  * Class which holds vertex id, data and edges.
