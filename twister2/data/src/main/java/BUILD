@@ -4,7 +4,10 @@ load("//tools:maven.bzl", "t2_java_lib")
 
 common_deps_files = [
     "@org_yaml_snakeyaml//jar",
-    "//twister2/common/src/java:common-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
     "@com_esotericsoftware_kryo//jar",
     "//third_party:com_github_jnr_jffi_native",
     "@com_google_guava_guava//jar",

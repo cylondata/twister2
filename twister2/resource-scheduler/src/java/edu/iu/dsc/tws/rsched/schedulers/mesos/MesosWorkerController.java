@@ -19,14 +19,14 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 
 public class MesosWorkerController implements IWorkerController {

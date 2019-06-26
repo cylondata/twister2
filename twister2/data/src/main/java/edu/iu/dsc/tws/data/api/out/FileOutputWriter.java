@@ -18,11 +18,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.OutputWriter;
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * Abstract class for writing to file system
@@ -57,7 +58,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
     this.outPath = outPath;
 
     try {
-      this.fs = FileSystem.get(outPath.toUri());
+      this.fs = FileSystemUtils.get(outPath.toUri());
     } catch (IOException e) {
       throw new RuntimeException("Failed to create file system for : " + outPath.toUri());
     }
@@ -83,6 +84,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
 
   /**
    * Create a suitable output
+   *
    * @param partition partition id
    * @param out the out stream
    */
@@ -90,6 +92,7 @@ public abstract class FileOutputWriter<T> implements OutputWriter<T> {
 
   /**
    * Write the record to output
+   *
    * @param partition partition id
    * @param data data
    */

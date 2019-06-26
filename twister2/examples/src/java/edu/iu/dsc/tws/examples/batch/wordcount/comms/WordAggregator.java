@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class WordAggregator implements BulkReceiver {
   private static final Logger LOG = Logger.getLogger(WordAggregator.class.getName());

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
 
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 
 public class NomadPersistentVolume implements IPersistentVolume {
   public static final String WORKER_DIR_NAME_PREFIX = "worker-";

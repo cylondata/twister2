@@ -21,10 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 /**
@@ -108,10 +109,10 @@ public abstract class KeyedReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.dataFlowOperation = op;
-    this.executor = dataFlowOperation.getTaskPlan().getThisExecutor();
+    this.executor = dataFlowOperation.getLogicalPlan().getThisExecutor();
     this.limitPerKey = 100; //TODO: use config to init this
     this.keyLimit = 10; //TODO: use config to init this
-    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
+    this.thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(), op.getSources());
 
     for (Map.Entry<Integer, List<Integer>> expectedIdPerTarget : expectedIds.entrySet()) {
       Map<Integer, Boolean> finishedPerTarget = new HashMap<>();

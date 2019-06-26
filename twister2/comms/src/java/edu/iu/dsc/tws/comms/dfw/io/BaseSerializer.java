@@ -15,13 +15,14 @@ import java.util.List;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
-import edu.iu.dsc.tws.comms.dfw.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 public abstract class BaseSerializer implements MessageSerializer {

@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples;
 
-import edu.iu.dsc.tws.task.api.window.api.ITimeStampedData;
+import edu.iu.dsc.tws.task.window.api.ITimeStampedData;
 
 public class IntData implements ITimeStampedData {
   private int[] data;

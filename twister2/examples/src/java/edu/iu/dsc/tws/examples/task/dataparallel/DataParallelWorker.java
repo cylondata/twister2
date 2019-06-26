@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.examples.task.dataparallel;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.utils.DataGenerator;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 /**
  * This example demonstrates the use of a data parallel job. Here we will generate set of random

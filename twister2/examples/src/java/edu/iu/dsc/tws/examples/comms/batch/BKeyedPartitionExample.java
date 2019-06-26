@@ -21,13 +21,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -64,11 +64,11 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new BKeyedPartition(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    partition = new BKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
         new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
 

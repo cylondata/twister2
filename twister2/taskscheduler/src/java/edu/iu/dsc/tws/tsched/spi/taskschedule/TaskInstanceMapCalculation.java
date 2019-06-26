@@ -18,7 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
@@ -47,17 +48,20 @@ public class TaskInstanceMapCalculation {
     taskAttributes = new TaskAttributes();
   }
 
-  private static double getContainerCpuValue(Map<Integer, List<InstanceId>> instancesAllocation) {
+  private static double getContainerCpuValue(Map<Integer,
+      List<TaskInstanceId>> instancesAllocation) {
     String cpuHint = "0.2";
     return Double.parseDouble(cpuHint);
   }
 
-  private static Double getContainerDiskValue(Map<Integer, List<InstanceId>> instancesAllocation) {
+  private static Double getContainerDiskValue(Map<Integer,
+      List<TaskInstanceId>> instancesAllocation) {
     String containerDiskValue = "1000.0";
     return Double.parseDouble(containerDiskValue);
   }
 
-  private static Double getContainerRamValue(Map<Integer, List<InstanceId>> instancesAllocation) {
+  private static Double getContainerRamValue(Map<Integer,
+      List<TaskInstanceId>> instancesAllocation) {
     String containerRamValue = "1000.0";
     return Double.parseDouble(containerRamValue);
   }
@@ -69,27 +73,28 @@ public class TaskInstanceMapCalculation {
    * @param taskVertexSet
    * @return
    */
-  public Map<Integer, Map<InstanceId, Double>> getInstancesRamMapInContainer(
-      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
+  public Map<Integer, Map<TaskInstanceId, Double>> getInstancesRamMapInContainer(
+      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap,
+      Set<Vertex> taskVertexSet) {
 
     Map<String, Double> ramMap = taskAttributes.getTaskRamMap(taskVertexSet);
-    HashMap<Integer, Map<InstanceId, Double>> instancesRamContainerMap = new HashMap<>();
+    HashMap<Integer, Map<TaskInstanceId, Double>> instancesRamContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedRamValue = 0.0;
-      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<InstanceId, Double> containerRam = new HashMap<>();
+      List<TaskInstanceId> taskInstanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<TaskInstanceId, Double> containerRam = new HashMap<>();
       instancesRamContainerMap.put(containerId, containerRam);
-      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (InstanceId instanceId : instanceIds) {
-        String taskName = instanceId.getTaskName();
+      for (TaskInstanceId taskInstanceId : taskInstanceIds) {
+        String taskName = taskInstanceId.getTaskName();
         if (ramMap.containsKey(taskName)) {
           Double ramValue = ramMap.get(taskName);
-          containerRam.put(instanceId, ramValue);
+          containerRam.put(taskInstanceId, ramValue);
           usedRamValue += ramValue;
         } else {
-          instancesToBeCalculated.add(instanceId);
+          instancesToBeCalculated.add(taskInstanceId);
         }
       }
 
@@ -102,8 +107,8 @@ public class TaskInstanceMapCalculation {
               - usedRamValue;
           instanceRequiredRam = remainingRam / instancesAllocationSize;
         }
-        for (InstanceId instanceId : instancesToBeCalculated) {
-          containerRam.put(instanceId, instanceRequiredRam);
+        for (TaskInstanceId taskInstanceId : instancesToBeCalculated) {
+          containerRam.put(taskInstanceId, instanceRequiredRam);
         }
         LOG.fine("Instances Required Ram:\t" + instanceRequiredRam + "\n");
       }
@@ -119,27 +124,28 @@ public class TaskInstanceMapCalculation {
    * @param taskVertexSet
    * @return
    */
-  public Map<Integer, Map<InstanceId, Double>> getInstancesDiskMapInContainer(
-      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
+  public Map<Integer, Map<TaskInstanceId, Double>> getInstancesDiskMapInContainer(
+      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap,
+      Set<Vertex> taskVertexSet) {
 
     Map<String, Double> diskMap = taskAttributes.getTaskDiskMap(taskVertexSet);
-    HashMap<Integer, Map<InstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
+    HashMap<Integer, Map<TaskInstanceId, Double>> instancesDiskContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedDiskValue = 0.0;
-      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<InstanceId, Double> containerDisk = new HashMap<>();
+      List<TaskInstanceId> taskInstanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<TaskInstanceId, Double> containerDisk = new HashMap<>();
       instancesDiskContainerMap.put(containerId, containerDisk);
-      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (InstanceId instanceId : instanceIds) {
-        String taskName = instanceId.getTaskName();
+      for (TaskInstanceId taskInstanceId : taskInstanceIds) {
+        String taskName = taskInstanceId.getTaskName();
         if (diskMap.containsKey(taskName)) {
           Double diskValue = diskMap.get(taskName);
-          containerDisk.put(instanceId, diskValue);
+          containerDisk.put(taskInstanceId, diskValue);
           usedDiskValue += diskValue;
         } else {
-          instancesToBeCalculated.add(instanceId);
+          instancesToBeCalculated.add(taskInstanceId);
         }
       }
 
@@ -152,8 +158,8 @@ public class TaskInstanceMapCalculation {
               - usedDiskValue;
           instanceRequiredDisk = remainingDisk / instancesAllocationSize;
         }
-        for (InstanceId instanceId : instancesToBeCalculated) {
-          containerDisk.put(instanceId, instanceRequiredDisk);
+        for (TaskInstanceId taskInstanceId : instancesToBeCalculated) {
+          containerDisk.put(taskInstanceId, instanceRequiredDisk);
         }
         LOG.fine("Instances Required Disk:\t" + instanceRequiredDisk);
       }
@@ -168,27 +174,28 @@ public class TaskInstanceMapCalculation {
    * @param taskVertexSet
    * @return
    */
-  public Map<Integer, Map<InstanceId, Double>> getInstancesCPUMapInContainer(
-      Map<Integer, List<InstanceId>> containerInstanceAllocationMap, Set<Vertex> taskVertexSet) {
+  public Map<Integer, Map<TaskInstanceId, Double>> getInstancesCPUMapInContainer(
+      Map<Integer, List<TaskInstanceId>> containerInstanceAllocationMap,
+      Set<Vertex> taskVertexSet) {
 
     Map<String, Double> taskCpuMap = taskAttributes.getTaskCPUMap(taskVertexSet);
-    HashMap<Integer, Map<InstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
+    HashMap<Integer, Map<TaskInstanceId, Double>> instancesCpuContainerMap = new HashMap<>();
 
     for (int containerId : containerInstanceAllocationMap.keySet()) {
       Double usedCPUValue = 0.0;
-      List<InstanceId> instanceIds = containerInstanceAllocationMap.get(containerId);
-      Map<InstanceId, Double> containerCPUMap = new HashMap<>();
+      List<TaskInstanceId> taskInstanceIds = containerInstanceAllocationMap.get(containerId);
+      Map<TaskInstanceId, Double> containerCPUMap = new HashMap<>();
       instancesCpuContainerMap.put(containerId, containerCPUMap);
-      List<InstanceId> instancesToBeCalculated = new ArrayList<>();
+      List<TaskInstanceId> instancesToBeCalculated = new ArrayList<>();
 
-      for (InstanceId instanceId : instanceIds) {
-        String taskName = instanceId.getTaskName();
+      for (TaskInstanceId taskInstanceId : taskInstanceIds) {
+        String taskName = taskInstanceId.getTaskName();
         if (taskCpuMap.containsKey(taskName)) {
           Double taskCpuValue = taskCpuMap.get(taskName);
-          containerCPUMap.put(instanceId, taskCpuValue);
+          containerCPUMap.put(taskInstanceId, taskCpuValue);
           usedCPUValue += taskCpuValue;
         } else {
-          instancesToBeCalculated.add(instanceId);
+          instancesToBeCalculated.add(taskInstanceId);
         }
       }
 
@@ -201,8 +208,8 @@ public class TaskInstanceMapCalculation {
               - usedCPUValue;
           instanceRequiredCpu = remainingCpu / instancesAllocationSize;
         }
-        for (InstanceId instanceId : instancesToBeCalculated) {
-          containerCPUMap.put(instanceId, instanceRequiredCpu);
+        for (TaskInstanceId taskInstanceId : instancesToBeCalculated) {
+          containerCPUMap.put(taskInstanceId, instanceRequiredCpu);
         }
         LOG.fine("Instances Required CPU:\t" + instanceRequiredCpu);
       }

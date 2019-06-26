@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class KeyValueTLink<K, V> extends BaseTLink<V> {
   public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {

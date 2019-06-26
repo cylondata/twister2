@@ -14,7 +14,9 @@ package edu.iu.dsc.tws.dataset;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 public class DataObjectImpl<T> implements DataObject<T> {
   private Map<Integer, DataPartition<T>> partitions = new HashMap<>();

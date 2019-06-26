@@ -23,8 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.ObjectBuilder;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
+import edu.iu.dsc.tws.api.comms.packing.ObjectBuilder;
 
 public class ObjectBuilderImpl<D, W> implements ObjectBuilder<D, W> {
 

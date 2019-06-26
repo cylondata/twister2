@@ -23,11 +23,11 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 
 public final class Utils {
   private static final Logger LOG = Logger.getLogger(Utils.class.getName());
@@ -41,10 +41,10 @@ public final class Utils {
    *
    * @return task plan
    */
-  public static TaskPlan createReduceTaskPlan(Config cfg,
-                                              int workerID,
-                                              List<JobMasterAPI.WorkerInfo> workerInfoList,
-                                              int noOfTasks) {
+  public static LogicalPlan createReduceTaskPlan(Config cfg,
+                                                 int workerID,
+                                                 List<JobMasterAPI.WorkerInfo> workerInfoList,
+                                                 int noOfTasks) {
     int numberOfWorkers = workerInfoList.size();
     LOG.log(Level.INFO, "No of workers: " + numberOfWorkers);
     Map<Integer, Set<Integer>> executorToGraphNodes = new HashMap<>();
@@ -93,7 +93,7 @@ public final class Utils {
     LOG.fine("Groups to executors: " + print);
     // now lets create the task plan of this, we assume we have map tasks in all the processes
     // and reduce task in 0th process
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors,
+    return new LogicalPlan(executorToGraphNodes, groupsToExeuctors,
         Collections.emptyMap(), thisExecutor);
   }
 
@@ -132,7 +132,8 @@ public final class Utils {
    * @return task plan
    */
 
-  public static TaskPlan createStageTaskPlan(WorkerEnv workerEnv, List<Integer> noOfTaskEachStage) {
+  public static LogicalPlan createStageLogicalPlan(WorkerEnv workerEnv,
+                                                   List<Integer> noOfTaskEachStage) {
     int workerID = workerEnv.getWorkerId();
     List<JobMasterAPI.WorkerInfo> workerList = workerEnv.getWorkerList();
 
@@ -181,10 +182,10 @@ public final class Utils {
 //    groupsToExeuctors.put(2, new HashSet<>(Arrays.asList(0)));
 //    groupsToExeuctors.put(3, new HashSet<>(Arrays.asList(3)));
 
-    return new TaskPlan(executorToGraphNodes, groupsToExeuctors, nodeToTasks, workerID);
+    return new LogicalPlan(executorToGraphNodes, groupsToExeuctors, nodeToTasks, workerID);
   }
 
-  public static Set<Integer> getTasksOfExecutor(int exec, TaskPlan plan,
+  public static Set<Integer> getTasksOfExecutor(int exec, LogicalPlan plan,
                                                 List<Integer> noOfTaskEachStage, int stage) {
     Set<Integer> out = new HashSet<>();
     int noOfTasks = noOfTaskEachStage.get(stage);

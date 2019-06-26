@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 /**

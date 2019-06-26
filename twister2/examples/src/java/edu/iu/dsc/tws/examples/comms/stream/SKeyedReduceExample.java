@@ -17,15 +17,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -55,12 +55,12 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    keyedReduce = new SKeyedReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    keyedReduce = new SKeyedReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(jobParameters.getIterations()), new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);

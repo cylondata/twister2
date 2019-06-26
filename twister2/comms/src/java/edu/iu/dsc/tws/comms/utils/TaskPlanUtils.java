@@ -26,13 +26,13 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
 
 public final class TaskPlanUtils {
   private TaskPlanUtils() {
   }
 
-  public static Set<Integer> getTasksOfThisWorker(TaskPlan plan, Set<Integer> tasks) {
+  public static Set<Integer> getTasksOfThisWorker(LogicalPlan plan, Set<Integer> tasks) {
     Set<Integer> allTasksOfThisExec = plan.getTasksOfThisExecutor();
     Set<Integer> tasksOfThisExec = new HashSet<>();
 
@@ -44,7 +44,7 @@ public final class TaskPlanUtils {
     return tasksOfThisExec;
   }
 
-  public static Set<Integer> getWorkersOfTasks(TaskPlan plan, Set<Integer> tasks) {
+  public static Set<Integer> getWorkersOfTasks(LogicalPlan plan, Set<Integer> tasks) {
     Set<Integer> workersOfTasks = new HashSet<>();
 
     for (int t : tasks) {
@@ -54,7 +54,7 @@ public final class TaskPlanUtils {
     return workersOfTasks;
   }
 
-  public static Set<Integer> getThisWorkerTasks(TaskPlan plan) {
+  public static Set<Integer> getThisWorkerTasks(LogicalPlan plan) {
     return plan.getChannelsOfExecutor(plan.getThisExecutor());
   }
 }

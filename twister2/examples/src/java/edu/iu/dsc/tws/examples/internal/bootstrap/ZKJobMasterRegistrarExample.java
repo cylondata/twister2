@@ -25,8 +25,8 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;

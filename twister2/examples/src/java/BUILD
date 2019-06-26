@@ -39,6 +39,18 @@ common_deps_files = [
     "@com_fasterxml_jackson_core_jackson_databind//:com_fasterxml_jackson_core_jackson_databind",
     "//third_party:harp_collective",
     "//twister2/compatibility/storm:twister2-storm",
+    "//twister2/compatibility/harp:twister2-harp",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
+    "//twister2/proto/utils:proto-utils-java",
 ]
 
 t2_java_lib(

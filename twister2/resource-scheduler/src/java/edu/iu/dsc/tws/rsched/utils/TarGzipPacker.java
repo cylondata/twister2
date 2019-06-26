@@ -33,9 +33,9 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 /**
  * a class to generate a tar.gz file.
  * Used to pack multiple files into an archive file

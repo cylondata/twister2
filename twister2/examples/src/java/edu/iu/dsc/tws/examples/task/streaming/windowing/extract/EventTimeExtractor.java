@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.examples.task.streaming.windowing.extract;
 
 import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
-import edu.iu.dsc.tws.task.api.window.api.TimestampExtractor;
+import edu.iu.dsc.tws.task.window.api.TimestampExtractor;
 
 public class EventTimeExtractor extends TimestampExtractor<EventTimeData> {
   @Override

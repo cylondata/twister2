@@ -14,15 +14,15 @@ package edu.iu.dsc.tws.tsched.taskscheduler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class TaskSchedulerTest {

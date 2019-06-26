@@ -13,7 +13,7 @@
 package edu.iu.dsc.tws.api.tset.sets;
 
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class MapTSet<T, P> extends BatchBaseTSet<T> {
   private BaseTLink<P> parent;

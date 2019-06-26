@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.ml.svm.aggregate;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.IFunction;
+import edu.iu.dsc.tws.api.task.IFunction;
 
 public class ReduceAggregator implements IFunction {
 

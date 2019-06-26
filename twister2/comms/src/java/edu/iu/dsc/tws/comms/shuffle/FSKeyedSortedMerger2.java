@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.common.threading.CommonThreadPool;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 /**
  * Sorted merger implementation

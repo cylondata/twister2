@@ -15,15 +15,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.BcastGatheStreamingReceiver;
@@ -86,9 +86,9 @@ public class AllGather implements DataFlowOperation {
   /**
    * Task plan
    */
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
-  public AllGather(Config config, TWSChannel chnl, TaskPlan instancePlan,
+  public AllGather(Config config, TWSChannel chnl, LogicalPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
                    BulkReceiver finalRecv, MessageType type,
                    int redEdge, int broadEdge, boolean stream) {
@@ -101,11 +101,11 @@ public class AllGather implements DataFlowOperation {
     this.middleTask = middleTask;
     this.streaming = stream;
     this.dataType = type;
-    this.taskPlan = instancePlan;
+    this.logicalPlan = instancePlan;
     init(config, type, instancePlan);
   }
 
-  private void init(Config config, MessageType type, TaskPlan instancePlan) {
+  private void init(Config config, MessageType type, LogicalPlan instancePlan) {
     MessageReceiver finalRcvr;
     if (streaming) {
       finalRcvr = new BcastGatheStreamingReceiver(finalReceiver);
@@ -194,8 +194,8 @@ public class AllGather implements DataFlowOperation {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
-    return taskPlan;
+  public LogicalPlan getLogicalPlan() {
+    return logicalPlan;
   }
 
   @Override

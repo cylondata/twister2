@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.BaseSource;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataPartition;
 
 public class CacheSource<T> extends BaseSource<T> {
   private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());

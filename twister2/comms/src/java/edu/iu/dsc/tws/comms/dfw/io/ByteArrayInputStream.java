@@ -16,7 +16,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 
 /**
  * This is a specialized input stream targetted to reading a twister object message expanding

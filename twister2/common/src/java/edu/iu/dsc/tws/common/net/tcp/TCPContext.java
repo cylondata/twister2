@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.net.tcp;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.net.NetworkInfo;
 
 public class TCPContext extends Context {

@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 
 public abstract class BaseReduceBatchFinalReceiver extends ReduceBatchReceiver {
   public BaseReduceBatchFinalReceiver(ReduceFunction reduce) {
