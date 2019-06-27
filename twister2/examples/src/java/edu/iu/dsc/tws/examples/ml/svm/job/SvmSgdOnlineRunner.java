@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMAccuracyReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMWeightVectorReduce;
-import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeWeightVectorReduceFunction;
+import edu.iu.dsc.tws.examples.ml.svm.aggregate.ReduceAggregator;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeStreamingCompute;
 import edu.iu.dsc.tws.examples.ml.svm.compute.window.IterativeStreamingWindowedCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
@@ -263,18 +263,33 @@ public class SvmSgdOnlineRunner extends TaskWorker {
         this.binaryBatchModel);
     BaseWindowedSink baseWindowedSink
         = new IterativeStreamingWindowedCompute(new ProcessWindowFunctionImpl(),
-        OperationMode.STREAMING)
-        .withTumblingCountWindow(5);
+        OperationMode.STREAMING,
+        this.svmJobParameters,
+        this.binaryBatchModel,
+        "online-training-graph")
+        .withTumblingCountWindow(500);
+    iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING,
+        new ReduceAggregator());
+
     trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
         iterativeStreamingDataStreamer, dataStreamerParallelism);
     ComputeConnection svmComputeConnection = trainingBuilder
-        .addSink(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE,
+        .addCompute(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE,
             baseWindowedSink,
             dataStreamerParallelism);
+
+    ComputeConnection svmReduceConnection = trainingBuilder
+        .addSink("window-sink", iterativeStreamingCompute, 1);
 
     svmComputeConnection.direct(Constants.SimpleGraphConfig
         .ITERATIVE_STREAMING_DATASTREAMER_SOURCE)
         .viaEdge(Constants.SimpleGraphConfig.STREAMING_EDGE)
+        .withDataType(MessageTypes.DOUBLE_ARRAY);
+
+    svmReduceConnection
+        .reduce(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE)
+        .viaEdge("window-sink-edge")
+        .withReductionFunction(new ReduceAggregator())
         .withDataType(MessageTypes.DOUBLE_ARRAY);
 
     trainingBuilder.setMode(OperationMode.STREAMING);

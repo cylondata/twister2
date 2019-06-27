@@ -15,6 +15,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
+import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
+import edu.iu.dsc.tws.examples.ml.svm.util.MLUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
+import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.collectives.ProcessWindow;
 import edu.iu.dsc.tws.task.window.function.ProcessWindowedFunction;
@@ -28,6 +34,14 @@ public class IterativeStreamingWindowedCompute extends ProcessWindow<double[]> {
 
   private OperationMode operationMode;
 
+  private SVMJobParameters svmJobParameters;
+
+  private BinaryBatchModel binaryBatchModel;
+
+  private String modelName;
+
+  private TrainedModel trainedModel;
+
   private static int counter = 0;
 
   public IterativeStreamingWindowedCompute(
@@ -37,14 +51,42 @@ public class IterativeStreamingWindowedCompute extends ProcessWindow<double[]> {
   }
 
   public IterativeStreamingWindowedCompute(
+      ProcessWindowedFunction<double[]> processWindowedFunction, OperationMode operationMode,
+      SVMJobParameters svmJobParameters, BinaryBatchModel binaryBatchModel) {
+    super(processWindowedFunction);
+    this.operationMode = operationMode;
+    this.svmJobParameters = svmJobParameters;
+    this.binaryBatchModel = binaryBatchModel;
+  }
+
+  public IterativeStreamingWindowedCompute(
+      ProcessWindowedFunction<double[]> processWindowedFunction, OperationMode operationMode,
+      SVMJobParameters svmJobParameters, BinaryBatchModel binaryBatchModel, String modelName) {
+    super(processWindowedFunction);
+    this.operationMode = operationMode;
+    this.svmJobParameters = svmJobParameters;
+    this.binaryBatchModel = binaryBatchModel;
+    this.modelName = modelName;
+  }
+
+  public IterativeStreamingWindowedCompute(
       ProcessWindowedFunction<double[]> processWindowedFunction) {
     super(processWindowedFunction);
   }
 
   @Override
   public boolean process(IWindowMessage<double[]> windowMessage) {
-    LOG.info(String.format("[%d] Message List Size : %d ", counter++, windowMessage.getWindow()
-        .size()));
+//    LOG.info(String.format("[%d] Message List Size : %d ", counter++, windowMessage.getWindow()
+//        .size()));
+    try {
+      trainedModel = MLUtils.runIterativeSGDSVM(windowMessage.getWindow(), this.svmJobParameters,
+          this.binaryBatchModel,  this.modelName);
+    } catch (NullDataSetException e) {
+      e.printStackTrace();
+    } catch (MatrixMultiplicationException e) {
+      e.printStackTrace();
+    }
+    context.write("window-sink-edge", trainedModel.getW());
     return true;
   }
 
