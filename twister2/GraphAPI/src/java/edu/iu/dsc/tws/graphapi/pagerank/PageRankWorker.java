@@ -237,6 +237,7 @@ public class PageRankWorker extends TaskWorker {
 
     if (workerId == 0) {
       Writer output = null;
+      double finalDanlingTotal = 0.0;
       File toptenurllist = new File("/home/anushan/Documents/dinput/output");
       try {
         output = new BufferedWriter(new FileWriter(toptenurllist));
@@ -249,38 +250,35 @@ public class PageRankWorker extends TaskWorker {
       HashMap<String, Double> finalone = (HashMap<String, Double>) finaloutput.getConsumer().next();
       LOG.info("Final output After " + iterations + "iterations ");
       Iterator it = finalone.entrySet().iterator();
-      Double recivedFinalDanglingValue = finalone.get("danglingvalues");
 
       double cummulativepagerankvalue = 0.0;
       int num = 0;
-      System.out.println(graphsize);
       while (it.hasNext()) {
         Map.Entry pair = (Map.Entry) it.next();
-        if (!pair.getKey().equals("danglingvalues")) {
-          double finalPagerankValue = (double) pair.getValue()
-              + ((0.85 * recivedFinalDanglingValue) / graphsize);
+        if (!pair.getKey().equals("danglingValues")) {
           System.out.print("Vertex Id: " + pair.getKey());
-          System.out.printf(" and it's pagerank value: %.15f \n", finalPagerankValue);
+          System.out.printf(" and it's pagerank value: %.15f \n", (double) pair.getValue());
 
           try {
             output.write("Vertex Id: " + pair.getKey()
                 + " and it's pagerank value: "
-                + String.format("%.15f", finalPagerankValue) + "\n");
+                + String.format("%.15f", (double) pair.getValue()) + "\n");
 
           } catch (IOException e) {
             e.printStackTrace();
           }
-          cummulativepagerankvalue += finalPagerankValue;
+          cummulativepagerankvalue += (double) pair.getValue();
           num += 1;
+        } else {
+          finalDanlingTotal = (double) pair.getValue();
         }
         it.remove(); // avoids a ConcurrentModificationException
       }
-      System.out.println(recivedFinalDanglingValue);
       System.out.println(num);
       System.out.println(cummulativepagerankvalue);
       System.out.println(cummulativepagerankvalue
           + ((graphsize - num) * ((((double) 1 / graphsize) * 0.15)
-          + (0.85 * (recivedFinalDanglingValue / graphsize)))));
+          + (0.85 * (finalDanlingTotal / graphsize)))));
 
     }
 
@@ -318,13 +316,8 @@ public class PageRankWorker extends TaskWorker {
           ArrayList<String> arrayList = graphData.get(key);
           Double valueAndDanglingValue;
 
-          if (recievedDanglingvalue != null) {
-            if (value != null) {
-              valueAndDanglingValue = value + ((0.85 * recievedDanglingvalue) / graphsize);
-            } else {
-              valueAndDanglingValue = (((double) 1 / graphsize) * 0.15)
-                  + ((0.85 * recievedDanglingvalue) / graphsize);
-            }
+          if (recievedDanglingvalue != null && value != null) {
+            valueAndDanglingValue = value + ((0.85 * recievedDanglingvalue) / graphsize);
           } else {
             valueAndDanglingValue = value;
           }
@@ -345,14 +338,19 @@ public class PageRankWorker extends TaskWorker {
           } else {
 
             if (arrayList.size() != 0) {
-              for (int j = 0; j < arrayList.size(); j++) {
-                Double newvalue = ((((double) 1 / graphsize) * 0.15)
-                    + (0.85 * valueAndDanglingValue)) / arrayList.size();
-                context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+              if (recievedDanglingvalue != 0.0) {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue = ((((double) 1 / graphsize) * 0.15)
+                      + (0.85 * (recievedDanglingvalue / graphsize))) / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
+              } else {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue = (((double) 1 / graphsize) * 0.15) / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
               }
-
             }
-
 
           }
           count++;

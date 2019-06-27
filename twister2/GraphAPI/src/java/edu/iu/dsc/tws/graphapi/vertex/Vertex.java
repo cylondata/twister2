@@ -97,6 +97,16 @@ public interface Vertex<I, V, E> {
    */
   void setEdges(Iterable<Edge<I, E>> edges);
 
+  /**
+   * Get an iterable of out-edges that can be modified in-place.
+   * This can mean changing the current edge value or removing the current edge
+   * (by using the iterator version).
+   * Note: accessing the edges with other methods (e.g., addEdge()) during
+   * iteration leads to undefined behavior.
+   *
+   * @return An iterable of mutable out-edges
+   */
+  Iterable<MutableEdge<I, E>> getMutableEdges();
 
   /**
    * Return the value of the first edge with the given target vertex id,
