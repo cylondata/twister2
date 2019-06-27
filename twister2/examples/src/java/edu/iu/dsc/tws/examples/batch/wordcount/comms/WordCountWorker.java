@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
@@ -59,7 +59,7 @@ public class WordCountWorker implements IWorker {
   private WordAggregator wordAggregator;
   private List<Integer> taskStages = new ArrayList<>();
   private int workerId;
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -72,7 +72,7 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
 
     // create a worker environment
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan

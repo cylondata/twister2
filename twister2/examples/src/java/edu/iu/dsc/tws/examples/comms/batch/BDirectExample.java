@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -42,7 +42,7 @@ public class BDirectExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     if (!jobParameters.getTaskStages().get(0).equals(jobParameters.getTaskStages().get(1))) {
       int min = Math.min(jobParameters.getTaskStages().get(0),
           jobParameters.getTaskStages().get(1));

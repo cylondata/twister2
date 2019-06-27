@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BReduce;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
@@ -37,7 +37,7 @@ public class SVMCommsReducer extends CommsWorker {
   private boolean reduceDone;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = svmJobParameters.getParallelism();
     for (int i = 0; i < noOfSourceTasks; i++) {

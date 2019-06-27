@@ -25,13 +25,14 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
@@ -63,7 +64,7 @@ public abstract class KeyedBenchWorker implements IWorker {
 
   private long streamWait = 0;
 
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -81,7 +82,7 @@ public abstract class KeyedBenchWorker implements IWorker {
 
     this.workerId = workerID;
 
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan
@@ -107,7 +108,7 @@ public abstract class KeyedBenchWorker implements IWorker {
     workerEnv.close();
   }
 
-  protected abstract void execute(WorkerEnv wEnv);
+  protected abstract void execute(WorkerEnvironment wEnv);
 
   protected void progress() {
     // we need to progress the communication

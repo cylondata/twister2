@@ -21,7 +21,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.impl;
+
+package edu.iu.dsc.tws.task;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -33,12 +34,14 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Network;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
-import edu.iu.dsc.tws.comms.net.Network;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public final class TaskEnvironment {
 
@@ -75,7 +78,7 @@ public final class TaskEnvironment {
 
   }
 
-  private TaskEnvironment(WorkerEnv workerEnv) {
+  private TaskEnvironment(WorkerEnvironment workerEnv) {
     this.config = workerEnv.getConfig();
     this.wController = workerEnv.getWorkerController();
     this.communicator = workerEnv.getCommunicator();
@@ -86,6 +89,7 @@ public final class TaskEnvironment {
   /**
    * Use task executor for fine grained task graph manipulations. For single task graph builds,
    * use @buildAndExecute
+   *
    * @return taskExecutor
    */
   public TaskExecutor getTaskExecutor() {
@@ -118,7 +122,7 @@ public final class TaskEnvironment {
     return new TaskEnvironment(config, workerId, wController, vVolume);
   }
 
-  public static TaskEnvironment init(WorkerEnv workerEnv) {
+  public static TaskEnvironment init(WorkerEnvironment workerEnv) {
     return new TaskEnvironment(workerEnv);
   }
 
