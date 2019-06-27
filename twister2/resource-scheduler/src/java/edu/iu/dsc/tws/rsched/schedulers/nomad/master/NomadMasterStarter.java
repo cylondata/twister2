@@ -37,7 +37,8 @@ public final class NomadMasterStarter {
   private JobAPI.Job job;
   private Config config;
 
-  public NomadMasterStarter() { }
+  public NomadMasterStarter() {
+  }
 
   public void initialize(JobAPI.Job jb, Config cfg) {
     job = jb;
@@ -46,6 +47,7 @@ public final class NomadMasterStarter {
 
   /**
    * launch the job master
+   *
    * @return false if setup fails
    */
   public boolean launch() {
@@ -91,7 +93,7 @@ public final class NomadMasterStarter {
     }
 
     boolean start = controller.start(job);
-    // now lets wait on client
+//     now lets wait on client
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         if (jmThread != null) {
@@ -100,12 +102,14 @@ public final class NomadMasterStarter {
       } catch (InterruptedException ignore) {
       }
     }
+
     return start;
   }
 
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
@@ -126,3 +130,4 @@ public final class NomadMasterStarter {
         Context.verbose(config));
   }
 }
+
