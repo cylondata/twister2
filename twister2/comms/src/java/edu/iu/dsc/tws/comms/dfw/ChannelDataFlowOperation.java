@@ -541,7 +541,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (outMessage.getSendState() == OutMessage.SendState.INIT) {
       // send it internally
       int startOfInternalRouts = outMessage.getAcceptedInternalSends();
-      List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
+      List<Integer> inRoutes = outMessage.getInternalSends();
       for (int i = startOfInternalRouts; i < outMessage.getInternalSends().size(); i++) {
         boolean receiveAccepted;
         lock.lock();
