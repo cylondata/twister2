@@ -316,17 +316,49 @@ public class PageRankWorker extends TaskWorker {
           Double value = graphPageRankValue.get(key);
           Double recievedDanglingvalue = graphPageRankValue.get("danglingvalues");
           ArrayList<String> arrayList = graphData.get(key);
-          Double valueAndDanglingValue;
+          Double valueAndDanglingValue = null;
+
+          //when dangling value recived
 
           if (recievedDanglingvalue != null) {
             if (value != null) {
               valueAndDanglingValue = value + ((0.85 * recievedDanglingvalue) / graphsize);
+              for (int j = 0; j < arrayList.size(); j++) {
+                Double newvalue = valueAndDanglingValue / arrayList.size();
+                context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+
+              }
+
             } else {
               valueAndDanglingValue = (((double) 1 / graphsize) * 0.15)
                   + ((0.85 * recievedDanglingvalue) / graphsize);
+              if (arrayList.size() != 0) {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue =  valueAndDanglingValue / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
+
+              }
             }
           } else {
-            valueAndDanglingValue = value;
+            if (value != null) {
+              valueAndDanglingValue = value;
+              for (int j = 0; j < arrayList.size(); j++) {
+                Double newvalue = valueAndDanglingValue / arrayList.size();
+                context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+
+              }
+
+            } else {
+              valueAndDanglingValue = ((double) 1 / graphsize) * 0.15;
+              if (arrayList.size() != 0) {
+                for (int j = 0; j < arrayList.size(); j++) {
+                  Double newvalue =  valueAndDanglingValue / arrayList.size();
+                  context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
+                }
+
+              }
+            }
           }
 
           if (arrayList.size() == 0) {
@@ -334,27 +366,6 @@ public class PageRankWorker extends TaskWorker {
             danglingValueLocal += valueAndDanglingValue;
           }
 
-          if (value != null) {
-
-            for (int j = 0; j < arrayList.size(); j++) {
-              Double newvalue = valueAndDanglingValue / arrayList.size();
-              context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
-
-            }
-
-          } else {
-
-            if (arrayList.size() != 0) {
-              for (int j = 0; j < arrayList.size(); j++) {
-                Double newvalue = ((((double) 1 / graphsize) * 0.15)
-                    + (0.85 * valueAndDanglingValue)) / arrayList.size();
-                context.write("keyedreduce", arrayList.get(j), new double[]{newvalue});
-              }
-
-            }
-
-
-          }
           count++;
 
 
