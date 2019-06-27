@@ -24,6 +24,8 @@ public final class MLDataObjectConstants {
 
   public static final String CROSS_VALIDATION_DATA_DIR = "testing_data_dir";
 
+  public static final String WEIGHT_VECTOR_DATA_DIR = "weight_vector_dir";
+
   public static final String MODEL_SAVE_PATH = "model_save_dir";
 
   public static final String SPLIT = "split";

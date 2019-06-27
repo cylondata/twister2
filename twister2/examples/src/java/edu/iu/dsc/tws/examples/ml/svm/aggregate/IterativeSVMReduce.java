@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.aggregate;
 
-import java.util.Arrays;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -22,13 +20,13 @@ import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
-public class SVMReduce extends BaseSink implements Collector {
+public class IterativeSVMReduce extends BaseSink implements Collector {
 
   private static final long serialVersionUID = -254264120110286748L;
 
-  private static final Logger LOG = Logger.getLogger(SVMReduce.class.getName());
+  private static final Logger LOG = Logger.getLogger(IterativeSVMReduce.class.getName());
 
-  private double[] object;
+  private double[][] newWeightVector;
 
   private boolean debug = false;
 
@@ -36,13 +34,13 @@ public class SVMReduce extends BaseSink implements Collector {
 
   private OperationMode operationMode;
 
-  public SVMReduce(OperationMode operationMode) {
+  public IterativeSVMReduce(OperationMode operationMode) {
     this.operationMode = operationMode;
   }
 
   @Override
-  public DataPartition<double[]> get() {
-    return new EntityPartition<>(this.context.taskIndex(), this.object);
+  public DataPartition<?> get() {
+    return new EntityPartition<>(context.taskIndex(), newWeightVector);
   }
 
   @Override
@@ -53,33 +51,10 @@ public class SVMReduce extends BaseSink implements Collector {
       this.status = false;
     } else {
 
-      if (message.getContent() instanceof double[]) {
-        this.status = true;
-        this.object = (double[]) message.getContent();
-        if (debug) {
-          LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
-              + ":" + this.context.globalTaskId() + ":" + Arrays.toString(this.object));
-        } else {
-          LOG.info("Object Type @Reduce : " + message.getContent().getClass().getName());
-        }
-      }
-
-      if (this.operationMode.equals(OperationMode.BATCH)) {
-        // do batch based computation
-        if (debug) {
-          LOG.info("Batch Mode : " + Arrays.toString(this.object));
-        }
-
-      }
-
-      if (this.operationMode.equals(OperationMode.STREAMING)) {
-        // do streaming based computation
-        if (debug) {
-          LOG.info("Streaming Mode : " + Arrays.toString(this.object));
-        }
-
+      if (message.getContent() instanceof double[][]) {
+        this.newWeightVector = (double[][]) message.getContent();
       }
     }
-    return this.status;
+    return true;
   }
 }
