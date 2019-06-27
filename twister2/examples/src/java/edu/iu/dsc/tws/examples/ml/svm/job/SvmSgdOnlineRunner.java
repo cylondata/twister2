@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
@@ -24,9 +25,12 @@ import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMAccuracyReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMWeightVectorReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeWeightVectorReduceFunction;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeStreamingCompute;
+import edu.iu.dsc.tws.examples.ml.svm.compute.window.IterativeStreamingWindowedCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.IterativeSVMConstants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeStreamingDataStreamer;
@@ -37,6 +41,9 @@ import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.window.function.ProcessWindowedFunction;
 
 public class SvmSgdOnlineRunner extends TaskWorker {
 
@@ -60,6 +67,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   private IterativeDataStream iterativeDataStream;
   private IterativeStreamingDataStreamer iterativeStreamingDataStreamer;
   private IterativeStreamingCompute iterativeStreamingCompute;
+  private IterativeStreamingWindowedCompute iterativeStreamingWindowedCompute;
   private IterativePredictionDataStreamer iterativePredictionDataStreamer;
   private IterativeSVMAccuracyReduce iterativeSVMAccuracyReduce;
   private IterativeSVMWeightVectorReduce iterativeSVMRiterativeSVMWeightVectorReduce;
@@ -253,23 +261,52 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     iterativeStreamingDataStreamer = new IterativeStreamingDataStreamer(this.svmJobParameters
         .getFeatures(), OperationMode.STREAMING, this.svmJobParameters.isDummy(),
         this.binaryBatchModel);
-    iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING);
+    BaseWindowedSink baseWindowedSink
+        = new IterativeStreamingWindowedCompute(new ProcessWindowFunctionImpl(),
+        OperationMode.STREAMING)
+        .withTumblingCountWindow(5);
     trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
         iterativeStreamingDataStreamer, dataStreamerParallelism);
     ComputeConnection svmComputeConnection = trainingBuilder
         .addSink(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE,
-            iterativeStreamingCompute,
+            baseWindowedSink,
             dataStreamerParallelism);
 
-    svmComputeConnection.allreduce(Constants.SimpleGraphConfig
+    svmComputeConnection.direct(Constants.SimpleGraphConfig
         .ITERATIVE_STREAMING_DATASTREAMER_SOURCE)
         .viaEdge(Constants.SimpleGraphConfig.STREAMING_EDGE)
-        .withReductionFunction(new IterativeWeightVectorReduceFunction())
         .withDataType(MessageTypes.DOUBLE_ARRAY);
 
     trainingBuilder.setMode(OperationMode.STREAMING);
     trainingBuilder.setTaskGraphName(IterativeSVMConstants.ITERATIVE_STREAMING_TRAINING_TASK_GRAPH);
     return trainingBuilder.build();
+  }
+
+  protected static class ProcessWindowFunctionImpl implements ProcessWindowedFunction<double[]> {
+
+    private static final long serialVersionUID = 8517840191276879034L;
+
+    private static final Logger LOG = Logger.getLogger(ProcessWindowFunctionImpl.class.getName());
+
+    @Override
+    public IWindowMessage<double[]> process(IWindowMessage<double[]> windowMessage) {
+      return windowMessage;
+    }
+
+    @Override
+    public IMessage<double[]> processLateMessage(IMessage<double[]> lateMessage) {
+      return lateMessage;
+    }
+
+    @Override
+    public double[] onMessage(double[] object1, double[] object2) {
+      try {
+        return Matrix.add(object1, object2);
+      } catch (MatrixMultiplicationException e) {
+        LOG.severe(String.format("Math Error : %s", e.getMessage()));
+      }
+      return null;
+    }
   }
 
 }
