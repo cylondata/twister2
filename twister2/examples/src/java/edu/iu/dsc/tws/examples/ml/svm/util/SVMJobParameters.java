@@ -57,6 +57,14 @@ public final class SVMJobParameters implements Serializable {
    */
 
   private String crossValidationDataDir;
+
+
+  /*
+  * Weight vector directory {csv format data is expected {features}}
+  * */
+
+  private String weightVectorDataDir;
+
   /**
    * Saving trained model
    */
@@ -116,6 +124,8 @@ public final class SVMJobParameters implements Serializable {
     svmJobParameters.isSplit = cfg.getBooleanValue(MLDataObjectConstants.SPLIT, false);
     svmJobParameters.trainingDataDir = cfg.getStringValue(MLDataObjectConstants.TRAINING_DATA_DIR);
     svmJobParameters.testingDataDir = cfg.getStringValue(MLDataObjectConstants.TESTING_DATA_DIR);
+    svmJobParameters.weightVectorDataDir = cfg.getStringValue(MLDataObjectConstants
+        .WEIGHT_VECTOR_DATA_DIR);
     svmJobParameters.crossValidationDataDir = cfg
         .getStringValue(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR);
     svmJobParameters.modelSaveDir = cfg
@@ -257,6 +267,14 @@ public final class SVMJobParameters implements Serializable {
     this.testingSamples = testingSamples;
   }
 
+  public String getWeightVectorDataDir() {
+    return weightVectorDataDir;
+  }
+
+  public void setWeightVectorDataDir(String weightVectorDataDir) {
+    this.weightVectorDataDir = weightVectorDataDir;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
@@ -267,6 +285,7 @@ public final class SVMJobParameters implements Serializable {
         + ", trainingDataDir='" + trainingDataDir + '\''
         + ", testingDataDir='" + testingDataDir + '\''
         + ", crossValidationDataDir='" + crossValidationDataDir + '\''
+        + ", weightVecotorDataDir='" + weightVectorDataDir + '\''
         + ", modelSaveDir='" + modelSaveDir + '\''
         + ", iterations=" + iterations
         + ", alpha=" + alpha

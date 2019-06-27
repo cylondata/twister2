@@ -42,9 +42,8 @@ import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
-//import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
 public final class NomadWorkerStarter {
   private static final Logger LOG = Logger.getLogger(NomadWorkerStarter.class.getName());
@@ -105,7 +104,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Setup the command line options for the MPI process
-   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -230,6 +228,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Create the resource plan
+   * @return
    */
   private IWorkerController createWorkerController() {
     // first get the worker id
@@ -244,13 +243,11 @@ public final class NomadWorkerStarter {
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    //String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    //int jobMasterPort = JobMasterContext.jobMasterPort(config);
-
     String jobName = NomadContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
+    LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
     //Map<String, Integer> additionalPorts =
     //    NomadContext.generateAdditionalPorts(config, startingPort);
@@ -261,31 +258,39 @@ public final class NomadWorkerStarter {
         WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
             computeResource, ports);
 
+    int jobMasterPort = 0;
+    String jobMasterIP = null;
+
     //find the jobmaster
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+      finder.initialize();
 
-/*    ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
-    finder.initialize();
+      String jobMasterIPandPort = finder.getJobMasterIPandPort();
+      if (jobMasterIPandPort == null) {
+        LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
+        jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
+        LOG.info("Job Master address: " + jobMasterIPandPort);
+      } else {
+        LOG.info("Job Master address: " + jobMasterIPandPort);
+      }
 
-    String jobMasterIPandPort = finder.getJobMasterIPandPort();
-    if (jobMasterIPandPort == null) {
-      LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
-      jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
-      LOG.info("Job Master address: " + jobMasterIPandPort);
+      finder.close();
+
+      String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":")
+          + 1);
+      jobMasterPort = Integer.parseInt(jobMasterPortStr);
+      jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
     } else {
-      LOG.info("Job Master address: " + jobMasterIPandPort);
+      jobMasterIP = JobMasterContext.jobMasterIP(config);
+      jobMasterPort = JobMasterContext.jobMasterPort(config);
     }
 
-    finder.close();
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
 
-    String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":") + 1);
-    int jobMasterPort = Integer.parseInt(jobMasterPortStr);
-    String jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));*/
-
-
-    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-//    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-//    int jobMasterPort = JobMasterContext.jobMasterPort(config);
+    int workerCount = job.getNumberOfWorkers();
+    LOG.info("Worker Count..: " + workerCount);
 
     this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);
@@ -316,7 +321,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Get the ports from the environment variable
-   *
    * @param cfg the configuration
    * @return port name -> port map
    */
@@ -335,7 +339,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Initialize the loggers to log into the task local directory
-   *
    * @param cfg the configuration
    * @param workerID worker id
    */

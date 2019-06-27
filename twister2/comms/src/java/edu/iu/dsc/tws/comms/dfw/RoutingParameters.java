@@ -11,16 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class RoutingParameters {
-  private Set<Integer> externalRoutes = new HashSet<>();
-  private Set<Integer> internalRoutes = new HashSet<>();
+  private List<Integer> externalRoutes = new ArrayList<>();
+  private List<Integer> internalRoutes = new ArrayList<>();
   private int destinationId;
 
-  public RoutingParameters(Set<Integer> externalRoutes,
-                           Set<Integer> internalRoutes, int destinationId) {
+  public RoutingParameters(List<Integer> externalRoutes,
+                           List<Integer> internalRoutes, int destinationId) {
     this.externalRoutes = externalRoutes;
     this.internalRoutes = internalRoutes;
     this.destinationId = destinationId;
@@ -29,11 +30,11 @@ public class RoutingParameters {
   public RoutingParameters() {
   }
 
-  public Set<Integer> getExternalRoutes() {
+  public List<Integer> getExternalRoutes() {
     return externalRoutes;
   }
 
-  public Set<Integer> getInternalRoutes() {
+  public List<Integer> getInternalRoutes() {
     return internalRoutes;
   }
 
@@ -41,12 +42,12 @@ public class RoutingParameters {
     return destinationId;
   }
 
-  public void addExternalRoutes(Set<Integer> extRoutes) {
-    this.externalRoutes = extRoutes;
+  public void addExternalRoutes(Collection<Integer> extRoutes) {
+    this.externalRoutes.addAll(extRoutes);
   }
 
-  public void addInternalRoutes(Set<Integer> intlRoutes) {
-    this.internalRoutes = intlRoutes;
+  public void addInternalRoutes(Collection<Integer> intlRoutes) {
+    this.internalRoutes.addAll(intlRoutes);
   }
 
   public void addExternalRoute(int route) {

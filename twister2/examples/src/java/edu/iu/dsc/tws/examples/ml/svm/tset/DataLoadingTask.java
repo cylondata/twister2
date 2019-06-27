@@ -76,7 +76,7 @@ public class DataLoadingTask extends BaseSource<double[][]> {
     this.dimension = this.binaryBatchModel.getFeatures() + 1;
     if ("train".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.binaryBatchModel.getSamples();
-      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
+      this.localPoints = new double[this.dataSize / parallelism][this.dimension];
       LOG.info(String.format("Data Size : %d, Array Shape [%d,%d]", this.dataSize,
           this.localPoints.length, this.dimension));
       this.source = new DataSource(config, new LocalTextInputPartitioner(new
@@ -85,7 +85,7 @@ public class DataLoadingTask extends BaseSource<double[][]> {
     }
     if ("test".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.svmJobParameters.getTestingSamples();
-      this.localPoints = new double[this.dataSize / (this.parallelism + 1)][this.dimension];
+      this.localPoints = new double[this.dataSize / parallelism][this.dimension];
       this.source = new DataSource(config, new LocalTextInputPartitioner(new
           Path(this.svmJobParameters.getTestingDataDir()), this.parallelism, config),
           this.parallelism);
