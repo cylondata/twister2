@@ -85,7 +85,7 @@ public final class SsspParameters {
         cfg.getStringValue(DataObjectConstants.PARALLELISM_VALUE));
     int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.NUMBER_OF_FILES));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
-    String sourceV = cfg.getStringValue(DataObjectConstants.SOURCE_VERTEX);
+//    String sourceV = cfg.getStringValue(DataObjectConstants.SOURCE_VERTEX);
 
     SsspParameters jobParameters = new SsspParameters(workers);
 
@@ -96,7 +96,7 @@ public final class SsspParameters {
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
     jobParameters.filesystem = fileSystem;
-    jobParameters.sourcevertex = sourceV;
+//    jobParameters.sourcevertex = sourceV;
 
     return jobParameters;
   }
