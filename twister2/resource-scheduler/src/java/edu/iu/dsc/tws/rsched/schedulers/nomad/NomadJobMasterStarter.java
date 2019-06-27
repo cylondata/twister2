@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
-//import java.net.Inet4Address;
 
 import java.io.File;
 import java.net.Inet4Address;
@@ -42,9 +41,6 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ResourceSchedulerUtils;
 
-//import java.net.InetAddress;
-//import edu.iu.dsc.tws.rsched.interfaces.IController;
-
 
 public final class NomadJobMasterStarter {
   private static final Logger LOG = Logger.getLogger(NomadJobMasterStarter.class.getName());
@@ -52,7 +48,6 @@ public final class NomadJobMasterStarter {
   private JobAPI.Job job;
   private Config config;
   private NomadController controller;
-
   public NomadJobMasterStarter(String[] args) {
     Options cmdOptions = null;
     try {
@@ -75,10 +70,8 @@ public final class NomadJobMasterStarter {
       throw new RuntimeException("Error parsing command line options: ", e);
     }
   }
-
   /**
    * Setup the command line options for the MPI process
-   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -123,21 +116,30 @@ public final class NomadJobMasterStarter {
         .argName("job name")
         .required()
         .build();
+    Option jobId = Option.builder("i")
+        .desc("Job id")
+        .longOpt("job_id")
+        .hasArgs()
+        .argName("job id")
+        .required()
+        .build();
+
     options.addOption(twister2Home);
     options.addOption(containerClass);
     options.addOption(configDirectory);
     options.addOption(clusterType);
     options.addOption(jobName);
+    options.addOption(jobId);
 
     return options;
   }
-
   private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
     String configDir = cmd.getOptionValue("config_dir");
     String clusterType = cmd.getOptionValue("cluster_type");
     String jobName = cmd.getOptionValue("job_name");
+    String jobId = cmd.getOptionValue("job_id");
 
     LOG.log(Level.FINE, String.format("Initializing process with "
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
@@ -149,6 +151,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
+        put(SchedulerContext.JOB_ID, jobId).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).build();
 
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, workerConfig);
@@ -161,10 +164,10 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.WORKER_CLASS, container).
         put(SchedulerContext.TWISTER2_CONTAINER_ID, id).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
+        put(SchedulerContext.JOB_ID, jobId).
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
-
   public void initialize(JobAPI.Job jb, Config cfg) {
     job = jb;
     config = cfg;
@@ -174,7 +177,6 @@ public final class NomadJobMasterStarter {
     NomadJobMasterStarter starter = new NomadJobMasterStarter(args);
     starter.run();
   }
-
   public void run() {
     // normal worker
     try {
@@ -184,10 +186,8 @@ public final class NomadJobMasterStarter {
       //closeWorker();
     }
   }
-
   /**
    * launch the job master
-   *
    * @return false if setup fails
    */
   public boolean launch() {
@@ -243,27 +243,19 @@ public final class NomadJobMasterStarter {
     JobMasterAPI.NodeInfo jobMasterNodeInfo = NomadContext.getNodeInfo(config, hostAddress);
     IScalerPerCluster clusterScaler = null;
     Thread jmThread = null;
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      //if you want to set it manually
-      //if (JobMasterContext.jobMasterIP(config) != null) {
-      //  hostAddress = JobMasterContext.jobMasterIP(config);
-      //}
-      LOG.log(Level.INFO, String.format("Starting the Job Master: %s:%d", hostAddress, port));
-      jobMaster = new JobMaster(
-          config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
-      jobMaster.addShutdownHook(true);
-      jobMaster.startJobMasterBlocking();
-      //jmThread = jobMaster.startJobMasterThreaded();
+    int workerCount = job.getNumberOfWorkers();
+    LOG.info("Worker Count..: " + workerCount);
 
-    } else {
-      jobMaster =
-          new JobMaster(config, hostAddress,
-              new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
-      LOG.info("JobMaster host address...:" + hostAddress);
-      jobMaster.addShutdownHook(true);
-      //jmThread = jobMaster.startJobMasterThreaded();
-      jobMaster.startJobMasterBlocking();
-    }
+    //if you want to set it manually
+    //if (JobMasterContext.jobMasterIP(config) != null) {
+    //  hostAddress = JobMasterContext.jobMasterIP(config);
+    //}
+    LOG.log(Level.INFO, String.format("Starting the Job Master: %s:%d", hostAddress, port));
+    jobMaster = new JobMaster(
+        config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+    jobMaster.addShutdownHook(true);
+    jobMaster.startJobMasterBlocking();
+    //jmThread = jobMaster.startJobMasterThreaded();
 
     waitIndefinitely();
     registrar.deleteJobMasterZNode();
@@ -271,14 +263,14 @@ public final class NomadJobMasterStarter {
 
     boolean start = controller.start(job);
     // now lets wait on client
-    if (JobMasterContext.jobMasterRunsInClient(config)) {
-      try {
-        if (jmThread != null) {
-          jmThread.join();
-        }
-      } catch (InterruptedException ignore) {
-      }
-    }
+//    if (JobMasterContext.jobMasterRunsInClient(config)) {
+//      try {
+//        if (jmThread != null) {
+//          jmThread.join();
+//        }
+//      } catch (InterruptedException ignore) {
+//      }
+//    }
     return start;
   }
 
@@ -297,11 +289,9 @@ public final class NomadJobMasterStarter {
       }
     }
   }
-
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
-   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
@@ -321,10 +311,8 @@ public final class NomadJobMasterStarter {
         jobPackageURI,
         Context.verbose(config));
   }
-
   /**
    * Initialize the loggers to log into the task local directory
-   *
    * @param cfg the configuration
    * @param workerID worker id
    */
