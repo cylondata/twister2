@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.testing;
 
-import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -21,7 +19,6 @@ import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
-import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
@@ -76,19 +73,10 @@ public class TestingDataObjectStreamingSource extends BaseSource {
    */
   @Override
   public void execute() {
-    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-    while (inputSplit != null) {
-      try {
-        while (!inputSplit.reachedEnd()) {
-          Object value = inputSplit.nextRecord(null);
-          if (value != null) {
-            context.write(getEdgeName(), value);
-          }
-        }
-        inputSplit = source.getNextSplit(context.taskIndex());
-      } catch (IOException e) {
-        LOG.log(Level.SEVERE, "Failed to read the input", e);
-      }
+    int i = 0;
+    while (i < 100) {
+      context.write(getEdgeName(), "StreamingSource");
+      ++i;
     }
     //context.end(getEdgeName());
   }

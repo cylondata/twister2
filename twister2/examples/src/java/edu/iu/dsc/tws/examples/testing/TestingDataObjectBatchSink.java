@@ -11,12 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.testing;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 
 public class TestingDataObjectBatchSink extends BaseSink {
+
+  private static final Logger LOG = Logger.getLogger(TestingDataObjectBatchSink.class.getName());
+
   @Override
   public boolean execute(IMessage content) {
-    return false;
+    LOG.info("Received Message:" + content.toString());
+    return true;
   }
 }

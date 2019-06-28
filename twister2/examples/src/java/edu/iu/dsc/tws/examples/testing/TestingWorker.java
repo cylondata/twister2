@@ -106,7 +106,6 @@ public class TestingWorker extends TaskWorker {
     int numFiles = kMeansJobParameters.getNumFiles();
     int dsize = kMeansJobParameters.getDsize();
     int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
 
     String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
     String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
@@ -114,31 +113,28 @@ public class TestingWorker extends TaskWorker {
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);
 
-    long startTime = System.currentTimeMillis();
-
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = buildStreamingTaskGraph(dataDirectory,
+    DataFlowTaskGraph streamingTaskGraph = buildStreamingTaskGraph(dataDirectory,
         parallelismValue, config);
     //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+    ExecutionPlan streamingGraphExecutionPlan = taskExecutor.plan(streamingTaskGraph);
     //Actual execution for the first taskgraph
     //taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    taskExecutor.iExecute(datapointsTaskGraph, firstGraphExecutionPlan);
+    taskExecutor.iExecute(streamingTaskGraph, streamingGraphExecutionPlan);
     //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-
+    DataObject<Object> streamingDataObject = taskExecutor.getOutput(
+        streamingTaskGraph, streamingGraphExecutionPlan, "streamingsink");
 
     /* Second Graph to read the centroids **/
-    DataFlowTaskGraph centroidsTaskGraph = buildBatchTaskGraph(centroidDirectory,
+    DataFlowTaskGraph batchTaskGraph = buildBatchTaskGraph(centroidDirectory,
         parallelismValue, config);
     //Get the execution plan for the second task graph
-    ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+    ExecutionPlan batchTaskGraphExecutionPlan = taskExecutor.plan(batchTaskGraph);
     //Actual execution for the second taskgraph
-    taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
+    taskExecutor.execute(batchTaskGraph, batchTaskGraphExecutionPlan);
     //Retrieve the output of the first task graph
-    DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
-        centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
+    DataObject<Object> batchDataObject = taskExecutor.getOutput(
+        batchTaskGraph, batchTaskGraphExecutionPlan, "batchsink");
   }
 }
 

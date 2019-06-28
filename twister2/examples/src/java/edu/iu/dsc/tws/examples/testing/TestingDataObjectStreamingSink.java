@@ -11,14 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.testing;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.ISink;
+import java.util.logging.Logger;
 
-public class TestingDataObjectStreamingSink implements ISink {
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.nodes.BaseSink;
+
+public class TestingDataObjectStreamingSink extends BaseSink {
+
+  private static final Logger LOG = Logger.getLogger(
+      TestingDataObjectStreamingSink.class.getName());
 
   @Override
-  public void prepare(Config cfg, TaskContext context) {
-
+  public boolean execute(IMessage content) {
+    LOG.info("Received Message:" + content.toString());
+    return true;
   }
 }
