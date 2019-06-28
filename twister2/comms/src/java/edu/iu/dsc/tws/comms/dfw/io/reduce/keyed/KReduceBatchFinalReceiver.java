@@ -82,9 +82,12 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    return b && reduced.isEmpty();
+  protected boolean isAllEmpty(int target) {
+    if (reduced.containsKey(target)) {
+      Map<Object, Object> queue = reduced.get(target);
+      return queue.isEmpty();
+    }
+    return true;
   }
 
   @Override
