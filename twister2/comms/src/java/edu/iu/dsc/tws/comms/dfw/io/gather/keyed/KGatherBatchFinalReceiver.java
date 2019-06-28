@@ -100,9 +100,12 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    return b && gathered.isEmpty();
+  protected boolean isAllEmpty(int target) {
+    if (gathered.containsKey(target)) {
+      Map<Object, List<Object>> queue = gathered.get(target);
+      return queue.isEmpty();
+    }
+    return true;
   }
 
   @Override

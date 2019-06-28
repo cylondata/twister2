@@ -148,7 +148,11 @@ public class TargetPartialReceiver extends TargetReceiver {
     return true;
   }
 
-  @Override
+  /**
+   * Check weather all the other information is flushed
+   *
+   * @return true if there is nothing to process
+   */
   protected boolean isAllEmpty() {
     for (int i = 0; i < targets.length; i++) {
       Queue<Object> msgQueue = messages.get(targets[i]);
@@ -208,6 +212,47 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+
+    lock.lock();
+    try {
+      boolean allEmpty = true;
+      for (int i = 0; i < targets.length; i++) {
+        int key = targets[i];
+        Queue<Object> val = messages.get(key);
+
+        if (val != null && val.size() > 0) {
+          merge(key, val);
+        }
+
+        // check weather we are ready to send and we have values to send
+        if (!isFilledToSend(key)) {
+          continue;
+        }
+
+        // if we send this list successfully
+        if (!sendToTarget(representSource, key)) {
+          needsFurtherProgress = true;
+        }
+        allEmpty &= val.isEmpty();
+      }
+
+      if (!allEmpty || !isAllEmpty() || !sync()) {
+        needsFurtherProgress = true;
+      }
+    } finally {
+      lock.unlock();
+    }
+
+    return needsFurtherProgress;
+  }
+
+  /**
+   * Handle the sync
+   *
+   * @return true if everything is synced
+   */
   public boolean sync() {
     boolean allSyncsSent = true;
     boolean allSynced = true;
