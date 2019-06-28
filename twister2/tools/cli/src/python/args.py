@@ -40,6 +40,17 @@ def add_verbose(parser):
         help='Verbose mode. Increases logging level to show debug messages')
     return parser
 
+def add_debug(parser):
+    '''
+    :param parser:
+    :return:
+    '''
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug Mode. Starts a worker with -Xdebug flag')
+    return parser
+
 
 def add_trace_execution(parser):
     '''
