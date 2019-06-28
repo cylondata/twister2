@@ -15,14 +15,16 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
-public class TestingDataObjectStreamingSource extends BaseSource {
+public class TestingDataObjectStreamingSource extends BaseSource implements Collector {
 
   private static final Logger LOG = Logger.getLogger(
       TestingDataObjectStreamingSource.class.getName());
@@ -88,5 +90,10 @@ public class TestingDataObjectStreamingSource extends BaseSource {
         ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
         new Path(getDataDirectory()), context.getParallelism(), config));
+  }
+
+  @Override
+  public DataPartition<?> get() {
+    return null;
   }
 }
