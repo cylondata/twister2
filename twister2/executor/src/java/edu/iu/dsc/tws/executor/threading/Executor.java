@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.task.executor.IExecution;
 import edu.iu.dsc.tws.api.task.executor.IExecutor;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 public class Executor implements IExecutor {
 

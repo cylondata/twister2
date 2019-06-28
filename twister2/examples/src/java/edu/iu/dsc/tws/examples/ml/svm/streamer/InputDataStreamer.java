@@ -42,9 +42,15 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   private DataObject<?> dataPointsObject = null;
 
+  private DataObject<?> weightVectorObject = null;
+
   private Object datapoints = null;
 
+  private Object weightVector = null;
+
   private double[][] datapointArray = null;
+
+  private double[][] weightVectorArray = null;
 
   private boolean debug = false;
 
@@ -136,17 +142,35 @@ public class InputDataStreamer extends BaseSource implements Receptor {
     if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
       this.dataPointsObject = data;
     }
+
+    if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
+      this.weightVectorObject = data;
+    }
   }
 
   public Object getDataPointsByTaskIndex(int taskIndex) {
     EntityPartition<Object> datapointsEntityPartition
         = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+
     if (datapointsEntityPartition != null) {
       DataObject<?> dataObject
           = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
       datapoints = getDataPointsByDataObject(taskIndex, dataObject);
     }
+
     return datapoints;
+  }
+
+  public Object getWeightVectorByTaskIndex(int taskIndex) {
+    EntityPartition<Object> weightVectorEntityPartition
+        = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
+
+    if (weightVectorEntityPartition != null) {
+      DataObject<?> weightVectorObjectLocal
+          = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
+      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObjectLocal);
+    }
+    return weightVector;
   }
 
   public Object getDataPointsByDataObject(int taskIndex, DataObject<?> datapointsDataObject) {
@@ -162,12 +186,18 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
+    this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
+
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
     this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
+    this.weightVectorArray = DataUtils.getDataPointsFromDataObject(this.weightVector);
+
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapointArray.length));
+    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
+        this.weightVectorArray.length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 }

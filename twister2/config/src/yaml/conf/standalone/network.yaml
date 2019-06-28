@@ -1,4 +1,4 @@
-twister2.network.channel.class: "edu.iu.dsc.tws.comms.dfw.mpi.TWSMPIChannel"
+twister2.network.channel.class: "edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"
 
 # the buffer size to be used
 network.buffer.size: 1024000

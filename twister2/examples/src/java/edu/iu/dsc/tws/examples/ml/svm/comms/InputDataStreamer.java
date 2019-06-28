@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 
@@ -35,7 +35,7 @@ public class InputDataStreamer extends CommsWorker {
 
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     List<Integer> sources = new ArrayList<>();
     List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = taskStages.get(0);

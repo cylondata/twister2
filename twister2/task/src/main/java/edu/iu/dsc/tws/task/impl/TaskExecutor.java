@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.executor.IExecution;
 import edu.iu.dsc.tws.api.task.executor.INodeInstance;
@@ -45,7 +46,6 @@ import edu.iu.dsc.tws.api.task.nodes.ISource;
 import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
 import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
@@ -101,7 +101,7 @@ public class TaskExecutor {
     this.checkpointingClient = checkpointingClient;
   }
 
-  public TaskExecutor(WorkerEnv workerEnv) {
+  public TaskExecutor(WorkerEnvironment workerEnv) {
     this.config = workerEnv.getConfig();
     this.workerID = workerEnv.getWorkerId();
     this.workerInfoList = workerEnv.getWorkerList();
@@ -283,7 +283,7 @@ public class TaskExecutor {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
-    DataObject<T> dataSet = new DataObjectImpl<T>(config);
+    DataObject<T> dataSet = new DataObjectImpl<>(config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();

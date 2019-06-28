@@ -153,7 +153,7 @@ public final class DataUtils {
           }
         }
       } else {
-        LOG.severe(String.format("Something Went Wrong"));
+        LOG.severe(String.format("Update Model: Something Went Wrong"));
       }
     }
     return binaryBatchModel;
@@ -188,15 +188,45 @@ public final class DataUtils {
           LOG.info(String.format("Data Type : %s", o.getClass().getName()));
         }
       }
+    } else {
+      LOG.info(String.format(""));
     }
     return res;
   }
 
-  public static double[] getWeightVectorFromWeightVectorObject(Object object) {
-    double[] weightVector = null;
-
-    return weightVector;
+  /**
+   * This method is used to convert the input data obtained from a different SourceTask
+   */
+  public static double[][] getWeightVectorFromDataObject(Object object) {
+    double[][] res = null;
+    if (object instanceof ArrayList<?>) {
+      ArrayList<?> data = (ArrayList<?>) object;
+      res = new double[data.size()][];
+      int count = 0;
+      for (Object o : data) {
+        if (o instanceof String) {
+          //LOG.info(String.format("Transformed Data : %s", (String) o));
+          //each string contains the a , delimeter string
+          // the first value is the class label and the rest are features of the datapoint
+          String[] s = String.valueOf(o).split(Constants.SimpleGraphConfig.DELIMITER);
+          double label = Double.parseDouble(s[0]);
+          int features = s.length;
+          res[count] = new double[s.length];
+          for (int i = 0; i < s.length; i++) {
+            res[count][i] = Double.parseDouble(s[i]);
+          }
+//          for (int i = 0; i < features; i++) {
+//            res[count][i] = Double.parseDouble(s[i + 1]);
+//          }
+          count++;
+        } else {
+          LOG.info(String.format("Data Type : %s", o.getClass().getName()));
+        }
+      }
+    }
+    return res;
   }
+
 
   public static double[][] getDataObjectToDoubleArray(DataObject<Object> dataPointsObject1) {
     double[][] d = null;
@@ -205,6 +235,48 @@ public final class DataUtils {
     LOG.info(String.format("Next Element %s",
         dataPointsObject1.getPartitions()[0].getConsumer().next().getClass().getName()));
     return d;
+  }
+
+  public static double[] arrayFromString(String s) {
+    double[] w = null;
+    String[] ws = s.split(",");
+    w = new double[ws.length];
+    for (int i = 0; i < w.length; i++) {
+      w[i] = Double.parseDouble(ws[i]);
+    }
+    return w;
+  }
+
+  public static double[] arrayFromString(String s, String delemiter) {
+    double[] w = null;
+    String[] ws = s.split(delemiter);
+    w = new double[ws.length];
+    for (int i = 0; i < w.length; i++) {
+      w[i] = Double.parseDouble(ws[i]);
+    }
+    return w;
+  }
+
+  public static double[] arrayFromString(String s, String delemiter, boolean trim) {
+    double[] w = null;
+    String[] ws = s.split(delemiter);
+    w = new double[ws.length];
+    for (int i = 0; i < w.length; i++) {
+      if (trim) {
+        w[i] = Double.parseDouble(ws[i].trim());
+      } else {
+        w[i] = Double.parseDouble(ws[i]);
+      }
+    }
+    return w;
+  }
+
+
+  public static double[] average(double[] a, int processes) {
+    for (int i = 0; i < a.length; i++) {
+      a[i] /= (double) processes;
+    }
+    return a;
   }
 
 

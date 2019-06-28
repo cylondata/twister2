@@ -117,6 +117,10 @@ public abstract class SgdSvm implements Serializable {
   public abstract void iterativeSgd(double[] w1, double[][] x1, double[] y1)
       throws NullDataSetException, MatrixMultiplicationException;
 
+  public abstract void iterativeTaskSgd(double[] w1, double[][] x1, double[] y1)
+      throws NullDataSetException, MatrixMultiplicationException;
+
+
   public abstract void onlineSGD(double[] w1, double[] x1, double y1)
       throws NullDataSetException, MatrixMultiplicationException;
 

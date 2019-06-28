@@ -76,14 +76,14 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
-      if (e.getValue().size() > 0) {
+  protected boolean isAllEmpty(int target) {
+    if (readyToSend.containsKey(target)) {
+      List<Object> queue = readyToSend.get(target);
+      if (queue.size() > 0) {
         return false;
       }
     }
-    return b;
+    return true;
   }
 
   @Override
