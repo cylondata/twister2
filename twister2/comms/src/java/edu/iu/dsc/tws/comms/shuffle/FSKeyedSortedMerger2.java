@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 /**
  * Sorted merger implementation

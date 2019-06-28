@@ -20,4 +20,8 @@ public class Twister2RuntimeException extends RuntimeException {
   public Twister2RuntimeException(String msg, Throwable cause) {
     super(msg, cause);
   }
+
+  public Twister2RuntimeException(Throwable throwable) {
+    super(throwable);
+  }
 }

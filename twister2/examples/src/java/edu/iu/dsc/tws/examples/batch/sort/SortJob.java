@@ -30,8 +30,8 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
 import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -53,7 +53,7 @@ public class SortJob implements IWorker {
   private LogicalPlan logicalPlan;
   private List<Integer> taskStages = new ArrayList<>();
   private Set<RecordSource> recordSources = new HashSet<>();
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -63,7 +63,7 @@ public class SortJob implements IWorker {
     this.workerId = workerID;
 
     // create a worker environment & setup the network
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     taskStages.add(NO_OF_TASKS);

@@ -25,7 +25,7 @@ import org.apache.commons.cli.Option;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 
@@ -132,7 +132,7 @@ public final class Utils {
    * @return task plan
    */
 
-  public static LogicalPlan createStageLogicalPlan(WorkerEnv workerEnv,
+  public static LogicalPlan createStageLogicalPlan(WorkerEnvironment workerEnv,
                                                    List<Integer> noOfTaskEachStage) {
     int workerID = workerEnv.getWorkerId();
     List<JobMasterAPI.WorkerInfo> workerList = workerEnv.getWorkerList();

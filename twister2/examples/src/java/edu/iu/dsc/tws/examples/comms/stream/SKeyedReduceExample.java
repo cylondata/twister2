@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
@@ -43,7 +43,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
   private boolean reduceDone;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
