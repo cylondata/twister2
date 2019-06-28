@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.testing;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.nodes.ISink;
-import edu.iu.dsc.tws.api.tset.BaseSink;
 
 public class TestingDataObjectStreamingSink implements ISink {
 

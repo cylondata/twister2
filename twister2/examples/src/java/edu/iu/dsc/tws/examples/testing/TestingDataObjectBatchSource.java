@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
 public class TestingDataObjectBatchSource extends BaseSource {
 
-  private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.task.dataobjects.DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(TestingDataObjectBatchSource.class.getName());
 
   private static final long serialVersionUID = -1L;
 

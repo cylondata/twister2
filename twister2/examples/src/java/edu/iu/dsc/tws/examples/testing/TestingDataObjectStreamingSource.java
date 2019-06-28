@@ -27,76 +27,78 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
 public class TestingDataObjectStreamingSource extends BaseSource {
 
-    private static final Logger LOG = Logger.getLogger(edu.iu.dsc.tws.task.dataobjects.DataObjectSource.class.getName());
+  private static final Logger LOG = Logger.getLogger(
+      TestingDataObjectStreamingSource.class.getName());
 
-    private static final long serialVersionUID = -1L;
+  private static final long serialVersionUID = -1L;
 
-    /**
-     * DataSource to partition the datapoints
-     */
-    private DataSource<?, ?> source;
+  /**
+   * DataSource to partition the datapoints
+   */
+  private DataSource<?, ?> source;
 
-    /**
-     * Edge name to write the partitoned datapoints
-     */
-    private String edgeName;
-    private String dataDirectory;
+  /**
+   * Edge name to write the partitoned datapoints
+   */
+  private String edgeName;
+  private String dataDirectory;
 
-    public TestingDataObjectStreamingSource(String edgename, String dataDirectory) {
-      this.edgeName = edgename;
-      this.dataDirectory = dataDirectory;
-    }
+  public TestingDataObjectStreamingSource(String edgename, String dataDirectory) {
+    this.edgeName = edgename;
+    this.dataDirectory = dataDirectory;
+  }
 
-    public String getDataDirectory() {
-      return dataDirectory;
-    }
+  public String getDataDirectory() {
+    return dataDirectory;
+  }
 
-    public void setDataDirectory(String dataDirectory) {
-      this.dataDirectory = dataDirectory;
-    }
+  public void setDataDirectory(String dataDirectory) {
+    this.dataDirectory = dataDirectory;
+  }
 
-    /**
-     * Getter property to set the edge name
-     */
-    public String getEdgeName() {
-      return edgeName;
-    }
+  /**
+   * Getter property to set the edge name
+   */
+  public String getEdgeName() {
+    return edgeName;
+  }
 
-    /**
-     * Setter property to set the edge name
-     */
-    public void setEdgeName(String edgeName) {
-      this.edgeName = edgeName;
-    }
+  /**
+   * Setter property to set the edge name
+   */
+  public void setEdgeName(String edgeName) {
+    this.edgeName = edgeName;
+  }
 
-    /**
-     * This method get the partitioned datapoints using the task index and write those values using
-     * the respective edge name.
-     */
-    @Override
-    public void execute() {
-      InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-      while (inputSplit != null) {
-        try {
-          while (!inputSplit.reachedEnd()) {
-            Object value = inputSplit.nextRecord(null);
-            if (value != null) {
-              context.write(getEdgeName(), value);
-            }
+  /**
+   * This method get the partitioned datapoints using the task index and write those values using
+   * the respective edge name.
+   */
+  @Override
+  public void execute() {
+    InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+    while (inputSplit != null) {
+      try {
+        while (!inputSplit.reachedEnd()) {
+          Object value = inputSplit.nextRecord(null);
+          if (value != null) {
+            context.write(getEdgeName(), value);
           }
-          inputSplit = source.getNextSplit(context.taskIndex());
-        } catch (IOException e) {
-          LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
+        inputSplit = source.getNextSplit(context.taskIndex());
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed to read the input", e);
       }
-      //context.end(getEdgeName());
     }
+    //context.end(getEdgeName());
+  }
 
-    @Override
-    public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), config));
-    }
+  @Override
+  public void prepare(Config cfg, TaskContext context) {
+    super.prepare(cfg, context);
+    ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
+        ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+        new Path(getDataDirectory()), context.getParallelism(), config));
+  }
 }
