@@ -21,10 +21,12 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeAccuracyReduceFunction;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMAccuracyReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMWeightVectorReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.ReduceAggregator;
 import edu.iu.dsc.tws.examples.ml.svm.compute.IterativeStreamingCompute;
+import edu.iu.dsc.tws.examples.ml.svm.compute.window.IterativeStreamingSinkEvaluator;
 import edu.iu.dsc.tws.examples.ml.svm.compute.window.IterativeStreamingWindowedCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.IterativeSVMConstants;
@@ -248,6 +250,9 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     taskExecutor.addInput(streamingTrainingTG, executionPlan,
         Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
         Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, inputDoubleWeightvectorObject);
+    taskExecutor.addInput(streamingTrainingTG, executionPlan,
+        "window-sink",
+        Constants.SimpleGraphConfig.TEST_DATA, testingDoubleDataPointObject);
 
     taskExecutor.execute(streamingTrainingTG, executionPlan);
 //    currentDataPoint = taskExecutor.getOutput(streamingTrainingTG,
@@ -267,9 +272,12 @@ public class SvmSgdOnlineRunner extends TaskWorker {
         this.svmJobParameters,
         this.binaryBatchModel,
         "online-training-graph")
-        .withTumblingCountWindow(500);
+        .withTumblingCountWindow(50);
     iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING,
-        new ReduceAggregator());
+        new ReduceAggregator(), this.svmJobParameters);
+
+    IterativeStreamingSinkEvaluator iterativeStreamingSinkEvaluator
+        = new IterativeStreamingSinkEvaluator();
 
     trainingBuilder.addSource(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_DATASTREAMER_SOURCE,
         iterativeStreamingDataStreamer, dataStreamerParallelism);
@@ -279,7 +287,11 @@ public class SvmSgdOnlineRunner extends TaskWorker {
             dataStreamerParallelism);
 
     ComputeConnection svmReduceConnection = trainingBuilder
-        .addSink("window-sink", iterativeStreamingCompute, 1);
+        .addCompute("window-sink", iterativeStreamingCompute, dataStreamerParallelism);
+
+    ComputeConnection svmFinalEvaluationConnection = trainingBuilder
+        .addSink("window-evaluation-sink", iterativeStreamingSinkEvaluator,
+            dataStreamerParallelism);
 
     svmComputeConnection.direct(Constants.SimpleGraphConfig
         .ITERATIVE_STREAMING_DATASTREAMER_SOURCE)
@@ -287,10 +299,16 @@ public class SvmSgdOnlineRunner extends TaskWorker {
         .withDataType(MessageTypes.DOUBLE_ARRAY);
 
     svmReduceConnection
-        .reduce(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE)
+        .allreduce(Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE)
         .viaEdge("window-sink-edge")
         .withReductionFunction(new ReduceAggregator())
         .withDataType(MessageTypes.DOUBLE_ARRAY);
+
+    svmFinalEvaluationConnection
+        .allreduce("window-sink")
+        .viaEdge("window-evaluation-edge")
+        .withReductionFunction(new IterativeAccuracyReduceFunction())
+        .withDataType(MessageTypes.DOUBLE);
 
     trainingBuilder.setMode(OperationMode.STREAMING);
     trainingBuilder.setTaskGraphName(IterativeSVMConstants.ITERATIVE_STREAMING_TRAINING_TASK_GRAPH);

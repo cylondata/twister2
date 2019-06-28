@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
+import edu.iu.dsc.tws.examples.ml.svm.test.Predict;
 
 public final class MLUtils {
 
@@ -57,6 +58,21 @@ public final class MLUtils {
     if (debug) {
       LOG.info(String.format("Iterative SGD SVM Training End"));
     }
+    return trainedModel;
+  }
+
+  public static <T> TrainedModel predictSGDSVM(double[] w, double[][] testData,
+                                               SVMJobParameters svmJobParameters,
+                                               String modelName)
+      throws MatrixMultiplicationException {
+    TrainedModel trainedModel = null;
+    BinaryBatchModel binaryBatchModel = new BinaryBatchModel(svmJobParameters.getSamples(),
+        svmJobParameters.getFeatures(), null, w);
+    BinaryBatchModel updatedBinaryBatchModel = DataUtils.updateModelData(binaryBatchModel,
+        testData);
+    Predict predict = new Predict(binaryBatchModel.getX(), binaryBatchModel.getY(), w);
+    double acc = predict.predict();
+    trainedModel = new TrainedModel(updatedBinaryBatchModel, acc, modelName);
     return trainedModel;
   }
 }

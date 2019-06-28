@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.examples.ml.svm.compute.window;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
@@ -42,7 +44,10 @@ public class IterativeStreamingWindowedCompute extends ProcessWindow<double[]> {
 
   private TrainedModel trainedModel;
 
+
   private static int counter = 0;
+
+  private boolean debug = false;
 
   public IterativeStreamingWindowedCompute(
       ProcessWindowedFunction<double[]> processWindowedFunction, OperationMode operationMode) {
@@ -75,16 +80,23 @@ public class IterativeStreamingWindowedCompute extends ProcessWindow<double[]> {
   }
 
   @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    super.prepare(cfg, ctx);
+  }
+
+  @Override
   public boolean process(IWindowMessage<double[]> windowMessage) {
-//    LOG.info(String.format("[%d] Message List Size : %d ", counter++, windowMessage.getWindow()
-//        .size()));
+    if (debug) {
+      LOG.info(String.format("[%d] Message List Size : %d ", counter++, windowMessage.getWindow()
+          .size()));
+    }
     try {
       trainedModel = MLUtils.runIterativeSGDSVM(windowMessage.getWindow(), this.svmJobParameters,
-          this.binaryBatchModel,  this.modelName);
+          this.binaryBatchModel, this.modelName);
     } catch (NullDataSetException e) {
-      e.printStackTrace();
+      LOG.severe(String.format("NullDataSetException : %s", e.getMessage()));
     } catch (MatrixMultiplicationException e) {
-      e.printStackTrace();
+      LOG.severe(String.format("MatrixMultiplicationException : %s", e.getMessage()));
     }
     context.write("window-sink-edge", trainedModel.getW());
     return true;
@@ -94,6 +106,5 @@ public class IterativeStreamingWindowedCompute extends ProcessWindow<double[]> {
   public boolean processLateMessages(IMessage<double[]> lateMessage) {
     return true;
   }
-
 
 }
