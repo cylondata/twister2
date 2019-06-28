@@ -10,42 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-package edu.iu.dsc.tws.common.worker;
+package edu.iu.dsc.tws.api.resource;
 
 import java.util.List;
 import java.util.logging.Level;
@@ -55,17 +20,11 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-/**
- * todo move to common
- */
-public final class WorkerEnv {
-  private static final Logger LOG = Logger.getLogger(WorkerEnv.class.getName());
+public final class WorkerEnvironment {
+  private static final Logger LOG = Logger.getLogger(WorkerEnvironment.class.getName());
 
   private Config config;
   private int workerId;
@@ -77,10 +36,10 @@ public final class WorkerEnv {
   private TWSChannel channel;
   private final List<JobMasterAPI.WorkerInfo> workerList;
 
-  private static volatile WorkerEnv workerEnv;
+  private static volatile WorkerEnvironment workerEnv;
 
-  private WorkerEnv(Config config, int workerId, IWorkerController workerController,
-                    IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
+                            IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     this.config = config;
     this.workerId = workerId;
     this.workerController = workerController;
@@ -99,8 +58,7 @@ public final class WorkerEnv {
     }
 
     // create the channel
-    //todo uncomment
-    //this.channel = Network.initializeChannel(config, workerController);
+    this.channel = Network.initializeChannel(config, workerController);
     // create the communicator
     this.communicator = new Communicator(config, channel);
   }
@@ -146,12 +104,14 @@ public final class WorkerEnv {
     this.channel.close();
   }
 
-  public static WorkerEnv init(Config config, int workerId, IWorkerController workerController,
-                               IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+  public static WorkerEnvironment init(Config config, int workerId,
+                                       IWorkerController workerController,
+                                       IPersistentVolume persistentVolume,
+                                       IVolatileVolume volatileVolume) {
     if (workerEnv == null) {
-      synchronized (WorkerEnv.class) {
+      synchronized (WorkerEnvironment.class) {
         if (workerEnv == null) {
-          workerEnv = new WorkerEnv(config, workerId, workerController, persistentVolume,
+          workerEnv = new WorkerEnvironment(config, workerId, workerController, persistentVolume,
               volatileVolume);
         }
       }
