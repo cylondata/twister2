@@ -158,14 +158,19 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   private Queue<DataBuffer> freeReceiveBuffers;
 
   /**
-   * the receive states of different ids
+   * the receive states of different task ids
    */
-  private List<List<InMessage.ReceivedState>> receiveStates = new ArrayList<>();
+  private List<Set<Integer>> receiveStates = new ArrayList<>();
 
   /**
-   * The receive groups
+   * The receive task id groups
    */
-  private List<List<Integer>> receiveGroups = new ArrayList<>();
+  private List<List<Integer>> receiveIdGroups;
+
+  /**
+   * Keep track of the current receive group
+   */
+  private int currentReceiveGroup;
 
   ControlledChannelOperation(TWSChannel channel) {
     this.channel = channel;
@@ -260,12 +265,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   private void setupCommunication() {
     // we will receive from these
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(config);
-    int receiveBufferSize = DataFlowContext.bufferSize(config);
     for (Integer recv : receivingExecutors) {
       Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
-      for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new DataBuffer(channel.createBuffer(receiveBufferSize)));
-      }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
       channel.receiveMessage(recv, edge, this, recvList);
@@ -284,8 +285,49 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Start receiving from the next set of ids
    */
-  public void setupReceiveGroups(List<List<Integer>> receivingIds) {
-    receiveGroups = receivingIds;
+  public void setupReceiveGroups(int initialGroup, List<List<Integer>> receivingIds) {
+    this.currentReceiveGroup = initialGroup;
+    this.receiveIdGroups = receivingIds;
+    int max = Integer.MIN_VALUE;
+    // first lets validate
+    for (int i = 0; i < receivingIds.size(); i++) {
+      List<Integer> group = receivingIds.get(i);
+      if (group.size() > max) {
+        max = group.size();
+      }
+      // add the executors
+      // add the states
+      receiveStates.add(new HashSet<>());
+    }
+    // we put max group size equal buffers
+    int receiveBufferSize = DataFlowContext.bufferSize(config);
+    this.freeReceiveBuffers = new ArrayBlockingQueue<>(max);
+    for (int i = 0; i < max; i++) {
+      ByteBuffer byteBuffer = channel.createBuffer(receiveBufferSize);
+      this.freeReceiveBuffers.offer(new DataBuffer(byteBuffer));
+    }
+  }
+
+  /**
+   * Start receiving from the next group
+   * @param group the next group
+   */
+  private void startReceiving(int group) {
+    List<Integer> receiveExecs = receiveIdGroups.get(group);
+    for (int i = 0; i < receiveExecs.size(); i++) {
+      int exec = receiveExecs.get(i);
+      Queue<DataBuffer> list = receiveBuffers.get(exec);
+      // poll the free receive buffers and ad to the receive
+      list.offer(freeReceiveBuffers.poll());
+    }
+  }
+
+  /**
+   * Utility method to increment the receive group
+   */
+  private void incrementReceiveGroup() {
+    currentReceiveGroup++;
+    currentReceiveGroup = currentReceiveGroup / receiveIdGroups.size();
   }
 
 
@@ -629,6 +671,14 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
           if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;
           }
+
+          // lets keep track that we have completed a receive from this executor
+          Set<Integer> currentReceives = receiveStates.get(currentReceiveGroup);
+          int exec = currentMessage.getOriginatingId();
+          if (currentReceives.contains(exec)) {
+            throw new RuntimeException("We cannot receive multiple from same executor: " + exec);
+          }
+
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
         } else {
@@ -662,7 +712,15 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
-      Queue<DataBuffer> list = receiveBuffers.get(id);
+      Set<Integer> currentReceives = receiveStates.get(currentReceiveGroup);
+      Queue<DataBuffer> list;
+      // if we have received the full message we can release the buffer to free buffers,
+      // otherwise we need to release to receive more
+      if (!currentReceives.contains(id)) {
+        list = receiveBuffers.get(id);
+      } else {
+        list = freeReceiveBuffers;
+      }
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
