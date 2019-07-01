@@ -165,7 +165,7 @@ to your pom.xml
 </dependency>
 ```
 
-No change your main method as follows,
+Now change your main method as follows,
 
 ```java
 public static void main(String[] args) {
@@ -203,13 +203,13 @@ With below line, you should point to a valid config directory of twister2.
 LocalSubmitter submitter = LocalSubmitter.prepare("twister2/config/src/yaml/conf");
 ```
 
-With following two lines, we will submit the job to an emulated cluster.
+With following two lines, we will submit the job to an emulated cluster on your local machine.
 
 ```java
 submitter.submitJob(twister2Job, config);
 ```
 
-NOTE : Adjust the number of workers, based on the resources available in your local machine and your testing requirements.
+NOTE : Adjust the number of workers, based on the resources available in your local machine and your testing requirements. 
 
 Now run or debug your program with IDE as you would normally do with any Java application.
 
