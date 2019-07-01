@@ -14,17 +14,16 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.comms.api.stream.SPartition;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 /**
  * The streaming operation.
@@ -34,7 +33,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
 
   protected SPartition op;
 
-  public PartitionStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+  public PartitionStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
                                      Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
     if (srcs.size() == 0) {
@@ -46,9 +45,9 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SPartition(newComm, taskPlan, srcs, dests,
-        Utils.dataTypeToMessageType(edge.getDataType()),
-        new  PartitionBulkReceiver(),
+    op = new SPartition(newComm, logicalPlan, srcs, dests,
+        edge.getDataType(),
+        new PartitionBulkReceiver(),
         new LoadBalanceSelector());
   }
 

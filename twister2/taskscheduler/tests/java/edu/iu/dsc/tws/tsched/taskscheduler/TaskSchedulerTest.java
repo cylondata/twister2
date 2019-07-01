@@ -14,15 +14,15 @@ package edu.iu.dsc.tws.tsched.taskscheduler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class TaskSchedulerTest {
@@ -105,7 +105,7 @@ public class TaskSchedulerTest {
   private Config getConfig() {
 
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";

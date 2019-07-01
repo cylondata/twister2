@@ -31,22 +31,22 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class DataLocalityBatchTaskSchedulerTest {
@@ -72,10 +72,10 @@ public class DataLocalityBatchTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         Assert.assertEquals(containerPlanTaskInstances.size() / graph.getTaskVertexSet().size(),
             TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
       }
@@ -96,10 +96,10 @@ public class DataLocalityBatchTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
       Assert.assertEquals(containerPlanTaskInstances.size(), parallel);
     }
   }
@@ -118,10 +118,10 @@ public class DataLocalityBatchTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
       Assert.assertEquals(containerPlanTaskInstances.size(),
           workers * graph.getTaskVertexSet().size());
     }
@@ -141,10 +141,10 @@ public class DataLocalityBatchTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
       Assert.assertEquals(containerPlanTaskInstances.size(),
           workers * graph.getTaskVertexSet().size());
     }
@@ -152,7 +152,7 @@ public class DataLocalityBatchTaskSchedulerTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
@@ -198,7 +198,7 @@ public class DataLocalityBatchTaskSchedulerTest {
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
@@ -215,7 +215,7 @@ public class DataLocalityBatchTaskSchedulerTest {
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
@@ -236,11 +236,11 @@ public class DataLocalityBatchTaskSchedulerTest {
 
     computeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkConnection.direct("compute")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "2");
@@ -267,21 +267,21 @@ public class DataLocalityBatchTaskSchedulerTest {
 
     firstComputeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     secondComputeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkConnection.allreduce("firstcompute")
         .viaEdge("freduce")
         .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkConnection.allreduce("secondcompute")
         .viaEdge("sreduce")
         .withReductionFunction(new TaskSchedulerClassTest.Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 

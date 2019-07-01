@@ -36,8 +36,8 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.BaseIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.BaseSink;
 import edu.iu.dsc.tws.api.tset.BaseSource;
@@ -53,10 +53,10 @@ import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class TSetWordCount extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(TSetWordCount.class.getName());

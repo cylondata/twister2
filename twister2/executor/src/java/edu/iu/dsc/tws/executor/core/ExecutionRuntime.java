@@ -11,15 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 /**
  * Captures the runtime information about the system.

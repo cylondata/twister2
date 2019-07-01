@@ -19,8 +19,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelDataFlowOperation;
 import edu.iu.dsc.tws.comms.dfw.ControlledChannelOperation;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
@@ -109,7 +109,7 @@ public final class OperationUtils {
   }
 
   public static Map<Integer, List<Integer>> getIntegerListMap(InvertedBinaryTreeRouter router,
-                                                               TaskPlan instancePlan,
+                                                               LogicalPlan instancePlan,
                                                                int destination) {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself

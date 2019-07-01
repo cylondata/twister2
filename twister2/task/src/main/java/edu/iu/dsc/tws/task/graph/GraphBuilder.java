@@ -11,18 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.graph;
 
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskPartitioner;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
+import edu.iu.dsc.tws.api.task.nodes.ISource;
 
 /**
  * This class is responsible for building the task graph and the configuration values required for
  * each task in the task graph.
  */
 public final class GraphBuilder {
+
   private DataFlowTaskGraph graph;
 
   private GraphBuilder() {
@@ -66,20 +71,6 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name));
-    return this;
-  }
-
   public GraphBuilder connect(String t1, String t2, String name, String operation) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
@@ -94,7 +85,8 @@ public final class GraphBuilder {
     return this;
   }
 
-  public GraphBuilder connect(String t1, String t2, String name, String operation, IFunction task) {
+  public GraphBuilder connect(String t1, String t2, String name,
+                              String operation, IFunction task) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -109,7 +101,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType, DataType keyType) {
+                              MessageType dataType, MessageType keyType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -124,7 +116,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              IFunction function, DataType dataType, DataType keyType) {
+                              IFunction function, MessageType dataType, MessageType keyType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -139,7 +131,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              IFunction function, DataType dataType, DataType keyType,
+                              IFunction function, MessageType dataType, MessageType keyType,
                               TaskPartitioner partitioner) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
@@ -156,7 +148,7 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
-                              DataType dataType) {
+                              MessageType dataType) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);

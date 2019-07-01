@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.task.TaskExecutor;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 public class TwisterStreamingContext {
 

@@ -14,16 +14,17 @@ package edu.iu.dsc.tws.examples.task.streaming;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.typed.streaming.SPartitionCompute;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.typed.streaming.SPartitionCompute;
 
 /**
  * todo add timing
@@ -37,7 +38,7 @@ public class STPartitionExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ((SourceTask) g).setMarkTimingOnlyForLowestTarget(true);

@@ -16,13 +16,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.OutputCollection;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 
 public class TaskContextImpl implements TaskContext {
   /**
@@ -136,12 +136,12 @@ public class TaskContextImpl implements TaskContext {
   }
 
   @Override
-  public Set<ContainerPlan> getWorkers() {
+  public Set<WorkerSchedulePlan> getWorkers() {
     return this.taskSchedulePlan.getContainers();
   }
 
   @Override
-  public Map<Integer, ContainerPlan> getWorkersMap() {
+  public Map<Integer, WorkerSchedulePlan> getWorkersMap() {
     return this.taskSchedulePlan.getContainersMap();
   }
 

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class CDFJobParameters {
 

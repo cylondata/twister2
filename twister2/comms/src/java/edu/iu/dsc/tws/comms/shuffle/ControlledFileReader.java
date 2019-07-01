@@ -17,16 +17,16 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
-public class ControlledFileReader implements RestorableIterator, Comparable<ControlledFileReader> {
+
+public class ControlledFileReader implements ControlledReader<Tuple> {
 
   private static final Logger LOG = Logger.getLogger(ControlledFileReader.class.getName());
 
@@ -45,8 +45,6 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
   private Queue<Integer> valueSizeQ = new LinkedList<>();
 
   private long mappedTill = 0;
-
-  private boolean inMemory = false;
 
   private RestorePoint restorePoint;
 
@@ -67,32 +65,9 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
     }
   }
 
-  /**
-   * This method will be used to create an instance with Tuples which are already in memory
-   */
-  public static ControlledFileReader loadInMemory(
-      ControlledFileReaderFlags meta,
-      List<Tuple> tuples,
-      Comparator keyComparator) {
-    ControlledFileReader cfr = new ControlledFileReader(
-        meta,
-        null,
-        null,
-        null,
-        keyComparator
-    );
-    tuples.forEach(tuple -> {
-      cfr.keysQ.add(tuple.getKey());
-      cfr.valuesQ.add(tuple.getValue());
-      cfr.valueSizeQ.add(0); //neglect in memory stuff from limits
-    });
-    cfr.inMemory = true;
-    return cfr;
-  }
-
   public void open() {
     try {
-      if (buffer == null && !this.inMemory) {
+      if (buffer == null) {
         this.raf = new RandomAccessFile(filePath, "r");
         this.channel = raf.getChannel();
         this.buffer = channel.map(FileChannel.MapMode.READ_ONLY, this.mappedTill,
@@ -119,7 +94,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
    * </p>
    */
   public void releaseResources() {
-    if (!this.inMemory && this.buffer != null) {
+    if (this.buffer != null) {
       this.mappedTill = this.mappedTill + this.buffer.position();
       boolean unmapped = false;
       try {
@@ -146,7 +121,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
   }
 
   private Object readNextKey() {
-    if (!this.inMemory && this.buffer.hasRemaining()) {
+    if (this.buffer.hasRemaining()) {
       int nextKeySize = this.getNextKeySize();
       Object nextKey = this.keyType.getDataPacker().unpackFromBuffer(this.buffer, nextKeySize);
       this.keysQ.add(nextKey);
@@ -159,7 +134,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
    * This method reads the next value from file and increases the memory load
    */
   private Object readNextValue() {
-    if (!this.inMemory && this.buffer.hasRemaining()) {
+    if (this.buffer.hasRemaining()) {
       int dataSize = this.buffer.getInt();
       Object nextValue = dataType.getDataPacker().unpackFromBuffer(this.buffer, dataSize);
 
@@ -222,7 +197,7 @@ public class ControlledFileReader implements RestorableIterator, Comparable<Cont
   }
 
   @Override
-  public int compareTo(ControlledFileReader o) {
+  public int compareTo(ControlledReader o) {
     // deliberately not checking null. If we are getting null here, check the code of this class and
     // FSKeyedSortedMerger class.
     return this.keyComparator.compare(this.nextKey(), o.nextKey());

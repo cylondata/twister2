@@ -15,24 +15,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BReduce;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.batch.BReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class ReduceBatchOperation extends AbstractParallelOperation {
   protected BReduce op;
 
-  public ReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public ReduceBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                               Set<Integer> sources, Set<Integer> dests,
                               Edge edge) {
     super(config, network, tPlan, edge.getName());
@@ -41,9 +40,9 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
       throw new RuntimeException("Reduce can only have one target: " + dests);
     }
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BReduce(newComm, taskPlan, sources, dests.iterator().next(),
+    op = new BReduce(newComm, logicalPlan, sources, dests.iterator().next(),
         new ReduceFnImpl(edge.getFunction()),
-        new FinalSingularReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
+        new FinalSingularReceiver(), edge.getDataType());
   }
 
   @Override

@@ -1,0 +1,10 @@
+# Enable or disable checkpointing
+twister2.checkpointing.enable: true
+
+#twister2.statebackend.directory: "/home/kumar/statebackend/"
+
+# Directory of local file system based store
+twister2.checkpointing.store.fs.dir: "${TWISTER2_HOME}/persistent/"
+
+# Source triggering frequency
+twister2.checkpointing.source.frequency: 1000

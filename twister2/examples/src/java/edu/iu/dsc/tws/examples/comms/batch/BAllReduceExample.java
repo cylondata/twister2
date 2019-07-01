@@ -18,13 +18,13 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.batch.BAllReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BAllReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -43,7 +43,7 @@ public class BAllReduceExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
 
@@ -52,12 +52,12 @@ public class BAllReduceExample extends BenchWorker {
         .boxed().collect(Collectors.toSet());
 
     // create the communication
-    reduce = new BAllReduce(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    reduce = new BAllReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);

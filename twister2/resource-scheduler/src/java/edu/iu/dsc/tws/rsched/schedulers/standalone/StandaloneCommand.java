@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class StandaloneCommand extends MPICommand {
   private static final Logger LOG = Logger.getLogger(StandaloneCommand.class.getName());
+
   public StandaloneCommand(Config cfg, String workingDirectory) {
     super(cfg, workingDirectory);
   }
@@ -58,6 +59,9 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
     mpiCommand.add(MPIContext.mpiMapBy(config));
+    if (config.getBooleanValue(SchedulerContext.DEBUG, false)) {
+      mpiCommand.add("debug");
+    }
     return mpiCommand;
   }
 

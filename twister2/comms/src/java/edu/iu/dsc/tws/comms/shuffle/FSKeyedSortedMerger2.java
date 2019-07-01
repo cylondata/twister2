@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 /**
  * Sorted merger implementation
@@ -471,9 +471,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     private static final String RP_SAME_KEY_READER = "SAME_KEY_READER";
     private static final String RP_FILE_READERS = "FILE_READERS";
 
-    private PriorityQueue<ControlledFileReader> controlledFileReaders
+    private PriorityQueue<ControlledReader<Tuple>> controlledFileReaders
         = new PriorityQueue<>(1 + noOfFileWritten);
-    private ControlledFileReader sameKeyReader;
+    private ControlledReader<Tuple> sameKeyReader;
 
     private RestorePoint restorePoint;
 
@@ -485,8 +485,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           keyComparator
       );
       if (!recordsInMemory.isEmpty()) {
-        ControlledFileReader inMemoryReader = ControlledFileReader.loadInMemory(
-            meta, recordsInMemory, keyComparator);
+        ControlledReader inMemoryReader = new ControlledMemoryReader(
+            recordsInMemory, keyComparator);
         if (inMemoryReader.hasNext()) {
           this.controlledFileReaders.add(inMemoryReader);
         }
@@ -517,7 +517,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     @Override
     public Tuple next() {
-      ControlledFileReader fr = this.sameKeyReader;
+      ControlledReader<Tuple> fr = this.sameKeyReader;
       if (fr == null || !fr.hasNext()) {
         fr = this.controlledFileReaders.poll();
         fr.open();
@@ -545,8 +545,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         this.restorePoint.put(RP_SAME_KEY_READER, this.sameKeyReader);
       }
 
-      List<ControlledFileReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
-      fileReaderList.forEach(ControlledFileReader::createRestorePoint);
+      List<ControlledReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
+      fileReaderList.forEach(ControlledReader::createRestorePoint);
 
       this.restorePoint.put(RP_FILE_READERS, fileReaderList);
     }
@@ -581,7 +581,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     public void clearRestorePoint() {
       this.restorePoint = null;
       this.controlledFileReaders.iterator()
-          .forEachRemaining(ControlledFileReader::clearRestorePoint);
+          .forEachRemaining(ControlledReader::clearRestorePoint);
     }
   }
 

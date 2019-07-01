@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 
 
 /**

@@ -14,25 +14,24 @@ package edu.iu.dsc.tws.executor.comms.batch;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   private BKeyedPartition op;
 
-  public KeyedPartitionBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public KeyedPartitionBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                                       Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
@@ -44,9 +43,8 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BKeyedPartition(newComm, taskPlan, srcs, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()),
+    op = new BKeyedPartition(newComm, logicalPlan, srcs, dests,
+        edge.getKeyType(), edge.getDataType(),
         new PartitionReceiver(), destSelector);
   }
 

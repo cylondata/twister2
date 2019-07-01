@@ -18,15 +18,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
@@ -35,7 +35,7 @@ public abstract class CommsWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(CommsWorker.class.getName());
   protected final Map<Integer, Boolean> finishedSources = new ConcurrentHashMap<>();
   protected int workerId;
-  protected TaskPlan taskPlan;
+  protected LogicalPlan logicalPlan;
   protected SVMJobParameters svmJobParameters;
   protected boolean sourcesDone = false;
 
@@ -53,7 +53,7 @@ public abstract class CommsWorker implements IWorker {
 
   protected String commsType;
 
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID, IWorkerController workerController,
@@ -62,13 +62,13 @@ public abstract class CommsWorker implements IWorker {
     this.workerId = workerID;
 
     // create a worker environment
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan
     generateTaskStages();
 
-    this.taskPlan = Utils.createStageTaskPlan(workerEnv, taskStages);
+    this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
 
     loadSVMData();
 
@@ -89,7 +89,7 @@ public abstract class CommsWorker implements IWorker {
 
   }
 
-  protected abstract void execute(WorkerEnv wEnv);
+  protected abstract void execute(WorkerEnvironment wEnv);
 
   protected abstract void progressCommunication();
 

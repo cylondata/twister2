@@ -19,12 +19,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.stream.SAllGather;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.stream.SAllGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 
 public class SAllGatherExample extends BenchWorker {
@@ -49,7 +50,7 @@ public class SAllGatherExample extends BenchWorker {
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
 
@@ -58,11 +59,11 @@ public class SAllGatherExample extends BenchWorker {
         .boxed().collect(Collectors.toSet());
 
     // create the communication
-    gather = new SAllGather(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    gather = new SAllGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new FinalReduceReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : sourceTasksOfExecutor) {
       finishedSources.put(t, false);
@@ -71,7 +72,7 @@ public class SAllGatherExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {

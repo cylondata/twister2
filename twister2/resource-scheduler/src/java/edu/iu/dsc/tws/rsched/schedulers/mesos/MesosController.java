@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 import org.apache.mesos.Protos;
 import org.apache.mesos.SchedulerDriver;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class MesosController {
 

@@ -20,36 +20,36 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.net.Network;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Network;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.nodes.BaseSink;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class HDFSTaskExample implements IWorker {
@@ -132,13 +132,13 @@ public class HDFSTaskExample implements IWorker {
     //Just to print the task schedule plan...
     if (workerID == 0) {
       if (taskSchedulePlan != null) {
-        Map<Integer, ContainerPlan> containersMap
+        Map<Integer, WorkerSchedulePlan> containersMap
             = taskSchedulePlan.getContainersMap();
-        for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+        for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
           Integer integer = entry.getKey();
-          ContainerPlan containerPlan = entry.getValue();
+          WorkerSchedulePlan workerSchedulePlan = entry.getValue();
           Set<TaskInstancePlan> containerPlanTaskInstances
-              = containerPlan.getTaskInstances();
+              = workerSchedulePlan.getTaskInstances();
           LOG.info("Task Details for Container Id:" + integer);
           for (TaskInstancePlan ip : containerPlanTaskInstances) {
             LOG.info("Task Id:" + ip.getTaskId()

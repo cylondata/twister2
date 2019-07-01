@@ -20,12 +20,12 @@ import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSet;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.common.config.Config;
 
 public abstract class BaseTSet<T> implements TSet<T> {
   private static final Logger LOG = Logger.getLogger(BaseTSet.class.getName());

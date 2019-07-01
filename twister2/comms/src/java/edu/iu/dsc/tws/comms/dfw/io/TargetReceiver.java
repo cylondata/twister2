@@ -20,11 +20,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -56,7 +56,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * The source task connected to this partial receiver
    */
-  private int representSource;
+  protected int representSource;
 
   /**
    * Keep weather source is set
@@ -76,7 +76,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * The lock
    */
-  private Lock lock = new ReentrantLock();
+  protected Lock lock = new ReentrantLock();
 
   /**
    * Sources we are expecting messages from
@@ -105,7 +105,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getTaskPlan().getThisExecutor();
+    workerId = op.getLogicalPlan().getThisExecutor();
     operation = op;
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
@@ -208,60 +208,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    */
   protected abstract void merge(int dest, Queue<Object> dests);
 
-  @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
 
-    lock.lock();
-    try {
-      boolean allEmpty = true;
-      for (int i = 0; i < targets.length; i++) {
-        int key = targets[i];
-        if (!messages.containsKey(key)) {
-          continue;
-        }
-
-        Queue<Object> val = messages.get(key);
-
-        if (val.size() > 0) {
-          merge(key, val);
-        }
-
-        // check weather we are ready to send and we have values to send
-        if (!isFilledToSend(key)) {
-          continue;
-        }
-
-        // if we send this list successfully
-        if (!sendToTarget(representSource, key)) {
-          needsFurtherProgress = true;
-        }
-        allEmpty &= val.isEmpty();
-      }
-
-      if (!allEmpty || !isAllEmpty() || !sync()) {
-        needsFurtherProgress = true;
-      }
-    } finally {
-      lock.unlock();
-    }
-
-    return needsFurtherProgress;
-  }
-
-  /**
-   * Handle the sync
-   *
-   * @return true if everything is synced
-   */
-  protected abstract boolean sync();
-
-  /**
-   * Check weather all the other information is flushed
-   *
-   * @return true if there is nothing to process
-   */
-  protected abstract boolean isAllEmpty();
 
   /**
    * Clear all the buffers for the target, to ready for the next

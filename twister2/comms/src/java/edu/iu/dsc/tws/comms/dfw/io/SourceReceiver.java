@@ -20,11 +20,11 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public abstract class SourceReceiver implements MessageReceiver {
@@ -88,7 +88,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getTaskPlan().getThisExecutor();
+    workerId = op.getLogicalPlan().getThisExecutor();
     sendPendingMax = DataFlowContext.sendPendingMax(cfg);
     this.operation = op;
 

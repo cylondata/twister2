@@ -14,19 +14,19 @@ package edu.iu.dsc.tws.examples.task.streaming;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.typed.streaming.SBroadCastCompute;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.typed.streaming.SBroadCastCompute;
 
 public class STBroadCastExample extends BenchTaskWorker {
 
@@ -44,7 +44,7 @@ public class STBroadCastExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     taskGraphBuilder.addSink(SINK, r, sinkParallelism)
-        .broadcast(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+        .broadcast(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
     return taskGraphBuilder;
   }

@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Sink;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Iterable Map Set

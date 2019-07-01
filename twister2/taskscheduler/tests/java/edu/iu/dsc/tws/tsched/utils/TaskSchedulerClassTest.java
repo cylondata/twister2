@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.task.nodes.BaseSink;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 
 public class TaskSchedulerClassTest {
 

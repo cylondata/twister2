@@ -18,18 +18,18 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class RoundRobinBatchTaskSchedulerTest {
@@ -52,10 +52,10 @@ public class RoundRobinBatchTaskSchedulerTest {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan);
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         Assert.assertEquals(containerPlanTaskInstances.size(),
             graph.vertex("source").getParallelism());
       }
@@ -91,10 +91,10 @@ public class RoundRobinBatchTaskSchedulerTest {
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
       Assert.assertEquals(containerPlanTaskInstances.size() / graph.getTaskVertexSet().size(),
           Integer.parseInt(graph.getGraphConstraints().get(
               Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
@@ -128,7 +128,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 
@@ -149,11 +149,11 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     computeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkConnection.direct("compute")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
 

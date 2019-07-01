@@ -18,20 +18,27 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
+import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.dfw.ChannelListener;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
@@ -116,12 +123,62 @@ public class TWSTCPChannel implements TWSChannel {
    */
   private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
 
-  public TWSTCPChannel(Config config, int exec, TCPChannel net) {
-    this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
+  public TWSTCPChannel(Config config,
+                       IWorkerController wController) {
+    int index = wController.getWorkerInfo().getWorkerID();
+    int workerPort = wController.getWorkerInfo().getPort();
+    String localIp = wController.getWorkerInfo().getWorkerIP();
+
+    TCPChannel channel = createChannel(config, localIp, workerPort, index);
+    // now lets start listening before sending the ports to master,
+    channel.startListening();
+
+    // wait for everyone to start the job master
+    try {
+      wController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      throw new Twister2RuntimeException(timeoutException);
+    }
+
+    // now talk to a central server and get the information about the worker
+    // this is a synchronization step
+    List<JobMasterAPI.WorkerInfo> wInfo = wController.getJoinedWorkers();
+
+    // lets start the client connections now
+    List<NetworkInfo> nInfos = new ArrayList<>();
+    for (JobMasterAPI.WorkerInfo w : wInfo) {
+      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      nInfos.add(networkInfo);
+    }
+
+    // start the connections
+    channel.startConnections(nInfos);
+    // now lets wait for connections to be established
+    channel.waitForConnections();
+
+
+    this.pendingSends = new ArrayBlockingQueue<>(1024);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = new IterativeLinkedList<>();
-    this.executor = exec;
-    this.comm = net;
+    this.executor = wController.getWorkerInfo().getWorkerID();
+    this.comm = channel;
+  }
+
+  /**
+   * Start the TCP servers here
+   *
+   * @param cfg the configuration
+   * @param workerId worker id
+   */
+  private static TCPChannel createChannel(Config cfg, String workerIP, int workerPort,
+                                          int workerId) {
+    NetworkInfo netInfo = new NetworkInfo(workerId);
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, workerIP);
+    netInfo.addProperty(TCPContext.NETWORK_PORT, workerPort);
+    return new TCPChannel(cfg, netInfo);
   }
 
   /**
@@ -142,10 +199,6 @@ public class TWSTCPChannel implements TWSChannel {
 
   /**
    * Register our interest to receive messages from particular rank using a stream
-   * @param rank
-   * @param stream
-   * @param callback
-   * @return
    */
   public boolean receiveMessage(int rank, int stream,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
@@ -201,6 +254,7 @@ public class TWSTCPChannel implements TWSChannel {
 
   /**
    * Post the receive request to MPI
+   *
    * @param rank MPI rank
    * @param stream the stream as a tag
    * @param byteBuffer the buffer

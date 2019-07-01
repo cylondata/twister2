@@ -17,9 +17,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
 
@@ -46,6 +46,7 @@ public class BcastBatchFinalReceiver extends TargetFinalReceiver {
 
   /**
    * Swap the messages to the ready queue
+   *
    * @param dest the target
    * @param dests message queue to switch to ready
    */
@@ -80,14 +81,14 @@ public class BcastBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    for (Map.Entry<Integer, Queue<Object>> e : readyToSend.entrySet()) {
-      if (e.getValue().size() > 0) {
+  protected boolean isAllEmpty(int target) {
+    if (readyToSend.containsKey(target)) {
+      Queue<Object> queue = readyToSend.get(target);
+      if (queue.size() > 0) {
         return false;
       }
     }
-    return b;
+    return true;
   }
 
   @Override

@@ -21,23 +21,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
@@ -50,10 +50,10 @@ public class SortJob implements IWorker {
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
   private List<Integer> taskStages = new ArrayList<>();
   private Set<RecordSource> recordSources = new HashSet<>();
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -63,7 +63,7 @@ public class SortJob implements IWorker {
     this.workerId = workerID;
 
     // create a worker environment & setup the network
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     taskStages.add(NO_OF_TASKS);
@@ -76,12 +76,12 @@ public class SortJob implements IWorker {
       return;
     }
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(workerEnv, taskStages);
+    this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
 
     // set up the tasks
     setupTasks();
 
-    partition = new BKeyedPartition(workerEnv.getCommunicator(), taskPlan, sources, destinations,
+    partition = new BKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
         MessageTypes.INTEGER, MessageTypes.BYTE_ARRAY,
         new RecordSave(), new HashingSelector(), new IntegerComparator());
 
@@ -100,11 +100,11 @@ public class SortJob implements IWorker {
       destinations.add(NO_OF_TASKS + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
-        taskPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisExecutor(), sources, destinations));
   }
 
   private void scheduleTasks() {
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan, taskStages, 0);
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

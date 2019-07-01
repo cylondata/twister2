@@ -18,10 +18,14 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -31,11 +35,8 @@ import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.typed.KeyedGatherCompute;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.typed.KeyedGatherCompute;
 
 /**
  * todo keyedgather for streaming is not applicable. This will be removed,
@@ -50,8 +51,8 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType keyType = DataType.INTEGER;
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType keyType = MessageTypes.INTEGER;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedGatherSinkTask();

@@ -14,22 +14,22 @@ package edu.iu.dsc.tws.examples.ml.svm.data;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
-import edu.iu.dsc.tws.dataset.DataObject;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.dataobjects.DataObjectSink;
+import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class TaskWorkerDataLoader extends TaskWorker {
 
@@ -52,7 +52,7 @@ public class TaskWorkerDataLoader extends TaskWorker {
 
     firstGraphComputeConnection.direct("datapointsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     taskGraphBuilder.setMode(OperationMode.BATCH);
 

@@ -15,22 +15,21 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BGather;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.batch.BGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class GatherBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
   private BGather op;
 
-  public GatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public GatherBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                               Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
     if (dests.size() > 1) {
@@ -43,9 +42,8 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BGather(newComm, taskPlan, srcs, dests.iterator().next(),
-        Utils.dataTypeToMessageType(edge.getDataType()),
-        new FinalGatherReceiver(), shuffle);
+    op = new BGather(newComm, logicalPlan, srcs, dests.iterator().next(),
+        edge.getDataType(), new FinalGatherReceiver(), shuffle);
   }
 
   @Override

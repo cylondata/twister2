@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.spi.common;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 
 /**
  * This class is to represent the default values for the task instances and task scheduler logical

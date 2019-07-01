@@ -22,16 +22,17 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.ILauncher;
+import edu.iu.dsc.tws.api.scheduler.IUploader;
+import edu.iu.dsc.tws.api.scheduler.LauncherException;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.exceptions.LauncherException;
-import edu.iu.dsc.tws.rsched.exceptions.UploaderException;
-import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
-import edu.iu.dsc.tws.rsched.interfaces.IUploader;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
@@ -68,6 +69,8 @@ public class ResourceAllocator {
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
     String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
+
+    Boolean debug = Boolean.valueOf(System.getProperty(SchedulerContext.DEBUG));
 
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
@@ -120,6 +123,7 @@ public class ResourceAllocator {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
         put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
+        put(SchedulerContext.DEBUG, debug).
         putAll(environmentProperties).
         putAll(cfg).
         build();
@@ -309,7 +313,6 @@ public class ResourceAllocator {
 
     LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
   }
-
 
 
   /**

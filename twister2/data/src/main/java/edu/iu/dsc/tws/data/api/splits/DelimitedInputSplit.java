@@ -16,9 +16,9 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
-import edu.iu.dsc.tws.data.fs.Path;
 
 public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
 
@@ -340,9 +340,9 @@ public abstract class DelimitedInputSplit<OT> extends FileInputSplit<OT> {
         }
         readPos++;
       }
-      if (readPos == limit) {
-        this.end = true;
-      }
+//      if (readPos == limit) {
+//        this.end = true;
+//      }
       // check why we dropped out
       if (delimPos == this.delimiter.length) {
         // we found a delimiter

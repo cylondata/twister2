@@ -20,11 +20,11 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BDirect;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -42,7 +42,7 @@ public class BDirectExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     if (!jobParameters.getTaskStages().get(0).equals(jobParameters.getTaskStages().get(1))) {
       int min = Math.min(jobParameters.getTaskStages().get(0),
           jobParameters.getTaskStages().get(1));
@@ -60,7 +60,7 @@ public class BDirectExample extends BenchWorker {
         IntStream.range(0, noOfTargetTasks).boxed().collect(Collectors.toList());
 
     // create the communication
-    direct = new BDirect(workerEnv.getCommunicator(), taskPlan, sources, targets,
+    direct = new BDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new DirectReceiver(), MessageTypes.INTEGER_ARRAY);
 
 
@@ -74,7 +74,7 @@ public class BDirectExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);

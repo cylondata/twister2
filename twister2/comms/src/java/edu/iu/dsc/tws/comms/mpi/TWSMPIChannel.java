@@ -36,12 +36,13 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.dfw.ChannelListener;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import mpi.Intracomm;
@@ -142,20 +143,19 @@ public class TWSMPIChannel implements TWSChannel {
   private boolean debug = false;
   private int completedReceives = 0;
 
-  /**
-   * Constructs the MPI channel
-   *
-   * @param config configuration
-   * @param comm communicator
-   * @param worker worker id
-   */
-  public TWSMPIChannel(Config config, Intracomm comm, int worker) {
-    this.comm = comm;
+  public TWSMPIChannel(Config config,
+                       IWorkerController wController) {
+    Object commObject = wController.getRuntimeObject("comm");
+    if (commObject == null) {
+      this.comm = MPI.COMM_WORLD;
+    } else {
+      this.comm = (Intracomm) commObject;
+    }
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
-    this.pendingSends = new ArrayBlockingQueue<MPISendRequests>(pendingSize);
+    this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
     this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
     this.waitForCompletionSends = new IterativeLinkedList<>();
-    this.workerId = worker;
+    this.workerId = wController.getWorkerInfo().getWorkerID();
   }
 
   /**

@@ -10,18 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
 package org.apache.storm.topology;
 
 import java.io.Serializable;
@@ -36,11 +24,11 @@ import org.apache.storm.topology.twister2.Twister2BoltGrouping;
 import org.apache.storm.topology.twister2.Twister2Spout;
 import org.apache.storm.topology.twister2.Twister2StormNode;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public class TopologyBuilder implements Serializable {
 
@@ -84,7 +72,7 @@ public class TopologyBuilder implements Serializable {
           LOG.info("Adding direct grouping : " + grouping);
           computeConnection.direct(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case SHUFFLE:
           LOG.info("Adding shuffle grouping : " + grouping
@@ -92,13 +80,13 @@ public class TopologyBuilder implements Serializable {
               + this.generateEdgeName(grouping, nodeId));
           computeConnection.partition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case FIELD:
           computeConnection.keyedPartition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT)
-              .withKeyType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT)
+              .withKeyType(MessageTypes.OBJECT);
           nodes.get(grouping.getComponentId()).setKeyedOutEdges(
               grouping.getStreamId(),
               grouping.getGroupingKey()
@@ -108,7 +96,7 @@ public class TopologyBuilder implements Serializable {
           computeConnection.broadcast(
               grouping.getComponentId()
           ).viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         default:
           throw new UnsupportedOperationException(

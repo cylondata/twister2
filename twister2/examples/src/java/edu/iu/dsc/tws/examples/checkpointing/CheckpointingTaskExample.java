@@ -15,25 +15,24 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskEnvironment;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.checkpointing.Snapshot;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.task.nodes.BaseSink;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.TaskEnvironment;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public class CheckpointingTaskExample implements IWorker {
 
@@ -53,12 +52,12 @@ public class CheckpointingTaskExample implements IWorker {
     taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
     taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
-        .direct("source").viaEdge("so-c").withDataType(DataType.INTEGER);
+        .direct("source").viaEdge("so-c").withDataType(MessageTypes.INTEGER);
 
     taskGraphBuilder.addSink("sink", new SinkTask(), parallelism)
         .direct("compute")
         .viaEdge("c-si")
-        .withDataType(DataType.INTEGER);
+        .withDataType(MessageTypes.INTEGER);
 
     taskEnvironment.buildAndExecute(taskGraphBuilder);
     taskEnvironment.close();

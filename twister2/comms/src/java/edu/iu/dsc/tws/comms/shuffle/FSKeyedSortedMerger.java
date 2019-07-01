@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.comms.utils.Heap;
 import edu.iu.dsc.tws.comms.utils.HeapNode;
 

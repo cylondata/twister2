@@ -13,15 +13,15 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Receptor;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.modifiers.Receptor;
+import edu.iu.dsc.tws.api.task.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
 
 public class SourceOp<T> implements ISource, Receptor {
   private static final Logger LOG = Logger.getLogger(SourceOp.class.getName());

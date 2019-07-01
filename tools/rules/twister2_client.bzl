@@ -108,6 +108,18 @@ def twister2_client_lib_resource_scheduler_files():
 def twister2_client_lib_api_files():
     return [
         "//twister2/api/src/java:api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+        "//twister2/proto/utils:proto-utils-java",
     ]
 
 def twister2_client_lib_task_files():

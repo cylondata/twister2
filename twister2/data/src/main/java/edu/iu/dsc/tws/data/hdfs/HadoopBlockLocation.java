@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.iu.dsc.tws.data.fs.BlockLocation;
+import edu.iu.dsc.tws.api.data.BlockLocation;
 
 public final class HadoopBlockLocation implements BlockLocation {
 

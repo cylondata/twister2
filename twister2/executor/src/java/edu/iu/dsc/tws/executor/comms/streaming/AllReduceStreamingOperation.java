@@ -16,26 +16,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.comms.stream.SAllReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class AllReduceStreamingOperation extends AbstractParallelOperation {
   protected SAllReduce op;
 
   public AllReduceStreamingOperation(Config config, Communicator network,
-                                     TaskPlan tPlan, IFunction function,
-                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
+                                     LogicalPlan tPlan, IFunction function,
+                                     Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("Sources should have more than 0 elements");
@@ -50,9 +49,8 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SAllReduce(newComm, taskPlan, sources, dest,
-        Utils.dataTypeToMessageType(edge.getDataType()), new ReduceFnImpl(function),
-        new FinalSingularReceive());
+    op = new SAllReduce(newComm, logicalPlan, sources, dest, edge.getDataType(),
+        new ReduceFnImpl(function), new FinalSingularReceive());
   }
 
   @Override

@@ -17,11 +17,12 @@ import java.util.logging.Logger;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
-//import org.apache.mesos.v1.scheduler.Scheduler;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.interfaces.ILauncher;
+
+//import org.apache.mesos.v1.scheduler.Scheduler;
 
 
 /**

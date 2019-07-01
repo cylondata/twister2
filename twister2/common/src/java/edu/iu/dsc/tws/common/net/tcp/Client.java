@@ -19,7 +19,8 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.net.StatusCode;
 
 public class Client implements SelectHandler {
   private static final Logger LOG = Logger.getLogger(Client.class.getName());

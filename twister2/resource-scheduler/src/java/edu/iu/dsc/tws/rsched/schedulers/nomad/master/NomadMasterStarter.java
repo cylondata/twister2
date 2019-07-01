@@ -16,15 +16,15 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.IController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.interfaces.IController;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadController;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
@@ -37,7 +37,8 @@ public final class NomadMasterStarter {
   private JobAPI.Job job;
   private Config config;
 
-  public NomadMasterStarter() { }
+  public NomadMasterStarter() {
+  }
 
   public void initialize(JobAPI.Job jb, Config cfg) {
     job = jb;
@@ -46,6 +47,7 @@ public final class NomadMasterStarter {
 
   /**
    * launch the job master
+   *
    * @return false if setup fails
    */
   public boolean launch() {
@@ -91,7 +93,7 @@ public final class NomadMasterStarter {
     }
 
     boolean start = controller.start(job);
-    // now lets wait on client
+//     now lets wait on client
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       try {
         if (jmThread != null) {
@@ -100,12 +102,14 @@ public final class NomadMasterStarter {
       } catch (InterruptedException ignore) {
       }
     }
+
     return start;
   }
 
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
@@ -126,3 +130,4 @@ public final class NomadMasterStarter {
         Context.verbose(config));
   }
 }
+

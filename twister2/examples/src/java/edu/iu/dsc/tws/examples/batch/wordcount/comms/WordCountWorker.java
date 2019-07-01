@@ -29,18 +29,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
 
 public class WordCountWorker implements IWorker {
@@ -52,14 +52,14 @@ public class WordCountWorker implements IWorker {
 
   private Set<Integer> sources;
   private Set<Integer> destinations;
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
   private Set<BatchWordSource> batchWordSources = new HashSet<>();
 
   private WordAggregator wordAggregator;
   private List<Integer> taskStages = new ArrayList<>();
   private int workerId;
-  private WorkerEnv workerEnv;
+  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -72,17 +72,17 @@ public class WordCountWorker implements IWorker {
     taskStages.add(NO_OF_TASKS);
 
     // create a worker environment
-    this.workerEnv = WorkerEnv.init(cfg, workerID, workerController, persistentVolume,
+    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
     // lets create the task plan
-    this.taskPlan = Utils.createStageTaskPlan(workerEnv, taskStages);
+    this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
 
     setupTasks();
 
     // create the communication
     wordAggregator = new WordAggregator();
-    keyGather = new BKeyedReduce(workerEnv.getCommunicator(), taskPlan, sources, destinations,
+    keyGather = new BKeyedReduce(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         wordAggregator, MessageTypes.OBJECT, MessageTypes.INTEGER, new HashingSelector());
     // assign the task ids to the workers, and run them using threads
@@ -104,11 +104,11 @@ public class WordCountWorker implements IWorker {
       destinations.add(NO_OF_TASKS + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
-        taskPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisExecutor(), sources, destinations));
   }
 
   private void scheduleTasks() {
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         taskStages, 0);
     // now initialize the workers
     for (int t : tasksOfExecutor) {

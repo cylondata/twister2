@@ -19,21 +19,21 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
@@ -59,10 +59,10 @@ public class DataLocalityTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         Assert.assertEquals(containerPlanTaskInstances.size(),
             TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
       }
@@ -83,11 +83,11 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
 
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(),
           Integer.parseInt(graph.getGraphConstraints().get(
@@ -109,11 +109,11 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
 
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(),
           Integer.parseInt(graph.getGraphConstraints().get(
@@ -123,7 +123,7 @@ public class DataLocalityTaskSchedulerTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
@@ -169,7 +169,7 @@ public class DataLocalityTaskSchedulerTest {
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -186,7 +186,7 @@ public class DataLocalityTaskSchedulerTest {
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.STREAMING);
     taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
     DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
@@ -210,11 +210,11 @@ public class DataLocalityTaskSchedulerTest {
 
     computeConnection.direct("source")
         .viaEdge("cdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkComputeConnection.direct("compute")
         .viaEdge("sdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     taskGraphBuilder.setMode(OperationMode.STREAMING);
 

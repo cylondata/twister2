@@ -17,13 +17,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.batch.BReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -42,7 +42,7 @@ public class BReduceExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -50,12 +50,12 @@ public class BReduceExample extends BenchWorker {
     }
     int target = noOfSourceTasks;
     // create the communication
-    reduce = new BReduce(workerEnv.getCommunicator(), taskPlan, sources, target,
+    reduce = new BReduce(workerEnv.getCommunicator(), logicalPlan, sources, target,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -64,7 +64,7 @@ public class BReduceExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
       reduceDone = true;
     }
 

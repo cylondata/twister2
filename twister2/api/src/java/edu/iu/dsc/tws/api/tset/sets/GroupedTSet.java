@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetEnv;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class GroupedTSet<K, V> extends BatchBaseTSet<V> {
   private PartitionFunction<K> partitioner;

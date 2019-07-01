@@ -12,7 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Constants;
 import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.Sink;
@@ -26,8 +27,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class StreamingKeyedPartitionTLink<T, K> extends StreamingKeyValueTLink<T, K> {
   private BaseTSet<T> parent;
@@ -85,8 +85,8 @@ public class StreamingKeyedPartitionTLink<T, K> extends StreamingKeyValueTLink<T
   }
 
   public void buildConnection(ComputeConnection connection) {
-    DataType keyType = TSetUtils.getDataType(getClassK());
-    DataType dataType = TSetUtils.getDataType(getClassT());
+    MessageType keyType = TSetUtils.getDataType(getClassK());
+    MessageType dataType = TSetUtils.getDataType(getClassT());
     connection.keyedPartition(parent.getName())
         .viaEdge(Constants.DEFAULT_EDGE)
         .withKeyType(keyType).withDataType(dataType)

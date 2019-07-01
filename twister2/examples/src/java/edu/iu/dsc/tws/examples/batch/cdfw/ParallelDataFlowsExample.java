@@ -34,27 +34,27 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.cdfw.BaseDriver;
-import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
-import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
-import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.modifiers.Receptor;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.cdfw.BaseDriver;
+import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
+import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
+import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
 public final class ParallelDataFlowsExample {
   private static final Logger LOG = Logger.getLogger(ParallelDataFlowsExample.class.getName());
@@ -168,7 +168,7 @@ public final class ParallelDataFlowsExample {
         parallelismValue);
     partitionConnection.partition("source1")
         .viaEdge("partition")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();
@@ -192,7 +192,7 @@ public final class ParallelDataFlowsExample {
     reduceConn.reduce("source1")
         .viaEdge("reduce")
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
     DataFlowTaskGraph batchGraph = graphBuilderX.build();

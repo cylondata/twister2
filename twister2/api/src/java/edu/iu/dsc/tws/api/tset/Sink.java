@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
  * Add a value at the end of the graph

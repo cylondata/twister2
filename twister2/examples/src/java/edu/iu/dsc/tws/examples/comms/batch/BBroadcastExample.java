@@ -20,11 +20,11 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BBroadcast;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -43,7 +43,7 @@ public class BBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting no of senders to 1");
       jobParameters.getTaskStages().set(0, 1);
@@ -56,10 +56,10 @@ public class BBroadcastExample extends BenchWorker {
     int source = 0;
 
     // create the communication
-    bcast = new BBroadcast(workerEnv.getCommunicator(), taskPlan, source, targets,
+    bcast = new BBroadcast(workerEnv.getCommunicator(), logicalPlan, source, targets,
         new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -78,7 +78,7 @@ public class BBroadcastExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> sinksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sinksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     if (sinksOfExecutor.isEmpty()) {
       bCastDone = true;

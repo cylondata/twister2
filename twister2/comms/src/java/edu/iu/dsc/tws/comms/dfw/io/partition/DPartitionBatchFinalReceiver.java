@@ -21,16 +21,16 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
@@ -143,7 +143,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
 
     expIds = expectedIds;
-    thisWorker = op.getTaskPlan().getThisExecutor();
+    thisWorker = op.getLogicalPlan().getThisExecutor();
     finishedSources = new Int2ObjectOpenHashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;
@@ -166,7 +166,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
                            int parallelIOAllowance) {
     for (Integer target : expIds.keySet()) {
       String shuffleDirectory = this.shuffleDirectories.get(
-          partition.getTaskPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
+          partition.getLogicalPlan().getIndexOfTaskInNode(target) % this.shuffleDirectories.size());
       Shuffle sortedMerger;
       if (partition.getKeyType() == null) {
         sortedMerger = new FSMerger(maxBytesInMemory, maxRecordsInMemory, shuffleDirectory,

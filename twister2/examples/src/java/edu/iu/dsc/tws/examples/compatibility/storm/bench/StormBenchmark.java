@@ -23,20 +23,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.task.nodes.ISource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.api.IComputableSink;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class StormBenchmark extends TaskWorker {
 
@@ -59,7 +59,8 @@ public class StormBenchmark extends TaskWorker {
 
     if ("reduce".equals(config.get(PARAM_OPERATION))) {
       taskGraphBuilder.addSink("sink", dataSink)
-          .reduce("generator").viaEdge("edge").withOperation(Op.SUM, DataType.DOUBLE_ARRAY);
+          .reduce("generator").viaEdge("edge").withOperation(Op.SUM,
+          MessageTypes.DOUBLE_ARRAY);
     } else {
       taskGraphBuilder.addSink("sink", dataSink)
           .gather("generator").viaEdge("edge");

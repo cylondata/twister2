@@ -1,111 +1,82 @@
-# Twister2
+# We have moved the documentation to [https://dsc-spidal.github.io/twister2](https://dsc-spidal.github.io/twister2)
 
-Twister2 provides a data analytics hosting environment where it supports different data analytics 
-including streaming, data pipelines and iterative computations. 
+This documentation is written using mark down files. These markdown files are converted into HTML and deployed on to github pages.
 
-Unlike many other big data systems that are designed around user APIs, Twister2 is built from bottom 
-up to support different APIs and workloads. Our vision for Twister2 is a complete computing
- environment for data analytics. 
- 
-One major goal of Twister2 is to provide independent components, that can be used by other 
-big data systems and evolve separately. 
- 
-We support the following components in Twister2
+In order to write documentation one has to be knowledgeable about markdown files.
 
-1. Resource provisioning component to bring up and manage parallel workers in cluster environments
-    1. Standalone
-    2. Kubernetes
-    3. Mesos
-    4. Slurm 
-    5. Nomad
-2. Parallel and Distributed Operators in HPC and Cloud Environments
-    1. Twister2:Net - a data level dataflow operator library for streaming and large scale batch analysis
-    2. Harp - a BSP (Bulk Synchronous Processing) innovative collective framework for parallel applications and machine learning at message level
-    3. OpenMPI (HPC Environments only) at message level
-3. Task System
-    1. Task Graph 
-       * Create dataflow graphs for streaming and batch analysis including iterative computations 
-    2. Task Scheduler - Schedule the task graph into cluster resources supporting different scheduling algorithms
-       * Datalocality Scheduling
-       * Roundrobin scheduling
-       * First fit scheduling
-    3. Executor - Execution of task graph     
-       * Batch executor
-       * Streaming executor
-4. TSet for distributed data representation (Similar to Spark RDD, Flink DataSet and Heron Streamlet)
-    1. Iterative computations
-    2. Data caching
-5. APIs for streaming and batch applications
-    1. Operator API
-    2. Task Graph based API
-    3. TSet API
-6. Support for storage systems
-    1. HDFS
-    2. Local file systems
-    3. NFS for persistent storage
-7. Web UI for monitoring Twister2 Jobs
-8. Apache Storm Compatibility API
-9. Connected DataFlow (Experimental)
-    1. Supports creation of multiple dataflow graphs executing in a single job
+Documentation is built using [Docusaurus](https://docusaurus.io). Please refer its documentation on how to build.
 
-Twister2 can be deployed both in HPC and cloud environments. When deployed in a HPC environment, it 
-can use OpenMPI for its communications. It can be programmed at different levels depending on the 
-application types giving the user the flexibility to use underlying features.
+## Deploying the documentation to website
 
-## High performance communication layer
+The website created using markdown files are deployed onto Github pages. We use a custom URL for the website.
 
-Because of the bottom up approach taken when designing and implementing Twister2 the communication 
-layer performs extremely well. A complete study on the Twister2 communication layer can be found at
-[Twister2:Net](https://www.computer.org/csdl/proceedings/cloud/2018/7235/00/723501a383-abs.html). 
+## Installing Docusaurus
 
-The image below which is extracted from [Twister2:Net](https://www.computer.org/csdl/proceedings/cloud/2018/7235/00/723501a383-abs.html) shows how
-Twister2 performs against Apache Spark and MPI. Please note that Spark KMeans example is written using the data level API 
-while Twister2 and MPI implementations are communication level applications. However it is clear that Twister2 performs on the same
-level as OpenMPI which is an highly optimized communication library in the HPC world. And it out performs Spark by roughly a factor of x10.
+Lets briefly look at how to install Docusaurus. This step is only needed if you would like to update the deployed website.
 
-Notation :   
-`DFW` refers to Twister2  
-`BSP` refers to MPI (OpenMPI)  
+### Install NodeJs
 
-![Kmeans Performance Comparison](images/kmeans_comparison_low.png)
+Follow the installtion instructions []Nodejs](https://nodejs.org/en/download/) and [Linux NodeJs](https://github.com/nodesource/distributions/blob/master/README.md)
 
-## Road map
+Here is how to install on Ubuntu or Debian
 
-We have started working on our next major release that will connect the core components we have developed 
-into a full data analytics environment. In particular it will focus on providing APIs around the core
-capabilities of Twister2 and integration of applications in a single dataflow. 
+```bash
+# Using Ubuntu
+curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
-### Next release - 0.3.0 (July 2019)
+# Using Debian, as root
+curl -sL https://deb.nodesource.com/setup_11.x | bash -
+apt-get install -y nodejs
+```
 
-We would like to complete following features 
+### Install Yarn
 
-1. Streaming windowing support (add to the TSet API)
-2. Fault tolerance (Automatic restart of failed workers)
-3. Supporting more API's including Beam  
-4. More resource managers - Pilot Jobs, Yarn
-5. More example applications
+Follow the instructions at [Yarn Install](https://yarnpkg.com/en/docs/install#debian-stable)
 
-### Beyond next release
+```bash
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 
-1. Implementing core parts of Twister2 with C/C++ for high performance 
-2. Python API
-3. Direct use of RDMA
-4. SQL interface 
-5. Native MPI support for cloud deployments
+sudo apt-get update && sudo apt-get install yarn
+```
 
-## Important Links
+### Install Docusaurus
 
-Harp is a separate project and its documentation can be found in [website](https://dsc-spidal.github.io/harp/)
+```bash
+sudo npm install -g docusaurus --unsafe-perm=true --allow-root
 
-We use OpenMPI for HP communications [OpenMPI](https://www.open-mpi.org/)
-  
-Twister2 started as a research project at Indiana University [Digital Science Center](https://www.dsc.soic.indiana.edu/).
+yarn add @babel/plugin-proposal-class-properties --dev
+```
 
-## License
+### Run the site
 
-Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+Following command will start a local server and start the website
 
-## Acknowledgements
+```bash
+cd website
+npm start
+```
 
-This work was partially supported by NSF CIF21 DIBBS 1443054 and the Indiana University Precision Health initiative.
-We thank Intel for their support of the Juliet and Victor systems and extend our gratitude to the FutureSystems team for their support with the infrastructure.
+### How to deploy
+
+Do the changes to the documents
+
+```bash
+cd website
+yarn run build
+GIT_USER=<GIT_USER> CURRENT_BRANCH=master USE_SSH=false yarn run publish-gh-pages
+```
+
+## Writing Documentation
+
+You can add your documentation to the docs folder as a markdown file.
+
+On top of the markdown file add a header like following to link the markdown file to other files and use it in the sidebar. The id is used to refer to the document in the sidebar.
+
+```text
+id: img_proc
+title: Image Processing
+```
+
+Inside website folder there is a file called, sidebars.json. You can modify that file to include the documentation in the sidebar.

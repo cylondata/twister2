@@ -17,31 +17,31 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.nodes.ISink;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.extract.EventTimeExtractor;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.api.typed.DirectCompute;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.api.ITimestampExtractor;
-import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.api.WindowMessageImpl;
-import edu.iu.dsc.tws.task.api.window.collectives.AggregateWindow;
-import edu.iu.dsc.tws.task.api.window.collectives.FoldWindow;
-import edu.iu.dsc.tws.task.api.window.collectives.ProcessWindow;
-import edu.iu.dsc.tws.task.api.window.collectives.ReduceWindow;
-import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
-import edu.iu.dsc.tws.task.api.window.function.AggregateWindowedFunction;
-import edu.iu.dsc.tws.task.api.window.function.FoldWindowedFunction;
-import edu.iu.dsc.tws.task.api.window.function.ProcessWindowedFunction;
-import edu.iu.dsc.tws.task.api.window.function.ReduceWindowedFunction;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.typed.DirectCompute;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.window.api.ITimestampExtractor;
+import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.api.WindowMessageImpl;
+import edu.iu.dsc.tws.task.window.collectives.AggregateWindow;
+import edu.iu.dsc.tws.task.window.collectives.FoldWindow;
+import edu.iu.dsc.tws.task.window.collectives.ProcessWindow;
+import edu.iu.dsc.tws.task.window.collectives.ReduceWindow;
+import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.window.function.AggregateWindowedFunction;
+import edu.iu.dsc.tws.task.window.function.FoldWindowedFunction;
+import edu.iu.dsc.tws.task.window.function.ProcessWindowedFunction;
+import edu.iu.dsc.tws.task.window.function.ReduceWindowedFunction;
 
 public class STWindowEventTimeExample extends BenchTaskWorker {
 
@@ -98,7 +98,7 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
-    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(DataType.INTEGER_ARRAY);
+    computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
     //computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
     return taskGraphBuilder;

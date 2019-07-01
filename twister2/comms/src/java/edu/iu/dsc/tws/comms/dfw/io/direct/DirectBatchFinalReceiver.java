@@ -17,9 +17,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
@@ -76,14 +76,14 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    for (Map.Entry<Integer, List<Object>> e : readyToSend.entrySet()) {
-      if (e.getValue().size() > 0) {
+  protected boolean isAllEmpty(int target) {
+    if (readyToSend.containsKey(target)) {
+      List<Object> queue = readyToSend.get(target);
+      if (queue.size() > 0) {
         return false;
       }
     }
-    return b;
+    return true;
   }
 
   @Override

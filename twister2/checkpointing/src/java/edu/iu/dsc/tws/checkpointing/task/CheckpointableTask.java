@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.checkpointing.task;
 
 
-import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.api.checkpointing.Snapshot;
 
 public interface CheckpointableTask {
 

@@ -15,17 +15,18 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.stream.SBroadCast;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.stream.SBroadCast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
@@ -40,7 +41,7 @@ public class SBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting task stages to 1");
       jobParameters.getTaskStages().set(0, 1);
@@ -54,10 +55,10 @@ public class SBroadcastExample extends BenchWorker {
     int source = 0;
 
     // create the communication
-    bcast = new SBroadCast(workerEnv.getCommunicator(), taskPlan, source, targets,
+    bcast = new SBroadCast(workerEnv.getCommunicator(), logicalPlan, source, targets,
         MessageTypes.INTEGER_ARRAY, new BCastReceiver());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -66,7 +67,7 @@ public class SBroadcastExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {

@@ -23,13 +23,13 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
-import edu.iu.dsc.tws.api.worker.WorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.batch.BJoin;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BJoin;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
@@ -49,7 +49,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
   private Lock lock = new ReentrantLock();
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     //Setting up the task plan for the join operation
 
 
@@ -65,12 +65,13 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
     int target = noOfSourceTasks;
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
       joinDone = true;
     }
 
     // create the join communication
-    join = new BJoin(workerEnv.getCommunicator(), taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        MessageTypes.INTEGER,
         MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
         new SimpleKeyBasedSelector(), false,
         new Comparator<Object>() {
@@ -83,7 +84,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
           }
         });
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     // now initialize the workers

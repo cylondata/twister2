@@ -21,12 +21,12 @@ import java.nio.file.FileAlreadyExistsException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.data.fs.BlockLocation;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.BlockLocation;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.OperatingSystem;
 
 /**
@@ -233,9 +233,6 @@ public class LocalFileSystem extends FileSystem {
 
   /**
    * Deletes the given file and the directory
-   * @param f
-   * @return
-   * @throws IOException
    */
   private boolean delete(final File f) throws IOException {
 

@@ -16,7 +16,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * This class is a wrapper class for FileHandler.

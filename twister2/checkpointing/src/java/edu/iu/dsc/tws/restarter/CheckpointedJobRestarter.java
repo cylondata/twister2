@@ -39,12 +39,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import static edu.iu.dsc.tws.common.config.Context.JOB_ID;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import static edu.iu.dsc.tws.api.config.Context.JOB_ID;
 
 /**
  * todo bundled as a separate jar due to cyclic dependency issues

@@ -17,25 +17,26 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.dataobjects.DataFileReplicatedReadSource;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSink;
-import edu.iu.dsc.tws.api.dataobjects.DataObjectSource;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataFileReader;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
+import edu.iu.dsc.tws.task.dataobjects.DataObjectSink;
+import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public class KMeansDataGeneratorTest {
 
@@ -61,7 +62,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalTextInputPartitioner localTextInputPartitioner = new
@@ -96,7 +97,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection1.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalFixedInputPartitioner localFixedInputPartitioner = new
@@ -131,7 +132,7 @@ public class KMeansDataGeneratorTest {
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     Path path = new Path(cinputDirectory);
-    final FileSystem fs = path.getFileSystem(config);
+    final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     Assert.assertNotNull(pathFile);
@@ -165,7 +166,7 @@ public class KMeansDataGeneratorTest {
     DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
 
     Path path = new Path(cinputDirectory);
-    final FileSystem fs = path.getFileSystem(config);
+    final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     Assert.assertNotNull(pathFile);
@@ -177,7 +178,7 @@ public class KMeansDataGeneratorTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";

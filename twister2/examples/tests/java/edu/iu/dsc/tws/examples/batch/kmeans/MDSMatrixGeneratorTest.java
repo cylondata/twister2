@@ -15,21 +15,22 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSink;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSource;
 import edu.iu.dsc.tws.examples.batch.mds.MatrixGenerator;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+
+//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 
 public class MDSMatrixGeneratorTest {
 
@@ -53,7 +54,7 @@ public class MDSMatrixGeneratorTest {
     taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
     ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
+    computeConnection.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
 
     BinaryInputPartitioner binaryInputPartitioner =
@@ -70,7 +71,7 @@ public class MDSMatrixGeneratorTest {
 
   private Config getConfig(int datasize) {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
