@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -40,10 +41,12 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.WindowArguments;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.constant.WindowType;
 import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.window.function.ProcessWindowedFunction;
 
@@ -96,6 +99,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   public void execute() {
     // method 2
     this.initialize()
+        .paramCheck()
         .loadData()
         .stream();
   }
@@ -153,6 +157,11 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   public SvmSgdOnlineRunner stream() {
     this.withWeightVector();
     streamData();
+    return this;
+  }
+
+  public SvmSgdOnlineRunner paramCheck() {
+    LOG.info(String.format("Info : %s ", this.svmJobParameters.toString()));
     return this;
   }
 
@@ -266,13 +275,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     iterativeStreamingDataStreamer = new IterativeStreamingDataStreamer(this.svmJobParameters
         .getFeatures(), OperationMode.STREAMING, this.svmJobParameters.isDummy(),
         this.binaryBatchModel);
-    BaseWindowedSink baseWindowedSink
-        = new IterativeStreamingWindowedCompute(new ProcessWindowFunctionImpl(),
-        OperationMode.STREAMING,
-        this.svmJobParameters,
-        this.binaryBatchModel,
-        "online-training-graph")
-        .withTumblingCountWindow(50);
+    BaseWindowedSink baseWindowedSink = getWindowSinkInstance();
     iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING,
         new ReduceAggregator(), this.svmJobParameters);
 
@@ -313,6 +316,42 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     trainingBuilder.setMode(OperationMode.STREAMING);
     trainingBuilder.setTaskGraphName(IterativeSVMConstants.ITERATIVE_STREAMING_TRAINING_TASK_GRAPH);
     return trainingBuilder.build();
+  }
+
+  private BaseWindowedSink getWindowSinkInstance() {
+    BaseWindowedSink baseWindowedSink = new IterativeStreamingWindowedCompute(
+        new ProcessWindowFunctionImpl(),
+        OperationMode.STREAMING,
+        this.svmJobParameters,
+        this.binaryBatchModel,
+        "online-training-graph");
+    WindowArguments windowArguments = this.svmJobParameters.getWindowArguments();
+    TimeUnit timeUnit = TimeUnit.MICROSECONDS;
+    if (windowArguments != null) {
+      WindowType windowType = windowArguments.getWindowType();
+      if (windowArguments.isDuration()) {
+        if (windowType.equals(WindowType.TUMBLING)) {
+          baseWindowedSink
+              .withTumblingDurationWindow(windowArguments.getWindowLength(), timeUnit);
+        }
+        if (windowType.equals(WindowType.SLIDING)) {
+          baseWindowedSink
+              .withSlidingDurationWindow(windowArguments.getWindowLength(), timeUnit,
+                  windowArguments.getSlidingLength(), timeUnit);
+        }
+      } else {
+        if (windowType.equals(WindowType.TUMBLING)) {
+          baseWindowedSink
+              .withTumblingCountWindow(windowArguments.getWindowLength());
+        }
+        if (windowType.equals(WindowType.SLIDING)) {
+          baseWindowedSink
+              .withSlidingCountWindow(windowArguments.getWindowLength(),
+                  windowArguments.getSlidingLength());
+        }
+      }
+    }
+    return baseWindowedSink;
   }
 
   protected static class ProcessWindowFunctionImpl implements ProcessWindowedFunction<double[]> {
