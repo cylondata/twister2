@@ -11,6 +11,7 @@ common_deps_files = [
     "//twister2/checkpointing/src/java:checkpointing-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
