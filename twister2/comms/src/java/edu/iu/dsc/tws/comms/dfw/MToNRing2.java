@@ -24,21 +24,22 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
 import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -83,7 +84,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The task plan
    */
-  private TaskPlan taskPlan;
+  private LogicalPlan taskPlan;
 
   /**
    * A map holding workerId to targets
@@ -191,11 +192,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    * @param rcvKType receive key type
    * @param edge the edge
    */
-  public MToNRing2(Config cfg, TWSChannel channel, TaskPlan tPlan, Set<Integer> sources,
-                  Set<Integer> targets, MessageReceiver finalRcvr,
-                  MessageReceiver partialRcvr,
-                  MessageType dType, MessageType rcvType,
-                  MessageType kType, MessageType rcvKType, int edge) {
+  public MToNRing2(Config cfg, TWSChannel channel, LogicalPlan tPlan, Set<Integer> sources,
+                   Set<Integer> targets, MessageReceiver finalRcvr,
+                   MessageReceiver partialRcvr,
+                   MessageType dType, MessageType rcvType,
+                   MessageType kType, MessageType rcvKType, int edge) {
     this.merger = partialRcvr;
     this.finalReceiver = finalRcvr;
     this.taskPlan = tPlan;
@@ -460,7 +461,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
+  public LogicalPlan getLogicalPlan() {
     return taskPlan;
   }
 

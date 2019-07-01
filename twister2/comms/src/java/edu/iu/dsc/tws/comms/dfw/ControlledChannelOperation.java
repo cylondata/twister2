@@ -28,15 +28,21 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
+import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class ControlledChannelOperation implements ChannelListener, ChannelMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(ControlledChannelOperation.class.getName());
@@ -49,7 +55,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   // the configuration
   private Config config;
   // the task plan
-  private TaskPlan instancePlan;
+  private LogicalPlan instancePlan;
 
   /**
    * The edge used
@@ -177,7 +183,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
-                   MessageType kType, MessageType rcvKeyType, TaskPlan plan,
+                   MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
@@ -224,7 +230,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     initProgressTrackers();
   }
 
-  public void init(Config cfg, MessageType messageType, TaskPlan plan,
+  public void init(Config cfg, MessageType messageType, LogicalPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
@@ -742,7 +748,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     }
   }
 
-  public TaskPlan getInstancePlan() {
+  public LogicalPlan getInstancePlan() {
     return instancePlan;
   }
 
