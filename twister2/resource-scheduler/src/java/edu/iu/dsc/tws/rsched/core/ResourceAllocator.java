@@ -70,6 +70,8 @@ public class ResourceAllocator {
     // lets get the job jar file from system properties or environment
     String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
 
+    Boolean debug = Boolean.valueOf(System.getProperty(SchedulerContext.DEBUG));
+
     // now lets see weather these are overridden in environment variables
     Map<String, Object> environmentProperties = JobUtils.readCommandLineOpts();
 
@@ -121,6 +123,7 @@ public class ResourceAllocator {
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
         put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
         put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
+        put(SchedulerContext.DEBUG, debug).
         putAll(environmentProperties).
         putAll(cfg).
         build();
@@ -310,7 +313,6 @@ public class ResourceAllocator {
 
     LOG.log(Level.INFO, "CLEANED TEMPORARY DIRECTORY......:" + jobDirectory);
   }
-
 
 
   /**

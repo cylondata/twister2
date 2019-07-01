@@ -8,11 +8,15 @@ fi
 
 if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
     profile=-agentpath:/home/skamburu/tools/jprofiler10/bin/linux-x64/libjprofilerti.so=port=8849
-    debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
+    debug=
+    #if final arg is debug them enable debug
+    for i; do :; done
+    if [ "$i" = "debug" ]; then
+        debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
+    fi
 fi
 
 profile=
-debug=
 
 # set JAVA_HOME by user
 CUSTOM_JAVA_HOME=

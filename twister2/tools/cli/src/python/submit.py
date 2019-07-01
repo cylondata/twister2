@@ -49,6 +49,7 @@ def create_parser(subparsers):
     cli_args.add_job_file(parser)
     cli_args.add_job_class(parser)
     cli_args.add_verbose(parser)
+    cli_args.add_debug(parser)
 
     parser.set_defaults(subcommand='submit')
     return parser
@@ -65,6 +66,8 @@ def setup_java_system_properties(cl_args):
     # set the cluster name property
     java_system_props.append("cluster_type=" + cl_args["cluster"])
     # set the job file
+    java_system_props.append("debug=" + str(cl_args['debug']))
+    # set debug mode
     java_system_props.append("job_file=" + cl_args['job-file-name'])
     # set the logger file
     conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
