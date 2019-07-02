@@ -162,3 +162,7 @@ deploy_library \
   twister2/compatibility/harp/libtwister2-harp.jar \
   twister2/compatibility/harp/pom.xml
 
+deploy_library \
+  twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
+  twister2/tools/local-runner/src/java/pom.xml
+
