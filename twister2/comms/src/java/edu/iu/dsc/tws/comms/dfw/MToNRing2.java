@@ -176,22 +176,22 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The receive groups
    */
-  private List<List<Integer>> receiveGroups = new ArrayList<>();
+  private List<List<Integer>> receiveGroupsWorkers = new ArrayList<>();
 
   /**
    * The sending groups
    */
-  private List<List<Integer>> sendingGroups = new ArrayList<>();
+  private List<List<Integer>> sendingGroupsWorkers = new ArrayList<>();
 
-  private enum ReceiverGroupState {
-    POSTED,
-    DONE,
-  }
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> sendingGroupsTargets = new ArrayList<>();
 
-  private enum SendGroupState {
-    SENDING,
-    DONE,
-  }
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> receiveGroupsSources = new ArrayList<>();
 
   /**
    * Send group index
@@ -216,7 +216,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Number of sends needs to complete
    */
-  private int sendsNeedsToComplete;
+  private List<Integer> sendsNeedsToComplete = new ArrayList<>();
 
   /**
    * The receives completed for this step
@@ -226,7 +226,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The receives needs to be completed for this round
    */
-  private int receivesNeedsToComplete;
+  private List<Integer> receivesNeedsToComplete = new ArrayList<>();
 
   /**
    * Create a ring partition communication
@@ -349,32 +349,26 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.delegate = new ControlledChannelOperation(channel);
     this.delegate.init(cfg, dataType, rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
-        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
+        pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
+        sendingGroupsTargets, receiveGroupsSources);
   }
 
-  private void startNextStep(int sendGroup, int receiveGroup) {
-    List<Integer> sendWorkers = sendingGroups.get(sendGroup);
+  private void startNextStep() {
+    sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
+    receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
+
+    List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
       sendWorkerTaskIndex.put(i, 0);
     }
-    // reset the completed sends
-    competedSends = 0;
-    sendsNeedsToComplete = 0;
-    // calculate the sends to complete
-    for (int worker : sendWorkers) {
-      List<Integer> workerTargets = workerToTargets.get(worker);
-      sendsNeedsToComplete += workerTargets.size();
-    }
 
+    // reset the completed sends and receives
+    competedSends = 0;
     competedReceives = 0;
-    receivesNeedsToComplete = 0;
-    // calculate the receives to complete
-    List<Integer> receiveWorkers = receiveGroups.get(receiveGroup);
-    for (int worker : receiveWorkers) {
-      List<Integer> workerSources = workerToTargets.get(worker);
-      receivesNeedsToComplete += workerSources.size();
-    }
+
+    // now configure the controlled operation to behave
+    delegate.startGroup(receiveGroupIndex, sendGroupIndex);
   }
 
   private void calculateReceiveGroups() {
@@ -402,8 +396,34 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     int numGroups = (int) Math.min(Math.ceil(sendingWorkers.size() / (group * 1.0)),
         Math.ceil(receiveWorkers.size() / (group * 1.0)));
 
-    createGroup(sendingWorkersSorted, numGroups, sendingGroups);
-    createGroup(receiveWorkersSorted, numGroups, receiveGroups);
+    createGroup(sendingWorkersSorted, numGroups, sendingGroupsWorkers);
+    createGroup(receiveWorkersSorted, numGroups, receiveGroupsWorkers);
+
+    for (List<Integer> sendGroup : sendingGroupsWorkers) {
+      List<Integer> ts = new ArrayList<>();
+      // calculate the sends to complete
+      int sendComplete = 0;
+      for (int worker : sendGroup) {
+        List<Integer> workerTargets = workerToTargets.get(worker);
+        sendComplete += workerTargets.size();
+        ts.addAll(workerTargets);
+      }
+      sendsNeedsToComplete.add(sendComplete);
+      sendingGroupsTargets.add(ts);
+    }
+
+    for (List<Integer> receiveGroup : receiveGroupsWorkers) {
+      List<Integer> srcs = new ArrayList<>();
+      int receiveComplete = 0;
+      // calculate the receives to complete
+      for (int worker : receiveGroup) {
+        List<Integer> workerSources = workerToSources.get(worker);
+        receiveComplete += workerSources.size();
+        srcs.addAll(workerSources);
+      }
+      receivesNeedsToComplete.add(receiveComplete);
+      receiveGroupsSources.add(srcs);
+    }
   }
 
   private void createGroup(List<Integer> sendingWorkersSorted, int numGroups,
@@ -498,6 +518,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     return true;
   }
 
+  private int increment(int groupIndex, int size) {
+    return (groupIndex + 1) % size;
+  }
+
   @Override
   public void sendCompleted(Object message) {
     competedSends++;
@@ -509,14 +533,15 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     try {
       boolean sendDone = sendToGroup();
-      boolean sendsCompleted = competedSends == sendsNeedsToComplete;
-      boolean receiveCompleted = receivesNeedsToComplete == competedReceives;
+      boolean sendsCompleted = competedSends == sendsNeedsToComplete.get(sendGroupIndex);
+      boolean receiveCompleted = receivesNeedsToComplete.get(receiveGroupIndex) == competedReceives;
       if (sendDone && sendsCompleted && receiveCompleted) {
         completed = true;
       }
       // if this step is completed start the next step
       if (completed) {
-        startNextStep(0, 0);
+        // lets advance the send group and receive group
+        startNextStep();
       }
     } finally {
       swapLock.unlock();
@@ -527,7 +552,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private boolean sendToGroup() {
-    List<Integer> sendingGroup = sendingGroups.get(sendGroupIndex);
+    List<Integer> sendingGroup = sendingGroupsWorkers.get(sendGroupIndex);
     for (int worker : sendingGroup) {
       List<Integer> workerTargets = workerToTargets.get(worker);
       int targetIndex = sendWorkerTaskIndex.get(worker);

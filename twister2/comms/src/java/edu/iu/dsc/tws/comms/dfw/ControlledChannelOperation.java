@@ -146,12 +146,12 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Send communicationProgress tracker
    */
-  private ProgressionTracker sendProgressTracker;
+  private ControlledProgressTracker sendProgressTracker;
 
   /**
    * Deserialize communicationProgress track
    */
-  private ProgressionTracker receiveProgressTracker;
+  private ControlledProgressTracker receiveProgressTracker;
 
   /**
    * Number of external sends pending
@@ -164,11 +164,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   private Queue<DataBuffer> freeReceiveBuffers;
 
   /**
-   * the receive states of different task ids
-   */
-  private List<Set<Integer>> receiveStates = new ArrayList<>();
-
-  /**
    * The receive task id groups
    */
   private List<List<Integer>> receiveIdGroups;
@@ -177,6 +172,26 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * Keep track of the current receive group
    */
   private int currentReceiveGroup;
+
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> sendingGroupsTargets;
+
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> receiveGroupsSources;
+
+  /**
+   * Number of targets for each worker in the group
+   */
+  private List<Map<Integer, Integer>> expectedReceivePerWorker = new ArrayList<>();
+
+  /**
+   * The current receives for each worker in the current group
+   */
+  private Map<Integer, Integer> currentReceives = new HashMap<>();
 
   ControlledChannelOperation(TWSChannel channel) {
     this.channel = channel;
@@ -190,7 +205,9 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                    Map<Integer, Queue<InMessage>> pRMPS,
                    Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
                    Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed,
+                   List<List<Integer>> sendingGrpTargets,
+                   List<List<Integer>> receiveGrpsSources) {
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -209,6 +226,9 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
     this.messageSerializer = serializer;
     this.messageDeSerializer = deSerializer;
+
+    this.sendingGroupsTargets = sendingGrpTargets;
+    this.receiveGroupsSources = receiveGrpsSources;
 
     int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
     int sendBufferSize = DataFlowContext.bufferSize(config);
@@ -230,19 +250,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     initProgressTrackers();
   }
 
-  public void init(Config cfg, MessageType messageType, LogicalPlan plan,
-                   int graphEdge, Set<Integer> recvExecutors,
-                   ChannelReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
-                   Map<Integer, Queue<InMessage>> pRMPS,
-                   Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
-                   Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
-    init(cfg, messageType, messageType, keyType, keyType,
-        plan, graphEdge, recvExecutors, msgReceiver,
-        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
-  }
-
   private void initSerializers() {
     // initialize the serializers
     for (MessageSerializer serializer : messageSerializer.values()) {
@@ -254,15 +261,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   private void initProgressTrackers() {
-    Set<Integer> sendItems = pendingSendMessagesPerSource.keySet();
-    sendProgressTracker = new ProgressionTracker(sendItems);
-
-    Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
-    Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
-    Set<Integer> items = new HashSet<>(receiveItems);
-    items.addAll(desrializeItems);
-
-    receiveProgressTracker = new ProgressionTracker(items);
+    sendProgressTracker = new ControlledProgressTracker(sendingGroupsTargets);
+    receiveProgressTracker = new ControlledProgressTracker(receiveGroupsSources);
   }
 
   /**
@@ -270,7 +270,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    */
   private void setupCommunication() {
     // we will receive from these
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(config);
     for (Integer recv : receivingExecutors) {
       Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
       // register with the channel
@@ -291,8 +290,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Start receiving from the next set of ids
    */
-  public void setupReceiveGroups(int initialGroup, List<List<Integer>> receivingIds) {
-    this.currentReceiveGroup = initialGroup;
+  public void setupReceiveGroups(List<List<Integer>> receivingIds) {
     this.receiveIdGroups = receivingIds;
     int max = Integer.MIN_VALUE;
     // first lets validate
@@ -301,7 +299,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       if (group.size() > max) {
         max = group.size();
       }
-      receiveStates.add(new HashSet<>());
     }
     // we put max group size equal buffers
     int receiveBufferSize = DataFlowContext.bufferSize(config);
@@ -313,16 +310,21 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   /**
-   * Start receiving from the next group
-   * @param group the next group
+   * Start receiving from the next receiveGroup
+   * @param receiveGroup the next receiveGroup
    */
-  private void startReceiving(int group) {
-    List<Integer> receiveExecs = receiveIdGroups.get(group);
+  public void startGroup(int receiveGroup, int sendGroup) {
+    this.currentReceiveGroup = receiveGroup;
+    List<Integer> receiveExecs = receiveIdGroups.get(receiveGroup);
     for (int i = 0; i < receiveExecs.size(); i++) {
       int exec = receiveExecs.get(i);
       Queue<DataBuffer> list = receiveBuffers.get(exec);
       // poll the free receive buffers and ad to the receive
-      list.offer(freeReceiveBuffers.poll());
+      DataBuffer buffer = freeReceiveBuffers.poll();
+      if (buffer == null) {
+        throw new RuntimeException("Buffer cannot be null");
+      }
+      list.offer(buffer);
     }
   }
 
@@ -333,7 +335,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     currentReceiveGroup++;
     currentReceiveGroup = currentReceiveGroup / receiveIdGroups.size();
   }
-
 
   /**
    * Sends a message from a originating location
@@ -677,11 +678,9 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
           }
 
           // lets keep track that we have completed a receive from this executor
-          Set<Integer> currentReceives = receiveStates.get(currentReceiveGroup);
+          int count = currentReceives.get(currentMessage.getOriginatingId());
           int exec = currentMessage.getOriginatingId();
-          if (currentReceives.contains(exec)) {
-            throw new RuntimeException("We cannot receive multiple from same executor: " + exec);
-          }
+          int expected = expectedReceivePerWorker.get(currentReceiveGroup).get(exec);
 
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
@@ -716,15 +715,9 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
-      Set<Integer> currentReceives = receiveStates.get(currentReceiveGroup);
-      Queue<DataBuffer> list;
+      Queue<DataBuffer> list = freeReceiveBuffers;
       // if we have received the full message we can release the buffer to free buffers,
       // otherwise we need to release to receive more
-      if (!currentReceives.contains(id)) {
-        list = receiveBuffers.get(id);
-      } else {
-        list = freeReceiveBuffers;
-      }
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
