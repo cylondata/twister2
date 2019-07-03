@@ -301,8 +301,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       if (group.size() > max) {
         max = group.size();
       }
-      // add the executors
-      // add the states
       receiveStates.add(new HashSet<>());
     }
     // we put max group size equal buffers
