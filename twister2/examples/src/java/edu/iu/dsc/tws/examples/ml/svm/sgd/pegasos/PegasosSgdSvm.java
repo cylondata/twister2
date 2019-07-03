@@ -157,6 +157,12 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
     this.setW(newW);
   }
 
+
+  @Override
+  public <T> void onlineDynamicSGD(T[] w1, T[] x1, T y1) {
+
+  }
+
   @Override
   public double[] getW() {
     return this.w;
