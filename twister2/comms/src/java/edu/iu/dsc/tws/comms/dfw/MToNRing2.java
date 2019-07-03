@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -88,6 +89,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private Map<Integer, List<Integer>> workerToTargets = new HashMap<>();
 
   /**
+   * Worker to sources
+   */
+  private Map<Integer, List<Integer>> workerToSources = new HashMap<>();
+
+  /**
    * Targets to workers
    */
   private Map<Integer, Integer> targetsToWorkers = new HashMap<>();
@@ -110,12 +116,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The target index to send for each worker
    */
-  private Map<Integer, Integer> targetIndex = new HashMap<>();
-
-  /**
-   * The next worker to send the data
-   */
-  private int nextWorkerIndex;
+  private Map<Integer, Integer> sendWorkerTaskIndex = new HashMap<>();
 
   /**
    * The data type
@@ -182,6 +183,51 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    */
   private List<List<Integer>> sendingGroups = new ArrayList<>();
 
+  private enum ReceiverGroupState {
+    POSTED,
+    DONE,
+  }
+
+  private enum SendGroupState {
+    SENDING,
+    DONE,
+  }
+
+  /**
+   * Send group index
+   */
+  private int sendGroupIndex;
+
+  /**
+   * The receive group index
+   */
+  private int receiveGroupIndex;
+
+  /**
+   * Keep track of the sources that send the sync
+   */
+  private Set<Integer> syncedSources = new HashSet<>();
+
+  /**
+   * The sends completed for this step
+   */
+  private int competedSends;
+
+  /**
+   * Number of sends needs to complete
+   */
+  private int sendsNeedsToComplete;
+
+  /**
+   * The receives completed for this step
+   */
+  private int competedReceives;
+
+  /**
+   * The receives needs to be completed for this round
+   */
+  private int receivesNeedsToComplete;
+
   /**
    * Create a ring partition communication
    *
@@ -236,7 +282,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     finalReceiver.init(cfg, this, finalExpectedIds);
 
     // now calculate the worker id to target mapping
-    calculateWorkerIdToTargets();
+    calculateWorkerIdToTargets(targets, workerToTargets);
+    calculateWorkerIdToTargets(sources, workerToSources);
 
     // calculate the workers
     workers = new ArrayList<>(workerToTargets.keySet());
@@ -244,15 +291,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
     // calculate the routes
     calculateRoutingParameters();
-
-    // lets calculate the worker as this worker
-    nextWorkerIndex = workers.indexOf(thisWorker);
-
-    // put 0 as the target index
-    Set<Integer> targetWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, targets);
-    for (int t : targetWorkers) {
-      targetIndex.put(t, 0);
-    }
 
     // lets set the represent source here
     if (sourcesOfThisWorker.size() > 0) {
@@ -303,11 +341,40 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         deSerializerMap.put(ex, new DataDeserializer());
       }
     }
+
+    // calculate the receive groups
+    calculateReceiveGroups();
+
     // create the delegate
     this.delegate = new ControlledChannelOperation(channel);
     this.delegate.init(cfg, dataType, rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
+  }
+
+  private void startNextStep(int sendGroup, int receiveGroup) {
+    List<Integer> sendWorkers = sendingGroups.get(sendGroup);
+    // lets set the task indexes to 0
+    for (int i : sendWorkers) {
+      sendWorkerTaskIndex.put(i, 0);
+    }
+    // reset the completed sends
+    competedSends = 0;
+    sendsNeedsToComplete = 0;
+    // calculate the sends to complete
+    for (int worker : sendWorkers) {
+      List<Integer> workerTargets = workerToTargets.get(worker);
+      sendsNeedsToComplete += workerTargets.size();
+    }
+
+    competedReceives = 0;
+    receivesNeedsToComplete = 0;
+    // calculate the receives to complete
+    List<Integer> receiveWorkers = receiveGroups.get(receiveGroup);
+    for (int worker : receiveWorkers) {
+      List<Integer> workerSources = workerToTargets.get(worker);
+      receivesNeedsToComplete += workerSources.size();
+    }
   }
 
   private void calculateReceiveGroups() {
@@ -352,18 +419,18 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  private void calculateWorkerIdToTargets() {
-    for (int t : targets) {
+  private void calculateWorkerIdToTargets(Set<Integer> logicalIds,
+                                          Map<Integer, List<Integer>> workerToIds) {
+    for (int t : logicalIds) {
       int worker = taskPlan.getExecutorForChannel(t);
       List<Integer> ts;
-      if (workerToTargets.containsKey(worker)) {
-        ts = workerToTargets.get(worker);
+      if (workerToIds.containsKey(worker)) {
+        ts = workerToIds.get(worker);
       } else {
         ts = new ArrayList<>();
       }
       ts.add(t);
-      workerToTargets.put(worker, ts);
-      targetsToWorkers.put(t, worker);
+      workerToIds.put(worker, ts);
     }
   }
 
@@ -409,13 +476,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     try {
       if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-        List<Object> mTarget = merged.get(target);
-        if (mTarget == null || mTarget.isEmpty()) {
-          return delegate.sendMessage(source, message, target,
-              MessageFlags.SYNC_EMPTY, targetRoutes.get(target));
-        } else {
-          return false;
-        }
+        syncedSources.add(source);
+        return true;
       }
 
       // we add to the merged
@@ -438,49 +500,55 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void sendCompleted(Object message) {
-
+    competedSends++;
   }
 
   @Override
   public boolean progress() {
+    boolean completed = false;
     swapLock.lock();
     try {
-      int worker = workers.get(nextWorkerIndex);
-      List<Integer> tgts = workerToTargets.get(worker);
-      // we need to send starting from the previosu
-      int i;
-      int index = targetIndex.get(worker);
-      for (i = index; i < tgts.size(); i++) {
-        int target = tgts.get(i);
-        List<Object> data = merged.get(target);
-
-        if (data != null && data.size() > 0) {
-          RoutingParameters parameters = targetRoutes.get(target);
-          if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
-            break;
-          } else {
-            data.clear();
-          }
-        }
+      boolean sendDone = sendToGroup();
+      boolean sendsCompleted = competedSends == sendsNeedsToComplete;
+      boolean receiveCompleted = receivesNeedsToComplete == competedReceives;
+      if (sendDone && sendsCompleted && receiveCompleted) {
+        completed = true;
       }
-      index = i;
-      // if we have sent everything reset to 0 and move onto next worker index
-      if (i == tgts.size()) {
-        index = 0;
-        incrementWorkerIndex();
+      // if this step is completed start the next step
+      if (completed) {
+        startNextStep(0, 0);
       }
-      targetIndex.put(worker, index);
     } finally {
       swapLock.unlock();
     }
-
     // now set the things
     return OperationUtils.progressReceivers(delegate, lock,
-        finalReceiver, partialLock, merger);
+        finalReceiver, partialLock, merger) && !completed;
   }
 
-  private void incrementWorkerIndex() {
-    nextWorkerIndex = (nextWorkerIndex + 1) % workers.size();
+  private boolean sendToGroup() {
+    List<Integer> sendingGroup = sendingGroups.get(sendGroupIndex);
+    for (int worker : sendingGroup) {
+      List<Integer> workerTargets = workerToTargets.get(worker);
+      int targetIndex = sendWorkerTaskIndex.get(worker);
+
+      for (int i = targetIndex; i < workerTargets.size(); i++) {
+        int target = workerTargets.get(i);
+        List<Object> data = merged.get(target);
+
+        RoutingParameters parameters = targetRoutes.get(target);
+        // even if we have 0 tuples, we need to send at this point
+        if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
+          return false;
+        } else {
+          data.clear();
+          // advance the index
+          targetIndex++;
+          sendWorkerTaskIndex.put(worker, targetIndex);
+        }
+      }
+    }
+    return true;
   }
 
   @Override
@@ -547,8 +615,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean receiveMessage(MessageHeader header, Object object) {
-    return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+    boolean recv = finalReceiver.onMessage(header.getSourceId(),
+        DataFlowContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
+    if (recv) {
+      competedReceives++;
+    }
+    return recv;
   }
 
   @Override
