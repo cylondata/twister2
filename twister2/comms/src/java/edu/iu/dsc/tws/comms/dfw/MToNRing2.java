@@ -99,6 +99,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private Map<Integer, Integer> targetsToWorkers = new HashMap<>();
 
   /**
+   * Sources to workers
+   */
+  private Map<Integer, Integer> sourcesToWorkers = new HashMap<>();
+
+  /**
    * The target routes
    */
   private Map<Integer, RoutingParameters> targetRoutes = new HashMap<>();
@@ -106,7 +111,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The workers for targets, sorted
    */
-  private List<Integer> workers;
+  private List<Integer> targetWorkers;
 
   /**
    * This worker id
@@ -229,6 +234,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private List<Integer> receivesNeedsToComplete = new ArrayList<>();
 
   /**
+   * Number of sources per worker
+   */
+  private Map<Integer, Integer> sourcesPerWorker = new HashMap<>();
+
+  /**
    * Create a ring partition communication
    *
    * @param cfg configuration
@@ -282,12 +292,19 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     finalReceiver.init(cfg, this, finalExpectedIds);
 
     // now calculate the worker id to target mapping
-    calculateWorkerIdToTargets(targets, workerToTargets);
-    calculateWorkerIdToTargets(sources, workerToSources);
+    calculateWorkerIdToTargets(targets, workerToTargets, targetsToWorkers);
+    calculateWorkerIdToTargets(sources, workerToSources, sourcesToWorkers);
 
     // calculate the workers
-    workers = new ArrayList<>(workerToTargets.keySet());
-    Collections.sort(workers);
+    targetWorkers = new ArrayList<>(workerToTargets.keySet());
+    Collections.sort(targetWorkers);
+
+    // calculate the sources per worker
+    List<Integer> sourceWorkers = new ArrayList<>(workerToSources.keySet());
+    Collections.sort(sourceWorkers);
+    for (int w : sourceWorkers) {
+      sourcesPerWorker.put(w, TaskPlanUtils.getTasksOfWorker(taskPlan, w, sources).size());
+    }
 
     // calculate the routes
     calculateRoutingParameters();
@@ -346,17 +363,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     calculateReceiveGroups();
 
     // create the delegate
-    this.delegate = new ControlledChannelOperation(channel);
-    this.delegate.init(cfg, dataType, rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
+    this.delegate = new ControlledChannelOperation(channel, cfg, dataType,
+        rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
-        sendingGroupsTargets, receiveGroupsSources);
+        sendingGroupsTargets, receiveGroupsSources, sourcesPerWorker);
+
+    // start the first step
+    startNextStep();
   }
 
   private void startNextStep() {
-    sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
-    receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
-
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -437,10 +454,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       list.add(sendingWorkersSorted.get(i));
     }
+    groups.add(list);
   }
 
   private void calculateWorkerIdToTargets(Set<Integer> logicalIds,
-                                          Map<Integer, List<Integer>> workerToIds) {
+                                          Map<Integer, List<Integer>> workerToIds,
+                                          Map<Integer, Integer> idToWorkers) {
     for (int t : logicalIds) {
       int worker = taskPlan.getExecutorForChannel(t);
       List<Integer> ts;
@@ -451,6 +470,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       ts.add(t);
       workerToIds.put(worker, ts);
+      idToWorkers.put(t, worker);
     }
   }
 
@@ -540,6 +560,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       // if this step is completed start the next step
       if (completed) {
+        sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
+        receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
         // lets advance the send group and receive group
         startNextStep();
       }
