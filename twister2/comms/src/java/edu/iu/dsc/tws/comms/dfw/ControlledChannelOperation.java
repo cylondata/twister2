@@ -617,6 +617,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
         if (!receiveAccepted) {
           canProgress = false;
           break;
+        } else {
+          receiver.sendCompleted(outMessage);
         }
         outMessage.incrementAcceptedInternalSends();
       }

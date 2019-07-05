@@ -567,6 +567,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
         receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
         // lets advance the send group and receive group
+        LOG.info(String.format("Starting next step: %d, %d", sendGroupIndex, receiveGroupIndex));
         startNextStep();
       }
     } finally {
@@ -689,7 +690,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
                                        int flags, Object message) {
     lock.lock();
     try {
-      return finalReceiver.onMessage(source, 0, target, flags, message);
+      boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
+      if (recv) {
+        competedReceives++;
+      }
+      return recv;
     } finally {
       lock.unlock();
     }
