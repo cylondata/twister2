@@ -303,7 +303,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     List<Integer> sourceWorkers = new ArrayList<>(workerToSources.keySet());
     Collections.sort(sourceWorkers);
     for (int w : sourceWorkers) {
-      sourcesPerWorker.put(w, TaskPlanUtils.getTasksOfWorker(taskPlan, w, sources).size());
+      if (w == thisWorker) {
+        sourcesPerWorker.put(w, 0);
+      } else {
+        sourcesPerWorker.put(w, TaskPlanUtils.getTasksOfWorker(taskPlan, w, sources).size());
+      }
     }
 
     // calculate the routes
@@ -367,7 +371,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
-        sendingGroupsTargets, receiveGroupsSources, sourcesPerWorker);
+        sendingGroupsTargets, receiveGroupsSources);
 
     // start the first step
     startNextStep();
@@ -385,7 +389,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     competedReceives = 0;
 
     // now configure the controlled operation to behave
-    delegate.startGroup(receiveGroupIndex, sendGroupIndex);
+    delegate.startGroup(receiveGroupIndex, sendGroupIndex, sourcesPerWorker);
   }
 
   private void calculateReceiveGroups() {
@@ -583,12 +587,21 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         int target = workerTargets.get(i);
         List<Object> data = merged.get(target);
 
+        // just continue if null
+        if (data == null) {
+          continue;
+        }
+
+        if (data.size() == 0) {
+          continue;
+        }
+
         RoutingParameters parameters = targetRoutes.get(target);
         // even if we have 0 tuples, we need to send at this point
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-          data.clear();
+          merged.put(target, new AggregatedObjects<>());
           // advance the index
           targetIndex++;
           sendWorkerTaskIndex.put(worker, targetIndex);

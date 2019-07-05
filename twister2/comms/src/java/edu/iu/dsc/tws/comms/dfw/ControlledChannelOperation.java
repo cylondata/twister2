@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.dfw;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -145,12 +146,12 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Send communicationProgress tracker
    */
-  private ControlledProgressTracker sendProgressTracker;
+  private ProgressionTracker sendProgressTracker;
 
   /**
    * Deserialize communicationProgress track
    */
-  private ControlledProgressTracker receiveProgressTracker;
+  private ProgressionTracker receiveProgressTracker;
 
   /**
    * Number of external sends pending
@@ -166,11 +167,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * The receive task id groups
    */
   private List<List<Integer>> receiveIdGroups;
-
-  /**
-   * Keep track of the current receive group
-   */
-  private int currentReceiveGroup;
 
   /**
    * The sending groups
@@ -224,8 +220,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                              Map<Integer, MessageSerializer> serializer,
                              Map<Integer, MessageDeSerializer> deSerializer, boolean keyed,
                              List<List<Integer>> sendingGrpTargets,
-                             List<List<Integer>> receiveGrpsSources,
-                             Map<Integer, Integer> expectedReceivePerWorker) {
+                             List<List<Integer>> receiveGrpsSources) {
     this.channel = channel;
     this.config = cfg;
     this.instancePlan = plan;
@@ -248,7 +243,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
     this.sendingGroupsTargets = sendingGrpTargets;
     this.receiveGroupsSources = receiveGrpsSources;
-    this.expectedReceivePerWorker = expectedReceivePerWorker;
 
     int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
     int sendBufferSize = DataFlowContext.bufferSize(config);
@@ -283,8 +277,15 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   private void initProgressTrackers() {
-    sendProgressTracker = new ControlledProgressTracker(sendingGroupsTargets);
-    receiveProgressTracker = new ControlledProgressTracker(receiveGroupsSources);
+    Set<Integer> sendItems = pendingSendMessagesPerSource.keySet();
+    sendProgressTracker = new ProgressionTracker(sendItems);
+
+    Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
+    Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
+    Set<Integer> items = new HashSet<>(receiveItems);
+    items.addAll(desrializeItems);
+
+    receiveProgressTracker = new ProgressionTracker(items);
   }
 
   /**
@@ -335,31 +336,26 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * Start receiving from the next receiveGroup
    * @param receiveGroup the next receiveGroup
    */
-  public void startGroup(int receiveGroup, int sendGroup) {
-    this.currentReceiveGroup = receiveGroup;
+  public void startGroup(int receiveGroup, int sendGroup,
+                         Map<Integer, Integer> expectedReceives) {
     List<Integer> receiveExecs = receiveIdGroups.get(receiveGroup);
+    this.expectedReceivePerWorker = expectedReceives;
+    currentReceives.clear();
     for (int i = 0; i < receiveExecs.size(); i++) {
       int exec = receiveExecs.get(i);
-      Queue<DataBuffer> list = receiveBuffers.get(exec);
-      // poll the free receive buffers and ad to the receive
-      DataBuffer buffer = freeReceiveBuffers.poll();
-      if (buffer == null) {
-        throw new RuntimeException("Buffer cannot be null");
+      int expected = expectedReceives.get(exec);
+      // we offer the buffer only if we are expecting some messages
+      if (expected > 0) {
+        Queue<DataBuffer> list = receiveBuffers.get(exec);
+        // poll the free receive buffers and ad to the receive
+        DataBuffer buffer = freeReceiveBuffers.poll();
+        if (buffer == null) {
+          throw new RuntimeException("Buffer cannot be null");
+        }
+        list.offer(buffer);
       }
-      list.offer(buffer);
+      currentReceives.put(exec, 0);
     }
-
-    // switch the trackers
-    sendProgressTracker.switchGroup(sendGroup);
-    receiveProgressTracker.switchGroup(receiveGroup);
-  }
-
-  /**
-   * Utility method to increment the receive group
-   */
-  private void incrementReceiveGroup() {
-    currentReceiveGroup++;
-    currentReceiveGroup = currentReceiveGroup / receiveIdGroups.size();
   }
 
   /**
@@ -702,15 +698,22 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
               ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
               Objects.requireNonNull(releaseMsg).release();
 
+              DataBuffer buffer = freeReceiveBuffers.poll();
               if (receivedState == InMessage.ReceivedState.BUILDING) {
                 Queue<DataBuffer> list = receiveBuffers.get(workerId);
+                if (buffer == null) {
+                  throw new RuntimeException("Free buffers doesn't have any buffer");
+                }
                 // we get a free buffer and offer
-                list.offer(freeReceiveBuffers.poll());
+                list.offer(buffer);
               } else {
                 if (expected > count) {
                   Queue<DataBuffer> list = receiveBuffers.get(workerId);
+                  if (buffer == null) {
+                    throw new RuntimeException("Free buffers doesn't have any buffer");
+                  }
                   // we get a free buffer and offer
-                  list.offer(freeReceiveBuffers.poll());
+                  list.offer(buffer);
                 }
               }
             }
@@ -761,13 +764,12 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
-      Queue<DataBuffer> list = freeReceiveBuffers;
       // if we have received the full message we can release the buffer to free buffers,
       // otherwise we need to release to receive more
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
-        if (!list.offer(buffer)) {
+        if (!freeReceiveBuffers.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));
         }
