@@ -188,6 +188,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    */
   private Map<Integer, Integer> currentReceives = new HashMap<>();
 
+  private int freedBuffersPoll;
+
   /**
    * Create the channel operation
    * @param channel
@@ -330,6 +332,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       ByteBuffer byteBuffer = channel.createBuffer(receiveBufferSize);
       this.freeReceiveBuffers.offer(new DataBuffer(byteBuffer));
     }
+    LOG.info("Initial add : " + max);
   }
 
   /**
@@ -347,11 +350,13 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       // we offer the buffer only if we are expecting some messages
       if (expected > 0) {
         Queue<DataBuffer> list = receiveBuffers.get(exec);
+        freedBuffersPoll++;
         // poll the free receive buffers and ad to the receive
         DataBuffer buffer = freeReceiveBuffers.poll();
         if (buffer == null) {
           throw new RuntimeException("Buffer cannot be null");
         }
+        LOG.info(String.format("Freeadd %d freedpoll %d", addedFreedBuffers, freedBuffersPoll));
         list.offer(buffer);
       }
       currentReceives.put(exec, 0);
@@ -700,8 +705,9 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
               ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
               Objects.requireNonNull(releaseMsg).release();
 
-              DataBuffer buffer = freeReceiveBuffers.poll();
               if (receivedState == InMessage.ReceivedState.BUILDING) {
+                freedBuffersPoll++;
+                DataBuffer buffer = freeReceiveBuffers.poll();
                 Queue<DataBuffer> list = receiveBuffers.get(workerId);
                 if (buffer == null) {
                   throw new RuntimeException("Free buffers doesn't have any buffer");
@@ -710,6 +716,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                 list.offer(buffer);
               } else {
                 if (expected > count) {
+                  freedBuffersPoll++;
+                  DataBuffer buffer = freeReceiveBuffers.poll();
                   Queue<DataBuffer> list = receiveBuffers.get(workerId);
                   if (buffer == null) {
                     throw new RuntimeException("Free buffers doesn't have any buffer");
@@ -764,6 +772,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     externalSendsPending.getAndDecrement();
   }
 
+  private int addedFreedBuffers = 0;
+
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
       // if we have received the full message we can release the buffer to free buffers,
@@ -771,6 +781,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
+        addedFreedBuffers++;
         if (!freeReceiveBuffers.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));
