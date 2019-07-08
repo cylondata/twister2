@@ -864,10 +864,14 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     int flags = header.getFlags();
     if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       competedReceives++;
-      return true;
+      return finalReceiver.onMessage(header.getSourceId(),
+          DataFlowContext.DEFAULT_DESTINATION,
+          header.getDestinationIdentifier(), header.getFlags(), object);
     } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
       competedReceives++;
-      return true;
+      return finalReceiver.onMessage(header.getSourceId(),
+          DataFlowContext.DEFAULT_DESTINATION,
+          header.getDestinationIdentifier(), header.getFlags(), object);
     }
 
     if (object instanceof AggregatedObjects) {
@@ -899,10 +903,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         competedReceives++;
-        return true;
+        return finalReceiver.onMessage(source, 0, target, flags, message);
       } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
         competedReceives++;
-        return true;
+        return finalReceiver.onMessage(source, 0, target, flags, message);
       }
 
       if (message instanceof AggregatedObjects) {
