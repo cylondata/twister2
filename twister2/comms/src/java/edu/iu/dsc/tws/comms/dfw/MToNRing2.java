@@ -415,6 +415,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     // calculate the receive groups
     calculateReceiveGroups();
 
+    for (int t : targets) {
+      merged.put(t, new AggregatedObjects<>());
+    }
+
     // create the delegate
     this.delegate = new ControlledChannelOperation(channel, cfg, dataType,
         rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
@@ -581,15 +585,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       // we add to the merged
       List<Object> messages = merged.computeIfAbsent(target, k -> new AggregatedObjects<>());
-
-      if (messages.size() < groupingSize) {
-        if (message instanceof AggregatedObjects) {
-          messages.addAll((Collection<?>) message);
-        } else {
-          messages.add(message);
-        }
+      if (message instanceof AggregatedObjects) {
+        messages.addAll((Collection<?>) message);
       } else {
-        return false;
+        messages.add(message);
       }
     } finally {
       swapLock.unlock();
@@ -627,6 +626,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, dest, flags, parameters)) {
+          LOG.info("Sent sync to: " + dest);
           finishedDestPerSource.add(dest);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -658,6 +658,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     boolean completed = false;
     boolean needFurtherMerging = true;
+    boolean allSyncsSent = false;
 
     // lets progress the controlled operation
     delegate.progress();
@@ -689,7 +690,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       boolean sendsCompleted = competedSends == sendsNeedsToComplete.get(sendGroupIndex);
       // lets try to send the syncs
-      boolean allSyncsSent = sendSyncs();
       boolean receiveCompleted = receivesNeedsToComplete.get(receiveGroupIndex) == competedReceives;
       if (sendDone && sendsCompleted && receiveCompleted) {
         completed = true;
@@ -715,7 +715,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         lock.unlock();
       }
     }
-    return finalNeedsProgress || needFurtherMerging;
+    return finalNeedsProgress || needFurtherMerging || !allSyncsSent;
   }
 
   private boolean containsDataToSend() {
@@ -835,6 +835,15 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean receiveMessage(MessageHeader header, Object object) {
+    int flags = header.getFlags();
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+      competedReceives++;
+      return true;
+    } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      competedReceives++;
+      return true;
+    }
+
     if (object instanceof AggregatedObjects) {
       if (((AggregatedObjects) object).size() > 0) {
         boolean recv = finalReceiver.onMessage(header.getSourceId(),
@@ -848,8 +857,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         competedReceives++;
         return true;
       }
+    } else if (object == null) {
+      competedReceives++;
+      return true;
+    } else {
+      throw new RuntimeException("we can only receive Aggregator objects");
     }
-    throw new RuntimeException("We can only receive aggregated objects");
   }
 
   @Override
@@ -857,6 +870,15 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
                                        int flags, Object message) {
     lock.lock();
     try {
+
+      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+        competedReceives++;
+        return true;
+      } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+        competedReceives++;
+        return true;
+      }
+
       if (message instanceof AggregatedObjects) {
         if (((AggregatedObjects) message).size() > 0) {
           boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
@@ -869,8 +891,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           competedReceives++;
           return true;
         }
+      } else if (message == null) {
+        competedReceives++;
+        return true;
+      } else {
+        throw new RuntimeException("we can only receive Aggregator objects");
       }
-      throw new RuntimeException("we can only receive Aggregator objects");
     } finally {
       lock.unlock();
     }
