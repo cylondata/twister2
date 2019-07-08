@@ -694,7 +694,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // now we can send to group
       boolean syncsDone = false;
       boolean sendsDone;
-      if (!allSyncsReceives ) {
+      if (needFurtherMerging || !allSyncsReceives) {
         sendsDone = sendToGroup();
       } else {
         if (containsDataToSend()) {
@@ -749,9 +749,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     List<Integer> sendingGroup = sendingGroupsWorkers.get(sendGroupIndex);
     for (int worker : sendingGroup) {
       List<Integer> workerTargets = workerToTargets.get(worker);
-      int targetIndex = sendWorkerTaskIndex.get(worker);
-
-      for (int i = targetIndex; i < workerTargets.size(); i++) {
+      for (int i = 0; i < workerTargets.size(); i++) {
         int target = workerTargets.get(i);
         List<Object> data = merged.get(target);
 
