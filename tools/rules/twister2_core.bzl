@@ -6,6 +6,7 @@ def twister2_core_files():
 def twister2_core_conf_files():
     return [
         "//twister2/config/src/yaml:config-system-yaml",
+        "//twister2/config/src/yaml:common-conf-yaml",
     ]
 
 def twister2_core_lib_files():

@@ -9,6 +9,7 @@ load("//tools:rules/twister2_client.bzl", "twister2_client_aurora_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_kubernetes_deployment_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_mesos_files")
+load("//tools:rules/twister2_client.bzl", "twister2_client_common_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_nomad_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_dashboard_files")
 load("//tools:rules/twister2_client.bzl", "twister2_client_lib_third_party_files")
@@ -295,6 +296,7 @@ pack_tw2(
         ":twister2-checkpointing",
         ":twister2-communication",
         ":twister2-conf-aurora",
+        ":twister2-conf-common",
         ":twister2-conf-dashboard",
         ":twister2-conf-kubernetes",
         ":twister2-conf-kubernetes-deployment",
@@ -369,6 +371,13 @@ pack_tw2(
     name = "twister2-conf-kubernetes-deployment",
     srcs = twister2_client_kubernetes_deployment_files(),
     package_dir = "conf/kubernetes/deployment",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-conf-common",
+    srcs = twister2_client_common_files(),
+    package_dir = "conf/common",
     version = T2_VERSION,
 )
 
