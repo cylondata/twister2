@@ -43,6 +43,8 @@ public class DataFlowContext extends CommunicationContext {
       "twister2.network.shuffle.file.bytes.max";
   public static final String SHUFFLE_PARALLEL_IO =
       "twister2.network.shuffle.parallel.io";
+  public static final String RING_GROUPING_WORKER_PER_GROUPS =
+      "twister2.network.partition.ring.group.workers";
 
 
   public static final int DEFAULT_DESTINATION = 0;
@@ -95,6 +97,10 @@ public class DataFlowContext extends CommunicationContext {
 
   public static int getParallelIOAllowance(Config cfg) {
     return cfg.getIntegerValue(SHUFFLE_PARALLEL_IO, 1);
+  }
+
+  public static int getRingWorkersPerGroup(Config cfg) {
+    return cfg.getIntegerValue(RING_GROUPING_WORKER_PER_GROUPS, 128);
   }
 }
 

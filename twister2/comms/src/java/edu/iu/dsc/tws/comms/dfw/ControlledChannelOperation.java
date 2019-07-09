@@ -356,7 +356,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
         if (buffer == null) {
           throw new RuntimeException("Buffer cannot be null");
         }
-        LOG.info(String.format("Freeadd %d freedpoll %d", addedFreedBuffers, freedBuffersPoll));
         list.offer(buffer);
       }
       currentReceives.put(exec, 0);

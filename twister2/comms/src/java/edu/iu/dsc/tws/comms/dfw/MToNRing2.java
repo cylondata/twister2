@@ -615,7 +615,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private boolean sendSyncs() {
     boolean allSyncsSent = true;
 
-    LOG.info("send syncs " + sendPerRound);
     int sourceIndex = syncSourceArrayIndex.get(sendGroupIndex);
 
     int source = thisSourceArray[sourceIndex];
@@ -633,7 +632,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
           sendPerRound++;
-          LOG.info("Sent sync to: " + target + " " + sendPerRound);
           finishedDestPerSource.add(target);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -732,6 +730,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       // if this step is completed and we need to progress the final receiver
       boolean notFinished = finalNeedsProgress || needFurtherMerging;
+      if (completed && !notFinished) {
+        finished = true;
+      }
+
       if (completed && notFinished) {
         sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
         receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
@@ -740,12 +742,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           startedSyncRound = true;
         }
         startNextStep();
-        LOG.info(String.format("Starting next step: %d, %d %d %b", sendGroupIndex,
-            receiveGroupIndex, sendPerRound, startedSyncRound));
       }
-      if (completed && !notFinished) {
-        finished = true;
-      }
+
       return notFinished;
     } finally {
       swapLock.unlock();
