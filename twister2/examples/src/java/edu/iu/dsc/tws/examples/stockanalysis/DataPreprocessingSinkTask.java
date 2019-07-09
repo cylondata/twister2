@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.examples.stockanalysis;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.IMessage;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.modifiers.Collector;
+import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 
 public class DataPreprocessingSinkTask  extends BaseSink implements Collector {
 

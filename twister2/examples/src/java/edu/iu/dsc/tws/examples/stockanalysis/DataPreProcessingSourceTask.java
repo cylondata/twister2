@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.examples.stockanalysis;
 import java.util.Date;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.task.api.BaseSource;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 
 public class DataPreProcessingSourceTask extends BaseSource {
   private static final Logger LOG = Logger.getLogger(DataPreProcessingSourceTask.class.getName());
