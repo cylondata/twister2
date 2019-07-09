@@ -124,6 +124,8 @@ public abstract class SgdSvm implements Serializable {
   public abstract void onlineSGD(double[] w1, double[] x1, double y1)
       throws NullDataSetException, MatrixMultiplicationException;
 
+  public abstract <T> void onlineDynamicSGD(T[] w1, T[] x1, T y1);
+
   public double[] getW() {
     return w;
   }
