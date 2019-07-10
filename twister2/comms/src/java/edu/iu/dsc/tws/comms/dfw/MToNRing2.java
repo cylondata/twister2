@@ -290,6 +290,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private Config config;
 
   /**
+   * Weather merger returned false
+   */
+  private boolean mergerBlocked;
+
+  /**
    * Create a ring partition communication
    *
    * @param cfg configuration
@@ -584,8 +589,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     try {
       if (merger.onMessage(source, 0, target, flags, message)) {
         mergerInMemoryMessages++;
+        mergerBlocked = false;
         return true;
       }
+      mergerBlocked = true;
       return false;
     } finally {
       partialLock.unlock();
@@ -696,7 +703,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     try {
       // if we have enough things in memory or some sources finished lets call progress on merger
-      if (mergerInMemoryMessages >= inMemoryMessageThreshold || finishedSources.size() > 0) {
+      Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
+      if (mergerInMemoryMessages >= inMemoryMessageThreshold * sendsToComplete || mergerBlocked
+          || finishedSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {
             needFurtherMerging = merger.progress();
@@ -725,7 +734,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         }
       }
 
-      boolean sendsCompleted = competedSends == sendsNeedsToComplete.get(sendGroupIndex);
+      boolean sendsCompleted = competedSends == sendsToComplete;
       // lets try to send the syncs
       boolean receiveCompleted = receivesNeedsToComplete.get(receiveGroupIndex) == competedReceives;
       if (sendsDone && sendsCompleted && receiveCompleted) {
