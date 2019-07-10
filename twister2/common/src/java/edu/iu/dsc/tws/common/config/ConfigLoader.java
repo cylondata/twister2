@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.config;
 
+import java.io.File;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -77,6 +78,20 @@ public final class ConfigLoader {
 
     Config config = cb.build();
     return Config.transform(config);
+  }
+
+  public static Config loadConfig(String twister2Home, String configPathRoot,
+                                  String clusterType) {
+    //load from common
+    Config common = loadConfig(twister2Home, configPathRoot
+        + File.separator + "common");
+
+    //platform specific config
+    Config platformSpecific = loadConfig(twister2Home, configPathRoot
+        + File.separator + clusterType);
+
+
+    return Config.newBuilder().putAll(common).putAll(platformSpecific).build();
   }
 
   public static Config loadComponentConfig(String filePath) {
