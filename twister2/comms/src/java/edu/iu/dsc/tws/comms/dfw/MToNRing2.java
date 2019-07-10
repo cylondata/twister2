@@ -262,12 +262,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Number of messages added in this step
    */
-  private int currentInMemoryMessages;
+  private int mergerInMemoryMessages;
+
+  /**
+   * Number of messages in the merged memory
+   */
+  private int mergedInMemoryMessages;
 
   /**
    * When this configuration limit is reached, we will call progress on merger
    */
-  private int inMemoryMessageThreshold = 1000;
+  private int inMemoryMessageThreshold = 100000;
 
   /**
    * keep track of finished sources
@@ -316,6 +321,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.receiveKeyType = rcvKType;
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
     this.config = cfg;
+    this.inMemoryMessageThreshold =
+        DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
 
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
@@ -576,7 +583,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     partialLock.lock();
     try {
       if (merger.onMessage(source, 0, target, flags, message)) {
-        currentInMemoryMessages++;
+        mergerInMemoryMessages++;
         return true;
       }
       return false;
@@ -597,12 +604,20 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return true;
       }
 
+      if (mergedInMemoryMessages > inMemoryMessageThreshold) {
+        return false;
+      }
+
       // we add to the merged
       List<Object> messages = merged.computeIfAbsent(target, k -> new AggregatedObjects<>());
       if (message instanceof AggregatedObjects) {
         messages.addAll((Collection<?>) message);
+        mergedInMemoryMessages += ((AggregatedObjects) message).size();
+        mergerInMemoryMessages -= ((AggregatedObjects) message).size();
       } else {
         messages.add(message);
+        mergedInMemoryMessages++;
+        mergerInMemoryMessages--;
       }
     } finally {
       swapLock.unlock();
@@ -681,7 +696,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     try {
       // if we have enough things in memory or some sources finished lets call progress on merger
-      if (currentInMemoryMessages > inMemoryMessageThreshold || finishedSources.size() > 0) {
+      if (mergerInMemoryMessages >= inMemoryMessageThreshold || finishedSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {
             needFurtherMerging = merger.progress();
@@ -787,7 +802,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           return false;
         } else {
           // we are going to decrease the amount of messages in memory
-          currentInMemoryMessages -= data.size();
+          mergedInMemoryMessages -= data.size();
           merged.put(target, new AggregatedObjects<>());
           // advance the index
           targetIndex++;
