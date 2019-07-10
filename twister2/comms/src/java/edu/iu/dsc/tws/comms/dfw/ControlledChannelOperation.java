@@ -548,7 +548,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
           break;
         }
 
-        List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
+        List<Integer> externalRoutes = outMessage.getExternalSends();
         // okay we build the message, send it
         if (outMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
