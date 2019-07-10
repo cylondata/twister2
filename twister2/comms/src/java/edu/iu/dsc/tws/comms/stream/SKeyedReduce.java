@@ -67,7 +67,7 @@ public class SKeyedReduce {
   public SKeyedReduce(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
-                      DestinationSelector destSelector) {
+                      DestinationSelector destSelector, int edgeId) {
     this.keyType = kType;
     this.dataType = dType;
 
@@ -77,16 +77,23 @@ public class SKeyedReduce {
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
-          keyType, keyType, comm.nextEdge());
+          keyType, keyType, edgeId);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
       this.keyedReduce = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc),
-          dataType, dataType, keyType, keyType, comm.nextEdge());
+          dataType, dataType, keyType, keyType, edgeId);
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
+  }
+
+  public SKeyedReduce(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> targets, MessageType kType,
+                      MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
+                      DestinationSelector destSelector) {
+    this(comm, plan, sources, targets, kType, dType, fnc, rcvr, destSelector, comm.nextEdge());
   }
 
   /**
@@ -105,6 +112,7 @@ public class SKeyedReduce {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -113,6 +121,7 @@ public class SKeyedReduce {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
+
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
 
   private BKeyedReduce op;

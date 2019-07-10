@@ -71,7 +71,8 @@ public class JoinBatchOperation extends AbstractParallelOperation {
         leftEdge.getKeyType(),
         leftEdge.getDataType(),
         rightEdge.getDataType(),
-        new JoinRecvrImpl(), destSelector, useDisk, keyComparator);
+        new JoinRecvrImpl(), destSelector, useDisk,
+        keyComparator, leftEdge.getEdgeID().nextId(), rightEdge.getEdgeID().nextId());
   }
 
   @Override

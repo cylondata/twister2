@@ -42,7 +42,7 @@ public class BKeyedReduce {
   public BKeyedReduce(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
                       BulkReceiver rcvr, MessageType kType, MessageType dType,
-                      DestinationSelector destSelector) {
+                      DestinationSelector destSelector, int edgeId) {
     this.keyType = kType;
     this.dataType = dType;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();
@@ -51,9 +51,16 @@ public class BKeyedReduce {
         plan, sources, destinations,
         new KReduceBatchFinalReceiver(fnc, rcvr),
         partialReceiver, dataType, dataType,
-        keyType, keyType, comm.nextEdge());
+        keyType, keyType, edgeId);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
+  }
+
+  public BKeyedReduce(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
+                      BulkReceiver rcvr, MessageType kType, MessageType dType,
+                      DestinationSelector destSelector) {
+    this(comm, plan, sources, destinations, fnc, rcvr, kType, dType, destSelector, comm.nextEdge());
   }
 
   public boolean reduce(int src, Object key, Object data, int flags) {

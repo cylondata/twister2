@@ -47,11 +47,17 @@ public class SReduce {
    */
   public SReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
-                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
+                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr, int edgeId) {
     reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
         new ReduceStreamingPartialReceiver(target, fnc));
-    reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    reduce.init(comm.getConfig(), dataType, plan, edgeId);
+  }
+
+  public SReduce(Communicator comm, LogicalPlan plan,
+                 Set<Integer> sources, int target,
+                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
+    this(comm, plan, sources, target, dataType, fnc, rcvr, comm.nextEdge());
   }
 
   /**
@@ -68,6 +74,7 @@ public class SReduce {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -97,6 +104,7 @@ public class SReduce {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

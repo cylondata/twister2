@@ -38,10 +38,26 @@ public class BBroadcast {
    */
   public BBroadcast(Communicator comm, LogicalPlan plan,
                     int sources, Set<Integer> target,
-                    BulkReceiver rcvr, MessageType dataType) {
+                    BulkReceiver rcvr, MessageType dataType, int edgeID) {
     bcast = new TreeBroadcast(comm.getChannel(), sources, target,
         new DirectBatchFinalReceiver(rcvr));
-    bcast.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    bcast.init(comm.getConfig(), dataType, plan, edgeID);
+  }
+
+  /**
+   * Construct a Streaming Reduce operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param target target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
+  public BBroadcast(Communicator comm, LogicalPlan plan,
+                    int sources, Set<Integer> target,
+                    BulkReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, target, rcvr, dataType, comm.nextEdge());
   }
 
   /**
@@ -58,6 +74,7 @@ public class BBroadcast {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -66,6 +83,7 @@ public class BBroadcast {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

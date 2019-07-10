@@ -41,7 +41,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SGather(newComm, logicalPlan, srcs, dests.iterator().next(),
-        edge.getDataType(), new GatherRcvr());
+        edge.getDataType(), new GatherRcvr(), edge.getEdgeID().nextId());
   }
 
   @Override

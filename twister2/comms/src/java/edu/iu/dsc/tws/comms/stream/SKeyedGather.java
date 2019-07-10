@@ -66,7 +66,7 @@ public class SKeyedGather {
   public SKeyedGather(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, BulkReceiver rcvr,
-                      DestinationSelector destSelector) {
+                      DestinationSelector destSelector, int edgeId) {
     this.keyType = kType;
     this.dataType = dType;
 
@@ -76,16 +76,24 @@ public class SKeyedGather {
           plan, sources, targets,
           new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
-          keyType, keyType, comm.nextEdge());
+          keyType, keyType, edgeId);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
       this.keyedGather = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1),
-          dataType, dataType, keyType, keyType, comm.nextEdge());
+          dataType, dataType, keyType, keyType, edgeId);
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
+
+  }
+
+  public SKeyedGather(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> targets, MessageType kType,
+                      MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector) {
+    this(comm, plan, sources, targets, kType, dType, rcvr, destSelector, comm.nextEdge());
 
   }
 
