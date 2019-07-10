@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.comms.stream;
 
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
@@ -27,7 +26,6 @@ import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
  * Streaming Partition Operation
  */
 public class SPartition {
-  private static final Logger LOG = Logger.getLogger(SPartition.class.getName());
 
   /**
    * The actual operation
@@ -52,13 +50,20 @@ public class SPartition {
   public SPartition(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr,
-                    DestinationSelector destSelector) {
+                    DestinationSelector destSelector, int edgeId) {
     this.destinationSelector = destSelector;
     this.partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr),
         new PartitionStreamingPartialReceiver(), dataType);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+  }
+
+  public SPartition(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    SingularReceiver rcvr,
+                    DestinationSelector destSelector) {
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector, comm.nextEdge());
   }
 
   /**
@@ -81,6 +86,7 @@ public class SPartition {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -98,6 +104,7 @@ public class SPartition {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

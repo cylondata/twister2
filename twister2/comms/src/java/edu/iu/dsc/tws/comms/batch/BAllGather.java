@@ -40,7 +40,7 @@ public class BAllGather {
    */
   public BAllGather(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
-                    BulkReceiver rcvr, MessageType dataType) {
+                    BulkReceiver rcvr, MessageType dataType, int gatherEdgeId, int broadEdgeId) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -54,7 +54,13 @@ public class BAllGather {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     gather = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets, middleTask,
-        rcvr, dataType, comm.nextEdge(), comm.nextEdge(), false);
+        rcvr, dataType, gatherEdgeId, broadEdgeId, false);
+  }
+
+  public BAllGather(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets,
+                    BulkReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), comm.nextEdge());
   }
 
   /**

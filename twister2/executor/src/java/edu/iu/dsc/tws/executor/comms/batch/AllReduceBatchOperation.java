@@ -32,12 +32,13 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
   protected BAllReduce op;
 
   public AllReduceBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                 Set<Integer> sources, Set<Integer>  dest, Edge edge) {
+                                 Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BAllReduce(newComm, logicalPlan, sources, dest,
         new ReduceFnImpl(edge.getFunction()),
-        new FinalSingularReceiver(), edge.getDataType());
+        new FinalSingularReceiver(), edge.getDataType(),
+        edge.getEdgeID().nextId(), edge.getEdgeID().nextId());
   }
 
   @Override

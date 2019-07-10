@@ -38,10 +38,16 @@ public class SDirect {
    */
   public SDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
-                 SingularReceiver rcvr) {
+                 SingularReceiver rcvr, int edgeId) {
     direct = new OneToOne(comm.getChannel(), sources, targets,
         new DirectStreamingFinalReceiver(rcvr), comm.getConfig(),
-        dataType, plan, comm.nextEdge());
+        dataType, plan, edgeId);
+  }
+
+  public SDirect(Communicator comm, LogicalPlan plan,
+                 List<Integer> sources, List<Integer> targets, MessageType dataType,
+                 SingularReceiver rcvr) {
+    this(comm, plan, sources, targets, dataType, rcvr, comm.nextEdge());
   }
 
   /**
@@ -58,6 +64,7 @@ public class SDirect {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -75,6 +82,7 @@ public class SDirect {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

@@ -44,11 +44,17 @@ public class BReduce {
    */
   public BReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, ReduceFunction fnc,
-                 SingularReceiver rcvr, MessageType dataType) {
+                 SingularReceiver rcvr, MessageType dataType, int edgeId) {
     reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceBatchFinalReceiver(fnc, rcvr),
         new ReduceBatchPartialReceiver(target, fnc));
-    reduce.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    reduce.init(comm.getConfig(), dataType, plan, edgeId);
+  }
+
+  public BReduce(Communicator comm, LogicalPlan plan,
+                 Set<Integer> sources, int target, ReduceFunction fnc,
+                 SingularReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, target, fnc, rcvr, dataType, comm.nextEdge());
   }
 
   /**
@@ -65,6 +71,7 @@ public class BReduce {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -73,6 +80,7 @@ public class BReduce {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

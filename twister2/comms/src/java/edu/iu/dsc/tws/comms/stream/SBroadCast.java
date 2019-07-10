@@ -28,6 +28,7 @@ public class SBroadCast {
 
   /**
    * Construct a Streaming Broadcast operation
+   *
    * @param comm the communicator
    * @param plan task plan
    * @param source source task
@@ -37,10 +38,16 @@ public class SBroadCast {
    */
   public SBroadCast(Communicator comm, LogicalPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
-                    SingularReceiver rcvr) {
+                    SingularReceiver rcvr, int edgeId) {
     this.bCast = new TreeBroadcast(comm.getChannel(), source, targets,
         new DirectStreamingFinalReceiver(rcvr));
-    this.bCast.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.bCast.init(comm.getConfig(), dataType, plan, edgeId);
+  }
+
+  public SBroadCast(Communicator comm, LogicalPlan plan,
+                    int source, Set<Integer> targets, MessageType dataType,
+                    SingularReceiver rcvr) {
+    this(comm, plan, source, targets, dataType, rcvr, comm.nextEdge());
   }
 
   /**
@@ -66,6 +73,7 @@ public class SBroadCast {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {

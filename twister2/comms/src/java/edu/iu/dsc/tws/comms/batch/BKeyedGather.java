@@ -54,6 +54,17 @@ public class BKeyedGather {
         destSelector, false, null, true);
   }
 
+  public BKeyedGather(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> destinations,
+                      MessageType kType, MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector,
+                      boolean useDisk,
+                      Comparator<Object> comparator,
+                      boolean groupByKey) {
+    this(comm, plan, sources, destinations, kType, dType, rcvr, destSelector,
+        useDisk, comparator, groupByKey, comm.nextEdge());
+  }
+
   /**
    * Creates an instance of BKeyedGather with key comparator
    *
@@ -65,7 +76,7 @@ public class BKeyedGather {
                       DestinationSelector destSelector,
                       boolean useDisk,
                       Comparator<Object> comparator,
-                      boolean groupByKey) {
+                      boolean groupByKey, int edgeId) {
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
@@ -88,12 +99,12 @@ public class BKeyedGather {
       this.keyedGather = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
-          keyType, keyType, comm.nextEdge());
+          keyType, keyType, edgeId);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       this.keyedGather = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
-          dataType, receiveDataType, keyType, keyType, comm.nextEdge());
+          dataType, receiveDataType, keyType, keyType, edgeId);
     }
 
     this.destinationSelector = destSelector;
