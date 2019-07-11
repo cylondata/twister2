@@ -848,7 +848,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           return false;
         } else {
           if (thisWorker == 0) {
-            LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
+            LOG.info(String.format("%d Sending message to: %d size: %d",
+                sendGroupIndex, target, data.size()));
           }
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
