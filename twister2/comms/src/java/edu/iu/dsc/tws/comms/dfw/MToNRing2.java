@@ -272,7 +272,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * When this configuration limit is reached, we will call progress on merger
    */
-  private int inMemoryMessageThreshold = 100000;
+  private int inMemoryMessageThreshold;
 
   /**
    * keep track of finished sources
@@ -293,6 +293,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    * Weather merger returned false
    */
   private boolean mergerBlocked;
+
+
+  /**
+   * Keep track of the finished send groups
+   */
+  private Set<Integer> finishedSendGroups = new HashSet<>();
+
+  /**
+   * Keep track of the finished receive groups
+   */
+  private Set<Integer> finishedReceiveGroups = new HashSet<>();
 
   /**
    * Create a ring partition communication
@@ -454,7 +465,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private void startNextStep() {
-    LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
+//    LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -540,7 +551,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
 
       if (wId == thisWorker) {
-        thisGroup = list.size() - 1;
+        thisGroup = groups.size() - 1;
       }
 
       if (list.size() == valuesPerGroup) {
@@ -664,7 +675,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
-          LOG.info(String.format("%d Sending sync to: %d", sendGroupIndex, target));
+//          LOG.info(String.format("%d Sending sync to: %d", sendGroupIndex, target));
           finishedDestPerSource.add(target);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -680,10 +691,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
     }
 
-    sourceIndex = (sourceIndex + 1) % sendingGroupsWorkers.size();
+    boolean lastIndex = sourceIndex == thisSourceArray.length - 1;
+    sourceIndex = (sourceIndex + 1) % thisSourceArray.length;
     syncSourceArrayIndex.put(sendGroupIndex, sourceIndex);
 
-    return allSyncsSent;
+    return allSyncsSent && lastIndex;
   }
 
   private int decrement(int groupIndex, int size) {
@@ -774,11 +786,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
 
       if (completed && notFinished) {
+        finishedSendGroups.add(sendGroupIndex);
+        finishedReceiveGroups.add(receiveGroupIndex);
+
         sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
         receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
         // lets advance the send group and receive group
         if (syncsReady) {
-          startedSyncRound = true;
+          if (finishedSendGroups.size() == sendingGroupsTargets.size()
+              && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
+            startedSyncRound = true;
+          }
         }
         startNextStep();
       }
@@ -826,7 +844,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-          LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
+//          LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
           merged.put(target, new AggregatedObjects<>());
