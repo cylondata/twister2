@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.stockanalysis;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 public final class StockAnalysisWorkerParameters {
 
