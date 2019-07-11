@@ -23,7 +23,7 @@ import java.util.stream.IntStream;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BBroadcast;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
@@ -43,7 +43,7 @@ public class BBroadcastExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     if (jobParameters.getTaskStages().get(0) != 1) {
       LOG.warning("Setting no of senders to 1");
       jobParameters.getTaskStages().set(0, 1);

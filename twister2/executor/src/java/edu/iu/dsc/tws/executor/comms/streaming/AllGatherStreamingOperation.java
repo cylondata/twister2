@@ -29,7 +29,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   protected SAllGather op;
 
   public AllGatherStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
-                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
+                                     Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -42,7 +42,8 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SAllGather(newComm, logicalPlan, sources, dest,
-        new FinalReduceReceive(), edge.getDataType());
+        new FinalReduceReceive(), edge.getDataType(),
+        edge.getEdgeID().nextId(), edge.getEdgeID().nextId());
   }
 
   @Override

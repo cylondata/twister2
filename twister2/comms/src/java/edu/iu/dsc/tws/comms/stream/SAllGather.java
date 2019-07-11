@@ -30,6 +30,7 @@ public class SAllGather {
 
   /**
    * Construct a Streaming AllGather operation
+   *
    * @param comm the communicator
    * @param plan task plan
    * @param sources source tasks
@@ -39,7 +40,7 @@ public class SAllGather {
    */
   public SAllGather(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
-                    BulkReceiver rcvr, MessageType dataType) {
+                    BulkReceiver rcvr, MessageType dataType, int gtrEdgeId, int bcstEdgeId) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -52,7 +53,13 @@ public class SAllGather {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
     gather = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets,
-        middleTask, rcvr, dataType, comm.nextEdge(), comm.nextEdge(), true);
+        middleTask, rcvr, dataType, gtrEdgeId, bcstEdgeId, true);
+  }
+
+  public SAllGather(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets,
+                    BulkReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), comm.nextEdge());
   }
 
   /**
@@ -78,6 +85,7 @@ public class SAllGather {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -86,6 +94,7 @@ public class SAllGather {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

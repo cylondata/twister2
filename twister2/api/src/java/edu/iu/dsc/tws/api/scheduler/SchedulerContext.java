@@ -49,6 +49,7 @@ public class SchedulerContext extends Context {
   public static final String CLUSTER_TYPE = "cluster_type";
   public static final String USER_JOB_JAR_FILE = "job_file";
   public static final String JOB_DESCRIPTION_FILE_CMD_VAR = "job_desc_file";
+  public static final String DEBUG = "debug";
 
   public static final String WORKING_DIRECTORY = "twister2.working_directory";
 

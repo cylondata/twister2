@@ -59,6 +59,8 @@ public class SVMReduce extends BaseSink implements Collector {
         if (debug) {
           LOG.log(Level.INFO, "Received Data from workerId: " + this.context.getWorkerId()
               + ":" + this.context.globalTaskId() + ":" + Arrays.toString(this.object));
+        } else {
+          LOG.info("Object Type @Reduce : " + message.getContent().getClass().getName());
         }
       }
 

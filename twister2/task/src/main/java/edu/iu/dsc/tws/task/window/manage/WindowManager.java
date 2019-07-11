@@ -56,6 +56,8 @@ public class WindowManager<T> implements IManager<T> {
 
   private final AtomicInteger eventsSinceLastExpiration;
 
+  private boolean debug = false;
+
   public WindowManager(WindowLifeCycleListener<T> windowLifeCycleListener) {
     this.windowLifeCycleListener = windowLifeCycleListener;
     this.queue = new ConcurrentLinkedQueue<>();
@@ -174,7 +176,9 @@ public class WindowManager<T> implements IManager<T> {
     }
     eventsSinceLastExpiration.set(0);
     if (!eventsToExpire.isEmpty()) {
-      LOG.severe(String.format("OnExiry called on WindowLifeCycleListener"));
+      if (debug) {
+        LOG.severe(String.format("OnExpiry called on WindowLifeCycleListener"));
+      }
       IWindowMessage<T> eventsToExpireIWindow = bundleExpiredWindowIMessage(eventsToExpire);
       windowLifeCycleListener.onExpiry(eventsToExpireIWindow);
     }
@@ -195,6 +199,7 @@ public class WindowManager<T> implements IManager<T> {
 
   /**
    * This method bundles data into a IWindowMessage for creating non-expired IWindowMessages
+   *
    * @param events list of elements that need to be passed into a window
    * @return a bundled IWindowMessage considering a list of IMessages of a given data type
    */
@@ -210,7 +215,8 @@ public class WindowManager<T> implements IManager<T> {
 
   /**
    * This method bundles data into a IWindowMessage for creating expired IWindowMessages
-   *@param events list of elements that need to be passed into a window
+   *
+   * @param events list of elements that need to be passed into a window
    * @return a bundled IWindowMessage considering a list of IMessages of a given data type
    */
   public IWindowMessage<T> bundleExpiredWindowIMessage(List<IMessage<T>> events) {
@@ -270,6 +276,7 @@ public class WindowManager<T> implements IManager<T> {
   /**
    * This method returns the number of event count which has the timestamp lesser than the
    * reference timestamp
+   *
    * @param referenceTime timestamp to which we compare the event time to filter them out
    * @return the number of event count which is less than or equal to the reference time
    */

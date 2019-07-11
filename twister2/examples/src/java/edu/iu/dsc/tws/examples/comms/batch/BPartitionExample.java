@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BPartition;
 import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -44,7 +44,7 @@ public class BPartitionExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);

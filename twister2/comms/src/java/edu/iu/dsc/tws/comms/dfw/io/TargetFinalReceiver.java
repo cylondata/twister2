@@ -115,35 +115,57 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    for (int i = 0; i < targets.length; i++) {
-      Queue<Object> msgQueue = messages.get(targets[i]);
-      if (msgQueue.size() > 0) {
-        return false;
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+
+    lock.lock();
+    try {
+      for (int i = 0; i < targets.length; i++) {
+        int key = targets[i];
+        Queue<Object> val = messages.get(key);
+
+        if (val.size() > 0) {
+          merge(key, val);
+        }
+
+        // check weather we are ready to send and we have values to send
+        if (!isFilledToSend(key)) {
+          continue;
+        }
+
+        // if we send this list successfully
+        if (!sendToTarget(representSource, key)) {
+          needsFurtherProgress = true;
+        }
+
+        if (!val.isEmpty() || !isAllEmpty(key) || !sync(key)) {
+          needsFurtherProgress = true;
+        }
       }
+    } finally {
+      lock.unlock();
     }
-    return true;
+
+    return needsFurtherProgress;
   }
 
-  @Override
-  protected boolean sync() {
+  protected abstract boolean isAllEmpty(int target);
+
+  protected boolean sync(int target) {
     boolean allSynced = true;
-    for (int i = 0; i < targets.length; i++) {
-      int target = targets[i];
-      // if we have synced no need to go forward
-      if (targetStates.get(target) == ReceiverState.INIT
-          || targetStates.get(target) == ReceiverState.SYNCED) {
-        continue;
-      }
+    // if we have synced no need to go forward
+    if (targetStates.get(target) == ReceiverState.INIT
+        || targetStates.get(target) == ReceiverState.SYNCED) {
+      return allSynced;
+    }
 
-      if (targetStates.get(target) == ReceiverState.RECEIVING) {
-        allSynced = false;
-      }
+    if (targetStates.get(target) == ReceiverState.RECEIVING) {
+      allSynced = false;
+    }
 
-      if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
-        targetStates.put(target, ReceiverState.SYNCED);
-        onSyncEvent(target, barriers.get(target));
-      }
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
+      targetStates.put(target, ReceiverState.SYNCED);
+      onSyncEvent(target, barriers.get(target));
     }
 
     return allSynced;

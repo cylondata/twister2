@@ -52,13 +52,19 @@ public class SGather {
    */
   public SGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
-                 BulkReceiver rcvr) {
+                 BulkReceiver rcvr, int edgeId) {
     this.dataType = dataType;
     gather = new MToOneTree(comm.getChannel(), sources, target,
         new GatherStreamingFinalReceiver(rcvr),
         new GatherStreamingPartialReceiver(), 0, 0,
         true, MessageTypes.INTEGER, dataType);
-    gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    gather.init(comm.getConfig(), dataType, plan, edgeId);
+  }
+
+  public SGather(Communicator comm, LogicalPlan plan,
+                 Set<Integer> sources, int target, MessageType dataType,
+                 BulkReceiver rcvr) {
+    this(comm, plan, sources, target, dataType, rcvr, comm.nextEdge());
   }
 
   /**

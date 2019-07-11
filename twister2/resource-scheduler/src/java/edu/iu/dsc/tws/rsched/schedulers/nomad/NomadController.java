@@ -39,8 +39,10 @@ import com.hashicorp.nomad.javasdk.NomadException;
 import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
@@ -161,7 +163,11 @@ public class NomadController implements IController {
 
   private TaskGroup getTaskGroup(JobAPI.Job job) {
     TaskGroup taskGroup = new TaskGroup();
-    taskGroup.setCount(job.getNumberOfWorkers());
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      taskGroup.setCount(job.getNumberOfWorkers());
+    } else {
+      taskGroup.setCount(job.getNumberOfWorkers() + 1);
+    }
     taskGroup.setName(job.getJobName());
     taskGroup.addTasks(getShellDriver(job));
     return taskGroup;
@@ -273,20 +279,25 @@ public class NomadController implements IController {
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
     Map<String, Object> map = workerCommandArguments(config, workingDirectory, job);
-
-    mpiCommand.add(map.get("procs").toString());
+    Config configCopy = JobUtils.resolveJobId(config, job.getJobName());
+    String jobId = configCopy.getStringValue(Context.JOB_ID);
+    String runIncLient = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      runIncLient = "true";
+    } else {
+      runIncLient = "false";
+    }
+    //mpiCommand.add(map.get("procs").toString());
+    mpiCommand.add(runIncLient);
     mpiCommand.add(map.get("java_props").toString());
     mpiCommand.add(map.get("classpath").toString());
     mpiCommand.add(map.get("container_class").toString());
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
-    mpiCommand.add(twister2Home);
+    mpiCommand.add(jobId);
 
     mpiCommand.add(SchedulerContext.jobPackageUrl(config));
-    //mpiCommand.add("http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz");
     mpiCommand.add(SchedulerContext.corePackageUrl(config));
-    //mpiCommand.add("http://149.165.150.81:8082/twister2/mesos/twister2-core-0.2.2.tar.gz");
-
 
     LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 

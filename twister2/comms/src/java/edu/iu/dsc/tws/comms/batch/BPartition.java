@@ -56,7 +56,7 @@ public class BPartition {
   public BPartition(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
-                    DestinationSelector destSelector, boolean shuffle) {
+                    DestinationSelector destSelector, boolean shuffle, int edgeId) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
@@ -72,15 +72,22 @@ public class BPartition {
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType);
-      p.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+      p.init(comm.getConfig(), dataType, plan, edgeId);
       this.partition = p;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       this.partition = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
-          dataType, dataType, null, null, comm.nextEdge());
+          dataType, dataType, null, null, edgeId);
     }
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+  }
+
+  public BPartition(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    BulkReceiver rcvr,
+                    DestinationSelector destSelector, boolean shuffle) {
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector, shuffle, comm.nextEdge());
   }
 
   /**

@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.common.worker.WorkerEnv;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
@@ -51,7 +51,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute(WorkerEnv workerEnv) {
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);

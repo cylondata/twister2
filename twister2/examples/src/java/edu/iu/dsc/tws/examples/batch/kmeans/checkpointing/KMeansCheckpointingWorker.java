@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.impl.TaskEnvironment;
+import edu.iu.dsc.tws.task.TaskEnvironment;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 /**

@@ -36,8 +36,8 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
@@ -90,12 +90,12 @@ public class OutMessage {
   /**
    * The internal send ids
    */
-  private Set<Integer> internalSends;
+  private List<Integer> internalSends;
 
   /**
    * The external send ids
    */
-  private Set<Integer> externalSends;
+  private List<Integer> externalSends;
 
   /**
    * Message flags
@@ -140,7 +140,7 @@ public class OutMessage {
   private Object data;
 
   public OutMessage(int src, int edge, int path, int target, int flags,
-                    Set<Integer> intSends, Set<Integer> extSends,
+                    List<Integer> intSends, List<Integer> extSends,
                     MessageType dataType, MessageType keyType,
                     ChannelMessageReleaseCallback releaseCallback, Object data) {
     this.source = src;
@@ -201,11 +201,11 @@ public class OutMessage {
     return target;
   }
 
-  public Set<Integer> getInternalSends() {
+  public List<Integer> getInternalSends() {
     return internalSends;
   }
 
-  public Set<Integer> getExternalSends() {
+  public List<Integer> getExternalSends() {
     return externalSends;
   }
 

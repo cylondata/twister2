@@ -10,114 +10,115 @@
 
 // List of projects/orgs using your project for the users page.
 const users = [
-  {
-    caption: 'User1',
-    // You will need to prepend the image path with your baseUrl
-    // if it is not '/', like: '/test-site/img/image.jpg'.
-    image: '/img/undraw_open_source.svg',
-    infoLink: 'https://www.facebook.com',
-    pinned: true,
-  },
+    {
+        caption: 'User1',
+        // You will need to prepend the image path with your baseUrl
+        // if it is not '/', like: '/test-site/img/image.jpg'.
+        image: '/img/undraw_open_source.svg',
+        infoLink: 'https://www.facebook.com',
+        pinned: true,
+    },
 ];
 
 const baseUrl = '/';
 
 const siteConfig = {
-  title: 'Twister2', // Title for your website.
-  tagline: 'High Performance Data Analytics',
-  url: 'https://dsc-spidal.github.io', // Your website URL
-  baseUrl: '/twister2/', // Base URL for your project */
-  // For github.io type URLs, you would set the url and baseUrl like:
-  //   url: 'https://facebook.github.io',
-  //   baseUrl: '/test-site/',
+    title: 'Twister2', // Title for your website.
+    tagline: 'High Performance Data Analytics',
+    url: 'https://dsc-spidal.github.io', // Your website URL
+    baseUrl: '/twister2/', // Base URL for your project */
+    // For github.io type URLs, you would set the url and baseUrl like:
+    //   url: 'https://facebook.github.io',
+    //   baseUrl: '/test-site/',
 
-  // Used for publishing and more
-  projectName: 'twister2',
-  organizationName: 'dsc-spidal',
-  // For top-level user or org sites, the organization is still the same.
-  // e.g., for the   https://JoelMarcey.github.io site, it would be set like...
-  //   organizationName: 'JoelMarcey'
+    // Used for publishing and more
+    projectName: 'twister2',
+    organizationName: 'dsc-spidal',
+    // For top-level user or org sites, the organization is still the same.
+    // e.g., for the   https://JoelMarcey.github.io site, it would be set like...
+    //   organizationName: 'JoelMarcey'
 
-  // For no header links in the top nav bar -> headerLinks: [],
-  headerLinks: [
-    {doc: 'introduction', label: 'Docs'},
-    {page: 'docs/download', label: 'Download'},
-    { href: "https://github.com/dsc-spidal/twister2", label: "GitHub" },
-    {blog: true, label: 'Blog'},
-  ],
-
-  // If you have users set above, you add it here:
-  users: [],
-
-  /* path to images for header/footer */
-  headerIcon: 'img/favicon.ico',
-  footerIcon: 'img/favicon.ico',
-  favicon: 'img/favicon.ico',
-
-  /* Colors for website */
-  colors: {
-    primaryColor: '#141736',
-    secondaryColor: '#625f76',
-  },
-
-  /* Custom fonts for website */
-  /*
-  fonts: {
-    myFont: [
-      "Times New Roman",
-      "Serif"
+    // For no header links in the top nav bar -> headerLinks: [],
+    headerLinks: [
+        {doc: 'introduction', label: 'Docs'},
+        {page: 'docs/download', label: 'Download'},
+        {href: "https://github.com/dsc-spidal/twister2", label: "GitHub"},
+        {blog: true, label: 'Blog'},
     ],
-    myOtherFont: [
-      "-apple-system",
-      "system-ui"
-    ]
-  },
-  */
 
-  // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
-  copyright: `Copyright © ${new Date().getFullYear()} Indiana University`,
+    // If you have users set above, you add it here:
+    users: [],
 
-  highlight: {
-    // Highlight.js theme to use for syntax highlighting in code blocks.
-    theme: 'atom-one-dark',
-  },
+    /* path to images for header/footer */
+    headerIcon: 'img/logo_large.png',
+    footerIcon: 'img/logo_large.png',
+    favicon: 'img/favicon.ico',
 
-  // Add custom scripts here that would be placed in <script> tags.
-  // Add custom scripts here that would be placed in <script> tags
-  scripts: [
-    'https://buttons.github.io/buttons.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js',
-    `${baseUrl}js/code-blocks-buttons.js`
-  ],
-  stylesheets: [
-    `${baseUrl}css/code-blocks-buttons.css`
-  ],
+    /* Colors for website */
+    colors: {
+        primaryColor: '#141736',
+        secondaryColor: '#625f76',
+    },
 
-  // On page navigation for the current documentation page.
-  onPageNav: 'separate',
-  // No .html extensions for paths.
-  cleanUrl: true,
+    /* Custom fonts for website */
+    /*
+    fonts: {
+      myFont: [
+        "Times New Roman",
+        "Serif"
+      ],
+      myOtherFont: [
+        "-apple-system",
+        "system-ui"
+      ]
+    },
+    */
 
-  disableHeaderTitle: false,
+    // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
+    copyright: `Copyright © ${new Date().getFullYear()} Indiana University`,
 
-  // Open Graph and Twitter card images.
-  ogImage: 'img/undraw_online.svg',
-  twitterImage: 'img/undraw_tweetstorm.svg',
+    highlight: {
+        // Highlight.js theme to use for syntax highlighting in code blocks.
+        theme: 'atom-one-dark',
+    },
 
-  projectDescription: `
+    // Add custom scripts here that would be placed in <script> tags.
+    // Add custom scripts here that would be placed in <script> tags
+    scripts: [
+        'https://buttons.github.io/buttons.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js',
+        `${baseUrl}js/code-blocks-buttons.js`
+    ],
+    stylesheets: [
+        `${baseUrl}css/code-blocks-buttons.css`,
+        `https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&display=swap`
+    ],
+
+    // On page navigation for the current documentation page.
+    onPageNav: 'separate',
+    // No .html extensions for paths.
+    cleanUrl: true,
+
+    disableHeaderTitle: false,
+
+    // Open Graph and Twitter card images.
+    ogImage: 'img/undraw_online.svg',
+    twitterImage: 'img/undraw_tweetstorm.svg',
+
+    projectDescription: `
     Twister2 is a high performance data analytics platform for data pipelines, analytics and streaming
   `,
 
 
-  // Show documentation's last contributor's name.
-  // enableUpdateBy: true,
+    // Show documentation's last contributor's name.
+    // enableUpdateBy: true,
 
-  // Show documentation's last update time.
-  // enableUpdateTime: true,
+    // Show documentation's last update time.
+    // enableUpdateTime: true,
 
-  // You may provide arbitrary config keys to be used as needed by your
-  // template. For example, if you need your repo's URL...
-  //   repoUrl: 'https://github.com/facebook/test-site',
+    // You may provide arbitrary config keys to be used as needed by your
+    // template. For example, if you need your repo's URL...
+    //   repoUrl: 'https://github.com/facebook/test-site',
 };
 
 module.exports = siteConfig;

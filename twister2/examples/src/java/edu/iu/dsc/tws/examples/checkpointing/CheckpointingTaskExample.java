@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.impl.TaskEnvironment;
+import edu.iu.dsc.tws.task.TaskEnvironment;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public class CheckpointingTaskExample implements IWorker {
