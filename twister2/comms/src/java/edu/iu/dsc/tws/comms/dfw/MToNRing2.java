@@ -633,7 +633,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return true;
       }
 
-      if (mergedInMemoryMessages > inMemoryMessageThreshold) {
+      if (mergedInMemoryMessages >= inMemoryMessageThreshold) {
         return false;
       }
 
