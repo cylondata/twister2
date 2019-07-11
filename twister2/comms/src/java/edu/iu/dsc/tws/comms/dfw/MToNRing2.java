@@ -466,7 +466,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private void startNextStep() {
-//    LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
+    if (thisWorker == 0) {
+      LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
+    }
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -845,7 +847,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-//          LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
+          if (thisWorker == 0) {
+            LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
+          }
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
           merged.put(target, new AggregatedObjects<>());
