@@ -454,6 +454,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private void startNextStep() {
+    LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -493,8 +494,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     int numGroups = (int) Math.min(Math.ceil(sendingWorkers.size() / (group * 1.0)),
         Math.ceil(receiveWorkers.size() / (group * 1.0)));
 
-    createGroup(sendingWorkersSorted, numGroups, sendingGroupsWorkers);
-    createGroup(receiveWorkersSorted, numGroups, receiveGroupsWorkers);
+    sendGroupIndex = createGroup(sendingWorkersSorted, numGroups, sendingGroupsWorkers);
+    receiveGroupIndex = createGroup(receiveWorkersSorted, numGroups, receiveGroupsWorkers);
 
     int index = 0;
     for (List<Integer> sendGroup : sendingGroupsWorkers) {
@@ -525,18 +526,28 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
   }
 
-  private void createGroup(List<Integer> sendingWorkersSorted, int numGroups,
+  private int createGroup(List<Integer> sendingWorkersSorted, int numGroups,
                            List<List<Integer>> groups) {
     int valuesPerGroup = sendingWorkersSorted.size() / numGroups;
     List<Integer> list = new ArrayList<>();
+    int thisGroup = 0;
     for (int i = 0; i < sendingWorkersSorted.size(); i++) {
-      if (list.size() == valuesPerGroup) {
-        list = new ArrayList<>();
+      Integer wId = sendingWorkersSorted.get(i);
+      list.add(wId);
+
+      if (list.size() == 1) {
         groups.add(list);
       }
-      list.add(sendingWorkersSorted.get(i));
+
+      if (wId == thisWorker) {
+        thisGroup = list.size() - 1;
+      }
+
+      if (list.size() == valuesPerGroup) {
+        list = new ArrayList<>();
+      }
     }
-    groups.add(list);
+    return thisGroup;
   }
 
   private void calculateWorkerIdToTargets(Set<Integer> logicalIds,
@@ -653,6 +664,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
+          LOG.info(String.format("%d Sending sync to: %d", sendGroupIndex, target));
           finishedDestPerSource.add(target);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -672,6 +684,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     syncSourceArrayIndex.put(sendGroupIndex, sourceIndex);
 
     return allSyncsSent;
+  }
+
+  private int decrement(int groupIndex, int size) {
+    return (groupIndex + size - 1) % size;
   }
 
   private int increment(int groupIndex, int size) {
@@ -758,7 +774,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
 
       if (completed && notFinished) {
-        sendGroupIndex = increment(sendGroupIndex, sendingGroupsWorkers.size());
+        sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
         receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
         // lets advance the send group and receive group
         if (syncsReady) {
@@ -810,6 +826,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
+          LOG.info(String.format("%d Sending message to: %d", sendGroupIndex, target));
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
           merged.put(target, new AggregatedObjects<>());
