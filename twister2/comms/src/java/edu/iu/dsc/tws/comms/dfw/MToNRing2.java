@@ -466,9 +466,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private void startNextStep() {
-    if (thisWorker == 0) {
-      LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
-    }
+//    if (thisWorker == 0) {
+//      LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
+//    }
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -616,9 +616,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         mergerInMemoryMessages++;
         mergerBlocked = false;
         return true;
+      } else {
+        mergerBlocked = true;
+        return false;
       }
-      mergerBlocked = true;
-      return false;
     } finally {
       partialLock.unlock();
     }
@@ -636,7 +637,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return true;
       }
 
-      if (mergedInMemoryMessages >= inMemoryMessageThreshold) {
+      if (mergedInMemoryMessages >= inMemoryMessageThreshold * targetsArray.length) {
         return false;
       }
 
@@ -732,6 +733,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     delegate.progress();
 
     swapLock.lock();
+    boolean mergeCalled = false;
     try {
       // if we have enough things in memory or some sources finished lets call progress on merger
       Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
@@ -740,6 +742,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (partialLock.tryLock()) {
           try {
             needFurtherMerging = merger.progress();
+            mergeCalled = true;
           } finally {
             partialLock.unlock();
           }
@@ -749,7 +752,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // now we can send to group
       boolean syncsDone = false;
       boolean sendsDone;
-      if (needFurtherMerging || !allSyncsReceives) {
+      if (mergeCalled && !allSyncsReceives) {
         sendsDone = sendToGroup();
       } else {
         if (containsDataToSend()) {
@@ -847,10 +850,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-          if (thisWorker == 0) {
-            LOG.info(String.format("%d Sending message to: %d size: %d",
-                sendGroupIndex, target, data.size()));
-          }
+//          if (thisWorker == 0) {
+//            LOG.info(String.format("%d Sending message to: %d size: %d",
+//                sendGroupIndex, target, data.size()));
+//          }
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
           merged.put(target, new AggregatedObjects<>());
