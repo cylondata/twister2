@@ -460,7 +460,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
         sendingGroupsTargets, receiveGroupsSources);
 
-    LOG.info("Starting group based send receive");
     // start the first step
     startNextStep();
   }

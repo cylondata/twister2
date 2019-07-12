@@ -146,7 +146,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.concurrentIOs = new Semaphore(parallelIOAllowance);
 
     this.target = tar;
-    LOG.info("Disk merger configured. Folder : " + folder
+    LOG.fine("Disk merger configured. Folder : " + folder
         + ", Bytes in memory :" + maxBytesInMemory);
   }
 
@@ -174,7 +174,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   public synchronized void switchToReading() {
-    LOG.info("Switching to read...");
     try {
       //wait if there are ongoing disk IOs
       fileWriteLock.acquire();

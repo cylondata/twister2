@@ -332,7 +332,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       ByteBuffer byteBuffer = channel.createBuffer(receiveBufferSize);
       this.freeReceiveBuffers.offer(new DataBuffer(byteBuffer));
     }
-    LOG.info("Initial add : " + max);
   }
 
   /**
