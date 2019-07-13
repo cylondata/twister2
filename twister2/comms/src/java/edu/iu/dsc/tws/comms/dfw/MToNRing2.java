@@ -46,13 +46,19 @@ import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntList;
+
 public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private static final Logger LOG = Logger.getLogger(MToNRing2.class.getName());
 
   /**
    * Locally merged results
    */
-  private Map<Integer, List<Object>> merged = new HashMap<>();
+  private Int2ObjectArrayMap<List<Object>> merged = new Int2ObjectArrayMap<>();
 
   /**
    * This is the local merger
@@ -175,11 +181,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private MessageType receiveKeyType;
 
   /**
-   * The grouping
-   */
-  private int groupingSize;
-
-  /**
    * The receive groups
    */
   private List<List<Integer>> receiveGroupsWorkers = new ArrayList<>();
@@ -212,7 +213,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Keep track of the sources that send the sync
    */
-  private Set<Integer> syncedSources = new HashSet<>();
+  private IntArraySet syncedSources = new IntArraySet();
 
   /**
    * The sends completed for this step
@@ -222,7 +223,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Number of sends needs to complete
    */
-  private List<Integer> sendsNeedsToComplete = new ArrayList<>();
+  private IntList sendsNeedsToComplete = new IntArrayList();
 
   /**
    * The receives completed for this step
@@ -232,12 +233,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The receives needs to be completed for this round
    */
-  private List<Integer> receivesNeedsToComplete = new ArrayList<>();
+  private IntList receivesNeedsToComplete = new IntArrayList();
 
   /**
    * Number of sources per worker
    */
-  private Map<Integer, Integer> sourcesPerWorker = new HashMap<>();
+  private Int2IntArrayMap sourcesPerWorker = new Int2IntArrayMap();
 
   /**
    * Source array for iterations
@@ -252,7 +253,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Keep state
    */
-  protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
+  protected Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
 
   /**
    * The targets
@@ -277,7 +278,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * keep track of finished sources
    */
-  private Set<Integer> finishedSources = new HashSet<>();
+  private IntArraySet finishedSources = new IntArraySet();
 
   /**
    * Weather all syncs received from the sources
@@ -298,12 +299,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Keep track of the finished send groups
    */
-  private Set<Integer> finishedSendGroups = new HashSet<>();
+  private IntArraySet finishedSendGroups = new IntArraySet();
 
   /**
    * Keep track of the finished receive groups
    */
-  private Set<Integer> finishedReceiveGroups = new HashSet<>();
+  private IntArraySet finishedReceiveGroups = new IntArraySet();
 
   /**
    * Create a ring partition communication
@@ -335,7 +336,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.targets = targets;
     this.receiveDataType = rcvType;
     this.receiveKeyType = rcvKType;
-    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
     this.config = cfg;
     this.inMemoryMessageThreshold =
         DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
