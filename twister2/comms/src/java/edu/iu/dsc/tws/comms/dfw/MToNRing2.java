@@ -761,7 +761,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             syncsDone = sendSyncs();
             sendsDone = syncsDone;
           } else {
-            syncsReady = true;
+            if (allSyncsReceives) {
+              syncsReady = true;
+            }
             sendsDone = true;
           }
         }
@@ -803,6 +805,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             startedSyncRound = true;
           }
         }
+//        LOG.info(String.format("Starting next %d synced %b %d total %d",
+//            sendGroupIndex, startedSyncRound,
+//            finishedSendGroups.size(), totalMessages));
         startNextStep();
       }
 
