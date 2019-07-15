@@ -238,12 +238,26 @@ public final class JoinUtils {
     };
   }
 
+
+  private enum OuterJoinType {
+    FULL, LEFT, RIGHT;
+
+    public boolean includeLeft() {
+      return this == FULL || this == LEFT;
+    }
+
+    public boolean includeRight() {
+      return this == FULL || this == RIGHT;
+    }
+  }
+
   /**
-   * Outer join the left and right relation using the tuple key
+   * Full Outer join the left and right relation using the tuple key
    */
-  public static List<Object> fullOuterJoin(List<Tuple> leftRelation,
-                                           List<Tuple> rightRelation,
-                                           KeyComparatorWrapper comparator) {
+  private static List<Object> outerJoin(List<Tuple> leftRelation,
+                                        List<Tuple> rightRelation,
+                                        KeyComparatorWrapper comparator,
+                                        OuterJoinType outerJoinType) {
     int leftIndex = 0;
     int rightIndex = 0;
 
@@ -285,26 +299,57 @@ public final class JoinUtils {
 
         rightIndex = index;
       } else if (comparator.compare(left, right) < 0) {
-        outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), null));
+        if (outerJoinType.includeLeft()) {
+          outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), null));
+        }
         leftIndex++;
       } else {
-        outPut.add(new JoinedTuple<>(right.getKey(), null, right.getValue()));
+        if (outerJoinType.includeRight()) {
+          outPut.add(new JoinedTuple<>(right.getKey(), null, right.getValue()));
+        }
         rightIndex++;
       }
     }
 
-    while (leftIndex < leftRelation.size()) {
+    while (leftIndex < leftRelation.size() && outerJoinType.includeLeft()) {
       Tuple left = leftRelation.get(leftIndex);
       outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), null));
       leftIndex++;
     }
 
-    while (rightIndex < rightRelation.size()) {
+    while (rightIndex < rightRelation.size() && outerJoinType.includeRight()) {
       Tuple right = rightRelation.get(rightIndex);
       outPut.add(new JoinedTuple<>(right.getKey(), null, right.getValue()));
       rightIndex++;
     }
 
     return outPut;
+  }
+
+  /**
+   * Full Outer join the left and right relation using the tuple key
+   */
+  public static List<Object> fullOuterJoin(List<Tuple> leftRelation,
+                                           List<Tuple> rightRelation,
+                                           KeyComparatorWrapper comparator) {
+    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.FULL);
+  }
+
+  /**
+   * Left Outer join the left and right relation using the tuple key
+   */
+  public static List<Object> leftOuterJoin(List<Tuple> leftRelation,
+                                           List<Tuple> rightRelation,
+                                           KeyComparatorWrapper comparator) {
+    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.LEFT);
+  }
+
+  /**
+   * Right Outer join the left and right relation using the tuple key
+   */
+  public static List<Object> rightOuterJoin(List<Tuple> leftRelation,
+                                            List<Tuple> rightRelation,
+                                            KeyComparatorWrapper comparator) {
+    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.RIGHT);
   }
 }

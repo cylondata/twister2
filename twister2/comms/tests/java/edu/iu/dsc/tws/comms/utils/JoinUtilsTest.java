@@ -71,12 +71,35 @@ public class JoinUtilsTest {
     return innerJoined;
   }
 
-  private List<Object> getOuterJoined() {
+  private List<Object> getFullOuterJoined() {
     List<Object> innerJoined = new ArrayList<>();
     innerJoined.add(new JoinedTuple(34, "Robinson", "Clerical"));
     innerJoined.add(new JoinedTuple(33, "Jones", "Engineering"));
     innerJoined.add(new JoinedTuple(34, "Smith", "Clerical"));
     innerJoined.add(new JoinedTuple(null, "Williams", null));
+    innerJoined.add(new JoinedTuple(33, "Heisenberg", "Engineering"));
+    innerJoined.add(new JoinedTuple(31, "Rafferty", "Sales"));
+    innerJoined.add(new JoinedTuple(35, null, "Marketing"));
+    return innerJoined;
+  }
+
+  private List<Object> getLeftOuterJoined() {
+    List<Object> innerJoined = new ArrayList<>();
+    innerJoined.add(new JoinedTuple(33, "Jones", "Engineering"));
+    innerJoined.add(new JoinedTuple(31, "Rafferty", "Sales"));
+    innerJoined.add(new JoinedTuple(34, "Robinson", "Clerical"));
+    innerJoined.add(new JoinedTuple(34, "Smith", "Clerical"));
+    innerJoined.add(new JoinedTuple(null, "Williams", null));
+    innerJoined.add(new JoinedTuple(33, "Heisenberg", "Engineering"));
+    return innerJoined;
+  }
+
+  private List<Object> getRightOuterJoined() {
+    List<Object> innerJoined = new ArrayList<>();
+
+    innerJoined.add(new JoinedTuple(34, "Smith", "Clerical"));
+    innerJoined.add(new JoinedTuple(33, "Jones", "Engineering"));
+    innerJoined.add(new JoinedTuple(34, "Robinson", "Clerical"));
     innerJoined.add(new JoinedTuple(33, "Heisenberg", "Engineering"));
     innerJoined.add(new JoinedTuple(31, "Rafferty", "Sales"));
     innerJoined.add(new JoinedTuple(35, null, "Marketing"));
@@ -95,23 +118,24 @@ public class JoinUtilsTest {
   }
 
   private Comparator<Object> getJoinedTupleComparator() {
-    return new Comparator<Object>() {
-      @Override
-      public int compare(Object o1, Object o2) {
-        Integer k1 = (Integer) ((JoinedTuple) o1).getKey();
-        Integer k2 = (Integer) ((JoinedTuple) o2).getKey();
-        if (k1 == null) {
-          return -1;
-        } else if (k2 == null) {
-          return 1;
-        }
-        return k1.compareTo(k2);
+    return (o1, o2) -> {
+      Integer k1 = (Integer) ((JoinedTuple) o1).getKey();
+      Integer k2 = (Integer) ((JoinedTuple) o2).getKey();
+      if (k1 == null) {
+        return -1;
+      } else if (k2 == null) {
+        return 1;
       }
+      return k1.compareTo(k2);
     };
   }
 
+  /**
+   * This test compares the results of in memory and disk based inner joins.
+   * Purpose is to verify the accuracy of disk based inner join
+   */
   @Test
-  public void innerJoin() {
+  public void innerJoinComparision() {
     List<Tuple> left = new ArrayList<>();
     List<Tuple> right = new ArrayList<>();
     Random random = new Random();
@@ -119,15 +143,6 @@ public class JoinUtilsTest {
       left.add(Tuple.of(random.nextInt(10), random.nextInt()));
       right.add(Tuple.of(random.nextInt(10), random.nextInt()));
     }
-//    left.add(Tuple.of(1, 10));
-//    left.add(Tuple.of(2, 201));
-//    left.add(Tuple.of(2, 202));
-//    left.add(Tuple.of(3, 30));
-//
-//    right.add(Tuple.of(1, 100));
-//    right.add(Tuple.of(2, 2001));
-//    right.add(Tuple.of(2, 2002));
-
 
     FSKeyedSortedMerger2 fsk1 = new FSKeyedSortedMerger2(
         10,
@@ -201,8 +216,12 @@ public class JoinUtilsTest {
     LOG.info(objects.toString());
   }
 
+  /**
+   * This test compares the in memory inner join against a known set of results.
+   * Purpose is to verify the accuracy of in memory inner join
+   */
   @Test
-  public void innerJoinReal() {
+  public void innerJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
     List<Object> joined = JoinUtils.innerJoin(
@@ -219,13 +238,16 @@ public class JoinUtilsTest {
     Assert.assertEquals(joined.size(), innerJoined.size());
 
     for (int i = 0; i < innerJoined.size(); i++) {
-      Assert.assertEquals(((JoinedTuple) innerJoined.get(i)).getKey(),
-          ((JoinedTuple) joined.get(i)).getKey());
+      Assert.assertEquals(innerJoined.get(i), joined.get(i));
     }
   }
 
+  /**
+   * This test compares the in memory full outer join against a known set of results.
+   * Purpose is to verify the accuracy of in memory full outer join
+   */
   @Test
-  public void outerJoinRead() {
+  public void fullOuterJoinInMemory() {
     List<Tuple> employees = this.getEmployees();
     List<Tuple> departments = this.getDepartments();
     List<Object> joined = JoinUtils.fullOuterJoin(
@@ -234,16 +256,67 @@ public class JoinUtilsTest {
         this.getEmployeeDepComparator()
     );
 
-    List<Object> innerJoined = this.getOuterJoined();
+    List<Object> outerJoined = this.getFullOuterJoined();
 
     joined.sort(this.getJoinedTupleComparator());
-    innerJoined.sort(this.getJoinedTupleComparator());
+    outerJoined.sort(this.getJoinedTupleComparator());
 
-    Assert.assertEquals(joined.size(), innerJoined.size());
+    Assert.assertEquals(joined.size(), outerJoined.size());
 
-    for (int i = 0; i < innerJoined.size(); i++) {
-      Assert.assertEquals(((JoinedTuple) innerJoined.get(i)).getKey(),
-          ((JoinedTuple) joined.get(i)).getKey());
+    for (int i = 0; i < outerJoined.size(); i++) {
+      Assert.assertEquals(outerJoined.get(i), joined.get(i));
+    }
+  }
+
+  /**
+   * This test compares the in memory left outer join against a known set of results.
+   * Purpose is to verify the accuracy of in memory left outer join
+   */
+  @Test
+  public void leftOuterJoinInMemory() {
+    List<Tuple> employees = this.getEmployees();
+    List<Tuple> departments = this.getDepartments();
+    List<Object> joined = JoinUtils.leftOuterJoin(
+        employees,
+        departments,
+        this.getEmployeeDepComparator()
+    );
+
+    List<Object> leftOuterJoined = this.getLeftOuterJoined();
+
+    joined.sort(this.getJoinedTupleComparator());
+    leftOuterJoined.sort(this.getJoinedTupleComparator());
+
+    Assert.assertEquals(joined.size(), leftOuterJoined.size());
+
+    for (int i = 0; i < leftOuterJoined.size(); i++) {
+      Assert.assertEquals(leftOuterJoined.get(i), joined.get(i));
+    }
+  }
+
+  /**
+   * This test compares the in memory right outer join against a known set of results.
+   * Purpose is to verify the accuracy of in memory left outer join
+   */
+  @Test
+  public void rightOuterJoinInMemory() {
+    List<Tuple> employees = this.getEmployees();
+    List<Tuple> departments = this.getDepartments();
+    List<Object> joined = JoinUtils.rightOuterJoin(
+        employees,
+        departments,
+        this.getEmployeeDepComparator()
+    );
+
+    List<Object> rightOuterJoined = this.getRightOuterJoined();
+
+    joined.sort(this.getJoinedTupleComparator());
+    rightOuterJoined.sort(this.getJoinedTupleComparator());
+
+    Assert.assertEquals(joined.size(), rightOuterJoined.size());
+
+    for (int i = 0; i < rightOuterJoined.size(); i++) {
+      Assert.assertEquals(rightOuterJoined.get(i), joined.get(i));
     }
   }
 }
