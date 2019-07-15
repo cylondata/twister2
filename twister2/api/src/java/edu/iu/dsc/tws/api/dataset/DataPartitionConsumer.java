@@ -29,6 +29,7 @@ package edu.iu.dsc.tws.api.dataset;
  * @param <T> the type of output
  */
 public interface DataPartitionConsumer<T> {
+
   /**
    * Weather we have a next value
    * @return true if there is a value in next call

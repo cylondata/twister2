@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -63,15 +64,16 @@ public class BJoin {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId) {
+               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
+               CommunicationContext.JoinType joinType) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator, joinType);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType);
     }
 
 
@@ -92,9 +94,9 @@ public class BJoin {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator) {
+               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
-        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge());
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(), joinType);
   }
 
   /**

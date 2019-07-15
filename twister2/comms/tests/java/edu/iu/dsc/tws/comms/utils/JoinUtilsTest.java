@@ -215,7 +215,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the results of in memory and disk based inner joins.
+   * This test compares the results of in memory and disk based full outer joins.
    * Purpose is to verify the accuracy of disk based full outer join
    */
   @Test
@@ -223,7 +223,7 @@ public class JoinUtilsTest {
     List<Tuple> left = new ArrayList<>();
     List<Tuple> right = new ArrayList<>();
     Random random = new Random();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 100; i++) {
       left.add(Tuple.of(random.nextInt(10), random.nextInt()));
       right.add(Tuple.of(random.nextInt(10), random.nextInt()));
     }
@@ -281,6 +281,174 @@ public class JoinUtilsTest {
 
 
     List<Object> objects = JoinUtils.fullOuterJoin(left, right,
+        new KeyComparatorWrapper(Comparator.naturalOrder()));
+
+    objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
+
+
+    int i = 0;
+    while (iterator.hasNext()) {
+      JoinedTuple nextFromIt = (JoinedTuple) iterator.next();
+      JoinedTuple nextFromList = (JoinedTuple) objects.get(i++);
+
+      Assert.assertEquals(nextFromIt.getKey(), nextFromList.getKey());
+    }
+
+
+    Assert.assertEquals(i, objects.size());
+  }
+
+  /**
+   * This test compares the results of in memory and disk based left outer joins.
+   * Purpose is to verify the accuracy of disk based left outer join
+   */
+  @Test
+  public void leftOuterJoinComparision() {
+    List<Tuple> left = new ArrayList<>();
+    List<Tuple> right = new ArrayList<>();
+    Random random = new Random();
+    for (int i = 0; i < 100; i++) {
+      left.add(Tuple.of(random.nextInt(10), random.nextInt()));
+      right.add(Tuple.of(random.nextInt(10), random.nextInt()));
+    }
+
+    FSKeyedSortedMerger2 fsk1 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-1-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : left) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk1.add(tuple.getKey(), data, data.length);
+      fsk1.run();
+    }
+
+    FSKeyedSortedMerger2 fsk2 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-2-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : right) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk2.add(tuple.getKey(), data, data.length);
+      fsk2.run();
+    }
+
+    CommonThreadPool.init(Config.newBuilder().build());
+
+    fsk1.switchToReading();
+    fsk2.switchToReading();
+
+    Iterator iterator = JoinUtils.leftOuterJoin(
+        (RestorableIterator) fsk1.readIterator(),
+        (RestorableIterator) fsk2.readIterator(),
+        new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
+    );
+
+
+    List<Object> objects = JoinUtils.leftOuterJoin(left, right,
+        new KeyComparatorWrapper(Comparator.naturalOrder()));
+
+    objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
+
+
+    int i = 0;
+    while (iterator.hasNext()) {
+      JoinedTuple nextFromIt = (JoinedTuple) iterator.next();
+      JoinedTuple nextFromList = (JoinedTuple) objects.get(i++);
+
+      Assert.assertEquals(nextFromIt.getKey(), nextFromList.getKey());
+    }
+
+
+    Assert.assertEquals(i, objects.size());
+  }
+
+  /**
+   * This test compares the results of in memory and disk based right outer joins.
+   * Purpose is to verify the accuracy of disk based right outer join
+   */
+  @Test
+  public void rightOuterJoinComparision() {
+    List<Tuple> left = new ArrayList<>();
+    List<Tuple> right = new ArrayList<>();
+    Random random = new Random();
+    for (int i = 0; i < 100; i++) {
+      left.add(Tuple.of(random.nextInt(10), random.nextInt()));
+      right.add(Tuple.of(random.nextInt(10), random.nextInt()));
+    }
+
+    FSKeyedSortedMerger2 fsk1 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-1-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : left) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk1.add(tuple.getKey(), data, data.length);
+      fsk1.run();
+    }
+
+    FSKeyedSortedMerger2 fsk2 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-2-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : right) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk2.add(tuple.getKey(), data, data.length);
+      fsk2.run();
+    }
+
+    CommonThreadPool.init(Config.newBuilder().build());
+
+    fsk1.switchToReading();
+    fsk2.switchToReading();
+
+    Iterator iterator = JoinUtils.rightOuterJoin(
+        (RestorableIterator) fsk1.readIterator(),
+        (RestorableIterator) fsk2.readIterator(),
+        new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
+    );
+
+
+    List<Object> objects = JoinUtils.rightOuterJoin(left, right,
         new KeyComparatorWrapper(Comparator.naturalOrder()));
 
     objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));

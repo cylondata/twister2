@@ -31,6 +31,7 @@ import java.io.Serializable;
  * @param <T> partition
  */
 public interface DataPartition<T> extends Serializable {
+
   /**
    * Get the data consumer
    *

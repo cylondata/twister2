@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
 public class CollectionPartition<T> implements DataPartition<T> {
+
   private List<T> dataList = new ArrayList<>();
 
   private int id;

@@ -15,12 +15,35 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.shuffle.RestorableIterator;
 
 public final class JoinUtils {
   private JoinUtils() {
+  }
+
+  public static List<Object> join(List<Tuple> leftRelation,
+                                  List<Tuple> rightRelation,
+                                  KeyComparatorWrapper comparator,
+                                  CommunicationContext.JoinType joinType) {
+    if (joinType == CommunicationContext.JoinType.INNER) {
+      return innerJoin(leftRelation, rightRelation, comparator);
+    } else {
+      return outerJoin(leftRelation, rightRelation, comparator, joinType);
+    }
+  }
+
+  public static Iterator<JoinedTuple> join(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                RestorableIterator<Tuple<?, ?>> rightIt,
+                                                KeyComparatorWrapper comparator,
+                                                CommunicationContext.JoinType joinType) {
+    if (joinType == CommunicationContext.JoinType.INNER) {
+      return innerJoin(leftIt, rightIt, comparator);
+    } else {
+      return outerJoin(leftIt, rightIt, comparator, joinType);
+    }
   }
 
   /**
@@ -238,26 +261,13 @@ public final class JoinUtils {
     };
   }
 
-
-  private enum OuterJoinType {
-    FULL, LEFT, RIGHT;
-
-    public boolean includeLeft() {
-      return this == FULL || this == LEFT;
-    }
-
-    public boolean includeRight() {
-      return this == FULL || this == RIGHT;
-    }
-  }
-
   /**
    * This util can be used to perform disk based inner join operations.
    */
   public static Iterator<JoinedTuple> outerJoin(RestorableIterator<Tuple<?, ?>> leftIt,
                                                 RestorableIterator<Tuple<?, ?>> rightIt,
                                                 KeyComparatorWrapper comparator,
-                                                OuterJoinType outerJoinType) {
+                                                CommunicationContext.JoinType outerJoinType) {
     return new Iterator<JoinedTuple>() {
 
       private JoinedTuple nextJoinTuple;
@@ -399,7 +409,7 @@ public final class JoinUtils {
   private static List<Object> outerJoin(List<Tuple> leftRelation,
                                         List<Tuple> rightRelation,
                                         KeyComparatorWrapper comparator,
-                                        OuterJoinType outerJoinType) {
+                                        CommunicationContext.JoinType outerJoinType) {
     int leftIndex = 0;
     int rightIndex = 0;
 
@@ -474,7 +484,7 @@ public final class JoinUtils {
   public static Iterator<JoinedTuple> fullOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
                                                     RestorableIterator<Tuple<?, ?>> rightIt,
                                                     KeyComparatorWrapper comparator) {
-    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.FULL);
+    return outerJoin(leftIt, rightIt, comparator, CommunicationContext.JoinType.FULL_OUTER);
   }
 
   /**
@@ -483,7 +493,7 @@ public final class JoinUtils {
   public static Iterator<JoinedTuple> leftOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
                                                     RestorableIterator<Tuple<?, ?>> rightIt,
                                                     KeyComparatorWrapper comparator) {
-    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.LEFT);
+    return outerJoin(leftIt, rightIt, comparator, CommunicationContext.JoinType.LEFT);
   }
 
   /**
@@ -492,7 +502,7 @@ public final class JoinUtils {
   public static Iterator<JoinedTuple> rightOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
                                                      RestorableIterator<Tuple<?, ?>> rightIt,
                                                      KeyComparatorWrapper comparator) {
-    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.RIGHT);
+    return outerJoin(leftIt, rightIt, comparator, CommunicationContext.JoinType.RIGHT);
   }
 
   /**
@@ -501,7 +511,8 @@ public final class JoinUtils {
   public static List<Object> fullOuterJoin(List<Tuple> leftRelation,
                                            List<Tuple> rightRelation,
                                            KeyComparatorWrapper comparator) {
-    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.FULL);
+    return outerJoin(leftRelation, rightRelation, comparator,
+        CommunicationContext.JoinType.FULL_OUTER);
   }
 
   /**
@@ -510,7 +521,7 @@ public final class JoinUtils {
   public static List<Object> leftOuterJoin(List<Tuple> leftRelation,
                                            List<Tuple> rightRelation,
                                            KeyComparatorWrapper comparator) {
-    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.LEFT);
+    return outerJoin(leftRelation, rightRelation, comparator, CommunicationContext.JoinType.LEFT);
   }
 
   /**
@@ -519,6 +530,6 @@ public final class JoinUtils {
   public static List<Object> rightOuterJoin(List<Tuple> leftRelation,
                                             List<Tuple> rightRelation,
                                             KeyComparatorWrapper comparator) {
-    return outerJoin(leftRelation, rightRelation, comparator, OuterJoinType.RIGHT);
+    return outerJoin(leftRelation, rightRelation, comparator, CommunicationContext.JoinType.RIGHT);
   }
 }
