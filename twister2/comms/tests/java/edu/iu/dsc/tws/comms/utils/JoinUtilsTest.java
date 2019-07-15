@@ -71,12 +71,24 @@ public class JoinUtilsTest {
     return innerJoined;
   }
 
+  private List<Object> getOuterJoined() {
+    List<Object> innerJoined = new ArrayList<>();
+    innerJoined.add(new JoinedTuple(34, "Robinson", "Clerical"));
+    innerJoined.add(new JoinedTuple(33, "Jones", "Engineering"));
+    innerJoined.add(new JoinedTuple(34, "Smith", "Clerical"));
+    innerJoined.add(new JoinedTuple(null, "Williams", null));
+    innerJoined.add(new JoinedTuple(33, "Heisenberg", "Engineering"));
+    innerJoined.add(new JoinedTuple(31, "Rafferty", "Sales"));
+    innerJoined.add(new JoinedTuple(35, null, "Marketing"));
+    return innerJoined;
+  }
+
   private KeyComparatorWrapper getEmployeeDepComparator() {
     return new KeyComparatorWrapper((Comparator<Integer>) (o1, o2) -> {
       if (o1 == null) {
-        return 1;
-      } else if (o2 == null) {
         return -1;
+      } else if (o2 == null) {
+        return 1;
       }
       return o1.compareTo(o2);
     });
@@ -89,9 +101,9 @@ public class JoinUtilsTest {
         Integer k1 = (Integer) ((JoinedTuple) o1).getKey();
         Integer k2 = (Integer) ((JoinedTuple) o2).getKey();
         if (k1 == null) {
-          return 1;
-        } else if (k2 == null) {
           return -1;
+        } else if (k2 == null) {
+          return 1;
         }
         return k1.compareTo(k2);
       }
@@ -200,6 +212,29 @@ public class JoinUtilsTest {
     );
 
     List<Object> innerJoined = this.getInnerJoined();
+
+    joined.sort(this.getJoinedTupleComparator());
+    innerJoined.sort(this.getJoinedTupleComparator());
+
+    Assert.assertEquals(joined.size(), innerJoined.size());
+
+    for (int i = 0; i < innerJoined.size(); i++) {
+      Assert.assertEquals(((JoinedTuple) innerJoined.get(i)).getKey(),
+          ((JoinedTuple) joined.get(i)).getKey());
+    }
+  }
+
+  @Test
+  public void outerJoinRead() {
+    List<Tuple> employees = this.getEmployees();
+    List<Tuple> departments = this.getDepartments();
+    List<Object> joined = JoinUtils.fullOuterJoin(
+        employees,
+        departments,
+        this.getEmployeeDepComparator()
+    );
+
+    List<Object> innerJoined = this.getOuterJoined();
 
     joined.sort(this.getJoinedTupleComparator());
     innerJoined.sort(this.getJoinedTupleComparator());

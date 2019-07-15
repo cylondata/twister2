@@ -237,4 +237,74 @@ public final class JoinUtils {
       }
     };
   }
+
+  /**
+   * Outer join the left and right relation using the tuple key
+   */
+  public static List<Object> fullOuterJoin(List<Tuple> leftRelation,
+                                           List<Tuple> rightRelation,
+                                           KeyComparatorWrapper comparator) {
+    int leftIndex = 0;
+    int rightIndex = 0;
+
+    leftRelation.sort(comparator);
+    rightRelation.sort(comparator);
+
+    List<Object> outPut = new ArrayList<>();
+    while (leftIndex < leftRelation.size() && rightIndex < rightRelation.size()) {
+      Tuple left = leftRelation.get(leftIndex);
+      Tuple right = rightRelation.get(rightIndex);
+
+      if (comparator.compare(left, right) == 0) {
+        outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), right.getValue()));
+
+        int index = leftIndex + 1;
+        while (index < leftRelation.size()) {
+          Tuple l = leftRelation.get(index);
+
+          if (comparator.compare(l, right) == 0) {
+            outPut.add(new JoinedTuple<>(l.getKey(), l.getValue(), right.getValue()));
+          } else {
+            break;
+          }
+          index++;
+        }
+
+        leftIndex = index;
+
+        index = rightIndex + 1;
+        while (index < rightRelation.size()) {
+          Tuple r = rightRelation.get(index);
+          if (comparator.compare(left, r) == 0) {
+            outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), r.getValue()));
+          } else {
+            break;
+          }
+          index++;
+        }
+
+        rightIndex = index;
+      } else if (comparator.compare(left, right) < 0) {
+        outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), null));
+        leftIndex++;
+      } else {
+        outPut.add(new JoinedTuple<>(right.getKey(), null, right.getValue()));
+        rightIndex++;
+      }
+    }
+
+    while (leftIndex < leftRelation.size()) {
+      Tuple left = leftRelation.get(leftIndex);
+      outPut.add(new JoinedTuple<>(left.getKey(), left.getValue(), null));
+      leftIndex++;
+    }
+
+    while (rightIndex < rightRelation.size()) {
+      Tuple right = rightRelation.get(rightIndex);
+      outPut.add(new JoinedTuple<>(right.getKey(), null, right.getValue()));
+      rightIndex++;
+    }
+
+    return outPut;
+  }
 }
