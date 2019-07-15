@@ -29,8 +29,6 @@ import edu.iu.dsc.tws.api.scheduler.LauncherException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.scheduler.UploaderException;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.logging.LoggingContext;
-import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
@@ -95,10 +93,10 @@ public class ResourceAllocator {
       configDir = twister2Home + "/conf";
     }
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     // set log level
-    LoggingHelper.setLogLevel(LoggingContext.loggingLevel(config));
+    // LoggingHelper.setLogLevel(LoggingContext.loggingLevel(config));
 
     LOG.log(Level.INFO, String.format("Loaded configuration with twister2_home: %s and "
         + "configuration: %s and cluster: %s", twister2Home, configDir, clusterType));

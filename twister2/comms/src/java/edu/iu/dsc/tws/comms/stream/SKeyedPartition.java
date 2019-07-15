@@ -50,14 +50,21 @@ public class SKeyedPartition {
   public SKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> targets,
                          MessageType keyType, MessageType dataType, SingularReceiver rcvr,
-                         DestinationSelector destSelector) {
+                         DestinationSelector destSelector, int edgeId) {
     this.destinationSelector = destSelector;
     this.partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr), new PartitionStreamingPartialReceiver(),
         dataType, keyType);
 
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+  }
+
+  public SKeyedPartition(Communicator comm, LogicalPlan plan,
+                         Set<Integer> sources, Set<Integer> targets,
+                         MessageType keyType, MessageType dataType, SingularReceiver rcvr,
+                         DestinationSelector destSelector) {
+    this(comm, plan, sources, targets, keyType, dataType, rcvr, destSelector, comm.nextEdge());
   }
 
   /**

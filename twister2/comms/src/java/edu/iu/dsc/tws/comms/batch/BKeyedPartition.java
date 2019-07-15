@@ -35,13 +35,20 @@ public class BKeyedPartition {
   public BKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType keyType, MessageType dataType,
-                         BulkReceiver rcvr, DestinationSelector destSelector) {
+                         BulkReceiver rcvr, DestinationSelector destSelector, int edgeId) {
     this.destinationSelector = destSelector;
     this.partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
-    this.partition.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+  }
+
+  public BKeyedPartition(Communicator comm, LogicalPlan plan,
+                         Set<Integer> sources, Set<Integer> destinations,
+                         MessageType keyType, MessageType dataType,
+                         BulkReceiver rcvr, DestinationSelector destSelector) {
+    this(comm, plan, sources, destinations, keyType, dataType, rcvr, destSelector, comm.nextEdge());
   }
 
   public BKeyedPartition(Communicator comm, LogicalPlan plan,

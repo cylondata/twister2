@@ -54,6 +54,13 @@ public class BGather {
                  Set<Integer> sources, int target,
                  MessageType dataType,
                  BulkReceiver rcvr, boolean shuffle) {
+    this(comm, plan, sources, target, dataType, rcvr, shuffle, comm.nextEdge());
+  }
+
+  public BGather(Communicator comm, LogicalPlan plan,
+                 Set<Integer> sources, int target,
+                 MessageType dataType,
+                 BulkReceiver rcvr, boolean shuffle, int edgeId) {
     MessageReceiver finalRcvr;
     if (!shuffle) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);
@@ -64,7 +71,7 @@ public class BGather {
     this.gather = new MToOneTree(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
         0, 0, true, MessageTypes.INTEGER, dataType);
-    this.gather.init(comm.getConfig(), dataType, plan, comm.nextEdge());
+    this.gather.init(comm.getConfig(), dataType, plan, edgeId);
   }
 
   /**

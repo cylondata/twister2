@@ -62,7 +62,8 @@ public class BJoin {
   public BJoin(Communicator comm, LogicalPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
@@ -82,9 +83,18 @@ public class BJoin {
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
         rightDataType, keyType);
 
-    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, comm.nextEdge());
-    this.partitionRight.init(comm.getConfig(), rightDataType, plan, comm.nextEdge());
+    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
+    this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
     this.destinationSelector.prepare(comm, sources, targets);
+  }
+
+  public BJoin(Communicator comm, LogicalPlan plan,
+               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator) {
+    this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge());
   }
 
   /**

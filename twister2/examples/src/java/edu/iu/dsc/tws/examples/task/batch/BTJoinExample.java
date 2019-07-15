@@ -45,7 +45,7 @@ import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_
 
 public class BTJoinExample extends BenchTaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(BTKeyedGatherExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BTJoinExample.class.getName());
   private static final String RIGHT_EDGE = "right";
   private static final String LEFT_EDGE = "left";
 

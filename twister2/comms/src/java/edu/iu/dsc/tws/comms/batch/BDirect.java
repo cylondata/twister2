@@ -26,19 +26,9 @@ public class BDirect {
    */
   private OneToOne direct;
 
-  /**
-   * Construct a Batch AllReduce operation
-   *
-   * @param comm the communicator
-   * @param plan task plan
-   * @param sources source tasks
-   * @param targets target tasks
-   * @param rcvr receiver
-   * @param dataType data type
-   */
   public BDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets,
-                 BulkReceiver rcvr, MessageType dataType) {
+                 BulkReceiver rcvr, MessageType dataType, int edgeId) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -52,7 +42,23 @@ public class BDirect {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     direct = new OneToOne(comm.getChannel(), sources, targets,
-        new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan, comm.nextEdge());
+        new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan, edgeId);
+  }
+
+  /**
+   * Construct a Batch AllReduce operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
+  public BDirect(Communicator comm, LogicalPlan plan,
+                 List<Integer> sources, List<Integer> targets,
+                 BulkReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge());
   }
 
   /**
@@ -78,6 +84,7 @@ public class BDirect {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -86,6 +93,7 @@ public class BDirect {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {
