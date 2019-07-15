@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.api.comms.structs;
 
+import java.util.Objects;
+
 /**
  * A joined tuple
  */
@@ -47,5 +49,33 @@ public class JoinedTuple<K, L, R> {
 
   public R getRightValue() {
     return rightValue;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    JoinedTuple<?, ?, ?> that = (JoinedTuple<?, ?, ?>) o;
+    return Objects.equals(key, that.key)
+        && Objects.equals(leftValue, that.leftValue)
+        && Objects.equals(rightValue, that.rightValue);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(key, leftValue, rightValue);
+  }
+
+  @Override
+  public String toString() {
+    return "JoinedTuple{"
+        + "key=" + key
+        + ", leftValue=" + leftValue
+        + ", rightValue=" + rightValue
+        + '}';
   }
 }
