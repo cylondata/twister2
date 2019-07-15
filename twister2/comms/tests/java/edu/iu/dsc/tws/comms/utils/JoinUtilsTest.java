@@ -212,8 +212,90 @@ public class JoinUtilsTest {
 
 
     Assert.assertEquals(i, objects.size());
+  }
 
-    LOG.info(objects.toString());
+  /**
+   * This test compares the results of in memory and disk based inner joins.
+   * Purpose is to verify the accuracy of disk based full outer join
+   */
+  @Test
+  public void fullOuterJoinComparision() {
+    List<Tuple> left = new ArrayList<>();
+    List<Tuple> right = new ArrayList<>();
+    Random random = new Random();
+    for (int i = 0; i < 1000; i++) {
+      left.add(Tuple.of(random.nextInt(10), random.nextInt()));
+      right.add(Tuple.of(random.nextInt(10), random.nextInt()));
+    }
+
+    FSKeyedSortedMerger2 fsk1 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-1-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : left) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk1.add(tuple.getKey(), data, data.length);
+      fsk1.run();
+    }
+
+    FSKeyedSortedMerger2 fsk2 = new FSKeyedSortedMerger2(
+        10,
+        100,
+        "/tmp",
+        "op-2-" + UUID.randomUUID().toString(),
+        MessageTypes.INTEGER,
+        MessageTypes.INTEGER,
+        (Comparator<Integer>) Integer::compare,
+        0,
+        false,
+        1
+    );
+
+    for (Tuple tuple : right) {
+      byte[] data = MessageTypes.INTEGER.getDataPacker()
+          .packToByteArray((Integer) tuple.getValue());
+      fsk2.add(tuple.getKey(), data, data.length);
+      fsk2.run();
+    }
+
+    CommonThreadPool.init(Config.newBuilder().build());
+
+    fsk1.switchToReading();
+    fsk2.switchToReading();
+
+    Iterator iterator = JoinUtils.fullOuterJoin(
+        (RestorableIterator) fsk1.readIterator(),
+        (RestorableIterator) fsk2.readIterator(),
+        new KeyComparatorWrapper((Comparator<Integer>) Integer::compare)
+    );
+
+
+    List<Object> objects = JoinUtils.fullOuterJoin(left, right,
+        new KeyComparatorWrapper(Comparator.naturalOrder()));
+
+    objects.sort(Comparator.comparingInt(o -> (Integer) ((JoinedTuple) o).getKey()));
+
+
+    int i = 0;
+    while (iterator.hasNext()) {
+      JoinedTuple nextFromIt = (JoinedTuple) iterator.next();
+      JoinedTuple nextFromList = (JoinedTuple) objects.get(i++);
+
+      Assert.assertEquals(nextFromIt.getKey(), nextFromList.getKey());
+    }
+
+
+    Assert.assertEquals(i, objects.size());
   }
 
   /**
@@ -316,7 +398,8 @@ public class JoinUtilsTest {
     Assert.assertEquals(joined.size(), rightOuterJoined.size());
 
     for (int i = 0; i < rightOuterJoined.size(); i++) {
-      Assert.assertEquals(rightOuterJoined.get(i), joined.get(i));
+      Assert.assertEquals(((JoinedTuple) rightOuterJoined.get(i)).getKey(),
+          ((JoinedTuple) joined.get(i)).getKey());
     }
   }
 }

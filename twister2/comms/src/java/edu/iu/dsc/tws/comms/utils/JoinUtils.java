@@ -252,6 +252,148 @@ public final class JoinUtils {
   }
 
   /**
+   * This util can be used to perform disk based inner join operations.
+   */
+  public static Iterator<JoinedTuple> outerJoin(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                RestorableIterator<Tuple<?, ?>> rightIt,
+                                                KeyComparatorWrapper comparator,
+                                                OuterJoinType outerJoinType) {
+    return new Iterator<JoinedTuple>() {
+
+      private JoinedTuple nextJoinTuple;
+
+      private Tuple currentLeft;
+      private Tuple currentRight;
+
+      // backup variables will hold a Tuple temporary if had to call .next()
+      // once during the join operation before creating a iterator restore point.
+      private Tuple backedUpLeft;
+      private Tuple backedUpRight;
+
+      // flags to mark the required side of iteration
+      private boolean shouldDoLeftIterations = false;
+      private boolean shouldDoRightIterations = false;
+
+      private JoinedTuple doLeftIteration() {
+        if (!shouldDoLeftIterations) {
+          return null;
+        }
+        JoinedTuple jtFromLeftIt = null;
+        if (leftIt.hasNext()) {
+          Tuple l = leftIt.next();
+          if (comparator.compare(l, this.currentRight) == 0) {
+            jtFromLeftIt = new JoinedTuple<>(l.getKey(), l.getValue(),
+                this.currentRight.getValue());
+          } else {
+            this.backedUpLeft = l;
+          }
+        }
+
+        /*
+         if this is the end of left iteration(jtFromLeftIt == null), configure the right iterations
+         to run next and restore left iterator
+        */
+        if (jtFromLeftIt == null) {
+          this.shouldDoLeftIterations = false;
+          this.shouldDoRightIterations = true;
+        }
+        return jtFromLeftIt;
+      }
+
+      private JoinedTuple doRightIteration() {
+        if (!shouldDoRightIterations) {
+          return null;
+        }
+        JoinedTuple jtFromRightIt = null;
+        if (rightIt.hasNext()) {
+          Tuple l = rightIt.next();
+          if (comparator.compare(this.currentLeft, l) == 0) {
+            jtFromRightIt = new JoinedTuple<>(l.getKey(), this.currentLeft.getValue(),
+                l.getValue());
+          } else {
+            this.backedUpRight = l;
+          }
+        }
+
+        /*
+         if this is the end of left iteration(jtFromRightIt == null), configure the right iterations
+         to run next and restore left iterator
+        */
+        if (jtFromRightIt == null) {
+          this.shouldDoRightIterations = false;
+        }
+        return jtFromRightIt;
+      }
+
+      private void makeNextJoinTuple() {
+        nextJoinTuple = this.doLeftIteration();
+        if (nextJoinTuple == null) {
+          nextJoinTuple = this.doRightIteration();
+        }
+        while (nextJoinTuple == null
+            && (this.backedUpLeft != null || leftIt.hasNext())
+            && (this.backedUpRight != null || rightIt.hasNext())) {
+          this.currentLeft = this.backedUpLeft != null ? this.backedUpLeft : leftIt.next();
+          this.backedUpLeft = null; // we used the backup, so setting to null
+
+          this.currentRight = this.backedUpRight != null ? this.backedUpRight : rightIt.next();
+          this.backedUpRight = null;
+
+          // still we don't need left or right iterations at this point
+          this.shouldDoLeftIterations = false;
+          this.shouldDoRightIterations = false;
+
+          if (comparator.compare(this.currentLeft, this.currentRight) == 0) {
+            this.nextJoinTuple = new JoinedTuple<>(this.currentLeft.getKey(),
+                this.currentLeft.getValue(), this.currentRight.getValue());
+            // schedule to run the left iteration next.
+            // Left iteration at the end will schedule right iteration
+            this.shouldDoLeftIterations = true;
+            break;
+          } else if (comparator.compare(this.currentLeft, this.currentRight) < 0) {
+            if (outerJoinType.includeLeft()) {
+              this.nextJoinTuple = new JoinedTuple<>(this.currentLeft.getKey(),
+                  this.currentLeft.getValue(), null);
+            }
+
+            if (leftIt.hasNext()) {
+              this.backedUpLeft = leftIt.next();
+            }
+            this.backedUpRight = this.currentRight;
+          } else {
+            if (outerJoinType.includeRight()) {
+              this.nextJoinTuple = new JoinedTuple<>(this.currentRight.getKey(),
+                  null, this.currentRight.getValue());
+            }
+
+            if (rightIt.hasNext()) {
+              this.backedUpRight = rightIt.next();
+            }
+            this.backedUpLeft = this.currentLeft;
+          }
+        }
+      }
+
+      {
+        // start by creating the first join tuple
+        this.makeNextJoinTuple();
+      }
+
+      @Override
+      public boolean hasNext() {
+        return nextJoinTuple != null;
+      }
+
+      @Override
+      public JoinedTuple next() {
+        JoinedTuple current = nextJoinTuple;
+        this.makeNextJoinTuple();
+        return current;
+      }
+    };
+  }
+
+  /**
    * Full Outer join the left and right relation using the tuple key
    */
   private static List<Object> outerJoin(List<Tuple> leftRelation,
@@ -324,6 +466,33 @@ public final class JoinUtils {
     }
 
     return outPut;
+  }
+
+  /**
+   * Full Outer join the left and right relation using the tuple key
+   */
+  public static Iterator<JoinedTuple> fullOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                    RestorableIterator<Tuple<?, ?>> rightIt,
+                                                    KeyComparatorWrapper comparator) {
+    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.FULL);
+  }
+
+  /**
+   * Left Outer join the left and right relation using the tuple key
+   */
+  public static Iterator<JoinedTuple> leftOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                    RestorableIterator<Tuple<?, ?>> rightIt,
+                                                    KeyComparatorWrapper comparator) {
+    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.LEFT);
+  }
+
+  /**
+   * Right Outer join the left and right relation using the tuple key
+   */
+  public static Iterator<JoinedTuple> rightOuterJoin(RestorableIterator<Tuple<?, ?>> leftIt,
+                                                     RestorableIterator<Tuple<?, ?>> rightIt,
+                                                     KeyComparatorWrapper comparator) {
+    return outerJoin(leftIt, rightIt, comparator, OuterJoinType.RIGHT);
   }
 
   /**
