@@ -809,7 +809,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           }
           roundCompleted = true;
           roundNumber++;
-          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
+//          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
           finishedReceiveGroups.clear();
           finishedSendGroups.clear();
         }
