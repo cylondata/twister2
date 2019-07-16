@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -47,6 +48,7 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -277,7 +279,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * keep track of finished sources
    */
-  private IntArraySet finishedSources = new IntArraySet();
+  private IntArraySet mergeFinishSources = new IntArraySet();
 
   /**
    * Weather all syncs received from the sources
@@ -311,7 +313,21 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   private boolean doneProgress = false;
 
-  private Set<Integer> syncGroupsCompleted = new HashSet<>();
+  /**
+   * Finished workers per target (target -> finished workers)
+   */
+  private Int2ObjectOpenHashMap<Set<Integer>> finishedSources = new Int2ObjectOpenHashMap<>();
+
+  /**
+   * After all the sources finished for a target we add to this set
+   */
+  private List<Integer> finishedTargets = new ArrayList<>();
+
+  private boolean receivingFinalSyncs = false;
+
+  private boolean allTargetsReceivedSyncs = false;
+
+  private Set<Integer> targetsOfThisWorker;
 
   /**
    * Create a ring partition communication
@@ -351,7 +367,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.thisWorker = tPlan.getThisExecutor();
 
     // get the tasks of this executor
-    Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
+    targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
     Set<Integer> sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, sources);
     Map<Integer, List<Integer>> mergerExpectedIds = new HashMap<>();
     for (int target : targets) {
@@ -458,6 +474,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
     for (int t : targets) {
       merged.put(t, new AggregatedObjects<>());
+      finishedSources.put(t, new HashSet<>());
     }
 
     // create the delegate
@@ -709,7 +726,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
     if (allSyncsSent && lastIndex && sent) {
       finishedSendGroups.add(sendGroupIndex);
-      syncGroupsCompleted.add(sendGroupIndex);
     }
     return allSyncsSent && lastIndex;
   }
@@ -748,7 +764,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // if we have enough things in memory or some sources finished lets call progress on merger
       Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
       if (mergerInMemoryMessages >= inMemoryMessageThreshold * sendsToComplete || mergerBlocked
-          || finishedSources.size() > 0) {
+          || mergeFinishSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {
             needFurtherMerging = merger.progress();
@@ -786,12 +802,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       if (sendsDone && sendsCompleted && receiveCompleted) {
         completed = true;
       }
-
       // lets progress the last receiver at last
-      boolean finalNeedsProgress = finalReceiver.progress();
+      if (!receivingFinalSyncs) {
+        finalReceiver.progress();
+      }
 
       // if this step is completed and we need to progress the final receiver
-      boolean needsProgress = finalNeedsProgress || needFurtherMerging;
+      boolean needsProgress = !allTargetsReceivedSyncs || needFurtherMerging;
       if (completed && !needsProgress) {
 //        LOG.info(thisWorker + " Finished receiving");
         finishedReceiving = true;
@@ -829,21 +846,14 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         } else if (lastRound && roundCompleted && delegate.isComplete()) {
           doneProgress = true;
         }
-
-//        if (!(finishedReceiving && roundCompleted)) {
-//          LOG.info(String.format("%d Starting next %d synced %b %d round %d",
-//              thisWorker, sendGroupIndex, startedSyncRound,
-//              finishedSendGroups.size(), roundNumber));
-//          startNextStep();
-//        } else if (!lastRound) {
-//          lastRound = true;
-//          roundCompleted = false;
-//        } else {
-//          doneProgress = true;
-//        }
       }
 
-      return !doneProgress;
+      boolean progress = true;
+      if (doneProgress) {
+        progress = finalReceiver.progress();
+      }
+
+      return progress;
     } finally {
       swapLock.unlock();
     }
@@ -914,7 +924,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     if (finalReceiver != null) {
       finalReceiver.close();
     }
-    finishedSources.clear();
+    mergeFinishSources.clear();
     delegate.close();
   }
 
@@ -928,7 +938,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       finalReceiver.clean();
     }
 
-    finishedSources.clear();
+    mergeFinishSources.clear();
   }
 
   @Override
@@ -982,6 +992,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           DataFlowContext.DEFAULT_DESTINATION,
           header.getDestinationIdentifier(), header.getFlags(), object);
       if (recv) {
+        addSync(header.getSourceId(), header.getDestinationIdentifier());
         competedReceives++;
       }
       return recv;
@@ -1029,6 +1040,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
         if (recv) {
           competedReceives++;
+
+          addSync(source, target);
         }
         return recv;
       } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
@@ -1062,6 +1075,27 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
   }
 
+  private void addSync(int source, int target) {
+    receivingFinalSyncs = true;
+    Set<Integer> finished = finishedSources.get(target);
+    if (finished.contains(source)) {
+      LOG.log(Level.FINE,
+          String.format("%d Duplicate finish from source id %d -> %d",
+              this.thisWorker, source, target));
+    } else {
+      finished.add(source);
+    }
+    if (finished.size() == sources.size()) {
+      if (!finishedTargets.contains(target)) {
+        finishedTargets.add(target);
+      }
+
+      if (finishedTargets.size() == targetsOfThisWorker.size()) {
+        allTargetsReceivedSyncs = true;
+      }
+    }
+  }
+
   @Override
   public boolean isDelegateComplete() {
     return delegate.isComplete();
@@ -1070,10 +1104,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     // add to finished sources
-    finishedSources.add(source);
+    mergeFinishSources.add(source);
 
-    Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
-    for (int dest : targetsOfThisWorker) {
+    Set<Integer> tOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(taskPlan, targets);
+    for (int dest : tOfThisWorker) {
       // first we need to call finish on the partial receivers
       while (!send(source, new int[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish
