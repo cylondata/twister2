@@ -12,72 +12,51 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.ops.SinkOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 
 public class SinkTSet<T> extends BatchBaseTSet<T> {
   private Sink<T> sink;
 
-  private BaseTLink<T> parent;
-
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
    *
-   * @param cfg config Object
    * @param tSetEnv The TSetEnv used for execution
-   * @param prnt parent of the Sink TSet
    * @param s The Sink function to be used
    */
-  public SinkTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, Sink<T> s) {
-    super(cfg, tSetEnv);
-    this.sink = s;
-    this.parent = prnt;
-    this.name = "sink-" + parent.getName();
-    this.parallel = 1;
+  public SinkTSet(TSetEnvironment tSetEnv, Sink<T> s) {
+    this(tSetEnv, s, 1);
   }
 
   /**
    * Creates SinkTSet with the given parameters
    *
-   * @param cfg config Object
    * @param tSetEnv The TSetEnv used for execution
-   * @param prnt parent of the Sink TSet
    * @param s The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, Sink<T> s, int parallelism) {
-    super(cfg, tSetEnv);
+  public SinkTSet(TSetEnvironment tSetEnv, Sink<T> s, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("sink"), parallelism);
     this.sink = s;
-    this.parent = prnt;
-    this.name = "sink-" + parent.getName();
-    this.parallel = parallelism;
   }
 
   @Override
-  public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-    boolean keyed = TSetUtils.isKeyedInput(parent);
-    // lets override the parallelism
-    //int p = calculateParallelism(parent);
-    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<>(sink, isIterable, keyed), parallel);
-    parent.buildConnection(connection);
-    return true;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
+  public void build(TSetGraph tSetGraph) {
+//    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
+//    boolean keyed = TSetUtils.isKeyedInput(parent);
+//    // lets override the parallelism
+//    //int p = calculateParallelism(parent);
+//    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
+//        new SinkOp<>(sink, isIterable, keyed), parallel);
+//    parent.buildConnection(connection);
+//    return true;
   }
 
   @Override
   public SinkTSet<T> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 }

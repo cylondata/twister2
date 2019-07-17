@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseIterableMapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.test.Predict;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;

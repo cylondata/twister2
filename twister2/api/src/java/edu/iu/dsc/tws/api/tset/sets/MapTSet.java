@@ -13,63 +13,47 @@
 package edu.iu.dsc.tws.api.tset.sets;
 
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.MapOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
-public class MapTSet<T, P> extends BatchBaseTSet<T> {
-  private BaseTLink<P> parent;
+public class MapTSet<T, P> extends BatchBaseTSet<P> {
+  private MapFunction<T, P> mapFn;
 
-  private MapFunction<P, T> mapFn;
 
-  public MapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent, MapFunction<P, T> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
+  public MapTSet(TSetEnvironment tSetEnv, MapFunction<T, P> mapFunc, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("map"), parallelism);
     this.mapFn = mapFunc;
-    this.parallel = 1;
-    this.name = "map-" + parent.getName();
-  }
-
-  public MapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                 MapFunction<P, T> mapFunc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = parallelism;
-    this.name = generateName("map", parent);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.sink(sink);
   }
 
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
+  @Override
+  public MapTSet<T, P> setName(String name) {
+    rename(name);
+    return this;
+  }
+
+/*  @Override
+  public void build(TSetGraph tSetGraph) {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
-    return true;
-  }
+  }*/
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public MapTSet<T, P> setName(String n) {
-    this.name = n;
-    return this;
+  protected ICompute getTask() {
+    return new MapOp<>(mapFn, false, false);
   }
 }

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.sink;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.tset.BaseSink;
+import edu.iu.dsc.tws.api.tset.fn.BaseSink;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CacheSink<T> extends BaseSink<T> {

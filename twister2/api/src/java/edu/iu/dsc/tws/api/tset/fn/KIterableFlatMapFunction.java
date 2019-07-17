@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.TFunction;
 
 /**
  * Iterable Keyed flat map function

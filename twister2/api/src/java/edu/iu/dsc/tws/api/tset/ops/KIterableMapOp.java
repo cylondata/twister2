@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 

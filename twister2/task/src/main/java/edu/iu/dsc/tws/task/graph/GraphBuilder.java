@@ -43,6 +43,10 @@ public final class GraphBuilder {
     return this;
   }
 
+  public GraphBuilder addSource(String name, ISource source, int parallelism) {
+    return addSource(name, source).setParallelism(name, parallelism);
+  }
+
   public GraphBuilder addSink(String name, ISink sink) {
     graph.addTaskVertex(name, new Vertex(name, sink));
     return this;
@@ -52,6 +56,11 @@ public final class GraphBuilder {
     graph.addTaskVertex(name, new Vertex(name, task));
     return this;
   }
+
+  public GraphBuilder addTask(String name, ICompute task, int parallelism) {
+    return addTask(name, task).setParallelism(name, parallelism);
+  }
+
 
   public GraphBuilder setParallelism(String taskName, int parallel) {
     Vertex v = graph.vertex(taskName);

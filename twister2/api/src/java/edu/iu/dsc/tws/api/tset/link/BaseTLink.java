@@ -11,71 +11,68 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 public abstract class BaseTLink<T> implements TLink<T> {
 
   /**
-   * The children of this set
-   */
-  protected List<TBase<?>> children;
-
-  /**
    * The TSet Env used for runtime operations
    */
-  protected TSetEnv tSetEnv;
-
+  private TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
    */
-  protected String name;
+  private String name;
 
-  /**
-   * The parallelism of the set
-   */
-  protected int parallel = 4;
-  /**
-   * The configuration
-   */
-  protected Config config;
+  private int sourceParallelism;
 
-  public BaseTLink(Config cfg, TSetEnv tSetEnv) {
-    this.children = new ArrayList<>();
-    this.tSetEnv = tSetEnv;
-    this.config = cfg;
+  private int targetParallelism;
+
+  private TBase<?> source;
+
+  private TBase<?> target;
+
+  public BaseTLink(TSetEnvironment tSetEnv, String name) {
+    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
   }
 
-  @Override
-  public BaseTLink<T> setName(String n) {
-    this.name = n;
-    return this;
+  public BaseTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism) {
+    this(tSetEnv, name, sourceParallelism, sourceParallelism);
+  }
+
+  public BaseTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism,
+                   int targetParallelism) {
+    this.tSetEnv = tSetEnv;
+    this.name = name;
+    this.sourceParallelism = sourceParallelism;
+    this.targetParallelism = targetParallelism;
+  }
+
+  public SinkTSet<T> sink(Sink<T> sink) {
+//    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
+//        source.getParallelism());
+//    addChildToGraph(sinkTSet);
+//    tSetEnv.run();
+//    return sinkTSet;
+
+    return null;
   }
 
   public String getName() {
     return name;
   }
 
-  public int getParallelism() {
-    return parallel;
-  }
-
-  @Override
-  public void build() {
-// first build our selves
-    baseBuild();
-
-    // then build children
-    for (TBase<?> c : children) {
-      c.build();
-    }
+  protected void rename(String name) {
+    this.name = name;
   }
 
   protected Class getType() {
@@ -84,17 +81,47 @@ public abstract class BaseTLink<T> implements TLink<T> {
     return typeToken.getRawType();
   }
 
-  /**
-   * Override the parallelism
-   *
-   * @return if overide, return value, otherwise -1
-   */
-  public int overrideParallelism() {
-    return -1;
+  protected void addChildToGraph(TBase child) {
+    tSetEnv.getGraph().addTSet(this, child);
   }
 
-  public List<TBase<?>> getChildren() {
-    return children;
+  public TSetEnvironment getTSetEnv() {
+    return tSetEnv;
   }
 
+  public int getSourceParallelism() {
+    return sourceParallelism;
+  }
+
+  public int getTargetParallelism() {
+    return targetParallelism;
+  }
+
+  TBase<?> getSource() {
+    return this.source;
+  }
+
+  TBase<?> getTarget() {
+    return this.target;
+  }
+
+  private void validateTlink(TSetGraph graph) {
+    Set<TBase> parents = graph.getPredecessors(this);
+    if (parents.size() != 1) {
+      throw new RuntimeException("tlinks must have only one source!");
+    }
+    this.source = parents.iterator().next();
+
+    Set<TBase> children = graph.getSuccessors(this);
+    if (children.size() != 1) {
+      throw new RuntimeException("tlinks must have only one target!");
+    }
+
+    this.target = children.iterator().next();
+  }
+
+  @Override
+  public void build(TSetGraph tSetGraph) {
+    validateTlink(tSetGraph);
+  }
 }

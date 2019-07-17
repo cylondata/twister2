@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.ops;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.TaskKeySelector;
-import edu.iu.dsc.tws.api.tset.Selector;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
 
 public class TaskKeySelectorImpl<K, V> implements TaskKeySelector {
   private Selector<K, V> selector;

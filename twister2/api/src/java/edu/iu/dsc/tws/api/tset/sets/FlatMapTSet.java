@@ -12,19 +12,13 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Apply a flat map operation
@@ -32,49 +26,23 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
  * @param <T> the input type
  * @param <P> the output type
  */
-public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
-  private static final Logger LOG = Logger.getLogger(FlatMapTSet.class.getName());
+public class FlatMapTSet<T, P> extends BatchBaseTSet<P> {
+  private FlatMapFunction<T, P> mapFn;
 
-  private BaseTLink<P> parent;
-
-  private FlatMapFunction<P, T> mapFn;
-
-  public FlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                     FlatMapFunction<P, T> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
+  public FlatMapTSet(TSetEnvironment tSetEnv, FlatMapFunction<T, P> mapFunc, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("fmap"), parallelism);
     this.mapFn = mapFunc;
-    this.parallel = 1;
-  }
-
-  public FlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                     FlatMapFunction<P, T> mapFunc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = parallelism;
-  }
-
-  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mFn);
-  }
-
-  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mFn);
   }
 
   public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.sink(sink);
   }
 
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
+/*
+  @Override
+  public void build(TSetGraph tSetGraph) {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
 
@@ -83,17 +51,18 @@ public class FlatMapTSet<T, P> extends BatchBaseTSet<T> {
     ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
         addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
     parent.buildConnection(connection);
-    return true;
   }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
+*/
 
   @Override
   public FlatMapTSet<T, P> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
+  }
+
+
+  @Override
+  protected ICompute getTask() {
+    return new FlatMapOp<>(mapFn, false, false);
   }
 }

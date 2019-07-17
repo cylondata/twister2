@@ -15,8 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseSink;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseSink;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.IdentitySelector;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;

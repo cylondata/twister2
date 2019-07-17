@@ -12,65 +12,62 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class DirectTLink<T> extends BaseTLink<T> {
-  private BaseTSet<T> parent;
 
-  public DirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "direct-" + parent.getName();
+  public DirectTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism);
   }
 
   public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
-    children.add(set);
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
   public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
-    children.add(set);
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn,
+        getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        parent.getParallelism());
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
+    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
+        getTargetParallelism());
+    addChildToGraph(set);
+    return set;
+  }
+
+  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
+                                                              computeFunction) {
+    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+        computeFunction, getTargetParallelism());
+    addChildToGraph(set);
+    return set;
   }
 
   @Override
-  public boolean baseBuild() {
-    return false;
+  public void build(TSetGraph tSetGraph) {
+
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public DirectTLink<T> setName(String n) {
-    super.setName(n);
+  public DirectTLink<T> setName(String name) {
+    rename(name);
     return this;
   }
 }

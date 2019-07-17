@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.fn.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public class SourceOp<T> implements ISource, Receptor {

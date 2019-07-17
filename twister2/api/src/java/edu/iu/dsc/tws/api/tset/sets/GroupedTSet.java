@@ -12,11 +12,13 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
@@ -27,71 +29,48 @@ public class GroupedTSet<K, V> extends BatchBaseTSet<V> {
 
   private Selector<K, V> selector;
 
-  private BaseTSet<V> parent;
-
-  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt, PartitionFunction<K> partFn,
-                     Selector<K, V> selc) {
-    super(cfg, tSetEnv);
+  public GroupedTSet(TSetEnvironment tSetEnv, PartitionFunction<K> partFn, Selector<K, V> selc,
+                     int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("groupby"), parallelism);
     this.partitioner = partFn;
     this.selector = selc;
-    this.parent = prnt;
-    this.name = "grouped-" + parent.getName();
-    this.parallel = 1;
-  }
-
-  public GroupedTSet(Config cfg, TSetEnv tSetEnv, BaseTSet<V> prnt, PartitionFunction<K> partFn,
-                     Selector<K, V> selc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.partitioner = partFn;
-    this.selector = selc;
-    this.parent = prnt;
-    this.name = "grouped-" + parent.getName();
-    this.parallel = parallelism;
   }
 
   public KeyedReduceTLink<K, V> keyedReduce(ReduceFunction<V> reduceFn) {
-    KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(config, tSetEnv, parent,
-        reduceFn, partitioner, selector);
-    children.add(reduce);
+    KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(getTSetEnv(), reduceFn, partitioner, 
+        selector, getParallelism());
+    addChildToGraph(reduce);
     return reduce;
   }
 
   public KeyedPartitionTLink<K, V> keyedPartition() {
-    KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(config, tSetEnv,
-        parent, partitioner, selector);
-    children.add(partition);
+    KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(getTSetEnv(), partitioner,
+        selector, getParallelism());
+    addChildToGraph(partition);
     return partition;
   }
 
   public KeyedGatherTLink<K, V> keyedGather() {
-    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(config, tSetEnv, parent,
-        partitioner, selector);
-    children.add(gather);
+    KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(), partitioner,
+        selector, getParallelism());
+    addChildToGraph(gather);
     return gather;
   }
 
-  public BaseTSet<V> getParent() {
-    return parent;
-  }
-
-  @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
 
   @Override
   public GroupedTSet<K, V> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 
   @Override
-  public String getName() {
-    return parent.getName();
+  public void build(TSetGraph tSetGraph) {
+    // nothing to build here. There will be no task created by a grouped tset
+  }
+
+  @Override
+  protected ICompute getTask() {
+    throw new UnsupportedOperationException("group tset does not create any tasks!");
   }
 }

@@ -14,13 +14,22 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
 
-public abstract class KeyValueTLink<K, V> extends BaseTLink<V> {
-  public KeyValueTLink(Config cfg, TSetEnv tSetEnv) {
-    super(cfg, tSetEnv);
+public abstract class KeyValueTLink<K, V> extends BaseTLink<Tuple<K, V>> {
+
+  private PartitionFunction<K> partitionFunction;
+
+  private Selector<K, V> selector;
+
+  protected KeyValueTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism,
+                PartitionFunction<K> parFn, Selector<K, V> selec) {
+    super(tSetEnv, name, sourceParallelism);
+    this.partitionFunction = parFn;
+    this.selector = selec;
   }
 
   Class<? super K> getClassK() {
@@ -33,6 +42,12 @@ public abstract class KeyValueTLink<K, V> extends BaseTLink<V> {
     }.getRawType();
   }
 
-  //todo use generics
-  public abstract Selector getSelector();
+
+  public PartitionFunction<K> getPartitionFunction() {
+    return partitionFunction;
+  }
+
+  public Selector<K, V> getSelector() {
+    return selector;
+  }
 }

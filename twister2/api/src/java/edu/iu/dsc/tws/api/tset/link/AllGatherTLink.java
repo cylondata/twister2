@@ -12,72 +12,71 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Represent a data set created by an all gather operation
  *
  * @param <T> type of data
  */
-public class AllGatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class AllGatherTLink<T> extends BaseTLink<T> {
 
-  public AllGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "all-gather-" + parent.getName();
-  }
-
-  @Override
-  public boolean baseBuild() {
-    return true;
+  public AllGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("allgather"), sourceParallelism);
   }
 
   public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this, mapFn,
-        parallelism);
-    children.add(set);
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, parallelism);
+    addChildToGraph(set);
     return set;
   }
 
   public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn,
                                                int parallelism) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parallelism);
-    children.add(set);
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn, parallelism);
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
+    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
+        getTargetParallelism());
+    addChildToGraph(set);
+    return set;
+  }
+
+  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
+                                                              computeFunction) {
+    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+        computeFunction, getTargetParallelism());
+    addChildToGraph(set);
+    return set;
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-    connection.allgather(parent.getName())
-        .viaEdge(Constants.DEFAULT_EDGE)
-        .withDataType(dataType);
+  public void build(TSetGraph tSetGraph) {
+    super.build(tSetGraph);
+//    MessageType dataType = TSetUtils.getDataType(getType());
+//    connection.allgather(parent.getName())
+//        .viaEdge(Constants.DEFAULT_EDGE)
+//        .withDataType(dataType);
   }
 
   @Override
-  public BaseTLink<T> setName(String n) {
-    super.setName(n);
+  public AllGatherTLink<T> setName(String n) {
+    rename(n);
     return this;
   }
 }

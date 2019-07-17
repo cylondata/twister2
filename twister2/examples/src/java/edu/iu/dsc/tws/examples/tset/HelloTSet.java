@@ -25,9 +25,10 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
@@ -65,7 +66,9 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, para).setName("Source");
+    }, para);
+
+    BaseTSet<int[]> a = source.setName("aaa");
 
     PartitionTLink<int[]> partitioned = source.
         partition(new LoadBalancePartitioner<>());

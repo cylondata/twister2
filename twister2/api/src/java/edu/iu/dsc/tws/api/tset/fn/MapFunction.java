@@ -23,8 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.TFunction;
-
 /**
  * Map function, one input and one output
  *

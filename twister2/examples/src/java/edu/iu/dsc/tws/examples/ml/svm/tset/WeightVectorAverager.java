@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
 
 public class WeightVectorAverager extends BaseMapFunction<double[], double[]> {

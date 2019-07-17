@@ -17,8 +17,8 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;

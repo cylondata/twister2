@@ -13,78 +13,37 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.MapOp;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
-public class StreamingMapTSet<T, P> extends StreamingBaseTSet<T> {
-  private BaseTLink<P> parent;
+public class StreamingMapTSet<T, P> extends StreamingBaseTSet<P> {
 
-  private MapFunction<P, T> mapFn;
+  private MapFunction<T, P> mapFn;
 
-  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                          MapFunction<P, T> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
+  public StreamingMapTSet(TSetEnvironment tSetEnv, MapFunction<T, P> mapFunc, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("smap"), parallelism);
     this.mapFn = mapFunc;
-    this.parallel = 1;
-    this.name = "map-" + parent.getName();
-  }
-
-  public StreamingMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                          MapFunction<P, T> mapFunc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = parallelism;
-    this.name = generateName("map", parent);
-  }
-
-  public <P1> StreamingMapTSet<P1, T> map(MapFunction<T, P1> mFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mFn);
-  }
-
-  public <P1> StreamingFlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mFn);
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.sink(sink);
-  }
-
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-    boolean keyed = TSetUtils.isKeyedInput(parent);
-    int p = calculateParallelism(parent);
-    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
-    parent.buildConnection(connection);
-    return true;
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
+  public void build(TSetGraph tSetGraph) {
+//    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
+//    boolean keyed = TSetUtils.isKeyedInput(parent);
+//    int p = calculateParallelism(parent);
+//    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+//        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
+//    parent.buildConnection(connection);
+//    return true;
   }
 
   @Override
   public StreamingMapTSet<T, P> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 }

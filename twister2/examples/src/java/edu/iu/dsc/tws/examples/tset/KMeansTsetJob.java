@@ -18,11 +18,12 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
-import edu.iu.dsc.tws.api.tset.BaseSource;
-import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseSource;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
@@ -69,17 +70,20 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     for (int i = 0; i < iterations; i++) {
       IterableMapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
       kmeansTSet.addInput("centers", centers);
-      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((t1, t2) -> {
+      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce(new ReduceFunction<double[][]>() {
+        @Override
+        public double[][] reduce(double[][] t1, double[][] t2) {
 
-        double[][] newCentroids = new double[t1.length]
-            [t1[0].length];
-        for (int j = 0; j < t1.length; j++) {
-          for (int k = 0; k < t1[0].length; k++) {
-            double newVal = t1[j][k] + t2[j][k];
-            newCentroids[j][k] = newVal;
+          double[][] newCentroids = new double[t1.length]
+              [t1[0].length];
+          for (int j = 0; j < t1.length; j++) {
+            for (int k = 0; k < t1[0].length; k++) {
+              double newVal = t1[j][k] + t2[j][k];
+              newCentroids[j][k] = newVal;
+            }
           }
+          return newCentroids;
         }
-        return newCentroids;
       });
       centers = reduced.map(new AverageCenters(), parallelismValue).cache();
     }

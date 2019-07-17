@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public class IdentitySelector<T> implements Selector<T, T> {

@@ -9,30 +9,50 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.api.tset.fn;
 
 import java.util.Map;
+
+import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public abstract class TBaseFunction implements TFunction {
   /**
    * The runtime context that is made avilable to users who create functions that
    * extend from the TBaseFunction abstract class
    */
-  public TSetContext context = new TSetContext();
+  public TSetContext context;
 
   @Override
   public void prepare(TSetContext ctx) {
-    this.context.setConfig(ctx.getConfig());
-    this.context.setParallelism(ctx.getParallelism());
-    this.context.settSetId(ctx.getId());
-    this.context.settSetIndex(ctx.getIndex());
-    this.context.settSetName(ctx.getName());
-    this.context.setWorkerId(ctx.getWorkerId());
-    this.context.getInputMap().putAll(ctx.getInputMap());
-    prepare();
+    this.context = ctx;
+//    this.context.setConfig(ctx.getConfig());
+//    this.context.setParallelism(ctx.getParallelism());
+//    this.context.settSetId(ctx.getId());
+//    this.context.settSetIndex(ctx.getIndex());
+//    this.context.settSetName(ctx.getName());
+//    this.context.setWorkerId(ctx.getWorkerId());
+//    this.context.getInputMap().putAll(ctx.getInputMap());
   }
 
 //  public abstract void prepare();
+
+
+  public TSetContext getTSetContext() {
+    return context;
+  }
 
   /**
    * Gets the input value for the given key from the input map

@@ -16,7 +16,7 @@ import java.io.IOException;
 
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sink.FileSink;

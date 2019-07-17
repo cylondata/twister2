@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sink;
 
-import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
 

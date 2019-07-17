@@ -12,21 +12,20 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Represent a data set create by a all reduce opration
@@ -36,47 +35,46 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
   private ReduceFunction<T> reduceFn;
 
-  private BaseTSet<T> parent;
-
-  public AllReduceTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, ReduceFunction<T> rFn) {
-    super(cfg, tSetEnv);
+  public AllReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<T> rFn, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("allreduce"), sourceParallelism);
     this.reduceFn = rFn;
-    this.parent = prnt;
-    this.name = "all-reduce-" + parent.getName();
   }
 
-  @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
+  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
+    MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn, parallelism);
-    children.add(set);
+  public <P> FlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
+    FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public <P> ComputeTSet<T, P> compute(ComputeFunction<T, P> computeFunction) {
+    ComputeTSet<T, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
+        getTargetParallelism());
+    addChildToGraph(set);
+    return set;
+  }
+
+  public <P> ComputeCollectorTSet<T, P> compute(ComputeCollectorFunction<T, P>
+                                                    computeFunction) {
+    ComputeCollectorTSet<T, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+        computeFunction, getTargetParallelism());
+    addChildToGraph(set);
+    return set;
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.allreduce(parent.getName())
-        .viaEdge(Constants.DEFAULT_EDGE)
-        .withReductionFunction(new ReduceOpFunction<T>(getReduceFn()))
-        .withDataType(dataType);
+  public void build(TSetGraph tSetGraph) {
+//    MessageType dataType = TSetUtils.getDataType(getType());
+//
+//    connection.allreduce(parent.getName())
+//        .viaEdge(Constants.DEFAULT_EDGE)
+//        .withReductionFunction(new ReduceOpFunction<T>(getReduceFn()))
+//        .withDataType(dataType);
   }
 
   public ReduceFunction<T> getReduceFn() {
@@ -85,7 +83,7 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
 
   @Override
   public AllReduceTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

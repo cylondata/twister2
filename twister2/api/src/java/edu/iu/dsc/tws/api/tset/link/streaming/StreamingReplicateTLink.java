@@ -13,80 +13,46 @@
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
-public class StreamingReplicateTLink<T> extends BaseTLink {
-  private BaseTSet<T> parent;
-
-  private int replications;
-
-  public StreamingReplicateTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, int reps) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "clone-" + parent.getName();
-    this.replications = reps;
+public class StreamingReplicateTLink<T> extends BaseTLink<T> {
+  public StreamingReplicateTLink(TSetEnvironment tSetEnv, int reps) {
+    super(tSetEnv, TSetUtils.generateName("sreplicate"), 1, reps);
   }
 
-  @Override
-  public int overrideParallelism() {
-    return replications;
-  }
-
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, replications);
-    children.add(set);
+  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+    StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn,
+        getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this,
-        mapFn, replications);
-    children.add(set);
+  public <P> StreamingFlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
+    StreamingFlatMapTSet<T, P> set = new StreamingFlatMapTSet<>(getTSetEnv(), mapFn,
+        getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        replications);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
-  }
-
   @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.broadcast(parent.getName()).viaEdge(Constants.DEFAULT_EDGE)
-        .withDataType(dataType).connect();
+  public void build(TSetGraph tSetGraph) {
+//    MessageType dataType = TSetUtils.getDataType(getType());
+//
+//    connection.broadcast(parent.getName()).viaEdge(Constants.DEFAULT_EDGE)
+//        .withDataType(dataType).connect();
   }
 
   @Override
   public StreamingReplicateTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

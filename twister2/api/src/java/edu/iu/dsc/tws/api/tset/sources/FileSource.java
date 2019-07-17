@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset.sources;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.tset.fn.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;

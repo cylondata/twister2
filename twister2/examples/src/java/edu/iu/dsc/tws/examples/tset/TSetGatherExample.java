@@ -15,9 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.examples.verification.VerificationException;

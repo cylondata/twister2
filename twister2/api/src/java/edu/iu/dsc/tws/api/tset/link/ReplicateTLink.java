@@ -12,97 +12,64 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.MapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
-public class ReplicateTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink {
-  private BaseTSet<T> parent;
+public class ReplicateTLink<T> extends BaseTLink<T> {
 
-  private int replications;
-
-  public ReplicateTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt, int reps) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "clone-" + parent.getName();
-    this.replications = reps;
+  public ReplicateTLink(TSetEnvironment tSetEnv, int reps) {
+    super(tSetEnv, TSetUtils.generateName("replicate"), 1, reps);
   }
 
-  @Override
-  public int overrideParallelism() {
-    return replications;
-  }
-
-  public <P> MapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    MapTSet<P, T> set = new MapTSet<P, T>(config, tSetEnv, this, mapFn, replications);
-    children.add(set);
+  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
+    MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public <P> FlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<P, T> set = new FlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        replications);
-    children.add(set);
+  public <P> FlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
+    FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public <P> IterableMapTSet<P, T> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<P, T> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, replications);
-    children.add(set);
+  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
+    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
+        getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public <P> IterableFlatMapTSet<P, T> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<P, T> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, replications);
-    children.add(set);
+  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
+                                                              computeFunction) {
+    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+        computeFunction, getTargetParallelism());
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        replications);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
-  }
-
   @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.broadcast(parent.getName())
-        .viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType).connect();
+  public void build(TSetGraph tSetGraph) {
+//    MessageType dataType = TSetUtils.getDataType(getType());
+//
+//    connection.broadcast(parent.getName())
+//        .viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType).connect();
   }
 
   @Override
   public ReplicateTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

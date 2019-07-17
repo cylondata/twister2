@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunction;
 
 public class AccuracyAverager extends BaseMapFunction<Double, Double> {
 

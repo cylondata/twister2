@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 
 public class TSetKeyedGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());

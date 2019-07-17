@@ -12,17 +12,16 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyValueTLink;
 import edu.iu.dsc.tws.api.tset.ops.KIterableMapOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * This is the Map Tset for keyed iterable functions
@@ -32,48 +31,38 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
  * @param <O> return type
  */
 public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
-  private KeyValueTLink<K, V> parent;
-
   private KIterableMapFunction<K, V, O> mapFn;
+  private Selector<K, V> selector;
 
-  public KIterableMapTSet(Config cfg, TSetEnv tSetEnv, KeyValueTLink<K, V> parent,
-                          KIterableMapFunction<K, V, O> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = 1;
-    this.name = "imap-" + parent.getName();
-  }
 
-  public KIterableMapTSet(Config cfg, TSetEnv tSetEnv, KeyValueTLink<K, V> parent,
+  public KIterableMapTSet(TSetEnvironment tSetEnv, Selector<K, V> selectr,
                           KIterableMapFunction<K, V, O> mapFunc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
+    super(tSetEnv, TSetUtils.generateName("kimap"), parallelism);
     this.mapFn = mapFunc;
-    this.parallel = parallelism;
-    this.name = "imap-" + parent.getName();
+    this.selector = selectr;
   }
 
   public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
-    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+    DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.map(mFn);
   }
 
   public <O1> IterableFlatMapTSet<O, O1> flatMap(IterableFlatMapFunction<O, O1> mFn) {
-    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+    DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.flatMap(mFn);
   }
 
   public SinkTSet<O> sink(Sink<O> sink) {
-    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.sink(sink);
+//    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
+//    addChildToGraph(direct);
+//    return direct.sink(sink);
+    return null;
   }
 
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
+/*  @Override
+  public void build(TSetGraph tSetGraph) {
     boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
     boolean keyed = TSetUtils.isKeyedInput(parent);
     int p = calculateParallelism(parent);
@@ -82,16 +71,16 @@ public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
             parent), new KIterableMapOp<>(mapFn, isIterable, keyed, parent.getSelector()), p);
     parent.buildConnection(connection);
     return true;
-  }
+  }*/
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
+  protected ICompute getTask() {
+    return new KIterableMapOp<>(mapFn, false, false, selector);
   }
 
   @Override
   public KIterableMapTSet<K, V, O> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 }

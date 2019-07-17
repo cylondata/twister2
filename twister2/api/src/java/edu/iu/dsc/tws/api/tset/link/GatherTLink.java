@@ -12,76 +12,67 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
 import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Create a gather data set
  *
  * @param <T> the type of data
  */
-public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class GatherTLink<T> extends BaseTLink<T> {
 
-  public GatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "gather-" + parent.getName();
-  }
-
-  @Override
-  public boolean baseBuild() {
-    return true;
+  public GatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism);
   }
 
   public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, 1);
-    children.add(set);
+    IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, 1);
+    addChildToGraph(set);
     return set;
   }
 
   public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, 1);
-    children.add(set);
+    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn, 1);
+    addChildToGraph(set);
     return set;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        1);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
+    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction, 1);
+    addChildToGraph(set);
+    return set;
+  }
+
+  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
+                                                              computeFunction) {
+    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+        computeFunction, 1);
+    addChildToGraph(set);
+    return set;
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public int overrideParallelism() {
-    return 1;
+  public void build(TSetGraph tSetGraph) {
+//    MessageType dataType = TSetUtils.getDataType(getType());
+//
+//    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
 
   @Override
   public GatherTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

@@ -162,7 +162,7 @@ public class TSetContext implements Serializable {
    *
    * @return the current input map
    */
-  protected Map<String, Cacheable<?>> getInputMap() {
+  public Map<String, Cacheable<?>> getInputMap() {
     return inputMap;
   }
 
@@ -171,7 +171,7 @@ public class TSetContext implements Serializable {
    *
    * @param inputMap the map to be set for this context
    */
-  protected void setInputMap(Map<String, Cacheable<?>> inputMap) {
+  public void setInputMap(Map<String, Cacheable<?>> inputMap) {
     this.inputMap = inputMap;
   }
 
@@ -180,7 +180,7 @@ public class TSetContext implements Serializable {
    *
    * @param map the map to be added
    */
-  protected void addInputMap(Map<String, Cacheable<?>> map) {
+  public void addInputMap(Map<String, Cacheable<?>> map) {
     this.inputMap.putAll(map);
   }
 
@@ -204,11 +204,11 @@ public class TSetContext implements Serializable {
     inputMap.put(key, data);
   }
 
-  protected void settSetIndex(int tSetIndex) {
+  public void settSetIndex(int tSetIndex) {
     this.tSetIndex = tSetIndex;
   }
 
-  protected void settSetId(int tSetId) {
+  public void settSetId(int tSetId) {
     this.tSetId = tSetId;
   }
 
@@ -216,19 +216,19 @@ public class TSetContext implements Serializable {
     return tSetName;
   }
 
-  protected void settSetName(String tSetName) {
+  public void settSetName(String tSetName) {
     this.tSetName = tSetName;
   }
 
-  protected void setParallelism(int parallelism) {
+  public void setParallelism(int parallelism) {
     this.parallelism = parallelism;
   }
 
-  protected void setWorkerId(int workerId) {
+  public void setWorkerId(int workerId) {
     this.workerId = workerId;
   }
 
-  protected void setConfig(Config config) {
+  public void setConfig(Config config) {
     this.config = config;
   }
 }

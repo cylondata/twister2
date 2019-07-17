@@ -12,50 +12,33 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 
 public abstract class BaseTSet<T> implements TSet<T> {
-  private static final Logger LOG = Logger.getLogger(BaseTSet.class.getName());
-  /**
-   * The children of this set
-   */
-  protected List<TBase<?>> children;
 
   /**
    * The TSet Env to use for runtime operations of the Tset
    */
-  protected TSetEnv tSetEnv;
+  private TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
    */
-  protected String name;
+  private String name;
 
   /**
    * The parallelism of the set
    */
-  protected int parallel = 1;
+  private int parallel;
+
   /**
    * Defines if the TSet is Mutable or not
    */
   private boolean isMutable = false;
-  /**
-   * The configuration
-   */
-  protected Config config;
 
   /**
    * Possible Types of state in a TSet
@@ -81,12 +64,21 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(Config cfg, TSetEnv tSetEnv) {
-    this.children = new ArrayList<>();
-    this.tSetEnv = tSetEnv;
-    this.config = cfg;
+  public BaseTSet(TSetEnvironment tSetEnv, String name) {
+    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
   }
 
+  public BaseTSet(TSetEnvironment tSetEnv, String name, int parallel) {
+    this.tSetEnv = tSetEnv;
+    this.name = name;
+    this.parallel = parallel;
+  }
+
+  protected void rename(String name) {
+    this.name = name;
+  }
+
+  @Override
   public String getName() {
     return name;
   }
@@ -95,22 +87,8 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return parallel;
   }
 
-  @Override
-  public BaseTSet<T> setName(String n) {
-    this.name = n;
-    return this;
-  }
-
-
-  @Override
-  public void build() {
-    // first build our selves
-    baseBuild();
-
-    // then build children
-    for (TBase<?> c : children) {
-      c.build();
-    }
+  public TSetEnvironment getTSetEnv() {
+    return tSetEnv;
   }
 
   public boolean isMutable() {
@@ -135,47 +113,14 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return typeToken.getRawType();
   }
 
-  /**
-   * Override the parallelism
-   *
-   * @return if overide, return value, otherwise -1
-   */
-  protected int overrideParallelism() {
-    return -1;
-  }
-
-  /**
-   * Override the parallelism if operations require differently
-   *
-   * @return new parallelism
-   */
-  protected <K> int calculateParallelism(BaseTLink<K> parent) {
-    int p;
-    if (parent.overrideParallelism() != -1) {
-      p = parent.overrideParallelism();
-      LOG.log(Level.WARNING, String.format("Overriding parallelism "
-          + "specified %d override value %d", parallel, p));
-    } else {
-      p = parallel;
-    }
-    return p;
-  }
-
-  protected String generateName(String prefix, BaseTLink parent) {
-    if (name != null) {
-      return name;
-    } else {
-      if (parent == null) {
-        return prefix + "-" + new Random().nextInt(100);
-      } else {
-        return prefix + "-" + parent.getName();
-      }
-    }
-  }
-
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
     tSetEnv.addInput(getName(), key, input);
     return true;
   }
+
+  protected void addChildToGraph(TBase child) {
+    tSetEnv.getGraph().addTSet(this, child);
+  }
+
 }
