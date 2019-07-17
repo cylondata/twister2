@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.api.tset.sources;
 import java.util.Collection;
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.fn.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.Source;
 
 public class CollectionSource<T> implements Source<T> {
   /**
@@ -81,10 +81,5 @@ public class CollectionSource<T> implements Source<T> {
       itr.next();
       currentIndex++;
     }
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }

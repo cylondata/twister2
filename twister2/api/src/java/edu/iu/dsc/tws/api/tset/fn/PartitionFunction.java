@@ -51,6 +51,7 @@ public interface PartitionFunction<T> extends Serializable {
 
   /**
    * Commit the partition
+   *
    * @param source the source
    * @param partition partition
    */

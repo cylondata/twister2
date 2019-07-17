@@ -12,13 +12,10 @@
 
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 /**
  * Apply a flat map operation
@@ -36,7 +33,7 @@ public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<P> {
     this.mapFn = mapFunc;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
 //    boolean keyed = TSetUtils.isKeyedInput(parent);
@@ -47,8 +44,12 @@ public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<P> {
 //        addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
 //    parent.buildConnection(connection);
 //    return true;
-  }
+  }*/
 
+  @Override
+  protected ICompute getTask() {
+    return null;
+  }
 
   @Override
   public StreamingFlatMapTSet<T, P> setName(String n) {

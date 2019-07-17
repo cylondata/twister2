@@ -35,8 +35,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.fn.TBaseFunction;
-
 public abstract class BaseSource<T> extends TBaseFunction implements Source<T> {
 }

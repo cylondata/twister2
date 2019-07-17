@@ -19,7 +19,6 @@ public interface TBase<T> {
 
   /**
    * Build this tset
-   * @param tSetGraph
    */
   void build(TSetGraph tSetGraph);
 

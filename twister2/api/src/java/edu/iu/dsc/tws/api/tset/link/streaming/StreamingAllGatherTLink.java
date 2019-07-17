@@ -12,21 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Represent a data set created by an all gather operation
@@ -39,7 +29,7 @@ public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("sallgather"), sourceParalellism);
   }
 
-  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
     StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn,
         getSourceParallelism());
     addChildToGraph(set);
@@ -51,20 +41,17 @@ public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
         getSourceParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-//    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-//    addChildToGraph(sinkTSet);
-//    tSetEnv.run();
-//    return sinkTSet;
-    return null;
-  }
-
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //    connection.allgather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

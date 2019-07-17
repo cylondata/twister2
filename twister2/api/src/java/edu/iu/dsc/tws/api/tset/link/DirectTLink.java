@@ -14,17 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class DirectTLink<T> extends BaseTLink<T> {
 
@@ -32,7 +29,7 @@ public class DirectTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism);
   }
 
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
     IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
@@ -43,31 +40,31 @@ public class DirectTLink<T> extends BaseTLink<T> {
         getTargetParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
-    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
+  public <P> ComputeTSet<P, Iterator<T>> compute(ComputeFunction<P, Iterator<T>> computeFunction) {
+    ComputeTSet<P, Iterator<T>> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
         getTargetParallelism());
     addChildToGraph(set);
     return set;
   }
 
-  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
+  public <P> ComputeCollectorTSet<P, Iterator<T>> compute(ComputeCollectorFunction<P, Iterator<T>>
                                                               computeFunction) {
-    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
+    ComputeCollectorTSet<P, Iterator<T>> set = new ComputeCollectorTSet<>(getTSetEnv(),
         computeFunction, getTargetParallelism());
     addChildToGraph(set);
     return set;
   }
 
   @Override
-  public void build(TSetGraph tSetGraph) {
-
-  }
-
-  @Override
   public DirectTLink<T> setName(String name) {
     rename(name);
     return this;
+  }
+
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.DIRECT, getMessageType());
   }
 }

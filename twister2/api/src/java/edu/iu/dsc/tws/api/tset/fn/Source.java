@@ -23,14 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.TFunction;
-
 /**
  * Represents a source producing values
  *
  * @param <T> type of values produced by source
  */
-public interface  Source<T> extends TFunction {
+public interface Source<T> extends TFunction {
   /**
    * Weather we have more data
    *
@@ -40,6 +38,7 @@ public interface  Source<T> extends TFunction {
 
   /**
    * Get the next value
+   *
    * @return the next value
    */
   T next();

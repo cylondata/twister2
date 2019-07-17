@@ -22,12 +22,9 @@ import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -58,7 +55,8 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 //    // lets override the parallelism
 //    int para = calculateParallelism(parent);
 //    Sink<T> cacheSink = new CacheSink();
-//    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
+//    ComputeConnection connection =
+//    tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
 //        new SinkOp<>(cacheSink, isIterable, keyed), para);
 //    parent.buildConnection(connection);
 //    return true;
@@ -69,23 +67,23 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
     return null;
   }
 
-  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
-        getParallelism());
-    return cacheSource.map(mFn);
-  }
+//  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
+//    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+//        getParallelism());
+//    return cacheSource.map(mFn);
+//  }
+//
+//  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
+//    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+//        getParallelism());
+//    return cacheSource.flatMap(mFn);
+//  }
 
-  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
-        getParallelism());
-    return cacheSource.flatMap(mFn);
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
+/*  public SinkTSet<T> sink(Sink<T> sink) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
     return cacheSource.sink(sink);
-  }
+  }*/
 
   @Override
   public DirectTLink<T> direct() {

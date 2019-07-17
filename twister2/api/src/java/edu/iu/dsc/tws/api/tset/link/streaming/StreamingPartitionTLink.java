@@ -12,19 +12,21 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class StreamingPartitionTLink<T> extends BaseTLink<T> {
 
   private PartitionFunction<T> partitionFunction;
+
+  public StreamingPartitionTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    this(tSetEnv, null, sourceParallelism);
+  }
 
   public StreamingPartitionTLink(TSetEnvironment tSetEnv, PartitionFunction<T> parFn,
                                  int sourceParallelism) {
@@ -32,7 +34,7 @@ public class StreamingPartitionTLink<T> extends BaseTLink<T> {
     this.partitionFunction = parFn;
   }
 
-  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
     MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getSourceParallelism());
     addChildToGraph(set);
     return set;
@@ -42,17 +44,22 @@ public class StreamingPartitionTLink<T> extends BaseTLink<T> {
     FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getSourceParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
 //    connection.partition(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
+  }*/
 
-  public PartitionFunction<T> getPartitionFunction() {
-    return partitionFunction;
+  @Override
+  protected Edge getEdge() {
+    Edge e = new Edge(getName(), OperationNames.PARTITION, getMessageType());
+    if (partitionFunction != null) {
+      e.setPartitioner(new TaskPartitionFunction<>(partitionFunction));
+    }
+    return e;
   }
 
   @Override

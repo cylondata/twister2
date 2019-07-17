@@ -73,9 +73,4 @@ public class CacheSource<T> extends BaseSource<T> {
   private DataObject<T> getDataObject() {
     return datapoints;
   }
-
-  @Override
-  public void prepare() {
-
-  }
 }

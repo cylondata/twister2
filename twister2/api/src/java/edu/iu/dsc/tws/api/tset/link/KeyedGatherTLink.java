@@ -12,15 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.NestedIterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.NestedIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.sets.NestedIterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.NestedIterableMapTSet;
 
 public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
 
@@ -29,7 +25,7 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
     super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism, parFn, selc);
   }
 
-  public <O> NestedIterableMapTSet<K, V, O> map(NestedIterableMapFunction<K, V, O> mapFn) {
+/*  public <O> NestedIterableMapTSet<K, V, O> map(NestedIterableMapFunction<K, V, O> mapFn) {
     NestedIterableMapTSet<K, V, O> set = new NestedIterableMapTSet<>(getTSetEnv(), mapFn,
         getSourceParallelism());
     addChildToGraph(set);
@@ -42,8 +38,9 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
         getSourceParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
+/*
   @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType keyType = TSetUtils.getDataType(getClassK());
@@ -53,6 +50,12 @@ public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
 //        .withKeyType(keyType)
 //        .withDataType(dataType)
 //        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
+  }
+*/
+
+  @Override
+  protected Edge getEdge() {
+    return null;
   }
 
   @Override

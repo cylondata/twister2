@@ -13,13 +13,10 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 public class StreamingMapTSet<T, P> extends StreamingBaseTSet<P> {
 
@@ -30,7 +27,7 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<P> {
     this.mapFn = mapFunc;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
 //    boolean keyed = TSetUtils.isKeyedInput(parent);
@@ -39,6 +36,11 @@ public class StreamingMapTSet<T, P> extends StreamingBaseTSet<P> {
 //        addCompute(getName(), new MapOp<>(mapFn, isIterable, keyed), p);
 //    parent.buildConnection(connection);
 //    return true;
+  }*/
+
+  @Override
+  protected ICompute getTask() {
+    return null;
   }
 
   @Override

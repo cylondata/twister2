@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.api.tset.fn;
 import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 /**
  * Add a value at the end of the graph

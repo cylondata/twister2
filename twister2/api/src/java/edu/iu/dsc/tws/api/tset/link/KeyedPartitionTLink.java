@@ -12,15 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 
 public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
 
@@ -29,7 +25,7 @@ public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
     super(tSetEnv, TSetUtils.generateName("kpartition"), sourceParallelism, parFn, selc);
   }
 
-  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn) {
+/*  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn) {
     KIterableMapTSet<K, V, O> set = new KIterableMapTSet<>(getTSetEnv(), ,
         mapFn, getSourceParallelism());
     addChildToGraph(set);
@@ -41,9 +37,9 @@ public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
         mapFn, getSourceParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType keyType = TSetUtils.getDataType(getClassK());
 //    MessageType dataType = TSetUtils.getDataType(getClassV());
@@ -52,6 +48,11 @@ public class KeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
 //        .withKeyType(keyType)
 //        .withDataType(dataType)
 //        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return null;
   }
 
   @Override

@@ -26,7 +26,7 @@ public abstract class KeyValueTLink<K, V> extends BaseTLink<Tuple<K, V>> {
   private Selector<K, V> selector;
 
   protected KeyValueTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism,
-                PartitionFunction<K> parFn, Selector<K, V> selec) {
+                          PartitionFunction<K> parFn, Selector<K, V> selec) {
     super(tSetEnv, name, sourceParallelism);
     this.partitionFunction = parFn;
     this.selector = selec;

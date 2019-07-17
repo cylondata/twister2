@@ -14,17 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Represent a data set created by an all gather operation
@@ -37,7 +34,7 @@ public class AllGatherTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("allgather"), sourceParallelism);
   }
 
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn, int parallelism) {
+/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn, int parallelism) {
     IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, parallelism);
     addChildToGraph(set);
     return set;
@@ -48,7 +45,7 @@ public class AllGatherTLink<T> extends BaseTLink<T> {
     IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn, parallelism);
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
     ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
@@ -65,13 +62,18 @@ public class AllGatherTLink<T> extends BaseTLink<T> {
     return set;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
     super.build(tSetGraph);
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //    connection.allgather(parent.getName())
 //        .viaEdge(Constants.DEFAULT_EDGE)
 //        .withDataType(dataType);
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

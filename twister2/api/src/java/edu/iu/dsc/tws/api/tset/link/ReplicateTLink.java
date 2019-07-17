@@ -14,17 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class ReplicateTLink<T> extends BaseTLink<T> {
 
@@ -32,6 +29,7 @@ public class ReplicateTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("replicate"), 1, reps);
   }
 
+/*
   public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
     MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
@@ -43,6 +41,7 @@ public class ReplicateTLink<T> extends BaseTLink<T> {
     addChildToGraph(set);
     return set;
   }
+*/
 
   public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
     ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
@@ -59,12 +58,17 @@ public class ReplicateTLink<T> extends BaseTLink<T> {
     return set;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
 //    connection.broadcast(parent.getName())
 //        .viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType).connect();
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.BROADCAST, getMessageType());
   }
 
   @Override

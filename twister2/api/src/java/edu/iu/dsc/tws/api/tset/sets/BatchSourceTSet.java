@@ -16,11 +16,7 @@ import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 
 public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
@@ -31,7 +27,7 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
     this.source = src;
   }
 
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.map(mapFn);
@@ -41,13 +37,13 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.flatMap(mapFn);
-  }
+  }*/
 
-  public SinkTSet<T> sink(Sink<T> sink) {
+/*  public SinkTSet<T> sink(Sink<T> sink) {
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.sink(sink);
-  }
+  }*/
 
   @Override
   public void build(TSetGraph tSetGraph) {
@@ -61,7 +57,7 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
   }
 
   @Override
-  public BatchBaseTSet<T> setName(String name) {
+  public BatchSourceTSet<T> setName(String name) {
     rename(name);
     return this;
   }

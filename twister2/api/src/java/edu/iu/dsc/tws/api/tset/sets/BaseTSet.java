@@ -14,9 +14,12 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public abstract class BaseTSet<T> implements TSet<T> {
 
@@ -33,7 +36,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   /**
    * The parallelism of the set
    */
-  private int parallel;
+  private int parallelism;
 
   /**
    * Defines if the TSet is Mutable or not
@@ -68,14 +71,14 @@ public abstract class BaseTSet<T> implements TSet<T> {
     this(tSetEnv, name, tSetEnv.getDefaultParallelism());
   }
 
-  public BaseTSet(TSetEnvironment tSetEnv, String name, int parallel) {
-    this.tSetEnv = tSetEnv;
-    this.name = name;
-    this.parallel = parallel;
+  public BaseTSet(TSetEnvironment env, String n, int parallel) {
+    this.tSetEnv = env;
+    this.name = n;
+    this.parallelism = parallel;
   }
 
-  protected void rename(String name) {
-    this.name = name;
+  protected void rename(String n) {
+    this.name = n;
   }
 
   @Override
@@ -84,7 +87,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   public int getParallelism() {
-    return parallel;
+    return parallelism;
   }
 
   public TSetEnvironment getTSetEnv() {
@@ -123,4 +126,18 @@ public abstract class BaseTSet<T> implements TSet<T> {
     tSetEnv.getGraph().addTSet(this, child);
   }
 
+  @Override
+  public void build(TSetGraph tSetGraph) {
+    GraphBuilder dfwGraphBuilder = tSetGraph.getDfwGraphBuilder();
+
+    // add task to the graph
+    dfwGraphBuilder.addTask(getName(), getTask(), getParallelism());
+  }
+
+  protected abstract ICompute getTask();
+
+  @Override
+  public String toString() {
+    return "[Tset:" + getName() + "]";
+  }
 }

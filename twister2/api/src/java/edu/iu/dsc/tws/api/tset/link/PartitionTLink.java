@@ -14,30 +14,34 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class PartitionTLink<T> extends BaseTLink<T> {
 
   private PartitionFunction<T> partitionFunction;
 
   // todo change target parallelism?
-  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunction<T> parFn, int sourceParallelism) {
+
+  public PartitionTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    this(tSetEnv, null, sourceParallelism);
+  }
+
+  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunction<T> parFn,
+                        int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("partition"), sourceParallelism);
     this.partitionFunction = parFn;
   }
 
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
     IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
@@ -48,7 +52,7 @@ public class PartitionTLink<T> extends BaseTLink<T> {
         getTargetParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
     ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
@@ -66,16 +70,21 @@ public class PartitionTLink<T> extends BaseTLink<T> {
   }
 
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
     super.build(tSetGraph);
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
 //    connection.partition(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
+  }*/
 
-  public PartitionFunction<T> getPartitionFunction() {
-    return partitionFunction;
+  @Override
+  protected Edge getEdge() {
+    Edge e = new Edge(getName(), OperationNames.PARTITION, getMessageType());
+    if (partitionFunction != null) {
+      e.setPartitioner(new TaskPartitionFunction<>(partitionFunction));
+    }
+    return e;
   }
 
   @Override

@@ -12,15 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 
 public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
   private Source<T> source;
@@ -30,7 +27,7 @@ public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
     this.source = src;
   }
 
-  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
     StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.map(mapFn);
@@ -41,17 +38,22 @@ public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
     addChildToGraph(direct);
     return direct.flatMap(mapFn);
   }
-
-  @Override
-  public void build(TSetGraph tSetGraph) {
-//    tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-//        addSource(getName(), new SourceOp<T>(source), parallel);
-//    return true;
-  }
+*/
 
   @Override
   public StreamingSourceTSet<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public void build(TSetGraph tSetGraph) {
+    SourceOp<T> sourceOp = new SourceOp<>(source);
+    tSetGraph.getDfwGraphBuilder().addSource(getName(), sourceOp, getParallelism());
+  }
+
+  @Override
+  protected ICompute getTask() {
+    throw new UnsupportedOperationException("source would not have an icompute task");
   }
 }

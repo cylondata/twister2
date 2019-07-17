@@ -14,17 +14,14 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Create a gather data set
@@ -37,7 +34,7 @@ public class GatherTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism);
   }
 
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
+/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
     IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, 1);
     addChildToGraph(set);
     return set;
@@ -47,7 +44,7 @@ public class GatherTLink<T> extends BaseTLink<T> {
     IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn, 1);
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
     ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction, 1);
@@ -64,10 +61,8 @@ public class GatherTLink<T> extends BaseTLink<T> {
   }
 
   @Override
-  public void build(TSetGraph tSetGraph) {
-//    MessageType dataType = TSetUtils.getDataType(getType());
-//
-//    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.GATHER, getMessageType());
   }
 
   @Override

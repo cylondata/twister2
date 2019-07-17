@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 /**
  * Reduce function
- * @param <T>
  */
 public interface ReduceFunction<T> extends TFunction {
   /**

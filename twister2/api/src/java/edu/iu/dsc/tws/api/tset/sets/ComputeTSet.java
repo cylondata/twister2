@@ -39,7 +39,7 @@ public class ComputeTSet<O, I> extends BatchBaseTSet<O> {
   }
 
   @Override
-  public TSet<O> setName(String name) {
+  public ComputeTSet<O, I> setName(String name) {
     rename(name);
     return this;
   }

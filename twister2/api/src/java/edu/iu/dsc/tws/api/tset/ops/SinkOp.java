@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
 
 public class SinkOp<T> implements IComputableSink, Closable, Collector, Receptor {
   private static final long serialVersionUID = -9398832570L;

@@ -16,12 +16,11 @@ import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
 
 /**
  * Apply a flat map operation
+ * todo: fix input output direction!!!
  *
  * @param <T> the input type
  * @param <P> the output type
@@ -34,11 +33,11 @@ public class FlatMapTSet<T, P> extends BatchBaseTSet<P> {
     this.mapFn = mapFunc;
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
+/*  public SinkTSet<T> sink(Sink<T> sink) {
     DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.sink(sink);
-  }
+  }*/
 
 /*
   @Override

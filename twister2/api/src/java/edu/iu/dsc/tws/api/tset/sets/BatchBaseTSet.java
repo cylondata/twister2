@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
@@ -24,7 +22,6 @@ import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
@@ -106,14 +103,4 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 //    return cacheTSet;
     return null;
   }
-
-  @Override
-  public void build(TSetGraph tSetGraph) {
-    GraphBuilder dfwGraphBuilder = tSetGraph.getDfwGraphBuilder();
-
-    // add task to the graph
-    dfwGraphBuilder.addTask(getName(), getTask(), getParallelism());
-  }
-
-  protected abstract ICompute getTask();
 }

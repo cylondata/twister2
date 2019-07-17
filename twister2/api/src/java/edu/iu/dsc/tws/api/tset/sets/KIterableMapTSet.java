@@ -15,13 +15,8 @@ package edu.iu.dsc.tws.api.tset.sets;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.KIterableMapOp;
 
 /**
  * This is the Map Tset for keyed iterable functions
@@ -41,7 +36,7 @@ public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
     this.mapFn = mapFunc;
     this.selector = selectr;
   }
-
+/*
   public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
@@ -52,14 +47,14 @@ public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.flatMap(mFn);
-  }
+  }*/
 
-  public SinkTSet<O> sink(Sink<O> sink) {
+/*  public SinkTSet<O> sink(Sink<O> sink) {
 //    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
 //    addChildToGraph(direct);
 //    return direct.sink(sink);
     return null;
-  }
+  }*/
 
 /*  @Override
   public void build(TSetGraph tSetGraph) {
@@ -75,7 +70,8 @@ public class KIterableMapTSet<K, V, O> extends BatchBaseTSet<O> {
 
   @Override
   protected ICompute getTask() {
-    return new KIterableMapOp<>(mapFn, false, false, selector);
+//    return new KIterableMapOp<>(mapFn, false, false, selector);
+    return null;
   }
 
   @Override

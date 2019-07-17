@@ -12,20 +12,15 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class ReduceTLink<T> extends BaseTLink<T> {
@@ -36,7 +31,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     this.reduceFn = rFn;
   }
 
-  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
     MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
@@ -46,7 +41,7 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public <P> ComputeTSet<T, P> compute(ComputeFunction<T, P> computeFunction) {
     ComputeTSet<T, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
@@ -70,6 +65,12 @@ public class ReduceTLink<T> extends BaseTLink<T> {
   }
 
   @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.REDUCE, getMessageType(),
+        new ReduceOpFunction<>(reduceFn));
+  }
+
+  /*  @Override
   public void build(TSetGraph tSetGraph) {
     super.build(tSetGraph);
     TBase source = getSource();
@@ -80,5 +81,5 @@ public class ReduceTLink<T> extends BaseTLink<T> {
     // make the direct edge between the parent and the child
     tSetGraph.getDfwGraphBuilder().connect(source.getName(), target.getName(), getName(),
         OperationNames.REDUCE, new ReduceOpFunction<>(reduceFn));
-  }
+  }*/
 }

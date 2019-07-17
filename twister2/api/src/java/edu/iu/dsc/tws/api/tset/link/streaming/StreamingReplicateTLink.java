@@ -12,23 +12,18 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.tset.Constants;
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class StreamingReplicateTLink<T> extends BaseTLink<T> {
   public StreamingReplicateTLink(TSetEnvironment tSetEnv, int reps) {
     super(tSetEnv, TSetUtils.generateName("sreplicate"), 1, reps);
   }
 
-  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
     StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn,
         getTargetParallelism());
     addChildToGraph(set);
@@ -40,14 +35,19 @@ public class StreamingReplicateTLink<T> extends BaseTLink<T> {
         getTargetParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
 //    connection.broadcast(parent.getName()).viaEdge(Constants.DEFAULT_EDGE)
 //        .withDataType(dataType).connect();
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.BROADCAST, getMessageType());
   }
 
   @Override

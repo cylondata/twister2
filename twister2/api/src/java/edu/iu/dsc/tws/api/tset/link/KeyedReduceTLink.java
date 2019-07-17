@@ -12,16 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.KIterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.sets.KIterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.KIterableMapTSet;
 
 public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
   private ReduceFunction<V> reduceFn;
@@ -32,7 +28,7 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
     this.reduceFn = rFn;
   }
 
-  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn) {
+/*  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn) {
     KIterableMapTSet<K, V, O> set = new KIterableMapTSet<>(getTSetEnv(), ,
         mapFn, getSourceParallelism());
     addChildToGraph(set);
@@ -44,13 +40,13 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
         mapFn, getSourceParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public ReduceFunction<V> getReduceFn() {
     return reduceFn;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType keyType = TSetUtils.getDataType(getClassK());
 //    MessageType dataType = TSetUtils.getDataType(getClassV());
@@ -59,6 +55,11 @@ public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
 //        .withReductionFunction(new ReduceOpFunction<>(reduceFn))
 //        .withKeyType(keyType).withDataType(dataType)
 //        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return null;
   }
 
   @Override

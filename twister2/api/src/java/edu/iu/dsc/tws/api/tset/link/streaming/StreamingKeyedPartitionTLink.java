@@ -12,18 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.KeyValueTLink;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
 
 public class StreamingKeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
 
@@ -33,7 +27,7 @@ public class StreamingKeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
   }
 
 
-  public <P> StreamingMapTSet<K, P> map(MapFunction<K, P> mapFn, int parallelism) {
+/*  public <P> StreamingMapTSet<K, P> map(MapFunction<K, P> mapFn, int parallelism) {
     StreamingMapTSet<K, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn, parallelism);
     addChildToGraph(set);
     return set;
@@ -43,9 +37,9 @@ public class StreamingKeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
     StreamingFlatMapTSet<K, P> set = new StreamingFlatMapTSet<>(getTSetEnv(), mapFn, parallelism);
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType keyType = TSetUtils.getDataType(getClassK());
 //    MessageType dataType = TSetUtils.getDataType(getClassT());
@@ -53,6 +47,11 @@ public class StreamingKeyedPartitionTLink<K, V> extends KeyValueTLink<K, V> {
 //        .viaEdge(Constants.DEFAULT_EDGE)
 //        .withKeyType(keyType).withDataType(dataType)
 //        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
+  }*/
+
+  @Override
+  protected Edge getEdge() {
+    return null;
   }
 
   @Override

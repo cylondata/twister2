@@ -12,16 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Create a gather data set
@@ -34,7 +29,7 @@ public class StreamingGatherTLink<T> extends BaseTLink<T> {
     super(tSetEnv, TSetUtils.generateName("sgather"), sourceParallelism, 1);
   }
 
-  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
     StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn, 1);
     addChildToGraph(set);
     return set;
@@ -44,15 +39,21 @@ public class StreamingGatherTLink<T> extends BaseTLink<T> {
     StreamingFlatMapTSet<T, P> set = new StreamingFlatMapTSet<>(getTSetEnv(), mapFn, 1);
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
+/*
   @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
 //    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
   }
+*/
 
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.GATHER, getMessageType());
+  }
 
   @Override
   public StreamingGatherTLink<T> setName(String n) {

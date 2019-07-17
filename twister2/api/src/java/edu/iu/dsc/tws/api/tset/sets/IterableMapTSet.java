@@ -14,14 +14,11 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.ops.IterableMapOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Iterable Map Set
@@ -41,6 +38,7 @@ public class IterableMapTSet<I, O> extends BatchBaseTSet<O> {
   /**
    * The Input of the mFn is the output of the current tSet
    */
+/*
   public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
@@ -52,7 +50,7 @@ public class IterableMapTSet<I, O> extends BatchBaseTSet<O> {
     addChildToGraph(direct);
     return direct.flatMap(mFn);
   }
-
+*/
   public SinkTSet<O> sink(Sink<O> sink) {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);

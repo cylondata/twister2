@@ -24,9 +24,9 @@ import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.CacheableImpl;
 import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.KIterableFlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.Selector;
 
 public class KIterableFlatMapOp<K, V, O> implements ICompute, Receptor {
   private static final long serialVersionUID = -5244396519L;

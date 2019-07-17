@@ -24,15 +24,13 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class StreamingReduceTLink<T> extends BaseTLink<T> {
   private ReduceFunction<T> reduceFn;
@@ -43,6 +41,7 @@ public class StreamingReduceTLink<T> extends BaseTLink<T> {
     this.reduceFn = rFn;
   }
 
+/*
   public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
     StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn,
         getTargetParallelism());
@@ -56,8 +55,9 @@ public class StreamingReduceTLink<T> extends BaseTLink<T> {
     addChildToGraph(set);
     return set;
   }
+*/
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
@@ -65,10 +65,12 @@ public class StreamingReduceTLink<T> extends BaseTLink<T> {
 //        .viaEdge(Constants.DEFAULT_EDGE)
 //        .withReductionFunction(new ReduceOpFunction<>(getReduceFn()))
 //        .withDataType(dataType);
-  }
+  }*/
 
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.REDUCE, getMessageType(),
+        new ReduceOpFunction<>(reduceFn));
   }
 
   @Override

@@ -35,8 +35,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.fn.TBaseFunction;
-
 public abstract class BaseSink<T> extends TBaseFunction implements Sink<T> {
 }

@@ -15,9 +15,12 @@ import java.util.Set;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
@@ -41,44 +44,46 @@ public abstract class BaseTLink<T> implements TLink<T> {
 
   private TBase<?> target;
 
-  public BaseTLink(TSetEnvironment tSetEnv, String name) {
-    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
+  public BaseTLink(TSetEnvironment env, String n) {
+    this(env, n, env.getDefaultParallelism());
   }
 
-  public BaseTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism) {
-    this(tSetEnv, name, sourceParallelism, sourceParallelism);
+  public BaseTLink(TSetEnvironment env, String n, int sourceP) {
+    this(env, n, sourceP, sourceP);
   }
 
-  public BaseTLink(TSetEnvironment tSetEnv, String name, int sourceParallelism,
-                   int targetParallelism) {
-    this.tSetEnv = tSetEnv;
-    this.name = name;
-    this.sourceParallelism = sourceParallelism;
-    this.targetParallelism = targetParallelism;
+  public BaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+    this.tSetEnv = env;
+    this.name = n;
+    this.sourceParallelism = sourceP;
+    this.targetParallelism = targetP;
   }
+
 
   public SinkTSet<T> sink(Sink<T> sink) {
-//    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-//        source.getParallelism());
-//    addChildToGraph(sinkTSet);
-//    tSetEnv.run();
-//    return sinkTSet;
-
-    return null;
+    SinkTSet<T> sinkTSet = new SinkTSet<>(tSetEnv, sink, targetParallelism);
+    addChildToGraph(sinkTSet);
+    tSetEnv.executeSink(sinkTSet);
+    return sinkTSet;
   }
+
 
   public String getName() {
     return name;
   }
 
-  protected void rename(String name) {
-    this.name = name;
+  protected void rename(String n) {
+    this.name = n;
   }
 
   protected Class getType() {
     TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
     };
     return typeToken.getRawType();
+  }
+
+  protected MessageType getMessageType() {
+    return TSetUtils.getDataType(getType());
   }
 
   protected void addChildToGraph(TBase child) {
@@ -123,5 +128,13 @@ public abstract class BaseTLink<T> implements TLink<T> {
   @Override
   public void build(TSetGraph tSetGraph) {
     validateTlink(tSetGraph);
+    tSetGraph.getDfwGraphBuilder().connect(getSource().getName(), getTarget().getName(), getEdge());
+  }
+
+  protected abstract Edge getEdge();
+
+  @Override
+  public String toString() {
+    return "[Tlink:" + getName() + "]";
   }
 }

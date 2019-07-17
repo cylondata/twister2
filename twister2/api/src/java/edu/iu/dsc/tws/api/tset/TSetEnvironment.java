@@ -23,8 +23,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -33,14 +39,18 @@ import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 public final class TSetEnvironment {
+  private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
-  private TSetGraph graph;
+  private TSetGraph tbaseGraph;
   private TaskExecutor taskExecutor;
   private OperationMode operationMode;
 
@@ -48,12 +58,13 @@ public final class TSetEnvironment {
   private Map<String, Map<String, Cacheable<?>>> inputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
+  private static int taskGraphCount = 0;
 
   private TSetEnvironment(WorkerEnvironment wEnv, OperationMode opMode) {
     this.workerEnv = wEnv;
     this.operationMode = opMode;
 
-    this.graph = new TSetGraph(this, opMode);
+    this.tbaseGraph = new TSetGraph(this, opMode);
     this.taskExecutor = new TaskExecutor(workerEnv);
   }
 
@@ -66,7 +77,7 @@ public final class TSetEnvironment {
   }
 
   public TSetGraph getGraph() {
-    return graph;
+    return tbaseGraph;
   }
 
   public int getDefaultParallelism() {
@@ -84,7 +95,7 @@ public final class TSetEnvironment {
     }
 
     BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
-    graph.addTSet(sourceT);
+    tbaseGraph.addTSet(sourceT);
 
     return sourceT;
   }
@@ -95,7 +106,7 @@ public final class TSetEnvironment {
     }
 
     StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
-    graph.addTSet(sourceT);
+    tbaseGraph.addTSet(sourceT);
 
     return sourceT;
   }
@@ -137,16 +148,59 @@ public final class TSetEnvironment {
     }
   }
 
-//  /**
-//   * reset the Env so that it can be reused for the next action
-//   * This method will reset the {@link TSetEnvironment#tSetBuilder} and clears all the values
-//   in the
-//   * {@link TSetEnvironment#inputMap}
-//   */
-/*  public void reset() {
-    settSetBuilder(TSetBuilder.newBuilder(config).setMode(tSetBuilder.getOpMode()));
-    inputMap.clear();
-  }*/
+  public void executeSink(SinkTSet sinkTSet) {
+    List<BaseTLink> linksPlan = new ArrayList<>();
+    List<BaseTSet> setsPlan = new ArrayList<>();
+
+    invertedBFS(sinkTSet, linksPlan, setsPlan);
+
+    LOG.info("Node build plan: "
+        + setsPlan.stream().map(BaseTSet::toString).collect(Collectors.joining(" ")));
+    LOG.info("Edge build plan: "
+        + linksPlan.stream().map(BaseTLink::toString).collect(Collectors.joining(" ")));
+
+    buildPlan(setsPlan);
+    buildPlan(linksPlan);
+
+    DataFlowTaskGraph dataflowGraph = tbaseGraph.getDfwGraphBuilder().build();
+    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
+
+    ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
+
+    taskExecutor.execute(dataflowGraph, executionPlan);
+  }
+
+
+  private void buildPlan(List<? extends TBase> plan) {
+    for (TBase baseTSet : plan) {
+      baseTSet.build(tbaseGraph);
+    }
+  }
+
+  private void invertedBFS(TBase s, List<BaseTLink> links, List<BaseTSet> sets) {
+    Map<TBase, Boolean> visited = new HashMap<>();
+
+    Deque<TBase> queue = new LinkedList<>();
+
+    visited.put(s, true);
+    queue.add(s);
+
+    while (queue.size() != 0) {
+      TBase t = queue.poll();
+      if (t instanceof BaseTLink) {
+        links.add((BaseTLink) t);
+      } else if (t instanceof BaseTSet) {
+        sets.add((BaseTSet) t);
+      }
+
+      for (TBase parent : tbaseGraph.getPredecessors(t)) {
+        if (visited.get(parent) == null || !visited.get(parent)) {
+          visited.put(parent, true);
+          queue.add(parent);
+        }
+      }
+    }
+  }
 
   /**
    * initialize the Tset environment

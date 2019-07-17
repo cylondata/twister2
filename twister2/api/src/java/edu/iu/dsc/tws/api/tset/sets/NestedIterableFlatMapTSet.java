@@ -12,14 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.NestedIterableFlatMapFunction;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 
 public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
 
@@ -32,7 +29,7 @@ public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
     this.mapFn = mapFunc;
   }
 
-  public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
+/*  public <O1> IterableMapTSet<O, O1> map(IterableMapFunction<O, O1> mFn) {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.map(mFn);
@@ -42,7 +39,7 @@ public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
     DirectTLink<O> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
     return direct.flatMap(mFn);
-  }
+  }*/
 
   public SinkTSet<O> sink(Sink<O> sink) {
 //    DirectTLink<O> direct = new DirectTLink<>(config, tSetEnv, this);
@@ -51,7 +48,7 @@ public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
     return null;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
 //    boolean keyed = TSetUtils.isKeyedInput(parent);
@@ -63,6 +60,11 @@ public class NestedIterableFlatMapTSet<K, V, O> extends BatchBaseTSet<O> {
 //            new NestedIterableFlatMapOp<>(mapFn, isIterable, keyed), p);
 //    parent.buildConnection(connection);
 //    return true;
+  }*/
+
+  @Override
+  protected ICompute getTask() {
+    return null;
   }
 
   @Override

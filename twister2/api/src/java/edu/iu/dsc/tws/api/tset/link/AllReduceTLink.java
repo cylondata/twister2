@@ -12,27 +12,23 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
 import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.FlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.MapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Represent a data set create by a all reduce opration
  *
  * @param <T> type of data
  */
-public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
+public class AllReduceTLink<T> extends BaseTLink<T> {
   private ReduceFunction<T> reduceFn;
 
   public AllReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<T> rFn, int sourceParallelism) {
@@ -40,7 +36,7 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     this.reduceFn = rFn;
   }
 
-  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
+/*  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
     MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
@@ -50,7 +46,7 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getTargetParallelism());
     addChildToGraph(set);
     return set;
-  }
+  }*/
 
   public <P> ComputeTSet<T, P> compute(ComputeFunction<T, P> computeFunction) {
     ComputeTSet<T, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
@@ -67,7 +63,7 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
     return set;
   }
 
-  @Override
+/*  @Override
   public void build(TSetGraph tSetGraph) {
 //    MessageType dataType = TSetUtils.getDataType(getType());
 //
@@ -75,10 +71,12 @@ public class AllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T>
 //        .viaEdge(Constants.DEFAULT_EDGE)
 //        .withReductionFunction(new ReduceOpFunction<T>(getReduceFn()))
 //        .withDataType(dataType);
-  }
+  }*/
 
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
+  @Override
+  protected Edge getEdge() {
+    return new Edge(getName(), OperationNames.ALLREDUCE, getMessageType(),
+        new ReduceOpFunction<>(reduceFn));
   }
 
   @Override

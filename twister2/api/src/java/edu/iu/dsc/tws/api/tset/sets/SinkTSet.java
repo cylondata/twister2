@@ -12,10 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 
 public class SinkTSet<T> extends BatchBaseTSet<T> {
   private Sink<T> sink;
@@ -48,10 +50,19 @@ public class SinkTSet<T> extends BatchBaseTSet<T> {
 //    boolean keyed = TSetUtils.isKeyedInput(parent);
 //    // lets override the parallelism
 //    //int p = calculateParallelism(parent);
-//    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
+//    ComputeConnection connection =
+//    tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
 //        new SinkOp<>(sink, isIterable, keyed), parallel);
 //    parent.buildConnection(connection);
 //    return true;
+
+    SinkOp<T> sinkOp = new SinkOp<>(sink, false, false);
+    tSetGraph.getDfwGraphBuilder().addSink(getName(), sinkOp, getParallelism());
+  }
+
+  @Override
+  protected ICompute getTask() {
+    throw new UnsupportedOperationException("sink would not have an icompute task");
   }
 
   @Override

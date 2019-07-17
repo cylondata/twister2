@@ -11,16 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sink;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.BaseSink;
 import edu.iu.dsc.tws.dataset.impl.EntityPartition;
 
 public class CacheSink<T> extends BaseSink<T> {
-  private static final Logger LOG = Logger.getLogger(CacheSink.class.getName());
-
-  private int count = 0;
   private DataPartition<T> partition = null;
 
   public CacheSink() {
@@ -42,10 +37,5 @@ public class CacheSink<T> extends BaseSink<T> {
   @Override
   public DataPartition<T> get() {
     return partition;
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }
