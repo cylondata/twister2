@@ -330,6 +330,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private Set<Integer> targetsOfThisWorker;
 
   /**
+   * The merge factor
+   */
+  private double mergeFactor = 1.0;
+
+  /**
    * Create a ring partition communication
    *
    * @param cfg configuration
@@ -362,6 +367,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.inMemoryMessageThreshold =
         DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    this.mergeFactor = DataFlowContext.getRingMergeFactor(cfg);
 
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
@@ -770,7 +776,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       // if we have enough things in memory or some sources finished lets call progress on merger
       Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
-      if (mergerInMemoryMessages >= inMemoryMessageThreshold * targetsArray.length * 0.8
+      if (mergerInMemoryMessages >= inMemoryMessageThreshold * sendsToComplete * mergeFactor
           || mergerBlocked || mergeFinishSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {

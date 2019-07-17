@@ -46,6 +46,8 @@ public class DataFlowContext extends CommunicationContext {
   public static final String RING_GROUPING_WORKER_PER_GROUPS =
       "twister2.network.partition.ring.group.workers";
 
+  public static final String RING_MERGE_FACTOR = "twister2.network.partition.ring.merge.factor";
+
 
   public static final int DEFAULT_DESTINATION = 0;
 
@@ -101,6 +103,10 @@ public class DataFlowContext extends CommunicationContext {
 
   public static int getRingWorkersPerGroup(Config cfg) {
     return cfg.getIntegerValue(RING_GROUPING_WORKER_PER_GROUPS, 128);
+  }
+
+  public static double getRingMergeFactor(Config cfg) {
+    return cfg.getDoubleValue(RING_MERGE_FACTOR, 1.0);
   }
 }
 
