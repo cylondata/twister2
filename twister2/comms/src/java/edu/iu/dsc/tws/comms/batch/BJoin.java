@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -62,15 +63,17 @@ public class BJoin {
   public BJoin(Communicator comm, LogicalPlan plan,
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
-               DestinationSelector destSelector, boolean shuffle, Comparator<Object> comparator) {
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
+               CommunicationContext.JoinType joinType) {
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator, joinType);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType);
     }
 
 
@@ -82,9 +85,18 @@ public class BJoin {
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
         rightDataType, keyType);
 
-    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, comm.nextEdge());
-    this.partitionRight.init(comm.getConfig(), rightDataType, plan, comm.nextEdge());
+    this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
+    this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
     this.destinationSelector.prepare(comm, sources, targets);
+  }
+
+  public BJoin(Communicator comm, LogicalPlan plan,
+               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
+    this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(), joinType);
   }
 
   /**

@@ -104,6 +104,10 @@ public abstract class FixedInputPartitioner<OT>
     final long maxSplitSize = totalLength / curminNumSplits
         + (totalLength % curminNumSplits == 0 ? 0 : 1);
 
+    if (files.size() > 1) {
+      throw new IllegalStateException("FixedInputPartitioner does not support multiple files"
+          + "currently");
+    }
     for (final FileStatus file : files) {
       //First Split Calculation
       //To retrieve the total count of the number of the lines in a file.
@@ -123,9 +127,34 @@ public abstract class FixedInputPartitioner<OT>
             + ". Decreasing minimal split size to block size.");
         localminSplitSize = blockSize;
       }
+      int currLineCount = 0;
+      long[] splitSizes = getSplitSizes(fs, file.getPath(), curminNumSplits, splSize);
 
-      long totalbytes = getSplitSize(fs, file.getPath(), 0, splSize);
-      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
+      int position = 0;
+      if (len > 0) {
+        for (int i = 0; i < splitSizes.length; i++) {
+          String[] hosts = new String[0];
+          final FileInputSplit fis
+              = createSplit(i, file.getPath(), position, splitSizes[i], hosts);
+          position += splitSizes[i];
+          inputSplits.add(fis);
+        }
+      } else {
+        //TODO need to check this section of the code for correctness
+        final BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, 0);
+        String[] hosts;
+        if (blocks.length > 0) {
+          hosts = blocks[0].getHosts();
+        } else {
+          hosts = new String[0];
+        }
+        final FileInputSplit fis = createSplit(0, file.getPath(), 0, 0, hosts);
+        inputSplits.add(fis);
+      }
+
+
+      //Old code that does splitting based on fixed byte sizes
+      /*      final long splitSize = Math.max(localminSplitSize, Math.min(maxSplitSize, blockSize));
       final long maxBytesForLastSplit = (long) (splitSize * MAX_SPLIT_SIZE_DISCREPANCY);
       long bytesUnassigned = len;
       int splitNum = 0;
@@ -157,9 +186,52 @@ public abstract class FixedInputPartitioner<OT>
         }
         final FileInputSplit fis = createSplit(splitNum++, file.getPath(), 0, 0, hosts);
         inputSplits.add(fis);
-      }
+      }*/
     }
     return inputSplits.toArray(new FileInputSplit[inputSplits.size()]);
+  }
+
+  /**
+   * Calculates the sizes of the splits for the given file, each split is created to be the
+   * exact amount of files that are specified in splitSlize
+   *
+   * @param fs File system that is used to read the file
+   * @param filename the path to the file
+   * @param numberOfSplits the number of splits to make
+   * @param splitSize the number of lines in each split
+   * @return a long array of split sizes
+   */
+  private long[] getSplitSizes(FileSystem fs, Path filename, int numberOfSplits, int splitSize)
+      throws IOException {
+    long[] splits = new long[numberOfSplits];
+    long currentSplitBytes = 0L;
+    int currLineCount = 0;
+    int completeSplitCount = 0;
+    String line;
+    BufferedReader in = new BufferedReader(new InputStreamReader(
+        fs.open(filename), StandardCharsets.UTF_8));
+    byte[] b;
+
+    for (int i = 0; i < numberOfSplits; i++) {
+      currLineCount = 0;
+      currentSplitBytes = 0;
+      while (currLineCount < splitSize && (line = in.readLine()) != null) {
+        b = line.getBytes(StandardCharsets.UTF_8);
+        //Adding 1 byte for the EOL
+        currentSplitBytes += b.length + 1;
+        currLineCount++;
+      }
+      splits[i] = currentSplitBytes;
+      if (currLineCount == splitSize) {
+        completeSplitCount++;
+      }
+    }
+    if (completeSplitCount != numberOfSplits) {
+      throw new IllegalStateException(String.format("The file %s could not be split into"
+          + " %d splits with %d lines for each split,"
+          + " please check the input file sizes", filename.toString(), numberOfSplits, splitSize));
+    }
+    return splits;
   }
 
   /**

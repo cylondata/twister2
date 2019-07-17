@@ -1,6 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
+    name = "conf-common-yaml",
+    srcs = glob(["conf/common/*.yaml"]),
+)
+
+filegroup(
     name = "conf-yaml",
     srcs = glob(["conf/*.yaml"]),
 )

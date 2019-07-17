@@ -35,6 +35,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.modifiers;
 
+import java.util.Collections;
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.dataset.DataObject;
 
 /**
@@ -43,8 +46,22 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 public interface Receptor {
   /**
    * This method is called when the data is available
+   *
    * @param name name of the input
    * @param data input data
    */
   void add(String name, DataObject<?> data);
+
+  /**
+   * This method should return a set of receivable names, that are expected by this receptor.
+   * These names will be used by task plan builder to cross validate parallelism
+   * between two task graphs.
+   * <p>
+   * If {@link Collector} C of task graph TG1 collects variable "var1" and C's parallelism is n, If
+   * {@link Receptor} R of task graph TG2 is interested in receiving "var1", R's parallelism should
+   * be equal to n and, R should have the same distribution as C among the workers.
+   */
+  default Set<String> getReceivableNames() {
+    return Collections.emptySet();
+  }
 }

@@ -41,7 +41,7 @@ public class SAllReduce {
    */
   public SAllReduce(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                    ReduceFunction fnc, SingularReceiver rcvr) {
+                    ReduceFunction fnc, SingularReceiver rcvr, int reduceEdgeId, int bcastEdgeId) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -55,7 +55,13 @@ public class SAllReduce {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     reduce = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources, targets,
-        middleTask, fnc, rcvr, dataType, comm.nextEdge(), comm.nextEdge(), true);
+        middleTask, fnc, rcvr, dataType, reduceEdgeId, bcastEdgeId, true);
+  }
+
+  public SAllReduce(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    ReduceFunction fnc, SingularReceiver rcvr) {
+    this(comm, plan, sources, targets, dataType, fnc, rcvr, comm.nextEdge(), comm.nextEdge());
   }
 
   /**
@@ -81,6 +87,7 @@ public class SAllReduce {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -89,6 +96,7 @@ public class SAllReduce {
 
   /**
    * Indicate the end of the communication
+   *
    * @param src the source that is ending
    */
   public void finish(int src) {

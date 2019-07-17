@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -482,7 +481,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           break;
         }
 
-        List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
+        List<Integer> externalRoutes = outMessage.getExternalSends();
         // okay we build the message, send it
         if (outMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();

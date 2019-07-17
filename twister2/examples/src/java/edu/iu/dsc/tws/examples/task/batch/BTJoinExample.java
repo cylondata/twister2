@@ -45,7 +45,7 @@ import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_
 
 public class BTJoinExample extends BenchTaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(BTKeyedGatherExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BTJoinExample.class.getName());
   private static final String RIGHT_EDGE = "right";
   private static final String LEFT_EDGE = "left";
 
@@ -63,7 +63,7 @@ public class BTJoinExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.join(SOURCE, SOURCE)
+    computeConnection.innerJoin(SOURCE, SOURCE)
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
         .withKeyType(keyType)

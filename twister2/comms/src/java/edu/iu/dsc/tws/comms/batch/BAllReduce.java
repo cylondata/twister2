@@ -29,19 +29,10 @@ public class BAllReduce {
    */
   private AllReduce reduce;
 
-  /**
-   * Construct a Batch AllReduce operation
-   *
-   * @param comm the communicator
-   * @param plan task plan
-   * @param sources source tasks
-   * @param targets target tasks
-   * @param rcvr receiver
-   * @param dataType data type
-   */
   public BAllReduce(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, ReduceFunction fnc,
-                    SingularReceiver rcvr, MessageType dataType) {
+                    SingularReceiver rcvr, MessageType dataType,
+                    int reduceEdgeId, int broadEdgeId) {
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -55,7 +46,23 @@ public class BAllReduce {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     reduce = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources,
-        targets, middleTask, fnc, rcvr, dataType, comm.nextEdge(), comm.nextEdge(), false);
+        targets, middleTask, fnc, rcvr, dataType, reduceEdgeId, broadEdgeId, false);
+  }
+
+  /**
+   * Construct a Batch AllReduce operation
+   *
+   * @param comm the communicator
+   * @param plan task plan
+   * @param sources source tasks
+   * @param targets target tasks
+   * @param rcvr receiver
+   * @param dataType data type
+   */
+  public BAllReduce(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, ReduceFunction fnc,
+                    SingularReceiver rcvr, MessageType dataType) {
+    this(comm, plan, sources, targets, fnc, rcvr, dataType, comm.nextEdge(), comm.nextEdge());
   }
 
   /**
@@ -81,6 +88,7 @@ public class BAllReduce {
 
   /**
    * Weather we have messages pending
+   *
    * @return true if there are messages pending
    */
   public boolean hasPending() {
@@ -89,6 +97,7 @@ public class BAllReduce {
 
   /**
    * Indicate the end of the communication
+   *
    * @param source the source that is ending
    */
   public void finish(int source) {

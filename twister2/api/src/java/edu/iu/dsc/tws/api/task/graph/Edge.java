@@ -90,6 +90,11 @@ public class Edge {
    */
   private int numberOfEdges;
 
+  /**
+   * ID generator for configuring comm ops
+   */
+  private EdgeID edgeID = new EdgeID();
+
   public Edge() {
   }
 
@@ -295,5 +300,9 @@ public class Edge {
 
   public int getNumberOfEdges() {
     return numberOfEdges;
+  }
+
+  public EdgeID getEdgeID() {
+    return edgeID;
   }
 }

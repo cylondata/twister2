@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.task.graph.Vertex;
@@ -149,14 +150,57 @@ public class ComputeConnection {
   }
 
   /**
-   * Create a join operation. The left source and right source can be the same source
+   * Create an inner join operation. The left source and right source can be the same source
    *
    * @param leftSource the left source to connection
    * @param rightSource the right source to connection
    * @return the {@link JoinConfig}
    */
-  public JoinConfig join(String leftSource, String rightSource) {
-    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource, this);
+  public JoinConfig innerJoin(String leftSource, String rightSource) {
+    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
+        this, CommunicationContext.JoinType.INNER);
+    this.addToAutoConfig(leftSource, joinConfig);
+    return joinConfig;
+  }
+
+  /**
+   * Create an full outer join operation. The left source and right source can be the same source
+   *
+   * @param leftSource the left source to connection
+   * @param rightSource the right source to connection
+   * @return the {@link JoinConfig}
+   */
+  public JoinConfig fullOuterJoin(String leftSource, String rightSource) {
+    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
+        this, CommunicationContext.JoinType.FULL_OUTER);
+    this.addToAutoConfig(leftSource, joinConfig);
+    return joinConfig;
+  }
+
+  /**
+   * Create an left outer join operation. The left source and right source can be the same source
+   *
+   * @param leftSource the left source to connection
+   * @param rightSource the right source to connection
+   * @return the {@link JoinConfig}
+   */
+  public JoinConfig leftOuterJoin(String leftSource, String rightSource) {
+    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
+        this, CommunicationContext.JoinType.LEFT);
+    this.addToAutoConfig(leftSource, joinConfig);
+    return joinConfig;
+  }
+
+  /**
+   * Create an right outer join operation. The left source and right source can be the same source
+   *
+   * @param leftSource the left source to connection
+   * @param rightSource the right source to connection
+   * @return the {@link JoinConfig}
+   */
+  public JoinConfig rightOuterJoin(String leftSource, String rightSource) {
+    JoinConfig joinConfig = new JoinConfig(leftSource, rightSource,
+        this, CommunicationContext.JoinType.RIGHT);
     this.addToAutoConfig(leftSource, joinConfig);
     return joinConfig;
   }

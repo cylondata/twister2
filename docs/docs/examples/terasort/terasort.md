@@ -12,11 +12,11 @@ In twister2, when terasort is running in non file based mode, we generate a batc
 
 Tera sort benchmark can be spawned as follows.
 
-```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -keySeed 1000 -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20```
+```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -instances 3 -instanceCPUs 1 -instanceMemory 4096 -sources 4 -sinks 4 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000```
 
 Instead of using a random data source, TeraSort can be configured to run with a file data source as follows.
 
-```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -valueSize 90 -keySize 10 -inputFile /path/to/file-%d -instances 4 -instanceCPUs 1 -instanceMemory 512 -sources 4 -sinks 4 -memoryBytesLimit 1000 -memoryRecordsLimit 20```
+```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.batch.sort.TeraSort -size 1 -valueSize 90 -keySize 10 -instances 3 -instanceCPUs 1 -instanceMemory 4096 -sources 4 -sinks 4 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000 -inputFile /path/to/file-%d```
 
 ### Tera Sort parameters
 
