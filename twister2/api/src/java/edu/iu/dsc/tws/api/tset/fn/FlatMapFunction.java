@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.tset.Collector;
 /**
  * Flat map function interface
  */
-public interface FlatMapFunction<T, O> extends TFunction {
+public interface FlatMapFunction<O, T> extends TFunction {
+
   void flatMap(T t, Collector<O> collector);
 }

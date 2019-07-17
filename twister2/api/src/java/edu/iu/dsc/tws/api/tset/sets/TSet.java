@@ -23,11 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
  *
  * @param <T> type of the data set
  */
-public interface TSet<T> extends TBase<T> {
+public interface TSet<T> extends BuildableTSet {
   /**
    * Name of the tset
    */
@@ -46,7 +46,7 @@ public interface TSet<T> extends TBase<T> {
    *
    * @return this TSet
    */
-  TLink<T> direct();
+  TLink<?, T> direct();
 
   /**
    * Reduce operation on the data
@@ -54,7 +54,7 @@ public interface TSet<T> extends TBase<T> {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TLink<T> reduce(ReduceFunction<T> reduceFn);
+  TLink<?, T> reduce(ReduceFunction<T> reduceFn);
 
   /**
    * All reduce operation
@@ -62,7 +62,7 @@ public interface TSet<T> extends TBase<T> {
    * @param reduceFn reduce function
    * @return this set
    */
-  TLink<T> allReduce(ReduceFunction<T> reduceFn);
+  TLink<?, T> allReduce(ReduceFunction<T> reduceFn);
 
   /**
    * Partition the data according the to partition function
@@ -70,45 +70,44 @@ public interface TSet<T> extends TBase<T> {
    * @param partitionFn partition function
    * @return this set
    */
-  TLink<T> partition(PartitionFunction<T> partitionFn);
+  TLink<?, T> partition(PartitionFunction<T> partitionFn);
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  TLink<T> gather();
+  TLink<?, T> gather();
 
   /**
    * Gather the set of values into a single partition
    *
    * @return this set
    */
-  TLink<T> allGather();
+  TLink<?, T> allGather();
 
   /**
    * Select a set of values
    *
-   * @param partitionFunction partition function
-   * @param selector the selector
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction, Selector<K, T> selector);
+  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn);
 
   /**
    * Create a cloned dataset
    *
    * @return the cloned set
    */
-  TLink<T> replicate(int replications);
+  TLink<?, T> replicate(int replications);
 
   /**
    * Executes TSet and saves any generated data as a in-memory data object
    *
    * @return the resulting TSet
    */
-  CachedTSet<T> cache();
+//  CachedTSet<T> cache();
+  TSet<?> cache();
 
   /**
    * Allows users to pass in other TSets as inputs for a TSet

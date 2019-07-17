@@ -29,29 +29,32 @@ import java.util.List;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
-public abstract class BaseComputeOp<O, I> extends BaseCompute<I> {
+/**
+ * takes care of preparing the compute instances and creating the out edges list
+ */
+public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOutEdgeOp {
   private List<String> outEdges;
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
     this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
+
+    this.getFunction().prepare(new TSetContext(cfg, ctx));
   }
 
-  protected void writeToEdges(O output) {
-    int i = 0;
-    do {
-      context.write(outEdges.get(i), output);
-      i++;
-    } while (i < outEdges.size());
+  public abstract TFunction getFunction();
+
+  @Override
+  public TaskContext getContext() {
+    return context;
   }
 
-  protected void writeEndToEdges() {
-    int i = 0;
-    do {
-      context.end(outEdges.get(i));
-      i++;
-    } while (i < outEdges.size());
+  @Override
+  public List<String> getEdges() {
+    return outEdges;
   }
 }

@@ -37,7 +37,7 @@ public final class TSetUtils {
   }
 
 
-  public static <T> boolean isKeyedInput(BaseTLink<T> parent) {
+  public static <T> boolean isKeyedInput(BaseTLink parent) {
     return parent instanceof KeyedGatherTLink || parent instanceof KeyedReduceTLink
         || parent instanceof KeyedPartitionTLink;
   }
@@ -45,7 +45,7 @@ public final class TSetUtils {
   /**
    * Check if the link is Iterable
    */
-  public static <T> boolean isIterableInput(BaseTLink<T> parent, OperationMode mode) {
+  public static <T> boolean isIterableInput(BaseTLink parent, OperationMode mode) {
     if (mode == OperationMode.STREAMING) {
       if (parent instanceof DirectTLink) {
         return true;

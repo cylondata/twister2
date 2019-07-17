@@ -26,16 +26,20 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
+ *
+ * @param <O> Collector type
+ * @param <I> Input message content type
  */
-public class ComputeCollectorOp<O, I> extends BaseComputeOp<O, I> {
+public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
 
-  private ComputeCollectorFunction<O, I> computeFunction;
+  private ComputeCollector<O, I> computeFunction;
 
-  public ComputeCollectorOp(ComputeCollectorFunction<O, I> computeFunction) {
+  public ComputeCollectorOp(ComputeCollector<O, I> computeFunction) {
     this.computeFunction = computeFunction;
   }
 
@@ -54,5 +58,10 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<O, I> {
 
     writeEndToEdges();
     return true;
+  }
+
+  @Override
+  public TFunction getFunction() {
+    return computeFunction;
   }
 }

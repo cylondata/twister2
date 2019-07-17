@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -25,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 
 public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
-  public BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -38,7 +39,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<T>(getTSetEnv(), reduceFn, getParallelism());
+    ReduceTLink<T> reduce = new ReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
     addChildToGraph(reduce);
     return reduce;
   }
@@ -71,12 +72,8 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<K, T> selector) {
-    GroupedTSet<K, T> groupedTSet = new GroupedTSet<>(getTSetEnv(),
-        partitionFunction, selector, getParallelism());
-    addChildToGraph(groupedTSet);
-    return groupedTSet;
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn) {
+    return direct().mapToTuple(mapToTupleFn);
   }
 
   @Override
@@ -103,4 +100,10 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 //    return cacheTSet;
     return null;
   }
+
+/*  public void sink(Sink<T> sink) {
+    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
+    direct.sink(sink);
+  }*/
 }

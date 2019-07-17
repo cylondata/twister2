@@ -26,12 +26,16 @@ package edu.iu.dsc.tws.api.tset.fn;
 import java.io.Serializable;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.task.TaskPartitioner;
+// todo: remove task partitioner and partition function duplicate interfaces! check destination
+//  selector
+
 /**
  * Given a data, give the partition index
  *
  * @param <T> the type of data
  */
-public interface PartitionFunction<T> extends Serializable {
+public interface PartitionFunction<T> extends Serializable, TaskPartitioner<T> {
 
   /**
    * Prepare the function

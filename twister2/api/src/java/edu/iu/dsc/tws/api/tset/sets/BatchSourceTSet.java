@@ -12,9 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.task.nodes.INode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.Source;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
@@ -46,14 +45,8 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
   }*/
 
   @Override
-  public void build(TSetGraph tSetGraph) {
-    SourceOp<T> sourceOp = new SourceOp<>(source);
-    tSetGraph.getDfwGraphBuilder().addSource(getName(), sourceOp, getParallelism());
-  }
-
-  @Override
-  protected ICompute getTask() {
-    throw new UnsupportedOperationException("source would not have an icompute task");
+  public INode getINode() {
+    return new SourceOp<>(source);
   }
 
   @Override

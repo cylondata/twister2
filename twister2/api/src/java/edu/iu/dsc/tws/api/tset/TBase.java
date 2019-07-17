@@ -15,12 +15,7 @@ package edu.iu.dsc.tws.api.tset;
  * All classes that are part of the TSet API need to implement this interface if they are
  * included in the execution graph
  */
-public interface TBase<T> {
-
-  /**
-   * Build this tset
-   */
-  void build(TSetGraph tSetGraph);
+public interface TBase {
 
   String getName();
 }

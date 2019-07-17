@@ -14,12 +14,9 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public abstract class BaseTSet<T> implements TSet<T> {
 
@@ -86,6 +83,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return name;
   }
 
+  @Override
   public int getParallelism() {
     return parallelism;
   }
@@ -127,17 +125,7 @@ public abstract class BaseTSet<T> implements TSet<T> {
   }
 
   @Override
-  public void build(TSetGraph tSetGraph) {
-    GraphBuilder dfwGraphBuilder = tSetGraph.getDfwGraphBuilder();
-
-    // add task to the graph
-    dfwGraphBuilder.addTask(getName(), getTask(), getParallelism());
-  }
-
-  protected abstract ICompute getTask();
-
-  @Override
   public String toString() {
-    return "[Tset:" + getName() + "]";
+    return "Tset{" + getName() + "[" + getParallelism() + "]}";
   }
 }

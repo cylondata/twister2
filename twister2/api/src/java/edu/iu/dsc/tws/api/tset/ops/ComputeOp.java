@@ -24,17 +24,23 @@
 package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
+import edu.iu.dsc.tws.api.tset.fn.Compute;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
  */
-public class ComputeOp<O, I> extends BaseComputeOp<O, I> {
+public class ComputeOp<O, I> extends BaseComputeOp<I> {
 
-  private ComputeFunction<O, I> computeFunction;
+  private Compute<O, I> computeFunction;
 
-  public ComputeOp(ComputeFunction<O, I> computeFunction) {
+  public ComputeOp(Compute<O, I> computeFunction) {
     this.computeFunction = computeFunction;
+  }
+
+  @Override
+  public TFunction getFunction() {
+    return computeFunction;
   }
 
   @Override

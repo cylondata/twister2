@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
@@ -22,9 +23,9 @@ import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -63,7 +64,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  protected ICompute getTask() {
+  public ICompute getINode() {
     return null;
   }
 
@@ -128,11 +129,10 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<K, T> selector) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> generateTuple) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
-    return cacheSource.groupBy(partitionFunction, selector);
+    return cacheSource.mapToTuple(generateTuple);
   }
 
   @Override

@@ -24,11 +24,11 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllReduceTLink;
@@ -38,8 +38,7 @@ import edu.iu.dsc.tws.api.tset.link.streaming.StreamingPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
 
 public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
 
@@ -90,8 +89,7 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<K, T> selector) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn) {
     throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
   }
 
@@ -113,9 +111,9 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
     throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
   }
 
-  public SinkTSet<T> sink(Sink<T> sink) {
+/*  public void sink(Sink<T> sink) {
     StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(direct);
-    return direct.sink(sink);
-  }
+    direct.sink(sink);
+  }*/
 }

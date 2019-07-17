@@ -12,50 +12,34 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
-public class KeyedGatherTLink<K, V> extends KeyValueTLink<K, V> {
+public class KeyedGatherTLink<K, V> extends IteratorLink<Tuple<K, Iterator<V>>> {
+  private PartitionFunction<K> partitionFunction;
 
-  public KeyedGatherTLink(TSetEnvironment tSetEnv, PartitionFunction<K> parFn, Selector<K, V> selc,
+  public KeyedGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    this(tSetEnv, null, sourceParallelism);
+  }
+
+  public KeyedGatherTLink(TSetEnvironment tSetEnv, PartitionFunction<K> partitionFn,
                           int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism, parFn, selc);
+    super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism);
+    this.partitionFunction = partitionFn;
   }
-
-/*  public <O> NestedIterableMapTSet<K, V, O> map(NestedIterableMapFunction<K, V, O> mapFn) {
-    NestedIterableMapTSet<K, V, O> set = new NestedIterableMapTSet<>(getTSetEnv(), mapFn,
-        getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <O> NestedIterableFlatMapTSet<K, V, O> flatMap(
-      NestedIterableFlatMapFunction<K, V, O> mapFn) {
-    NestedIterableFlatMapTSet<K, V, O> set = new NestedIterableFlatMapTSet<>(getTSetEnv(), mapFn,
-        getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }*/
-
-/*
-  @Override
-  public void build(TSetGraph tSetGraph) {
-//    MessageType keyType = TSetUtils.getDataType(getClassK());
-//    MessageType dataType = TSetUtils.getDataType(getClassV());
-//    connection.keyedGather(parent.getName())
-//        .viaEdge(Constants.DEFAULT_EDGE)
-//        .withKeyType(keyType)
-//        .withDataType(dataType)
-//        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
-  }
-*/
 
   @Override
-  protected Edge getEdge() {
-    return null;
+  public Edge getEdge() {
+    Edge e = new Edge(getName(), OperationNames.KEYED_GATHER, getMessageType());
+    e.setKeyed(true);
+    e.setPartitioner(partitionFunction);
+    return e;
   }
 
   @Override

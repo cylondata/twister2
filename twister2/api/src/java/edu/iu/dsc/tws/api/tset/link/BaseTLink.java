@@ -11,20 +11,22 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import java.util.Set;
-
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.Compute;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
+import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
-public abstract class BaseTLink<T> implements TLink<T> {
+public abstract class BaseTLink<T, T1> implements TLink<T, T1> {
 
   /**
    * The TSet Env used for runtime operations
@@ -39,10 +41,6 @@ public abstract class BaseTLink<T> implements TLink<T> {
   private int sourceParallelism;
 
   private int targetParallelism;
-
-  private TBase<?> source;
-
-  private TBase<?> target;
 
   public BaseTLink(TSetEnvironment env, String n) {
     this(env, n, env.getDefaultParallelism());
@@ -59,14 +57,48 @@ public abstract class BaseTLink<T> implements TLink<T> {
     this.targetParallelism = targetP;
   }
 
+  protected <P> ComputeTSet<P, T> compute(String n, Compute<P, T> computeFunction) {
+    ComputeTSet<P, T> set;
+    if (n != null && !n.isEmpty()) {
+      set = new ComputeTSet<>(tSetEnv, n, new ComputeOp<>(computeFunction), targetParallelism);
+    } else {
+      set = new ComputeTSet<>(tSetEnv, new ComputeOp<>(computeFunction), targetParallelism);
+    }
+    addChildToGraph(set);
 
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(tSetEnv, sink, targetParallelism);
-    addChildToGraph(sinkTSet);
-    tSetEnv.executeSink(sinkTSet);
-    return sinkTSet;
+    return set;
   }
 
+  protected <P> ComputeTSet<P, T> compute(String n, ComputeCollector<P, T> computeFunction) {
+    ComputeTSet<P, T> set;
+    if (n != null && !n.isEmpty()) {
+      set = new ComputeTSet<>(tSetEnv, n, new ComputeCollectorOp<>(computeFunction),
+          targetParallelism);
+    } else {
+      set = new ComputeTSet<>(tSetEnv, new ComputeCollectorOp<>(computeFunction),
+          targetParallelism);
+    }
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  @Override
+  public <P> ComputeTSet<P, T> compute(Compute<P, T> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  @Override
+  public <P> ComputeTSet<P, T> compute(ComputeCollector<P, T> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  @Override
+  public void sink(Sink<T> sinkFunction) {
+    SinkTSet<T> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
+    addChildToGraph(sinkTSet);
+    tSetEnv.executeTSet(sinkTSet);
+  }
 
   public String getName() {
     return name;
@@ -82,6 +114,7 @@ public abstract class BaseTLink<T> implements TLink<T> {
     return typeToken.getRawType();
   }
 
+  //todo: this always return Object type!!!
   protected MessageType getMessageType() {
     return TSetUtils.getDataType(getType());
   }
@@ -102,39 +135,11 @@ public abstract class BaseTLink<T> implements TLink<T> {
     return targetParallelism;
   }
 
-  TBase<?> getSource() {
-    return this.source;
-  }
-
-  TBase<?> getTarget() {
-    return this.target;
-  }
-
-  private void validateTlink(TSetGraph graph) {
-    Set<TBase> parents = graph.getPredecessors(this);
-    if (parents.size() != 1) {
-      throw new RuntimeException("tlinks must have only one source!");
-    }
-    this.source = parents.iterator().next();
-
-    Set<TBase> children = graph.getSuccessors(this);
-    if (children.size() != 1) {
-      throw new RuntimeException("tlinks must have only one target!");
-    }
-
-    this.target = children.iterator().next();
-  }
-
-  @Override
-  public void build(TSetGraph tSetGraph) {
-    validateTlink(tSetGraph);
-    tSetGraph.getDfwGraphBuilder().connect(getSource().getName(), getTarget().getName(), getEdge());
-  }
-
-  protected abstract Edge getEdge();
-
   @Override
   public String toString() {
-    return "[Tlink:" + getName() + "]";
+    return "Tlink{" + getName()
+        + " s=" + tSetEnv.getGraph().getPredecessors(this)
+        + " t=" + tSetEnv.getGraph().getSuccessors(this)
+        + "}";
   }
 }

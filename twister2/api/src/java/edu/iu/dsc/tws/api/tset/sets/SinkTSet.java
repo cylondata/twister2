@@ -14,13 +14,11 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 
 public class SinkTSet<T> extends BatchBaseTSet<T> {
-  private Sink<T> sink;
+  private SinkOp<T> sink;
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
@@ -28,7 +26,7 @@ public class SinkTSet<T> extends BatchBaseTSet<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s The Sink function to be used
    */
-  public SinkTSet(TSetEnvironment tSetEnv, Sink<T> s) {
+  public SinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s) {
     this(tSetEnv, s, 1);
   }
 
@@ -39,30 +37,14 @@ public class SinkTSet<T> extends BatchBaseTSet<T> {
    * @param s The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(TSetEnvironment tSetEnv, Sink<T> s, int parallelism) {
+  public SinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("sink"), parallelism);
     this.sink = s;
   }
 
   @Override
-  public void build(TSetGraph tSetGraph) {
-//    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-//    boolean keyed = TSetUtils.isKeyedInput(parent);
-//    // lets override the parallelism
-//    //int p = calculateParallelism(parent);
-//    ComputeConnection connection =
-//    tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-//        new SinkOp<>(sink, isIterable, keyed), parallel);
-//    parent.buildConnection(connection);
-//    return true;
-
-    SinkOp<T> sinkOp = new SinkOp<>(sink, false, false);
-    tSetGraph.getDfwGraphBuilder().addSink(getName(), sinkOp, getParallelism());
-  }
-
-  @Override
-  protected ICompute getTask() {
-    throw new UnsupportedOperationException("sink would not have an icompute task");
+  public ICompute getINode() {
+    return sink;
   }
 
   @Override

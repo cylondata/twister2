@@ -12,54 +12,26 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
+import edu.iu.dsc.tws.executor.core.OperationNames;
 
-public class KeyedReduceTLink<K, V> extends KeyValueTLink<K, V> {
+public class KeyedReduceTLink<K, V> extends IteratorLink<Tuple<K, V>> {
   private ReduceFunction<V> reduceFn;
 
-  public KeyedReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<V> rFn,
-                          PartitionFunction<K> parFn, Selector<K, V> selec, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("kreduce"), sourceParallelism, parFn, selec);
+  public KeyedReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<V> rFn, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("kreduce"), sourceParallelism);
     this.reduceFn = rFn;
   }
 
-/*  public <O> KIterableMapTSet<K, V, O> map(KIterableMapFunction<K, V, O> mapFn) {
-    KIterableMapTSet<K, V, O> set = new KIterableMapTSet<>(getTSetEnv(), ,
-        mapFn, getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <O> KIterableFlatMapTSet<K, V, O> flatMap(KIterableFlatMapFunction<K, V, O> mapFn) {
-    KIterableFlatMapTSet<K, V, O> set = new KIterableFlatMapTSet<>(getTSetEnv(), getSelector(),
-        mapFn, getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }*/
-
-  public ReduceFunction<V> getReduceFn() {
-    return reduceFn;
-  }
-
-/*  @Override
-  public void build(TSetGraph tSetGraph) {
-//    MessageType keyType = TSetUtils.getDataType(getClassK());
-//    MessageType dataType = TSetUtils.getDataType(getClassV());
-//    connection.keyedReduce(parent.getName())
-//        .viaEdge(Constants.DEFAULT_EDGE)
-//        .withReductionFunction(new ReduceOpFunction<>(reduceFn))
-//        .withKeyType(keyType).withDataType(dataType)
-//        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
-  }*/
-
   @Override
-  protected Edge getEdge() {
-    return null;
+  public Edge getEdge() {
+    Edge e = new Edge(getName(), OperationNames.KEYED_REDUCE, getMessageType(), reduceFn);
+    e.setKeyed(true);
+    return e;
   }
 
   @Override

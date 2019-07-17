@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.TaskContext;
 
 public class TSetContext implements Serializable {
   /**
@@ -84,6 +85,11 @@ public class TSetContext implements Serializable {
 
   public TSetContext() {
     this.inputMap = new HashMap<>();
+  }
+
+  public TSetContext(Config cfg, TaskContext ctx) {
+    this(cfg, ctx.taskIndex(), ctx.globalTaskId(), ctx.taskName(), ctx.getParallelism(),
+        ctx.getWorkerId(), ctx.getConfigurations());
   }
 
   /**

@@ -47,7 +47,7 @@ public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<P> {
   }*/
 
   @Override
-  protected ICompute getTask() {
+  public ICompute getINode() {
     return null;
   }
 

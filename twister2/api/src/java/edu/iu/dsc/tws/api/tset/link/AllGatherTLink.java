@@ -12,15 +12,12 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunction;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunction;
-import edu.iu.dsc.tws.api.tset.sets.ComputeCollectorTSet;
-import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
@@ -28,51 +25,14 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
  *
  * @param <T> type of data
  */
-public class AllGatherTLink<T> extends BaseTLink<T> {
+public class AllGatherTLink<T> extends TupleValueIteratorLink<Integer, T> {
 
   public AllGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("allgather"), sourceParallelism);
   }
 
-/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn, int parallelism) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(getTSetEnv(), mapFn, parallelism);
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn,
-                                               int parallelism) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(getTSetEnv(), mapFn, parallelism);
-    addChildToGraph(set);
-    return set;
-  }*/
-
-  public <P> ComputeTSet<Iterator<T>, P> compute(ComputeFunction<Iterator<T>, P> computeFunction) {
-    ComputeTSet<Iterator<T>, P> set = new ComputeTSet<>(getTSetEnv(), computeFunction,
-        getTargetParallelism());
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <P> ComputeCollectorTSet<Iterator<T>, P> compute(ComputeCollectorFunction<Iterator<T>, P>
-                                                              computeFunction) {
-    ComputeCollectorTSet<Iterator<T>, P> set = new ComputeCollectorTSet<>(getTSetEnv(),
-        computeFunction, getTargetParallelism());
-    addChildToGraph(set);
-    return set;
-  }
-
-/*  @Override
-  public void build(TSetGraph tSetGraph) {
-    super.build(tSetGraph);
-//    MessageType dataType = TSetUtils.getDataType(getType());
-//    connection.allgather(parent.getName())
-//        .viaEdge(Constants.DEFAULT_EDGE)
-//        .withDataType(dataType);
-  }*/
-
   @Override
-  protected Edge getEdge() {
+  public Edge getEdge() {
     return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
   }
 

@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.TupleValueIteratorLink;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
@@ -23,35 +23,14 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
  *
  * @param <T> the type of data
  */
-public class StreamingGatherTLink<T> extends BaseTLink<T> {
+public class StreamingGatherTLink<T> extends TupleValueIteratorLink<Integer, T> {
 
   public StreamingGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("sgather"), sourceParallelism, 1);
   }
 
-/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
-    StreamingMapTSet<T, P> set = new StreamingMapTSet<>(getTSetEnv(), mapFn, 1);
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <P> StreamingFlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingFlatMapTSet<T, P> set = new StreamingFlatMapTSet<>(getTSetEnv(), mapFn, 1);
-    addChildToGraph(set);
-    return set;
-  }*/
-
-/*
   @Override
-  public void build(TSetGraph tSetGraph) {
-//    MessageType dataType = TSetUtils.getDataType(getType());
-//
-//    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-*/
-
-  @Override
-  protected Edge getEdge() {
+  public Edge getEdge() {
     return new Edge(getName(), OperationNames.GATHER, getMessageType());
   }
 

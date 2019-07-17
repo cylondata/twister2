@@ -16,11 +16,10 @@ import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
+import edu.iu.dsc.tws.api.tset.link.SingleLink;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
-public class StreamingPartitionTLink<T> extends BaseTLink<T> {
+public class StreamingPartitionTLink<T> extends SingleLink<T> {
 
   private PartitionFunction<T> partitionFunction;
 
@@ -34,30 +33,11 @@ public class StreamingPartitionTLink<T> extends BaseTLink<T> {
     this.partitionFunction = parFn;
   }
 
-/*  public <P> MapTSet<T, P> map(MapFunction<T, P> mapFn) {
-    MapTSet<T, P> set = new MapTSet<>(getTSetEnv(), mapFn, getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }
-
-  public <P> FlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
-    FlatMapTSet<T, P> set = new FlatMapTSet<>(getTSetEnv(), mapFn, getSourceParallelism());
-    addChildToGraph(set);
-    return set;
-  }*/
-
-/*  @Override
-  public void build(TSetGraph tSetGraph) {
-//    MessageType dataType = TSetUtils.getDataType(getType());
-//
-//    connection.partition(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }*/
-
   @Override
-  protected Edge getEdge() {
+  public Edge getEdge() {
     Edge e = new Edge(getName(), OperationNames.PARTITION, getMessageType());
     if (partitionFunction != null) {
-      e.setPartitioner(new TaskPartitionFunction<>(partitionFunction));
+      e.setPartitioner(partitionFunction);
     }
     return e;
   }

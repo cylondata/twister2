@@ -38,13 +38,6 @@ public abstract class TBaseFunction implements TFunction {
   @Override
   public void prepare(TSetContext ctx) {
     this.context = ctx;
-//    this.context.setConfig(ctx.getConfig());
-//    this.context.setParallelism(ctx.getParallelism());
-//    this.context.settSetId(ctx.getId());
-//    this.context.settSetIndex(ctx.getIndex());
-//    this.context.settSetName(ctx.getName());
-//    this.context.setWorkerId(ctx.getWorkerId());
-//    this.context.getInputMap().putAll(ctx.getInputMap());
   }
 
 //  public abstract void prepare();

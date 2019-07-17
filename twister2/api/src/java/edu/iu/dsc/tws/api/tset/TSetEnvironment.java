@@ -30,7 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -39,10 +38,10 @@ import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
+import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -50,7 +49,7 @@ public final class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
-  private TSetGraph tbaseGraph;
+  private TSetGraph tsetGraph;
   private TaskExecutor taskExecutor;
   private OperationMode operationMode;
 
@@ -64,7 +63,7 @@ public final class TSetEnvironment {
     this.workerEnv = wEnv;
     this.operationMode = opMode;
 
-    this.tbaseGraph = new TSetGraph(this, opMode);
+    this.tsetGraph = new TSetGraph(this, opMode);
     this.taskExecutor = new TaskExecutor(workerEnv);
   }
 
@@ -77,7 +76,7 @@ public final class TSetEnvironment {
   }
 
   public TSetGraph getGraph() {
-    return tbaseGraph;
+    return tsetGraph;
   }
 
   public int getDefaultParallelism() {
@@ -88,6 +87,10 @@ public final class TSetEnvironment {
     return workerEnv.getConfig();
   }
 
+  public int getWorkerID(){
+    return workerEnv.getWorkerId();
+  }
+
   // todo: find a better OOP way of doing this!
   public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism) {
     if (operationMode == OperationMode.STREAMING) {
@@ -95,7 +98,7 @@ public final class TSetEnvironment {
     }
 
     BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
-    tbaseGraph.addTSet(sourceT);
+    tsetGraph.addTSet(sourceT);
 
     return sourceT;
   }
@@ -106,7 +109,7 @@ public final class TSetEnvironment {
     }
 
     StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
-    tbaseGraph.addTSet(sourceT);
+    tsetGraph.addTSet(sourceT);
 
     return sourceT;
   }
@@ -148,36 +151,48 @@ public final class TSetEnvironment {
     }
   }
 
-  public void executeSink(SinkTSet sinkTSet) {
-    List<BaseTLink> linksPlan = new ArrayList<>();
-    List<BaseTSet> setsPlan = new ArrayList<>();
+  public void executeTSet(BaseTSet leafTset) {
+    List<BuildableTLink> linksPlan = new ArrayList<>();
+    List<BuildableTSet> setsPlan = new ArrayList<>();
 
-    invertedBFS(sinkTSet, linksPlan, setsPlan);
+    invertedBFS(leafTset, linksPlan, setsPlan);
 
-    LOG.info("Node build plan: "
-        + setsPlan.stream().map(BaseTSet::toString).collect(Collectors.joining(" ")));
-    LOG.info("Edge build plan: "
-        + linksPlan.stream().map(BaseTLink::toString).collect(Collectors.joining(" ")));
+    LOG.info("Node build plan: " + setsPlan);
+    buildTSets(setsPlan);
 
-    buildPlan(setsPlan);
-    buildPlan(linksPlan);
+    LOG.info("Edge build plan: " + linksPlan);
+    buildTLinks(linksPlan, setsPlan);
 
-    DataFlowTaskGraph dataflowGraph = tbaseGraph.getDfwGraphBuilder().build();
+    DataFlowTaskGraph dataflowGraph = tsetGraph.getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
 
     ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
 
+    LOG.fine(executionPlan.toString());
+    LOG.fine("edges: " + dataflowGraph.getDirectedEdgesSet());
+    LOG.fine("vertices: " + dataflowGraph.getTaskVertexSet());
+
     taskExecutor.execute(dataflowGraph, executionPlan);
+
+    // once a graph is built and executed, reset the underlying builder!
+    tsetGraph.resetDfwGraphBuilder();
   }
 
 
-  private void buildPlan(List<? extends TBase> plan) {
-    for (TBase baseTSet : plan) {
-      baseTSet.build(tbaseGraph);
+  private void buildTLinks(List<BuildableTLink> tlinks, List<? extends TBase> tSets) {
+    // links need to be built in order. check issue #519
+    for (int i = 0; i < tlinks.size(); i++) {
+      tlinks.get(tlinks.size() - i - 1).build(tsetGraph, tSets);
     }
   }
 
-  private void invertedBFS(TBase s, List<BaseTLink> links, List<BaseTSet> sets) {
+  private void buildTSets(List<BuildableTSet> tsets) {
+    for (BuildableTSet baseTSet : tsets) {
+      baseTSet.build(tsetGraph);
+    }
+  }
+
+  private void invertedBFS(TBase s, List<BuildableTLink> links, List<BuildableTSet> sets) {
     Map<TBase, Boolean> visited = new HashMap<>();
 
     Deque<TBase> queue = new LinkedList<>();
@@ -187,13 +202,13 @@ public final class TSetEnvironment {
 
     while (queue.size() != 0) {
       TBase t = queue.poll();
-      if (t instanceof BaseTLink) {
-        links.add((BaseTLink) t);
-      } else if (t instanceof BaseTSet) {
-        sets.add((BaseTSet) t);
+      if (t instanceof BuildableTLink) {
+        links.add((BuildableTLink) t);
+      } else if (t instanceof BuildableTSet) {
+        sets.add((BuildableTSet) t);
       }
 
-      for (TBase parent : tbaseGraph.getPredecessors(t)) {
+      for (TBase parent : tsetGraph.getPredecessors(t)) {
         if (visited.get(parent) == null || !visited.get(parent)) {
           visited.put(parent, true);
           queue.add(parent);

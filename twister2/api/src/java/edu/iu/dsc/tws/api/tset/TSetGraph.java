@@ -49,6 +49,7 @@ public class TSetGraph {
   private MutableGraph<TBase> graph;
 
   private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
+  private OperationMode opMode;
 
   public TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
     this.env = tSetEnv;
@@ -57,8 +58,8 @@ public class TSetGraph {
         .expectedNodeCount(100000) // use config and change this value
         .build();
 
-    this.dfwGraphBuilder = edu.iu.dsc.tws.task.graph.GraphBuilder.newBuilder();
-    this.dfwGraphBuilder.operationMode(operationMode);
+    this.opMode = operationMode;
+    resetDfwGraphBuilder();
   }
 
   /**
@@ -104,6 +105,11 @@ public class TSetGraph {
 
   public edu.iu.dsc.tws.task.graph.GraphBuilder getDfwGraphBuilder() {
     return dfwGraphBuilder;
+  }
+
+  void resetDfwGraphBuilder() {
+    this.dfwGraphBuilder = edu.iu.dsc.tws.task.graph.GraphBuilder.newBuilder();
+    this.dfwGraphBuilder.operationMode(opMode);
   }
 
 }
