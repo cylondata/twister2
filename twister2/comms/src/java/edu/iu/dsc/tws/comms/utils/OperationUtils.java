@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.comms.dfw.ChannelDataFlowOperation;
+import edu.iu.dsc.tws.comms.dfw.ControlledChannelOperation;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
@@ -43,6 +44,44 @@ public final class OperationUtils {
   public static boolean progressReceivers(ChannelDataFlowOperation delegate, Lock lock,
                                        MessageReceiver finalReceiver, Lock partialLock,
                                        MessageReceiver partialReceiver) {
+    boolean finalNeedsProgress = false;
+    boolean partialNeedsProgress = false;
+    try {
+      delegate.progress();
+      if (lock.tryLock()) {
+        try {
+          finalNeedsProgress = finalReceiver.progress();
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      if (partialLock.tryLock()) {
+        try {
+          partialNeedsProgress = partialReceiver.progress();
+        } finally {
+          partialLock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
+    }
+    return finalNeedsProgress || partialNeedsProgress;
+  }
+
+  /**
+   * Progress the receivers and return true if needs further progress
+   * @param delegate the channel dataflow opeation
+   * @param lock lock for final receiver
+   * @param finalReceiver final receiver
+   * @param partialLock lock for partial receiver
+   * @param partialReceiver partial receiver
+   * @return true if need further progress
+   */
+  public static boolean progressReceivers(ControlledChannelOperation delegate, Lock lock,
+                                          MessageReceiver finalReceiver, Lock partialLock,
+                                          MessageReceiver partialReceiver) {
     boolean finalNeedsProgress = false;
     boolean partialNeedsProgress = false;
     try {
