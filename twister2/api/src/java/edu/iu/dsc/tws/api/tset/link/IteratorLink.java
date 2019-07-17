@@ -35,12 +35,9 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.api.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleIterOp;
-import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
     implements TupleMappableLink<T> {

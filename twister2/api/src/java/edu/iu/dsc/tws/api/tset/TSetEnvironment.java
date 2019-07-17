@@ -87,7 +87,7 @@ public final class TSetEnvironment {
     return workerEnv.getConfig();
   }
 
-  public int getWorkerID(){
+  public int getWorkerID() {
     return workerEnv.getWorkerId();
   }
 

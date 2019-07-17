@@ -24,7 +24,7 @@ public class CacheSink<T> extends BaseSink<T> {
   @Override
   public boolean add(T value) {
     // todo every time add is called, a new partition will be made! how to handle that?
-    partition = new EntityPartition<>(context.getIndex(), value);
+    partition = new EntityPartition<>(getTSetContext().getIndex(), value);
     return true;
   }
 

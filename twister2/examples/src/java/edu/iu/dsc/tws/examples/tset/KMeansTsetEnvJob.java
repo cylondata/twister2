@@ -24,23 +24,17 @@
 package edu.iu.dsc.tws.examples.tset;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -49,7 +43,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    LOG.log(Level.INFO, "TSet worker starting: " + workerId);
+    /*LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
 
@@ -85,7 +79,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
     @Override
     public double[][] next() {
       return new double[0][];
-    }
+    }*/
   }
 
 

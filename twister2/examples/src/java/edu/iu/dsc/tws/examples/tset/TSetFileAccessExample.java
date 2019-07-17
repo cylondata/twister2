@@ -11,25 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
-import java.io.File;
-import java.io.IOException;
-
-import edu.iu.dsc.tws.api.data.FileSystem;
-import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sink.FileSink;
-import edu.iu.dsc.tws.api.tset.sources.FileSource;
-import edu.iu.dsc.tws.data.api.formatters.SharedTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
-import edu.iu.dsc.tws.examples.comms.Constants;
-import edu.iu.dsc.tws.examples.utils.DataGenerator;
 
 public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
   public void execute(TwisterBatchContext tc) {
-    super.execute(tc);
+/*    super.execute(tc);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_FNAME,
         "/tmp/twister2");
@@ -56,6 +43,6 @@ public class TSetFileAccessExample extends BaseTSetBatchWorker {
     textSource.partition(new OneToOnePartitioner<>()).sink(
         new FileSink<>(new TextOutputWriter(
             FileSystem.WriteMode.OVERWRITE,
-            new Path(output))), jobParameters.getTaskStages().get(0));
+            new Path(output))), jobParameters.getTaskStages().get(0)); */
   }
 }

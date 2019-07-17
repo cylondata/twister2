@@ -11,37 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.tset.fn.BaseIterableMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.BaseMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.BaseSource;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
-import edu.iu.dsc.tws.data.fs.io.InputSplit;
-import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 
 public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    LOG.log(Level.INFO, "TSet worker starting: " + workerId);
+/*    LOG.log(Level.INFO, "TSet worker starting: " + workerId);
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
@@ -93,10 +74,10 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-    }
+    }*/
   }
 
-  public class KMeansMap extends BaseIterableMapFunction<double[][], double[][]> {
+  /*public class KMeansMap extends BaseIterableMapFunction<double[][], double[][]> {
     private int dimension;
 
     @Override
@@ -249,6 +230,6 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       }
       return centers;
     }
-  }
+  }*/
 }
 

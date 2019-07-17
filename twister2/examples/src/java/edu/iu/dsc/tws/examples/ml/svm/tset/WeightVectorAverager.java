@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
 
-public class WeightVectorAverager extends BaseMapFunction<double[], double[]> {
+public class WeightVectorAverager implements MapFunction<double[], double[]> {
 
-  private int parallelism = 1;
+  private int parallelism;
 
   public WeightVectorAverager(int parallelism) {
     this.parallelism = parallelism;
@@ -25,10 +25,5 @@ public class WeightVectorAverager extends BaseMapFunction<double[], double[]> {
   @Override
   public double[] map(double[] doubles) {
     return Matrix.scalarDivide(doubles, (double) this.parallelism);
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }

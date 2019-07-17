@@ -71,6 +71,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
     return gather;
   }
 
+  // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
   public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);

@@ -19,16 +19,16 @@ import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**
  * Create a gather data set
- *
+ * <p>
  * Gather comms message content signature is Iterator<Tuple<Integer, T>>.
  * Here, the tuple is artificially created by the comms layer, and users would have very little
  * idea about it. Hence, the tuple, needs to be broken apart, and only values need to be
  * considered for compute operations like map, flatmap, foreach etc.
- *
+ * <p>
  * but, for the generic compute, Iterator<Tuple<Integer, T>> messages are valid.
- *
+ * <p>
  * Because of this reason, we can not use, IteratorLink<Tuple<Integer, T>>
- *
+ * <p>
  * Same logic applies to AllGather TLink
  *
  * @param <T> the type of data

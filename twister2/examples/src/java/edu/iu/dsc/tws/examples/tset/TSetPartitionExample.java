@@ -11,24 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseSink;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.OneToOnePartitioner;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class TSetPartitionExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetPartitionExample.class.getName());
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    super.execute(tc);
+/*    super.execute(tc);
 
     // set the parallelism of source to task stage 0
     List<Integer> taskStages = jobParameters.getTaskStages();
@@ -54,7 +46,7 @@ public class TSetPartitionExample extends BaseTSetBatchWorker {
       @Override
       public void prepare() {
       }
-    }, sinkParallelism);
+    }, sinkParallelism);*/
   }
 
 }

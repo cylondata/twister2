@@ -11,21 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class TSetAllReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllReduceExample.class.getName());
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    super.execute(tc);
+/*    super.execute(tc);
 
     // set the parallelism of source to task stage 0
     int srcPara = jobParameters.getTaskStages().get(0);
@@ -49,7 +44,7 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
         LOG.info("Exception Message : " + e.getMessage());
       }
       return true;
-    }, sinkPara);
+    }, sinkPara);*/
   }
 
 }

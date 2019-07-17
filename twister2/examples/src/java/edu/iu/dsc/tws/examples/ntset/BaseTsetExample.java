@@ -28,31 +28,16 @@ import java.io.Serializable;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.Source;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public abstract class BaseTsetExample implements IWorker, Serializable {
+public abstract class BaseTsetExample implements TSetIWorker, Serializable {
   static final int COUNT = 5;
   static final int PARALLELISM = 2;
-
-  public void execute(Config config, int workerID, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
-        persistentVolume, volatileVolume);
-
-    TSetEnvironment tSetEnv = TSetEnvironment.init(workerEnv);
-
-    execute(tSetEnv);
-  }
-
-  public abstract void execute(TSetEnvironment env);
 
   BatchSourceTSet<Integer> dummySource(TSetEnvironment env, int count, int parallel) {
     return env.createBatchSource(new Source<Integer>() {
@@ -80,5 +65,10 @@ public abstract class BaseTsetExample implements IWorker, Serializable {
         .build();
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
+  }
+
+  @Override
+  public OperationMode getOperationMode() {
+    return OperationMode.BATCH;
   }
 }

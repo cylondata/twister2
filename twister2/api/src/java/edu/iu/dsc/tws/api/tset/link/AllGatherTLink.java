@@ -15,9 +15,6 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
-import edu.iu.dsc.tws.api.tset.ops.SinkOp;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 /**

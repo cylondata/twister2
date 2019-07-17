@@ -54,7 +54,7 @@ public class CacheSource<T> extends BaseSource<T> {
 
   @Override
   public T next() {
-    return getDataObject().getPartitions(context.getIndex()).getConsumer().next();
+    return getDataObject().getPartitions(getTSetContext().getIndex()).getConsumer().next();
   }
 
   private List<T> getData() {

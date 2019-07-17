@@ -21,7 +21,7 @@ public abstract class TBaseFunction implements TFunction {
    * The runtime context that is made avilable to users who create functions that
    * extend from the TBaseFunction abstract class
    */
-  public TSetContext context;
+  private TSetContext context;
 
   @Override
   public void prepare(TSetContext ctx) {

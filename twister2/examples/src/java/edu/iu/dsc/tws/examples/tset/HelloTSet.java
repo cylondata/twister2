@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.tset;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -25,16 +24,8 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.fn.Source;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -45,7 +36,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
 
   @Override
   public void execute(TwisterBatchContext tc) {
-    LOG.info("Strating Hello TSet Example");
+/*    LOG.info("Strating Hello TSet Example");
     int para = config.getIntegerValue("para", 4);
     BatchSourceTSet<int[]> source = tc.createSource(new Source<int[]>() {
 
@@ -96,7 +87,7 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
       return false;
     });
 
-    LOG.info("Ending  Hello TSet Example");
+    LOG.info("Ending  Hello TSet Example");*/
 
   }
 

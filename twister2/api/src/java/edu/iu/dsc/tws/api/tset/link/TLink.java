@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
  * Link represents the connections between data Links.
  * This would map to some form of communication patter in the communication layer
  *
- * @param <I> Type output from the communication layer for the corresponding edge
+ * @param <I0> Type output from the communication layer for the corresponding edge
  * @param <I1> Base type of the edge
  */
-public interface TLink<I, I1> extends BuildableTLink {
+public interface TLink<I0, I1> extends BuildableTLink {
 
   /**
    * Name of the TSet and return the same tlink
@@ -34,7 +34,7 @@ public interface TLink<I, I1> extends BuildableTLink {
    * @param name name
    * @return same TLink
    */
-  TLink<I, I1> setName(String name);
+  TLink<I0, I1> setName(String name);
 
   /**
    * Base compute implementation
@@ -43,7 +43,7 @@ public interface TLink<I, I1> extends BuildableTLink {
    * @param <O> output tset base type
    * @return output TSet
    */
-  <O> TSet<O> compute(Compute<O, I> computeFunction);
+  <O> TSet<O> compute(Compute<O, I0> computeFunction);
 
   /**
    * Base compute implementation which would take in a Collector<O>
@@ -52,7 +52,7 @@ public interface TLink<I, I1> extends BuildableTLink {
    * @param <O> output type (Collector type)
    * @return output TSet
    */
-  <O> TSet<O> compute(ComputeCollector<O, I> computeFunction);
+  <O> TSet<O> compute(ComputeCollector<O, I0> computeFunction);
 
   /**
    * Elementwise map operation
@@ -81,8 +81,9 @@ public interface TLink<I, I1> extends BuildableTLink {
 
   /**
    * Sink function
-   * @param sinkFunction sink function which takes in <I>. Similar to a compute, but would not
+   *
+   * @param sinkFunction sink function which takes in <I0>. Similar to a compute, but would not
    * return any TSet
    */
-  void sink(Sink<I> sinkFunction);
+  void sink(Sink<I0> sinkFunction);
 }

@@ -33,53 +33,47 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.fn.BaseSink;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSource;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
-import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.HashingPartitioner;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
+import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable {
+public class TSetSimpleWordCount implements TSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetSimpleWordCount.class.getName());
 
   @Override
-  public void execute(TwisterBatchContext tc) {
+  public void execute(TSetEnvironment env) {
     int sourcePar = 4;
-    int sinkPar = 1;
+//    int sinkPar = 1;
 
-    BatchSourceTSet<WordCountPair> source = tc.createSource(
+    Config config = env.getConfig();
+
+    BatchSourceTSet<String> source = env.createBatchSource(
         new WordGenerator((int) config.get("NO_OF_SAMPLE_WORDS"), (int) config.get("MAX_CHARS")),
         sourcePar).setName("source");
 
-    GroupedTSet<String, WordCountPair> groupedWords = source.groupBy(new HashingPartitioner<>(),
-        (Selector<String, WordCountPair>) WordCountPair::getWord);
+    KeyedTSet<String, Integer, String> groupedWords = source.mapToTuple(w -> new Tuple<>(w, 1));
 
-    KeyedReduceTLink<String, WordCountPair> keyedReduce =
-        groupedWords.keyedReduce(
-            (ReduceFunction<WordCountPair>) (t1, t2) ->
-                new WordCountPair(t1.getWord(), t1.getCount() + t2.getCount())
-        );
+    KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
-    keyedReduce.sink(new WordCountLogger(), sinkPar);
+    keyedReduce.forEach(c -> LOG.info(c.toString()));
   }
 
-  class WordCountLogger extends BaseSink<WordCountPair> {
-    @Override
-    public boolean add(WordCountPair value) {
-      LOG.info(value.toString());
-      return true;
-    }
+  @Override
+  public OperationMode getOperationMode() {
+    return OperationMode.BATCH;
   }
 
-  class WordGenerator extends BaseSource<WordCountPair> {
+  class WordGenerator extends BaseSource<String> {
     private Iterator<String> iter;
     private int count;
     private int maxChars;
@@ -95,12 +89,14 @@ public class TSetSimpleWordCount extends TSetBatchWorker implements Serializable
     }
 
     @Override
-    public WordCountPair next() {
-      return new WordCountPair(iter.next(), 1);
+    public String next() {
+      return iter.next();
     }
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext ctx) {
+      super.prepare(ctx);
+
       Random random = new Random();
 
       RandomString randomString = new RandomString(maxChars, random, RandomString.ALPHANUM);

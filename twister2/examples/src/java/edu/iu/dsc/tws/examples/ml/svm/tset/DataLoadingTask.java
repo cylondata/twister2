@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSource;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -67,11 +68,13 @@ public class DataLoadingTask extends BaseSource<double[][]> {
   }
 
   @Override
-  public void prepare() {
+  public void prepare(TSetContext context) {
+    super.prepare(context);
+
     this.config = context.getConfig();
     this.parallelism = context.getParallelism();
-    LOG.info(String.format("%d, %d, %d", this.context.getIndex(),
-        this.svmJobParameters.getParallelism(), this.context.getParallelism()));
+    LOG.info(String.format("%d, %d, %d", context.getIndex(),
+        this.svmJobParameters.getParallelism(), context.getParallelism()));
     // dimension is +1 features as the input data comes along with the label
     this.dimension = this.binaryBatchModel.getFeatures() + 1;
     if ("train".equalsIgnoreCase(this.dataType)) {
@@ -103,8 +106,8 @@ public class DataLoadingTask extends BaseSource<double[][]> {
 
   @Override
   public double[][] next() {
-    LOG.fine("Context Prepare Task Index:" + context.getIndex());
-    InputSplit inputSplit = this.source.getNextSplit(context.getIndex());
+    LOG.fine("Context Prepare Task Index:" + getTSetContext().getIndex());
+    InputSplit inputSplit = this.source.getNextSplit(getTSetContext().getIndex());
     int totalCount = 0;
     while (inputSplit != null) {
       try {
@@ -130,7 +133,7 @@ public class DataLoadingTask extends BaseSource<double[][]> {
             count += 1;
           }
         }
-        inputSplit = this.source.getNextSplit(context.getIndex());
+        inputSplit = this.source.getNextSplit(getTSetContext().getIndex());
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Failed to read the input", e);
       }

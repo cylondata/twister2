@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 
 public interface TSetIWorker extends IWorker {
@@ -27,10 +28,12 @@ public interface TSetIWorker extends IWorker {
     WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
 
-    TSetEnvironment tSetEnv = TSetEnvironment.init(workerEnv);
+    TSetEnvironment tSetEnv = TSetEnvironment.init(workerEnv, getOperationMode());
 
     execute(tSetEnv);
   }
 
   void execute(TSetEnvironment env);
+
+  OperationMode getOperationMode();
 }

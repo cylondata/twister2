@@ -11,9 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.tset;
 
+import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.MapFunction;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
@@ -22,7 +24,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
+public class SvmTrainMap implements MapFunction<double[], Iterator<double[][]>> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 
@@ -36,19 +38,22 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
 
   private boolean debug = false;
 
+  private TSetContext context;
+
   public SvmTrainMap(BinaryBatchModel binaryBatchModel, SVMJobParameters svmJobParameters) {
     this.binaryBatchModel = binaryBatchModel;
     this.svmJobParameters = svmJobParameters;
   }
 
   @Override
-  public void prepare() {
+  public void prepare(TSetContext ctx) {
     this.w = this.binaryBatchModel.getW();
+    this.context = ctx;
   }
 
   @Override
-  public double[] map(Iterable<double[][]> t) {
-    double[][] dataPoints = t.iterator().next();
+  public double[] map(Iterator<double[][]> t) {
+    double[][] dataPoints = t.next();
     if (debug) {
       LOG.info(String.format("Training Dimensions [%d,%d]", dataPoints.length, dataPoints[0]
           .length));
