@@ -307,10 +307,19 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    */
   private IntArraySet finishedReceiveGroups = new IntArraySet();
 
+  /**
+   * Started the sync round
+   */
   private boolean startedSyncRound = false;
 
+  /**
+   * Weather we have finished receiving, all syncs are available
+   */
   private boolean finishedReceiving = false;
 
+  /**
+   * We are done with progress until we reset
+   */
   private boolean doneProgress = false;
 
   /**
@@ -323,16 +332,27 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    */
   private List<Integer> finishedTargets = new ArrayList<>();
 
+  /**
+   * Keep track weather we have started receive syncs to the final destination
+   */
   private boolean receivingFinalSyncs = false;
 
+  /**
+   * Keep track weather all targets received syncs. After we start receiving syncs
+   * we can only progress final receiver after all targets received syncs and we are
+   * done with the rounds.
+   */
   private boolean allTargetsReceivedSyncs = false;
 
+  /**
+   * Targets of this worker
+   */
   private Set<Integer> targetsOfThisWorker;
 
   /**
    * The merge factor
    */
-  private double mergeFactor = 1.0;
+  private double mergeFactor;
 
   /**
    * Create a ring partition communication
@@ -495,9 +515,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private void startNextStep() {
-//    if (thisWorker == 0) {
-//      LOG.info(String.format("Starting recev %d, send %d", receiveGroupIndex, sendGroupIndex));
-//    }
     List<Integer> sendWorkers = sendingGroupsWorkers.get(sendGroupIndex);
     // lets set the task indexes to 0
     for (int i : sendWorkers) {
@@ -664,17 +681,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         syncedSources.add(source);
         if (syncedSources.size() == thisSourceArray.length) {
           allSyncsReceives = true;
-//          LOG.info("******* partial messages " + mergerInMemoryMessages);
         }
         return true;
       }
 
       if (mergedInMemoryMessages >= inMemoryMessageThreshold * targetsArray.length) {
         return false;
-      }
-
-      if (allSyncsReceives) {
-        LOG.info("***************************** Adding messages after all syncs received");
       }
 
       // we add to the merged
@@ -908,9 +920,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         assert data != null;
 
         if (data.size() > 0) {
-//          if (startedSyncRound) {
-//            LOG.info(String.format("Has more data %d, %d", thisWorker, data.size()));
-//          }
           return true;
         }
       }
@@ -979,6 +988,30 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
 
     mergeFinishSources.clear();
+    allTargetsReceivedSyncs = false;
+    receivingFinalSyncs = false;
+    doneProgress = false;
+    finishedTargets.clear();
+    startedSyncRound = false;
+
+    for (int t : targets) {
+      merged.put(t, new AggregatedObjects<>());
+      finishedSources.put(t, new HashSet<>());
+    }
+
+    finishedReceiveGroups.clear();
+    finishedSendGroups.clear();
+    mergerBlocked = false;
+    allSyncsReceives = false;
+    mergeFinishSources.clear();
+    finishedReceiving = false;
+
+    int index = 0;
+    for (int s : thisWorkerSources) {
+      this.thisSourceArray[index++] = s;
+      syncSent.put(s, new HashSet<>());
+      sourceStates.put(s, ReceiverState.INIT);
+    }
   }
 
   @Override
@@ -1080,14 +1113,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
         if (recv) {
           competedReceives++;
-
           addSync(source, target);
-        }
-        return recv;
-      } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
-        boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
-        if (recv) {
-          competedReceives++;
         }
         return recv;
       }
