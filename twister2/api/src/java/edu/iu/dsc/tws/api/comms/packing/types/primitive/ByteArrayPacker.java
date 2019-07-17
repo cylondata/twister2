@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.ObjectBuilder;
+import edu.iu.dsc.tws.api.comms.packing.PackerStore;
 
 public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
 
@@ -67,6 +68,19 @@ public final class ByteArrayPacker implements PrimitiveArrayPacker<byte[]> {
   @Override
   public void readFromBufferAndSet(ByteBuffer byteBuffer, byte[] array, int index) {
     array[index] = byteBuffer.get();
+  }
+
+  @Override
+  public void writeDataToBuffer(byte[] data, PackerStore packerStore, int alreadyCopied,
+                                 int leftToCopy, int spaceLeft, ByteBuffer targetBuffer) {
+    int unitSize = this.getMessageType().getUnitSizeInBytes();
+    int elementsCopied = alreadyCopied / unitSize;
+    int elementsLeft = leftToCopy / unitSize;
+
+    int spacePermitsFor = spaceLeft / unitSize;
+    int willCopy = Math.min(spacePermitsFor, elementsLeft);
+
+    targetBuffer.put(data, elementsCopied, willCopy);
   }
 
   @Override
