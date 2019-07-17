@@ -636,7 +636,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     partialLock.lock();
     try {
       if (merger.onMessage(source, 0, target, flags, message)) {
-        mergerInMemoryMessages++;
+        if ((flags & MessageFlags.SYNC_EMPTY) != MessageFlags.SYNC_EMPTY) {
+          mergerInMemoryMessages++;
+        }
         mergerBlocked = false;
         return true;
       } else {
@@ -656,12 +658,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         syncedSources.add(source);
         if (syncedSources.size() == thisSourceArray.length) {
           allSyncsReceives = true;
+//          LOG.info("******* partial messages " + mergerInMemoryMessages);
         }
         return true;
       }
 
       if (mergedInMemoryMessages >= inMemoryMessageThreshold * targetsArray.length) {
         return false;
+      }
+
+      if (allSyncsReceives) {
+        LOG.info("***************************** Adding messages after all syncs received");
       }
 
       // we add to the merged
@@ -782,6 +789,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         sendsDone = sendToGroup();
       } else {
         if (containsDataToSend()) {
+          if (startedSyncRound) {
+            throw new RuntimeException("Cannot have data after sync started");
+          }
           sendsDone = sendToGroup();
         } else {
           if (startedSyncRound) {
@@ -791,7 +801,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             if (allSyncsReceives) {
               syncsReady = true;
             }
-            sendsDone = true;
+            sendsDone = sendToGroup();
           }
         }
       }
@@ -821,7 +831,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         // lets advance the send group and receive group
         if (finishedSendGroups.size() == sendingGroupsWorkers.size()
             && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
-          if (syncsReady) {
+          if (syncsReady && !containsAnyDataToSend()) {
             startedSyncRound = true;
           }
           roundCompleted = true;
@@ -829,6 +839,21 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 //          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
           finishedReceiveGroups.clear();
           finishedSendGroups.clear();
+
+          // we need to have all the syncs received in a single round to terminate
+//          if (startedSyncRound && !allTargetsReceivedSyncs) {
+//            finishedTargets.clear();
+//            for (int i : targetsOfThisWorker) {
+//              Set<Integer> fin = finishedSources.get(i);
+//              fin.clear();
+//            }
+//          }
+        }
+
+        if (roundCompleted && !lastRound && finishedReceiving) {
+          lastRound = true;
+        } else if (lastRound && roundCompleted && delegate.isComplete()) {
+          doneProgress = true;
         }
 
         if (!lastRound || !roundCompleted) {
@@ -840,16 +865,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 //              finishedSendGroups.size(), roundNumber, lastRound));
           startNextStep();
         }
-
-        if (roundCompleted && !lastRound && finishedReceiving) {
-          lastRound = true;
-        } else if (lastRound && roundCompleted && delegate.isComplete()) {
-          doneProgress = true;
-        }
       }
 
       boolean progress = true;
       if (doneProgress) {
+//        LOG.info(String.format("%d round %d", thisWorker, roundNumber));
         progress = finalReceiver.progress();
       }
 
@@ -857,6 +877,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     } finally {
       swapLock.unlock();
     }
+  }
+
+  private boolean containsAnyDataToSend() {
+    for (int i = 0; i < targetsArray.length; i++) {
+      int t = targetsArray[i];
+      List<Object> data = merged.get(t);
+      if (data != null && data.size() > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private boolean containsDataToSend() {
@@ -871,6 +902,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         assert data != null;
 
         if (data.size() > 0) {
+//          if (startedSyncRound) {
+//            LOG.info(String.format("Has more data %d, %d", thisWorker, data.size()));
+//          }
           return true;
         }
       }
