@@ -38,10 +38,17 @@ public class SVMDataObjectSource<T, O extends InputSplit<T>> extends BaseSource 
    */
   private String edgeName;
   private String dataDirectory;
+  private int datasize;
 
   public SVMDataObjectSource(String edgeName, String dataDirectory) {
     this.edgeName = edgeName;
     this.dataDirectory = dataDirectory;
+  }
+
+  public SVMDataObjectSource(String edgeName, String dataDirectory, int dsize) {
+    this.edgeName = edgeName;
+    this.dataDirectory = dataDirectory;
+    this.datasize = dsize;
   }
 
   public String getEdgeName() {

@@ -42,6 +42,7 @@ import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
+import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
@@ -235,7 +236,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
       int randomIndex = new Random()
-          .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
+          .nextInt(this.svmJobParameters.getTestingSamples() / dataStreamerParallelism - 1);
       LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
           .toString(datapoints[randomIndex])));
     }
@@ -273,7 +274,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
                                                            String graphName) {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataSourcePathStr);
+        dataSourcePathStr, samples);
     IterativeSVMDataObjectCompute dataObjectCompute
         = new IterativeSVMDataObjectCompute(Context.TWISTER2_DIRECT_EDGE, parallelism,
         samples, numOfFeatures, DELIMITER);
@@ -448,6 +449,14 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
     s += "======================================================================================\n";
     LOG.info(String.format(s));
+    save();
+  }
+
+  private void save() {
+    TrainedModel trainedModel = new TrainedModel(this.binaryBatchModel, accuracy, this.trainingTime,
+        this.svmJobParameters.getExperimentName() + "-itr-task", this.svmJobParameters
+        .getParallelism());
+    trainedModel.saveModel(this.svmJobParameters.getModelSaveDir());
   }
 
   private void convert2Seconds() {

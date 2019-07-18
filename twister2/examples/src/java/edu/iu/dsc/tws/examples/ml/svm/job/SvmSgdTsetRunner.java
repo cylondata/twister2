@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
@@ -35,10 +34,8 @@ import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorLoad;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
-import edu.iu.dsc.tws.examples.ml.svm.util.IPrintFunction;
 import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
-import edu.iu.dsc.tws.examples.ml.svm.util.TSetUtils;
 
 
 public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
@@ -141,7 +138,6 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
   }
 
   private void executeTraining() {
-    long time = System.nanoTime();
     this.binaryBatchModel.setW(this.trainedWeightVector.getPartitionData(0));
     for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
       LOG.info(String.format("Iteration %d", i));
@@ -170,13 +166,12 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
 //              dataStreamerParallelism)
 //          .cache();
     }
-    this.trainingTime = System.nanoTime() - time;
-    TSetUtils.printCachedTset(trainedWeightVector, new IPrintFunction<double[]>() {
-      @Override
-      public void print(double[] doubles) {
-        System.out.println(Arrays.toString(doubles));
-      }
-    });
+//    TSetUtils.printCachedTset(trainedWeightVector, new IPrintFunction<double[]>() {
+//      @Override
+//      public void print(double[] doubles) {
+//        System.out.println(Arrays.toString(doubles));
+//      }
+//    });
   }
 
   private void executeSummary() {
@@ -249,7 +244,7 @@ public class SvmSgdTsetRunner extends TSetBatchWorker implements Serializable {
   private void saveResults() throws IOException {
     ResultsSaver resultsSaver = new ResultsSaver(this.trainingTime, this.testingTime,
         this.dataLoadingTime, this.dataLoadingTime + this.trainingTime + this.testingTime,
-        this.svmJobParameters, "tset");
+        this.svmJobParameters, "itr-tset");
     resultsSaver.save();
   }
 

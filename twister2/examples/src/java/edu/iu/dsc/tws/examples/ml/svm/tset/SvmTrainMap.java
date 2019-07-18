@@ -71,6 +71,7 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
+
     return this.pegasosSgdSvm.getW();
   }
 }
