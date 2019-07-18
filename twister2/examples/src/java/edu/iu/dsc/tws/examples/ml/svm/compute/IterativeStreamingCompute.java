@@ -96,7 +96,7 @@ public class IterativeStreamingCompute extends BaseCompute<double[]>
 
   private void prepareDataPoints() {
     DataPartition<double[][]> dataPartition = this.dataPointsObject
-        .getPartitions(context.taskIndex());
+        .getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));

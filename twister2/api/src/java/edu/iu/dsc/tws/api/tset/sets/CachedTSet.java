@@ -154,7 +154,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
       return new ArrayList<>();
     }
 
-    DataPartition<T>[] parts = data.getPartitions();
+    DataPartition<T>[] parts = data.getPartition();
     List<T> results = new ArrayList<>();
     for (DataPartition<T> part : parts) {
       results.add(part.getConsumer().next());

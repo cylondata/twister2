@@ -123,7 +123,7 @@ public class KMeansWorker extends TaskWorker {
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
@@ -239,10 +239,10 @@ public class KMeansWorker extends TaskWorker {
     public void execute() {
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
 
-      DataPartition<?> centroidPartition = centroidsObject.getPartitions(context.taskIndex());
+      DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
       centroid = (double[][]) centroidPartition.getConsumer().next();
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);

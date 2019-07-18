@@ -150,7 +150,7 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public Object getDataPointsByTaskIndex(int taskIndex) {
     EntityPartition<Object> datapointsEntityPartition
-        = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+        = (EntityPartition<Object>) dataPointsObject.getPartition(taskIndex);
 
     if (datapointsEntityPartition != null) {
       DataObject<?> dataObject
@@ -163,7 +163,7 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public Object getWeightVectorByTaskIndex(int taskIndex) {
     EntityPartition<Object> weightVectorEntityPartition
-        = (EntityPartition<Object>) weightVectorObject.getPartitions(taskIndex);
+        = (EntityPartition<Object>) weightVectorObject.getPartition(taskIndex);
 
     if (weightVectorEntityPartition != null) {
       DataObject<?> weightVectorObjectLocal
@@ -175,7 +175,7 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public Object getDataPointsByDataObject(int taskIndex, DataObject<?> datapointsDataObject) {
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-        datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
+        datapointsDataObject.getPartition(taskIndex).getConsumer().next();
     List<Object> items = new ArrayList<>();
     while (arrayListIterator.hasNext()) {
       Object object = arrayListIterator.next();

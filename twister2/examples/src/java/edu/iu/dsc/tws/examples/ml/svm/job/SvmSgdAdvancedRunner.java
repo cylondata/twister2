@@ -179,7 +179,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     if (data == null) {
       throw new NullPointerException("Something Went Wrong in Loading Training Data");
     } else {
-      LOG.info("Training Data Total Partitions : " + data.getPartitions().length);
+      LOG.info("Training Data Total Partitions : " + data.getPartition().length);
     }
     return data;
   }
@@ -213,7 +213,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     if (data == null) {
       throw new NullPointerException("Something Went Wrong in Loading Weight Vector");
     } else {
-      LOG.info("Training Data Total Partitions : " + data.getPartitions().length);
+      LOG.info("Training Data Total Partitions : " + data.getPartition().length);
     }
     return data;
   }
@@ -251,7 +251,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     if (data == null) {
       throw new NullPointerException("Something Went Wrong in Loading Testing Data");
     } else {
-      LOG.info("Testing Data Total Partitions : " + data.getPartitions().length);
+      LOG.info("Testing Data Total Partitions : " + data.getPartition().length);
     }
     return data;
   }
@@ -404,10 +404,10 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     DataObject<double[]> dataSet = taskExecutor.getOutput(graph1, plan1,
         Constants.SimpleGraphConfig.SVM_REDUCE);
     if (debug) {
-      LOG.info(String.format("Number of Partitions : %d ", dataSet.getPartitions().length));
+      LOG.info(String.format("Number of Partitions : %d ", dataSet.getPartition().length));
     }
 
-    DataPartition<double[]> values = dataSet.getPartitions()[0];
+    DataPartition<double[]> values = dataSet.getPartition()[0];
     DataPartitionConsumer<double[]> dataPartitionConsumer = values.getConsumer();
 
     while (dataPartitionConsumer.hasNext()) {
@@ -497,7 +497,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    */
   public double retriveFinalTestingAccuracy(DataObject<Object> finalRes) {
     double avgAcc = 0;
-    Object o = finalRes.getPartitions()[0].getConsumer().next();
+    Object o = finalRes.getPartition()[0].getConsumer().next();
     if (o instanceof Double) {
       avgAcc = ((double) o) / dataStreamerParallelism;
       LOG.info(String.format("Testing Accuracy  : %f ", avgAcc));

@@ -153,7 +153,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     taskExecutor.execute(graph, plan);
 
     DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-    DataPartition<double[]> values = dataSet.getPartitions()[0];
+    DataPartition<double[]> values = dataSet.getPartition()[0];
     double[] newValue = values.getConsumer().next();
     LOG.info("Final Aggregated Values Are:" + Arrays.toString(newValue));
   }

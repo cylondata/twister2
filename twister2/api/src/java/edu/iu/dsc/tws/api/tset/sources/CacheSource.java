@@ -44,17 +44,17 @@ public class CacheSource<T> extends BaseSource<T> {
     } else {
       return false;
     }
-//    boolean hasNext = (current < count) ? getDataObject().getPartitions(context.getIndex())
+//    boolean hasNext = (current < count) ? getDataObject().getPartition(context.getIndex())
 //        .getConsumer().hasNext() : false;
 //
 //    while (++current < count && !hasNext) {
-//      hasNext = getDataObject().getPartitions(current).getConsumer().hasNext();
+//      hasNext = getDataObject().getPartition(current).getConsumer().hasNext();
 //    }
   }
 
   @Override
   public T next() {
-    return getDataObject().getPartitions(getTSetContext().getIndex()).getConsumer().next();
+    return getDataObject().getPartition(getTSetContext().getIndex()).getConsumer().next();
   }
 
   private List<T> getData() {
@@ -62,7 +62,7 @@ public class CacheSource<T> extends BaseSource<T> {
       LOG.fine("Data has not been added to the data object");
       return new ArrayList<>();
     }
-    DataPartition<T>[] parts = datapoints.getPartitions();
+    DataPartition<T>[] parts = datapoints.getPartition();
     List<T> results = new ArrayList();
     for (DataPartition<T> part : parts) {
       results.add(part.getConsumer().next());

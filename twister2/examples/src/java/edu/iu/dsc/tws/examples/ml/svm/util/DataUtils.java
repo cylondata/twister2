@@ -231,9 +231,9 @@ public final class DataUtils {
   public static double[][] getDataObjectToDoubleArray(DataObject<Object> dataPointsObject1) {
     double[][] d = null;
     LOG.info(String.format("Which Type %s", dataPointsObject1.getClass().getName()));
-    LOG.info(String.format("How Much %d", dataPointsObject1.getPartitions().length));
+    LOG.info(String.format("How Much %d", dataPointsObject1.getPartition().length));
     LOG.info(String.format("Next Element %s",
-        dataPointsObject1.getPartitions()[0].getConsumer().next().getClass().getName()));
+        dataPointsObject1.getPartition()[0].getConsumer().next().getClass().getName()));
     return d;
   }
 

@@ -61,7 +61,7 @@ public class TaskWorkerDataLoader extends TaskWorker {
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-    LOG.info("Total Partitions : " + dataPointsObject.getPartitions().length);
+    LOG.info("Total Partitions : " + dataPointsObject.getPartition().length);
     showAllUnits(dataPointsObject);
   }
 
@@ -73,8 +73,8 @@ public class TaskWorkerDataLoader extends TaskWorker {
 
 
   public void showAllUnits(DataObject<Object> dataPointsObject) {
-    for (int i = 0; i < dataPointsObject.getPartitions().length; i++) {
-      DataPartition<Object> values = dataPointsObject.getPartitions()[i];
+    for (int i = 0; i < dataPointsObject.getPartition().length; i++) {
+      DataPartition<Object> values = dataPointsObject.getPartition()[i];
       DataPartitionConsumer<Object> dataPartitionConsumer = values.getConsumer();
       //LOG.info("Final Receive  : " + dataPartitionConsumer.hasNext());
       while (dataPartitionConsumer.hasNext()) {
@@ -85,10 +85,10 @@ public class TaskWorkerDataLoader extends TaskWorker {
           DataObjectImpl<?> dataObjectImpl = (DataObjectImpl<?>) object;
           LOG.info(String.format("Id1[%d], Partition Count :  %d", i,
               dataObjectImpl.getPartitionCount()));
-          int numpar = dataObjectImpl.getPartitions().length;
+          int numpar = dataObjectImpl.getPartition().length;
           LOG.info("Number of Partitions : " + numpar);
-          for (int j = 0; j < dataObjectImpl.getPartitions().length; j++) {
-            DataPartition<?> values1 = dataObjectImpl.getPartitions()[j];
+          for (int j = 0; j < dataObjectImpl.getPartition().length; j++) {
+            DataPartition<?> values1 = dataObjectImpl.getPartition()[j];
             Object object1 = values1.getConsumer().next();
             LOG.info(String.format("Ids[%d,%d] , Received Object : %s ", i, j,
                 object1.getClass().getName()));

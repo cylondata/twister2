@@ -33,7 +33,7 @@ public class CacheableImpl<T> implements Cacheable<T> {
       LOG.fine("Data has not been added to the data object");
       return new ArrayList<>();
     }
-    DataPartition<T>[] parts = data.getPartitions();
+    DataPartition<T>[] parts = data.getPartition();
     List<T> results = new ArrayList();
     for (DataPartition<T> part : parts) {
       results.add(part.getConsumer().next());
@@ -48,7 +48,7 @@ public class CacheableImpl<T> implements Cacheable<T> {
 
   @Override
   public T getPartitionData(int partitionId) {
-    return data.getPartitions(partitionId).getConsumer().next();
+    return data.getPartition(partitionId).getConsumer().next();
   }
 
   @Override

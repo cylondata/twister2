@@ -283,7 +283,7 @@ public class TaskExecutor {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
-    DataObject<T> dataSet = new DataObjectImpl<>(config);
+    DataObject<T> dataSet = new DataObjectImpl<>(taskName, config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();

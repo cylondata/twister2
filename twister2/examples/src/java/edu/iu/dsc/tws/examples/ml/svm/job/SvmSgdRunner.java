@@ -108,7 +108,7 @@ public class SvmSgdRunner extends TaskWorker {
     if (operationMode.equals(OperationMode.BATCH)) {
       DataObject<double[]> dataSet = taskExecutor.getOutput(graph, plan,
           Constants.SimpleGraphConfig.SVM_REDUCE);
-      DataPartition<double[]> values = dataSet.getPartitions()[0];
+      DataPartition<double[]> values = dataSet.getPartition()[0];
       DataPartitionConsumer<double[]> dataPartitionConsumer = values.getConsumer();
       //LOG.info("Final Receive  : " + dataPartitionConsumer.hasNext());
       while (dataPartitionConsumer.hasNext()) {

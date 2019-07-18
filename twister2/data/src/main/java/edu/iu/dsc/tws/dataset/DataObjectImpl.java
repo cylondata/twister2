@@ -21,7 +21,17 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 public class DataObjectImpl<T> implements DataObject<T> {
   private Map<Integer, DataPartition<T>> partitions = new HashMap<>();
 
-  public DataObjectImpl(Config config) {
+  private Config config;
+
+  private String id;
+
+  public DataObjectImpl(Config conf) {
+    this.config = conf;
+  }
+
+  public DataObjectImpl(String name, Config conf) {
+    this.id = name;
+    this.config = conf;
   }
 
   @Override
@@ -29,18 +39,27 @@ public class DataObjectImpl<T> implements DataObject<T> {
     partitions.put(partition.getPartitionId(), partition);
   }
 
-  public DataPartition<T>[] getPartitions() {
+  public DataPartition<T>[] getPartition() {
     DataPartition<T>[] parts = new DataPartition[partitions.size()];
     return partitions.values().toArray(parts);
   }
 
   @Override
-  public DataPartition<T> getPartitions(int partitionId) {
+  public DataPartition<T> getPartition(int partitionId) {
     return partitions.get(partitionId);
   }
 
   @Override
   public int getPartitionCount() {
     return partitions.size();
+  }
+
+  @Override
+  public String getID() {
+    if (id != null && !id.isEmpty()) {
+      return id;
+    } else {
+      throw new RuntimeException("Unnamed data object");
+    }
   }
 }
