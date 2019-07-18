@@ -59,3 +59,6 @@ twister2.batch.keyed.gather.op: "partition"
 
 # the partitioning algorithm
 twister2.batch.partition.algorithm: "simple"
+
+# number of workers in ring group
+twister2.network.partition.ring.group.workers: 2

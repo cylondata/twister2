@@ -19,6 +19,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -60,11 +61,16 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     boolean useDisk = false;
     Comparator keyComparator = null;
     try {
-      useDisk = (Boolean) leftEdge.getProperty("use-disk");
-      keyComparator = (Comparator) leftEdge.getProperty("key-comparator");
+      useDisk = (Boolean) leftEdge.getProperty(CommunicationContext.USE_DISK);
+      keyComparator = (Comparator) leftEdge.getProperty(
+          CommunicationContext.KEY_COMPARATOR);
     } catch (Exception ex) {
       //ignore
     }
+
+    CommunicationContext.JoinType joinType = (CommunicationContext.JoinType) leftEdge.getProperty(
+        CommunicationContext.JOIN_TYPE
+    );
 
     Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
     op = new BJoin(newComm, logicalPlan, sources, dests,
@@ -72,7 +78,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
         leftEdge.getDataType(),
         rightEdge.getDataType(),
         new JoinRecvrImpl(), destSelector, useDisk,
-        keyComparator, leftEdge.getEdgeID().nextId(), rightEdge.getEdgeID().nextId());
+        keyComparator, leftEdge.getEdgeID().nextId(), rightEdge.getEdgeID().nextId(), joinType);
   }
 
   @Override

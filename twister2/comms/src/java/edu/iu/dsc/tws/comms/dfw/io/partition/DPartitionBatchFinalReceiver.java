@@ -197,11 +197,6 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       throw new RuntimeException("Un-expected target id: " + target);
     }
 
-    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-        || targetStates.get(target) == ReceiverState.SYNCED) {
-      return false;
-    }
-
     if (targetStates.get(target) == ReceiverState.INIT) {
       targetStates.put(target, ReceiverState.RECEIVING);
     }
@@ -209,17 +204,24 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       Set<Integer> finished = finishedSources.get(target);
       if (finished.contains(source)) {
-        LOG.log(Level.WARNING,
+        LOG.log(Level.FINE,
             String.format("%d Duplicate finish from source id %d -> %d",
                 this.thisWorker, source, target));
       } else {
         finished.add(source);
       }
       if (finished.size() == partition.getSources().size()) {
-        finishedTargets.add(target);
+        if (!finishedTargets.contains(target)) {
+          finishedTargets.add(target);
+        }
         targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
       return true;
+    }
+
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        || targetStates.get(target) == ReceiverState.SYNCED) {
+      return false;
     }
 
     // add the object to the map
@@ -260,7 +262,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       sorts.run();
 
       ReceiverState state = targetStates.get(target);
-      if (state != ReceiverState.INIT) {
+      if (state != ReceiverState.SYNCED) {
         needFurtherProgress = true;
       }
     }
@@ -279,7 +281,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
       }
     }
 
-    return finishedTargets.size() != targets.size();
+    return finishedTargetsCompleted.size() != targets.size();
   }
 
   private void finishTarget(int target) {

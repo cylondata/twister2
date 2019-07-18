@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,8 +44,8 @@ import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
 
-public class ChannelDataFlowOperation implements ChannelListener, ChannelMessageReleaseCallback {
-  private static final Logger LOG = Logger.getLogger(ChannelDataFlowOperation.class.getName());
+public class ControlledChannelOperation implements ChannelListener, ChannelMessageReleaseCallback {
+  private static final Logger LOG = Logger.getLogger(ControlledChannelOperation.class.getName());
 
   /**
    * The default path to be used
@@ -114,12 +114,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   private Map<Integer, Queue<DataBuffer>> receiveBuffers;
 
   /**
-   * Local buffers that are used when receive buffers need to be freed. Buffer are only added
-   * to the list when needed
-   */
-  private Queue<DataBuffer> localReceiveBuffers;
-
-  /**
    * Pending send messages
    */
   private Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource;
@@ -159,21 +153,77 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private ProgressionTracker receiveProgressTracker;
 
+  /**
+   * Number of external sends pending
+   */
   private AtomicInteger externalSendsPending = new AtomicInteger(0);
 
-  ChannelDataFlowOperation(TWSChannel channel) {
-    this.channel = channel;
-  }
+  /**
+   * The receive buffers that are not used
+   */
+  private Queue<DataBuffer> freeReceiveBuffers;
 
-  public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
-                   MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
-                   int graphEdge, Set<Integer> recvExecutors,
-                   ChannelReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
-                   Map<Integer, Queue<InMessage>> pRMPS,
-                   Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
-                   Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
+  /**
+   * The receive task id groups
+   */
+  private List<List<Integer>> receiveIdGroups;
+
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> sendingGroupsTargets;
+
+  /**
+   * The sending groups
+   */
+  private List<List<Integer>> receiveGroupsSources;
+
+  /**
+   * Number of targets for each worker in the group
+   */
+  private Map<Integer, Integer> expectedReceivePerWorker;
+
+  /**
+   * The current receives for each worker in the current group
+   */
+  private Map<Integer, Integer> currentReceives = new HashMap<>();
+
+  private int freedBuffersPoll;
+
+  /**
+   * Create the channel operation
+   * @param channel
+   * @param cfg
+   * @param messageType
+   * @param rcvDataType
+   * @param kType
+   * @param rcvKeyType
+   * @param plan
+   * @param graphEdge
+   * @param recvExecutors
+   * @param msgReceiver
+   * @param pendingSendPerSource
+   * @param pRMPS
+   * @param pendingReceiveDesrialize
+   * @param serializer
+   * @param deSerializer
+   * @param keyed
+   * @param sendingGrpTargets
+   * @param receiveGrpsSources
+   */
+  ControlledChannelOperation(TWSChannel channel, Config cfg,
+                             MessageType messageType, MessageType rcvDataType,
+                             MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
+                             int graphEdge, Set<Integer> recvExecutors,
+                             ChannelReceiver msgReceiver,
+                             Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
+                             Map<Integer, Queue<InMessage>> pRMPS,
+                             Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
+                             Map<Integer, MessageSerializer> serializer,
+                             Map<Integer, MessageDeSerializer> deSerializer, boolean keyed,
+                             List<List<Integer>> sendingGrpTargets,
+                             List<List<Integer>> receiveGrpsSources) {
+    this.channel = channel;
     this.config = cfg;
     this.instancePlan = plan;
     this.edge = graphEdge;
@@ -193,6 +243,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.messageSerializer = serializer;
     this.messageDeSerializer = deSerializer;
 
+    this.sendingGroupsTargets = sendingGrpTargets;
+    this.receiveGroupsSources = receiveGrpsSources;
+
     int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
     int sendBufferSize = DataFlowContext.bufferSize(config);
 
@@ -201,7 +254,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       sendBuffers.offer(new DataBuffer(channel.createBuffer(sendBufferSize)));
     }
     this.receiveBuffers = new HashMap<>();
-    this.localReceiveBuffers = new ArrayDeque<>();
 
     LOG.log(Level.FINE, String.format("%d setup communication", instancePlan.getThisExecutor()));
     // now setup the sends and receives
@@ -211,20 +263,9 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
     initSerializers();
 
-    initProgressTrackers();
-  }
+    setupReceiveGroups(receiveGroupsSources);
 
-  public void init(Config cfg, MessageType messageType, LogicalPlan plan,
-                   int graphEdge, Set<Integer> recvExecutors,
-                   ChannelReceiver msgReceiver,
-                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
-                   Map<Integer, Queue<InMessage>> pRMPS,
-                   Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
-                   Map<Integer, MessageSerializer> serializer,
-                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
-    init(cfg, messageType, messageType, keyType, keyType,
-        plan, graphEdge, recvExecutors, msgReceiver,
-        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
+    initProgressTrackers();
   }
 
   private void initSerializers() {
@@ -254,13 +295,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private void setupCommunication() {
     // we will receive from these
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(config);
-    int receiveBufferSize = DataFlowContext.bufferSize(config);
     for (Integer recv : receivingExecutors) {
       Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
-      for (int i = 0; i < maxReceiveBuffers; i++) {
-        recvList.add(new DataBuffer(channel.createBuffer(receiveBufferSize)));
-      }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
       channel.receiveMessage(recv, edge, this, recvList);
@@ -277,22 +313,52 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   /**
-   * Sends a message from a partial location
-   *
-   * @param source source id
-   * @param message the actual message
-   * @param target an specific target
-   * @param flags message flags
-   * @param routingParameters routing parameter
-   * @return true if the message is accepted
+   * Start receiving from the next set of ids
    */
-  protected boolean sendMessagePartial(int source, Object message, int target,
-                                       int flags, RoutingParameters routingParameters) {
-    // for partial sends we use minus value to find the correct queue
-    ArrayBlockingQueue<OutMessage> pendingSendMessages =
-        pendingSendMessagesPerSource.get(source * -1 - 1);
-    return offerForSend(source, message, target, flags,
-        routingParameters, pendingSendMessages);
+  public void setupReceiveGroups(List<List<Integer>> receivingIds) {
+    this.receiveIdGroups = receivingIds;
+    int max = Integer.MIN_VALUE;
+    // first lets validate
+    for (int i = 0; i < receivingIds.size(); i++) {
+      List<Integer> group = receivingIds.get(i);
+      if (group.size() > max) {
+        max = group.size();
+      }
+    }
+    // we put max group size equal buffers
+    int receiveBufferSize = DataFlowContext.bufferSize(config);
+    this.freeReceiveBuffers = new ArrayBlockingQueue<>(max);
+    for (int i = 0; i < max; i++) {
+      ByteBuffer byteBuffer = channel.createBuffer(receiveBufferSize);
+      this.freeReceiveBuffers.offer(new DataBuffer(byteBuffer));
+    }
+  }
+
+  /**
+   * Start receiving from the next receiveGroup
+   * @param receiveGroup the next receiveGroup
+   */
+  public void startGroup(int receiveGroup, int sendGroup,
+                         Map<Integer, Integer> expectedReceives) {
+    List<Integer> receiveExecs = receiveIdGroups.get(receiveGroup);
+    this.expectedReceivePerWorker = expectedReceives;
+    currentReceives.clear();
+    for (int i = 0; i < receiveExecs.size(); i++) {
+      int exec = receiveExecs.get(i);
+      int expected = expectedReceives.get(exec);
+      // we offer the buffer only if we are expecting some messages
+      if (expected > 0) {
+        Queue<DataBuffer> list = receiveBuffers.get(exec);
+        freedBuffersPoll++;
+        // poll the free receive buffers and ad to the receive
+        DataBuffer buffer = freeReceiveBuffers.poll();
+        if (buffer == null) {
+          throw new RuntimeException("Buffer cannot be null");
+        }
+        list.offer(buffer);
+      }
+      currentReceives.put(exec, 0);
+    }
   }
 
   /**
@@ -540,7 +606,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (outMessage.getSendState() == OutMessage.SendState.INIT) {
       // send it internally
       int startOfInternalRouts = outMessage.getAcceptedInternalSends();
-      List<Integer> inRoutes = outMessage.getInternalSends();
+      List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
       for (int i = startOfInternalRouts; i < outMessage.getInternalSends().size(); i++) {
         boolean receiveAccepted;
         lock.lock();
@@ -554,6 +620,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         if (!receiveAccepted) {
           canProgress = false;
           break;
+        } else {
+          receiver.sendCompleted(outMessage);
         }
         outMessage.incrementAcceptedInternalSends();
       }
@@ -609,8 +677,21 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
 
       lock.lock();
       try {
-        if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILDING
-            || currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT) {
+        // lets keep track that we have completed a receive from this executor
+        int workerId = currentMessage.getOriginatingId();
+        int count = currentReceives.get(workerId);
+        int expected = expectedReceivePerWorker.get(workerId);
+        InMessage.ReceivedState receivedState = currentMessage.getReceivedState();
+
+        if (receivedState == InMessage.ReceivedState.BUILT) {
+          // if this message is built, we need to check how many we are expecting
+          count++;
+          currentReceives.put(workerId, count);
+        }
+
+        if (receivedState == InMessage.ReceivedState.BUILDING
+            || receivedState == InMessage.ReceivedState.BUILT) {
+
           while (currentMessage.getBuiltMessages().size() > 0) {
             // get the first channel message
             ChannelMessage msg = currentMessage.getBuiltMessages().peek();
@@ -621,20 +702,43 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
               }
               ChannelMessage releaseMsg = currentMessage.getBuiltMessages().poll();
               Objects.requireNonNull(releaseMsg).release();
+
+              if (receivedState == InMessage.ReceivedState.BUILDING) {
+                freedBuffersPoll++;
+                DataBuffer buffer = freeReceiveBuffers.poll();
+                Queue<DataBuffer> list = receiveBuffers.get(workerId);
+                if (buffer == null) {
+                  throw new RuntimeException("Free buffers doesn't have any buffer");
+                }
+                // we get a free buffer and offer
+                list.offer(buffer);
+              } else {
+                if (expected > count) {
+                  freedBuffersPoll++;
+                  DataBuffer buffer = freeReceiveBuffers.poll();
+                  Queue<DataBuffer> list = receiveBuffers.get(workerId);
+                  if (buffer == null) {
+                    throw new RuntimeException("Free buffers doesn't have any buffer");
+                  }
+                  // we get a free buffer and offer
+                  list.offer(buffer);
+                }
+              }
             }
           }
 
-          if (currentMessage.getReceivedState() == InMessage.ReceivedState.BUILT
+          if (receivedState == InMessage.ReceivedState.BUILT
               && currentMessage.getBuiltMessages().size() == 0 && canProgress) {
             currentMessage.setReceivedState(InMessage.ReceivedState.RECEIVE);
           }
         }
 
-        if (currentMessage.getReceivedState() == InMessage.ReceivedState.RECEIVE) {
+        if (receivedState == InMessage.ReceivedState.RECEIVE) {
           Object object = currentMessage.getDeserializedData();
           if (!receiver.receiveMessage(currentMessage.getHeader(), object)) {
             break;
           }
+
           currentMessage.setReceivedState(InMessage.ReceivedState.DONE);
           pendingReceiveMessages.poll();
         } else {
@@ -666,26 +770,20 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     externalSendsPending.getAndDecrement();
   }
 
+  private int addedFreedBuffers = 0;
+
   private void releaseTheBuffers(int id, ChannelMessage message) {
     if (MessageDirection.IN == message.getMessageDirection()) {
-      Queue<DataBuffer> list = receiveBuffers.get(id);
+      // if we have received the full message we can release the buffer to free buffers,
+      // otherwise we need to release to receive more
       for (DataBuffer buffer : message.getNormalBuffers()) {
         // we need to reset the buffer so it can be used again
         buffer.getByteBuffer().clear();
-        if (!list.offer(buffer)) {
+        addedFreedBuffers++;
+        if (!freeReceiveBuffers.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
               executor, message.getHeader().getDestinationIdentifier()));
         }
-      }
-      if (message.getOverflowBuffers().size() > 0) {
-        for (DataBuffer byteBuffer : message.getOverflowBuffers()) {
-          byteBuffer.getByteBuffer().clear();
-          if (!localReceiveBuffers.offer(byteBuffer)) {
-            throw new RuntimeException(String.format("%d Local buffer release failed for target %d",
-                executor, message.getHeader().getDestinationIdentifier()));
-          }
-        }
-        message.getOverflowBuffers().clear();
       }
     } else if (MessageDirection.OUT == message.getMessageDirection()) {
       ArrayBlockingQueue<DataBuffer> queue = (ArrayBlockingQueue<DataBuffer>) sendBuffers;

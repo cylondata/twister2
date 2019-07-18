@@ -43,6 +43,8 @@ public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
   @Override
   protected TextInputSplit createSplit(int num, Path file, long start,
                                        long length, String[] hosts) {
+
+
     return new TextInputSplit(num, file, start, length, hosts);
   }
 
