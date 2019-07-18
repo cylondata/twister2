@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -124,6 +126,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    * We use a target array to iterator
    */
   private int[] targetsArray;
+
+  private Lock lock = new ReentrantLock();
 
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                       List<String> shuffleDirs,
@@ -254,33 +258,38 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   @Override
-  public synchronized boolean progress() {
-    boolean needFurtherProgress = false;
-    for (int i = 0; i < targetsArray.length; i++) {
-      int target = targetsArray[i];
-      Shuffle sorts = sortedMergers.get(target);
-      sorts.run();
+  public boolean progress() {
+    if (lock.tryLock()) {
+      try {
+        boolean needFurtherProgress = false;
+        for (int i = 0; i < targetsArray.length; i++) {
+          int target = targetsArray[i];
+          Shuffle sorts = sortedMergers.get(target);
+          sorts.run();
 
-      ReceiverState state = targetStates.get(target);
-      if (state != ReceiverState.SYNCED) {
-        needFurtherProgress = true;
+          ReceiverState state = targetStates.get(target);
+          if (state != ReceiverState.SYNCED) {
+            needFurtherProgress = true;
+          }
+        }
+
+        if (!needFurtherProgress) {
+          return needFurtherProgress;
+        }
+
+        for (int i = 0; i < finishedTargets.size(); i++) {
+          int target = finishedTargets.get(i);
+          if (!finishedTargetsCompleted.contains(target) && partition.isDelegateComplete()) {
+            finishTarget(target);
+            targetStates.put(target, ReceiverState.SYNCED);
+            onSyncEvent(target, null);
+            finishedTargetsCompleted.add(target);
+          }
+        }
+      } finally {
+        lock.unlock();
       }
     }
-
-    if (!needFurtherProgress) {
-      return needFurtherProgress;
-    }
-
-    for (int i = 0; i < finishedTargets.size(); i++) {
-      int target = finishedTargets.get(i);
-      if (!finishedTargetsCompleted.contains(target) && partition.isDelegateComplete()) {
-        finishTarget(target);
-        targetStates.put(target, ReceiverState.SYNCED);
-        onSyncEvent(target, null);
-        finishedTargetsCompleted.add(target);
-      }
-    }
-
     return finishedTargetsCompleted.size() != targets.size();
   }
 
