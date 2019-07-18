@@ -237,7 +237,7 @@ public final class MPIWorker {
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
 
     // now lets send the starting message
