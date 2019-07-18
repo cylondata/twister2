@@ -9,28 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset.impl;
+package edu.iu.dsc.tws.dataset.consumer;
 
-import edu.iu.dsc.tws.api.dataset.DataPartition;
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
-public class EntityPartition<T> implements DataPartition<T> {
-  private int id;
+public class IterativeConsumer<T> implements DataPartitionConsumer<T> {
+  private Iterator<T> iterator;
 
-  private T value;
-
-  public EntityPartition(int id, T val) {
-    this.id = id;
-    this.value = val;
+  public IterativeConsumer(Iterator<T> iterator) {
+    this.iterator = iterator;
   }
 
   @Override
-  public DataPartitionConsumer<T> getConsumer() {
-    return new EntityConsumer<>(value);
+  public boolean hasNext() {
+    return iterator.hasNext();
   }
 
   @Override
-  public int getPartitionId() {
-    return id;
+  public T next() {
+    return iterator.next();
   }
 }

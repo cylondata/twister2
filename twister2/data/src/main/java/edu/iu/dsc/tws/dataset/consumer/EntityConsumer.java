@@ -9,7 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.dataset.impl;
+package edu.iu.dsc.tws.dataset.consumer;
+
+import java.util.NoSuchElementException;
 
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 
@@ -24,15 +26,16 @@ public class EntityConsumer<T> implements DataPartitionConsumer<T> {
 
   @Override
   public boolean hasNext() {
-    if (consumed) {
-      return false;
-    }
-    consumed = true;
-    return true;
+    return !consumed;
   }
 
   @Override
   public T next() {
+    if (consumed) {
+      throw new NoSuchElementException();
+    } else {
+      consumed = true;
+    }
     return value;
   }
 }

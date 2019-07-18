@@ -21,43 +21,29 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.ml.svm.aggregate;
-
-import java.util.logging.Logger;
+package edu.iu.dsc.tws.dataset.partition;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.examples.ml.svm.integration.test.ICollector;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.dataset.consumer.EntityConsumer;
 
-public class IterativeSVMDataPointReduce extends BaseSink<double[][]>
-    implements ICollector<double[][]> {
+public class EntityPartition<T> implements DataPartition<T> {
+  private int id;
 
-  private static final long serialVersionUID = 5737384175970887837L;
-  private static final Logger LOG = Logger.getLogger(IterativeSVMDataPointReduce.class.getName());
+  private T value;
 
-  private double[][] newDataPoint;
-
-  private boolean debug = false;
-
-  private boolean status = false;
-
-  private OperationMode operationMode;
-
-  public IterativeSVMDataPointReduce(OperationMode operationMode) {
-    this.operationMode = operationMode;
+  public EntityPartition(int id, T val) {
+    this.id = id;
+    this.value = val;
   }
 
   @Override
-  public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), newDataPoint);
+  public DataPartitionConsumer<T> getConsumer() {
+    return new EntityConsumer<>(value);
   }
 
   @Override
-  public boolean execute(IMessage<double[][]> message) {
-    Object o = message.getContent();
-    return true;
+  public int getPartitionId() {
+    return id;
   }
 }

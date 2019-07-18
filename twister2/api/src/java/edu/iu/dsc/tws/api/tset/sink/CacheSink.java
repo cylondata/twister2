@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset.sink;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.BaseSink;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class CacheSink<T> extends BaseSink<T> {
   private DataPartition<T> partition = null;
