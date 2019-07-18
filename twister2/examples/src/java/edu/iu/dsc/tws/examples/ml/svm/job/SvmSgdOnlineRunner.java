@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.WindowArguments;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
@@ -101,7 +102,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     this.initialize()
         .paramCheck()
         .loadData()
-        .stream();
+        .stream()
+        .summary();
   }
 
   /**
@@ -167,7 +169,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
 
 
   private void loadTrainingData() {
-    DataFlowTaskGraph trainingDFTG = TGUtils.buildTrainingDataPointsTG(this.dataStreamerParallelism,
+    DataFlowTaskGraph trainingDFTG = TGUtils
+        .buildTrainingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan trainingEP = taskExecutor.plan(trainingDFTG);
     taskExecutor.execute(trainingDFTG, trainingEP);
@@ -188,7 +191,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   }
 
   private void loadTestingData() {
-    DataFlowTaskGraph testingDFTG = TGUtils.buildTestingDataPointsTG(this.dataStreamerParallelism,
+    DataFlowTaskGraph testingDFTG = TGUtils
+        .buildTestingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan testingEP = taskExecutor.plan(testingDFTG);
     taskExecutor.execute(testingDFTG, testingEP);
@@ -200,7 +204,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
       int randomIndex = new Random()
-          .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
+          .nextInt(this.svmJobParameters.getTestingSamples() / dataStreamerParallelism - 1);
       LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
           .toString(datapoints[randomIndex])));
     }
@@ -240,6 +244,14 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
     s += "======================================================================================\n";
     LOG.info(String.format(s));
+    save();
+  }
+
+  private void save() {
+    TrainedModel trainedModel = new TrainedModel(this.binaryBatchModel, accuracy, this.trainingTime,
+        this.svmJobParameters.getExperimentName() + "-online", this.svmJobParameters
+        .getParallelism());
+    trainedModel.saveModel(this.svmJobParameters.getModelSaveDir());
   }
 
   private void convert2Seconds() {
