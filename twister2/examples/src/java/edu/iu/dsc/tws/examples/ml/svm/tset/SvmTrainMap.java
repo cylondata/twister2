@@ -71,8 +71,7 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
-    double[] computedW = DataUtils.average(this.pegasosSgdSvm.getW(),
-        this.context.getParallelism());
-    return computedW;
+
+    return this.pegasosSgdSvm.getW();
   }
 }
