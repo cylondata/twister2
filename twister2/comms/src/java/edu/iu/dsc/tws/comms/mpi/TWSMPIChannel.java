@@ -261,17 +261,17 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    for (int i = 0; i < registeredReceives.size(); i++) {
-      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
-      if (debug) {
-        LOG.info(String.format("%d available receive %d %d %s", workerId, receiveRequests.rank,
-            receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
-      }
-      // okay we have more buffers to be posted
-      if (receiveRequests.availableBuffers.size() > 0) {
-        postReceive(receiveRequests);
-      }
-    }
+//    for (int i = 0; i < registeredReceives.size(); i++) {
+//      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+//      if (debug) {
+//        LOG.info(String.format("%d available receive %d %d %s", workerId, receiveRequests.rank,
+//            receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
+//      }
+//      // okay we have more buffers to be posted
+//      if (receiveRequests.availableBuffers.size() > 0) {
+//        postReceive(receiveRequests);
+//      }
+//    }
 
     IterativeLinkedList.ILLIterator sendRequestsIterator
         = waitForCompletionSends.iterator();
@@ -313,6 +313,10 @@ public class TWSMPIChannel implements TWSChannel {
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+      // okay we have more buffers to be posted
+      if (receiveRequests.availableBuffers.size() > 0) {
+        postReceive(receiveRequests);
+      }
       try {
         IterativeLinkedList.ILLIterator requestIterator
             = receiveRequests.pendingRequests.iterator();
