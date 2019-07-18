@@ -23,10 +23,10 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
  * Link represents the connections between data Links.
  * This would map to some form of communication patter in the communication layer
  *
- * @param <I0> Type output from the communication layer for the corresponding edge
- * @param <I1> Base type of the edge
+ * @param <T1> Type output from the communication layer for the corresponding edge
+ * @param <T0> Base type of the edge
  */
-public interface TLink<I0, I1> extends BuildableTLink {
+public interface TLink<T1, T0> extends BuildableTLink {
 
   /**
    * Name of the TSet and return the same tlink
@@ -34,16 +34,16 @@ public interface TLink<I0, I1> extends BuildableTLink {
    * @param name name
    * @return same TLink
    */
-  TLink<I0, I1> setName(String name);
+  TLink<T1, T0> setName(String name);
 
   /**
    * Base compute implementation
    *
-   * @param computeFunction comp function. Takes in I1 type object and map to the output type O
+   * @param computeFunction comp function. Takes in T0 type object and map to the output type O
    * @param <O> output tset base type
    * @return output TSet
    */
-  <O> TSet<O> compute(Compute<O, I0> computeFunction);
+  <O> TSet<O> compute(Compute<O, T1> computeFunction);
 
   /**
    * Base compute implementation which would take in a Collector<O>
@@ -52,38 +52,38 @@ public interface TLink<I0, I1> extends BuildableTLink {
    * @param <O> output type (Collector type)
    * @return output TSet
    */
-  <O> TSet<O> compute(ComputeCollector<O, I0> computeFunction);
+  <O> TSet<O> compute(ComputeCollector<O, T1> computeFunction);
 
   /**
    * Elementwise map operation
    *
-   * @param mapFn map function I1 to O
+   * @param mapFn map function T0 to O
    * @param <O> output type
    * @return output TSet
    */
-  <O> TSet<O> map(MapFunction<O, I1> mapFn);
+  <O> TSet<O> map(MapFunction<O, T0> mapFn);
 
   /**
    * Flatmap operation
    *
-   * @param mapFn map function which can produce multiple elements for a single <I1> element
-   * @param <O> map function to I1 to multiple elements of <O>
+   * @param mapFn map function which can produce multiple elements for a single <T0> element
+   * @param <O> map function to T0 to multiple elements of <O>
    * @return output TSet
    */
-  <O> TSet<O> flatmap(FlatMapFunction<O, I1> mapFn);
+  <O> TSet<O> flatmap(FlatMapFunction<O, T0> mapFn);
 
   /**
    * Applies a functoin elementwise
    *
    * @param applyFunction apply function
    */
-  void forEach(Apply<I1> applyFunction);
+  void forEach(Apply<T0> applyFunction);
 
   /**
    * Sink function
    *
-   * @param sinkFunction sink function which takes in <I0>. Similar to a compute, but would not
+   * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
    * return any TSet
    */
-  void sink(Sink<I0> sinkFunction);
+  void sink(Sink<T1> sinkFunction);
 }

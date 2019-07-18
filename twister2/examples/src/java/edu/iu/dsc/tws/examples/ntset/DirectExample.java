@@ -33,6 +33,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.Compute;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -45,46 +47,51 @@ public class DirectExample extends BaseTsetExample {
   public void execute(TSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
+    DirectTLink<Integer> direct = src.direct();
+
     LOG.info("test foreach");
-    src.direct()
-        .forEach(i -> LOG.info("foreach: " + i));
+    direct.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    src.direct()
-        .map(i -> i.toString() + "$$")
+    direct.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    src.direct()
-        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+    direct.flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    src.direct()
-        .compute((Compute<String, Iterator<Integer>>) input -> {
-          int sum = 0;
-          while (input.hasNext()) {
-            sum += input.next();
-          }
-          return "sum" + sum;
-        })
+    direct.compute((Compute<String, Iterator<Integer>>) input -> {
+      int sum = 0;
+      while (input.hasNext()) {
+        sum += input.next();
+      }
+      return "sum" + sum;
+    })
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    src.direct()
-        .compute((ComputeCollector<String, Iterator<Integer>>)
-            (input, output) -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next();
-              }
-              output.collect("sum" + sum);
-            })
+    direct.compute((ComputeCollector<String, Iterator<Integer>>)
+        (input, output) -> {
+          int sum = 0;
+          while (input.hasNext()) {
+            sum += input.next();
+          }
+          output.collect("sum" + sum);
+        })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test sink");
+    direct.sink((Sink<Iterator<Integer>>) value -> {
+      while (value.hasNext()) {
+        LOG.info("val =" + value.next());
+      }
+      return true;
+    });
 
   }
 
