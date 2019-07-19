@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.data.api.formatters;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +68,6 @@ public abstract class FixedInputPartitioner<OT>
 
   @Override
   public void configure(Config parameters) {
-    LOG.info("I am coming inside to configure the parameters");
     this.config = parameters;
   }
 
@@ -210,16 +211,63 @@ public abstract class FixedInputPartitioner<OT>
     String line;
     BufferedReader in = new BufferedReader(new InputStreamReader(
         fs.open(filename), StandardCharsets.UTF_8));
+    BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename.getPath()));
     byte[] b;
-
+    boolean skipLf = false;
+    int overflow = -1;
+    outerfor:
     for (int i = 0; i < numberOfSplits; i++) {
       currLineCount = 0;
       currentSplitBytes = 0;
-      while (currLineCount < splitSize && (line = in.readLine()) != null) {
-        b = line.getBytes(StandardCharsets.UTF_8);
-        //Adding 1 byte for the EOL
-        currentSplitBytes += b.length + 1;
-        currLineCount++;
+      int c;
+      char ch;
+      linewhile:
+      while (currLineCount < splitSize) {
+        if (overflow != -1) {
+          c = overflow;
+          ch = (char) c;
+          overflow = -1;
+        } else {
+          c = bis.read();
+        }
+        if (c == -1) {
+          //reached end of stream
+          break outerfor;
+        } else {
+          currentSplitBytes++;
+          ch = (char) c;
+
+          if (skipLf) {
+            skipLf = false;
+            if (ch == '\n') {
+              continue linewhile;
+            }
+          }
+
+          if (ch == '\r' || ch == '\n') {
+            currLineCount++;
+            if (ch == '\r') {
+              if (currLineCount == splitSize) {
+                c = bis.read();
+                if (c == -1) {
+                  //reached end of stream
+                  break outerfor;
+                } else {
+                  ch = (char) c;
+                  if (ch == '\n') {
+                    currentSplitBytes++;
+                    continue linewhile;
+                  } else {
+                    overflow = c;
+                  }
+                }
+              } else {
+                skipLf = true;
+              }
+            }
+          }
+
+        }
       }
       splits[i] = currentSplitBytes;
       if (currLineCount == splitSize) {
