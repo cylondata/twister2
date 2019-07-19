@@ -164,7 +164,7 @@ const Community = props => (
 <Block layout="twoColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "Our goal is to build a community to bridge the gap between high performance computing and data analytics. Join our community and help us to build better and more efficient data analytics producs",
+                content: "Our goal is to build a community to bridge the gap between high performance computing and data analytics. Join our community and help us to build better and more efficient data analytics products",
                 title: "Help Us Improve Twister2!"
             },
 ]}
