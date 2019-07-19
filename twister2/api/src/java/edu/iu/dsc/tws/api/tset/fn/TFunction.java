@@ -24,9 +24,7 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 import java.io.Serializable;
-import java.util.Map;
 
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 /**
@@ -41,45 +39,6 @@ public interface TFunction extends Serializable {
    */
   default void prepare(TSetContext context) {
 
-  }
-
-  /**
-   * Gets the input value for the given key from the input map
-   *
-   * @param key the key to be retrieved
-   * @return the object associated with the given key, null if the key is not present
-   * @deprecated Use context instead!
-   */
-  @Deprecated
-  default Object getInput(String key) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
-  }
-
-  /**
-   * Adds the given key value pair into the input map
-   *
-   * @param key the key to be added
-   * @param input the value associated with the key
-   * @deprecated Use context instead!
-   */
-  @Deprecated
-  default void addInput(String key, Cacheable<?> input) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
-  }
-
-  /**
-   * Adds the given map into the input map
-   *
-   * @param map map that contains key, input pairs that need to be added into
-   * the  input map
-   * @deprecated Use context instead!
-   */
-  @Deprecated
-  default void addInputs(Map<String, Cacheable<?>> map) {
-    throw new UnsupportedOperationException("Inputs for TSets are only supported for functions"
-        + "that extend from TBaseFunction.");
   }
 }
 
