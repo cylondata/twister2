@@ -30,26 +30,26 @@ import edu.iu.dsc.tws.api.task.graph.OperationMode;
 
 public interface MultiOutEdgeOp {
 
-  TaskContext getContext();
+  TaskContext getTaskContext();
 
   List<String> getEdges();
 
   default <T> void writeToEdges(T output) {
     int i = 0;
     while (i < getEdges().size()) {
-      getContext().write(getEdges().get(i), output);
+      getTaskContext().write(getEdges().get(i), output);
       i++;
     }
   }
 
   default void writeEndToEdges() {
-    if (getContext().getOperationMode() == OperationMode.STREAMING) {
+    if (getTaskContext().getOperationMode() == OperationMode.STREAMING) {
       return;
     }
 
     int i = 0;
     while (i < getEdges().size()) {
-      getContext().end(getEdges().get(i));
+      getTaskContext().end(getEdges().get(i));
       i++;
     }
   }
@@ -57,7 +57,7 @@ public interface MultiOutEdgeOp {
   default <K, V> void keyedWriteToEdges(K key, V value) {
     int i = 0;
     while (i < getEdges().size()) {
-      getContext().write(getEdges().get(i), key, value);
+      getTaskContext().write(getEdges().get(i), key, value);
       i++;
     }
   }

@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
@@ -35,26 +37,34 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 /**
  * takes care of preparing the compute instances and creating the out edges list
  */
-public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOutEdgeOp {
+public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOutEdgeOp, Receptor {
   private List<String> outEdges;
+
+  private TSetContext tSetContext;
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
     this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
 
-    this.getFunction().prepare(new TSetContext(cfg, ctx));
+    this.tSetContext = new TSetContext(cfg, ctx);
+    this.getFunction().prepare(tSetContext);
   }
 
   public abstract TFunction getFunction();
 
   @Override
-  public TaskContext getContext() {
+  public TaskContext getTaskContext() {
     return context;
   }
 
   @Override
   public List<String> getEdges() {
     return outEdges;
+  }
+
+  @Override
+  public void add(String name, DataObject<?> data) {
+//    tSetContext.addInput();
   }
 }

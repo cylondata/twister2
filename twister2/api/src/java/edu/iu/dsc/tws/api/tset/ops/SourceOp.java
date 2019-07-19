@@ -61,7 +61,7 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   }
 
   @Override
-  public TaskContext getContext() {
+  public TaskContext getTaskContext() {
     return this.context;
   }
 
