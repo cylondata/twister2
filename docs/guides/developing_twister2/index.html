@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Developing a Twister2 Applications · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;This guide walks you through creating a simple application using Twister2.&lt;/p&gt;
 "/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Developing a Twister2 Applications · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://dsc-spidal.github.io/twister2/"/><meta property="og:description" content="&lt;p&gt;This guide walks you through creating a simple application using Twister2.&lt;/p&gt;
-"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/favicon.ico" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Application Development</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Application Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/par_ops">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/data-access/data_access">Data Access</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
+"/><meta property="og:image" content="https://dsc-spidal.github.io/twister2/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://dsc-spidal.github.io/twister2/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/twister2/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://dsc-spidal.github.io/twister2/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://dsc-spidal.github.io/twister2/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/twister2/js/scrollSpy.js"></script><link rel="stylesheet" href="/twister2/css/main.css"/><script src="/twister2/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/twister2/"><img class="logo" src="/twister2/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/twister2/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/twister2/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/dsc-spidal/twister2" target="_self">GitHub</a></li><li class=""><a href="/twister2/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>App Development</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Getting Started</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/download">Download</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/quickstart">Quickstart</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Compiling</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/compile_overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/linux">Linux</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/macos">MacOS</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/compiling/generate-maven">Maven Artifacts</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">App Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/api_overview">API Overview</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/twister2/docs/guides/developing_twister2">Developing Applications</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/tset_api">TSet API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task_api">Task API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/op_api">Operator API</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/windowing/windowing_api">Windowing API</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Deployment</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/docker/docker">Docker</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/kubernetes/kubernetes">Kubernetes</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/mesos/mesos">Mesos</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/slurm/slurm">Slurm</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/standalone/standalone">Standalone</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/job-submit">Job Submit</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/dashboard">Dashboard</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/deployment/logging">Logging</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Concepts</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/distributed_runtime">Distributed Runtime</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/par_ops">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/task-system/concept_task">Task System</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/concepts/data-access/data_access">Data Access</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Examples</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/wordcount/wordcount">Word Count</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/comms/comm">Operators</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/collectives/task/task">Task</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/benchmark/benchmark">Benchmark</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/joins/join">Join</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/terasort/terasort">Tera Sort</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/windowing/windowing">Windowing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/kmeans/kmeans">K-Means</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/examples/ml/svm/svm">SVM</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Developer Resources</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/debugging">Debugging</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/devenv">IDE&#x27;s</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/faq">FAQ</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/developers/tests">Unit Tests</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Community</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/community/contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/twister2/docs/community/mailing">Mailing Lists</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Publications</h3><ul class=""><li class="navListItem"><a class="navItem" href="/twister2/docs/publications">Publications</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
             for (var i = 0; i < coll.length; i++) {
@@ -59,57 +59,39 @@
         </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Developing a Twister2 Applications</h1></header><article><div><span><p>This guide walks you through creating a simple application using Twister2.</p>
 <h2><a class="anchor" aria-hidden="true" id="pre-requisites"></a><a href="#pre-requisites" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Pre-Requisites</h2>
 <p>Twister2 Applications are developed as Java Applications. We recommend using Java 1.8 or higher.</p>
-<p>It is easier to use Maven to develop the application.</p>
+<p>It is easier use Maven build tool to build the application.</p>
 <h2><a class="anchor" aria-hidden="true" id="creating-the-maven-application"></a><a href="#creating-the-maven-application" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Creating the Maven application</h2>
 <p>Lets create an empty Maven application and after that add the Twister2 dependencies.</p>
-<pre><code class="hljs css language-bash">mvn archetype:generate -DgroupId=<span class="hljs-string">"twister2-hello"</span> -DartifactId=<span class="hljs-string">"hello"</span> -DarchetypeArtifactId=<span class="hljs-string">"maven-archetype-quickstart"</span>  -DinteractiveMode=<span class="hljs-literal">false</span>
+<pre><code class="hljs css language-bash">mvn archetype:generate -DgroupId=<span class="hljs-string">"helloworld"</span> -DartifactId=<span class="hljs-string">"helloworld"</span> -DarchetypeArtifactId=<span class="hljs-string">"maven-archetype-quickstart"</span>  -DinteractiveMode=<span class="hljs-literal">false</span>
 </code></pre>
-<h2><a class="anchor" aria-hidden="true" id="maven-dependency"></a><a href="#maven-dependency" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Maven Dependency</h2>
+<p>Now go inside the helloworld directory.</p>
+<pre><code class="hljs css language-java">cd helloworld
+ls
+pom.xml  src
+</code></pre>
+<p>It has <code>pom.xml</code> and <code>src</code> folder where the source files are.</p>
+<p>We need to modify the <code>pom.xml</code> and add a file <code>src/main/java/helloworld/HelloWorld.java</code>.</p>
+<h3><a class="anchor" aria-hidden="true" id="maven-dependency"></a><a href="#maven-dependency" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Maven Dependency</h3>
 <p>Now lets add the Twister2 dependencies to the pom. Please add the correct version as required.</p>
-<pre><code class="hljs css language-xml">  <span class="hljs-tag">&lt;<span class="hljs-name">dependencies</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>comms-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>proto-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>resource-scheduler-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>common-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>api-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>data-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>task-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-    <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>taskscheduler-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
-      <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
-    <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
-  <span class="hljs-tag">&lt;/<span class="hljs-name">dependencies</span>&gt;</span>
+<pre><code class="hljs css language-xml">    <span class="hljs-tag">&lt;<span class="hljs-name">dependencies</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>api-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>resource-scheduler-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>task-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">dependencies</span>&gt;</span>
 </code></pre>
-<p>You would want to develop your application as a combined jar. So add the following to the project.</p>
+<p>You would want to develop your application as a combined jar. So add the following to the pom.xml generated.</p>
 <pre><code class="hljs css language-xml">
   <span class="hljs-tag">&lt;<span class="hljs-name">build</span>&gt;</span>
       <span class="hljs-tag">&lt;<span class="hljs-name">plugins</span>&gt;</span>
@@ -147,25 +129,24 @@
   <span class="hljs-tag">&lt;/<span class="hljs-name">build</span>&gt;</span>
 
 </code></pre>
-<p>Now lets add code to the project.</p>
-<pre><code class="hljs css language-java">
-<span class="hljs-keyword">import</span> java.util.HashMap;
-<span class="hljs-keyword">import</span> java.util.List;
-<span class="hljs-keyword">import</span> java.util.logging.Level;
-<span class="hljs-keyword">import</span> java.util.logging.Logger;
+<p>Now lets add code to the project. You can add the code to the file</p>
+<pre><code class="hljs css language-bash">vi src/main/java/helloworld/HelloWorld.java
+</code></pre>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">package</span> helloworld;
 
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.JobConfig;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.Twister2Submitter;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.job.Twister2Job;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.config.Config;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.controller.IWorkerController;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.exceptions.TimeoutException;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IPersistentVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IVolatileVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IWorker;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.Twister2Job;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.config.Config;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IPersistentVolume;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IVolatileVolume;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorker;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorkerController;
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+
+<span class="hljs-keyword">import</span> java.util.HashMap;
+<span class="hljs-keyword">import</span> java.util.logging.Level;
+<span class="hljs-keyword">import</span> java.util.logging.Logger;
 
 <span class="hljs-comment">/**
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
@@ -173,51 +154,98 @@
  */</span>
 <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloWorld</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IWorker</span> </span>{
 
-  <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Logger LOG = Logger.getLogger(HelloWorld.class.getName());
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
-  <span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
-    <span class="hljs-comment">// lets retrieve the configuration set in the job config</span>
-    String helloKeyValue = config.getStringValue(<span class="hljs-string">"hello-key"</span>);
+    <span class="hljs-meta">@Override</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID,
+                        IWorkerController workerController,
+                        IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
+        <span class="hljs-comment">// lets retrieve the configuration set in the job config</span>
+        String helloKeyValue = config.getStringValue(<span class="hljs-string">"hello-key"</span>);
 
-    <span class="hljs-comment">// lets do a log to indicate we are running</span>
-    LOG.log(Level.INFO, String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
-            + <span class="hljs-string">"and I got a message: %s"</span>, workerID,
-        workerController.getNumberOfWorkers(), helloKeyValue));
-  }
-
-  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
-    <span class="hljs-comment">// lets take number of workers as an command line argument</span>
-    <span class="hljs-keyword">int</span> numberOfWorkers = <span class="hljs-number">4</span>;
-    <span class="hljs-keyword">if</span> (args.length == <span class="hljs-number">1</span>) {
-      numberOfWorkers = Integer.valueOf(args[<span class="hljs-number">0</span>]);
+        <span class="hljs-comment">// lets do a log to indicate we are running</span>
+        LOG.log(Level.INFO, String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
+                        + <span class="hljs-string">"and I got a message: %s"</span>, workerID,
+                workerController.getNumberOfWorkers(), helloKeyValue));
     }
 
-    <span class="hljs-comment">// first load the configurations from command line and config files</span>
-    Config config = ResourceAllocator.loadConfig(<span class="hljs-keyword">new</span> HashMap&lt;&gt;());
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+        <span class="hljs-comment">// lets take number of workers as an command line argument</span>
+        <span class="hljs-keyword">int</span> numberOfWorkers = <span class="hljs-number">4</span>;
+        <span class="hljs-keyword">if</span> (args.length == <span class="hljs-number">1</span>) {
+            numberOfWorkers = Integer.valueOf(args[<span class="hljs-number">0</span>]);
+        }
 
-    <span class="hljs-comment">// lets put a configuration here</span>
-    JobConfig jobConfig = <span class="hljs-keyword">new</span> JobConfig();
-    jobConfig.put(<span class="hljs-string">"hello-key"</span>, <span class="hljs-string">"Twister2-Hello"</span>);
+        <span class="hljs-comment">// first load the configurations from command line and config files</span>
+        Config config = ResourceAllocator.loadConfig(<span class="hljs-keyword">new</span> HashMap&lt;&gt;());
 
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName(<span class="hljs-string">"hello-world-job"</span>)
-        .setWorkerClass(HelloWorld.class)
-        .addComputeResource(<span class="hljs-number">2</span>, <span class="hljs-number">1024</span>, numberOfWorkers)
-        .setConfig(jobConfig)
-        .build();
-    <span class="hljs-comment">// now submit the job</span>
-    Twister2Submitter.submitJob(twister2Job, config);
-  }
+        <span class="hljs-comment">// lets put a configuration here</span>
+        JobConfig jobConfig = <span class="hljs-keyword">new</span> JobConfig();
+        jobConfig.put(<span class="hljs-string">"hello-key"</span>, <span class="hljs-string">"Twister2-Hello"</span>);
+
+        Twister2Job twister2Job = Twister2Job.newBuilder()
+                .setJobName(<span class="hljs-string">"hello-world-job"</span>)
+                .setWorkerClass(HelloWorld.class)
+                .addComputeResource(<span class="hljs-number">2</span>, <span class="hljs-number">1024</span>, numberOfWorkers)
+                .setConfig(jobConfig)
+                .build();
+        <span class="hljs-comment">// now submit the job</span>
+        Twister2Submitter.submitJob(twister2Job, config);
+    }
 }
 </code></pre>
-<p>After this lets build the project.</p>
+<h3><a class="anchor" aria-hidden="true" id="running-deploying-on-cluster"></a><a href="#running-deploying-on-cluster" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Running/Deploying on Cluster</h3>
+<p>Build your project to generate a jar file with following command.</p>
 <pre><code class="hljs css language-bash">mvn install
 </code></pre>
 <p>After this we can run this code from the Twister2 installation directory</p>
-<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar [PATH TO JAR FILE] HelloWorld 8
+<pre><code class="hljs css language-bash">./bin/twister2 submit standalone jar [PATH TO JAR FILE] HelloWorld 4
 
 </code></pre>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/concepts/api_overview"><span class="arrow-prev">← </span><span>API Overview</span></a><a class="docs-next button" href="/twister2/docs/concepts/tset_api"><span>TSet API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#pre-requisites">Pre-Requisites</a></li><li><a href="#creating-the-maven-application">Creating the Maven application</a></li><li><a href="#maven-dependency">Maven Dependency</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/favicon.ico" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/twister2/docs/en/doc2.html">Guides (or other categories)</a><a href="/twister2/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/twister2/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/twister2/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
+<h2><a class="anchor" aria-hidden="true" id="testing-on-ide"></a><a href="#testing-on-ide" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Testing on IDE</h2>
+<p>In order to test your project on IDE, you have to add the following dependency
+to your pom.xml</p>
+<pre><code class="hljs css language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>edu.iu.dsc.tws<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>local-runner-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>0.2.2<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+</code></pre>
+<p>Now change your main method as follows,</p>
+<pre><code class="hljs css language-java"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
+
+        LocalSubmitter submitter = LocalSubmitter.prepare(<span class="hljs-string">"twister2/config/src/yaml/conf"</span>);
+
+        <span class="hljs-comment">// lets take number of workers as an command line argument</span>
+        <span class="hljs-keyword">int</span> numberOfWorkers = <span class="hljs-number">4</span>;
+        <span class="hljs-keyword">if</span> (args.length == <span class="hljs-number">1</span>) {
+            numberOfWorkers = Integer.valueOf(args[<span class="hljs-number">0</span>]);
+        }
+
+        <span class="hljs-comment">// first load the configurations from command line and config files</span>
+        Config config = ResourceAllocator.loadConfig(<span class="hljs-keyword">new</span> HashMap&lt;&gt;());
+
+        <span class="hljs-comment">// lets put a configuration here</span>
+        JobConfig jobConfig = <span class="hljs-keyword">new</span> JobConfig();
+        jobConfig.put(<span class="hljs-string">"hello-key"</span>, <span class="hljs-string">"Twister2-Hello"</span>);
+
+        Twister2Job twister2Job = Twister2Job.newBuilder()
+                .setJobName(<span class="hljs-string">"hello-world-job"</span>)
+                .setWorkerClass(HelloWorld.class)
+                .addComputeResource(<span class="hljs-number">2</span>, <span class="hljs-number">1024</span>, numberOfWorkers)
+                .setConfig(jobConfig)
+                .build();
+        <span class="hljs-comment">// now submit the job</span>
+        <span class="hljs-comment">//Twister2Submitter.submitJob(twister2Job, config);</span>
+        submitter.submitJob(twister2Job, config);
+    }
+</code></pre>
+<p>With below line, you should point to a valid config directory of twister2.</p>
+<pre><code class="hljs css language-java">LocalSubmitter submitter = LocalSubmitter.prepare(<span class="hljs-string">"twister2/config/src/yaml/conf"</span>);
+</code></pre>
+<p>With following two lines, we will submit the job to an emulated cluster on your local machine.</p>
+<pre><code class="hljs css language-java">submitter.submitJob(twister2Job, config);
+</code></pre>
+<p>NOTE : Adjust the number of workers, based on the resources available in your local machine and your testing requirements.</p>
+<p>Now run or debug your program with IDE as you would normally do with any Java application.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/twister2/docs/concepts/api_overview"><span class="arrow-prev">← </span><span>API Overview</span></a><a class="docs-next button" href="/twister2/docs/concepts/tset_api"><span>TSet API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#pre-requisites">Pre-Requisites</a></li><li><a href="#creating-the-maven-application">Creating the Maven application</a><ul class="toc-headings"><li><a href="#maven-dependency">Maven Dependency</a></li><li><a href="#running-deploying-on-cluster">Running/Deploying on Cluster</a></li></ul></li><li><a href="#testing-on-ide">Testing on IDE</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/twister2/" class="nav-home"><img src="/twister2/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/twister2/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/twister2/docs/en/developing_twister2.html">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/twister2/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
