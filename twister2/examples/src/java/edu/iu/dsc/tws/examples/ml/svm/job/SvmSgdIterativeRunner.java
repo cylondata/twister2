@@ -201,6 +201,8 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .getOutput(weightVectorTaskGraph, weightVectorExecutionPlan,
             Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
     double[] w = inputDoubleWeightvectorObject.getPartitions()[0].getConsumer().next();
+    // TODO : initial load of weight vector is faulty test it
+    // Doesn't affect training
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }
 
@@ -308,7 +310,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
   private DataFlowTaskGraph buildWeightVectorTG() {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
-        this.svmJobParameters.getWeightVectorDataDir());
+        this.svmJobParameters.getWeightVectorDataDir(), 1);
     IterativeSVMWeightVectorObjectCompute weightVectorObjectCompute
         = new IterativeSVMWeightVectorObjectCompute(Context.TWISTER2_DIRECT_EDGE, 1,
         this.svmJobParameters.getFeatures());
