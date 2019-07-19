@@ -125,46 +125,48 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    lock.lock();
-    try {
-      if (!representSourceSet) {
-        this.representSource = source;
-        representSourceSet = true;
-      }
+    if (lock.tryLock()) {
+      try {
+        if (!representSourceSet) {
+          this.representSource = source;
+          representSourceSet = true;
+        }
 
-      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-        addSyncMessage(source, target);
+        if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+          addSyncMessage(source, target);
+          return true;
+        } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+          addSyncMessageBarrier(source, target, (byte[]) object);
+          return true;
+        }
+
+        // if we have a sync from this source we cannot accept more data
+        // until we finish this sync
+        if (!canAcceptMessage(source, target)) {
+          return false;
+        }
+
+        if (object instanceof ChannelMessage) {
+          ((ChannelMessage) object).incrementRefCount();
+        }
+
+        Queue<Object> msgQueue = messages.get(target);
+        addMessage(msgQueue, object);
+
+        if (msgQueue.size() > lowWaterMark) {
+          merge(target, msgQueue);
+        }
+
+        if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
+          addSyncMessage(source, target);
+        }
+
         return true;
-      } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
-        addSyncMessageBarrier(source, target, (byte[]) object);
-        return true;
+      } finally {
+        lock.unlock();
       }
-
-      // if we have a sync from this source we cannot accept more data
-      // until we finish this sync
-      if (!canAcceptMessage(source, target)) {
-        return false;
-      }
-
-      if (object instanceof ChannelMessage) {
-        ((ChannelMessage) object).incrementRefCount();
-      }
-
-      Queue<Object> msgQueue = messages.get(target);
-      addMessage(msgQueue, object);
-
-      if (msgQueue.size() > lowWaterMark) {
-        merge(target, msgQueue);
-      }
-
-      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
-        addSyncMessage(source, target);
-      }
-
-      return true;
-    } finally {
-      lock.unlock();
     }
+    return false;
   }
 
   protected void addMessage(Queue<Object> msgQueue, Object value) {

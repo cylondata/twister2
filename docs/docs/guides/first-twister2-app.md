@@ -10,17 +10,29 @@ This guide walks you through creating a simple application using Twister2.
 
 Twister2 Applications are developed as Java Applications. We recommend using Java 1.8 or higher.
 
-It is easier to use Maven to develop the application.
+It is easier use Maven build tool to build the application.
 
 ## Creating the Maven application
 
 Lets create an empty Maven application and after that add the Twister2 dependencies.
 
 ```bash
-mvn archetype:generate -DgroupId="twister2-hello" -DartifactId="hello" -DarchetypeArtifactId="maven-archetype-quickstart"  -DinteractiveMode=false
+mvn archetype:generate -DgroupId="helloworld" -DartifactId="helloworld" -DarchetypeArtifactId="maven-archetype-quickstart"  -DinteractiveMode=false
 ```
 
-## Maven Dependency
+Now go inside the helloworld directory.
+
+```java
+cd helloworld
+ls
+pom.xml  src
+```
+
+It has ```pom.xml``` and ```src``` folder where the source files are. 
+
+We need to modify the ```pom.xml``` and add a file ```src/main/java/helloworld/HelloWorld.java```.
+
+### Maven Dependency
 
 Now lets add the Twister2 dependencies to the pom. Please add the correct version as required.
 
@@ -44,7 +56,7 @@ Now lets add the Twister2 dependencies to the pom. Please add the correct versio
     </dependencies>
 ```
 
-You would want to develop your application as a combined jar. So add the following to the project.
+You would want to develop your application as a combined jar. So add the following to the pom.xml generated.
 
 ```xml
 
@@ -85,9 +97,14 @@ You would want to develop your application as a combined jar. So add the followi
 
 ```
 
-Now lets add code to the project.
+Now lets add code to the project. You can add the code to the file
+
+```bash
+vi src/main/java/helloworld/HelloWorld.java
+```
 
 ```java
+package helloworld;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
@@ -148,7 +165,20 @@ public class HelloWorld implements IWorker {
         Twister2Submitter.submitJob(twister2Job, config);
     }
 }
+```
 
+### Running/Deploying on Cluster
+
+Build your project to generate a jar file with following command.
+
+```bash
+mvn install
+```
+
+After this we can run this code from the Twister2 installation directory
+
+```bash
+./bin/twister2 submit standalone jar [PATH TO JAR FILE] HelloWorld 4
 
 ```
 
@@ -212,21 +242,5 @@ submitter.submitJob(twister2Job, config);
 NOTE : Adjust the number of workers, based on the resources available in your local machine and your testing requirements. 
 
 Now run or debug your program with IDE as you would normally do with any Java application.
-
-
-## Running/Deploying on Cluster
-
-Build your project to generate a jar file with following command.
-
-```bash
-mvn install
-```
-
-After this we can run this code from the Twister2 installation directory
-
-```bash
-./bin/twister2 submit standalone jar [PATH TO JAR FILE] HelloWorld 8
-
-```
 
 
