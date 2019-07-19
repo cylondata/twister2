@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.ISource;
-import edu.iu.dsc.tws.api.tset.CacheableImpl;
+import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.Source;
 
@@ -57,7 +57,7 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
 
   @Override
   public void add(String name, DataObject<?> data) {
-    source.addInput(name, new CacheableImpl<>(data));
+    source.addInput(name, new CacheableWrapper<>(data));
   }
 
   @Override

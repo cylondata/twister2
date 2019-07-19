@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
@@ -65,6 +66,6 @@ public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOu
 
   @Override
   public void add(String name, DataObject<?> data) {
-//    tSetContext.addInput();
+    tSetContext.addInput(name, new CacheableWrapper<>(data));
   }
 }

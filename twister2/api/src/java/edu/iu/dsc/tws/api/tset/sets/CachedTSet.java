@@ -12,12 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
@@ -148,7 +144,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
 
-  @Override
+/*  @Override
   public List<T> getData() {
     if (data == null) {
       return new ArrayList<>();
@@ -160,14 +156,14 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
       results.add(part.getConsumer().next());
     }
     return results;
-  }
+  }*/
 
   @Override
   public DataObject<T> getDataObject() {
     return data;
   }
 
-  @Override
+/*  @Override
   public T getPartitionData(int partitionId) {
     return null;
   }
@@ -180,7 +176,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 //    int curr = data.getPartitionCount();
 //    data.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
-  }
+  }*/
 
   public void setData(DataObject<T> inData) {
     this.data = inData;

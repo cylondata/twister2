@@ -11,23 +11,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 
-public class CacheableImpl<T> implements Cacheable<T> {
-  private static final Logger LOG = Logger.getLogger(CacheableImpl.class.getName());
-  //TODO: need to define the APO for cachble properly
-  private DataObject<T> data = null;
+public class CacheableWrapper<T> implements Cacheable<T> {
+  //  private static final Logger LOG = Logger.getLogger(CacheableImpl.class.getName());
+  //  TODO: need to define the APO for cachble properly
+  private DataObject<T> data;
 
-  public CacheableImpl(DataObject<T> data) {
+  public CacheableWrapper(DataObject<T> data) {
     this.data = data;
   }
 
-  @Override
+/*  @Override
   public List<T> getData() {
     if (data == null) {
       LOG.fine("Data has not been added to the data object");
@@ -39,20 +34,21 @@ public class CacheableImpl<T> implements Cacheable<T> {
       results.add(part.getConsumer().next());
     }
     return results;
-  }
+  }*/
 
   @Override
   public DataObject<T> getDataObject() {
     return data;
   }
 
-  @Override
+/*  @Override
   public T getPartitionData(int partitionId) {
-    return data.getPartition(partitionId).getConsumer().next();
+//    return data.getPartition(partitionId).getConsumer().next();
+    throw new UnsupportedOperationException("Partition needs to be traversed from its consumer");
   }
 
   @Override
   public boolean addData(T value) {
     throw new UnsupportedOperationException("Not Supported yet");
-  }
+  }*/
 }

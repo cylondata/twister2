@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.task.modifiers.Closable;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
-import edu.iu.dsc.tws.api.tset.CacheableImpl;
+import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.Sink;
 
@@ -57,6 +57,6 @@ public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Recep
 
   @Override
   public void add(String name, DataObject<?> data) {
-    sink.addInput(name, new CacheableImpl<>(data));
+    sink.addInput(name, new CacheableWrapper<>(data));
   }
 }

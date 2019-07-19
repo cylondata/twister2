@@ -61,7 +61,8 @@ public class SvmTrainMap implements MapFunction<double[], Iterator<double[][]>> 
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
     this.binaryBatchModel.setW((double[]) context
         .getInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR)
-        .getPartitionData(0));
+        .getDataObject().getPartition(0).getConsumer().next());
+    // todo: this is not the best way to do it! partitionID should correspond to task ID
 
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
         this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),

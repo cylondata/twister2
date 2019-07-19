@@ -13,9 +13,11 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
  * All Tsets that are cachable need to implement this interface
@@ -29,7 +31,19 @@ public interface Cacheable<T> extends Serializable {
    *
    * @return dataObject
    */
-  List<T> getData();
+  default List<T> getData() {
+    List<T> results = new ArrayList<>();
+
+    if (getDataObject() != null) {
+      for (DataPartition<T> partition : getDataObject().getPartitions()) {
+        while (partition.getConsumer().hasNext()) {
+          results.add(partition.getConsumer().next());
+        }
+      }
+    }
+
+    return results;
+  }
 
   /**
    * retrieve data saved in the TSet
@@ -38,20 +52,23 @@ public interface Cacheable<T> extends Serializable {
    */
   DataObject<T> getDataObject();
 
-  /**
+  /*  *//**
    * get the data from the given partition
    *
+   * This is not deprecated. Because a partition needs to be traversed using its consumer, and
+   * can not return a value T from it!
    * @param partitionId the partition ID
    * @return the data related to the given partition
-   */
+   *//*
+  @Deprecated
   T getPartitionData(int partitionId);
 
-  /**
+  *//**
    * Add Data to the data object
    *
    * @param value value to be added
    * @return true if the data was added successfully or false otherwise
-   */
-  boolean addData(T value);
+   *//*
+  boolean addData(T value);*/
 
 }
