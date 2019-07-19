@@ -20,9 +20,9 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
+import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.examples.ml.svm.integration.test.LocalTextInputPartitioner1;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
 public class SVMDataObjectSource<T, O extends InputSplit<T>> extends BaseSource {
@@ -91,7 +91,7 @@ public class SVMDataObjectSource<T, O extends InputSplit<T>> extends BaseSource 
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner1(
-        new Path(getDataDirectory()), context.getParallelism(), config));
+    this.source = runtime.createInput(cfg, context, new LocalFixedInputPartitioner(
+        new Path(getDataDirectory()), context.getParallelism(), config, this.datasize));
   }
 }
