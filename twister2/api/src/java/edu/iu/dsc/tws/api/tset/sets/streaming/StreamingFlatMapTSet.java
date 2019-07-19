@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 
 /**
  * Apply a flat map operation
@@ -25,10 +25,10 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
  */
 public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<P> {
 
-  private FlatMapFunction<T, P> mapFn;
+  private FlatMapFunc<T, P> mapFn;
 
   public StreamingFlatMapTSet(TSetEnvironment tSetEnv,
-                              FlatMapFunction<T, P> mapFunc, int parallelism) {
+                              FlatMapFunc<T, P> mapFunc, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("sflatmap"), parallelism);
     this.mapFn = mapFunc;
   }

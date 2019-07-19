@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.tset.fn.Apply;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 /**
@@ -43,7 +43,7 @@ public interface TLink<T1, T0> extends BuildableTLink {
    * @param <O> output tset base type
    * @return output TSet
    */
-  <O> TSet<O> compute(Compute<O, T1> computeFunction);
+  <O> TSet<O> compute(ComputeFunc<O, T1> computeFunction);
 
   /**
    * Base compute implementation which would take in a Collector<O>
@@ -52,7 +52,7 @@ public interface TLink<T1, T0> extends BuildableTLink {
    * @param <O> output type (Collector type)
    * @return output TSet
    */
-  <O> TSet<O> compute(ComputeCollector<O, T1> computeFunction);
+  <O> TSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
 
   /**
    * Elementwise map operation
@@ -61,7 +61,7 @@ public interface TLink<T1, T0> extends BuildableTLink {
    * @param <O> output type
    * @return output TSet
    */
-  <O> TSet<O> map(MapFunction<O, T0> mapFn);
+  <O> TSet<O> map(MapFunc<O, T0> mapFn);
 
   /**
    * Flatmap operation
@@ -70,14 +70,14 @@ public interface TLink<T1, T0> extends BuildableTLink {
    * @param <O> map function to T0 to multiple elements of <O>
    * @return output TSet
    */
-  <O> TSet<O> flatmap(FlatMapFunction<O, T0> mapFn);
+  <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
   /**
    * Applies a functoin elementwise
    *
    * @param applyFunction apply function
    */
-  void forEach(Apply<T0> applyFunction);
+  void forEach(ApplyFunc<T0> applyFunction);
 
   /**
    * Sink function
@@ -85,5 +85,5 @@ public interface TLink<T1, T0> extends BuildableTLink {
    * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
    * return any TSet
    */
-  void sink(Sink<T1> sinkFunction);
+  void sink(SinkFunc<T1> sinkFunction);
 }

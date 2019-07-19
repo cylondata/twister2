@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
 
 public class TSetContext implements Serializable {
@@ -48,7 +49,7 @@ public class TSetContext implements Serializable {
    * Inputs that are added to a TSet are stored in this
    * map to be passed to functions
    */
-  private Map<String, Cacheable<?>> inputMap;
+  private Map<String, DataObject<?>> inputMap;
 
   /**
    * The worker id this tSet instance belongs to
@@ -168,7 +169,7 @@ public class TSetContext implements Serializable {
    *
    * @return the current input map
    */
-  public Map<String, Cacheable<?>> getInputMap() {
+  public Map<String, DataObject<?>> getInputMap() {
     return inputMap;
   }
 
@@ -177,7 +178,7 @@ public class TSetContext implements Serializable {
    *
    * @param inputMap the map to be set for this context
    */
-  public void setInputMap(Map<String, Cacheable<?>> inputMap) {
+  public void setInputMap(Map<String, DataObject<?>> inputMap) {
     this.inputMap = inputMap;
   }
 
@@ -186,7 +187,7 @@ public class TSetContext implements Serializable {
    *
    * @param map the map to be added
    */
-  public void addInputMap(Map<String, Cacheable<?>> map) {
+  public void addInputMap(Map<String, DataObject<?>> map) {
     this.inputMap.putAll(map);
   }
 
@@ -196,7 +197,7 @@ public class TSetContext implements Serializable {
    * @param key key of the input object
    * @return the input object if the key is present or null
    */
-  public Cacheable<?> getInput(String key) {
+  public DataObject<?> getInput(String key) {
     return inputMap.get(key);
   }
 
@@ -206,7 +207,7 @@ public class TSetContext implements Serializable {
    * @param key the key to be associated with the input object
    * @param data the input object
    */
-  public void addInput(String key, Cacheable<?> data) {
+  public void addInput(String key, DataObject<?> data) {
     inputMap.put(key, data);
   }
 

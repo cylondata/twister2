@@ -27,10 +27,10 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class ForEachIterCompute<T> implements Compute<Object, Iterator<T>> {
-  private Apply<T> applyFn;
+public class ForEachIterCompute<T> implements ComputeFunc<Object, Iterator<T>> {
+  private ApplyFunc<T> applyFn;
 
-  public ForEachIterCompute(Apply<T> applyFunction) {
+  public ForEachIterCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }
 

@@ -29,13 +29,13 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
-  private MapFunction<Tuple<K, O>, I> mapFunction;
+  private MapFunc<Tuple<K, O>, I> mapFunction;
 
-  public MapToTupleIterOp(MapFunction<Tuple<K, O>, I> mapToTupFn) {
+  public MapToTupleIterOp(MapFunc<Tuple<K, O>, I> mapToTupFn) {
     this.mapFunction = mapToTupFn;
   }
 

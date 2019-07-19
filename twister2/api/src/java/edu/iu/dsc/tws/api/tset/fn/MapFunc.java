@@ -23,12 +23,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Collector;
-
 /**
- * Flat map function interface
+ * Map function, one input and one output
+ *
+ * @param <I> input type
+ * @param <O> output type
  */
-public interface FlatMapFunction<O, T> extends TFunction {
-
-  void flatMap(T t, Collector<O> collector);
+public interface MapFunc<O, I> extends TFunction {
+  /**
+   * Map function
+   *
+   * @param input input
+   * @return the result
+   */
+  O map(I input);
 }

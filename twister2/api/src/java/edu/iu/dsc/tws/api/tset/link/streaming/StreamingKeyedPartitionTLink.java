@@ -16,14 +16,14 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.Selector;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.SelectorFunc;
 import edu.iu.dsc.tws.api.tset.link.SingleLink;
 
 public class StreamingKeyedPartitionTLink<K, V> extends SingleLink<Tuple<K, V>> {
 
-  public StreamingKeyedPartitionTLink(TSetEnvironment tSetEnv, PartitionFunction<K> parFn,
-                                      Selector<K, V> selec, int sourceParallelism) {
+  public StreamingKeyedPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<K> parFn,
+                                      SelectorFunc<K, V> selec, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("skpartition"), sourceParallelism);
   }
 

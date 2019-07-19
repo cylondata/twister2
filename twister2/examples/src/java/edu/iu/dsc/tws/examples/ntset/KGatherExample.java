@@ -33,10 +33,10 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Apply;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -53,12 +53,12 @@ public class KGatherExample extends BaseTsetExample {
         .keyedGather();
 
     LOG.info("test foreach");
-    klink.forEach((Apply<Tuple<Integer, Iterator<Integer>>>)
+    klink.forEach((ApplyFunc<Tuple<Integer, Iterator<Integer>>>)
         data -> LOG.info("key " + data.getKey() + " " + data.getValue().toString())
     );
 
     LOG.info("test map");
-    klink.map((MapFunction<String, Tuple<Integer, Iterator<Integer>>>)
+    klink.map((MapFunc<String, Tuple<Integer, Iterator<Integer>>>)
         input -> {
           int s = 0;
           while (input.getValue().hasNext()) {
@@ -70,7 +70,7 @@ public class KGatherExample extends BaseTsetExample {
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    klink.compute((Compute<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+    klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
         input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
@@ -83,7 +83,7 @@ public class KGatherExample extends BaseTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollector<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
         (input, output) -> {
           while (input.hasNext()) {
             Tuple<Integer, Iterator<Integer>> next = input.next();

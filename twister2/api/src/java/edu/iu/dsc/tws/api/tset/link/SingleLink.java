@@ -27,12 +27,12 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Apply;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapCompute;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapCompute;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
@@ -49,17 +49,17 @@ public abstract class SingleLink<T> extends BaseTLink<T, T> implements
   }
 
   @Override
-  public <P> ComputeTSet<P, T> map(MapFunction<P, T> mapFn) {
+  public <P> ComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
     return compute(TSetUtils.generateName("map"), new MapCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, T> flatmap(FlatMapFunction<P, T> mapFn) {
+  public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
     return compute(TSetUtils.generateName("flatmap"), new FlatMapCompute<>(mapFn));
   }
 
   @Override
-  public void forEach(Apply<T> applyFunction) {
+  public void forEach(ApplyFunc<T> applyFunction) {
     ComputeTSet<Object, T> set = compute(TSetUtils.generateName("foreach"),
         new ForEachCompute<>(applyFunction));
 
@@ -67,7 +67,7 @@ public abstract class SingleLink<T> extends BaseTLink<T, T> implements
   }
 
   @Override
-  public <K, O> KeyedTSet<K, O, T> mapToTuple(MapFunction<Tuple<K, O>, T> genTupleFn) {
+  public <K, O> KeyedTSet<K, O, T> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
     KeyedTSet<K, O, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
         getTargetParallelism());
 

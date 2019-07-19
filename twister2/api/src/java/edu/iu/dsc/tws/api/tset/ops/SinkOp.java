@@ -20,29 +20,30 @@ import edu.iu.dsc.tws.api.task.modifiers.Closable;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
-import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 
 public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Receptor {
   private static final long serialVersionUID = -9398832570L;
 
-  private Sink<T> sink;
+  private SinkFunc<T> sink;
 
-  public SinkOp(Sink<T> sink) {
+  private TSetContext tSetContext;
+
+  public SinkOp(SinkFunc<T> sink) {
     this.sink = sink;
+  }
+
+  @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    tSetContext = new TSetContext(cfg, ctx);
+    sink.prepare(tSetContext);
   }
 
   @Override
   public boolean execute(IMessage<T> message) {
     sink.add(message.getContent());
     return true;
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    TSetContext tSetContext = new TSetContext(cfg, ctx);
-    sink.prepare(tSetContext);
   }
 
   @Override
@@ -57,6 +58,6 @@ public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Recep
 
   @Override
   public void add(String name, DataObject<?> data) {
-    sink.addInput(name, new CacheableWrapper<>(data));
+    tSetContext.addInput(name, data);
   }
 }

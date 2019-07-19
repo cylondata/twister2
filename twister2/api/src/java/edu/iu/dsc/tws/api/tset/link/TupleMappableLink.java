@@ -25,10 +25,10 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 public interface TupleMappableLink<I> {
 
-  <K, O> TupleTSet<K, O, I> mapToTuple(MapFunction<Tuple<K, O>, I> genTupleFn);
+  <K, O> TupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
 }

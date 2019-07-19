@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
@@ -39,6 +38,7 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
  * takes care of preparing the compute instances and creating the out edges list
  */
 public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOutEdgeOp, Receptor {
+
   private List<String> outEdges;
 
   private TSetContext tSetContext;
@@ -66,6 +66,6 @@ public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOu
 
   @Override
   public void add(String name, DataObject<?> data) {
-    tSetContext.addInput(name, new CacheableWrapper<>(data));
+    tSetContext.addInput(name, data);
   }
 }

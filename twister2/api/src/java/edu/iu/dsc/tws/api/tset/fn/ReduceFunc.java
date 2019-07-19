@@ -21,13 +21,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.task.IFunction;
 
-public interface ComputeCollector<O, I> extends TFunction {
+/**
+ * Reduce function
+ */
+public interface ReduceFunc<T> extends TFunction, IFunction<T> {
+  /**
+   * Reduce the t1 and t2 into a single value
+   *
+   * @param t1 input one
+   * @param t2 input two
+   * @return the reduced object
+   */
+  T reduce(T t1, T t2);
 
-  void compute(I input, Collector<O> output);
+  @Override
+  default T onMessage(T object1, T object2) {
+    return reduce(object1, object2);
+  }
 }
-

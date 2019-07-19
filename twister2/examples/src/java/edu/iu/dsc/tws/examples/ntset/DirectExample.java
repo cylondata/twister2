@@ -31,9 +31,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -63,7 +63,7 @@ public class DirectExample extends BaseTsetExample {
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    direct.compute((Compute<String, Iterator<Integer>>) input -> {
+    direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next();
@@ -74,7 +74,7 @@ public class DirectExample extends BaseTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    direct.compute((ComputeCollector<String, Iterator<Integer>>)
+    direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -86,7 +86,7 @@ public class DirectExample extends BaseTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    direct.sink((Sink<Iterator<Integer>>) value -> {
+    direct.sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
         LOG.info("val =" + value.next());
       }

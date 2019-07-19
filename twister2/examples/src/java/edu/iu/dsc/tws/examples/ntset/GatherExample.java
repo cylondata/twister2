@@ -32,8 +32,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -57,7 +57,7 @@ public class GatherExample extends BaseTsetExample {
 
     LOG.info("test compute");
     src.gather()
-        .compute((Compute<String, Iterator<Tuple<Integer, Integer>>>)
+        .compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
             input -> {
               int sum = 0;
               while (input.hasNext()) {
@@ -70,7 +70,7 @@ public class GatherExample extends BaseTsetExample {
 
     LOG.info("test computec");
     src.gather()
-        .compute((ComputeCollector<String, Iterator<Tuple<Integer, Integer>>>)
+        .compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {

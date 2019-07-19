@@ -37,9 +37,9 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
@@ -66,7 +66,7 @@ public interface TSet<T> extends BuildableTSet {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TLink<?, T> reduce(ReduceFunction<T> reduceFn);
+  TLink<?, T> reduce(ReduceFunc<T> reduceFn);
 
   /**
    * All reduce operation
@@ -74,7 +74,7 @@ public interface TSet<T> extends BuildableTSet {
    * @param reduceFn reduce function
    * @return this set
    */
-  TLink<?, T> allReduce(ReduceFunction<T> reduceFn);
+  TLink<?, T> allReduce(ReduceFunc<T> reduceFn);
 
   /**
    * Partition the data according the to partition function
@@ -82,7 +82,7 @@ public interface TSet<T> extends BuildableTSet {
    * @param partitionFn partition function
    * @return this set
    */
-  TLink<?, T> partition(PartitionFunction<T> partitionFn);
+  TLink<?, T> partition(PartitionFunc<T> partitionFn);
 
   /**
    * Gather the set of values into a single partition
@@ -104,7 +104,7 @@ public interface TSet<T> extends BuildableTSet {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   /**
    * Create a cloned dataset

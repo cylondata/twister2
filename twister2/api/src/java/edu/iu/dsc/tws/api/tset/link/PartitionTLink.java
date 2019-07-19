@@ -15,18 +15,18 @@ package edu.iu.dsc.tws.api.tset.link;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class PartitionTLink<T> extends IteratorLink<T> {
 
-  private PartitionFunction<T> partitionFunction;
+  private PartitionFunc<T> partitionFunction;
 
   public PartitionTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism);
   }
 
-  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunction<T> parFn,
+  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("partition"),
         sourceParallelism, sourceParallelism);

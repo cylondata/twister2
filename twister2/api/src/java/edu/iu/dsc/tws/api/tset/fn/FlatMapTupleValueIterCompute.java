@@ -31,10 +31,10 @@ import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public class FlatMapTupleValueIterCompute<O, K, I> implements
-    ComputeCollector<O, Iterator<Tuple<K, I>>> {
-  private FlatMapFunction<O, I> mapFn;
+    ComputeCollectorFunc<O, Iterator<Tuple<K, I>>> {
+  private FlatMapFunc<O, I> mapFn;
 
-  public FlatMapTupleValueIterCompute(FlatMapFunction<O, I> mapFunction) {
+  public FlatMapTupleValueIterCompute(FlatMapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
 

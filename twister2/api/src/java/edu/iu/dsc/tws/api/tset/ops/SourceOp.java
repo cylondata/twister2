@@ -13,28 +13,25 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.ISource;
-import edu.iu.dsc.tws.api.tset.CacheableWrapper;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 
 public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
-  private static final Logger LOG = Logger.getLogger(SourceOp.class.getName());
-
   private static final long serialVersionUID = -2400242961L;
 
   private TaskContext context;
+  private TSetContext tSetContext;
+
   private List<String> outEdges;
+  private SourceFunc<T> source;
 
-  private Source<T> source;
-
-  public SourceOp(Source<T> src) {
+  public SourceOp(SourceFunc<T> src) {
     this.source = src;
   }
 
@@ -51,13 +48,15 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
     this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
-    TSetContext tSetContext = new TSetContext(cfg, ctx);
-    source.prepare(tSetContext);
+
+    this.tSetContext = new TSetContext(cfg, ctx);
+
+    this.source.prepare(tSetContext);
   }
 
   @Override
   public void add(String name, DataObject<?> data) {
-    source.addInput(name, new CacheableWrapper<>(data));
+    this.tSetContext.addInput(name, data);
   }
 
   @Override

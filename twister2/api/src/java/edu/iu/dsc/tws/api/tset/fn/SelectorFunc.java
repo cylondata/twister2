@@ -23,41 +23,18 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.Serializable;
-import java.util.Set;
-
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
-// todo: remove task partitioner and partition function duplicate interfaces! check destination
-//  selector
-
 /**
- * Given a data, give the partition index
+ * Given a data T, selects a Key K
  *
- * @param <T> the type of data
+ * @param <V> data type
+ * @param <K> key type
  */
-public interface PartitionFunction<T> extends Serializable, TaskPartitioner<T> {
-
+public interface SelectorFunc<K, V> extends TFunction {
   /**
-   * Prepare the function
+   * Select key value from data t
    *
-   * @param sources source
-   * @param destinations destinations
+   * @param t data
+   * @return key
    */
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
-
-  /**
-   * Computes the partition for the given key.
-   *
-   * @param val value.
-   * @return The partition index.
-   */
-  int partition(int sourceIndex, T val);
-
-  /**
-   * Commit the partition
-   *
-   * @param source the source
-   * @param partition partition
-   */
-  void commit(int source, int partition);
+  K select(V t);
 }

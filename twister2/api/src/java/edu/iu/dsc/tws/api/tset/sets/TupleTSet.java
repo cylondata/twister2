@@ -24,8 +24,8 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
@@ -52,7 +52,7 @@ public interface TupleTSet<K, V, T> extends BuildableTSet {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TLink<?, ?> keyedReduce(ReduceFunction<V> reduceFn);
+  TLink<?, ?> keyedReduce(ReduceFunc<V> reduceFn);
 
   /**
    * Partition by key
@@ -60,6 +60,6 @@ public interface TupleTSet<K, V, T> extends BuildableTSet {
    * @param partitionFn partition function
    * @return this set
    */
-  TLink<?, ?> keyedPartition(PartitionFunction<K> partitionFn);
+  TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
 
 }

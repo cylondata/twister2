@@ -23,23 +23,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+
 /**
- * Represents a source producing values
+ * Add a value at the end of the graph
  *
- * @param <T> type of values produced by source
+ * @param <T> type of sink
  */
-public interface Source<T> extends TFunction {
+public interface SinkFunc<T> extends TFunction {
   /**
-   * Weather we have more data
+   * Add a value
    *
-   * @return true if there is more data to be read
+   * @param value the value to add
+   * @return true if success
    */
-  boolean hasNext();
+  boolean add(T value);
 
   /**
-   * Get the next value
-   *
-   * @return the next value
+   * Call this at the end
    */
-  T next();
+  default void close() {
+  }
+
+  /**
+   * Return the data partition associated with this task instance
+   */
+  default DataPartition<T> get() {
+    throw new UnsupportedOperationException("Get is not supported for this task, please"
+        + "override the get method in the Sink interface to add functionality");
+  }
 }

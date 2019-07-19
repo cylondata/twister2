@@ -28,10 +28,10 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class MapIterCompute<O, I> implements ComputeCollector<O, Iterator<I>> {
-  private MapFunction<O, I> mapFn;
+public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>> {
+  private MapFunc<O, I> mapFn;
 
-  public MapIterCompute(MapFunction<O, I> mapFunction) {
+  public MapIterCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
 

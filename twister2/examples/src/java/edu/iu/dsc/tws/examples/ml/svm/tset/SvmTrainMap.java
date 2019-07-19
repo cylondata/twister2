@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap implements MapFunction<double[], Iterator<double[][]>> {
+public class SvmTrainMap implements MapFunc<double[], Iterator<double[][]>> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 
@@ -61,7 +61,7 @@ public class SvmTrainMap implements MapFunction<double[], Iterator<double[][]>> 
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
     this.binaryBatchModel.setW((double[]) context
         .getInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR)
-        .getDataObject().getPartition(0).getConsumer().next());
+        .getPartition(0).getConsumer().next());
     // todo: this is not the best way to do it! partitionID should correspond to task ID
 
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),

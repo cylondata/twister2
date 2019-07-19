@@ -30,8 +30,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -62,7 +62,7 @@ public class PartitionExample extends BaseTsetExample {
 
     LOG.info("test compute");
     src.partition(new LoadBalancePartitioner<>())
-        .compute((Compute<Integer, Iterator<Integer>>) input -> {
+        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
@@ -74,7 +74,7 @@ public class PartitionExample extends BaseTsetExample {
 
     LOG.info("test computec");
     src.partition(new LoadBalancePartitioner<>())
-        .compute((ComputeCollector<String, Iterator<Integer>>)
+        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {
               int sum = 0;
               while (input.hasNext()) {

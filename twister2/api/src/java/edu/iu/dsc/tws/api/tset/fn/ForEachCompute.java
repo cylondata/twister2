@@ -14,10 +14,10 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class ForEachCompute<T> implements Compute<Object, T> {
-  private Apply<T> applyFn;
+public class ForEachCompute<T> implements ComputeFunc<Object, T> {
+  private ApplyFunc<T> applyFn;
 
-  public ForEachCompute(Apply<T> applyFunction) {
+  public ForEachCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }
 

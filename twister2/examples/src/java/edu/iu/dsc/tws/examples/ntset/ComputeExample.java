@@ -30,7 +30,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -44,7 +44,7 @@ public class ComputeExample extends BaseTsetExample {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
     ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
-        (Compute<Integer, Iterator<Integer>>) input -> {
+        (ComputeFunc<Integer, Iterator<Integer>>) input -> {
           int s = 0;
           while (input.hasNext()) {
             s += input.next();

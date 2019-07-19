@@ -29,11 +29,11 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Apply;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.ForEachTupleValueIterCompute;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 
@@ -60,19 +60,19 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   }*/
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<K, T>>> map(MapFunction<O, T> mapFn) {
+  public <O> ComputeTSet<O, Iterator<Tuple<K, T>>> map(MapFunc<O, T> mapFn) {
     MapTupleValueIterCompute<O, K, T> comp = new MapTupleValueIterCompute<>(mapFn);
     return compute(TSetUtils.generateName("map"), comp);
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<K, T>>> flatmap(FlatMapFunction<O, T> mapFn) {
+  public <O> ComputeTSet<O, Iterator<Tuple<K, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
     FlatMapTupleValueIterCompute<O, K, T> comp = new FlatMapTupleValueIterCompute<>(mapFn);
     return compute(TSetUtils.generateName("map"), comp);
   }
 
   @Override
-  public void forEach(Apply<T> applyFunction) {
+  public void forEach(ApplyFunc<T> applyFunction) {
     ForEachTupleValueIterCompute<K, T> comp = new ForEachTupleValueIterCompute<>(applyFunction);
     ComputeTSet<Object, Iterator<Tuple<K, T>>> foreach =
         compute(TSetUtils.generateName("foreach"), comp);

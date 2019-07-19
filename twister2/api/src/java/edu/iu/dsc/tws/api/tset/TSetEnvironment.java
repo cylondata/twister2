@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
@@ -93,7 +93,7 @@ public final class TSetEnvironment {
   }
 
   // todo: find a better OOP way of doing this!
-  public <T> BatchSourceTSet<T> createBatchSource(Source<T> source, int parallelism) {
+  public <T> BatchSourceTSet<T> createBatchSource(SourceFunc<T> source, int parallelism) {
     if (operationMode == OperationMode.STREAMING) {
       throw new RuntimeException("Batch sources can not be created in streaming mode");
     }
@@ -104,7 +104,7 @@ public final class TSetEnvironment {
     return sourceT;
   }
 
-  public <T> StreamingSourceTSet<T> createStreamingSource(Source<T> source, int parallelism) {
+  public <T> StreamingSourceTSet<T> createStreamingSource(SourceFunc<T> source, int parallelism) {
     if (operationMode == OperationMode.BATCH) {
       throw new RuntimeException("Streaming sources can not be created in batch mode");
     }
@@ -178,7 +178,6 @@ public final class TSetEnvironment {
       }
     }
   }
-
 
 
   private void buildTLinks(List<BuildableTLink> tlinks, List<? extends TBase> tSets) {

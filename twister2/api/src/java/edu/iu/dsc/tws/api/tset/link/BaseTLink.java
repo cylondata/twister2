@@ -17,9 +17,9 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 /**
  * Base link impl for all the links
+ *
  * @param <T1> output type from the comms
  * @param <T0> base type
  */
@@ -62,7 +63,7 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
     this.targetParallelism = targetP;
   }
 
-  protected <P> ComputeTSet<P, T1> compute(String n, Compute<P, T1> computeFunction) {
+  protected <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(tSetEnv, n, new ComputeOp<>(computeFunction), targetParallelism);
@@ -74,7 +75,7 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
     return set;
   }
 
-  protected <P> ComputeTSet<P, T1> compute(String n, ComputeCollector<P, T1> computeFunction) {
+  protected <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(tSetEnv, n, new ComputeCollectorOp<>(computeFunction),
@@ -89,17 +90,17 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(Compute<P, T1> computeFunction) {
+  public <P> ComputeTSet<P, T1> compute(ComputeFunc<P, T1> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(ComputeCollector<P, T1> computeFunction) {
+  public <P> ComputeTSet<P, T1> compute(ComputeCollectorFunc<P, T1> computeFunction) {
     return compute(null, computeFunction);
   }
 
   @Override
-  public void sink(Sink<T1> sinkFunction) {
+  public void sink(SinkFunc<T1> sinkFunction) {
     SinkTSet<T1> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
     addChildToGraph(sinkTSet);
     tSetEnv.run(sinkTSet);

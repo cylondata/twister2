@@ -40,9 +40,9 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.executor.core.OperationNames;
@@ -68,7 +68,7 @@ public class TSetExecDemo implements IWorker, Serializable {
     GraphBuilder graph = GraphBuilder.newBuilder();
     graph.operationMode(OperationMode.BATCH);
 
-    graph.addSource("src", new SourceOp<>(new Source<Integer>() {
+    graph.addSource("src", new SourceOp<>(new SourceFunc<Integer>() {
       private int c = 0;
 
       @Override
@@ -84,7 +84,7 @@ public class TSetExecDemo implements IWorker, Serializable {
 
 
     graph.addTask("compute",
-        new ComputeOp<>((Compute<String, Iterator<Tuple<Integer, Integer>>>)
+        new ComputeOp<>((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
             input -> {
               int sum = 0;
               while (input.hasNext()) {

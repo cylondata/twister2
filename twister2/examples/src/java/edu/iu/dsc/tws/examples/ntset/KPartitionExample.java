@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
@@ -61,7 +61,7 @@ public class KPartitionExample extends BaseTsetExample {
 
     LOG.info("test compute");
     klink.compute(
-        (Compute<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
             s.append(input.next().toString()).append(" ");
@@ -72,7 +72,7 @@ public class KPartitionExample extends BaseTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollector<String, Iterator<Tuple<Integer, Integer>>>)
+    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
         (input, output) -> {
           while (input.hasNext()) {
             output.collect(input.next().toString());

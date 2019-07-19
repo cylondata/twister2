@@ -12,10 +12,10 @@
 package edu.iu.dsc.tws.api.tset.sink;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
 
-public class FileSink<T> implements Sink<T> {
+public class FileSink<T> implements SinkFunc<T> {
   private FileOutputWriter<T> output;
 
   private int partition;

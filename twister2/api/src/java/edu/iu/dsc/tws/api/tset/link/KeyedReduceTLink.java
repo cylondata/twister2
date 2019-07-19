@@ -16,13 +16,13 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class KeyedReduceTLink<K, V> extends IteratorLink<Tuple<K, V>> {
-  private ReduceFunction<V> reduceFn;
+  private ReduceFunc<V> reduceFn;
 
-  public KeyedReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<V> rFn, int sourceParallelism) {
+  public KeyedReduceTLink(TSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("kreduce"), sourceParallelism);
     this.reduceFn = rFn;
   }

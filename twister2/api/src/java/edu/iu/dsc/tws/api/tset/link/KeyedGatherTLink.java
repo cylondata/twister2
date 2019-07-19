@@ -18,17 +18,17 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class KeyedGatherTLink<K, V> extends IteratorLink<Tuple<K, Iterator<V>>> {
-  private PartitionFunction<K> partitionFunction;
+  private PartitionFunc<K> partitionFunction;
 
   public KeyedGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism);
   }
 
-  public KeyedGatherTLink(TSetEnvironment tSetEnv, PartitionFunction<K> partitionFn,
+  public KeyedGatherTLink(TSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism);
     this.partitionFunction = partitionFn;

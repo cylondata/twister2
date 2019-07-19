@@ -15,10 +15,10 @@ package edu.iu.dsc.tws.api.tset.sink;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
 
-public class FileIterSink<T> implements Sink<Iterator<T>> {
+public class FileIterSink<T> implements SinkFunc<Iterator<T>> {
   private FileOutputWriter<T> output;
 
   private int partition;

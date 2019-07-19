@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -38,13 +38,13 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+  public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
     ReduceTLink<T> reduce = new ReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
     addChildToGraph(reduce);
     return reduce;
   }
 
-  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
     PartitionTLink<T> partition = new PartitionTLink<>(getTSetEnv(), partitionFn, getParallelism());
     addChildToGraph(partition);
     return partition;
@@ -58,7 +58,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+  public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     AllReduceTLink<T> reduce = new AllReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
     addChildToGraph(reduce);
     return reduce;
@@ -73,7 +73,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
   // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);
   }
 

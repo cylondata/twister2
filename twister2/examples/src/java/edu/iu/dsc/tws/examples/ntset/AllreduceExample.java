@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
@@ -70,7 +70,7 @@ public class AllreduceExample extends BaseTsetExample {
 
     LOG.info("test computec");
     src.allReduce(Integer::sum)
-        .compute((ComputeCollector<String, Integer>)
+        .compute((ComputeCollectorFunc<String, Integer>)
             (input, output) -> output.collect("sum=" + input))
         .direct()
         .forEach(s -> LOG.info("computec: " + s));

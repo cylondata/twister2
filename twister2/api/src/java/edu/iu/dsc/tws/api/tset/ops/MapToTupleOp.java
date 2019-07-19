@@ -27,13 +27,13 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 public class MapToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private MapFunction<Tuple<K, O>, I> mapFunction;
+  private MapFunc<Tuple<K, O>, I> mapFunction;
 
-  public MapToTupleOp(MapFunction<Tuple<K, O>, I> mapToTupFn) {
+  public MapToTupleOp(MapFunc<Tuple<K, O>, I> mapToTupFn) {
     this.mapFunction = mapToTupFn;
   }
 

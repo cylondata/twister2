@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 /**
@@ -37,9 +37,9 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
  */
 public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
 
-  private ComputeCollector<O, I> computeFunction;
+  private ComputeCollectorFunc<O, I> computeFunction;
 
-  public ComputeCollectorOp(ComputeCollector<O, I> computeFunction) {
+  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction) {
     this.computeFunction = computeFunction;
   }
 

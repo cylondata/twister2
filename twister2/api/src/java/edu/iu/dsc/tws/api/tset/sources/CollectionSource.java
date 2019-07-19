@@ -15,9 +15,9 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 
-public class CollectionSource<T> implements Source<T> {
+public class CollectionSource<T> implements SourceFunc<T> {
   /**
    * Collection to be divided
    */

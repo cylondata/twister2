@@ -26,10 +26,10 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class MapCompute<O, I> implements Compute<O, I> {
-  private MapFunction<O, I> mapFn;
+public class MapCompute<O, I> implements ComputeFunc<O, I> {
+  private MapFunc<O, I> mapFn;
 
-  public MapCompute(MapFunction<O, I> mapFunction) {
+  public MapCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
 

@@ -9,14 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset.fn;
 
-/**
- * Applies a function to data
- *
- * @param <T> data type
- */
-public interface Apply<T> extends TFunction {
-
-  void apply(T data);
+public abstract class BaseSinkFunc<T> extends BaseTFunction implements SinkFunc<T> {
 }

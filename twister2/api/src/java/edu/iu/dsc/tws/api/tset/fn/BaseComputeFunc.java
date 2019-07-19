@@ -9,21 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
+package edu.iu.dsc.tws.api.tset.fn;
 
-public class WeightVectorAverager implements MapFunc<double[], double[]> {
+public abstract class BaseComputeFunc<O, I> extends BaseTFunction implements ComputeFunc<O, I> {
 
-  private int parallelism;
-
-  public WeightVectorAverager(int parallelism) {
-    this.parallelism = parallelism;
-  }
-
-  @Override
-  public double[] map(double[] doubles) {
-    return Matrix.scalarDivide(doubles, (double) this.parallelism);
-  }
 }

@@ -43,9 +43,9 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.BaseSink;
-import edu.iu.dsc.tws.api.tset.fn.BaseSource;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
@@ -72,7 +72,7 @@ public class TSetWordCount implements TSetIWorker, Serializable {
 
     ComputeTSet<String, Iterator<String>> words =
         lines.direct()
-            .flatmap((FlatMapFunction<String, String>) (l, collector) -> {
+            .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
               StringTokenizer itr = new StringTokenizer(l);
               while (itr.hasMoreTokens()) {
                 collector.collect(itr.nextToken());
@@ -91,7 +91,7 @@ public class TSetWordCount implements TSetIWorker, Serializable {
     return OperationMode.BATCH;
   }
 
-  class WordCountFileSource extends BaseSource<String> {
+  class WordCountFileSource extends BaseSourceFunc<String> {
 
     private String inputFile;
     private DataSource<String, FileInputSplit<String>> dataSource;
@@ -140,7 +140,7 @@ public class TSetWordCount implements TSetIWorker, Serializable {
   }
 
 
-  class WordCountFileLogger extends BaseSink<Iterator<Tuple<String, Integer>>> {
+  class WordCountFileLogger extends BaseSinkFunc<Iterator<Tuple<String, Integer>>> {
     private BufferedWriter writer;
     private String fileName;
 

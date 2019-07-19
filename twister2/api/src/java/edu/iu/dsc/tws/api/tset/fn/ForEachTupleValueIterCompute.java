@@ -29,10 +29,10 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class ForEachTupleValueIterCompute<K, T> implements Compute<Object, Iterator<Tuple<K, T>>> {
-  private Apply<T> applyFn;
+public class ForEachTupleValueIterCompute<K, T> implements ComputeFunc<Object, Iterator<Tuple<K, T>>> {
+  private ApplyFunc<T> applyFn;
 
-  public ForEachTupleValueIterCompute(Apply<T> applyFunction) {
+  public ForEachTupleValueIterCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }
 

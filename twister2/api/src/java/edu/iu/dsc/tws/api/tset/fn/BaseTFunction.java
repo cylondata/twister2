@@ -9,21 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.ml.svm.tset;
+package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class WeightVectorAverager implements MapFunc<double[], double[]> {
-
-  private int parallelism;
-
-  public WeightVectorAverager(int parallelism) {
-    this.parallelism = parallelism;
-  }
+public abstract class BaseTFunction implements TFunction {
+  /**
+   * The runtime context that is made avilable to users who create functions that
+   * extend from the TBaseFunction abstract class
+   */
+  private TSetContext context;
 
   @Override
-  public double[] map(double[] doubles) {
-    return Matrix.scalarDivide(doubles, (double) this.parallelism);
+  public void prepare(TSetContext ctx) {
+    this.context = ctx;
+  }
+
+  public TSetContext getTSetContext() {
+    return context;
   }
 }

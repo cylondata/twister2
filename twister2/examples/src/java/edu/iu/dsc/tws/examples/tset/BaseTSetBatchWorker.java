@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
@@ -50,7 +50,7 @@ public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable
     }
   }
 
-  public static class TestBaseSource implements Source<int[]> {
+  public static class TestBaseSource implements SourceFunc<int[]> {
     private int count = 0;
 
     private int[] values;

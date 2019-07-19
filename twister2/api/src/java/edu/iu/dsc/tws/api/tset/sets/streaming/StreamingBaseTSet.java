@@ -26,9 +26,9 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingAllReduceTLink;
@@ -54,11 +54,11 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+  public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
     return null;
   }
 
-  public StreamingPartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+  public StreamingPartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
     StreamingPartitionTLink<T> partition = new StreamingPartitionTLink<>(getTSetEnv(),
         partitionFn, getParallelism());
     addChildToGraph(partition);
@@ -73,7 +73,7 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public StreamingAllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+  public StreamingAllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     StreamingAllReduceTLink<T> allreduce = new StreamingAllReduceTLink<>(getTSetEnv(), reduceFn,
         getParallelism());
     addChildToGraph(allreduce);
@@ -89,7 +89,7 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
     throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
   }
 

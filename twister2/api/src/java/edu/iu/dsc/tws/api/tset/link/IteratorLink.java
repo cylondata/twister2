@@ -29,11 +29,11 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.Apply;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleIterOp;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
@@ -51,17 +51,17 @@ public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> map(MapFunction<P, T> mapFn) {
+  public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
     return compute(TSetUtils.generateName("map"), new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunction<P, T> mapFn) {
+  public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
     return compute(TSetUtils.generateName("flatmap"), new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
-  public void forEach(Apply<T> applyFunction) {
+  public void forEach(ApplyFunc<T> applyFunction) {
     ComputeTSet<Object, Iterator<T>> set = compute(TSetUtils.generateName("foreach"),
         new ForEachIterCompute<>(applyFunction)
     );
@@ -70,7 +70,7 @@ public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> mapToTupFn) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
     KeyedTSet<K, V, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
         getTargetParallelism());
 

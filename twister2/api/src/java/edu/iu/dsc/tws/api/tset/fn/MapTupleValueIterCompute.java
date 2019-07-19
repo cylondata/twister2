@@ -31,11 +31,11 @@ import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
 public class MapTupleValueIterCompute<O, K, I> implements
-    ComputeCollector<O, Iterator<Tuple<K, I>>> {
+    ComputeCollectorFunc<O, Iterator<Tuple<K, I>>> {
 
-  private MapFunction<O, I> mapFn;
+  private MapFunc<O, I> mapFn;
 
-  public MapTupleValueIterCompute(MapFunction<O, I> mapFunction) {
+  public MapTupleValueIterCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
   }
 

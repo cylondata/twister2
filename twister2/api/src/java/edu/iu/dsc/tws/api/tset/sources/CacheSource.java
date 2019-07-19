@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.tset.fn.BaseSource;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 
-public class CacheSource<T> extends BaseSource<T> {
+public class CacheSource<T> extends BaseSourceFunc<T> {
   private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
   //TODO: need to check this codes logic developed now just based on the data object API

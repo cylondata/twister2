@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.BaseSource;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
@@ -73,7 +73,7 @@ public class TSetSimpleWordCount implements TSetIWorker, Serializable {
     return OperationMode.BATCH;
   }
 
-  class WordGenerator extends BaseSource<String> {
+  class WordGenerator extends BaseSourceFunc<String> {
     private Iterator<String> iter;
     private int count;
     private int maxChars;

@@ -19,9 +19,9 @@ import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -90,14 +90,14 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
+  public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
     return cacheSource.reduce(reduceFn);
   }
 
   @Override
-  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
     return cacheSource.partition(partitionFn);
@@ -111,7 +111,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
+  public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
     return cacheSource.allReduce(reduceFn);
@@ -125,7 +125,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunction<Tuple<K, V>, T> generateTuple) {
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
         getParallelism());
     return cacheSource.mapToTuple(generateTuple);

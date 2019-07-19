@@ -15,8 +15,8 @@ package edu.iu.dsc.tws.api.tset.sets;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
@@ -47,14 +47,14 @@ public class KeyedTSet<K, V, T> extends BaseTupleTSet<K, V, T> {
     this.mapToTupleOp = genTupleOp;
   }
 
-  public KeyedReduceTLink<K, V> keyedReduce(ReduceFunction<V> reduceFn) {
+  public KeyedReduceTLink<K, V> keyedReduce(ReduceFunc<V> reduceFn) {
     KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(getTSetEnv(), reduceFn,
         getParallelism());
     addChildToGraph(reduce);
     return reduce;
   }
 
-  public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunction<K> partitionFn) {
+  public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(getTSetEnv(), partitionFn,
         getParallelism());
     addChildToGraph(partition);

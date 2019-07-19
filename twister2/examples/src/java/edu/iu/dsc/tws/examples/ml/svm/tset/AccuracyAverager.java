@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class AccuracyAverager implements MapFunction<Double, Double> {
+public class AccuracyAverager implements MapFunc<Double, Double> {
 
   private static final Logger LOG = Logger.getLogger(AccuracyAverager.class.getName());
 

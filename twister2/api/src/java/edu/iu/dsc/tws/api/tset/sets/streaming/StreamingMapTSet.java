@@ -16,13 +16,13 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
 public class StreamingMapTSet<T, P> extends StreamingBaseTSet<P> {
 
-  private MapFunction<T, P> mapFn;
+  private MapFunc<T, P> mapFn;
 
-  public StreamingMapTSet(TSetEnvironment tSetEnv, MapFunction<T, P> mapFunc, int parallelism) {
+  public StreamingMapTSet(TSetEnvironment tSetEnv, MapFunc<T, P> mapFunc, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("smap"), parallelism);
     this.mapFn = mapFunc;
   }

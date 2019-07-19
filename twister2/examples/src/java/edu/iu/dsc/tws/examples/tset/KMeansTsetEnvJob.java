@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.tset.fn.Source;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
 import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
@@ -83,7 +83,7 @@ public class KMeansTsetEnvJob extends TSetBatchWorker implements Serializable {
   }
 
 
-  public class CenterSource implements Source<double[][]> {
+  public class CenterSource implements SourceFunc<double[][]> {
 
     @Override
     public boolean hasNext() {

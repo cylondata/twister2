@@ -30,9 +30,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.Compute;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollector;
-import edu.iu.dsc.tws.api.tset.fn.Sink;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -66,20 +66,20 @@ public class ReduceExample extends BaseTsetExample {
 
     LOG.info("test compute");
     reduce
-        .compute((Compute<String, Integer>)
+        .compute((ComputeFunc<String, Integer>)
             input -> "sum=" + input)
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
     LOG.info("test computec");
     reduce
-        .compute((ComputeCollector<String, Integer>)
+        .compute((ComputeCollectorFunc<String, Integer>)
             (input, output) -> output.collect("sum=" + input))
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    reduce.sink((Sink<Integer>)
+    reduce.sink((SinkFunc<Integer>)
         value -> {
           LOG.info("val =" + value);
           return true;

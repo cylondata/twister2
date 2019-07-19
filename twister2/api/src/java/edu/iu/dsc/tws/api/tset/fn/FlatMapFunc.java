@@ -23,23 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.tset.Collector;
 
 /**
- * Reduce function
+ * Flat map function interface
  */
-public interface ReduceFunction<T> extends TFunction, IFunction<T> {
-  /**
-   * Reduce the t1 and t2 into a single value
-   *
-   * @param t1 input one
-   * @param t2 input two
-   * @return the reduced object
-   */
-  T reduce(T t1, T t2);
+public interface FlatMapFunc<O, T> extends TFunction {
 
-  @Override
-  default T onMessage(T object1, T object2) {
-    return reduce(object1, object2);
-  }
+  void flatMap(T t, Collector<O> collector);
 }

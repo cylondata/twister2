@@ -27,14 +27,14 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.SingleLink;
 import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class StreamingReduceTLink<T> extends SingleLink<T> {
-  private ReduceFunction<T> reduceFn;
+  private ReduceFunc<T> reduceFn;
 
-  public StreamingReduceTLink(TSetEnvironment tSetEnv, ReduceFunction<T> rFn,
+  public StreamingReduceTLink(TSetEnvironment tSetEnv, ReduceFunc<T> rFn,
                               int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("sreduce"), sourceParallelism, 1);
     this.reduceFn = rFn;
