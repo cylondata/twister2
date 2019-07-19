@@ -23,8 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import java.io.Serializable;
-
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
@@ -32,7 +30,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
  *
  * @param <T> type of sink
  */
-public interface Sink<T> extends TFunction, Serializable {
+public interface Sink<T> extends TFunction {
   /**
    * Add a value
    *

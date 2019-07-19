@@ -34,10 +34,6 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
 
   private Source<T> source;
 
-  public SourceOp() {
-
-  }
-
   public SourceOp(Source<T> src) {
     this.source = src;
   }
@@ -55,8 +51,7 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
     this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
-        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
+    TSetContext tSetContext = new TSetContext(cfg, ctx);
     source.prepare(tSetContext);
   }
 

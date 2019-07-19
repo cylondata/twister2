@@ -54,6 +54,7 @@ public final class TSetEnvironment {
   private OperationMode operationMode;
 
   private int defaultParallelism = 1;
+
   private Map<String, Map<String, Cacheable<?>>> inputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
@@ -121,6 +122,33 @@ public final class TSetEnvironment {
 //    this.taskExecutor.execute(graph, executionPlan);
   }
 
+  public void run(BaseTSet leafTset) {
+    List<BuildableTLink> linksPlan = new ArrayList<>();
+    List<BuildableTSet> setsPlan = new ArrayList<>();
+
+    invertedBFS(leafTset, linksPlan, setsPlan);
+
+    LOG.info("Node build plan: " + setsPlan);
+    buildTSets(setsPlan);
+
+    LOG.info("Edge build plan: " + linksPlan);
+    buildTLinks(linksPlan, setsPlan);
+
+    DataFlowTaskGraph dataflowGraph = tsetGraph.getDfwGraphBuilder().build();
+    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
+
+    ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
+
+    LOG.fine(executionPlan.toString());
+    LOG.fine("edges: " + dataflowGraph.getDirectedEdgesSet());
+    LOG.fine("vertices: " + dataflowGraph.getTaskVertexSet());
+
+    taskExecutor.execute(dataflowGraph, executionPlan);
+
+    // once a graph is built and executed, reset the underlying builder!
+    tsetGraph.resetDfwGraphBuilder();
+  }
+
   public <T> DataObject<T> runAndGet(String sinkName) {
 //    DataFlowTaskGraph graph = tSetBuilder.build();
 //    ExecutionPlan executionPlan = taskExecutor.plan(graph);
@@ -151,32 +179,6 @@ public final class TSetEnvironment {
     }
   }
 
-  public void executeTSet(BaseTSet leafTset) {
-    List<BuildableTLink> linksPlan = new ArrayList<>();
-    List<BuildableTSet> setsPlan = new ArrayList<>();
-
-    invertedBFS(leafTset, linksPlan, setsPlan);
-
-    LOG.info("Node build plan: " + setsPlan);
-    buildTSets(setsPlan);
-
-    LOG.info("Edge build plan: " + linksPlan);
-    buildTLinks(linksPlan, setsPlan);
-
-    DataFlowTaskGraph dataflowGraph = tsetGraph.getDfwGraphBuilder().build();
-    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
-
-    ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
-
-    LOG.fine(executionPlan.toString());
-    LOG.fine("edges: " + dataflowGraph.getDirectedEdgesSet());
-    LOG.fine("vertices: " + dataflowGraph.getTaskVertexSet());
-
-    taskExecutor.execute(dataflowGraph, executionPlan);
-
-    // once a graph is built and executed, reset the underlying builder!
-    tsetGraph.resetDfwGraphBuilder();
-  }
 
 
   private void buildTLinks(List<BuildableTLink> tlinks, List<? extends TBase> tSets) {

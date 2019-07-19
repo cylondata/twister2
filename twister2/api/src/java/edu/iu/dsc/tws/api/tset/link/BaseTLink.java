@@ -102,7 +102,7 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
   public void sink(Sink<T1> sinkFunction) {
     SinkTSet<T1> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
     addChildToGraph(sinkTSet);
-    tSetEnv.executeTSet(sinkTSet);
+    tSetEnv.run(sinkTSet);
   }
 
   public String getName() {

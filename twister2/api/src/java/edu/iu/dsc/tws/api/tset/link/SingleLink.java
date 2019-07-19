@@ -63,7 +63,7 @@ public abstract class SingleLink<T> extends BaseTLink<T, T> implements
     ComputeTSet<Object, T> set = compute(TSetUtils.generateName("foreach"),
         new ForEachCompute<>(applyFunction));
 
-    getTSetEnv().executeTSet(set);
+    getTSetEnv().run(set);
   }
 
   @Override

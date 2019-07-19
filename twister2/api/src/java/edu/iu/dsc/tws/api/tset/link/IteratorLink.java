@@ -66,7 +66,7 @@ public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
         new ForEachIterCompute<>(applyFunction)
     );
 
-    getTSetEnv().executeTSet(set);
+    getTSetEnv().run(set);
   }
 
   @Override

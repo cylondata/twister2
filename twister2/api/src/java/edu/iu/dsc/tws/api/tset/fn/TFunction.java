@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 public interface TFunction extends Serializable {
 
   /**
-   * Prepare the function
+   * Prepare the function. Use this context in case you need to add/get inputs
    *
    * @param context CONTEXT
    */

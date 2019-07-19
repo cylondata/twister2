@@ -77,6 +77,6 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
     ComputeTSet<Object, Iterator<Tuple<K, T>>> foreach =
         compute(TSetUtils.generateName("foreach"), comp);
     addChildToGraph(foreach);
-    getTSetEnv().executeTSet(foreach);
+    getTSetEnv().run(foreach);
   }
 }
