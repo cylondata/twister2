@@ -29,6 +29,8 @@ import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sink.CacheSink;
 import edu.iu.dsc.tws.api.tset.sources.CacheSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 
@@ -37,50 +39,19 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   //  visible to the executor
   private DataObject<T> data;
 
+  private SinkOp<T> sinkOp;
+
   public CachedTSet(TSetEnvironment tSetEnv, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("cached"), parallelism);
-    data = new DataObjectImpl<>(tSetEnv.getConfig());
-  }
+    this.data = new DataObjectImpl<>(tSetEnv.getConfig());
 
-  // todo: operations like map is different on a cached tset, because map will be done on data in
-  //  the execution runtime, rather than a source task
-
-  @Override
-  public void build(TSetGraph tSetGraph) {
-//    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-//    boolean keyed = TSetUtils.isKeyedInput(parent);
-//    // lets override the parallelism
-//    int para = calculateParallelism(parent);
-//    Sink<T> cacheSink = new CacheSink();
-//    ComputeConnection connection =
-//    tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-//        new SinkOp<>(cacheSink, isIterable, keyed), para);
-//    parent.buildConnection(connection);
-//    return true;
+    this.sinkOp = new SinkOp<>(new CacheSink<>());
   }
 
   @Override
   public ICompute getINode() {
-    return null;
+    return sinkOp;
   }
-
-//  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
-//    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
-//        getParallelism());
-//    return cacheSource.map(mFn);
-//  }
-//
-//  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-//    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
-//        getParallelism());
-//    return cacheSource.flatMap(mFn);
-//  }
-
-/*  public SinkTSet<T> sink(Sink<T> sink) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
-        getParallelism());
-    return cacheSource.sink(sink);
-  }*/
 
   @Override
   public DirectTLink<T> direct() {
@@ -142,21 +113,6 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   public CachedTSet<T> cache() {
     throw new IllegalStateException("Calling Cache on an already cached Object");
   }
-
-
-/*  @Override
-  public List<T> getData() {
-    if (data == null) {
-      return new ArrayList<>();
-    }
-
-    DataPartition<T>[] parts = data.getPartitions();
-    List<T> results = new ArrayList<>();
-    for (DataPartition<T> part : parts) {
-      results.add(part.getConsumer().next());
-    }
-    return results;
-  }*/
 
   @Override
   public DataObject<T> getDataObject() {

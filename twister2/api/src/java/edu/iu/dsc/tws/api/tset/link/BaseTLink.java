@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.api.tset.link;
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
@@ -23,8 +24,10 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 /**
  * Base link impl for all the links
@@ -104,6 +107,17 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
     SinkTSet<T1> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
     addChildToGraph(sinkTSet);
     tSetEnv.run(sinkTSet);
+  }
+
+  @Override
+  public <TO> CachedTSet<TO> cache() {
+    CachedTSet<TO> cacheTSet = new CachedTSet<>(tSetEnv, targetParallelism);
+    addChildToGraph(cacheTSet);
+
+    DataObject<TO> output = tSetEnv.runAndGet(cacheTSet);
+    cacheTSet.setData(output);
+
+    return cacheTSet;
   }
 
   public String getName() {

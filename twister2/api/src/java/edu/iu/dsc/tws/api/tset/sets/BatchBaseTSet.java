@@ -90,21 +90,6 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
   @Override
   public CachedTSet<T> cache() {
-//    // todo: why cant we add a single cache tset here?
-//    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv());
-//    addChildToGraph(direct);
-//    CachedTSet<T> cacheTSet = new CachedTSet<>(config, tSetEnv, direct, parallel);
-//    direct.getChildren().add(cacheTSet);
-//    cacheTSet.setData(tSetEnv.runAndGet(cacheTSet.getName()));
-//
-//    tSetEnv.reset();
-//    return cacheTSet;
-    return null;
+    return direct().cache();
   }
-
-/*  public void sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    direct.sink(sink);
-  }*/
 }

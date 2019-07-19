@@ -55,7 +55,7 @@ public final class TSetEnvironment {
 
   private int defaultParallelism = 1;
 
-  private Map<String, Map<String, Cacheable<?>>> inputMap = new HashMap<>();
+  private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
   private static int taskGraphCount = 0;
@@ -123,10 +123,19 @@ public final class TSetEnvironment {
   }
 
   public void run(BaseTSet leafTset) {
+    doRun(leafTset, false);
+  }
+
+  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
+    return doRun(leafTset, true);
+  }
+
+  private <T> DataObject<T> doRun(BaseTSet leafTSet, boolean returnOutput) {
+
     List<BuildableTLink> linksPlan = new ArrayList<>();
     List<BuildableTSet> setsPlan = new ArrayList<>();
 
-    invertedBFS(leafTset, linksPlan, setsPlan);
+    invertedBFS(leafTSet, linksPlan, setsPlan);
 
     LOG.info("Node build plan: " + setsPlan);
     buildTSets(setsPlan);
@@ -143,25 +152,24 @@ public final class TSetEnvironment {
     LOG.fine("edges: " + dataflowGraph.getDirectedEdgesSet());
     LOG.fine("vertices: " + dataflowGraph.getTaskVertexSet());
 
+    pushInputsToFunctions(dataflowGraph, executionPlan);
     taskExecutor.execute(dataflowGraph, executionPlan);
 
     // once a graph is built and executed, reset the underlying builder!
     tsetGraph.resetDfwGraphBuilder();
-  }
 
-  public <T> DataObject<T> runAndGet(String sinkName) {
-//    DataFlowTaskGraph graph = tSetBuilder.build();
-//    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-//    pushInputsToFunctions(graph, executionPlan);
-//    this.taskExecutor.execute(graph, executionPlan);
-//    return this.taskExecutor.getOutput(graph, executionPlan, sinkName);
+    if (returnOutput) {
+      return this.taskExecutor.getOutput(null, executionPlan, leafTSet.getName());
+    }
+
     return null;
   }
 
+
   public void addInput(String taskName, String key, Cacheable<?> input) {
-    Map<String, Cacheable<?>> temp = inputMap.getOrDefault(taskName, new HashMap<>());
+    Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
     temp.put(key, input);
-    inputMap.put(taskName, temp);
+    tSetInputMap.put(taskName, temp);
   }
 
   /**
@@ -170,8 +178,8 @@ public final class TSetEnvironment {
    * @param executionPlan the built execution plan
    */
   private void pushInputsToFunctions(DataFlowTaskGraph graph, ExecutionPlan executionPlan) {
-    for (String taskName : inputMap.keySet()) {
-      Map<String, Cacheable<?>> tempMap = inputMap.get(taskName);
+    for (String taskName : tSetInputMap.keySet()) {
+      Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
       for (String keyName : tempMap.keySet()) {
         taskExecutor.addInput(graph, executionPlan, taskName,
             keyName, tempMap.get(keyName).getDataObject());

@@ -108,7 +108,7 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
 
   @Override
   public CachedTSet<T> cache() {
-    throw new UnsupportedOperationException("Cache is not avilable in streaming operations");
+    throw new UnsupportedOperationException("Cache is not available in streaming operations");
   }
 
 /*  public void sink(Sink<T> sink) {

@@ -73,6 +73,14 @@ public interface TLink<T1, T0> extends BuildableTLink {
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
   /**
+   * Runs the dataflow graph and caches data in memory
+   *
+   * @param <TO> output tset type
+   * @return output TSet
+   */
+  <TO> TSet<TO> cache();
+
+  /**
    * Applies a functoin elementwise
    *
    * @param applyFunction apply function
