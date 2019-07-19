@@ -39,7 +39,7 @@ public class DataObjectImpl<T> implements DataObject<T> {
     partitions.put(partition.getPartitionId(), partition);
   }
 
-  public DataPartition<T>[] getPartition() {
+  public DataPartition<T>[] getPartitions() {
     DataPartition<T>[] parts = new DataPartition[partitions.size()];
     return partitions.values().toArray(parts);
   }

@@ -157,7 +157,7 @@ public class TeraSort extends TaskWorker {
           sampleTaskPlan, TASK_SAMPLER_REDUCE);
       LOG.info("Sample output received");
       taskPartitioner = new TaskPartitionerForSampledData(
-          output.getPartition()[0].getConsumer().next(),
+          output.getPartitions()[0].getConsumer().next(),
           keySize
       );
     } else {

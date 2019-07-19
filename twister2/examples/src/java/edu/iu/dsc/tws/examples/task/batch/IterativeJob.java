@@ -68,7 +68,7 @@ public class IterativeJob extends TaskWorker {
       // this is a blocking call
       taskExecutor.itrExecute(graph, plan);
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
-      DataPartition<Object>[] values = dataSet.getPartition();
+      DataPartition<Object>[] values = dataSet.getPartitions();
     }
     taskExecutor.waitFor(graph, plan);
   }

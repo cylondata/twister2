@@ -33,7 +33,7 @@ public class CacheableImpl<T> implements Cacheable<T> {
       LOG.fine("Data has not been added to the data object");
       return new ArrayList<>();
     }
-    DataPartition<T>[] parts = data.getPartition();
+    DataPartition<T>[] parts = data.getPartitions();
     List<T> results = new ArrayList();
     for (DataPartition<T> part : parts) {
       results.add(part.getConsumer().next());

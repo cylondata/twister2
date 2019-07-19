@@ -165,8 +165,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     trainingDoubleDataPointObject = taskExecutor
         .getOutput(trainingDFTG, trainingEP,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
-    for (int i = 0; i < trainingDoubleDataPointObject.getPartition().length; i++) {
-      double[][] datapoints = trainingDoubleDataPointObject.getPartition()[i].getConsumer()
+    for (int i = 0; i < trainingDoubleDataPointObject.getPartitions().length; i++) {
+      double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[i].getConsumer()
           .next();
       LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0]
           .length));
@@ -186,8 +186,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     testingDoubleDataPointObject = taskExecutor
         .getOutput(testingDFTG, testingEP,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING);
-    for (int i = 0; i < testingDoubleDataPointObject.getPartition().length; i++) {
-      double[][] datapoints = testingDoubleDataPointObject.getPartition()[i].getConsumer().next();
+    for (int i = 0; i < testingDoubleDataPointObject.getPartitions().length; i++) {
+      double[][] datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
       int randomIndex = new Random()
@@ -205,7 +205,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     inputDoubleWeightvectorObject = taskExecutor
         .getOutput(weightVectorTaskGraph, weightVectorExecutionPlan,
             Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
-    double[] w = inputDoubleWeightvectorObject.getPartition()[0].getConsumer().next();
+    double[] w = inputDoubleWeightvectorObject.getPartitions()[0].getConsumer().next();
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }
 
@@ -258,7 +258,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
 //    currentDataPoint = taskExecutor.getOutput(streamingTrainingTG,
 //        executionPlan,
 //        Constants.SimpleGraphConfig.ITERATIVE_STREAMING_SVM_COMPUTE);
-//    double[] dp = currentDataPoint.getPartition(0).getConsumer().next();
+//    double[] dp = currentDataPoint.getPartitions(0).getConsumer().next();
 //    LOG.info(String.format("DataPoint[%d] : %s", count++, Arrays.toString(dp)));
   }
 

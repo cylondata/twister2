@@ -33,7 +33,7 @@ public interface DataObject<T> extends Serializable {
    *
    * @return the partitions
    */
-  DataPartition<T>[] getPartition();
+  DataPartition<T>[] getPartitions();
 
   /**
    * Get the partition with the specific partition id
