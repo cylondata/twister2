@@ -126,6 +126,6 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   @Override
   public String toString() {
-    return "Tset{" + getName() + "[" + getParallelism() + "]}";
+    return "S{" + getName() + "[" + getParallelism() + "]}";
   }
 }

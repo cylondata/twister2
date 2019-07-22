@@ -35,19 +35,33 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
+import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 
 public class TSetGraph {
+  private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
+
+  private static int taskGraphCount = 0;
 
   private TSetEnvironment env;
-
   private MutableGraph<TBase> graph;
-
   private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
   private OperationMode opMode;
 
@@ -99,7 +113,7 @@ public class TSetGraph {
     return this.graph.predecessors(tSet);
   }
 
-  public boolean removeNode(TBase tSet) {
+  private boolean removeNode(TBase tSet) {
     return this.graph.removeNode(tSet);
   }
 
@@ -116,4 +130,99 @@ public class TSetGraph {
     this.dfwGraphBuilder.operationMode(opMode);
   }
 
+  /**
+   * Builds the entire graph
+   *
+   * @return data flow graph to execute
+   */
+  public DataFlowTaskGraph build() {
+    return null;
+  }
+
+  /**
+   * Builds a subgraph of TSets from the specified TSet
+   *
+   * @param leafTSet leaf tset
+   * @return data flow graph to execute the subgraph of TSets
+   */
+  public DataFlowTaskGraph build(BuildableTSet leafTSet) {
+    List<BuildableTLink> linksPlan = new ArrayList<>();
+    List<BuildableTSet> setsPlan = new ArrayList<>();
+
+    List<TBase> buildOrder = invertedBFS(leafTSet, linksPlan, setsPlan);
+
+    LOG.info(() -> "Build order: " + buildOrder.toString());
+
+    LOG.fine(() -> "Node build plan: " + setsPlan);
+    for (BuildableTSet baseTSet : setsPlan) {
+      baseTSet.build(this);
+    }
+
+    LOG.fine(() -> "Edge build plan: " + linksPlan);
+    // links need to be built in order. check issue #519
+    for (int i = 0; i < linksPlan.size(); i++) {
+      linksPlan.get(linksPlan.size() - i - 1).build(this, setsPlan);
+    }
+
+    DataFlowTaskGraph dataflowGraph = getDfwGraphBuilder().build();
+    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
+
+    // clean the upstream of the cached tsets
+    if (cleanUpstream(setsPlan)) {
+      LOG.info("Some TSets have been cleaned up!");
+    }
+
+    return dataflowGraph;
+  }
+
+  private List<TBase> invertedBFS(BuildableTSet s, List<BuildableTLink> links,
+                                  List<BuildableTSet> sets) {
+    List<TBase> buildOrder = new ArrayList<>();
+
+    Map<TBase, Boolean> visited = new HashMap<>();
+
+    Deque<TBase> queue = new LinkedList<>();
+
+    visited.put(s, true);
+    queue.add(s);
+
+    while (queue.size() != 0) {
+      TBase t = queue.poll();
+      buildOrder.add(t);
+      if (t instanceof BuildableTLink) {
+        links.add((BuildableTLink) t);
+      } else if (t instanceof BuildableTSet) {
+        sets.add((BuildableTSet) t);
+      }
+
+      for (TBase parent : getPredecessors(t)) {
+        if (visited.get(parent) == null || !visited.get(parent)) {
+          visited.put(parent, true);
+          queue.add(parent);
+        }
+      }
+    }
+
+    Collections.reverse(buildOrder);
+
+    return buildOrder;
+  }
+
+  private boolean cleanUpstream(List<BuildableTSet> tSets) {
+    Set<TBase> toRemove = new HashSet<>();
+
+    boolean changed = false;
+
+    for (BuildableTSet tset : tSets) {
+      if (tset instanceof CachedTSet) {
+        toRemove.addAll(getPredecessors(tset));
+      }
+    }
+
+    for (TBase tset : toRemove) {
+      changed = changed || removeNode(tset);
+    }
+
+    return changed;
+  }
 }

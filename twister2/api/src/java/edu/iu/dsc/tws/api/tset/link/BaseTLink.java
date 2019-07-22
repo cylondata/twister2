@@ -143,9 +143,9 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
 
   @Override
   public String toString() {
-    return "Tlink{" + getName()
-        + " s=" + tSetEnv.getGraph().getPredecessors(this)
-        + " t=" + tSetEnv.getGraph().getSuccessors(this)
+    return "L{" + getName()
+        + tSetEnv.getGraph().getPredecessors(this)
+        + "->" + tSetEnv.getGraph().getSuccessors(this)
         + "}";
   }
 }

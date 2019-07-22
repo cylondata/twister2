@@ -23,14 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -40,11 +34,9 @@ import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -61,13 +53,14 @@ public final class TSetEnvironment {
   private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
-  private static int taskGraphCount = 0;
 
   private TSetEnvironment(WorkerEnvironment wEnv, OperationMode opMode) {
     this.workerEnv = wEnv;
     this.operationMode = opMode;
 
     this.tsetGraph = new TSetGraph(this, opMode);
+
+    // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
   }
 
@@ -118,42 +111,51 @@ public final class TSetEnvironment {
     return sourceT;
   }
 
-  public void run() { // todo: is this the best name? or should this be a method in the tset?
-//    DataFlowTaskGraph graph = tSetBuilder.build();
-//    ExecutionPlan executionPlan = taskExecutor.plan(graph);
-//    pushInputsToFunctions(graph, executionPlan);
-//    this.taskExecutor.execute(graph, executionPlan);
+  /**
+   * Runs the entire TSet graph
+   */
+  public void run() {
+    DataFlowTaskGraph graph = tsetGraph.build();
+    executeDataFlowGraph(graph, null);
   }
 
+  /**
+   * Runs a subgraph of TSets from the specified TSet
+   *
+   * @param leafTset leaf tset
+   */
   public void run(BaseTSet leafTset) {
-    doRun(leafTset, false);
+    DataFlowTaskGraph dataflowGraph = tsetGraph.build(leafTset);
+    executeDataFlowGraph(dataflowGraph, null);
   }
 
+  /**
+   * Runs a subgraph of TSets from the specified TSet and output results as a tset
+   *
+   * @param leafTset leaf tset
+   * @param <T> type of the output data object
+   * @return output result as a data object
+   */
   public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-    return doRun(leafTset, true);
+    DataFlowTaskGraph dataflowGraph = tsetGraph.build(leafTset);
+    return executeDataFlowGraph(dataflowGraph, leafTset);
   }
 
-  private <T> DataObject<T> doRun(BaseTSet leafTSet, boolean returnOutput) {
-
-    List<BuildableTLink> linksPlan = new ArrayList<>();
-    List<BuildableTSet> setsPlan = new ArrayList<>();
-
-    invertedBFS(leafTSet, linksPlan, setsPlan);
-
-    LOG.info("Node build plan: " + setsPlan);
-    buildTSets(setsPlan);
-
-    LOG.info("Edge build plan: " + linksPlan);
-    buildTLinks(linksPlan, setsPlan);
-
-    DataFlowTaskGraph dataflowGraph = tsetGraph.getDfwGraphBuilder().build();
-    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
-
+  /**
+   * execute data flow graph
+   *
+   * @param dataflowGraph data flow graph
+   * @param outputTset output tset. If null, then no output would be returned
+   * @param <T> type of the output data object
+   * @return output as a data object if outputTset is not null. Else null
+   */
+  private <T> DataObject<T> executeDataFlowGraph(DataFlowTaskGraph dataflowGraph,
+                                                 BuildableTSet outputTset) {
     ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
 
-    LOG.fine(executionPlan.toString());
-    LOG.fine("edges: " + dataflowGraph.getDirectedEdgesSet());
-    LOG.fine("vertices: " + dataflowGraph.getTaskVertexSet());
+    LOG.fine(executionPlan::toString);
+    LOG.fine(() -> "edges: " + dataflowGraph.getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + dataflowGraph.getTaskVertexSet());
 
     pushInputsToFunctions(dataflowGraph, executionPlan);
     taskExecutor.execute(dataflowGraph, executionPlan);
@@ -161,13 +163,8 @@ public final class TSetEnvironment {
     // once a graph is built and executed, reset the underlying builder!
     tsetGraph.resetDfwGraphBuilder();
 
-    // clean the upstream of the cached tsets
-    if (cleanUpstream(setsPlan)) {
-      LOG.info("Some TSets have been cleaned up!");
-    }
-
-    if (returnOutput) {
-      return this.taskExecutor.getOutput(null, executionPlan, leafTSet.getName());
+    if (outputTset != null) {
+      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getName());
     }
 
     return null;
@@ -191,63 +188,6 @@ public final class TSetEnvironment {
       for (String keyName : tempMap.keySet()) {
         taskExecutor.addInput(graph, executionPlan, taskName,
             keyName, tempMap.get(keyName).getDataObject());
-      }
-    }
-  }
-
-
-  private void buildTLinks(List<BuildableTLink> tlinks, List<? extends TBase> tSets) {
-    // links need to be built in order. check issue #519
-    for (int i = 0; i < tlinks.size(); i++) {
-      tlinks.get(tlinks.size() - i - 1).build(tsetGraph, tSets);
-    }
-  }
-
-  private void buildTSets(List<BuildableTSet> tsets) {
-    for (BuildableTSet baseTSet : tsets) {
-      baseTSet.build(tsetGraph);
-    }
-  }
-
-  private boolean cleanUpstream(List<BuildableTSet> tSets) {
-    Set<TBase> toRemove = new HashSet<>();
-
-    boolean changed = false;
-
-    for (BuildableTSet tset : tSets) {
-      if (tset instanceof CachedTSet) {
-        toRemove.addAll(tsetGraph.getPredecessors(tset));
-      }
-    }
-
-    for (TBase tset : toRemove) {
-      changed = changed || tsetGraph.removeNode(tset);
-    }
-
-    return changed;
-  }
-
-  private void invertedBFS(TBase s, List<BuildableTLink> links, List<BuildableTSet> sets) {
-    Map<TBase, Boolean> visited = new HashMap<>();
-
-    Deque<TBase> queue = new LinkedList<>();
-
-    visited.put(s, true);
-    queue.add(s);
-
-    while (queue.size() != 0) {
-      TBase t = queue.poll();
-      if (t instanceof BuildableTLink) {
-        links.add((BuildableTLink) t);
-      } else if (t instanceof BuildableTSet) {
-        sets.add((BuildableTSet) t);
-      }
-
-      for (TBase parent : tsetGraph.getPredecessors(t)) {
-        if (visited.get(parent) == null || !visited.get(parent)) {
-          visited.put(parent, true);
-          queue.add(parent);
-        }
       }
     }
   }
