@@ -26,8 +26,6 @@ import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
 
 /**
  * Attaches a key to the oncoming data.
- * NOTE: does not create a physical icompute task, but rather holds the partitioner and selector
- * information for the downstream keyed tsets
  *
  * @param <K> key type
  * @param <V> data (value) type

@@ -10,20 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-
-package edu.iu.dsc.tws.examples.ntset;
+package edu.iu.dsc.tws.examples.ntset.basic;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,38 +20,49 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KPartitionExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(KPartitionExample.class.getName());
+public class KGatherExample extends BaseTsetExample {
+  private static final Logger LOG = Logger.getLogger(KGatherExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(TSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
-        .keyedPartition(new LoadBalancePartitioner<>());
+    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+        .keyedGather();
 
     LOG.info("test foreach");
-    klink.forEach(t -> LOG.info(t.getKey() + "_" + t.getValue()));
+    klink.forEach((ApplyFunc<Tuple<Integer, Iterator<Integer>>>)
+        data -> LOG.info("key " + data.getKey() + " " + data.getValue().toString())
+    );
 
     LOG.info("test map");
-    klink.map(i -> i.toString() + "$$")
+    klink.map((MapFunc<String, Tuple<Integer, Iterator<Integer>>>)
+        input -> {
+          int s = 0;
+          while (input.getValue().hasNext()) {
+            s += input.getValue().next();
+          }
+          return "key " + input.getKey() + " " + s;
+        })
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    klink.compute(
-        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+    klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+        input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
-            s.append(input.next().toString()).append(" ");
+            Tuple<Integer, Iterator<Integer>> next = input.next();
+            s.append("$").append(next.getKey()).append("_").append(next.getValue().toString());
           }
           return s.toString();
         })
@@ -72,10 +70,11 @@ public class KPartitionExample extends BaseTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
         (input, output) -> {
           while (input.hasNext()) {
-            output.collect(input.next().toString());
+            Tuple<Integer, Iterator<Integer>> next = input.next();
+            output.collect(next.getKey() + "#" + next.getValue().toString());
           }
         })
         .direct()
@@ -87,6 +86,6 @@ public class KPartitionExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KPartitionExample.class.getName());
+    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KGatherExample.class.getName());
   }
 }
