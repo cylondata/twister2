@@ -26,24 +26,6 @@ public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
     this.source = src;
   }
 
-/*  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    return direct.map(mapFn);
-  }
-
-  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    return direct.flatMap(mapFn);
-  }*/
-
-/*  public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    return direct.sink(sink);
-  }*/
-
   @Override
   public INode getINode() {
     return new SourceOp<>(source);

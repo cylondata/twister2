@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 
 public class CacheSource<T> extends BaseSourceFunc<T> {
@@ -23,13 +24,12 @@ public class CacheSource<T> extends BaseSourceFunc<T> {
   private int end;
   private int current;
   private DataObject<T> data;
-  private DataPartitionConsumer<T> currentConsumer;
+  private transient DataPartitionConsumer<T> currentConsumer;
 
   public CacheSource(DataObject<T> datapoints) {
     this.data = datapoints;
     this.end = datapoints.getPartitionCount();
     this.current = 0;
-    this.currentConsumer = datapoints.getPartitions()[0].getConsumer();
   }
 
   @Override
@@ -53,7 +53,14 @@ public class CacheSource<T> extends BaseSourceFunc<T> {
     }
   }
 
-/*  private List<T> getData() {
+  @Override
+  public void prepare(TSetContext ctx) {
+    super.prepare(ctx);
+
+    this.currentConsumer = data.getPartitions()[0].getConsumer();
+  }
+
+  /*  private List<T> getData() {
     if (data == null) {
       LOG.fine("Data has not been added to the data object");
       return new ArrayList<>();

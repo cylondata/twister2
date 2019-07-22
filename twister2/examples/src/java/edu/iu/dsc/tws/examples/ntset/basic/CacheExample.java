@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -35,23 +35,25 @@ public class CacheExample extends BaseTsetExample {
   public void execute(TSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    DirectTLink<Integer> direct = src.direct();
+    CachedTSet<Integer> cache = src.direct().cache();
+
+    LOG.info(cache.toString());
 
     LOG.info("test foreach");
-    direct.forEach(i -> LOG.info("foreach: " + i));
+    cache.direct().forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    direct.map(i -> i.toString() + "$$")
+    cache.direct().map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    direct.flatmap((i, c) -> c.collect(i.toString() + "##"))
+    cache.direct().flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
+    cache.direct().compute((ComputeFunc<String, Iterator<Integer>>) input -> {
       int sum = 0;
       while (input.hasNext()) {
         sum += input.next();
@@ -62,7 +64,7 @@ public class CacheExample extends BaseTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+    cache.direct().compute((ComputeCollectorFunc<String, Iterator<Integer>>)
         (input, output) -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -74,7 +76,7 @@ public class CacheExample extends BaseTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    direct.sink((SinkFunc<Iterator<Integer>>) value -> {
+    cache.direct().sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
         LOG.info("val =" + value.next());
       }

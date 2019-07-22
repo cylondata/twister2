@@ -163,7 +163,7 @@ public final class TSetEnvironment {
 
     // clean the upstream of the cached tsets
     if (cleanUpstream(setsPlan)) {
-      LOG.info("TSets have been deleted!");
+      LOG.info("Some TSets have been cleaned up!");
     }
 
     if (returnOutput) {

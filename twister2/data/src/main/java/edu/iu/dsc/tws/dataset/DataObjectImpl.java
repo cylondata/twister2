@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 public class DataObjectImpl<T> implements DataObject<T> {
   private Map<Integer, DataPartition<T>> partitions = new HashMap<>();
 
-  private Config config;
+  private transient Config config;
 
   private String id;
 
