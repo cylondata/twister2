@@ -249,17 +249,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Keep track what are the targets we've sent syncs to
    */
-  protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
+  private Int2ObjectOpenHashMap<Set<Integer>> syncSent = new Int2ObjectOpenHashMap<>();
 
   /**
    * Keep state
    */
-  protected Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
+  private Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
 
   /**
    * The targets
    */
-  protected int[] targetsArray;
+  private int[] targetsArray;
 
   /**
    * Number of messages added in this step
@@ -330,7 +330,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * After all the sources finished for a target we add to this set
    */
-  private List<Integer> finishedTargets = new ArrayList<>();
+  private IntArrayList finishedTargets = new IntArrayList();
 
   /**
    * Keep track weather we have started receive syncs to the final destination
@@ -347,7 +347,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Targets of this worker
    */
-  private Set<Integer> targetsOfThisWorker;
+  private IntArraySet targetsOfThisWorker;
 
   /**
    * The merge factor
@@ -393,7 +393,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.thisWorker = tPlan.getThisExecutor();
 
     // get the tasks of this executor
-    targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
+    targetsOfThisWorker = new IntArraySet(TaskPlanUtils.getTasksOfThisWorker(tPlan, targets));
     Set<Integer> sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, sources);
     Map<Integer, List<Integer>> mergerExpectedIds = new HashMap<>();
     for (int target : targets) {
@@ -446,7 +446,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     thisSourceArray = new int[thisWorkerSources.size()];
     for (int s : thisWorkerSources) {
       this.thisSourceArray[index++] = s;
-      syncSent.put(s, new HashSet<>());
+      syncSent.put(s, new IntArraySet());
       sourceStates.put(s, ReceiverState.INIT);
     }
 
@@ -787,7 +787,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return false;
       }
       // if we have enough things in memory or some sources finished lets call progress on merger
-      Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
+      int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
       if (mergerInMemoryMessages >= inMemoryMessageThreshold * sendsToComplete * mergeFactor
           || mergerBlocked || mergeFinishSources.size() > 0) {
         if (partialLock.tryLock()) {
