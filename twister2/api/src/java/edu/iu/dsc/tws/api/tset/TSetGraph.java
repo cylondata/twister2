@@ -36,6 +36,7 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
 
 public class TSetGraph {
   private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
@@ -65,6 +66,8 @@ public class TSetGraph {
   private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
   private OperationMode opMode;
 
+  private Set<BuildableTSet> sources;
+
   public TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
     this.env = tSetEnv;
     this.graph = GraphBuilder.directed()
@@ -73,36 +76,40 @@ public class TSetGraph {
         .build();
 
     this.opMode = operationMode;
+
+    this.sources = new HashSet<>();
+
     resetDfwGraphBuilder();
   }
 
   /**
-   * for intermediate nodes. u --> v
+   * for intermediate nodes. origin --> target
    *
-   * @param v child tset
-   * @param u parent tset
+   * @param target target tset
+   * @param origin origin tset
    */
-  public void addTSet(TBase u, TBase v) {
-    this.graph.putEdge(u, v);
+  public void addTSet(TBase origin, TBase target) {
+    this.graph.putEdge(origin, target);
   }
 
   /**
-   * for sources and sinks
+   * Specific method to add sources
    *
-   * @param u source/ sink
+   * @param source source
    */
-  public void addTSet(TBase u) {
-    this.graph.addNode(u);
+  public void addSourceTSet(BuildableTSet source) {
+    this.sources.add(source);
+    this.graph.addNode(source);
   }
 
   /**
    * connect two tsets
    *
-   * @param v v
-   * @param u u
+   * @param target target
+   * @param origin origin
    */
-  public void connectTSets(TBase u, TBase v) {
-    this.graph.putEdge(u, v);
+  public void connectTSets(TBase origin, TBase target) {
+    this.graph.putEdge(origin, target);
   }
 
   public Set<TBase> getSuccessors(TBase tSet) {
@@ -132,11 +139,23 @@ public class TSetGraph {
 
   /**
    * Builds the entire graph
+   * todo: this is performing iterative BFS. Use multi source BFS instead
    *
    * @return data flow graph to execute
    */
   public DataFlowTaskGraph build() {
-    return null;
+    List<BuildableTLink> links = new ArrayList<>();
+    Set<BuildableTSet> sets = new HashSet<>();
+
+    List<TBase> buildOrder = new ArrayList<>();
+
+    for (BuildableTSet src : sources) {
+      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
+    }
+
+    LOG.info(() -> "Build order: " + buildOrder.toString());
+
+    return buildGraph(links, sets);
   }
 
   /**
@@ -146,37 +165,42 @@ public class TSetGraph {
    * @return data flow graph to execute the subgraph of TSets
    */
   public DataFlowTaskGraph build(BuildableTSet leafTSet) {
-    List<BuildableTLink> linksPlan = new ArrayList<>();
-    List<BuildableTSet> setsPlan = new ArrayList<>();
+    List<BuildableTLink> links = new ArrayList<>();
+    Set<BuildableTSet> sets = new HashSet<>();
 
-    List<TBase> buildOrder = invertedBFS(leafTSet, linksPlan, setsPlan);
+    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
 
-    LOG.fine(() -> "Node build plan: " + setsPlan);
-    for (BuildableTSet baseTSet : setsPlan) {
+    return buildGraph(links, sets);
+  }
+
+  private DataFlowTaskGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
+
+    LOG.fine(() -> "Node build plan: " + sets);
+    for (BuildableTSet baseTSet : sets) {
       baseTSet.build(this);
     }
 
-    LOG.fine(() -> "Edge build plan: " + linksPlan);
+    LOG.fine(() -> "Edge build plan: " + links);
     // links need to be built in order. check issue #519
-    for (int i = 0; i < linksPlan.size(); i++) {
-      linksPlan.get(linksPlan.size() - i - 1).build(this, setsPlan);
+    for (int i = 0; i < links.size(); i++) {
+      links.get(links.size() - i - 1).build(this, sets);
     }
 
     DataFlowTaskGraph dataflowGraph = getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
 
     // clean the upstream of the cached tsets
-    if (cleanUpstream(setsPlan)) {
+    if (cleanUpstream(sets)) {
       LOG.info("Some TSets have been cleaned up!");
     }
 
     return dataflowGraph;
   }
 
-  private List<TBase> invertedBFS(BuildableTSet s, List<BuildableTLink> links,
-                                  List<BuildableTSet> sets) {
+  private List<TBase> bfs(BuildableTSet s, Collection<BuildableTLink> links,
+                          Collection<BuildableTSet> sets, AdjNodesExtractor adjNodesExtractor) {
     List<TBase> buildOrder = new ArrayList<>();
 
     Map<TBase, Boolean> visited = new HashMap<>();
@@ -195,7 +219,7 @@ public class TSetGraph {
         sets.add((BuildableTSet) t);
       }
 
-      for (TBase parent : getPredecessors(t)) {
+      for (TBase parent : adjNodesExtractor.extract(t)) {
         if (visited.get(parent) == null || !visited.get(parent)) {
           visited.put(parent, true);
           queue.add(parent);
@@ -208,13 +232,13 @@ public class TSetGraph {
     return buildOrder;
   }
 
-  private boolean cleanUpstream(List<BuildableTSet> tSets) {
+  private boolean cleanUpstream(Collection<BuildableTSet> tSets) {
     Set<TBase> toRemove = new HashSet<>();
 
     boolean changed = false;
 
     for (BuildableTSet tset : tSets) {
-      if (tset instanceof CachedTSet) {
+      if (tset instanceof CacheableTSet) {
         toRemove.addAll(getPredecessors(tset));
       }
     }
@@ -224,5 +248,9 @@ public class TSetGraph {
     }
 
     return changed;
+  }
+
+  interface AdjNodesExtractor {
+    Set<TBase> extract(TBase node);
   }
 }

@@ -95,7 +95,7 @@ public final class TSetEnvironment {
     }
 
     BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
-    tsetGraph.addTSet(sourceT);
+    tsetGraph.addSourceTSet(sourceT);
 
     return sourceT;
   }
@@ -106,7 +106,7 @@ public final class TSetEnvironment {
     }
 
     StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
-    tsetGraph.addTSet(sourceT);
+    tsetGraph.addSourceTSet(sourceT);
 
     return sourceT;
   }

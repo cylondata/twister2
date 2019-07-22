@@ -23,8 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
@@ -34,7 +34,7 @@ public interface BuildableTLink extends TBase {
 
   Edge getEdge();
 
-  default void build(TSetGraph tSetGraph, List<? extends TBase> tSets) {
+  default void build(TSetGraph tSetGraph, Collection<? extends TBase> tSets) {
 
     // filter out the relevant sources out of the predecessors
     HashSet<TBase> relevantSources = new HashSet<>(tSetGraph.getPredecessors(this));

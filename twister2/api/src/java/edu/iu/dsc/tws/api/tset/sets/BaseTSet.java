@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
+import java.util.Objects;
+
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.tset.Cacheable;
@@ -127,5 +129,24 @@ public abstract class BaseTSet<T> implements TSet<T> {
   @Override
   public String toString() {
     return "S{" + getName() + "[" + getParallelism() + "]}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BaseTSet<?> baseTSet = (BaseTSet<?>) o;
+    return Objects.equals(name, baseTSet.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
   }
 }

@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import java.util.Objects;
+
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -147,5 +149,23 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
         + tSetEnv.getGraph().getPredecessors(this)
         + "->" + tSetEnv.getGraph().getSuccessors(this)
         + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
+    return Objects.equals(name, baseTLink.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
   }
 }
