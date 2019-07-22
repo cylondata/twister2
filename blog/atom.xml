@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://dsc-spidal.github.io/twister2/blog</id>
+    <id>http://twister2.org/twister2/blog</id>
     <title>Twister2 Blog</title>
     <updated>2019-06-14T06:00:00Z</updated>
     <generator>Feed for Node.js</generator>
-    <link rel="alternate" href="https://dsc-spidal.github.io/twister2/blog"/>
+    <link rel="alternate" href="http://twister2.org/twister2/blog"/>
     <subtitle>The best place to stay up-to-date with the latest Twister2 news and events.</subtitle>
-    <logo>https://dsc-spidal.github.io/twister2/img/logo_large.png</logo>
+    <logo>http://twister2.org/twister2/img/logo_large.png</logo>
     <rights>Copyright © 2019 Indiana University</rights>
     <entry>
         <title type="html"><![CDATA[New Version 0.2.2]]></title>
-        <id>https://dsc-spidal.github.io/twister2/blog/2019/06/14/new-version-0.2.2.html</id>
-        <link href="https://dsc-spidal.github.io/twister2/blog/2019/06/14/new-version-0.2.2.html">
+        <id>http://twister2.org/twister2/blog/2019/06/14/new-version-0.2.2.html</id>
+        <link href="http://twister2.org/twister2/blog/2019/06/14/new-version-0.2.2.html">
         </link>
         <updated>2019-06-14T06:00:00Z</updated>
         <summary type="html"><![CDATA[<p>We have just released Twister2 v0.2.2.</p> <p>The release note can be found at, [Release Note]</p> <p>Source code can be downloaded from, [Source Release]</p> <p>Updated Twister2 docs can be found at, <a href>Documents</a></p> ]]></summary>
