@@ -728,7 +728,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
-//          LOG.info(String.format("%d Sync group %d to: %d", thisWorker, sendGroupIndex, target));
+          LOG.info(String.format("%d Sync group %d to: %d", thisWorker, sendGroupIndex, target));
           finishedDestPerSource.add(target);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -838,7 +838,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // if this step is completed and we need to progress the final receiver
       boolean needsProgress = !allTargetsReceivedSyncs || needFurtherMerging;
       if (completed && !needsProgress) {
-//        LOG.info(thisWorker + " Finished receiving");
+        LOG.info(thisWorker + " Finished receiving");
         finishedReceiving = true;
       }
 
@@ -854,7 +854,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           }
           roundCompleted = true;
           roundNumber++;
-//          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
+          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
           finishedReceiveGroups.clear();
           finishedSendGroups.clear();
 
@@ -877,10 +877,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!lastRound || !roundCompleted) {
           sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
           receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
-//          LOG.info(
-//              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
-//              thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
-//              finishedSendGroups.size(), roundNumber, lastRound));
+          LOG.info(
+              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
+              thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
+              finishedSendGroups.size(), roundNumber, lastRound));
           startNextStep();
         }
       }
@@ -946,7 +946,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-//          LOG.info(thisWorker + " Send " + target + " " + data.size());
+          LOG.info(thisWorker + " Send " + target + " " + data.size());
           sent = true;
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
