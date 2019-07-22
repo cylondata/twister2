@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
 import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.tset.DataLoadingTask;
@@ -39,9 +39,9 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
   private OperationMode operationMode;
   private SVMJobParameters svmJobParameters;
   private BinaryBatchModel binaryBatchModel;
-  private CachedTSet<double[]> trainedWeightVector;
-  private CachedTSet<double[][]> trainingData;
-  private CachedTSet<double[][]> testingData;
+  private CacheableTSet<double[]> trainedWeightVector;
+  private CacheableTSet<double[][]> trainingData;
+  private CacheableTSet<double[][]> testingData;
   private long dataLoadingTime = 0L;
   private long initializingTime = 0L;
   private double initializingDTime = 0;
@@ -109,26 +109,23 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
     LOG.info(this.binaryBatchModel.toString());
   }
 
-  private CachedTSet<double[][]> loadTrainingData(TSetEnvironment env) {
-    CachedTSet<double[][]> data = env.createBatchSource(
+  private CacheableTSet<double[][]> loadTrainingData(TSetEnvironment env) {
+    return env.createBatchSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "train"),
         this.dataStreamerParallelism).setName("trainingDataSource").cache();
-    return data;
   }
 
-  private CachedTSet<double[][]> loadTestingData(TSetEnvironment env) {
-    CachedTSet<double[][]> data = env.createBatchSource(
+  private CacheableTSet<double[][]> loadTestingData(TSetEnvironment env) {
+    return env.createBatchSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "test"),
         this.dataStreamerParallelism).setName("testingDataSource").cache();
-    return data;
   }
 
-  private CachedTSet<double[]> loadWeightVector(TSetEnvironment env) {
-    CachedTSet<double[]> weightVector = env.createBatchSource(
+  private CacheableTSet<double[]> loadWeightVector(TSetEnvironment env) {
+    return env.createBatchSource(
         new WeightVectorLoad(this.binaryBatchModel, this.svmJobParameters),
         this.dataStreamerParallelism).setName("weightVectorSource")
         .cache();
-    return weightVector;
   }
 
   private void executeTraining(TSetEnvironment env) {

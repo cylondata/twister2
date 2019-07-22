@@ -25,6 +25,7 @@
 package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
@@ -34,8 +35,10 @@ import edu.iu.dsc.tws.api.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.sink.CacheSingleSink;
 
 public abstract class SingleLink<T> extends BaseTLink<T, T> implements
     TupleMappableLink<T> {
@@ -74,5 +77,17 @@ public abstract class SingleLink<T> extends BaseTLink<T, T> implements
     addChildToGraph(set);
 
     return set;
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<>(),
+        getTargetParallelism());
+    addChildToGraph(cacheTSet);
+
+    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
+    cacheTSet.setData(output);
+
+    return cacheTSet;
   }
 }

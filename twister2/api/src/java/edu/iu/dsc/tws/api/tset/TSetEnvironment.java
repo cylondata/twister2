@@ -26,9 +26,11 @@ package edu.iu.dsc.tws.api.tset;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -42,6 +44,7 @@ import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
@@ -158,6 +161,11 @@ public final class TSetEnvironment {
     // once a graph is built and executed, reset the underlying builder!
     tsetGraph.resetDfwGraphBuilder();
 
+    // clean the upstream of the cached tsets
+    if (cleanUpstream(setsPlan)) {
+      LOG.info("TSets have been deleted!");
+    }
+
     if (returnOutput) {
       return this.taskExecutor.getOutput(null, executionPlan, leafTSet.getName());
     }
@@ -199,6 +207,24 @@ public final class TSetEnvironment {
     for (BuildableTSet baseTSet : tsets) {
       baseTSet.build(tsetGraph);
     }
+  }
+
+  private boolean cleanUpstream(List<BuildableTSet> tSets) {
+    Set<TBase> toRemove = new HashSet<>();
+
+    boolean changed = false;
+
+    for (BuildableTSet tset : tSets) {
+      if (tset instanceof CachedTSet) {
+        toRemove.addAll(tsetGraph.getPredecessors(tset));
+      }
+    }
+
+    for (TBase tset : toRemove) {
+      changed = changed || tsetGraph.removeNode(tset);
+    }
+
+    return changed;
   }
 
   private void invertedBFS(TBase s, List<BuildableTLink> links, List<BuildableTSet> sets) {

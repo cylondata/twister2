@@ -99,6 +99,10 @@ public class TSetGraph {
     return this.graph.predecessors(tSet);
   }
 
+  public boolean removeNode(TBase tSet) {
+    return this.graph.removeNode(tSet);
+  }
+
   public Set<TBase> getNodes() {
     return this.graph.nodes();
   }

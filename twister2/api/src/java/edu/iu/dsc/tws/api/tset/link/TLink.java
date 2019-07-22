@@ -75,10 +75,9 @@ public interface TLink<T1, T0> extends BuildableTLink {
   /**
    * Runs the dataflow graph and caches data in memory
    *
-   * @param <TO> output tset type
    * @return output TSet
    */
-  <TO> TSet<TO> cache();
+  TSet<T0> cache();
 
   /**
    * Applies a functoin elementwise

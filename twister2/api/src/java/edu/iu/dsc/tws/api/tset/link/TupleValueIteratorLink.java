@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.tset.fn.ForEachTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 public abstract class TupleValueIteratorLink<K, T> extends BaseTLink<Iterator<Tuple<K, T>>, T> {
 
@@ -78,5 +79,10 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
         compute(TSetUtils.generateName("foreach"), comp);
     addChildToGraph(foreach);
     getTSetEnv().run(foreach);
+  }
+
+  @Override
+  public TSet<T> cache() {
+    return null;
   }
 }

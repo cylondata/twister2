@@ -36,18 +36,16 @@ public interface BuildableTLink extends TBase {
 
   default void build(TSetGraph tSetGraph, List<? extends TBase> tSets) {
 
-    HashSet<TBase> relavantSources = new HashSet<>(tSetGraph.getPredecessors(this));
-//    System.out.println("sources0: " + relavantSources);
-    relavantSources.retainAll(tSets);
-//    System.out.println("sources1: " + relavantSources);
+    // filter out the relevant sources out of the predecessors
+    HashSet<TBase> relevantSources = new HashSet<>(tSetGraph.getPredecessors(this));
+    relevantSources.retainAll(tSets);
 
-    HashSet<TBase> relavantTargets = new HashSet<>(tSetGraph.getSuccessors(this));
-//    System.out.println("tar0: " + relavantTargets);
-    relavantTargets.retainAll(tSets);
-//    System.out.println("tar1: " + relavantTargets);
+    // filter out the relevant sources out of the successors
+    HashSet<TBase> relevantTargets = new HashSet<>(tSetGraph.getSuccessors(this));
+    relevantTargets.retainAll(tSets);
 
-    for (TBase source : relavantSources) {
-      for (TBase target : relavantTargets) {
+    for (TBase source : relevantSources) {
+      for (TBase target : relevantTargets) {
         String s = source.getName();
         String t = target.getName();
 
