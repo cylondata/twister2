@@ -859,13 +859,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           finishedSendGroups.clear();
 
           // we need to have all the syncs received in a single round to terminate
-//          if (startedSyncRound && !allTargetsReceivedSyncs) {
-//            finishedTargets.clear();
-//            for (int i : targetsOfThisWorker) {
-//              Set<Integer> fin = finishedSources.get(i);
-//              fin.clear();
-//            }
-//          }
+          if (startedSyncRound && !allTargetsReceivedSyncs) {
+            finishedTargets.clear();
+            for (int i : targetsOfThisWorker) {
+              Set<Integer> fin = finishedSources.get(i);
+              fin.clear();
+            }
+          }
         }
 
         if (roundCompleted && !lastRound && finishedReceiving) {
