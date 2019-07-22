@@ -163,7 +163,8 @@ public class TSetWordCount implements TSetIWorker, Serializable {
     public boolean add(Iterator<Tuple<String, Integer>> value) {
       try {
         while (value.hasNext()) {
-          writer.write(value.next().toString());
+          Tuple<String, Integer> t = value.next();
+          writer.write(t.getKey() + " " + t.getValue());
           writer.newLine();
         }
       } catch (IOException e) {
@@ -241,7 +242,7 @@ public class TSetWordCount implements TSetIWorker, Serializable {
       }
     }
 
-/*    if (test1.equals(trusted)) {
+    if (test1.equals(trusted)) {
       LOG.info("RESULTS VALID!");
     } else {
       LOG.severe("UNSUCCESSFUL!");
@@ -251,6 +252,6 @@ public class TSetWordCount implements TSetIWorker, Serializable {
           br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
         }
       }
-    }*/
+    }
   }
 }
