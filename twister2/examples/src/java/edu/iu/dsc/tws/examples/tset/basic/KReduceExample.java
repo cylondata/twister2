@@ -10,7 +10,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.ntset.basic;
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+package edu.iu.dsc.tws.examples.tset.basic;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,32 +34,31 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KPartitionExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(KPartitionExample.class.getName());
+public class KReduceExample extends BaseTsetExample {
+  private static final Logger LOG = Logger.getLogger(KReduceExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(TSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
-        .keyedPartition(new LoadBalancePartitioner<>());
+    KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+        .keyedReduce(Integer::sum);
 
     LOG.info("test foreach");
-    klink.forEach(t -> LOG.info(t.getKey() + "_" + t.getValue()));
+    kreduce.forEach(t -> LOG.info("sum by key=" + t.getKey() + ", " + t.getValue()));
 
     LOG.info("test map");
-    klink.map(i -> i.toString() + "$$")
+    kreduce.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test compute");
-    klink.compute(
+    kreduce.compute(
         (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
@@ -59,7 +70,7 @@ public class KPartitionExample extends BaseTsetExample {
         .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+    kreduce.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
         (input, output) -> {
           while (input.hasNext()) {
             output.collect(input.next().toString());
@@ -74,6 +85,6 @@ public class KPartitionExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KPartitionExample.class.getName());
+    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KReduceExample.class.getName());
   }
 }
