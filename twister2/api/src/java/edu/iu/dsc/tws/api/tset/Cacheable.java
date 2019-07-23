@@ -28,6 +28,9 @@ public interface Cacheable<T> extends Serializable {
 
   /**
    * retrieve data saved in the TSet
+   * <p>
+   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
+   * this would unnecessarily loads data to the memory from the partition consumer
    *
    * @return dataObject
    */
@@ -46,29 +49,37 @@ public interface Cacheable<T> extends Serializable {
   }
 
   /**
+   * get the data from the given partition.
+   * <p>
+   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
+   * this would unnecessarily loads data to the memory from the partition consumer
+   *
+   * @param partitionId the partition ID
+   * @return the data related to the given partition
+   */
+  default List<T> getData(int partitionId) {
+    DataPartition<T> partition = getDataObject().getPartition(partitionId);
+    List<T> results = new ArrayList<>();
+    while (partition.getConsumer().hasNext()) {
+      results.add(partition.getConsumer().next());
+    }
+
+    return results;
+  }
+
+  /**
    * retrieve data saved in the TSet
    *
    * @return dataObject
    */
   DataObject<T> getDataObject();
 
-  /*  *//**
-   * get the data from the given partition
-   *
-   * This is not deprecated. Because a partition needs to be traversed using its consumer, and
-   * can not return a value T from it!
-   * @param partitionId the partition ID
-   * @return the data related to the given partition
-   *//*
-  @Deprecated
-  T getPartitionData(int partitionId);
-
-  *//**
-   * Add Data to the data object
-   *
-   * @param value value to be added
-   * @return true if the data was added successfully or false otherwise
-   *//*
-  boolean addData(T value);*/
+//  /**
+//   * Add Data to the data object
+//   *
+//   * @param value value to be added
+//   * @return true if the data was added successfully or false otherwise
+//   */
+//  boolean addData(T value);
 
 }

@@ -118,7 +118,6 @@ public interface TSet<T> extends BuildableTSet {
    *
    * @return the resulting TSet
    */
-//  CachedTSet<T> cache();
   CacheableTSet<T> cache();
 
   /**
