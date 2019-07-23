@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.sink;
+package edu.iu.dsc.tws.api.tset.sinks;
 
 import java.util.Iterator;
 

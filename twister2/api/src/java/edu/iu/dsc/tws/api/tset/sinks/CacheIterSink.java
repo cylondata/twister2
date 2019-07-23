@@ -9,18 +9,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sink;
+
+package edu.iu.dsc.tws.api.tset.sinks;
+
+import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
-public class CacheSingleSink<T> extends BaseSinkFunc<T> {
-  protected DataPartition<T> partition;
+public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
+
+  private CollectionPartition<T> partition;
 
   @Override
-  public boolean add(T value) {
-    this.partition = new EntityPartition<>(getTSetContext().getIndex(), value);
+  public void prepare(TSetContext ctx) {
+    super.prepare(ctx);
+
+    this.partition = new CollectionPartition<>(getTSetContext().getIndex());
+  }
+
+  @Override
+  public boolean add(Iterator<T> value) {
+    while (value.hasNext()) {
+      partition.add(value.next());
+    }
     return true;
   }
 

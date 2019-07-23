@@ -9,37 +9,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+package edu.iu.dsc.tws.api.tset.sinks;
 
-package edu.iu.dsc.tws.api.tset.sink;
-
-import java.util.Iterator;
-
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
 
-public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
+public class FileSink<T> implements SinkFunc<T> {
+  private FileOutputWriter<T> output;
 
-  private CollectionPartition<T> partition;
+  private int partition;
 
-  @Override
-  public void prepare(TSetContext ctx) {
-    super.prepare(ctx);
-
-    this.partition = new CollectionPartition<>(getTSetContext().getIndex());
+  public FileSink(FileOutputWriter<T> out) {
+    this.output = out;
   }
 
   @Override
-  public boolean add(Iterator<T> value) {
-    while (value.hasNext()) {
-      partition.add(value.next());
-    }
+  public boolean add(T value) {
+    output.write(partition, value);
     return true;
   }
 
   @Override
-  public DataPartition<T> get() {
-    return partition;
+  public void prepare(TSetContext context) {
+    partition = context.getIndex();
+  }
+
+  @Override
+  public void close() {
+    output.close();
   }
 }

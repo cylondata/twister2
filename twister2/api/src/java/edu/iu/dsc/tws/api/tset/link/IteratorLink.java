@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.api.tset.ops.MapToTupleIterOp;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.sink.CacheIterSink;
+import edu.iu.dsc.tws.api.tset.sinks.CacheIterSink;
 
 public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
     implements TupleMappableLink<T> {

@@ -9,34 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sink;
+package edu.iu.dsc.tws.api.tset.sinks;
 
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.data.api.out.FileOutputWriter;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
-public class FileSink<T> implements SinkFunc<T> {
-  private FileOutputWriter<T> output;
-
-  private int partition;
-
-  public FileSink(FileOutputWriter<T> out) {
-    this.output = out;
-  }
+public class CacheSingleSink<T> extends BaseSinkFunc<T> {
+  protected DataPartition<T> partition;
 
   @Override
   public boolean add(T value) {
-    output.write(partition, value);
+    this.partition = new EntityPartition<>(getTSetContext().getIndex(), value);
     return true;
   }
 
   @Override
-  public void prepare(TSetContext context) {
-    partition = context.getIndex();
-  }
-
-  @Override
-  public void close() {
-    output.close();
+  public DataPartition<T> get() {
+    return partition;
   }
 }

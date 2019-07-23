@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.sink.CacheSingleSink;
+import edu.iu.dsc.tws.api.tset.sinks.CacheSingleSink;
 
 public abstract class SingleLink<T> extends BaseTLink<T, T> implements
     TupleMappableLink<T> {

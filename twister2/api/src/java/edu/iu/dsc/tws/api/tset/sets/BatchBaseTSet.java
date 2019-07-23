@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 
 public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
-  BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  public BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 

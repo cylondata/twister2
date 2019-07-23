@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
+import edu.iu.dsc.tws.api.tset.sinks.SinkTSet;
 
 /**
  * Base link impl for all the links
