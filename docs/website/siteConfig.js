@@ -25,8 +25,9 @@ const baseUrl = '/';
 const siteConfig = {
     title: 'Twister2', // Title for your website.
     tagline: 'High Performance Data Analytics',
-    url: 'https://dsc-spidal.github.io', // Your website URL
-    baseUrl: '/twister2/', // Base URL for your project */
+    url: 'https://twister2.org', // Your website URL
+    baseUrl: '/', // Base URL for your project */
+    cname: 'twister2.org',
     // For github.io type URLs, you would set the url and baseUrl like:
     //   url: 'https://facebook.github.io',
     //   baseUrl: '/test-site/',
@@ -42,7 +43,7 @@ const siteConfig = {
     headerLinks: [
         {doc: 'introduction', label: 'Docs'},
         {page: 'docs/download', label: 'Download'},
-        {href: "https://github.com/dsc-spidal/twister2", label: "GitHub"},
+        {href: "http://twister2.org", label: "GitHub"},
         {blog: true, label: 'Blog'},
     ],
 

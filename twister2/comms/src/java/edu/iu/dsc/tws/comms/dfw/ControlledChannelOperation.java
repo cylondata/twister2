@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.dfw;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -151,7 +150,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Deserialize communicationProgress track
    */
-  private ProgressionTracker receiveProgressTracker;
+  private ControlledProgressTracker receiveProgressTracker;
 
   /**
    * Number of external sends pending
@@ -282,12 +281,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     Set<Integer> sendItems = pendingSendMessagesPerSource.keySet();
     sendProgressTracker = new ProgressionTracker(sendItems);
 
-    Set<Integer> receiveItems = pendingReceiveMessagesPerSource.keySet();
-    Set<Integer> desrializeItems = pendingReceiveDeSerializations.keySet();
-    Set<Integer> items = new HashSet<>(receiveItems);
-    items.addAll(desrializeItems);
-
-    receiveProgressTracker = new ProgressionTracker(items);
+    receiveProgressTracker = new ControlledProgressTracker(receiveGroupsSources);
   }
 
   /**
@@ -340,6 +334,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    */
   public void startGroup(int receiveGroup, int sendGroup,
                          Map<Integer, Integer> expectedReceives) {
+    receiveProgressTracker.switchGroup(receiveGroup);
     List<Integer> receiveExecs = receiveIdGroups.get(receiveGroup);
     this.expectedReceivePerWorker = expectedReceives;
     currentReceives.clear();

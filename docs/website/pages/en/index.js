@@ -125,10 +125,10 @@ const FeaturesTop = props => (
     title: "High Performance"
 },
 {
-    content: `Supports both streaming and batch natively in a single engine.`,
+    content: `Supports both streaming and batch applications natively in a single engine.`,
         image: imgUrl('Flow.svg'),
     imageAlign: 'top',
-    title: "Straming & Batch"
+    title: "Streaming & Batch"
 },
 {
     content: "Provides high level APIs similar to Spark, Hadoop and Storm as well as support for BEAM and Storm APIs",
@@ -144,14 +144,14 @@ const Twister2Apps = props => (
 <Block layout="twoColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "Offers a set of modular components for building data analytic applications",
+                content: "This graph shows the performance of K-Means compared to popular engines",
                 //image: imgUrl('icon/time.png'),
                 image : imgUrl("cogs.svg"),
                 imageAlign: 'top',
                 title: "K-Means"
             },
 {
-    content: "Work with high performance networks to efficiently execute IO intensive applications",
+    content: "This graph shows the performance of Terasort compared to popular engines",
         image: imgUrl('speed.svg'),
     imageAlign: 'top',
     title: "Terasort"
