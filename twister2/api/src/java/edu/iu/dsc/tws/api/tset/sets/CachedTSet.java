@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -37,7 +38,7 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
  *
  * @param <T> base type of the tset
  */
-public class CachedTSet<T> extends BatchBaseTSet<T> implements CacheableTSet<T> {
+public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
   private DataObject<T> data;
@@ -113,7 +114,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements CacheableTSet<T> 
   }
 
   @Override
-  public CacheableTSet<T> cache() {
+  public CachedTSet<T> cache() {
     return this;
 //    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
@@ -142,7 +143,6 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements CacheableTSet<T> 
     return false;
   }*/
 
-  @Override
   public void setData(DataObject<T> inData) {
     this.data = inData;
   }

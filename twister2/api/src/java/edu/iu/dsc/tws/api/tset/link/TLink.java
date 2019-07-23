@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 /**
@@ -78,7 +77,7 @@ public interface TLink<T1, T0> extends BuildableTLink {
    *
    * @return output TSet
    */
-  CacheableTSet<T0> cache();
+  TSet<T0> cache();
 
   /**
    * Applies a functoin elementwise

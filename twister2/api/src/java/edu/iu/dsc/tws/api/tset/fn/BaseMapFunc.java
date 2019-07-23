@@ -9,12 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.Cacheable;
-
-public interface CacheableTSet<T> extends TSet<T>, Cacheable<T> {
-
-  void setData(DataObject<T> inData);
+public abstract class BaseMapFunc<O, I> extends BaseTFunction implements MapFunc<O, I> {
 }

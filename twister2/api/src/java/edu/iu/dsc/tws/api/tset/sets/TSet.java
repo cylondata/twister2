@@ -118,7 +118,7 @@ public interface TSet<T> extends BuildableTSet {
    *
    * @return the resulting TSet
    */
-  CacheableTSet<T> cache();
+  TSet<T> cache();
 
   /**
    * Allows users to pass in other TSets as inputs for a TSet

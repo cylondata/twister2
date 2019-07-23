@@ -89,7 +89,7 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public CacheableTSet<T> cache() {
+  public CachedTSet<T> cache() {
     return direct().cache();
   }
 }

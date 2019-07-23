@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.tset.link.streaming.StreamingGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
 
 public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
@@ -107,13 +107,7 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
   }
 
   @Override
-  public CacheableTSet<T> cache() {
+  public CachedTSet<T> cache() {
     throw new UnsupportedOperationException("Cache is not available in streaming operations");
   }
-
-/*  public void sink(Sink<T> sink) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    direct.sink(sink);
-  }*/
 }
