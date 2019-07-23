@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
+import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.ExperimentData;
 import edu.iu.dsc.tws.examples.verification.ExperimentVerification;
@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.examples.verification.VerificationException;
 /**
  * We need to keep variable static as this class is serialized
  */
-public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable {
+public class BaseTSetBatchWorker implements TSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(BaseTSetBatchWorker.class.getName());
 
   protected static JobParameters jobParameters;
@@ -36,8 +36,8 @@ public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable
   protected static ExperimentData experimentData;
 
   @Override
-  public void execute(TwisterBatchContext tc) {
-    jobParameters = JobParameters.build(config);
+  public void execute(TSetEnvironment env) {
+    jobParameters = JobParameters.build(env.getConfig());
 
     experimentData = new ExperimentData();
     experimentData.setTaskStages(jobParameters.getTaskStages());
@@ -48,6 +48,11 @@ public class BaseTSetBatchWorker extends TSetBatchWorker implements Serializable
       experimentData.setOperationMode(OperationMode.BATCH);
       experimentData.setIterations(jobParameters.getIterations());
     }
+  }
+
+  @Override
+  public OperationMode getOperationMode() {
+    return OperationMode.BATCH;
   }
 
   public static class TestBaseSource implements SourceFunc<int[]> {
