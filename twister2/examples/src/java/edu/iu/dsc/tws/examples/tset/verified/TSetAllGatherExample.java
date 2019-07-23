@@ -55,7 +55,7 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
     AllGatherTLink<int[]> gather = source.allGather();
 
     gather.sink(new SinkFunc<Iterator<Tuple<Integer, int[]>>>() {
-      TSetContext context;
+      private TSetContext context;
 
       @Override
       public boolean add(Iterator<Tuple<Integer, int[]>> value) {
@@ -81,8 +81,8 @@ public class TSetAllGatherExample extends BaseTSetBatchWorker {
       }
 
       @Override
-      public void prepare(TSetContext context) {
-        this.context = context;
+      public void prepare(TSetContext ctx) {
+        this.context = ctx;
       }
     });
   }

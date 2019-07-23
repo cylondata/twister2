@@ -9,23 +9,49 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.tset;
 
+package edu.iu.dsc.tws.examples.tset.kmeans;
+
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.Iterator;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.fs.io.InputSplit;
+import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+import edu.iu.dsc.tws.dataset.DataSource;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 
-public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
+// TODO: this needs to checked for correctness!!!
+
+public class KMeansTsetJob implements TSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetJob.class.getName());
 
   @Override
-  public void execute(TwisterBatchContext tc) {
-/*    LOG.log(Level.INFO, "TSet worker starting: " + workerId);
+  public void execute(TSetEnvironment tc) {
+    int workerId = tc.getWorkerID();
+    LOG.info("TSet worker starting: " + workerId);
 
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
+    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(tc.getConfig());
+    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(tc.getConfig());
 
     int parallelismValue = kMeansJobParameters.getParallelismValue();
     int dimension = kMeansJobParameters.getDimension();
@@ -41,32 +67,33 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
         centroidDirectory);
 
     long startTime = System.currentTimeMillis();
-    CachedTSet<double[][]> points = tc.createSource(
-        new PointsSource(), parallelismValue).setName("dataSource").cache();
-    CachedTSet<double[][]> centers = tc.createSource(
-        new CenterSource(), parallelismValue).cache();
+    CachedTSet<double[][]> points =
+        tc.createBatchSource(new PointsSource(), parallelismValue).setName("dataSource").cache();
+    CachedTSet<double[][]> centers =
+        tc.createBatchSource(new CenterSource(), parallelismValue).cache();
 
     long endTimeData = System.currentTimeMillis();
 
     for (int i = 0; i < iterations; i++) {
-      IterableMapTSet<double[][], double[][]> kmeansTSet = points.map(new KMeansMap());
-      kmeansTSet.addInput("centers", centers);
-      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce(new ReduceFunction<double[][]>() {
-        @Override
-        public double[][] reduce(double[][] t1, double[][] t2) {
+      ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
+          points.direct().map(new KMeansMap());
 
-          double[][] newCentroids = new double[t1.length]
-              [t1[0].length];
-          for (int j = 0; j < t1.length; j++) {
-            for (int k = 0; k < t1[0].length; k++) {
-              double newVal = t1[j][k] + t2[j][k];
-              newCentroids[j][k] = newVal;
+      kmeansTSet.addInput("centers", centers);
+
+      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
+          (t1, t2) -> {
+            double[][] newCentroids = new double[t1.length]
+                [t1[0].length];
+            for (int j = 0; j < t1.length; j++) {
+              for (int k = 0; k < t1[0].length; k++) {
+                double newVal = t1[j][k] + t2[j][k];
+                newCentroids[j][k] = newVal;
+              }
             }
-          }
-          return newCentroids;
-        }
-      });
-      centers = reduced.map(new AverageCenters(), parallelismValue).cache();
+            return newCentroids;
+          });
+
+      centers = reduced.map(new AverageCenters()).cache();
     }
 
     long endTime = System.currentTimeMillis();
@@ -74,32 +101,37 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-    }*/
+    }
   }
 
-  /*public class KMeansMap extends BaseIterableMapFunction<double[][], double[][]> {
+  @Override
+  public OperationMode getOperationMode() {
+    return OperationMode.BATCH;
+  }
+
+
+  private class KMeansMap extends BaseMapFunc<double[][], double[][]> {
     private int dimension;
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext context) {
+      super.prepare(context);
       Config cfg = context.getConfig();
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
 
     }
 
     @Override
-    public double[][] map(Iterable<double[][]> t) {
-      double[][] data = t.iterator().next();
-      //TODO: cast needed since the context inputmap can hold many types of TSets, Solution?
-      double[][] centers = (double[][]) context.getInput("centers").
-          getPartitionData(context.getIndex());
+    public double[][] map(double[][] data) {
+      double[][] centers = (double[][]) getTSetContext().getInput("centers").
+          getPartition(getTSetContext().getIndex()).getConsumer().next();
       KMeansCalculator kMeansCalculator = new KMeansCalculator(data, centers, dimension);
       return kMeansCalculator.calculate();
     }
   }
 
-  private class AverageCenters extends BaseMapFunction<double[][], double[][]> {
 
+  private class AverageCenters implements MapFunc<double[][], double[][]> {
     @Override
     public double[][] map(double[][] centers) {
       //The centers that are received at this map is a the sum of all points assigned to each
@@ -118,9 +150,8 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     }
   }
 
-  public class PointsSource extends BaseSource<double[][]> {
 
-
+  private class PointsSource extends BaseSourceFunc<double[][]> {
     private DataSource<double[][], InputSplit<double[][]>> source;
     private int dataSize;
     private int dimension;
@@ -128,7 +159,9 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
     private boolean read = false;
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext context) {
+      super.prepare(context);
+
       int para = context.getParallelism();
       Config cfg = context.getConfig();
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
@@ -150,7 +183,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] next() {
-      InputSplit inputSplit = source.getNextSplit(context.getIndex());
+      InputSplit inputSplit = source.getNextSplit(getTSetContext().getIndex());
       while (inputSplit != null) {
         try {
           int count = 0;
@@ -165,7 +198,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
             }
             count += 1;
           }
-          inputSplit = source.getNextSplit(context.getIndex());
+          inputSplit = source.getNextSplit(getTSetContext().getIndex());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
@@ -177,14 +210,16 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
   }
 
 
-  public class CenterSource extends BaseSource<double[][]> {
+  public class CenterSource extends BaseSourceFunc<double[][]> {
     private DataSource<double[][], InputSplit<double[][]>> source;
     private boolean read = false;
     private int dimension;
     private double[][] centers;
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext context) {
+      super.prepare(context);
+
       Config cfg = context.getConfig();
       String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
           + context.getWorkerId();
@@ -208,7 +243,7 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
 
     @Override
     public double[][] next() {
-      InputSplit inputSplit = source.getNextSplit(context.getIndex());
+      InputSplit inputSplit = source.getNextSplit(getTSetContext().getIndex());
       while (inputSplit != null) {
         try {
           int count = 0;
@@ -223,13 +258,13 @@ public class KMeansTsetJob extends TSetBatchWorker implements Serializable {
             }
             count += 1;
           }
-          inputSplit = source.getNextSplit(context.getIndex());
+          inputSplit = source.getNextSplit(getTSetContext().getIndex());
         } catch (IOException e) {
           LOG.log(Level.SEVERE, "Failed to read the input", e);
         }
       }
       return centers;
     }
-  }*/
+  }
 }
 
