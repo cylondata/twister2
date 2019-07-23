@@ -9,7 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.sort;
+package edu.iu.dsc.tws.examples.batch.sortop;
 
 import java.util.Objects;
 import java.util.Random;
