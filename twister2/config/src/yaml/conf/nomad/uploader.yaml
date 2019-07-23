@@ -1,9 +1,12 @@
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
 
-# twister2.uploader.directory: "${HOME}/.twister2/repository"
+#twister2.uploader.directory: "/root/.twister2/repository"
+# if you want to run it on a local machine use this value
+twister2.uploader.directory: "/tmp/repository"
 
-twister2.uploader.directory: "/var/www/html/twister2/mesos/"
+# if you want to use http server on echo
+#twister2.uploader.directory: "/var/www/html/twister2/mesos/"
 
 # twister2.uploader.directory.repository: "/var/www/html/twister2/mesos/"
 
@@ -26,5 +29,5 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSyste
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 # this is the method that workers use to download the core and job packages
-# it could be  HTTP, HDFS, ..
-twister2.uploader.download.method: "HTTP"
+# it could be  LOCAL,  HTTP, HDFS, ..
+twister2.uploader.download.method: "LOCAL"
