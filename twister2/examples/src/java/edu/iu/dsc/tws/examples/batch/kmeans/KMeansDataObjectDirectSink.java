@@ -59,6 +59,8 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   @Override
   public DataPartition<double[][]> get() {
+    LOG.info("worker:" + context.getWorker() + "\tworker id" + context.getWorkerId()
+        + "\ttask index" + context.taskIndex());
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
   }
 }

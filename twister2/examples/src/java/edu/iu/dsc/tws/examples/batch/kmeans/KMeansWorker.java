@@ -90,7 +90,6 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
-
     /* Second Graph to read the centroids **/
     DataFlowTaskGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
         parallelismValue, dimension, config);
@@ -103,7 +102,6 @@ public class KMeansWorker extends TaskWorker {
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
     long endTimeData = System.currentTimeMillis();
-
 
     /* Third Graph to do the actual calculation **/
     DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
