@@ -84,7 +84,7 @@ public final class KMeansDataGenerator {
       for (int j = 0; j < dimension; j++) {
         double randomValue = r.nextDouble();
         line.append(String.format("%1$,.8f", randomValue));
-        if (j == 0) {
+        if (j < dimension - 1) {
           line.append(",").append("\t");
         }
       }

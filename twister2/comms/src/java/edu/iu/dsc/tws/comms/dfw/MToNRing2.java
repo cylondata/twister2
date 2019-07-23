@@ -12,11 +12,11 @@
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -59,7 +59,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Locally merged results
    */
-  private Int2ObjectArrayMap<List<Object>> merged = new Int2ObjectArrayMap<>();
+  private Int2ObjectArrayMap<Queue<AggregatedObjects<Object>>> merged = new Int2ObjectArrayMap<>();
 
   /**
    * This is the local merger
@@ -249,17 +249,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Keep track what are the targets we've sent syncs to
    */
-  protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
+  private Int2ObjectOpenHashMap<Set<Integer>> syncSent = new Int2ObjectOpenHashMap<>();
 
   /**
    * Keep state
    */
-  protected Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
+  private Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
 
   /**
    * The targets
    */
-  protected int[] targetsArray;
+  private int[] targetsArray;
 
   /**
    * Number of messages added in this step
@@ -294,7 +294,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Weather merger returned false
    */
-  private boolean mergerBlocked;
+  private boolean mergerBlocked = false;
 
 
   /**
@@ -330,7 +330,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * After all the sources finished for a target we add to this set
    */
-  private List<Integer> finishedTargets = new ArrayList<>();
+  private IntArrayList finishedTargets = new IntArrayList();
 
   /**
    * Keep track weather we have started receive syncs to the final destination
@@ -347,12 +347,27 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Targets of this worker
    */
-  private Set<Integer> targetsOfThisWorker;
+  private IntArraySet targetsOfThisWorker;
 
   /**
    * The merge factor
    */
   private double mergeFactor;
+
+  /**
+   * Low water mark
+   */
+  private int lowWaterMark = 8;
+
+  /**
+   * High water mark to keep track of objects
+   */
+  private int highWaterMark = 16;
+
+  /**
+   * The grouping size
+   */
+  private long groupingSize;
 
   /**
    * Create a ring partition communication
@@ -389,11 +404,19 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     this.mergeFactor = DataFlowContext.getRingMergeFactor(cfg);
 
+    lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
+    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    if (highWaterMark - lowWaterMark <= groupingSize) {
+      groupingSize = highWaterMark - lowWaterMark - 1;
+      LOG.fine("Changing the grouping size to: " + groupingSize);
+    }
+
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
 
     // get the tasks of this executor
-    targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
+    targetsOfThisWorker = new IntArraySet(TaskPlanUtils.getTasksOfThisWorker(tPlan, targets));
     Set<Integer> sourcesOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, sources);
     Map<Integer, List<Integer>> mergerExpectedIds = new HashMap<>();
     for (int target : targets) {
@@ -446,7 +469,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     thisSourceArray = new int[thisWorkerSources.size()];
     for (int s : thisWorkerSources) {
       this.thisSourceArray[index++] = s;
-      syncSent.put(s, new HashSet<>());
+      syncSent.put(s, new IntArraySet());
       sourceStates.put(s, ReceiverState.INIT);
     }
 
@@ -468,7 +491,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    for (int s : sources) {
+    for (int s : sourcesOfThisWorker) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
@@ -499,7 +522,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     calculateReceiveGroups();
 
     for (int t : targets) {
-      merged.put(t, new AggregatedObjects<>());
+      merged.put(t, new LinkedList<>());
       finishedSources.put(t, new HashSet<>());
     }
 
@@ -685,20 +708,18 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return true;
       }
 
-      if (mergedInMemoryMessages >= inMemoryMessageThreshold * targetsArray.length) {
+      if (mergedInMemoryMessages >= highWaterMark * targetsArray.length) {
         return false;
       }
 
       // we add to the merged
-      List<Object> messages = merged.computeIfAbsent(target, k -> new AggregatedObjects<>());
+      Queue<AggregatedObjects<Object>> messages = merged.get(target);
       if (message instanceof AggregatedObjects) {
-        messages.addAll((Collection<?>) message);
+        messages.add((AggregatedObjects) message);
         mergedInMemoryMessages += ((AggregatedObjects) message).size();
         mergerInMemoryMessages -= ((AggregatedObjects) message).size();
       } else {
-        messages.add(message);
-        mergedInMemoryMessages++;
-        mergerInMemoryMessages--;
+        throw new RuntimeException("Un-expected message");
       }
     } finally {
       swapLock.unlock();
@@ -787,8 +808,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         return false;
       }
       // if we have enough things in memory or some sources finished lets call progress on merger
-      Integer sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
-      if (mergerInMemoryMessages >= inMemoryMessageThreshold * sendsToComplete * mergeFactor
+      int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
+      if (mergerInMemoryMessages >= highWaterMark * targetsArray.length
           || mergerBlocked || mergeFinishSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {
@@ -802,7 +823,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       // now we can send to group
       boolean syncsDone = false;
-      boolean sendsDone;
+      boolean sendsDone = true;
       if (mergeCalled && !allSyncsReceives) {
         sendsDone = sendToGroup();
       } else {
@@ -819,7 +840,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             if (allSyncsReceives) {
               syncsReady = true;
             }
-            sendsDone = sendToGroup();
           }
         }
       }
@@ -859,13 +879,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           finishedSendGroups.clear();
 
           // we need to have all the syncs received in a single round to terminate
-//          if (startedSyncRound && !allTargetsReceivedSyncs) {
-//            finishedTargets.clear();
-//            for (int i : targetsOfThisWorker) {
-//              Set<Integer> fin = finishedSources.get(i);
-//              fin.clear();
-//            }
-//          }
+          if (startedSyncRound && !allTargetsReceivedSyncs) {
+            finishedTargets.clear();
+            for (int i : targetsOfThisWorker) {
+              Set<Integer> fin = finishedSources.get(i);
+              fin.clear();
+            }
+          }
         }
 
         if (roundCompleted && !lastRound && finishedReceiving) {
@@ -900,7 +920,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private boolean containsAnyDataToSend() {
     for (int i = 0; i < targetsArray.length; i++) {
       int t = targetsArray[i];
-      List<Object> data = merged.get(t);
+      Queue<AggregatedObjects<Object>> data = merged.get(t);
       if (data != null && data.size() > 0) {
         return true;
       }
@@ -914,7 +934,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       List<Integer> workerTargets = workerToTargets.get(worker);
       for (int i = 0; i < workerTargets.size(); i++) {
         int target = workerTargets.get(i);
-        List<Object> data = merged.get(target);
+        Queue<AggregatedObjects<Object>> data = merged.get(target);
 
         // data cannot be null
         assert data != null;
@@ -927,6 +947,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     return false;
   }
 
+  private AggregatedObjects<Object> empty = new AggregatedObjects<>();
+
   private boolean sendToGroup() {
     boolean sent = false;
     List<Integer> sendingGroup = sendingGroupsWorkers.get(sendGroupIndex);
@@ -936,21 +958,22 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       for (int i = targetIndex; i < workerTargets.size(); i++) {
         int target = workerTargets.get(i);
-        List<Object> data = merged.get(target);
+        Queue<AggregatedObjects<Object>> queue = merged.get(target);
 
-        // data cannot be null
-        assert data != null;
-
+        AggregatedObjects<Object> data = queue.poll();
+        if (data == null) {
+          data = empty;
+        }
         RoutingParameters parameters = targetRoutes.get(target);
         // even if we have 0 tuples, we need to send at this point
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-//          LOG.info(thisWorker + " Send " + target + " " + data.size());
+//          LOG.info(String.format("%d Send to %d size %d, inMemory %d merged %d",
+//              thisWorker, target, data.size(), mergerInMemoryMessages, mergedInMemoryMessages));
           sent = true;
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
-          merged.put(target, new AggregatedObjects<>());
           // advance the index
           targetIndex++;
           sendWorkerTaskIndex.put(worker, targetIndex);
@@ -995,7 +1018,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     startedSyncRound = false;
 
     for (int t : targets) {
-      merged.put(t, new AggregatedObjects<>());
+      merged.put(t, new LinkedList<>());
       finishedSources.put(t, new HashSet<>());
     }
 
