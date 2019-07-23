@@ -15,14 +15,14 @@ twister2.uploader.directory: "/tmp/repository"
 twister2.uploader.scp.command.options: "--chmod=+rwx"
 
 # The scp connection string sets the remote user name and host used by the uploader.
-twister2.uploader.scp.command.connection: "root@149.165.150.81"
+twister2.uploader.scp.command.connection: "root@localhost"
 
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
 twister2.uploader.ssh.command.options: ""
 
 # The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.ssh.command.connection: "root@149.165.150.81"
+twister2.uploader.ssh.command.connection: "root@localhost"
 
 # file system uploader to be used
 twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"

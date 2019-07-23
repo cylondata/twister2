@@ -32,4 +32,4 @@ twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.2.tar.gz"
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "149.165.150.81:2181"
+twister2.zookeeper.server.addresses: "localhost:2181"
