@@ -294,7 +294,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Weather merger returned false
    */
-  private boolean mergerBlocked;
+  private boolean mergerBlocked = false;
 
 
   /**
@@ -823,7 +823,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       // now we can send to group
       boolean syncsDone = false;
-      boolean sendsDone;
+      boolean sendsDone = true;
       if (mergeCalled && !allSyncsReceives) {
         sendsDone = sendToGroup();
       } else {
@@ -840,7 +840,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             if (allSyncsReceives) {
               syncsReady = true;
             }
-            sendsDone = sendToGroup();
           }
         }
       }

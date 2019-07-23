@@ -100,7 +100,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
 
     boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
     if (send) {
-      reduced.remove(target);
+      reduced.put(target, new HashMap<>());
     }
     return send;
   }
