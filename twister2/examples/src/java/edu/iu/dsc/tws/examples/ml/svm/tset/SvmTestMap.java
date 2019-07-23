@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -22,7 +21,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTestMap implements MapFunc<Double, Iterator<double[][]>> {
+public class SvmTestMap implements MapFunc<Double, double[][]> {
 
   private static final Logger LOG = Logger.getLogger(SvmTestMap.class.getName());
 
@@ -49,8 +48,7 @@ public class SvmTestMap implements MapFunc<Double, Iterator<double[][]>> {
   }
 
   @Override
-  public Double map(Iterator<double[][]> t) {
-    double[][] doubles = t.next();
+  public Double map(double[][] doubles) {
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, doubles);
     this.predict = new Predict(this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),
         this.binaryBatchModel.getW());

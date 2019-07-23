@@ -13,19 +13,33 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
+import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
+import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
+import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
+import edu.iu.dsc.tws.examples.ml.svm.tset.AccuracyAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.DataLoadingTask;
+import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTestMap;
+import edu.iu.dsc.tws.examples.ml.svm.tset.SvmTrainMap;
+import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorAverager;
 import edu.iu.dsc.tws.examples.ml.svm.tset.WeightVectorLoad;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.IPrintFunction;
 import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
+import edu.iu.dsc.tws.examples.ml.svm.util.TSetUtils;
 
 
 public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
@@ -39,9 +53,9 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
   private OperationMode operationMode;
   private SVMJobParameters svmJobParameters;
   private BinaryBatchModel binaryBatchModel;
-  private CacheableTSet<double[]> trainedWeightVector;
-  private CacheableTSet<double[][]> trainingData;
-  private CacheableTSet<double[][]> testingData;
+  private CachedTSet<double[]> trainedWeightVector;
+  private CachedTSet<double[][]> trainingData;
+  private CachedTSet<double[][]> testingData;
   private long dataLoadingTime = 0L;
   private long initializingTime = 0L;
   private double initializingDTime = 0;
@@ -109,19 +123,19 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
     LOG.info(this.binaryBatchModel.toString());
   }
 
-  private CacheableTSet<double[][]> loadTrainingData(TSetEnvironment env) {
+  private CachedTSet<double[][]> loadTrainingData(TSetEnvironment env) {
     return env.createBatchSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "train"),
         this.dataStreamerParallelism).setName("trainingDataSource").cache();
   }
 
-  private CacheableTSet<double[][]> loadTestingData(TSetEnvironment env) {
+  private CachedTSet<double[][]> loadTestingData(TSetEnvironment env) {
     return env.createBatchSource(
         new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "test"),
         this.dataStreamerParallelism).setName("testingDataSource").cache();
   }
 
-  private CacheableTSet<double[]> loadWeightVector(TSetEnvironment env) {
+  private CachedTSet<double[]> loadWeightVector(TSetEnvironment env) {
     return env.createBatchSource(
         new WeightVectorLoad(this.binaryBatchModel, this.svmJobParameters),
         this.dataStreamerParallelism).setName("weightVectorSource")
@@ -129,26 +143,33 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
   }
 
   private void executeTraining(TSetEnvironment env) {
-/*    long time = System.nanoTime();
-    this.binaryBatchModel.setW(this.trainedWeightVector.getPartitionData(0));
+    long time = System.nanoTime();
+    this.binaryBatchModel.setW(this.trainedWeightVector.getData(0).get(0));
+
     for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
       LOG.info(String.format("Iteration %d", i));
-      IterableMapTSet<double[][], double[]> svmTrainTset = trainingData
-          .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
+
+      ComputeTSet<double[], Iterator<double[][]>> svmTrainTset =
+          trainingData.direct()
+              .map(new SvmTrainMap(this.binaryBatchModel, this.svmJobParameters));
+
       svmTrainTset.addInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR, trainedWeightVector);
-      AllReduceTLink<double[]> reduceTLink = svmTrainTset.allReduce((t1, t2) -> {
-        double[] newWeightVector = new double[t1.length];
-        try {
-          newWeightVector = Matrix.add(t1, t2);
-        } catch (MatrixMultiplicationException e) {
-          e.printStackTrace();
-        }
-        return newWeightVector;
-      });
-      trainedWeightVector = reduceTLink
-          .map(new WeightVectorAverager(this.dataStreamerParallelism),
-              this.dataStreamerParallelism)
-          .cache();
+
+      AllReduceTLink<double[]> reduceTLink =
+          svmTrainTset.allReduce((t1, t2) -> {
+            double[] newWeightVector = new double[t1.length];
+            try {
+              newWeightVector = Matrix.add(t1, t2);
+            } catch (MatrixMultiplicationException e) {
+              e.printStackTrace();
+            }
+            return newWeightVector;
+          });
+
+      trainedWeightVector =
+          reduceTLink.map(new WeightVectorAverager(this.dataStreamerParallelism))
+              .cache();
+
       //TODO : Think
       // TDirectLink is not serializable or any of the super classes are not serializable
       // so this is hard to do without that support. Config class is also not serializable
@@ -158,13 +179,14 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
 //              dataStreamerParallelism)
 //          .cache();
     }
+
     this.trainingTime = System.nanoTime() - time;
     TSetUtils.printCachedTset(trainedWeightVector, new IPrintFunction<double[]>() {
       @Override
       public void print(double[] doubles) {
         System.out.println(Arrays.toString(doubles));
       }
-    });*/
+    });
   }
 
   private void executeSummary(TSetEnvironment env) {
@@ -174,18 +196,23 @@ public class SvmSgdTsetRunner implements TSetIWorker, Serializable {
   }
 
   private void executePredict(TSetEnvironment env) {
-/*    assert this.trainedWeightVector.getPartitionData(0) != null : "Partition is null";
+    assert this.trainedWeightVector.getDataObject() != null : "Partition is null";
+
     this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0));
-    IterableMapTSet<double[][], Double> svmTestTset = testingData
-        .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
-    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce((t1, t2) -> {
-      double t = t1 + t2;
-      return t;
-    });
-    CachedTSet<Double> finalAcc = reduceTestLink
-        .map(new AccuracyAverager(this.svmJobParameters.getParallelism())).cache();
+
+    ComputeTSet<Double, Iterator<double[][]>> svmTestTset =
+        testingData.direct()
+            .map(new SvmTestMap(this.binaryBatchModel, this.svmJobParameters));
+
+    ReduceTLink<Double> reduceTestLink = svmTestTset.reduce(Double::sum);
+
+    CachedTSet<Double> finalAcc =
+        reduceTestLink.map(new AccuracyAverager(this.svmJobParameters.getParallelism()))
+            .cache();
+
     accuracy = finalAcc.getData().get(0);
-    LOG.info(String.format("Training Accuracy : %f ", accuracy));*/
+
+    LOG.info(String.format("Training Accuracy : %f ", accuracy));
   }
 
   private SvmSgdTsetRunner initialize(TSetEnvironment env) {
