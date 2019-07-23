@@ -809,7 +809,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       // if we have enough things in memory or some sources finished lets call progress on merger
       int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
-      if (mergerInMemoryMessages >= highWaterMark * targetsArray.length
+      if (mergerInMemoryMessages >= lowWaterMark * targetsArray.length
           || mergerBlocked || mergeFinishSources.size() > 0) {
         if (partialLock.tryLock()) {
           try {
