@@ -215,36 +215,36 @@ public class TargetPartialReceiver extends TargetReceiver {
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
-    lock.lock();
-    try {
-      boolean allEmpty = true;
-      for (int i = 0; i < targets.length; i++) {
-        int key = targets[i];
-        Queue<Object> val = messages.get(key);
+    if (lock.tryLock()) {
+      try {
+        boolean allEmpty = true;
+        for (int i = 0; i < targets.length; i++) {
+          int key = targets[i];
+          Queue<Object> val = messages.get(key);
 
-        if (val != null && val.size() > 0) {
-          merge(key, val);
+          if (val != null && val.size() > 0) {
+            merge(key, val);
+          }
+
+          // check weather we are ready to send and we have values to send
+          if (!isFilledToSend(key)) {
+            continue;
+          }
+
+          // if we send this list successfully
+          if (!sendToTarget(representSource, key)) {
+            needsFurtherProgress = true;
+          }
+          allEmpty &= val.isEmpty();
         }
 
-        // check weather we are ready to send and we have values to send
-        if (!isFilledToSend(key)) {
-          continue;
-        }
-
-        // if we send this list successfully
-        if (!sendToTarget(representSource, key)) {
+        if (!allEmpty || !isAllEmpty() || !sync()) {
           needsFurtherProgress = true;
         }
-        allEmpty &= val.isEmpty();
+      } finally {
+        lock.unlock();
       }
-
-      if (!allEmpty || !isAllEmpty() || !sync()) {
-        needsFurtherProgress = true;
-      }
-    } finally {
-      lock.unlock();
     }
-
     return needsFurtherProgress;
   }
 

@@ -9,21 +9,19 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.sort;
+package edu.iu.dsc.tws.examples.ml.svm.constant;
 
-import java.util.Random;
+public final class WindowingConstants {
+  private WindowingConstants() {
 
-public class RecordGenerator {
-  private int maxRange;
-
-  private Random random;
-
-  public RecordGenerator(int maxRange) {
-    this.maxRange = maxRange;
-    this.random = new Random();
   }
 
-  public Record next() {
-    return new Record(random.nextInt(maxRange), 10);
-  }
+  public static final String WINDOW_TYPE = "window_type";
+
+  public static final String SLIDING_WINDOW_LENGTH = "sliding_window_length";
+
+  public static final String WINDOW_LENGTH = "window_length";
+
+  public static final String WINDOW_CAPACITY_TYPE = "time";
+
 }

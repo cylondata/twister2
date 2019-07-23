@@ -277,14 +277,6 @@ public class TWSTCPChannel implements TWSChannel {
       waitForCompletionSends.add(sendRequests);
     }
 
-    for (int i = 0; i < registeredReceives.size(); i++) {
-      TCPReceiveRequests receiveRequests = registeredReceives.get(i);
-      // okay we have more buffers to be posted
-      if (receiveRequests.availableBuffers.size() > 0) {
-        postReceive(receiveRequests);
-      }
-    }
-
     IterativeLinkedList.ILLIterator sendRequestsIterator
         = waitForCompletionSends.iterator();
     while (sendRequestsIterator.hasNext()) {
@@ -312,6 +304,12 @@ public class TWSTCPChannel implements TWSChannel {
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       TCPReceiveRequests receiveRequests = registeredReceives.get(i);
+
+      // okay we have more buffers to be posted
+      if (receiveRequests.availableBuffers.size() > 0) {
+        postReceive(receiveRequests);
+      }
+
       IterativeLinkedList.ILLIterator requestIterator = receiveRequests.pendingRequests.iterator();
       while (requestIterator.hasNext()) {
         Request r = (Request) requestIterator.next();

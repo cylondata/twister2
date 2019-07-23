@@ -75,6 +75,7 @@ public class SvmTrainMap extends BaseTFunction implements MapFunc<double[], doub
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
+
     return this.pegasosSgdSvm.getW();
   }
 }

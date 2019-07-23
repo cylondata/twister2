@@ -5,209 +5,207 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from "react";
-//const React = require('react');
+const React = require("react");
 
-const CompLibrary = require('../../core/CompLibrary.js');
+const CompLibrary = require("../../core/CompLibrary.js");
 
-const MarkdownBlock = CompLibrary.MarkdownBlock; /* Used to read markdown */
-const Container = CompLibrary.Container;
-const GridBlock = CompLibrary.GridBlock;
+const {MarkdownBlock, GridBlock, Container} = CompLibrary; /* Used to read markdown */
 
-class HomeSplash extends React.Component {
+const siteConfig = require(`${process.cwd()}/siteConfig.js`);
+
+function docUrl(doc, language) {
+    return `${siteConfig.baseUrl}${language ? `${language}/` : ""}${doc}`;
+}
+
+function imgUrl(img) {
+    return `${siteConfig.baseUrl}img/${img}`;
+}
+
+class Button extends React.Component {
     render() {
-        const {siteConfig, language = ''} = this.props;
-        const {baseUrl, docsUrl} = siteConfig;
-        const docsPart = `${docsUrl ? `${docsUrl}/` : ''}`;
-        const langPart = `${language ? `${language}/` : ''}`;
-        const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
-
-        const SplashContainer = props => (
-            <div className="homeContainer">
-                <div className="homeSplashFade">
-                    <div className="wrapper homeWrapper">{props.children}</div>
-                </div>
-            </div>
-        );
-
-        const Logo = props => (
-            <div className="projectLogo">
-                <img src={props.img_src} alt="Twister2"/>
-            </div>
-        );
-
-        const ProjectTitle = () => (
-            <h2 className="projectTitle">
-                {siteConfig.title}
-                <small>{siteConfig.tagline}</small>
-            </h2>
-        );
-
-        const PromoSection = props => (
-            <div className="section promoSection">
-                <div className="promoRow">
-                    <div className="pluginRowBlock">{props.children}</div>
-                </div>
-            </div>
-        );
-
-        const Button = props => (
-            <div className="pluginWrapper buttonWrapper">
-                <a className="button" href={props.href} target={props.target}>
-                    {props.children}
-                </a>
-            </div>
-        );
-
         return (
-            <SplashContainer>
-                <Logo img_src={`${baseUrl}img/undraw_monitor.svg`}/>
-                <div className="inner">
-                    <ProjectTitle siteConfig={siteConfig}/>
-                    <PromoSection>
-                        <Button href="https://github.com/DSC-SPIDAL/twister2">Github</Button>
-                        <Button href={docUrl('quickstart.html')}>Quickstart</Button>
-                    </PromoSection>
-                </div>
-            </SplashContainer>
-        );
+            <div className="pluginWrapper buttonWrapper">
+            <a className="button hero" href={this.props.href} target={this.props.target}>
+        {this.props.children}
+    </a>
+        </div>
+    );
     }
 }
 
+Button.defaultProps = {
+    target: "_self"
+};
+
+const SplashContainer = props => (
+<div className="homeContainer">
+    <div className="homeSplashFade">
+    <div className="wrapper homeWrapper">{props.children}</div>
+</div>
+</div>
+);
+
+
+const ProjectTitle = () => (
+<React.Fragment>
+<div style={{display : "flex", justifyContent : "center", alignItems : "center"}}>
+<img src={"img/half.jpg"} alt="Twister2 Logo" width={100} height={100}/>
+<h1 className="projectTitle">{siteConfig.title}</h1>
+</div>
+
+<h2 style={{marginTop : "0.5em"}}>
+Flexible, High performance data analytics.
+</h2>
+</React.Fragment>
+);
+
+const PromoSection = props => (
+<div className="section promoSection">
+    <div className="promoRow">
+    <div className="pluginRowBlock">{props.children}</div>
+</div>
+</div>
+);
+
+class HomeSplash extends React.Component {
+    render() {
+        const language = this.props.language || "";
+        return (
+            <SplashContainer>
+            <div className="inner">
+            <ProjectTitle />
+            <PromoSection>
+            <Button href={docUrl("docs/quickstart", language)}>
+        Get Started
+        </Button>
+        </PromoSection>
+        </div>
+        </SplashContainer>
+    );
+    }
+}
+
+const Installation = () => (
+<div
+className="productShowcaseSection"
+style={{ textAlign: "center" }}
+>
+<h2 style={{marginTop : 10, marginBottom : 5}}>Installation</h2>
+<MarkdownBlock>
+``` npm install --save
+      redux ```
+</MarkdownBlock>
+</div>
+);
+
+const Block = props => (
+<Container
+id={props.id}
+background={props.background}
+className={props.className}
+>
+<GridBlock align="center" contents={props.children} layout={props.layout}/>
+</Container>
+);
+
+const FeaturesTop = props => (
+<Block layout="fourColumn" className="rowContainer featureBlock">
+    {[
+            {
+                content: "Offers a set of modular components for building data analytic applications",
+                //image: imgUrl('icon/time.png'),
+                image : imgUrl("cogs.svg"),
+                imageAlign: 'top',
+                title: "Flexible"
+            },
+{
+    content: "Work with high performance networks to efficiently execute IO intensive applications",
+        image: imgUrl('speed.svg'),
+    imageAlign: 'top',
+    title: "High Performance"
+},
+{
+    content: `Supports both streaming and batch applications natively in a single engine.`,
+        image: imgUrl('Flow.svg'),
+    imageAlign: 'top',
+    title: "Streaming & Batch"
+},
+{
+    content: "Provides high level APIs similar to Spark, Hadoop and Storm as well as support for BEAM and Storm APIs",
+        image: imgUrl('api.svg'),
+    imageAlign: 'top',
+    title: "API Support"
+},
+]}
+</Block>
+);
+
+const Twister2Apps = props => (
+<Block layout="twoColumn" className="rowContainer featureBlock">
+    {[
+            {
+                content: "This graph shows the performance of K-Means compared to popular engines",
+                //image: imgUrl('icon/time.png'),
+                image : imgUrl("cogs.svg"),
+                imageAlign: 'top',
+                title: "K-Means"
+            },
+{
+    content: "This graph shows the performance of Terasort compared to popular engines",
+        image: imgUrl('speed.svg'),
+    imageAlign: 'top',
+    title: "Terasort"
+},
+]}
+</Block>
+);
+
+const Community = props => (
+<Block layout="twoColumn" className="rowContainer featureBlock">
+    {[
+            {
+                content: "Our goal is to build a community to bridge the gap between high performance computing and data analytics. Join our community and help us to build better and more efficient data analytics products",
+                title: "Help Us Improve Twister2!"
+            },
+]}
+</Block>
+);
+
+// const Community = () => (
+// <Block layout="oneColumn" className="featureBlock rowContainer">
+//     {[
+//             {
+//                 content: "Our goal is to build a community to bridge the gap between high performance computing and data analytics. Join our community and help us to build better and more efficient data analytics producs",
+//                 title: "Help Us Improve Twister2!"
+//             },
+// ]}
+// </Block>
+// );
+
 class Index extends React.Component {
     render() {
-        const {config: siteConfig, language = ''} = this.props;
-        const {baseUrl} = siteConfig;
-
-        const Block = props => (
-            <Container
-                padding={['bottom', 'top']}
-                id={props.id}
-                background={props.background}>
-                <GridBlock
-                    align="center"
-                    contents={props.children}
-                    layout={props.layout}
-                />
-            </Container>
-        );
-
-        const FeatureCallout = () => (
-            <div
-                className="productShowcaseSection paddingBottom"
-                style={{textAlign: 'center'}}>
-                <h2>Features</h2>
-                <MarkdownBlock>
-                    1. Customizable framework for data analytics
-                </MarkdownBlock>
-            </div>
-        );
-
-        const TryOut = () => (
-            <Block id="try">
-                {[
-                    {
-                        content:
-                            'To make your landing page more attractive, use illustrations! Check out ' +
-                            '[**unDraw**](https://undraw.co/) which provides you with customizable illustrations which are free to use. ' +
-                            'The illustrations you see on this page are from unDraw.',
-                        image: `${baseUrl}img/undraw_code_review.svg`,
-                        imageAlign: 'left',
-                        title: 'Wonderful SVG Illustrations',
-                    },
-                ]}
-            </Block>
-        );
-
-        const Description = () => (
-            <Block background="dark">
-                {[
-                    {
-                        content:
-                            'Twister2 provides an efficient implementation of ',
-                        image: `${baseUrl}img/undraw_note_list.svg`,
-                        imageAlign: 'right',
-                        title: 'Why Twister2?',
-                    },
-                ]}
-            </Block>
-        );
-
-        const LearnHow = () => (
-            <Block background="light">
-                {[
-                    {
-                        content:
-                            'Each new Docusaurus project has **randomly-generated** theme colors.',
-                        image: `${baseUrl}img/undraw_youtube_tutorial.svg`,
-                        imageAlign: 'right',
-                        title: 'Randomly Generated Theme Colors',
-                    },
-                ]}
-            </Block>
-        );
-
-        const Features = () => (
-            <Block layout="fourColumn">
-                {[
-                    {
-                        content: 'Provides highly efficient data analytics as a framework and a library bridging the gap between data computing and high performance computing',
-                        image: `${baseUrl}img/undraw_react.svg`,
-                        imageAlign: 'top',
-                        title: 'High performance data analytics.',
-                    },
-                    {
-                        content: 'Supports pure streaming and batch analytics in a single engine with high performance.',
-                        image: `${baseUrl}img/undraw_operating_system.svg`,
-                        imageAlign: 'top',
-                        title: 'Streaming & Batch analytics',
-                    },
-                ]}
-            </Block>
-        );
-
-        const Showcase = () => {
-            if ((siteConfig.users || []).length === 0) {
-                return null;
-            }
-
-            const showcase = siteConfig.users
-                .filter(user => user.pinned)
-                .map(user => (
-                    <a href={user.infoLink} key={user.infoLink}>
-                        <img src={user.image} alt={user.caption} title={user.caption}/>
-                    </a>
-                ));
-
-            const pageUrl = page => baseUrl + (language ? `${language}/` : '') + page;
-
-            return (
-                <div className="productShowcaseSection paddingBottom">
-                    <h2>Who is Using This?</h2>
-                    <p>This project is used by all these people</p>
-                    <div className="logos">{showcase}</div>
-                    <div className="more-users">
-                        <a className="button" href={pageUrl('users.html')}>
-                            More {siteConfig.title} Users
-                        </a>
-                    </div>
-                </div>
-            );
-        };
+        const language = this.props.language || "";
 
         return (
             <div>
-                <HomeSplash siteConfig={siteConfig} language={language}/>
-                <div className="mainContainer">
-                    <Features/>
-                    <FeatureCallout/>
-                    <LearnHow/>
-                    <TryOut/>
-                    <Description/>
-                    <Showcase/>
-                </div>
+            <HomeSplash language={language} />
+        <div className="mainContainer">
+
+            <div className="productShowcaseSection">
+            <Container background="light">
+            <FeaturesTop />
+            </Container>
+            <Container className="libsContainer" wrapper={false}>
+
+            <Twister2Apps/>
+            </Container>
+            <Container background="light">
+            <Community/>
+            </Container>
             </div>
-        );
+            </div>
+            </div>
+    );
     }
 }
 
