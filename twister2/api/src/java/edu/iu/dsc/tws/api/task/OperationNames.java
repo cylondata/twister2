@@ -21,23 +21,25 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.task;
 
-public final class Operations {
-  private Operations() {
+public final class OperationNames {
+
+  private OperationNames() {
   }
 
-  public static final String PARTITION = "partition";
-  public static final String PARTITION_BY_MULTI_BYTE = "partition_by_multi_byte";
   public static final String REDUCE = "reduce";
-  public static final String REDUCE_BATCH = "reduce_batch";
-  public static final String REDUCE_HL = "reduce_hl";
   public static final String GATHER = "gather";
-  public static final String ALL_REDUCE = "all_reduce";
-  public static final String ALL_GATHER = "all_gather";
-  public static final String KEYED_GATHER = "keyed_gather";
-  public static final String KEYED_REDUCE = "keyed_reduce";
-  public static final String KEYED_PARTITION = "keyed_partition";
+  public static final String PARTITION = "partition";
+  public static final String ALLGATHER = "allgather";
+  public static final String ALLREDUCE = "allreduce";
   public static final String BROADCAST = "broadcast";
-  public static final String LOAD_BALANCE = "load_balance";
+  public static final String KEYED_PARTITION = "keyed_partition";
+  public static final String KEYED_REDUCE = "keyed_reduce";
+  public static final String KEYED_GATHER = "keyed_gather";
+  public static final String DIRECT = "direct";
+  public static final String JOIN = "join";
+
 }
+

@@ -28,8 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;

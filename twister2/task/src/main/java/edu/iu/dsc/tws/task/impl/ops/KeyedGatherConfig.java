@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.impl.ops;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.OperationNames;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 

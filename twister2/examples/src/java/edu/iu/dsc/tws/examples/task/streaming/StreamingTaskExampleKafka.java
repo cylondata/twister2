@@ -17,7 +17,6 @@ import java.util.List;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -25,6 +24,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.GraphConstants;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;

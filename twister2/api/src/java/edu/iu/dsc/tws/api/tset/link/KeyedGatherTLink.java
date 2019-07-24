@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;

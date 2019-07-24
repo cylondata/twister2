@@ -18,12 +18,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Op;
-import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
