@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class KeyedGatherTLink<K, V> extends IteratorLink<Tuple<K, Iterator<V>>> {
   private PartitionFunc<K> partitionFunction;

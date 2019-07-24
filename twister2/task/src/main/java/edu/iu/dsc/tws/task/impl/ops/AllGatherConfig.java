@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl.ops;
 
-import edu.iu.dsc.tws.executor.core.OperationNames;
+import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class AllGatherConfig extends GatherConfig {

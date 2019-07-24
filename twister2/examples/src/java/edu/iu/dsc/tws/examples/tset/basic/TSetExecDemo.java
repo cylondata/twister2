@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -45,7 +46,6 @@ import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.TaskEnvironment;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;

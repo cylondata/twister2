@@ -26,12 +26,12 @@ package edu.iu.dsc.tws.examples.tset.verified;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class TSetAllReduceExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetAllReduceExample.class.getName());

@@ -12,11 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.comms.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.link.SingleLink;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 
 public class StreamingReplicateTLink<T> extends SingleLink<T> {
   public StreamingReplicateTLink(TSetEnvironment tSetEnv, int reps) {
