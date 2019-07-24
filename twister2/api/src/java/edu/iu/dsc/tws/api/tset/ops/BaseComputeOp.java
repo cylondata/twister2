@@ -24,7 +24,9 @@
 package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -43,12 +45,17 @@ public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOu
 
   private TSetContext tSetContext;
 
+  // this map will hold input temporarily until tset context is available
+  private Map<String, DataObject<?>> tempInputMap = new HashMap<>();
+
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
     this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
 
     this.tSetContext = new TSetContext(cfg, ctx);
+    this.tSetContext.addInputMap(tempInputMap);
+
     this.getFunction().prepare(tSetContext);
   }
 
@@ -66,6 +73,10 @@ public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOu
 
   @Override
   public void add(String name, DataObject<?> data) {
-    tSetContext.addInput(name, data);
+    if (tSetContext != null) {
+      tSetContext.addInput(name, data);
+    } else {
+      tempInputMap.put(name, data);
+    }
   }
 }
