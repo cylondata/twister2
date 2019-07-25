@@ -35,18 +35,15 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public final class TSetEnvironment {
+public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
   private TSetGraph tsetGraph;
   private TaskExecutor taskExecutor;
-  private OperationMode operationMode;
 
   private int defaultParallelism = 1;
 
@@ -54,11 +51,10 @@ public final class TSetEnvironment {
 
   private static volatile TSetEnvironment thisTSetEnv;
 
-  private TSetEnvironment(WorkerEnvironment wEnv, OperationMode opMode) {
+  protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
-    this.operationMode = opMode;
 
-    this.tsetGraph = new TSetGraph(this, opMode);
+    this.tsetGraph = new TSetGraph(this, getOperationMode());
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
@@ -68,9 +64,9 @@ public final class TSetEnvironment {
     this.defaultParallelism = defaultParallelism;
   }
 
-  public OperationMode getOperationMode() {
-    return this.operationMode;
-  }
+  public abstract OperationMode getOperationMode();
+
+  public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
 
   public TSetGraph getGraph() {
     return tsetGraph;
@@ -88,7 +84,7 @@ public final class TSetEnvironment {
     return workerEnv.getWorkerId();
   }
 
-  // todo: find a better OOP way of doing this!
+/*  // todo: find a better OOP way of doing this!
   public <T> BatchSourceTSet<T> createBatchSource(SourceFunc<T> source, int parallelism) {
     if (operationMode == OperationMode.STREAMING) {
       throw new RuntimeException("Batch sources can not be created in streaming mode");
@@ -100,7 +96,7 @@ public final class TSetEnvironment {
     return sourceT;
   }
 
-  public <T> StreamingSourceTSet<T> createStreamingSource(SourceFunc<T> source, int parallelism) {
+    public <T> StreamingSourceTSet<T> createStreamingSource(SourceFunc<T> source, int parallelism) {
     if (operationMode == OperationMode.BATCH) {
       throw new RuntimeException("Streaming sources can not be created in batch mode");
     }
@@ -109,7 +105,7 @@ public final class TSetEnvironment {
     tsetGraph.addSourceTSet(sourceT);
 
     return sourceT;
-  }
+  }*/
 
   /**
    * Runs the entire TSet graph
@@ -199,11 +195,15 @@ public final class TSetEnvironment {
    * @param opMode operation mode
    * @return tset environment
    */
-  public static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
+  private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
     if (thisTSetEnv == null) {
       synchronized (TSetEnvironment.class) {
         if (thisTSetEnv == null) {
-          thisTSetEnv = new TSetEnvironment(wEnv, opMode);
+          if (opMode == OperationMode.BATCH) {
+            thisTSetEnv = new BatchTSetEnvironment(wEnv);
+          } else { // streaming
+            thisTSetEnv = new StreamingTSetEnvironment(wEnv);
+          }
         }
       }
     }
@@ -217,7 +217,17 @@ public final class TSetEnvironment {
    * @param wEnv worker environment
    * @return tset environment for batch operation
    */
-  public static TSetEnvironment init(WorkerEnvironment wEnv) {
-    return init(wEnv, OperationMode.BATCH);
+  public static BatchTSetEnvironment initBatch(WorkerEnvironment wEnv) {
+    return (BatchTSetEnvironment) init(wEnv, OperationMode.BATCH);
+  }
+
+  /**
+   * initialize the Tset environment
+   *
+   * @param wEnv worker environment
+   * @return tset environment for batch operation
+   */
+  public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
+    return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);
   }
 }
