@@ -35,5 +35,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.nodes;
 
-public interface IComputableSink extends ICompute, ISink {
+public interface IComputableSink<T> extends ICompute<T>, ISink {
 }

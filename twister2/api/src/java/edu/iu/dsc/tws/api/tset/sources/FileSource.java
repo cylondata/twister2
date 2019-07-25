@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.api.tset.sources;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.tset.Source;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.data.api.formatters.FileInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 
-public class FileSource<T> implements Source<T> {
+public class FileSource<T> implements SourceFunc<T> {
   /**
    * The input partitioner
    */

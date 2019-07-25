@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class SVMReduce extends BaseSink implements Collector {
 

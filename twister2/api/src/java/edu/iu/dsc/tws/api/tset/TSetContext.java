@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.task.TaskContext;
 
 public class TSetContext implements Serializable {
   /**
@@ -47,7 +49,7 @@ public class TSetContext implements Serializable {
    * Inputs that are added to a TSet are stored in this
    * map to be passed to functions
    */
-  private Map<String, Cacheable<?>> inputMap;
+  private Map<String, DataObject<?>> inputMap;
 
   /**
    * The worker id this tSet instance belongs to
@@ -84,6 +86,11 @@ public class TSetContext implements Serializable {
 
   public TSetContext() {
     this.inputMap = new HashMap<>();
+  }
+
+  public TSetContext(Config cfg, TaskContext ctx) {
+    this(cfg, ctx.taskIndex(), ctx.globalTaskId(), ctx.taskName(), ctx.getParallelism(),
+        ctx.getWorkerId(), ctx.getConfigurations());
   }
 
   /**
@@ -162,7 +169,7 @@ public class TSetContext implements Serializable {
    *
    * @return the current input map
    */
-  protected Map<String, Cacheable<?>> getInputMap() {
+  public Map<String, DataObject<?>> getInputMap() {
     return inputMap;
   }
 
@@ -171,7 +178,7 @@ public class TSetContext implements Serializable {
    *
    * @param inputMap the map to be set for this context
    */
-  protected void setInputMap(Map<String, Cacheable<?>> inputMap) {
+  public void setInputMap(Map<String, DataObject<?>> inputMap) {
     this.inputMap = inputMap;
   }
 
@@ -180,7 +187,7 @@ public class TSetContext implements Serializable {
    *
    * @param map the map to be added
    */
-  protected void addInputMap(Map<String, Cacheable<?>> map) {
+  public void addInputMap(Map<String, DataObject<?>> map) {
     this.inputMap.putAll(map);
   }
 
@@ -190,7 +197,7 @@ public class TSetContext implements Serializable {
    * @param key key of the input object
    * @return the input object if the key is present or null
    */
-  public Cacheable<?> getInput(String key) {
+  public DataObject<?> getInput(String key) {
     return inputMap.get(key);
   }
 
@@ -200,15 +207,15 @@ public class TSetContext implements Serializable {
    * @param key the key to be associated with the input object
    * @param data the input object
    */
-  public void addInput(String key, Cacheable<?> data) {
+  public void addInput(String key, DataObject<?> data) {
     inputMap.put(key, data);
   }
 
-  protected void settSetIndex(int tSetIndex) {
+  public void settSetIndex(int tSetIndex) {
     this.tSetIndex = tSetIndex;
   }
 
-  protected void settSetId(int tSetId) {
+  public void settSetId(int tSetId) {
     this.tSetId = tSetId;
   }
 
@@ -216,19 +223,19 @@ public class TSetContext implements Serializable {
     return tSetName;
   }
 
-  protected void settSetName(String tSetName) {
+  public void settSetName(String tSetName) {
     this.tSetName = tSetName;
   }
 
-  protected void setParallelism(int parallelism) {
+  public void setParallelism(int parallelism) {
     this.parallelism = parallelism;
   }
 
-  protected void setWorkerId(int workerId) {
+  public void setWorkerId(int workerId) {
     this.workerId = workerId;
   }
 
-  protected void setConfig(Config config) {
+  public void setConfig(Config config) {
     this.config = config;
   }
 }

@@ -11,90 +11,161 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
+import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
+import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sinks.SinkTSet;
 
-public abstract class BaseTLink<T> implements TLink<T> {
-
-  /**
-   * The children of this set
-   */
-  protected List<TBase<?>> children;
+/**
+ * Base link impl for all the links
+ *
+ * @param <T1> output type from the comms
+ * @param <T0> base type
+ */
+public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
 
   /**
    * The TSet Env used for runtime operations
    */
-  protected TSetEnv tSetEnv;
-
+  private TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
    */
-  protected String name;
+  private String name;
 
-  /**
-   * The parallelism of the set
-   */
-  protected int parallel = 4;
-  /**
-   * The configuration
-   */
-  protected Config config;
+  private int sourceParallelism;
 
-  public BaseTLink(Config cfg, TSetEnv tSetEnv) {
-    this.children = new ArrayList<>();
-    this.tSetEnv = tSetEnv;
-    this.config = cfg;
+  private int targetParallelism;
+
+  public BaseTLink(TSetEnvironment env, String n) {
+    this(env, n, env.getDefaultParallelism());
+  }
+
+  public BaseTLink(TSetEnvironment env, String n, int sourceP) {
+    this(env, n, sourceP, sourceP);
+  }
+
+  public BaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+    this.tSetEnv = env;
+    this.name = n;
+    this.sourceParallelism = sourceP;
+    this.targetParallelism = targetP;
+  }
+
+  protected <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
+    ComputeTSet<P, T1> set;
+    if (n != null && !n.isEmpty()) {
+      set = new ComputeTSet<>(tSetEnv, n, new ComputeOp<>(computeFunction), targetParallelism);
+    } else {
+      set = new ComputeTSet<>(tSetEnv, new ComputeOp<>(computeFunction), targetParallelism);
+    }
+    addChildToGraph(set);
+
+    return set;
+  }
+
+  protected <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+    ComputeTSet<P, T1> set;
+    if (n != null && !n.isEmpty()) {
+      set = new ComputeTSet<>(tSetEnv, n, new ComputeCollectorOp<>(computeFunction),
+          targetParallelism);
+    } else {
+      set = new ComputeTSet<>(tSetEnv, new ComputeCollectorOp<>(computeFunction),
+          targetParallelism);
+    }
+    addChildToGraph(set);
+
+    return set;
   }
 
   @Override
-  public BaseTLink<T> setName(String n) {
-    this.name = n;
-    return this;
+  public <P> ComputeTSet<P, T1> compute(ComputeFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  @Override
+  public <P> ComputeTSet<P, T1> compute(ComputeCollectorFunc<P, T1> computeFunction) {
+    return compute(null, computeFunction);
+  }
+
+  @Override
+  public void sink(SinkFunc<T1> sinkFunction) {
+    SinkTSet<T1> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
+    addChildToGraph(sinkTSet);
+    tSetEnv.run(sinkTSet);
   }
 
   public String getName() {
     return name;
   }
 
-  public int getParallelism() {
-    return parallel;
-  }
-
-  @Override
-  public void build() {
-// first build our selves
-    baseBuild();
-
-    // then build children
-    for (TBase<?> c : children) {
-      c.build();
-    }
+  protected void rename(String n) {
+    this.name = n;
   }
 
   protected Class getType() {
-    TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
+    TypeToken<T1> typeToken = new TypeToken<T1>(getClass()) {
     };
     return typeToken.getRawType();
   }
 
-  /**
-   * Override the parallelism
-   *
-   * @return if overide, return value, otherwise -1
-   */
-  public int overrideParallelism() {
-    return -1;
+  //todo: this always return Object type!!!
+  protected MessageType getMessageType() {
+    return TSetUtils.getDataType(getType());
   }
 
-  public List<TBase<?>> getChildren() {
-    return children;
+  protected void addChildToGraph(TBase child) {
+    tSetEnv.getGraph().addTSet(this, child);
   }
 
+  public TSetEnvironment getTSetEnv() {
+    return tSetEnv;
+  }
+
+  public int getSourceParallelism() {
+    return sourceParallelism;
+  }
+
+  public int getTargetParallelism() {
+    return targetParallelism;
+  }
+
+  @Override
+  public String toString() {
+    return "L{" + getName()
+        + tSetEnv.getGraph().getPredecessors(this)
+        + "->" + tSetEnv.getGraph().getSuccessors(this)
+        + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
+    return Objects.equals(name, baseTLink.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
 }

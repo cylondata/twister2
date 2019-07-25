@@ -102,4 +102,11 @@ public class TaskSchedulePlan {
     result = 31 * result + jobId;
     return result;
   }
+
+  @Override
+  public String toString() {
+    return "TaskSchedulePlan{"
+        + "containers=" + containersMap
+        + "}";
+  }
 }

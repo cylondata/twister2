@@ -12,70 +12,31 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.link.TupleValueIteratorLink;
 
 /**
  * Represent a data set created by an all gather operation
  *
  * @param <T> type of data
  */
-public class StreamingAllGatherTLink<T> extends BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class StreamingAllGatherTLink<T> extends TupleValueIteratorLink<Integer, T> {
 
-  public StreamingAllGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "all-gather-" + parent.getName();
+  public StreamingAllGatherTLink(TSetEnvironment tSetEnv, int sourceParalellism) {
+    super(tSetEnv, TSetUtils.generateName("sallgather"), sourceParalellism);
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public Edge getEdge() {
+    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-    connection.allgather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public BaseTLink<T> setName(String n) {
-    super.setName(n);
+  public StreamingAllGatherTLink<T> setName(String n) {
+    rename(n);
     return this;
   }
 }

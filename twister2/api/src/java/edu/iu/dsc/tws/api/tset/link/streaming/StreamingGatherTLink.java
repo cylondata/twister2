@@ -12,76 +12,31 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.link.TupleValueIteratorLink;
 
 /**
  * Create a gather data set
  *
  * @param <T> the type of data
  */
-public class StreamingGatherTLink<T> extends BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class StreamingGatherTLink<T> extends TupleValueIteratorLink<Integer, T> {
 
-  public StreamingGatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "gather-" + parent.getName();
+  public StreamingGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("sgather"), sourceParallelism, 1);
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv, this, mapFn, 1);
-    children.add(set);
-    return set;
-  }
-
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv, this, mapFn,
-        1);
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        1);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public int overrideParallelism() {
-    return 1;
+  public Edge getEdge() {
+    return new Edge(getName(), OperationNames.GATHER, getMessageType());
   }
 
   @Override
   public StreamingGatherTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

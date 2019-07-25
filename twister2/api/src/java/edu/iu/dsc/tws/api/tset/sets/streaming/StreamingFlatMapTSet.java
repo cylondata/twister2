@@ -12,19 +12,10 @@
 
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
-import edu.iu.dsc.tws.api.tset.ops.FlatMapOp;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 
 /**
  * Apply a flat map operation
@@ -32,69 +23,37 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
  * @param <T> the input type
  * @param <P> the output type
  */
-public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<T> {
-  private static final Logger LOG = Logger.getLogger(StreamingFlatMapTSet.class.getName());
+public class StreamingFlatMapTSet<T, P> extends StreamingBaseTSet<P> {
 
-  private BaseTLink<P> parent;
+  private FlatMapFunc<T, P> mapFn;
 
-  private FlatMapFunction<P, T> mapFn;
-
-  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                              FlatMapFunction<P, T> mapFunc) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
+  public StreamingFlatMapTSet(TSetEnvironment tSetEnv,
+                              FlatMapFunc<T, P> mapFunc, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("sflatmap"), parallelism);
     this.mapFn = mapFunc;
-    this.parallel = 1;
   }
 
-  public StreamingFlatMapTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<P> parent,
-                              FlatMapFunction<P, T> mapFunc, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = parent;
-    this.mapFn = mapFunc;
-    this.parallel = parallelism;
-  }
-
-  public <P1> StreamingMapTSet<P1, T> map(MapFunction<T, P1> mFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mFn);
-  }
-
-  public <P1> StreamingFlatMapTSet<P1, T> flatMap(FlatMapFunction<T, P1> mFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mFn);
-  }
-
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.sink(sink);
-  }
-
-  @SuppressWarnings("unchecked")
-  public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-    boolean keyed = TSetUtils.isKeyedInput(parent);
-
-    int p = calculateParallelism(parent);
-    String newName = generateName("flat-map", parent);
-    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
-    parent.buildConnection(connection);
-    return true;
-  }
+/*  @Override
+  public void build(TSetGraph tSetGraph) {
+//    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
+//    boolean keyed = TSetUtils.isKeyedInput(parent);
+//
+//    int p = calculateParallelism(parent);
+//    String newName = generateName("flat-map", parent);
+//    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().
+//        addCompute(newName, new FlatMapOp<>(mapFn, isIterable, keyed), p);
+//    parent.buildConnection(connection);
+//    return true;
+  }*/
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
+  public ICompute getINode() {
+    return null;
   }
 
   @Override
   public StreamingFlatMapTSet<T, P> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 }

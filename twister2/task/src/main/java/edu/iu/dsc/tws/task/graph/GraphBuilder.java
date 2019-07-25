@@ -43,15 +43,29 @@ public final class GraphBuilder {
     return this;
   }
 
+  public GraphBuilder addSource(String name, ISource source, int parallelism) {
+    return addSource(name, source).setParallelism(name, parallelism);
+  }
+
   public GraphBuilder addSink(String name, ISink sink) {
     graph.addTaskVertex(name, new Vertex(name, sink));
     return this;
   }
 
+  public GraphBuilder addSink(String name, ISink sink, int parallelism) {
+    return addSink(name, sink).setParallelism(name, parallelism);
+  }
+
+
   public GraphBuilder addTask(String name, ICompute task) {
     graph.addTaskVertex(name, new Vertex(name, task));
     return this;
   }
+
+  public GraphBuilder addTask(String name, ICompute task, int parallelism) {
+    return addTask(name, task).setParallelism(name, parallelism);
+  }
+
 
   public GraphBuilder setParallelism(String taskName, int parallel) {
     Vertex v = graph.vertex(taskName);
@@ -72,83 +86,43 @@ public final class GraphBuilder {
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation));
+    connect(t1, t2, new Edge(name, operation));
     return this;
   }
 
   public GraphBuilder connect(String t1, String t2, String name,
                               String operation, IFunction task) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation, task));
+    connect(t1, t2, new Edge(name, operation, task));
     return this;
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
                               MessageType dataType, MessageType keyType) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType, keyType));
+    connect(t1, t2, new Edge(name, operation, dataType, keyType));
     return this;
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
                               IFunction function, MessageType dataType, MessageType keyType) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType, keyType, function));
+    connect(t1, t2, new Edge(name, operation, dataType, keyType, function));
     return this;
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
                               IFunction function, MessageType dataType, MessageType keyType,
                               TaskPartitioner partitioner) {
-    Vertex v1 = graph.vertex(t1);
-    if (v1 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t1);
-    }
-
-    Vertex v2 = graph.vertex(t2);
-    if (v2 == null) {
-      throw new RuntimeException("Failed to connect non-existing task: " + t2);
-    }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType, keyType,
+    connect(t1, t2, new Edge(name, operation, dataType, keyType,
         function, partitioner));
     return this;
   }
 
   public GraphBuilder connect(String t1, String t2, String name, String operation,
                               MessageType dataType) {
+    connect(t1, t2, new Edge(name, operation, dataType));
+    return this;
+  }
+
+  public GraphBuilder connect(String t1, String t2, Edge edge) {
     Vertex v1 = graph.vertex(t1);
     if (v1 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t1);
@@ -158,9 +132,10 @@ public final class GraphBuilder {
     if (v2 == null) {
       throw new RuntimeException("Failed to connect non-existing task: " + t2);
     }
-    graph.addTaskEdge(v1, v2, new Edge(name, operation, dataType));
+    graph.addTaskEdge(v1, v2, edge);
     return this;
   }
+
 
   public DataFlowTaskGraph build() {
     graph.validate();

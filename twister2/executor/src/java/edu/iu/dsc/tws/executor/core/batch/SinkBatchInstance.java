@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.INodeInstance;
 import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.task.executor.ISync;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.modifiers.Closable;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.task.nodes.INode;
@@ -149,7 +150,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
 
   public void prepare(Config cfg) {
     context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule, OperationMode.BATCH);
     batchTask.prepare(cfg, context);
 
     /// we will use this array for iteration
