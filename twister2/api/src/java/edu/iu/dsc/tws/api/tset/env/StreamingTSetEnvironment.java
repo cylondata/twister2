@@ -16,7 +16,6 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
 
 public class StreamingTSetEnvironment extends TSetEnvironment {
@@ -31,7 +30,7 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
   }
 
   @Override
-  public <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism) {
+  public <T> StreamingSourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
     StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
