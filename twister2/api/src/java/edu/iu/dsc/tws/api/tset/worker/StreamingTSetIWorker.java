@@ -9,6 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset.worker;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -17,10 +18,10 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 
-public interface TSetIWorker extends IWorker {
+public interface StreamingTSetIWorker extends IWorker {
 
   @Override
   default void execute(Config config, int workerID, IWorkerController workerController,
@@ -28,12 +29,10 @@ public interface TSetIWorker extends IWorker {
     WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
 
-    TSetEnvironment tSetEnv = TSetEnvironment.init(workerEnv, getOperationMode());
+    StreamingTSetEnvironment tSetEnv = TSetEnvironment.initStreaming(workerEnv);
 
     execute(tSetEnv);
   }
 
-  void execute(TSetEnvironment env);
-
-  OperationMode getOperationMode();
+  void execute(StreamingTSetEnvironment env);
 }

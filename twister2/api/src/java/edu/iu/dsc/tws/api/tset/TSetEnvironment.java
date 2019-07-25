@@ -33,6 +33,8 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
@@ -83,29 +85,6 @@ public abstract class TSetEnvironment {
   public int getWorkerID() {
     return workerEnv.getWorkerId();
   }
-
-/*  // todo: find a better OOP way of doing this!
-  public <T> BatchSourceTSet<T> createBatchSource(SourceFunc<T> source, int parallelism) {
-    if (operationMode == OperationMode.STREAMING) {
-      throw new RuntimeException("Batch sources can not be created in streaming mode");
-    }
-
-    BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
-    tsetGraph.addSourceTSet(sourceT);
-
-    return sourceT;
-  }
-
-    public <T> StreamingSourceTSet<T> createStreamingSource(SourceFunc<T> source, int parallelism) {
-    if (operationMode == OperationMode.BATCH) {
-      throw new RuntimeException("Streaming sources can not be created in batch mode");
-    }
-
-    StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
-    tsetGraph.addSourceTSet(sourceT);
-
-    return sourceT;
-  }*/
 
   /**
    * Runs the entire TSet graph

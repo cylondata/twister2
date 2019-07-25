@@ -29,19 +29,18 @@ import java.io.Serializable;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public abstract class BaseTsetExample implements TSetIWorker, Serializable {
+public abstract class BaseTsetExample implements BatchTSetIWorker, Serializable {
   static final int COUNT = 5;
   static final int PARALLELISM = 2;
 
-  BatchSourceTSet<Integer> dummySource(TSetEnvironment env, int count, int parallel) {
-    return env.createBatchSource(new SourceFunc<Integer>() {
+  BatchSourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
+    return env.createSource(new SourceFunc<Integer>() {
       private int c = 0;
 
       @Override
@@ -68,8 +67,4 @@ public abstract class BaseTsetExample implements TSetIWorker, Serializable {
     Twister2Submitter.submitJob(twister2Job, config);
   }
 
-  @Override
-  public OperationMode getOperationMode() {
-    return OperationMode.BATCH;
-  }
 }

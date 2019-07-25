@@ -35,29 +35,28 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class TSetSimpleWordCount implements TSetIWorker, Serializable {
+public class TSetSimpleWordCount implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetSimpleWordCount.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     int sourcePar = 4;
 //    int sinkPar = 1;
 
     Config config = env.getConfig();
 
-    BatchSourceTSet<String> source = env.createBatchSource(
+    BatchSourceTSet<String> source = env.createSource(
         new WordGenerator((int) config.get("NO_OF_SAMPLE_WORDS"), (int) config.get("MAX_CHARS")),
         sourcePar).setName("source");
 
@@ -66,11 +65,6 @@ public class TSetSimpleWordCount implements TSetIWorker, Serializable {
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
     keyedReduce.forEach(c -> LOG.info(c.toString()));
-  }
-
-  @Override
-  public OperationMode getOperationMode() {
-    return OperationMode.BATCH;
   }
 
   class WordGenerator extends BaseSourceFunc<String> {

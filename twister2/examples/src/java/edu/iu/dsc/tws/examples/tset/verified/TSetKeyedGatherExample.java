@@ -25,18 +25,18 @@ package edu.iu.dsc.tws.examples.tset.verified;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 
 public class TSetKeyedGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetKeyedReduceExample.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     super.execute(env);
 
     // set the parallelism of source to task stage 0
-    /*TSet<int[]> source = tSetBuilder.createBatchSource(new TestBaseSource()).setName("Source").
+    /*TSet<int[]> source = tSetBuilder.createSource(new TestBaseSource()).setName("Source").
         setParallelism(jobParameters.getTaskStages().get(0));
     TSet<int[]> reduce = source.groupBy(new LoadBalancePartitioner<>(), new IdentitySelector<>()).
         setParallelism(10);

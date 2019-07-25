@@ -23,12 +23,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset.verified;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 
 public class TSetFileAccessExample extends BaseTSetBatchWorker {
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     super.execute(env);
 /*    super.execute(tc);
 

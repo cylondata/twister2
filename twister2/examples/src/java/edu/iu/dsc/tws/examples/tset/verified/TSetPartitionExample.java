@@ -25,14 +25,14 @@ package edu.iu.dsc.tws.examples.tset.verified;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 
 public class TSetPartitionExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetPartitionExample.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     super.execute(env);
 /*    super.execute(tc);
 

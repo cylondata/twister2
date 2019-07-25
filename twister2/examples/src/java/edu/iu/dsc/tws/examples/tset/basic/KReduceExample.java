@@ -31,7 +31,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
@@ -43,7 +43,7 @@ public class KReduceExample extends BaseTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 4, i))

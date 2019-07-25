@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -44,6 +45,11 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
 
   public StreamingBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
+  }
+
+  @Override
+  public StreamingTSetEnvironment getTSetEnv() {
+    return (StreamingTSetEnvironment) super.getTSetEnv();
   }
 
   @Override

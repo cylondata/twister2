@@ -59,56 +59,56 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 
   @Override
   public DirectTLink<T> direct() {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.direct();
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.reduce(reduceFn);
   }
 
   @Override
   public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.partition(partitionFn);
   }
 
   @Override
   public GatherTLink<T> gather() {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.gather();
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.allReduce(reduceFn);
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.allGather();
   }
 
   @Override
   public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.mapToTuple(generateTuple);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
-    BatchSourceTSet<T> cacheSource = getTSetEnv().createBatchSource(new CacheSource<>(data),
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.replicate(replications);
   }

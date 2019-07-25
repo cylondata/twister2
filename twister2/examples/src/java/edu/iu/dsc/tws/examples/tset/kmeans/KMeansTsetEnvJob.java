@@ -22,22 +22,21 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
-import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class KMeansTsetEnvJob implements TSetIWorker, Serializable {
+public class KMeansTsetEnvJob implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(KMeansTsetEnvJob.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     int workerId = env.getWorkerID();
     LOG.info("TSet worker starting: " + workerId);
 
@@ -63,14 +62,10 @@ public class KMeansTsetEnvJob implements TSetIWorker, Serializable {
         throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
-    CachedTSet<double[][]> points = env.createBatchSource(new PointsSource(),
+    CachedTSet<double[][]> points = env.createSource(new PointsSource(),
         parallelismValue).cache();
   }
 
-  @Override
-  public OperationMode getOperationMode() {
-    return OperationMode.BATCH;
-  }
 
   public class PointsSource implements SourceFunc<double[][]> {
     @Override

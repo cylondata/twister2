@@ -10,30 +10,30 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.api.tset.env;
 
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 
-public class StreamingTSetEnvironment extends TSetEnvironment{
+public class BatchTSetEnvironment extends TSetEnvironment {
 
-  StreamingTSetEnvironment(WorkerEnvironment wEnv) {
+  public BatchTSetEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
   }
 
   @Override
   public OperationMode getOperationMode() {
-    return OperationMode.STREAMING;
+    return OperationMode.BATCH;
   }
 
   @Override
-  public <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism) {
-    StreamingSourceTSet<T> sourceT = new StreamingSourceTSet<>(this, source, parallelism);
+  public <T> BatchSourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
+    BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
-    return sourceT;  }
+    return sourceT;
+  }
 }

@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
@@ -40,13 +40,13 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
   private static final Logger LOG = Logger.getLogger(TSetGatherExample.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     super.execute(env);
 
     // set the parallelism of source to task stage 0
     int srcPara = jobParameters.getTaskStages().get(0);
     int sinkPara = jobParameters.getTaskStages().get(1);
-    BatchSourceTSet<int[]> source = env.createBatchSource(new TestBaseSource(), srcPara)
+    BatchSourceTSet<int[]> source = env.createSource(new TestBaseSource(), srcPara)
         .setName("Source");
 
     GatherTLink<int[]> gather = source.gather();

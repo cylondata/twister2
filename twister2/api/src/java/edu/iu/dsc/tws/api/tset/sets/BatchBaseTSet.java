@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -28,6 +29,11 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
 
   public BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
+  }
+
+  @Override
+  public BatchTSetEnvironment getTSetEnv() {
+    return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
   @Override

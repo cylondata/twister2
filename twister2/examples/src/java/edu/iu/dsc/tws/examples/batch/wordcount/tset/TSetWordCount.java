@@ -40,9 +40,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -50,7 +49,7 @@ import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.worker.TSetIWorker;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -58,16 +57,16 @@ import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class TSetWordCount implements TSetIWorker, Serializable {
+public class TSetWordCount implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetWordCount.class.getName());
 
   @Override
-  public void execute(TSetEnvironment env) {
+  public void execute(BatchTSetEnvironment env) {
     int sourcePar = 1;
 //    int sinkPar = 1;
 
     BatchSourceTSet<String> lines =
-        env.createBatchSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")),
+        env.createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")),
             sourcePar).setName("source");
 
     ComputeTSet<String, Iterator<String>> words =
@@ -84,11 +83,6 @@ public class TSetWordCount implements TSetIWorker, Serializable {
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
     keyedReduce.sink(new WordCountFileLogger((String) env.getConfig().get("OUTPUT_FILE")));
-  }
-
-  @Override
-  public OperationMode getOperationMode() {
-    return OperationMode.BATCH;
   }
 
   class WordCountFileSource extends BaseSourceFunc<String> {
