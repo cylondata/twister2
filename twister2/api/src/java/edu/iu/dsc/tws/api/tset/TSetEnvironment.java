@@ -40,6 +40,10 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
+/**
+ * Entry point to tset operations. This is a singleton which initializes as
+ * {@link BatchTSetEnvironment} or {@link StreamingTSetEnvironment}
+ */
 public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
@@ -62,26 +66,50 @@ public abstract class TSetEnvironment {
     this.taskExecutor = new TaskExecutor(workerEnv);
   }
 
-  public void setDefaultParallelism(int defaultParallelism) {
-    this.defaultParallelism = defaultParallelism;
-  }
-
   public abstract OperationMode getOperationMode();
 
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
 
+  /**
+   * Returns the tset graph
+   *
+   * @return tset graph
+   */
   public TSetGraph getGraph() {
     return tsetGraph;
   }
 
+  /**
+   * Overrides the default parallelism. Default is 1
+   *
+   * @param newDefaultParallelism new parallelism
+   */
+  public void setDefaultParallelism(int newDefaultParallelism) {
+    this.defaultParallelism = newDefaultParallelism;
+  }
+
+  /**
+   * Default parallelism
+   *
+   * @return default parallelism
+   */
   public int getDefaultParallelism() {
     return defaultParallelism;
   }
 
+  /**
+   * returns the config object passed on to the iWorker Config
+   *
+   * @return config
+   */
   public Config getConfig() {
     return workerEnv.getConfig();
   }
 
+  /**
+   * Running worker ID
+   * @return workerID
+   */
   public int getWorkerID() {
     return workerEnv.getWorkerId();
   }
@@ -145,7 +173,13 @@ public abstract class TSetEnvironment {
     return null;
   }
 
-
+  /**
+   * Adds inputs to tasks
+   *
+   * @param taskName task name
+   * @param key identifier/ key for the input
+   * @param input a cacheable object which returns a {@link DataObject}
+   */
   public void addInput(String taskName, String key, Cacheable<?> input) {
     Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
     temp.put(key, input);
@@ -167,13 +201,7 @@ public abstract class TSetEnvironment {
     }
   }
 
-  /**
-   * initialize the Tset environment
-   *
-   * @param wEnv worker environment
-   * @param opMode operation mode
-   * @return tset environment
-   */
+  // TSetEnvironment singleton initialization
   private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {
     if (thisTSetEnv == null) {
       synchronized (TSetEnvironment.class) {
@@ -191,7 +219,7 @@ public abstract class TSetEnvironment {
   }
 
   /**
-   * initialize the Tset environment
+   * initialize the Tset environment in batch mode
    *
    * @param wEnv worker environment
    * @return tset environment for batch operation
@@ -201,10 +229,10 @@ public abstract class TSetEnvironment {
   }
 
   /**
-   * initialize the Tset environment
+   * initialize the Tset environment in streaming mode
    *
    * @param wEnv worker environment
-   * @return tset environment for batch operation
+   * @return tset environment for streaming operation
    */
   public static StreamingTSetEnvironment initStreaming(WorkerEnvironment wEnv) {
     return (StreamingTSetEnvironment) init(wEnv, OperationMode.STREAMING);
