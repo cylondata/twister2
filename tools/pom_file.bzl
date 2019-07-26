@@ -179,7 +179,6 @@ def _pom_file(ctx):
 pom_file = rule(
     attrs = {
         "template_file": attr.label(
-            single_file = True,
             allow_files = True,
         ),
         "substitutions": attr.string_dict(
