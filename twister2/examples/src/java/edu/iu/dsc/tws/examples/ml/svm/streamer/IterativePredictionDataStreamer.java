@@ -111,9 +111,9 @@ public class IterativePredictionDataStreamer extends BaseSource implements IRece
   }
 
   public void getData() {
-    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    DataPartition<double[][]> dataPartition = dataPointsObject.getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
-    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartition(context
         .taskIndex());
     this.weightVector = weightVectorPartition.getConsumer().next();
 

@@ -6,8 +6,8 @@
 
 package edu.iu.dsc.tws.task.impl.ops;
 
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class BroadcastConfig extends AbstractOpsConfig<BroadcastConfig> {

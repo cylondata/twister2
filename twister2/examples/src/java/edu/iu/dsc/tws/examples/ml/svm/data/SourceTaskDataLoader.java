@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
@@ -141,7 +141,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     private Object getTaskIndexDataPoints(int taskIndex) {
       EntityPartition<Object> datapointsEntityPartition
-          = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+          = (EntityPartition<Object>) dataPointsObject.getPartition(taskIndex);
       if (datapointsEntityPartition != null) {
         DataObject<?> dataObject
             = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
@@ -152,7 +152,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     public Object getDataObjects(int taskIndex, DataObject<?> datapointsDataObject) {
       Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-          datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
+          datapointsDataObject.getPartition(taskIndex).getConsumer().next();
       List<Object> allObjects = new ArrayList<>();
 
       while (arrayListIterator.hasNext()) {

@@ -48,7 +48,7 @@ public class ConnectedSource extends BaseSource implements Receptor {
     }
 
     if (data == null) {
-      data = dSet.getPartitions(context.taskIndex());
+      data = dSet.getPartition(context.taskIndex());
       iterator = data.getConsumer();
     }
 

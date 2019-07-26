@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.tset;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class ModelAverager extends BaseMapFunction<double[], double[]> {
+public class ModelAverager implements MapFunc<double[], double[]> {
 
   private int parallelism = 0;
 
@@ -27,10 +27,5 @@ public class ModelAverager extends BaseMapFunction<double[], double[]> {
       doubles[i] = doubles[i] / (double) parallelism;
     }
     return doubles;
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }

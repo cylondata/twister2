@@ -41,7 +41,7 @@ public interface DataObject<T> extends Serializable {
    * @param partitionId partition id
    * @return DataPartition
    */
-  DataPartition<T> getPartitions(int partitionId);
+  DataPartition<T> getPartition(int partitionId);
 
   /**
    * Get the number of partitions currently in the DataObject
@@ -49,4 +49,10 @@ public interface DataObject<T> extends Serializable {
    * @return the number of partitions
    */
   int getPartitionCount();
+
+  /**
+   * ID of the data object. The ID needs to be deterministic
+   * @return ID
+   */
+  String getID();
 }

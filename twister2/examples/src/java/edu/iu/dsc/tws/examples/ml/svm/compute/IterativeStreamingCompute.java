@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.ICollector;
@@ -96,7 +96,7 @@ public class IterativeStreamingCompute extends BaseCompute<double[]>
 
   private void prepareDataPoints() {
     DataPartition<double[][]> dataPartition = this.dataPointsObject
-        .getPartitions(context.taskIndex());
+        .getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
