@@ -65,9 +65,9 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("twister2_home=" + twister2_home)
     # set the cluster name property
     java_system_props.append("cluster_type=" + cl_args["cluster"])
-    # set the job file
-    java_system_props.append("debug=" + str(cl_args['debug']))
     # set debug mode
+    java_system_props.append("debug=" + str(cl_args['debug']))
+    # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
     # set the logger file
     conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
