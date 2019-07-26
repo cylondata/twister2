@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -40,10 +41,13 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
+import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
+import edu.iu.dsc.tws.examples.ml.svm.util.WindowArguments;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.constant.WindowType;
 import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.window.function.ProcessWindowedFunction;
 
@@ -96,8 +100,10 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   public void execute() {
     // method 2
     this.initialize()
+        .paramCheck()
         .loadData()
-        .stream();
+        .stream()
+        .summary();
   }
 
   /**
@@ -156,9 +162,15 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     return this;
   }
 
+  public SvmSgdOnlineRunner paramCheck() {
+    LOG.info(String.format("Info : %s ", this.svmJobParameters.toString()));
+    return this;
+  }
+
 
   private void loadTrainingData() {
-    DataFlowTaskGraph trainingDFTG = TGUtils.buildTrainingDataPointsTG(this.dataStreamerParallelism,
+    DataFlowTaskGraph trainingDFTG = TGUtils
+        .buildTrainingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan trainingEP = taskExecutor.plan(trainingDFTG);
     taskExecutor.execute(trainingDFTG, trainingEP);
@@ -179,7 +191,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   }
 
   private void loadTestingData() {
-    DataFlowTaskGraph testingDFTG = TGUtils.buildTestingDataPointsTG(this.dataStreamerParallelism,
+    DataFlowTaskGraph testingDFTG = TGUtils
+        .buildTestingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan testingEP = taskExecutor.plan(testingDFTG);
     taskExecutor.execute(testingDFTG, testingEP);
@@ -191,7 +204,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
       int randomIndex = new Random()
-          .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
+          .nextInt(this.svmJobParameters.getTestingSamples() / dataStreamerParallelism - 1);
       LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
           .toString(datapoints[randomIndex])));
     }
@@ -231,6 +244,14 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     s += String.format("Accuracy of the Trained Model \t\t\t\t\t= %2.9f", accuracy) + " %%\n";
     s += "======================================================================================\n";
     LOG.info(String.format(s));
+    save();
+  }
+
+  private void save() {
+    TrainedModel trainedModel = new TrainedModel(this.binaryBatchModel, accuracy, this.trainingTime,
+        this.svmJobParameters.getExperimentName() + "-online", this.svmJobParameters
+        .getParallelism());
+    trainedModel.saveModel(this.svmJobParameters.getModelSaveDir());
   }
 
   private void convert2Seconds() {
@@ -266,13 +287,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     iterativeStreamingDataStreamer = new IterativeStreamingDataStreamer(this.svmJobParameters
         .getFeatures(), OperationMode.STREAMING, this.svmJobParameters.isDummy(),
         this.binaryBatchModel);
-    BaseWindowedSink baseWindowedSink
-        = new IterativeStreamingWindowedCompute(new ProcessWindowFunctionImpl(),
-        OperationMode.STREAMING,
-        this.svmJobParameters,
-        this.binaryBatchModel,
-        "online-training-graph")
-        .withTumblingCountWindow(50);
+    BaseWindowedSink baseWindowedSink = getWindowSinkInstance();
     iterativeStreamingCompute = new IterativeStreamingCompute(OperationMode.STREAMING,
         new ReduceAggregator(), this.svmJobParameters);
 
@@ -313,6 +328,42 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     trainingBuilder.setMode(OperationMode.STREAMING);
     trainingBuilder.setTaskGraphName(IterativeSVMConstants.ITERATIVE_STREAMING_TRAINING_TASK_GRAPH);
     return trainingBuilder.build();
+  }
+
+  private BaseWindowedSink getWindowSinkInstance() {
+    BaseWindowedSink baseWindowedSink = new IterativeStreamingWindowedCompute(
+        new ProcessWindowFunctionImpl(),
+        OperationMode.STREAMING,
+        this.svmJobParameters,
+        this.binaryBatchModel,
+        "online-training-graph");
+    WindowArguments windowArguments = this.svmJobParameters.getWindowArguments();
+    TimeUnit timeUnit = TimeUnit.MICROSECONDS;
+    if (windowArguments != null) {
+      WindowType windowType = windowArguments.getWindowType();
+      if (windowArguments.isDuration()) {
+        if (windowType.equals(WindowType.TUMBLING)) {
+          baseWindowedSink
+              .withTumblingDurationWindow(windowArguments.getWindowLength(), timeUnit);
+        }
+        if (windowType.equals(WindowType.SLIDING)) {
+          baseWindowedSink
+              .withSlidingDurationWindow(windowArguments.getWindowLength(), timeUnit,
+                  windowArguments.getSlidingLength(), timeUnit);
+        }
+      } else {
+        if (windowType.equals(WindowType.TUMBLING)) {
+          baseWindowedSink
+              .withTumblingCountWindow(windowArguments.getWindowLength());
+        }
+        if (windowType.equals(WindowType.SLIDING)) {
+          baseWindowedSink
+              .withSlidingCountWindow(windowArguments.getWindowLength(),
+                  windowArguments.getSlidingLength());
+        }
+      }
+    }
+    return baseWindowedSink;
   }
 
   protected static class ProcessWindowFunctionImpl implements ProcessWindowedFunction<double[]> {

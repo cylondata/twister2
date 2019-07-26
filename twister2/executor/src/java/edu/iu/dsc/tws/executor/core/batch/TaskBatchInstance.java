@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.task.executor.INodeInstance;
 import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.task.executor.ISync;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.modifiers.Closable;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.task.nodes.INode;
@@ -197,7 +198,8 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
-        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule,
+        OperationMode.BATCH);
     task.prepare(cfg, taskContext);
 
     /// we will use this array for iteration

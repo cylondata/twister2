@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class IterativeSVMPrimaryDataObjectDirectSink extends BaseSink implements Collector {
 

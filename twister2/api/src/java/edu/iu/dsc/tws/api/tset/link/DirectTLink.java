@@ -12,65 +12,26 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
-public class DirectTLink<T> extends BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class DirectTLink<T> extends IteratorLink<T> {
 
-  public DirectTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "direct-" + parent.getName();
-  }
-
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, parent.getParallelism());
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        parent.getParallelism());
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public DirectTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism,
+        sourceParallelism);
   }
 
   @Override
-  public boolean baseBuild() {
-    return false;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-    connection.direct(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public DirectTLink<T> setName(String n) {
-    super.setName(n);
+  public DirectTLink<T> setName(String name) {
+    rename(name);
     return this;
+  }
+
+  @Override
+  public Edge getEdge() {
+    return new Edge(getName(), OperationNames.DIRECT, getMessageType());
   }
 }

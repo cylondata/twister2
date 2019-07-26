@@ -113,9 +113,9 @@ public class IterativeDataStream extends BaseSource implements IReceptor<double[
   }
 
   public void getData() {
-    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    DataPartition<double[][]> dataPartition = dataPointsObject.getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
-    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartition(context
         .taskIndex());
     this.weightVector = weightVectorPartition.getConsumer().next();
 
@@ -124,10 +124,10 @@ public class IterativeDataStream extends BaseSource implements IReceptor<double[
     }
 
 
-    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
-        this.datapoints.length));
-    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
-        weightVector.length));
+//    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
+//        this.datapoints.length));
+//    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
+//        weightVector.length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 
@@ -199,8 +199,8 @@ public class IterativeDataStream extends BaseSource implements IReceptor<double[
   public void initializeBatchMode() {
     this.initializeBinaryModel(this.datapoints);
     this.binaryBatchModel.setW(this.weightVector);
-    LOG.info(String.format("Features in X : %d, Features in W : %d",
-        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
+//    LOG.info(String.format("Features in X : %d, Features in W : %d",
+//        this.binaryBatchModel.getFeatures(), this.binaryBatchModel.getW().length));
     pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(), this.binaryBatchModel.getX(),
         this.binaryBatchModel.getY(), this.binaryBatchModel.getAlpha(),
         this.binaryBatchModel.getIterations(), this.binaryBatchModel.getFeatures());

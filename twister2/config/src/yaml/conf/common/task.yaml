@@ -89,3 +89,6 @@ twister2.exector.worker.threads: 2
 # name of the batch executor
 twister2.executor.batch.name: "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2"
 
+# number of tuples executed at a single pass
+twister2.exector.instance.queue.low.watermark: 10000
+

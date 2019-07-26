@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.data.api.assigner.OrderedInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.api.splits.TextInputSplit;
 
-public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
+public class LocalFixedInputPartitioner<T> extends FixedInputPartitioner<T> {
 
   private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
 
   private int nTasks;
 
-  private OrderedInputSplitAssigner<String> assigner;
+  private OrderedInputSplitAssigner<T> assigner;
 
   public LocalFixedInputPartitioner(Path filePath, int numTasks) {
     super(filePath);
@@ -43,14 +43,16 @@ public class LocalFixedInputPartitioner extends FixedInputPartitioner<String> {
   @Override
   protected TextInputSplit createSplit(int num, Path file, long start,
                                        long length, String[] hosts) {
+
+
     return new TextInputSplit(num, file, start, length, hosts);
   }
 
   @Override
-  public OrderedInputSplitAssigner<String> getInputSplitAssigner(
-      FileInputSplit<String>[] inputSplits) {
+  public OrderedInputSplitAssigner<T> getInputSplitAssigner(
+      FileInputSplit<T>[] inputSplits) {
     if (assigner == null) {
-      assigner = new OrderedInputSplitAssigner<String>(inputSplits, nTasks);
+      assigner = new OrderedInputSplitAssigner<T>(inputSplits, nTasks);
     }
     return assigner;
   }

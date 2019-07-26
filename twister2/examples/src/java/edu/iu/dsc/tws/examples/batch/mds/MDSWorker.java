@@ -134,7 +134,7 @@ public class MDSWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (short[]) dataPartition.getConsumer().next();
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, "MDS Execution");
     }

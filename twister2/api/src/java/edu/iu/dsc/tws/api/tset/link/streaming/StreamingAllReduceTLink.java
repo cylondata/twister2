@@ -12,83 +12,35 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.ops.ReduceOpFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.link.SingleLink;
 
 /**
  * Represent a data set create by a all reduce opration
  *
  * @param <T> type of data
  */
-public class StreamingAllReduceTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
-  private ReduceFunction<T> reduceFn;
+public class StreamingAllReduceTLink<T> extends SingleLink<T> {
+  private ReduceFunc<T> reduceFn;
 
-  private BaseTSet<T> parent;
-
-  public StreamingAllReduceTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
-                                 ReduceFunction<T> rFn) {
-    super(cfg, tSetEnv);
+  public StreamingAllReduceTLink(TSetEnvironment tSetEnv, ReduceFunc<T> rFn,
+                                 int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("sallreduce"), sourceParallelism);
     this.reduceFn = rFn;
-    this.parent = prnt;
-    this.name = "all-reduce-" + parent.getName();
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.allreduce(parent.getName())
-        .viaEdge(Constants.DEFAULT_EDGE)
-        .withReductionFunction(new ReduceOpFunction<>(getReduceFn()))
-        .withDataType(dataType);
-  }
-
-  public ReduceFunction<T> getReduceFn() {
-    return reduceFn;
+  public Edge getEdge() {
+    return new Edge(getName(), OperationNames.ALLREDUCE, getMessageType(), reduceFn);
   }
 
   @Override
   public StreamingAllReduceTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

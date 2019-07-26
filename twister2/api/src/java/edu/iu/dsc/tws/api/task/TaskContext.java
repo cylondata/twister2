@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 
@@ -202,4 +203,6 @@ public interface TaskContext {
         .filter(taskInstancePlan -> taskInstancePlan.getTaskName().equals(name))
         .collect(Collectors.toSet());
   }
+
+  OperationMode getOperationMode();
 }

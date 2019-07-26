@@ -124,11 +124,14 @@ public class IterativeSVMDataObjectCompute extends AbstractIterableDataCompute<S
     int count = 0;
     while (itr.hasNext()) {
       String s = itr.next();
-      if (s != null) {
-        this.dataPointsLocal[count++] = DataUtils.arrayFromString(s, delemiter, true);
+      if (s != null && !s.isEmpty()) {
+        if (count < this.dataPointsLocal.length) {
+          this.dataPointsLocal[count] = DataUtils.arrayFromString(s, delemiter, true);
+        }
       } else {
         LOG.severe(String.format("Received data point is null!!!"));
       }
+      count++;
     }
     context.write(getEdgeName(), this.dataPointsLocal);
     context.end(getEdgeName());

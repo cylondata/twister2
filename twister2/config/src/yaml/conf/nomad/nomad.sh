@@ -18,8 +18,18 @@ echo $debug
 #wget http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz .
 #wget http://149.165.150.81:8082/twister2/mesos/twister2-core-0.2.2.tar.gz .
 
-wget $8 .
-wget $9 .
+method=$10
+
+#echo ${CORE_PACKAGE_ENV}
+#echo ${JOB_PACKAGE_ENV}
+
+if [ $method = "LOCAL" ]; then
+  cp $11/twister2-job.tar.gz .
+  cp $11/twister2-core-0.2.2.tar.gz .
+else
+  wget $8 .
+  wget $9 .
+fi
 
 tar -xvf twister2-core-0.2.2.tar.gz
 tar -xvf twister2-job.tar.gz --strip 1
@@ -40,6 +50,8 @@ echo "6" $6
 echo "7" $7
 echo "8" $8
 echo "9" $9
+echo "10" $10
+echo "11" $11
 
 
 

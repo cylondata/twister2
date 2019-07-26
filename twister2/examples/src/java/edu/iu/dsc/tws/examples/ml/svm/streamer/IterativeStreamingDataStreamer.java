@@ -102,7 +102,7 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
 
   private void prepareDataPoints() {
     DataPartition<double[][]> dataPartition = this.dataPointsObject
-        .getPartitions(context.taskIndex());
+        .getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
@@ -112,7 +112,7 @@ public class IterativeStreamingDataStreamer extends BaseSource implements IRecep
   }
 
   private void prepareWeightVector() {
-    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartition(context
         .taskIndex());
     this.weightVector = weightVectorPartition.getConsumer().next();
     LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),

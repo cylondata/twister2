@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.OutputCollection;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 
@@ -92,10 +93,14 @@ public class TaskContextImpl implements TaskContext {
    */
   private boolean allEdgedFinished;
 
+  /**
+   * Operation mode. Batch/ streaming
+   */
+  private OperationMode operationMode;
+
   private TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
-                          int parallelism, int wId,
-                          Map<String, Object> configs,
-                          TaskSchedulePlan taskSchedulePlan) {
+                          int parallelism, int wId, Map<String, Object> configs,
+                          TaskSchedulePlan taskSchedulePlan, OperationMode opMode) {
     this.taskIndex = taskIndex;
     this.globalTaskId = globalTaskId;
     this.taskId = taskId;
@@ -105,33 +110,38 @@ public class TaskContextImpl implements TaskContext {
     this.configs = configs;
     this.taskSchedulePlan = taskSchedulePlan;
     this.allEdgedFinished = false;
+    this.operationMode = opMode;
   }
 
 
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
                          int parallelism, int wId, Map<String, Object> configs,
-                         Map<String, Set<String>> inputs, TaskSchedulePlan taskSchedulePlan) {
-    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
+                         Map<String, Set<String>> inputs, TaskSchedulePlan taskSchedulePlan,
+                         OperationMode opMode) {
+    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan,
+        opMode);
     this.inputs = inputs;
   }
 
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId,
                          String taskName, int parallelism, int wId,
                          OutputCollection collection, Map<String, Object> configs,
-                         Map<String, String> outEdges, TaskSchedulePlan taskSchedulePlan) {
-    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan);
+                         Map<String, String> outEdges, TaskSchedulePlan taskSchedulePlan,
+                         OperationMode opMode) {
+    this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, configs, taskSchedulePlan,
+        opMode);
     this.collection = collection;
     this.outEdges = outEdges;
     outEdgeNames.addAll(outEdges.keySet());
   }
 
   public TaskContextImpl(int taskIndex, int taskId, int globalTaskId, String taskName,
-                         int parallelism, int wId,
-                         OutputCollection collection, Map<String, Object> configs,
-                         Map<String, Set<String>> inputs, Map<String, String> outEdges,
-                         TaskSchedulePlan taskSchedulePlan) {
+                         int parallelism, int wId, OutputCollection collection,
+                         Map<String, Object> configs, Map<String, Set<String>> inputs,
+                         Map<String, String> outEdges, TaskSchedulePlan taskSchedulePlan,
+                         OperationMode opMode) {
     this(taskIndex, taskId, globalTaskId, taskName, parallelism, wId, collection,
-        configs, outEdges, taskSchedulePlan);
+        configs, outEdges, taskSchedulePlan, opMode);
     this.inputs = inputs;
   }
 
@@ -143,6 +153,11 @@ public class TaskContextImpl implements TaskContext {
   @Override
   public Map<Integer, WorkerSchedulePlan> getWorkersMap() {
     return this.taskSchedulePlan.getContainersMap();
+  }
+
+  @Override
+  public OperationMode getOperationMode() {
+    return null;
   }
 
   /**
@@ -348,6 +363,7 @@ public class TaskContextImpl implements TaskContext {
 
   /**
    * Weather all the edges are finished
+   *
    * @return true if all the edges are finished
    */
   public boolean allEdgedFinished() {

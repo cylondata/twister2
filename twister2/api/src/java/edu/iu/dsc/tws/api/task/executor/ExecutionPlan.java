@@ -47,6 +47,7 @@ public class ExecutionPlan {
 
   /**
    * Add a node instance of this execution
+   *
    * @param taskId the global task id
    * @param node the instance
    */
@@ -105,5 +106,14 @@ public class ExecutionPlan {
   @Override
   public int hashCode() {
     return Objects.hash(id);
+  }
+
+  @Override
+  public String toString() {
+    return "ExecutionPlan{"
+        + "nodes=" + nodes
+        + ", nodesName=" + nodesByName
+        + ", parOps=" + parallelOperations
+        + "}";
   }
 }

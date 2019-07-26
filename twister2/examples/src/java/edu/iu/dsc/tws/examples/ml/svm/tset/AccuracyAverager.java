@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseMapFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
-public class AccuracyAverager extends BaseMapFunction<Double, Double> {
+public class AccuracyAverager implements MapFunc<Double, Double> {
 
   private static final Logger LOG = Logger.getLogger(AccuracyAverager.class.getName());
 
@@ -28,10 +28,5 @@ public class AccuracyAverager extends BaseMapFunction<Double, Double> {
   @Override
   public Double map(Double aDouble) {
     return aDouble / (double) this.parallelism;
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }

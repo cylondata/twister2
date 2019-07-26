@@ -164,7 +164,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
