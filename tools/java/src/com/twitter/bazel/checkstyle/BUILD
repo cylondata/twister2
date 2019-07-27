@@ -5,8 +5,6 @@ common_deps = [
     "@commons_cli_commons_cli//jar",
     "@org_apache_commons_commons_lang3//jar",
     "@com_google_guava_guava//jar",
-    "//third_party/java/bazel:extra_actions_proto_java",
-    "//third_party/java/bazel:proto_java",
 ]
 
 java_binary(
@@ -37,8 +35,6 @@ java_library(
     name = "util",
     srcs = ["ExtraActionUtils.java"],
     deps = [
-        "@com_google_protobuf//:protobuf_java",
         "//third_party/java/bazel:extra_actions_proto_java",
-        "//third_party/java/bazel:proto_java",
     ],
 )

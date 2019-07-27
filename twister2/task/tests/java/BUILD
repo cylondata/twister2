@@ -1,4 +1,4 @@
-load("//tools:rules/java_tests.bzl", "java_tests")
+load("//tools/rules:java_tests.bzl", "java_tests")
 
 java_library(
     name = "task-tests",

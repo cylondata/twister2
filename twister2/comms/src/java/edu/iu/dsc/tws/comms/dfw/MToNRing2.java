@@ -526,6 +526,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       finishedSources.put(t, new HashSet<>());
     }
 
+    if (thisWorker == 0) {
+      LOG.info("Starting ring algorithm");
+    }
+
     // create the delegate
     this.delegate = new ControlledChannelOperation(channel, cfg, dataType,
         rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
