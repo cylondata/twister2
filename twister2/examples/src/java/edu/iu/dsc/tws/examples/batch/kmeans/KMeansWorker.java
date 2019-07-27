@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -121,7 +121,7 @@ public class KMeansWorker extends TaskWorker {
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
@@ -237,10 +237,10 @@ public class KMeansWorker extends TaskWorker {
     public void execute() {
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
 
-      DataPartition<?> centroidPartition = centroidsObject.getPartitions(context.taskIndex());
+      DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
       centroid = (double[][]) centroidPartition.getConsumer().next();
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);

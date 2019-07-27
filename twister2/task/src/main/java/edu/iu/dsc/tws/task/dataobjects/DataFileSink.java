@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.data.api.out.TextOutputWriter;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSink;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 /**
  * This class receives the message from the DataFileSource and writes the output into the DataObject

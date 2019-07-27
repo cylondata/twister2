@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.dataset.impl.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
 public class ConnectedSink extends BaseSink implements Collector {
   /**

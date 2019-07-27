@@ -19,7 +19,7 @@ import java.util.Set;
 /**
  * Go from one task to a corresponding task
  */
-public class OneToOnePartitioner<T> implements PartitionFunction<T> {
+public class OneToOnePartitioner<T> implements PartitionFunc<T> {
 
   private List<Integer> destinations;
 

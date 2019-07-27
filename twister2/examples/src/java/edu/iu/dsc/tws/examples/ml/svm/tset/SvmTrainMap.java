@@ -13,7 +13,9 @@ package edu.iu.dsc.tws.examples.ml.svm.tset;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.tset.BaseIterableMapFunction;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseTFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
@@ -22,7 +24,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
+public class SvmTrainMap extends BaseTFunction implements MapFunc<double[], double[][]> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 
@@ -36,27 +38,29 @@ public class SvmTrainMap extends BaseIterableMapFunction<double[][], double[]> {
 
   private boolean debug = false;
 
+
   public SvmTrainMap(BinaryBatchModel binaryBatchModel, SVMJobParameters svmJobParameters) {
     this.binaryBatchModel = binaryBatchModel;
     this.svmJobParameters = svmJobParameters;
   }
 
   @Override
-  public void prepare() {
+  public void prepare(TSetContext ctx) {
+    super.prepare(ctx);
     this.w = this.binaryBatchModel.getW();
   }
 
   @Override
-  public double[] map(Iterable<double[][]> t) {
-    double[][] dataPoints = t.iterator().next();
+  public double[] map(double[][] dataPoints) {
     if (debug) {
       LOG.info(String.format("Training Dimensions [%d,%d]", dataPoints.length, dataPoints[0]
           .length));
     }
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
-    this.binaryBatchModel.setW((double[]) context
-        .getInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR)
-        .getPartitionData(0));
+    this.binaryBatchModel.setW(
+        (double[]) getTSetContext().getInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR)
+            .getPartition(0).getConsumer().next());
+    // todo: this is not the best way to do it! partitionID should correspond to task ID
 
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
         this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),

@@ -12,76 +12,41 @@
 
 package edu.iu.dsc.tws.api.tset.link;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 /**
  * Create a gather data set
+ * <p>
+ * Gather comms message content signature is Iterator<Tuple<Integer, T>>.
+ * Here, the tuple is artificially created by the comms layer, and users would have very little
+ * idea about it. Hence, the tuple, needs to be broken apart, and only values need to be
+ * considered for compute operations like map, flatmap, foreach etc.
+ * <p>
+ * but, for the generic compute, Iterator<Tuple<Integer, T>> messages are valid.
+ * <p>
+ * Because of this reason, we can not use, IteratorLink<Tuple<Integer, T>>
+ * <p>
+ * Same logic applies to AllGather TLink
  *
  * @param <T> the type of data
  */
-public class GatherTLink<T> extends edu.iu.dsc.tws.api.tset.link.BaseTLink<T> {
-  private BaseTSet<T> parent;
+public class GatherTLink<T> extends TupleValueIteratorLink<Integer, T> {
 
-  public GatherTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "gather-" + parent.getName();
+  public GatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism, 1);
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    IterableMapTSet<T, P> set = new IterableMapTSet<>(config, tSetEnv, this,
-        mapFn, 1);
-    children.add(set);
-    return set;
-  }
-
-  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    IterableFlatMapTSet<T, P> set = new IterableFlatMapTSet<>(config, tSetEnv, this,
-        mapFn, 1);
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink,
-        1);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    MessageType dataType = TSetUtils.getDataType(getType());
-
-    connection.gather(parent.getName()).viaEdge(Constants.DEFAULT_EDGE).withDataType(dataType);
-  }
-
-  @Override
-  public int overrideParallelism() {
-    return 1;
+  public Edge getEdge() {
+    return new Edge(getName(), OperationNames.GATHER, getMessageType());
   }
 
   @Override
   public GatherTLink<T> setName(String n) {
-    super.setName(n);
+    rename(n);
     return this;
   }
 }

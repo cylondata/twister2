@@ -4,8 +4,6 @@ title: Tera Sort
 sidebar_label: Tera Sort
 ---
 
-## Introduction
-
 Tera Sort is a common benchmark to measure and compare high performance big data frameworks such 
 as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.
 
@@ -31,11 +29,15 @@ operation is configured with a comparator to sort by key.
 
 ### In memory example command
 
-```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.terasort.TeraSort -size .5 -valueSize 90 -keySize 10 -instances 8 -instanceCPUs 1 -instanceMemory 1024 -sources 8 -sinks 8 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000```
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.terasort.TeraSort -size .5 -valueSize 90 -keySize 10 -instances 8 -instanceCPUs 1 -instanceMemory 1024 -sources 8 -sinks 8 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000
+```
 
 ### File mode example command
 
-```./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.terasort.TeraSort -size .5 -valueSize 90 -keySize 10 -instances 8 -instanceCPUs 1 -instanceMemory 1024 -sources 8 -sinks 8 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000 -inputFile /path/to/file-%d```
+```bash
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.terasort.TeraSort -size .5 -valueSize 90 -keySize 10 -instances 8 -instanceCPUs 1 -instanceMemory 1024 -sources 8 -sinks 8 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000 -inputFile /path/to/file-%d
+```
 
 ### Tera Sort parameters
 

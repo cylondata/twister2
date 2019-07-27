@@ -12,62 +12,41 @@
 
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
-import java.util.Random;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingDirectTLink;
+import edu.iu.dsc.tws.api.task.nodes.INode;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class StreamingSourceTSet<T> extends StreamingBaseTSet<T> {
-  private Source<T> source;
+  private SourceFunc<T> source;
 
-  public StreamingSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
-    super(cfg, tSetEnv);
+  public StreamingSourceTSet(TSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("ssource"), parallelism);
     this.source = src;
-    this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
-    this.parallel = parallelism;
   }
 
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.map(mapFn);
   }
 
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+  public <P> StreamingFlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
+    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct.flatMap(mapFn);
   }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.sink(sink);
-  }
-
-  @Override
-  public boolean baseBuild() {
-    tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addSource(getName(), new SourceOp<T>(source), parallel);
-    return true;
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
+*/
 
   @Override
   public StreamingSourceTSet<T> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
+  }
+
+  @Override
+  public INode getINode() {
+    return new SourceOp<>(source);
   }
 }

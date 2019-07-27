@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.executor.INodeInstance;
 import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.task.executor.ISync;
+import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.modifiers.Closable;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.task.nodes.INode;
@@ -157,7 +158,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    */
   public void prepare(Config cfg) {
     streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
-        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan));
+        globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan,
+        OperationMode.STREAMING));
 
     /// we will use this array for iteration
     this.intOpArray = new IParallelOperation[streamingInParOps.size()];

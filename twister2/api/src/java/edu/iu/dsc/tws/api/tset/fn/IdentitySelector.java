@@ -11,10 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Selector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class IdentitySelector<T> implements Selector<T, T> {
+public class IdentitySelector<T> implements SelectorFunc<T, T> {
   @Override
   public T select(T t) {
     return t;
@@ -22,10 +21,5 @@ public class IdentitySelector<T> implements Selector<T, T> {
 
   @Override
   public void prepare(TSetContext context) {
-  }
-
-  @Override
-  public void prepare() {
-
   }
 }
