@@ -67,7 +67,7 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress();
   }
 
   private class PartitionRecvrImpl implements SingularReceiver {
@@ -100,11 +100,11 @@ public class KeyedPartitionStreamOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

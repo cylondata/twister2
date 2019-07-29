@@ -124,7 +124,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !join.hasPending();
+    return sourcesDone && join.isComplete();
   }
 
   @Override

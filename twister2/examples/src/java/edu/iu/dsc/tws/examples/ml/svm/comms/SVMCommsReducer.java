@@ -76,7 +76,7 @@ public class SVMCommsReducer extends CommsWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return reduceDone && sourcesDone && reduce.isComplete();
   }
 
   @Override

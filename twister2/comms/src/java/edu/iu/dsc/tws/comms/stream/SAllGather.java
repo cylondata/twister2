@@ -18,16 +18,12 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.comms.dfw.AllGather;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 
 /**
  * Streaming ALLGather Operation
  */
-public class SAllGather {
-  /**
-   * The actual operation
-   */
-  private AllGather gather;
-
+public class SAllGather extends BaseOperation {
   /**
    * Construct a Streaming AllGather operation
    *
@@ -41,6 +37,7 @@ public class SAllGather {
   public SAllGather(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
                     BulkReceiver rcvr, MessageType dataType, int gtrEdgeId, int bcstEdgeId) {
+    super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -52,7 +49,7 @@ public class SAllGather {
 
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
-    gather = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets,
+    op = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets,
         middleTask, rcvr, dataType, gtrEdgeId, bcstEdgeId, true);
   }
 
@@ -71,45 +68,6 @@ public class SAllGather {
    * @return true if the message is accepted
    */
   public boolean gather(int src, Object message, int flags) {
-    return gather.send(src, message, flags);
-  }
-
-  /**
-   * Progress the gather operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return gather.progress();
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !gather.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    gather.finish(src);
-  }
-
-  public void close() {
-    // deregister from the channel
-    gather.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    gather.reset();
+    return op.send(src, message, flags);
   }
 }
