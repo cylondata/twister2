@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
@@ -27,13 +28,8 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
 /**
  * Streaming Gather Operation
  */
-public class SGather {
+public class SGather extends BaseOperation {
   private static final Logger LOG = Logger.getLogger(SReduce.class.getName());
-
-  /**
-   * The actual operation
-   */
-  private MToOneTree gather;
 
   /**
    * The data type
@@ -53,12 +49,14 @@ public class SGather {
   public SGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
                  BulkReceiver rcvr, int edgeId) {
+    super(comm.getChannel());
     this.dataType = dataType;
-    gather = new MToOneTree(comm.getChannel(), sources, target,
+    MToOneTree gather = new MToOneTree(comm.getChannel(), sources, target,
         new GatherStreamingFinalReceiver(rcvr),
         new GatherStreamingPartialReceiver(), 0, 0,
         true, MessageTypes.INTEGER, dataType);
     gather.init(comm.getConfig(), dataType, plan, edgeId);
+    op = gather;
   }
 
   public SGather(Communicator comm, LogicalPlan plan,
@@ -77,45 +75,6 @@ public class SGather {
    */
   public boolean gather(int src, Object message, int flags) {
     Tuple tuple = new Tuple(src, message, MessageTypes.INTEGER, dataType);
-    return gather.send(src, tuple, flags);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !gather.isComplete();
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return gather.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    gather.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    gather.reset();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    gather.finish(src);
+    return op.send(src, tuple, flags);
   }
 }

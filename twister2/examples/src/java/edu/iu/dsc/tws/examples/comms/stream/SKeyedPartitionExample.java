@@ -83,7 +83,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return partitionDone && sourcesDone && partition.isComplete();
   }
 
   @Override

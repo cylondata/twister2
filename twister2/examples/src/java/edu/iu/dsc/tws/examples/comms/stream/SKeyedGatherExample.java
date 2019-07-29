@@ -91,7 +91,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !keyedGather.hasPending();
+    return gatherDone && sourcesDone && keyedGather.isComplete();
   }
 
   @Override

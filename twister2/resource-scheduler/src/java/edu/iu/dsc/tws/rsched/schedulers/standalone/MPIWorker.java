@@ -94,7 +94,7 @@ public final class MPIWorker {
   private MPIWorker(String[] args) {
     Options cmdOptions = null;
     try {
-      MPI.Init(args);
+      MPI.InitThread(args, MPI.THREAD_MULTIPLE);
       int rank = MPI.COMM_WORLD.getRank();
 
       cmdOptions = setupOptions();

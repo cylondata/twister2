@@ -15,13 +15,13 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
@@ -30,12 +30,7 @@ import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingFinalReceiver;
 /**
  * Streaming Keyed Partition Operation
  */
-public class SKeyedReduce {
-  /**
-   * The actual operation
-   */
-  private DataFlowOperation keyedReduce;
-
+public class SKeyedReduce extends BaseOperation {
   /**
    * Destination selector
    */
@@ -68,19 +63,20 @@ public class SKeyedReduce {
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
                       DestinationSelector destSelector, int edgeId) {
+    super(comm.getChannel());
     this.keyType = kType;
     this.dataType = dType;
 
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedReduce = new MToNSimple(comm.getConfig(), comm.getChannel(),
+      this.op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
           keyType, keyType, edgeId);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
-      this.keyedReduce = new MToNRing(comm.getConfig(), comm.getChannel(),
+      this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc),
           dataType, dataType, keyType, keyType, edgeId);
@@ -107,46 +103,6 @@ public class SKeyedReduce {
    */
   public boolean reduce(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
-    return keyedReduce.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !keyedReduce.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    keyedReduce.finish(src);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return keyedReduce.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    keyedReduce.close();
-  }
-
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void refresh() {
-    keyedReduce.reset();
+    return op.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
   }
 }

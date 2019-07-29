@@ -17,11 +17,11 @@ import java.util.Set;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
@@ -31,12 +31,7 @@ import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 /**
  * Streaming Partition Operation
  */
-public class BPartition {
-  /**
-   * The actual operation
-   */
-  private DataFlowOperation partition;
-
+public class BPartition extends BaseOperation {
   /**
    * Destination selector
    */
@@ -57,6 +52,7 @@ public class BPartition {
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle, int edgeId) {
+    super(comm.getChannel());
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
@@ -73,14 +69,14 @@ public class BPartition {
       MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType);
       p.init(comm.getConfig(), dataType, plan, edgeId);
-      this.partition = p;
+      this.op = p;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
-      this.partition = new MToNRing(comm.getConfig(), comm.getChannel(),
+      this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
           dataType, dataType, null, null, edgeId);
     }
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.destinationSelector.prepare(comm, op.getSources(), op.getTargets());
   }
 
   public BPartition(Communicator comm, LogicalPlan plan,
@@ -101,48 +97,10 @@ public class BPartition {
   public boolean partition(int source, Object message, int flags) {
     int dest = destinationSelector.next(source, message);
 
-    boolean send = partition.send(source, message, flags, dest);
+    boolean send = op.send(source, message, flags, dest);
     if (send) {
       destinationSelector.commit(source, dest);
     }
     return send;
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !partition.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param source the source that is ending
-   */
-  public void finish(int source) {
-    partition.finish(source);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return partition.progress();
-  }
-
-  public void close() {
-    partition.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    partition.reset();
   }
 }

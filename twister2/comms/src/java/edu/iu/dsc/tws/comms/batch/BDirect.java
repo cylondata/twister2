@@ -17,18 +17,15 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
 
-public class BDirect {
-  /**
-   * The actual operation
-   */
-  private OneToOne direct;
-
+public class BDirect extends BaseOperation {
   public BDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets,
                  BulkReceiver rcvr, MessageType dataType, int edgeId) {
+    super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -41,7 +38,7 @@ public class BDirect {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    direct = new OneToOne(comm.getChannel(), sources, targets,
+    op = new OneToOne(comm.getChannel(), sources, targets,
         new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan, edgeId);
   }
 
@@ -70,45 +67,6 @@ public class BDirect {
    * @return true if the message is accepted
    */
   public boolean direct(int src, Object message, int flags) {
-    return direct.send(src, message, flags);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return direct.progress();
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !direct.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param source the source that is ending
-   */
-  public void finish(int source) {
-    direct.finish(source);
-  }
-
-  public void close() {
-    // deregister from the channel
-    direct.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    direct.reset();
+    return op.send(src, message, flags);
   }
 }
