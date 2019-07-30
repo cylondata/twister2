@@ -107,7 +107,7 @@ public class BBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !bcast.hasPending();
+    return sourcesDone && bcast.isComplete();
   }
 
   @Override

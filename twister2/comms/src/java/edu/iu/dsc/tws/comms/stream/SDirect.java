@@ -17,14 +17,11 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
 
-public class SDirect {
-  /**
-   * The actual operation
-   */
-  private OneToOne direct;
+public class SDirect extends BaseOperation {
 
   /**
    * Construct a Streaming partition operation
@@ -39,7 +36,8 @@ public class SDirect {
   public SDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
                  SingularReceiver rcvr, int edgeId) {
-    direct = new OneToOne(comm.getChannel(), sources, targets,
+    super(comm.getChannel());
+    op = new OneToOne(comm.getChannel(), sources, targets,
         new DirectStreamingFinalReceiver(rcvr), comm.getConfig(),
         dataType, plan, edgeId);
   }
@@ -59,45 +57,6 @@ public class SDirect {
    * @return true if the message is accepted
    */
   public boolean partition(int src, Object message, int flags) {
-    return direct.send(src, message, flags);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !direct.isComplete();
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return direct.progress();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    direct.finish(src);
-  }
-
-  public void close() {
-    // deregister from the channel
-    direct.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    direct.reset();
+    return op.send(src, message, flags);
   }
 }

@@ -103,7 +103,7 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !direct.hasPending();
+    return sourcesDone && direct.isComplete();
   }
 
   @Override

@@ -139,7 +139,7 @@ public class SortJob implements IWorker {
         done = false;
       }
 
-      if (partition.hasPending()) {
+      if (!partition.isComplete()) {
         done = false;
       }
 

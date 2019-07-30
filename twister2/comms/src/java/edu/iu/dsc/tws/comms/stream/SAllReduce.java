@@ -19,16 +19,12 @@ import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.comms.dfw.AllReduce;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 
 /**
  * Streaming ALLReduce Operation
  */
-public class SAllReduce {
-  /**
-   * The actual operation
-   */
-  private AllReduce reduce;
-
+public class SAllReduce extends BaseOperation {
   /**
    * Construct a Streaming AllReduce operation
    *
@@ -42,6 +38,7 @@ public class SAllReduce {
   public SAllReduce(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     ReduceFunction fnc, SingularReceiver rcvr, int reduceEdgeId, int bcastEdgeId) {
+    super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }
@@ -54,7 +51,7 @@ public class SAllReduce {
     int firstSource = sources.iterator().next();
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
-    reduce = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources, targets,
+    op = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources, targets,
         middleTask, fnc, rcvr, dataType, reduceEdgeId, bcastEdgeId, true);
   }
 
@@ -73,45 +70,6 @@ public class SAllReduce {
    * @return true if the message is accepted
    */
   public boolean reduce(int src, Object message, int flags) {
-    return reduce.send(src, message, flags);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return reduce.progress();
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !reduce.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    reduce.finish(src);
-  }
-
-  public void close() {
-    // deregister from the channel
-    reduce.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    reduce.reset();
+    return op.send(src, message, flags);
   }
 }
