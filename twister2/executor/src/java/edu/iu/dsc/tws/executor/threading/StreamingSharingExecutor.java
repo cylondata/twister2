@@ -95,7 +95,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
           + "have more workers than tasks", workerId));
-      return null;
+      return new LifelessExecutor();
     }
 
     schedulerExecution(nodes);
