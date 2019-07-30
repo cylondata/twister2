@@ -14,11 +14,12 @@ package edu.iu.dsc.tws.api.tset.sinks;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
-public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
+public class CacheTupleValueIterSink<K, T> extends BaseSinkFunc<Iterator<Tuple<K, T>>> {
 
   private CollectionPartition<T> partition;
 
@@ -30,9 +31,9 @@ public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
   }
 
   @Override
-  public boolean add(Iterator<T> value) {
+  public boolean add(Iterator<Tuple<K, T>> value) {
     while (value.hasNext()) {
-      partition.add(value.next());
+      partition.add(value.next().getValue()); // key will be dropped. Only value is cached.
     }
     return true;
   }
