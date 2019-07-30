@@ -64,6 +64,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     String dataDirectory = ssspParameters.getDatapointDirectory();
     String soruceVertex = ssspParameters.getSourcevertex();
     sourceVertexGlobal = soruceVertex;
+    System.out.println(soruceVertex);
 
 
     /* First Graph to partition and read the partitioned adjacency list datas **/
@@ -219,7 +220,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
     ComputeGraphBuilder ssspTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
-    ssspTaskGraphBuilder.addSource("pageranksource",
+    ssspTaskGraphBuilder.addSource("ssspSource",
         ssspSource, parallelismValue);
     ComputeConnection computeConnectionKeyedReduce = ssspTaskGraphBuilder.addCompute(
         "ssspKeyedReduce", ssspKeyedReduce, parallelismValue);
@@ -231,7 +232,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
         .viaEdge("keyedreduce")
         .withReductionFunction(new Keyedreducefun())
         .withKeyType(MessageTypes.OBJECT)
-        .withDataType(MessageTypes.INTEGER);
+        .withDataType(MessageTypes.INTEGER_ARRAY);
 
     computeConnectionAllReduce.allreduce("ssspKeyedReduce")
         .viaEdge("all-reduce")

@@ -56,7 +56,7 @@ public class SsspMain {
     options.addOption(DataObjectConstants.NUMBER_OF_FILES, true, "Number of files");
     options.addOption(DataObjectConstants.SHARED_FILE_SYSTEM, false, "Shared file system");
     options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
-    options.addOption("SOURCE_VERTEX", true, "soruce vertex");
+    options.addOption("sourcev", true, "soruce vertex");
 
 
     options.addOption(DataObjectConstants.DINPUT_DIRECTORY,
@@ -74,7 +74,7 @@ public class SsspMain {
     int parallelismValue = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.PARALLELISM_VALUE));
 
-    String soruceVertex = cmd.getOptionValue("SOURCE_VERTEX");
+    String soruceVertex = cmd.getOptionValue("sourcev");
 
     String dataDirectory = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
 
@@ -93,10 +93,10 @@ public class SsspMain {
     jobConfig.put(DataObjectConstants.NUMBER_OF_FILES, Integer.toString(numFiles));
     jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
     jobConfig.put(DataObjectConstants.SHARED_FILE_SYSTEM, shared);
-    jobConfig.put("SOURCE_VERTEX",soruceVertex);
+    jobConfig.put("sourcev",soruceVertex);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("KMeans-job");
+    jobBuilder.setJobName("Sssp-job");
     jobBuilder.setWorkerClass(SingleSourceShortestPathWorker.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
