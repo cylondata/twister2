@@ -38,6 +38,7 @@ import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
+import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 /**
@@ -166,11 +167,15 @@ public abstract class TSetEnvironment {
     // once a graph is built and executed, reset the underlying builder!
     tsetGraph.resetDfwGraphBuilder();
 
-    if (outputTset != null) {
+    // output tset alone does not guarantees that there will be an output available.
+    // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
+    // executor 1 would have an output to get.
+    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getName())) {
       return this.taskExecutor.getOutput(null, executionPlan, outputTset.getName());
     }
 
-    return null;
+    // if there is no output, an empty data object needs to be returned!
+    return new EmptyDataObject<>();
   }
 
   /**

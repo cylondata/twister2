@@ -11,12 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sinks;
 
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class CacheSingleSink<T> extends BaseSinkFunc<T> {
-  protected DataPartition<T> partition;
+  private EntityPartition<T> partition;
 
   @Override
   public boolean add(T value) {
@@ -25,7 +24,7 @@ public class CacheSingleSink<T> extends BaseSinkFunc<T> {
   }
 
   @Override
-  public DataPartition<T> get() {
+  public EntityPartition<T> get() {
     return partition;
   }
 }

@@ -24,7 +24,6 @@
 package edu.iu.dsc.tws.dataset.partition;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.dataset.consumer.EntityConsumer;
 
 public class EntityPartition<T> implements DataPartition<T> {
@@ -38,7 +37,7 @@ public class EntityPartition<T> implements DataPartition<T> {
   }
 
   @Override
-  public DataPartitionConsumer<T> getConsumer() {
+  public EntityConsumer<T> getConsumer() {
     return new EntityConsumer<>(value);
   }
 

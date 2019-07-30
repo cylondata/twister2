@@ -45,6 +45,11 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 
   private SinkOp<?> sinkOp;
 
+  /*
+  Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
+  so, we would need to have several types of sink functions that can convert the comms message to
+   T. example: for direct, sink func would convert Iterator<T> to T.
+   */
   public CachedTSet(TSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("cached"), parallelism);
     this.data = new DataObjectImpl<>(tSetEnv.getConfig());

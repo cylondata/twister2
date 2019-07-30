@@ -47,10 +47,20 @@ public class CacheExample extends BaseTsetExample {
   public void execute(BatchTSetEnvironment env) {
     BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
+    // test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();
+    runOps(cache);
 
-    // test cache.direct() which has IterLink semantics
+    // test reduce().cache() which has SingleLink semantics
+    CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
+    runOps(cache1);
 
+    // test gather.cache() which has TupleValueIterLink
+    CachedTSet<Integer> cache2 = src.gather().cache();
+    runOps(cache2);
+  }
+
+  private void runOps(CachedTSet<Integer> cache) {
     LOG.info("test foreach");
     cache.direct()
         .forEach(i -> LOG.info("foreach: " + i));
@@ -100,47 +110,6 @@ public class CacheExample extends BaseTsetExample {
           }
           return true;
         });
-
-
-    // test cache.reduce() which has SingleLink semantics
-
-    LOG.info("test foreach");
-    cache.reduce(Integer::sum)
-        .forEach(i -> LOG.info("foreach: " + i));
-
-    LOG.info("test map");
-    cache.reduce(Integer::sum)
-        .map(i -> i.toString() + "$$")
-        .direct()
-        .forEach(s -> LOG.info("map: " + s));
-
-    LOG.info("test flat map");
-    cache.reduce(Integer::sum)
-        .flatmap((i, c) -> c.collect(i.toString() + "##"))
-        .direct()
-        .forEach(s -> LOG.info("flat:" + s));
-
-    LOG.info("test compute");
-    cache.reduce(Integer::sum)
-        .compute((ComputeFunc<String, Integer>)
-            input -> "sum=" + input)
-        .direct()
-        .forEach(s -> LOG.info("compute: " + s));
-
-    LOG.info("test computec");
-    cache.reduce(Integer::sum)
-        .compute((ComputeCollectorFunc<String, Integer>)
-            (input, output) -> output.collect("sum=" + input))
-        .direct()
-        .forEach(s -> LOG.info("computec: " + s));
-
-    LOG.info("test sink");
-    cache.reduce(Integer::sum).sink((SinkFunc<Integer>)
-        value -> {
-          LOG.info("val =" + value);
-          return true;
-        });
-
   }
 
 
