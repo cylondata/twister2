@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -41,7 +41,7 @@ public class FullGraphRunExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     src.direct()
         .flatmap((FlatMapFunc<Object, Integer>)

@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KGatherExample extends BaseTsetExample {
@@ -46,7 +46,7 @@ public class KGatherExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
         .keyedGather();

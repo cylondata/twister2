@@ -14,17 +14,17 @@ package edu.iu.dsc.tws.api.tset;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.link.GatherTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
 
 public final class TSetUtils {
   private static long genCount = 0;

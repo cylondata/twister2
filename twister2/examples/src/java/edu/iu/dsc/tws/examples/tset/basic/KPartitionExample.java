@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KPartitionExample extends BaseTsetExample {
@@ -45,7 +45,7 @@ public class KPartitionExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
         .keyedPartition(new LoadBalancePartitioner<>());

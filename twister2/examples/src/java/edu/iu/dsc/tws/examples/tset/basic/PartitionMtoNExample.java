@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class PartitionMtoNExample extends BaseTsetExample {
@@ -32,7 +32,7 @@ public class PartitionMtoNExample extends BaseTsetExample {
   @Override
   public void execute(BatchTSetEnvironment env) {
     int n = 4;
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     // test M < N
     runPartition(src, n);
@@ -42,7 +42,7 @@ public class PartitionMtoNExample extends BaseTsetExample {
     runPartition(src, n);
   }
 
-  private void runPartition(BatchSourceTSet<Integer> src, int n) {
+  private void runPartition(SourceTSet<Integer> src, int n) {
     LOG.info("test foreach");
     src.partition(new LoadBalancePartitioner<>(), n)
         .forEach(i -> LOG.info("foreach: " + i));

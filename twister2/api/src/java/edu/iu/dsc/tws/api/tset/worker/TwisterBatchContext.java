@@ -54,7 +54,12 @@ import edu.iu.dsc.tws.task.impl.TaskExecutor;
 /**
  * Twister context provides the user with the basic functionality that is needed to
  * start a Twister2 application
+ *
+ * This is now deprecated. Use {@link edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment} instead!
+ *
+ * @deprecated deprecated class
  */
+@Deprecated
 public class TwisterBatchContext {
 
   private Config config;

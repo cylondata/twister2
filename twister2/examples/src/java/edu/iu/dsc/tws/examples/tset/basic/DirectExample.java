@@ -35,8 +35,8 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.DirectTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -46,7 +46,7 @@ public class DirectExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     DirectTLink<Integer> direct = src.direct();
 

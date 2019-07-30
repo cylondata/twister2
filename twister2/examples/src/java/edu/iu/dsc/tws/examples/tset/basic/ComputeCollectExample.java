@@ -32,8 +32,8 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -42,7 +42,7 @@ public class ComputeCollectExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
     ComputeTSet<String, Iterator<Integer>> modify = src.direct().compute(
         (ComputeCollectorFunc<String, Iterator<Integer>>) (input, collector) -> {

@@ -16,7 +16,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
 
@@ -30,8 +30,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   @Override
-  public <T> BatchSourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
-    BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
+  public <T> SourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
+    SourceTSet<T> sourceT = new SourceTSet<>(this, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;

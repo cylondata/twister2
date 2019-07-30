@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
@@ -45,7 +45,7 @@ public class CacheExample extends BaseTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    BatchSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
     // test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();

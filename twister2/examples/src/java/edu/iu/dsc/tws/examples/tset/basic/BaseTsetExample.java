@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -39,7 +39,7 @@ public abstract class BaseTsetExample implements BatchTSetIWorker, Serializable 
   static final int COUNT = 5;
   static final int PARALLELISM = 2;
 
-  BatchSourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
+  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 0;
 

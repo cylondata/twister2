@@ -51,6 +51,12 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
+/**
+ * This is now deprecated. Use {@link edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment} instead!
+ *
+ * @deprecated deprecated abstract class
+ */
+@Deprecated
 public class TwisterStreamingContext {
 
   private Config config;

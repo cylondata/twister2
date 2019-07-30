@@ -54,7 +54,7 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
 
 public class TSetGraph {
   private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
