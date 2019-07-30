@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.dataset.consumer.IterativeConsumer;
 
 public class CollectionPartition<T> implements DataPartition<T> {
@@ -50,7 +49,7 @@ public class CollectionPartition<T> implements DataPartition<T> {
   }
 
   @Override
-  public DataPartitionConsumer<T> getConsumer() {
+  public IterativeConsumer<T> getConsumer() {
     return new IterativeConsumer<>(dataList.iterator());
   }
 

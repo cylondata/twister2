@@ -81,7 +81,7 @@ public abstract class SingleLink<T> extends BaseTLink<T, T> implements
 
   @Override
   public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<>(),
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 

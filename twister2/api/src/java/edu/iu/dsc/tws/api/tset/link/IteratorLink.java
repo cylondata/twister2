@@ -84,7 +84,7 @@ public abstract class IteratorLink<T> extends BaseTLink<Iterator<T>, T>
 
   @Override
   public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<>(),
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 

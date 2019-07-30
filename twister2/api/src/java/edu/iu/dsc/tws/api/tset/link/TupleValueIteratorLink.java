@@ -27,6 +27,7 @@ package edu.iu.dsc.tws.api.tset.link;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
@@ -37,7 +38,16 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sinks.CacheTupleValueIterSink;
 
+/**
+ * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
+ * etc will be done on the tuple value only (key will be dropped, as key is an information
+ * forcibly attached at the communication level). If the key information is required, users can
+ * use the compute methods which enables the use of Iterator<Tuple<K, T>>
+ * @param <K> key type
+ * @param <T> value type
+ */
 public abstract class TupleValueIteratorLink<K, T> extends BaseTLink<Iterator<Tuple<K, T>>, T> {
 
   protected TupleValueIteratorLink(TSetEnvironment env, String n, int sourceP) {
@@ -83,6 +93,13 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public CachedTSet<T> cache() {
-    return null;
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheTupleValueIterSink<K, T>(),
+        getTargetParallelism());
+    addChildToGraph(cacheTSet);
+
+    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
+    cacheTSet.setData(output);
+
+    return cacheTSet;
   }
 }

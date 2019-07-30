@@ -46,7 +46,11 @@ public interface SinkFunc<T> extends TFunction {
   }
 
   /**
-   * Return the data partition associated with this task instance
+   * Return the data partition associated with this task instance. Specifically to be used for
+   * caching functionality.
+   * @return data partition - type remains unknown as the output of sinked data can be a
+   * different type than T. Example, caching gatherTlink, T -> Tuple<int, T> but the output would
+   * be T
    */
   default DataPartition<?> get() {
     throw new UnsupportedOperationException("Get is not supported for this task, please"

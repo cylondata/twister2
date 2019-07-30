@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.api.tset.sinks;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
@@ -39,7 +38,7 @@ public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
   }
 
   @Override
-  public DataPartition<T> get() {
+  public CollectionPartition<T> get() {
     return partition;
   }
 }
