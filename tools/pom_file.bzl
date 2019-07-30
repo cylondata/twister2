@@ -15,7 +15,6 @@
 """
 
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//:t2_meta.bzl", "T2_VERSION")
 
 MavenInfo = provider(
     fields = {
@@ -27,7 +26,6 @@ MavenInfo = provider(
         The Maven coordinates of the direct dependencies, and the transitively exported targets, of
         this target.
         """,
-        "deps": "",
     },
 )
 
@@ -150,7 +148,7 @@ def _pom_file(ctx):
     )
 
     formatted_deps = []
-    for dep in _sort_artifacts(mvn_deps, ctx.attr.preferred_group_ids):
+    for dep in _sort_artifacts(mvn_deps.to_list(), ctx.attr.preferred_group_ids):
         parts = dep.split(":")
         if ":".join(parts[0:2]) in ctx.attr.excluded_artifacts:
             continue
@@ -167,7 +165,7 @@ def _pom_file(ctx):
     substitutions.update(ctx.attr.substitutions)
     substitutions.update({
         "{generated_bzl_deps}": "\n".join(formatted_deps),
-        "{pom_version}": T2_VERSION,  #ctx.var.get("pom_version", T2_VERSION),
+        "{pom_version}": ctx.var.get("pom_version", "LOCAL-SNAPSHOT"),
     })
 
     ctx.actions.expand_template(
@@ -179,8 +177,7 @@ def _pom_file(ctx):
 pom_file = rule(
     attrs = {
         "template_file": attr.label(
-            single_file = True,
-            allow_files = True,
+            allow_single_file = True,
         ),
         "substitutions": attr.string_dict(
             allow_empty = True,
@@ -254,7 +251,7 @@ def _maven_info_test_impl(ctx):
         actual = ctx.attr.target[MavenInfo].maven_dependencies,
         msg = "MavenInfo.maven_dependencies",
     )
-    unittest.end(env)
+    return unittest.end(env)
 
 _maven_info_test = unittest.make(
     _maven_info_test_impl,

@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
+load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
 
 #JOB STATE
 #native.proto_library(
@@ -64,8 +65,8 @@ load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
 #)
 
 #UNIFIED JAR
-native.proto_library(
-    name = "proto",
+proto_library(
+    name = "protop",
     srcs = [
         "checkpoint.proto",
         "htgjob.proto",
@@ -81,7 +82,7 @@ t2_proto_java_lib(
     name = "proto-java",
     artifact_name = "Twister2 Proto",
     deps = [
-        ":proto",
+        ":protop",
     ],
 )
 
