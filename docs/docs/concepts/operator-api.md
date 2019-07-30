@@ -82,34 +82,42 @@ methods.
 
 ## Batch Operators
 
-| Operator | Description
-| :--- | :--- | 
-| Reduce  | Reduces a set of values into a single value with a user defined function. |  
-| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets |
-| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory |
-| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory |
-| Broadcast | Broadcast a value from a single source to multiple targets |
-| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target |
-| KeyedReduce | Reduce based on a key specified by the user. Values with the same key are reduced together |
-| KeyedGather | Gather based on a key specified by the user. Values with the same key are gathered together |
-| Join | Equi join two data sets with a given key |
-| OuterJoin | Outer join two data sets with a given key |
-| Left outer join | Left outer join two data sets according to a key |
-| Right outer join | Rigght outer join two data sets according to a key |
-| Partition | Redistributes data according to a user criteria |
+The table below describes the batch operators supported by Twister2 and their semantics.
+
+| Operator | Description | Class |
+| :--- | :--- | :--- | 
+| Reduce  | Reduces a set of values into a single value with a user defined function. |  edu.iu.dsc.tws.comms.batch.BReduce |
+| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets | edu.iu.dsc.tws.comms.batch.BAllReduce |
+| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory | edu.iu.dsc.tws.comms.batch.BGather |
+| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory | edu.iu.dsc.tws.comms.batch.BAllGather |
+| Broadcast | Broadcast a value from a single source to multiple targets | edu.iu.dsc.tws.comms.batch.BBroadcast |
+| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target | edu.iu.dsc.tws.comms.batch.BDirect |
+| KeyedReduce | Reduce based on a key specified by the user. Values with the same key are reduced together | edu.iu.dsc.tws.comms.batch.BKeyedReduce |
+| KeyedGather | Gather based on a key specified by the user. Values with the same key are gathered together | edu.iu.dsc.tws.comms.batch.BKeyedGather |
+| Join | Equi join two data sets with a given key | edu.iu.dsc.tws.comms.batch.BJoin |
+| OuterJoin | Outer join two data sets with a given key | edu.iu.dsc.tws.comms.batch.BJoin |
+| Left outer join | Left outer join two data sets according to a key | edu.iu.dsc.tws.comms.batch.BJoin |
+| Right outer join | Rigght outer join two data sets according to a key | edu.iu.dsc.tws.comms.batch.BJoin |
+| Partition | Redistributes data according to a user criteria | edu.iu.dsc.tws.comms.batch.BPartition |
 
 ## Streaming Operators
 
-| Operator | Description
-| :--- | :--- | 
-| Reduce  | Reduces a set of values into a single value with a user defined function. |  
-| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets |
-| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory |
-| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory |
-| Broadcast | Broadcast a value from a single source to multiple targets |
-| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target |
-| Partition | Redistributes data according to a user criteria |
+The table below describes the streaming operators supported by Twister2 and their semantics.
 
+| Operator | Description | Class |
+| :--- | :--- | :--- |
+| Reduce  | Reduces a set of values into a single value with a user defined function. | edu.iu.dsc.tws.comms.stream.SReduce |
+| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets | edu.iu.dsc.tws.comms.stream.SAllReduce |
+| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory | edu.iu.dsc.tws.comms.stream.SGather |
+| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory | edu.iu.dsc.tws.comms.stream.SAllGather |
+| Broadcast | Broadcast a value from a single source to multiple targets | edu.iu.dsc.tws.comms.stream.SBroadcast |
+| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target | edu.iu.dsc.tws.comms.stream.SDirect |
+| Partition | Redistributes data according to a user criteria | edu.iu.dsc.tws.comms.stream.SPartition |
+
+## Disk Based Operators
+
+Some operators can be configured to use the disk in-order to support large data sets. Only batch operators
+support this mode. Join operations and KeyedGather operators can use the disk to do large data operations. 
 
 ## High performance communication layer
 
