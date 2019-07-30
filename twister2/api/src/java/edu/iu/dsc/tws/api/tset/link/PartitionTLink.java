@@ -28,10 +28,16 @@ public class PartitionTLink<T> extends IteratorLink<T> {
 
   public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism) {
+    this(tSetEnv, parFn, sourceParallelism, sourceParallelism);
+  }
+
+  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+                        int sourceParallelism, int targetParallelism) {
     super(tSetEnv, TSetUtils.generateName("partition"),
-        sourceParallelism, sourceParallelism);
+        sourceParallelism, targetParallelism);
     this.partitionFunction = parFn;
   }
+
 
   @Override
   public Edge getEdge() {
