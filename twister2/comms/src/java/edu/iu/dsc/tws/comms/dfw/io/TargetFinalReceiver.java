@@ -11,13 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -63,7 +62,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     int index = 0;
     targets = new int[thisDestinations.size()];
     for (int target : thisDestinations) {
-      messages.put(target, new LinkedBlockingQueue<>());
+      messages.put(target, new ArrayList<>());
       targets[index++] = target;
     }
   }
@@ -110,7 +109,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       targetStates.put(target, ReceiverState.RECEIVING);
     }
 
-    Queue<Object> msgQueue = messages.get(target);
+    List<Object> msgQueue = messages.get(target);
     return msgQueue.size() < highWaterMark;
   }
 
@@ -122,7 +121,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     try {
       for (int i = 0; i < targets.length; i++) {
         int key = targets[i];
-        Queue<Object> val = messages.get(key);
+        List<Object> val = messages.get(key);
 
         if (val.size() > 0) {
           merge(key, val);

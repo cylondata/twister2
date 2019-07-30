@@ -15,18 +15,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
@@ -39,11 +35,6 @@ public class TargetPartialReceiver extends TargetReceiver {
    * Keep track what are the targets we've sent syncs to
    */
   protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
-
-  /**
-   * Keep the list of tuples for each target
-   */
-  protected Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
 
   /**
    * The barriers for each source
@@ -99,7 +90,7 @@ public class TargetPartialReceiver extends TargetReceiver {
     }
 
     for (int target : thisDestinations) {
-      messages.put(target, new LinkedBlockingQueue<>());
+      messages.put(target, new AggregatedObjects<>());
     }
 
     index = 0;
@@ -118,14 +109,7 @@ public class TargetPartialReceiver extends TargetReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  protected void merge(int dest, Queue<Object> dests) {
-    if (!readyToSend.containsKey(dest)) {
-      readyToSend.put(dest, new AggregatedObjects<>(dests));
-    } else {
-      List<Object> ready = readyToSend.get(dest);
-      ready.addAll(dests);
-    }
-    dests.clear();
+  protected void merge(int dest, List<Object> dests) {
   }
 
   /**
@@ -137,10 +121,10 @@ public class TargetPartialReceiver extends TargetReceiver {
    */
   @Override
   protected boolean sendToTarget(int source, int target) {
-    List<Object> values = readyToSend.get(target);
+    List<Object> values = messages.get(target);
     if (values != null && values.size() > 0) {
       if (operation.sendPartial(source, values, 0, target)) {
-        readyToSend.remove(target);
+        messages.put(target, new AggregatedObjects<>());
       } else {
         return false;
       }
@@ -155,13 +139,8 @@ public class TargetPartialReceiver extends TargetReceiver {
    */
   protected boolean isAllEmpty() {
     for (int i = 0; i < targets.length; i++) {
-      Queue<Object> msgQueue = messages.get(targets[i]);
+      List<Object> msgQueue = messages.get(targets[i]);
       if (msgQueue.size() > 0) {
-        return false;
-      }
-
-      List<Object> queue = readyToSend.get(targets[i]);
-      if (queue != null && queue.size() > 0) {
         return false;
       }
     }
@@ -170,7 +149,7 @@ public class TargetPartialReceiver extends TargetReceiver {
 
   @Override
   protected boolean isFilledToSend(int target) {
-    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
+    return messages.get(target) != null && messages.get(target).size() > 0;
   }
 
   @Override
@@ -196,13 +175,8 @@ public class TargetPartialReceiver extends TargetReceiver {
       sourceStates.put(source, ReceiverState.RECEIVING);
     }
 
-    Queue<Object> msgQueue = messages.get(target);
-    List<Object> readyQueue = readyToSend.get(target);
+    List<Object> msgQueue = messages.get(target);
     int size = msgQueue.size();
-    if (readyQueue != null) {
-      size += readyQueue.size();
-    }
-
     return size < highWaterMark;
   }
 
@@ -220,7 +194,7 @@ public class TargetPartialReceiver extends TargetReceiver {
         boolean allEmpty = true;
         for (int i = 0; i < targets.length; i++) {
           int key = targets[i];
-          Queue<Object> val = messages.get(key);
+          List<Object> val = messages.get(key);
 
           if (val != null && val.size() > 0) {
             merge(key, val);

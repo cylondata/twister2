@@ -61,11 +61,11 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected void merge(int dest, Queue<Object> dests) {
+  protected void merge(int dest, List<Object> dests) {
     Map<Object, List<Object>> targetValues = gathered.get(dest);
 
-    while (dests.size() > 0) {
-      Object val = dests.poll();
+    for (int i = 0; i < dests.size(); i++) {
+      Object val = dests.get(i);
       Tuple t;
 
       if (val instanceof Tuple) {
@@ -81,6 +81,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
       }
       currentVal.add(t.getValue());
     }
+    dests.clear();
   }
 
   @Override
