@@ -36,20 +36,20 @@ to a single value at the target. How to reduce multiple values to a single value
 a user defined function.
 
 ```java
-    // setup the batch operation
-    BReduce reduce = new BReduce(communicator, logicalPlan, sources, target,
-        reduceFunction, reduceReceiver, datatype);
-    // send the data
-    reduce.reduce(task, data, flag);
+// setup the batch operation
+BReduce reduce = new BReduce(communicator, logicalPlan, sources, target,
+    reduceFunction, reduceReceiver, datatype);
+// send the data
+reduce.reduce(task, data, flag);
 
-    // lets call finish, every source need to call finish, in this example
-    // we assume one source in a single worker
-    reduce.finish(source);
+// lets call finish, every source need to call finish, in this example
+// we assume one source in a single worker
+reduce.finish(source);
 
-    // wait while operator completes
-    while (!reduce.isComplete()) {
-        reduce.progressChannel();
-    }
+// wait while operator completes
+while (!reduce.isComplete()) {
+    reduce.progressChannel();
+}
 ```
 
 After every participating source sends its data and calls finish, the final values will be
@@ -77,8 +77,39 @@ not go through the network.
 The data accepting functions of the operators can return ```true``` or ```false``` depending
 on weather they accept the data or not. If the method doesn't accept data, that means the internal
 data structures are full and user needs to call the ```progressChannel``` method to send the data to
-its targets. User doesn't need to wait unti the method returns ```false``` to call the progression
+its targets. User doesn't need to wait until the method returns ```false``` to call the progression
 methods.
+
+## Batch Operators
+
+| Operator | Description
+| :--- | :--- | 
+| Reduce  | Reduces a set of values into a single value with a user defined function. |  
+| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets |
+| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory |
+| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory |
+| Broadcast | Broadcast a value from a single source to multiple targets |
+| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target |
+| KeyedReduce | Reduce based on a key specified by the user. Values with the same key are reduced together |
+| KeyedGather | Gather based on a key specified by the user. Values with the same key are gathered together |
+| Join | Equi join two data sets with a given key |
+| OuterJoin | Outer join two data sets with a given key |
+| Left outer join | Left outer join two data sets according to a key |
+| Right outer join | Rigght outer join two data sets according to a key |
+| Partition | Redistributes data according to a user criteria |
+
+## Streaming Operators
+
+| Operator | Description
+| :--- | :--- | 
+| Reduce  | Reduces a set of values into a single value with a user defined function. |  
+| AllReduce | Reduces a set of values into a single value with a user defined function and broadcast it to all the targets |
+| Gather | Gathers values from all sources and give it to a single target, optionally can use the disk to do large gathers that doesn't fit into memory |
+| AllGather | Gathers values from all sources and broadcast it to all the targets, optionally can use the disk to do large gathers that doesn't fit into memory |
+| Broadcast | Broadcast a value from a single source to multiple targets |
+| Direct | A peer to peer communication between set of sources and targets, each source is matched to a single target |
+| Partition | Redistributes data according to a user criteria |
+
 
 ## High performance communication layer
 
