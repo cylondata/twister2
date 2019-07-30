@@ -9,22 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sinks;
+package edu.iu.dsc.tws.graphapi.vertex;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+public class SsspVertexStatus {
+  private String id;
+  private int value;
 
-public class CacheSingleSink<T> extends BaseSinkFunc<T> {
-  private EntityPartition<T> partition;
 
-  @Override
-  public boolean add(T value) {
-    this.partition = new EntityPartition<>(getTSetContext().getIndex(), value);
-    return true;
+  public String getId() {
+    return id;
   }
 
-  @Override
-  public EntityPartition<T> get() {
-    return partition;
+
+  public int getValue() {
+    return value;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+
+  public void setValue(int value) {
+    this.value = value;
   }
 }

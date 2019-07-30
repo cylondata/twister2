@@ -75,6 +75,10 @@ public class ExecutionPlan {
     return parallelOperations;
   }
 
+  public boolean isNodeAvailable(String taskName) {
+    return nodesByName.containsKey(taskName);
+  }
+
   public Map<Integer, INodeInstance> getNodes(String taskName) {
     return nodesByName.get(taskName);
   }

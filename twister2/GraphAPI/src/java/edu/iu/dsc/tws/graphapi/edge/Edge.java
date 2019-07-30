@@ -9,22 +9,28 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sinks;
+package edu.iu.dsc.tws.graphapi.edge;
 
-import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
-public class CacheSingleSink<T> extends BaseSinkFunc<T> {
-  private EntityPartition<T> partition;
+/**
+ * A complete edge, the target vertex and the edge value.  Can only be one
+ * edge with a destination vertex id per edge map.
+ *
+ * @param <I> Vertex index
+ * @param <E> Edge value
+ */
+public interface Edge<I, E> {
+  /**
+   * Get the target vertex index of this edge
+   *
+   * @return Target vertex index of this edge
+   */
+  I getTargetVertexId();
 
-  @Override
-  public boolean add(T value) {
-    this.partition = new EntityPartition<>(getTSetContext().getIndex(), value);
-    return true;
-  }
-
-  @Override
-  public EntityPartition<T> get() {
-    return partition;
-  }
+  /**
+   * Get the edge value of the edge
+   *
+   * @return Edge value of this edge
+   */
+  E getValue();
 }
