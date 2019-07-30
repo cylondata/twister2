@@ -338,6 +338,7 @@ public class PageRankWorker extends TaskWorker {
 
     @Override
     public void execute() {
+      System.out.println("before call this method");
       DataPartition<?> dataPartition = graphObject.getPartition(context.taskIndex());
       graphData = (HashMap<String, ArrayList<String>>) dataPartition.getConsumer().next();
 
