@@ -37,7 +37,6 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -227,7 +226,9 @@ public class TSetGraph {
       }
     }
 
-    Collections.reverse(buildOrder);
+//    if (reverse) {
+//      Collections.reverse(buildOrder);
+//    }
 
     return buildOrder;
   }
