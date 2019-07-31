@@ -111,7 +111,7 @@ public class SAllReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return reduceDone && sourcesDone && reduce.isComplete();
   }
 
   public class FinalSingularReceiver implements SingularReceiver {

@@ -22,26 +22,27 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
-public class BKeyedPartition {
-  private MToNSimple partition;
-
+public class BKeyedPartition extends BaseOperation {
   private DestinationSelector destinationSelector;
 
   public BKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType keyType, MessageType dataType,
                          BulkReceiver rcvr, DestinationSelector destSelector, int edgeId) {
+    super(comm.getChannel());
     this.destinationSelector = destSelector;
-    this.partition = new MToNSimple(comm.getChannel(), sources, destinations,
+    MToNSimple partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
         new PartitionPartialReceiver(), dataType, keyType);
-    this.partition.init(comm.getConfig(), dataType, plan, edgeId);
+    partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.op = partition;
   }
 
   public BKeyedPartition(Communicator comm, LogicalPlan plan,
@@ -55,46 +56,24 @@ public class BKeyedPartition {
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType dataType, MessageType keyType, BulkReceiver rcvr,
                          DestinationSelector destSelector, Comparator<Object> comparator) {
+    super(comm.getChannel());
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
     int e = comm.nextEdge();
-    this.partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
+    MToNSimple partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
         sources, destinations,
         new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator, true),
         new PartitionPartialReceiver(), dataType, MessageTypes.BYTE_ARRAY, keyType,
         keyType, e);
-    this.partition.init(comm.getConfig(), dataType, plan, e);
+    partition.init(comm.getConfig(), dataType, plan, e);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    this.op = partition;
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source, key, message);
 
-    return partition.send(source, Tuple.of(key, message, partition.getKeyType(),
-        partition.getDataType()), flags, destinations);
-  }
-
-  public boolean hasPending() {
-    return !partition.isComplete();
-  }
-
-  public void finish(int source) {
-    partition.finish(source);
-  }
-
-  public boolean progress() {
-    return partition.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    partition.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    partition.reset();
+    return op.send(source, Tuple.of(key, message, op.getKeyType(),
+        op.getDataType()), flags, destinations);
   }
 }

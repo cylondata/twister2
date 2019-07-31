@@ -49,7 +49,8 @@ public final class MesosJobMasterStarter {
 
   private static final Logger LOG = Logger.getLogger(MesosJobMasterStarter.class.getName());
 
-  private MesosJobMasterStarter() { }
+  private MesosJobMasterStarter() {
+  }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
@@ -61,8 +62,8 @@ public final class MesosJobMasterStarter {
     String jobId = System.getenv("JOB_ID");
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
     Config.Builder builder = Config.newBuilder().putAll(config);
     builder.put(Context.JOB_ID, jobId);
     config = builder.build();
@@ -75,7 +76,7 @@ public final class MesosJobMasterStarter {
     edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController controller;
     controller = new edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController(config);
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
+        + jobName + ".job");
 //    try {
 //      workerController = new MesosWorkerController(config, job,
 //          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);

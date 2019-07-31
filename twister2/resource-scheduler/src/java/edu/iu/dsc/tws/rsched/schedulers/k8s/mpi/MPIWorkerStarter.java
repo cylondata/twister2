@@ -39,9 +39,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import mpi.MPI;
 import mpi.MPIException;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class MPIWorkerStarter {
@@ -56,7 +54,8 @@ public final class MPIWorkerStarter {
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
-  private MPIWorkerStarter() { }
+  private MPIWorkerStarter() {
+  }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
@@ -79,8 +78,7 @@ public final class MPIWorkerStarter {
     encodedNodeInfoList = encodedNodeInfoList.replaceAll("'", "");
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
-        + KUBERNETES_CLUSTER_TYPE;
+    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
@@ -178,7 +176,8 @@ public final class MPIWorkerStarter {
     // finalize MPI
     try {
       MPI.Finalize();
-    } catch (MPIException ignore) { }
+    } catch (MPIException ignore) {
+    }
 
     // close the worker
     closeWorker();

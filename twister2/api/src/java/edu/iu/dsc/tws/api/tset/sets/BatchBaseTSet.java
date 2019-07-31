@@ -50,10 +50,17 @@ public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
     return reduce;
   }
 
-  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
-    PartitionTLink<T> partition = new PartitionTLink<>(getTSetEnv(), partitionFn, getParallelism());
+  @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
+    PartitionTLink<T> partition = new PartitionTLink<>(getTSetEnv(), partitionFn, getParallelism(),
+        targetParallelism);
     addChildToGraph(partition);
     return partition;
+  }
+
+  @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+    return partition(partitionFn, getParallelism());
   }
 
   @Override

@@ -87,7 +87,7 @@ public class SKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !keyedReduce.hasPending();
+    return reduceDone && sourcesDone && keyedReduce.isComplete();
   }
 
   @Override

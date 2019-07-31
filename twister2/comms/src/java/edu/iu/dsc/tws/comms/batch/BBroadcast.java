@@ -17,15 +17,11 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
 
-public class BBroadcast {
-  /**
-   * The actual operation
-   */
-  private TreeBroadcast bcast;
-
+public class BBroadcast extends BaseOperation {
   /**
    * Construct a Streaming Reduce operation
    *
@@ -39,9 +35,11 @@ public class BBroadcast {
   public BBroadcast(Communicator comm, LogicalPlan plan,
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType, int edgeID) {
-    bcast = new TreeBroadcast(comm.getChannel(), sources, target,
+    super(comm.getChannel());
+    TreeBroadcast bcast = new TreeBroadcast(comm.getChannel(), sources, target,
         new DirectBatchFinalReceiver(rcvr));
     bcast.init(comm.getConfig(), dataType, plan, edgeID);
+    op = bcast;
   }
 
   /**
@@ -69,45 +67,6 @@ public class BBroadcast {
    * @return true if the message is accepted
    */
   public boolean bcast(int src, Object message, int flags) {
-    return bcast.send(src, message, flags);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !bcast.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    bcast.finish(src);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return bcast.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    bcast.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    bcast.reset();
+    return op.send(src, message, flags);
   }
 }

@@ -119,7 +119,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !partition.hasPending();
+    return sourcesDone && partition.isComplete();
   }
 
   @Override

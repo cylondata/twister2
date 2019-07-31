@@ -64,11 +64,17 @@ public abstract class StreamingBaseTSet<T> extends BaseTSet<T> {
     return null;
   }
 
-  public StreamingPartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+  @Override
+  public StreamingPartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     StreamingPartitionTLink<T> partition = new StreamingPartitionTLink<>(getTSetEnv(),
-        partitionFn, getParallelism());
+        partitionFn, getParallelism(), targetParallelism);
     addChildToGraph(partition);
     return partition;
+  }
+
+  @Override
+  public StreamingPartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+    return partition(partitionFn, getParallelism());
   }
 
   @Override

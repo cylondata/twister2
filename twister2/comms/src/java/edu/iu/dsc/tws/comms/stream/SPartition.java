@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
@@ -25,13 +26,7 @@ import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
 /**
  * Streaming Partition Operation
  */
-public class SPartition {
-
-  /**
-   * The actual operation
-   */
-  private MToNSimple partition;
-
+public class SPartition extends BaseOperation {
   /**
    * Destination selector
    */
@@ -51,12 +46,14 @@ public class SPartition {
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr,
                     DestinationSelector destSelector, int edgeId) {
+    super(comm.getChannel());
     this.destinationSelector = destSelector;
-    this.partition = new MToNSimple(comm.getChannel(), sources, targets,
+    MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr),
         new PartitionStreamingPartialReceiver(), dataType);
-    this.partition.init(comm.getConfig(), dataType, plan, edgeId);
+    partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
+    op = partition;
   }
 
   public SPartition(Communicator comm, LogicalPlan plan,
@@ -77,49 +74,10 @@ public class SPartition {
   public boolean partition(int src, Object message, int flags) {
     final int dest = destinationSelector.next(src, message);
 
-    boolean send = partition.send(src, message, flags, dest);
+    boolean send = op.send(src, message, flags, dest);
     if (send) {
       destinationSelector.commit(src, dest);
     }
     return send;
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !partition.isComplete();
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return partition.progress();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    partition.finish(src);
-  }
-
-  public void close() {
-    // deregister from the channel
-    partition.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    partition.reset();
   }
 }
