@@ -12,25 +12,11 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 
-public class SDirectTLink<T> extends SSingleLink<T> {
+public interface StreamingTupleMappableLink<I> {
 
-  public SDirectTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("sdirect"), sourceParallelism);
-  }
-
-  @Override
-  public Edge getEdge() {
-    return new Edge(getName(), OperationNames.DIRECT, getMessageType());
-  }
-
-  @Override
-  public SDirectTLink<T> setName(String n) {
-    rename(n);
-    return this;
-  }
+  <K, O> StreamingTupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
 }

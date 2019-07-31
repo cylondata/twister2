@@ -22,7 +22,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,48 +33,64 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class PartitionExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(PartitionExample.class.getName());
+
+public class CacheExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(CacheExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
+    // test direct().cache() which has IterLink semantics
+    CachedTSet<Integer> cache = src.direct().cache();
+    runOps(cache);
+
+    // test reduce().cache() which has SingleLink semantics
+    CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
+    runOps(cache1);
+
+    // test gather.cache() which has TupleValueIterLink
+    CachedTSet<Integer> cache2 = src.gather().cache();
+    runOps(cache2);
+  }
+
+  private void runOps(CachedTSet<Integer> cache) {
     LOG.info("test foreach");
-    src.partition(new LoadBalancePartitioner<>())
+    cache.direct()
         .forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    src.partition(new LoadBalancePartitioner<>())
+    cache.direct()
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    src.partition(new LoadBalancePartitioner<>())
+    cache.direct()
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    src.partition(new LoadBalancePartitioner<>())
-        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
+    cache.direct()
+        .compute((ComputeFunc<String, Iterator<Integer>>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
           }
-          return sum;
+          return "sum" + sum;
         })
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    src.partition(new LoadBalancePartitioner<>())
+    cache.direct()
         .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {
               int sum = 0;
@@ -85,6 +101,15 @@ public class PartitionExample extends BaseTsetExample {
             })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test sink");
+    cache.direct()
+        .sink((SinkFunc<Iterator<Integer>>) value -> {
+          while (value.hasNext()) {
+            LOG.info("val =" + value.next());
+          }
+          return true;
+        });
   }
 
 
@@ -92,6 +117,6 @@ public class PartitionExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, PartitionExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, CacheExample.class.getName());
   }
 }

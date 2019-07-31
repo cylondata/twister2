@@ -157,7 +157,7 @@ public class TaskContextImpl implements TaskContext {
 
   @Override
   public OperationMode getOperationMode() {
-    return null;
+    return operationMode;
   }
 
   /**

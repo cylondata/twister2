@@ -108,9 +108,8 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
-    return Objects.equals(name, baseTLink.name);
+    return name.equals(baseTLink.name);
   }
 
   @Override

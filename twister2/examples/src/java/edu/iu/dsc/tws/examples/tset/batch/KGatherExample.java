@@ -22,56 +22,73 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-
-public class AllreduceExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(AllreduceExample.class.getName());
-
-  private static final int COUNT = 10;
-  private static final int PARALLELISM = 4;
+public class KGatherExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(KGatherExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
+    KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+        .keyedGather();
+
     LOG.info("test foreach");
-    src.allReduce(Integer::sum)
-        .forEach(i -> LOG.info("foreach: " + i));
+    klink.forEach((ApplyFunc<Tuple<Integer, Iterator<Integer>>>)
+        data -> LOG.info("key " + data.getKey() + " " + data.getValue().toString())
+    );
 
     LOG.info("test map");
-    src.allReduce(Integer::sum)
-        .map(i -> i.toString() + "$$")
+    klink.map((MapFunc<String, Tuple<Integer, Iterator<Integer>>>)
+        input -> {
+          int s = 0;
+          while (input.getValue().hasNext()) {
+            s += input.getValue().next();
+          }
+          return "key " + input.getKey() + " " + s;
+        })
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
-    src.allReduce(Integer::sum)
-        .flatmap((i, c) -> c.collect(i.toString() + "$$"))
-        .direct()
-        .forEach(s -> LOG.info("flat:" + s));
-
     LOG.info("test compute");
-    src.allReduce(Integer::sum)
-        .compute(i -> i * 2)
+    klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+        input -> {
+          StringBuilder s = new StringBuilder();
+          while (input.hasNext()) {
+            Tuple<Integer, Iterator<Integer>> next = input.next();
+            s.append("$").append(next.getKey()).append("_").append(next.getValue().toString());
+          }
+          return s.toString();
+        })
         .direct()
-        .forEach(i -> LOG.info("comp: " + i));
+        .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    src.allReduce(Integer::sum)
-        .compute((ComputeCollectorFunc<String, Integer>)
-            (input, output) -> output.collect("sum=" + input))
+    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
+        (input, output) -> {
+          while (input.hasNext()) {
+            Tuple<Integer, Iterator<Integer>> next = input.next();
+            output.collect(next.getKey() + "#" + next.getValue().toString());
+          }
+        })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
   }
@@ -81,6 +98,6 @@ public class AllreduceExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, AllreduceExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, KGatherExample.class.getName());
   }
 }

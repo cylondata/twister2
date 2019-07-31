@@ -22,49 +22,43 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
-import java.io.Serializable;
+import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
-import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public abstract class BaseTsetExample implements BatchTSetIWorker, Serializable {
-  static final int COUNT = 5;
-  static final int PARALLELISM = 2;
 
-  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
-    return env.createSource(new SourceFunc<Integer>() {
-      private int c = 0;
+public class FullGraphRunExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(FullGraphRunExample.class.getName());
+  private static final long serialVersionUID = -2753072757838198105L;
 
-      @Override
-      public boolean hasNext() {
-        return c < count;
-      }
+  @Override
+  public void execute(BatchTSetEnvironment env) {
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-      @Override
-      public Integer next() {
-        return c++;
-      }
-    }, parallel);
+    src.direct()
+        .flatmap((FlatMapFunc<Object, Integer>)
+            (integer, collector) -> LOG.info("dir= " + integer));
+
+    src.reduce(Integer::sum)
+        .flatmap((FlatMapFunc<Object, Integer>)
+            (integer, collector) -> LOG.info("red= " + integer));
+
+    env.run();
   }
 
-  public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
-    Twister2Job twister2Job;
-    twister2Job = Twister2Job.newBuilder()
-        .setJobName(clazz)
-        .setWorkerClass(clazz)
-        .addComputeResource(1, 512, containers)
-        .setConfig(jobConfig)
-        .build();
-    // now submit the job
-    Twister2Submitter.submitJob(twister2Job, config);
-  }
 
+  public static void main(String[] args) {
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    JobConfig jobConfig = new JobConfig();
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, FullGraphRunExample.class.getName());
+  }
 }

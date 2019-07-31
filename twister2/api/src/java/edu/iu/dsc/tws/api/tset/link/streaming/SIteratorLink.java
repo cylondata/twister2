@@ -23,13 +23,12 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.api.tset.link.TupleMappableLink;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleIterOp;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.SKeyedTSet;
 
 public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
-    implements TupleMappableLink<T> {
+    implements StreamingTupleMappableLink<T> {
 
   SIteratorLink(TSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
@@ -59,8 +58,8 @@ public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
-    KeyedTSet<K, V, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
+  public <K, V> SKeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+    SKeyedTSet<K, V, T> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
         getTargetParallelism());
 
     addChildToGraph(set);

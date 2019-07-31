@@ -22,61 +22,67 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KPartitionExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(KPartitionExample.class.getName());
+public class PartitionExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(PartitionExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
-        .keyedPartition(new LoadBalancePartitioner<>());
-
     LOG.info("test foreach");
-    klink.forEach(t -> LOG.info(t.getKey() + "_" + t.getValue()));
+    src.partition(new LoadBalancePartitioner<>())
+        .forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    klink.map(i -> i.toString() + "$$")
+    src.partition(new LoadBalancePartitioner<>())
+        .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
+    LOG.info("test flat map");
+    src.partition(new LoadBalancePartitioner<>())
+        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .direct()
+        .forEach(s -> LOG.info("flat:" + s));
+
     LOG.info("test compute");
-    klink.compute(
-        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
-          StringBuilder s = new StringBuilder();
+    src.partition(new LoadBalancePartitioner<>())
+        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
+          int sum = 0;
           while (input.hasNext()) {
-            s.append(input.next().toString()).append(" ");
+            sum += input.next();
           }
-          return s.toString();
+          return sum;
         })
         .direct()
-        .forEach(s -> LOG.info("compute: concat " + s));
+        .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
-        (input, output) -> {
-          while (input.hasNext()) {
-            output.collect(input.next().toString());
-          }
-        })
+    src.partition(new LoadBalancePartitioner<>())
+        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+            (input, output) -> {
+              int sum = 0;
+              while (input.hasNext()) {
+                sum += input.next();
+              }
+              output.collect("sum" + sum);
+            })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
   }
@@ -86,6 +92,6 @@ public class KPartitionExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KPartitionExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, PartitionExample.class.getName());
   }
 }

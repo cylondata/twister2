@@ -10,7 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,67 +21,68 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-
-public class BroadcastExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(BroadcastExample.class.getName());
+public class PartitionMtoNExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(PartitionMtoNExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, 1);
+    int n = 4;
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    ReplicateTLink<Integer> replicate = src.replicate(PARALLELISM);
+    // test M < N
+    runPartition(src, n);
 
+    // test M < N
+    n = 1;
+    runPartition(src, n);
+  }
+
+  private void runPartition(SourceTSet<Integer> src, int n) {
     LOG.info("test foreach");
-    replicate.forEach(i -> LOG.info("foreach: " + i));
+    src.partition(new LoadBalancePartitioner<>(), n)
+        .forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    replicate.map(i -> i.toString() + "$$")
+    src.partition(new LoadBalancePartitioner<>(), n)
+        .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    replicate.flatmap((i, c) -> c.collect(i.toString() + "##"))
+    src.partition(new LoadBalancePartitioner<>(), n)
+        .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    replicate.compute((ComputeFunc<String, Iterator<Integer>>)
-        input -> {
+    src.partition(new LoadBalancePartitioner<>(), n)
+        .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
           int sum = 0;
           while (input.hasNext()) {
             sum += input.next();
           }
-          return "sum" + sum;
+          return sum;
         })
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    replicate.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
-        (input, output) -> {
-          int sum = 0;
-          while (input.hasNext()) {
-            sum += input.next();
-          }
-          output.collect("sum" + sum);
-        })
+    src.partition(new LoadBalancePartitioner<>(), n)
+        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
+            (input, output) -> {
+              int sum = 0;
+              while (input.hasNext()) {
+                sum += input.next();
+              }
+              output.collect("sum" + sum);
+            })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
-
-    LOG.info("test sink");
-    replicate.sink((SinkFunc<Iterator<Integer>>) value -> {
-      while (value.hasNext()) {
-        LOG.info("val =" + value.next());
-      }
-      return true;
-    });
-
   }
 
 
@@ -89,6 +90,7 @@ public class BroadcastExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, BroadcastExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig,
+        PartitionMtoNExample.class.getName());
   }
 }

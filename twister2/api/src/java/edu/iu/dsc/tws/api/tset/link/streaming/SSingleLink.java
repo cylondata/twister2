@@ -21,19 +21,18 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.link.TupleMappableLink;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.SKeyedTSet;
 
 public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
-    TupleMappableLink<T> {
+    StreamingTupleMappableLink<T> {
 
-  protected SSingleLink(TSetEnvironment env, String n, int sourceP) {
+  SSingleLink(TSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  protected SSingleLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  SSingleLink(TSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
@@ -56,8 +55,8 @@ public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
   }
 
   @Override
-  public <K, O> KeyedTSet<K, O, T> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    KeyedTSet<K, O, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+  public <K, O> SKeyedTSet<K, O, T> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
+    SKeyedTSet<K, O, T> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
         getTargetParallelism());
 
     addChildToGraph(set);

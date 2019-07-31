@@ -43,7 +43,7 @@ import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
-  public SBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  SBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 

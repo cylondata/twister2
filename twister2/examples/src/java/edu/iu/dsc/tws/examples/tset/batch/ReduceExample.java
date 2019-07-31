@@ -22,37 +22,68 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
-public class ComputeCollectExample extends BaseTsetExample {
+public class ReduceExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(ReduceExample.class.getName());
+
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    ComputeTSet<String, Iterator<Integer>> modify = src.direct().compute(
-        (ComputeCollectorFunc<String, Iterator<Integer>>) (input, collector) -> {
-          while (input.hasNext()) {
-            collector.collect(input.next() + "##");
-          }
-        }).setName("modify");
+    ReduceTLink<Integer> reduce = src.reduce(Integer::sum);
 
+    LOG.info("test foreach");
+    reduce.forEach(i -> LOG.info("foreach: " + i));
 
-    modify.direct().forEach(data -> System.out.println("val: " + data));
+    LOG.info("test map");
+    reduce
+        .map(i -> i.toString() + "$$")
+        .direct()
+        .forEach(s -> LOG.info("map: " + s));
+
+    LOG.info("test flat map");
+    reduce
+        .flatmap((i, c) -> c.collect(i.toString() + "##"))
+        .direct()
+        .forEach(s -> LOG.info("flat:" + s));
+
+    LOG.info("test compute");
+    reduce
+        .compute((ComputeFunc<String, Integer>)
+            input -> "sum=" + input)
+        .direct()
+        .forEach(s -> LOG.info("compute: " + s));
+
+    LOG.info("test computec");
+    reduce
+        .compute((ComputeCollectorFunc<String, Integer>)
+            (input, output) -> output.collect("sum=" + input))
+        .direct()
+        .forEach(s -> LOG.info("computec: " + s));
+
+    LOG.info("test sink");
+    reduce.sink((SinkFunc<Integer>)
+        value -> {
+          LOG.info("val =" + value);
+          return true;
+        });
   }
 
 
@@ -60,7 +91,6 @@ public class ComputeCollectExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig,
-        ComputeCollectExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, ReduceExample.class.getName());
   }
 }

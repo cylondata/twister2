@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.api.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleIterOp;
 import edu.iu.dsc.tws.api.tset.ops.MapToTupleOp;
-import edu.iu.dsc.tws.api.tset.sets.BaseTupleTSet;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 
 /**
  * Attaches a key to the oncoming data.
@@ -43,7 +43,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTupleTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public class KeyedTSet<K, V, T> extends BaseTupleTSet<K, V, T> {
+public class KeyedTSet<K, V, T> extends BaseTSet<V> implements BatchTupleTSet<K, V, T> {
   private BaseComputeOp<?> mapToTupleOp;
 
   public KeyedTSet(TSetEnvironment tSetEnv,
@@ -58,6 +58,7 @@ public class KeyedTSet<K, V, T> extends BaseTupleTSet<K, V, T> {
     this.mapToTupleOp = genTupleOp;
   }
 
+  @Override
   public KeyedReduceTLink<K, V> keyedReduce(ReduceFunc<V> reduceFn) {
     KeyedReduceTLink<K, V> reduce = new KeyedReduceTLink<>(getTSetEnv(), reduceFn,
         getParallelism());
@@ -65,6 +66,7 @@ public class KeyedTSet<K, V, T> extends BaseTupleTSet<K, V, T> {
     return reduce;
   }
 
+  @Override
   public KeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
     KeyedPartitionTLink<K, V> partition = new KeyedPartitionTLink<>(getTSetEnv(), partitionFn,
         getParallelism());
@@ -72,6 +74,7 @@ public class KeyedTSet<K, V, T> extends BaseTupleTSet<K, V, T> {
     return partition;
   }
 
+  @Override
   public KeyedGatherTLink<K, V> keyedGather() {
     KeyedGatherTLink<K, V> gather = new KeyedGatherTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(gather);

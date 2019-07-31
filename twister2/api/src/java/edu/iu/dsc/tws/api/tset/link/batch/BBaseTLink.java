@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.tset.sets.batch.SinkTSet;
 public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  public BBaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BBaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

@@ -22,7 +22,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -111,6 +111,6 @@ public class TSetExecDemo implements IWorker, Serializable {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, TSetExecDemo.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, TSetExecDemo.class.getName());
   }
 }

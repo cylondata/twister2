@@ -23,7 +23,7 @@
 //  limitations under the License.
 
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
-public class DirectExample extends BaseTsetExample {
+public class DirectExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(DirectExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
@@ -101,6 +101,6 @@ public class DirectExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, DirectExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, DirectExample.class.getName());
   }
 }

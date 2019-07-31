@@ -22,94 +22,63 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-
-public class CacheExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(CacheExample.class.getName());
+public class KPartitionExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(KPartitionExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    // test direct().cache() which has IterLink semantics
-    CachedTSet<Integer> cache = src.direct().cache();
-    runOps(cache);
+    KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
+        .keyedPartition(new LoadBalancePartitioner<>());
 
-    // test reduce().cache() which has SingleLink semantics
-    CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
-    runOps(cache1);
-
-    // test gather.cache() which has TupleValueIterLink
-    CachedTSet<Integer> cache2 = src.gather().cache();
-    runOps(cache2);
-  }
-
-  private void runOps(CachedTSet<Integer> cache) {
     LOG.info("test foreach");
-    cache.direct()
-        .forEach(i -> LOG.info("foreach: " + i));
+    klink.forEach(t -> LOG.info(t.getKey() + "_" + t.getValue()));
 
     LOG.info("test map");
-    cache.direct()
-        .map(i -> i.toString() + "$$")
+    klink.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
-    cache.direct()
-        .flatmap((i, c) -> c.collect(i.toString() + "##"))
-        .direct()
-        .forEach(s -> LOG.info("flat:" + s));
-
     LOG.info("test compute");
-    cache.direct()
-        .compute((ComputeFunc<String, Iterator<Integer>>) input -> {
-          int sum = 0;
+    klink.compute(
+        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
+          StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
-            sum += input.next();
+            s.append(input.next().toString()).append(" ");
           }
-          return "sum" + sum;
+          return s.toString();
         })
         .direct()
-        .forEach(i -> LOG.info("comp: " + i));
+        .forEach(s -> LOG.info("compute: concat " + s));
 
     LOG.info("test computec");
-    cache.direct()
-        .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
-            (input, output) -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next();
-              }
-              output.collect("sum" + sum);
-            })
+    klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
+        (input, output) -> {
+          while (input.hasNext()) {
+            output.collect(input.next().toString());
+          }
+        })
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
-
-    LOG.info("test sink");
-    cache.direct()
-        .sink((SinkFunc<Iterator<Integer>>) value -> {
-          while (value.hasNext()) {
-            LOG.info("val =" + value.next());
-          }
-          return true;
-        });
   }
 
 
@@ -117,6 +86,6 @@ public class CacheExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, CacheExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, KPartitionExample.class.getName());
   }
 }

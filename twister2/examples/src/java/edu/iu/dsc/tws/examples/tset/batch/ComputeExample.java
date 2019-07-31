@@ -22,62 +22,39 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.examples.tset.basic;
+
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class KReduceExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(KReduceExample.class.getName());
+
+public class ComputeExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
-    KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 4, i))
-        .keyedReduce(Integer::sum);
-
-    LOG.info("test foreach");
-    kreduce.forEach(t -> LOG.info("sum by key=" + t.getKey() + ", " + t.getValue()));
-
-    LOG.info("test map");
-    kreduce.map(i -> i.toString() + "$$")
-        .direct()
-        .forEach(s -> LOG.info("map: " + s));
-
-    LOG.info("test compute");
-    kreduce.compute(
-        (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
-          StringBuilder s = new StringBuilder();
+    ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
+        (ComputeFunc<Integer, Iterator<Integer>>) input -> {
+          int s = 0;
           while (input.hasNext()) {
-            s.append(input.next().toString()).append(" ");
+            s += input.next();
           }
-          return s.toString();
-        })
-        .direct()
-        .forEach(s -> LOG.info("compute: concat " + s));
+          return s;
+        }).setName("sum");
 
-    LOG.info("test computec");
-    kreduce.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
-        (input, output) -> {
-          while (input.hasNext()) {
-            output.collect(input.next().toString());
-          }
-        })
-        .direct()
-        .forEach(s -> LOG.info("computec: " + s));
+
+    sum.direct().forEach(data -> System.out.println("val: " + data));
   }
 
 
@@ -85,6 +62,6 @@ public class KReduceExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, KReduceExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, ComputeExample.class.getName());
   }
 }

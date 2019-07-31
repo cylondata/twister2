@@ -36,6 +36,9 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
@@ -57,7 +60,7 @@ public interface BatchTupleTSet<K, V, T> extends BuildableTSet {
    *
    * @return this TSet
    */
-  TLink<?, ?> keyedGather();
+  TLink<Iterator<Tuple<K, Iterator<V>>>, Tuple<K, Iterator<V>>> keyedGather();
 
   /**
    * Reduce by key
@@ -65,7 +68,7 @@ public interface BatchTupleTSet<K, V, T> extends BuildableTSet {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TLink<?, ?> keyedReduce(ReduceFunc<V> reduceFn);
+  TLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedReduce(ReduceFunc<V> reduceFn);
 
   /**
    * Partition by key
@@ -73,6 +76,6 @@ public interface BatchTupleTSet<K, V, T> extends BuildableTSet {
    * @param partitionFn partition function
    * @return this set
    */
-  TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
+  TLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedPartition(PartitionFunc<K> partitionFn);
 
 }

@@ -13,23 +13,27 @@
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.fn.SelectorFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BSingleLink;
 
-public class SKeyedPartitionTLink<K, V> extends BSingleLink<Tuple<K, V>> {
+public class SKeyedPartitionTLink<K, V> extends SSingleLink<Tuple<K, V>> {
+  private PartitionFunc<K> partitionFunction;
 
   public SKeyedPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<K> parFn,
-                              SelectorFunc<K, V> selec, int sourceParallelism) {
+                              int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("skpartition"), sourceParallelism);
+    this.partitionFunction = parFn;
   }
 
   @Override
   public Edge getEdge() {
-    return null;
+    Edge e = new Edge(getName(), OperationNames.KEYED_PARTITION, getMessageType());
+    e.setKeyed(true);
+    e.setPartitioner(partitionFunction);
+    return e;
   }
 
   @Override

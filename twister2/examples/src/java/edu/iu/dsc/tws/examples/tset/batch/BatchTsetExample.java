@@ -22,46 +22,49 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+package edu.iu.dsc.tws.examples.tset.batch;
 
-package edu.iu.dsc.tws.examples.tset.basic;
-
-import java.util.HashMap;
-import java.util.Iterator;
+import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
+public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable {
+  static final int COUNT = 5;
+  static final int PARALLELISM = 2;
 
-public class ComputeExample extends BaseTsetExample {
-  private static final long serialVersionUID = -2753072757838198105L;
+  SourceTSet<Integer> dummySource(BatchTSetEnvironment env, int count, int parallel) {
+    return env.createSource(new SourceFunc<Integer>() {
+      private int c = 0;
 
-  @Override
-  public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+      @Override
+      public boolean hasNext() {
+        return c < count;
+      }
 
-    ComputeTSet<Integer, Iterator<Integer>> sum = src.direct().compute(
-        (ComputeFunc<Integer, Iterator<Integer>>) input -> {
-          int s = 0;
-          while (input.hasNext()) {
-            s += input.next();
-          }
-          return s;
-        }).setName("sum");
-
-
-    sum.direct().forEach(data -> System.out.println("val: " + data));
+      @Override
+      public Integer next() {
+        return c++;
+      }
+    }, parallel);
   }
 
-
-  public static void main(String[] args) {
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, ComputeExample.class.getName());
+  public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(clazz)
+        .setWorkerClass(clazz)
+        .addComputeResource(1, 512, containers)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
   }
+
 }

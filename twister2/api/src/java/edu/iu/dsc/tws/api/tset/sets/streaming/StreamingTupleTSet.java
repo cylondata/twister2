@@ -29,5 +29,5 @@ public interface StreamingTupleTSet<K, V, T> extends BuildableTSet {
    * @param partitionFn partition function
    * @return this set
    */
-  StreamingTLink<Tuple<K, T>, Tuple<K, T>> keyedPartition(PartitionFunc<K> partitionFn);
+  StreamingTLink<Tuple<K, V>, Tuple<K, V>> keyedPartition(PartitionFunc<K> partitionFn);
 }

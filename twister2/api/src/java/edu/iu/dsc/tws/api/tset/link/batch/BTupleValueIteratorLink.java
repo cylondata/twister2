@@ -39,11 +39,11 @@ import edu.iu.dsc.tws.api.tset.sinks.CacheTupleValueIterSink;
 public abstract class BTupleValueIteratorLink<K, T> extends
     BBaseTLink<Iterator<Tuple<K, T>>, T> {
 
-  protected BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP) {
+  BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  protected BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 /*  public <P> ComputeTSet<P, Iterator<T>>

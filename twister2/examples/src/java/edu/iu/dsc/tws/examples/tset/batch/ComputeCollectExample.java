@@ -23,64 +23,36 @@
 //  limitations under the License.
 
 
-package edu.iu.dsc.tws.examples.tset.basic;
+package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class GatherExample extends BaseTsetExample {
-  private static final Logger LOG = Logger.getLogger(GatherExample.class.getName());
+
+public class ComputeCollectExample extends BatchTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
-    LOG.info("test foreach");
-    src.gather()
-        .forEach(i -> LOG.info("foreach: " + i));
+    ComputeTSet<String, Iterator<Integer>> modify = src.direct().compute(
+        (ComputeCollectorFunc<String, Iterator<Integer>>) (input, collector) -> {
+          while (input.hasNext()) {
+            collector.collect(input.next() + "##");
+          }
+        }).setName("modify");
 
-    LOG.info("test map");
-    src.gather()
-        .map(i -> i.toString() + "$$")
-        .direct()
-        .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test compute");
-    src.gather()
-        .compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
-            input -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next().getValue();
-              }
-              return "sum=" + sum;
-            })
-        .direct()
-        .forEach(s -> LOG.info("compute: " + s));
-
-    LOG.info("test computec");
-    src.gather()
-        .compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
-            (input, output) -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next().getValue();
-              }
-              output.collect("sum=" + sum);
-            })
-        .direct()
-        .forEach(s -> LOG.info("computec: " + s));
+    modify.direct().forEach(data -> System.out.println("val: " + data));
   }
 
 
@@ -88,6 +60,7 @@ public class GatherExample extends BaseTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BaseTsetExample.submitJob(config, PARALLELISM, jobConfig, GatherExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig,
+        ComputeCollectExample.class.getName());
   }
 }

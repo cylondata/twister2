@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 
 public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
-  public BBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  BBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
