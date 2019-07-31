@@ -48,6 +48,7 @@ public final class NomadJobMasterStarter {
   private JobAPI.Job job;
   private Config config;
   private NomadController controller;
+
   public NomadJobMasterStarter(String[] args) {
     Options cmdOptions = null;
     try {
@@ -70,8 +71,10 @@ public final class NomadJobMasterStarter {
       throw new RuntimeException("Error parsing command line options: ", e);
     }
   }
+
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -133,6 +136,7 @@ public final class NomadJobMasterStarter {
 
     return options;
   }
+
   private Config loadConfigurations(CommandLine cmd, int id) {
     String twister2Home = cmd.getOptionValue("twister2_home");
     String container = cmd.getOptionValue("container_class");
@@ -145,7 +149,7 @@ public final class NomadJobMasterStarter {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
@@ -168,6 +172,7 @@ public final class NomadJobMasterStarter {
         put(SchedulerContext.JOB_NAME, job.getJobName()).build();
     return updatedConfig;
   }
+
   public void initialize(JobAPI.Job jb, Config cfg) {
     job = jb;
     config = cfg;
@@ -177,6 +182,7 @@ public final class NomadJobMasterStarter {
     NomadJobMasterStarter starter = new NomadJobMasterStarter(args);
     starter.run();
   }
+
   public void run() {
     // normal worker
     try {
@@ -186,8 +192,10 @@ public final class NomadJobMasterStarter {
       //closeWorker();
     }
   }
+
   /**
    * launch the job master
+   *
    * @return false if setup fails
    */
   public boolean launch() {
@@ -289,9 +297,11 @@ public final class NomadJobMasterStarter {
       }
     }
   }
+
   /**
    * setup the working directory mainly it downloads and extracts the heron-core-release
    * and job package to the working directory
+   *
    * @return false if setup fails
    */
   private boolean setupWorkingDirectory(JobAPI.Job jb, String jobWorkingDirectory) {
@@ -311,8 +321,10 @@ public final class NomadJobMasterStarter {
         jobPackageURI,
         Context.verbose(config));
   }
+
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */

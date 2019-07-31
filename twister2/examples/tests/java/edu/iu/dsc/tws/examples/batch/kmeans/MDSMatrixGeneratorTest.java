@@ -78,7 +78,7 @@ public class MDSMatrixGeneratorTest {
 
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(DataObjectConstants.DSIZE, datasize);
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
     return Config.newBuilder().putAll(config).putAll(jobConfig).build();
   }
 }
