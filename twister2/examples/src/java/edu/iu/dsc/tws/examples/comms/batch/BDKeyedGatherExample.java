@@ -141,7 +141,7 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !keyedGather.hasPending();
+    return sourcesDone && keyedGather.isComplete();
   }
 
   @Override

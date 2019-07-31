@@ -78,7 +78,7 @@ public class SPartitionExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return partitionDone && sourcesDone && partition.isComplete();
   }
 
   @Override

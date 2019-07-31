@@ -110,7 +110,7 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !gather.hasPending();
+    return gatherDone && sourcesDone && gather.isComplete();
   }
 
   public class FinalReduceReceiver implements BulkReceiver {

@@ -72,7 +72,7 @@ public class InputDataStreamer extends CommsWorker {
 
   @Override
   protected boolean isDone() {
-    return directDone && sourcesDone && !direct.hasPending();
+    return directDone && sourcesDone && direct.isComplete();
   }
 
   @Override

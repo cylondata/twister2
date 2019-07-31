@@ -132,7 +132,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !keyedReduce.hasPending();
+    return sourcesDone && keyedReduce.isComplete();
   }
 
   @Override

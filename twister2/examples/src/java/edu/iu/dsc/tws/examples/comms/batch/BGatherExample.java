@@ -119,7 +119,7 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !gather.hasPending();
+    return sourcesDone && gather.isComplete();
   }
 
   @Override
