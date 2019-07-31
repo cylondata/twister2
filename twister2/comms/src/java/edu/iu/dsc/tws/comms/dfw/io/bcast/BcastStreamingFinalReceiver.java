@@ -44,7 +44,7 @@ public class BcastStreamingFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected void addMessage(List<Object> msgQueue, Object value) {
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
     msgQueue.add(value);
   }
 

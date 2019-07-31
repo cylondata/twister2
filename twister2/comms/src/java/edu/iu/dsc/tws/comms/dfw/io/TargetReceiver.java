@@ -150,7 +150,7 @@ public abstract class TargetReceiver implements MessageReceiver {
         }
 
         List<Object> msgQueue = messages.get(target);
-        addMessage(msgQueue, object);
+        addMessage(target, msgQueue, object);
 
         if (msgQueue.size() > lowWaterMark) {
           merge(target, msgQueue);
@@ -168,7 +168,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     return false;
   }
 
-  protected void addMessage(List<Object> msgQueue, Object value) {
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
     if (value instanceof AggregatedObjects) {
       msgQueue.addAll((Collection<?>) value);
     } else {

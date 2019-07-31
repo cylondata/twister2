@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,17 +25,20 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
+import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
    * Keep state
    */
-  protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
+  protected Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
 
   /**
    * Keep track what are the targets we've sent syncs to
    */
-  protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
+  protected Int2ObjectArrayMap<Set<Integer>> syncSent = new Int2ObjectArrayMap<>();
 
   /**
    * The barriers for each source
@@ -55,6 +59,16 @@ public class TargetPartialReceiver extends TargetReceiver {
    * This source array for iteration
    */
   private int[] sourceArray;
+
+  /**
+   * Keep weather source accepts a message
+   */
+  private Int2BooleanArrayMap sourceAcceptMessages = new Int2BooleanArrayMap();
+
+  /**
+   * Keep weather target accepts a message
+   */
+  private Int2BooleanArrayMap targetAcceptMessages = new Int2BooleanArrayMap();
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -91,6 +105,7 @@ public class TargetPartialReceiver extends TargetReceiver {
 
     for (int target : thisDestinations) {
       messages.put(target, new AggregatedObjects<>());
+      targetAcceptMessages.put(target, true);
     }
 
     index = 0;
@@ -125,6 +140,7 @@ public class TargetPartialReceiver extends TargetReceiver {
     if (values != null && values.size() > 0) {
       if (operation.sendPartial(source, values, 0, target)) {
         messages.put(target, new AggregatedObjects<>());
+        targetAcceptMessages.put(target, true);
       } else {
         return false;
       }
@@ -155,6 +171,7 @@ public class TargetPartialReceiver extends TargetReceiver {
   @Override
   protected void addSyncMessage(int source, int target) {
     sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
+    sourceAcceptMessages.put(source, false);
   }
 
   @Override
@@ -162,12 +179,23 @@ public class TargetPartialReceiver extends TargetReceiver {
     sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
     syncState = SyncState.BARRIER_SYNC;
     barriers.put(source, barrier);
+    sourceAcceptMessages.put(source, false);
+  }
+
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
+    if (value instanceof AggregatedObjects) {
+      msgQueue.addAll((Collection<?>) value);
+    } else {
+      msgQueue.add(value);
+    }
+    if (msgQueue.size() >= highWaterMark) {
+      targetAcceptMessages.put(target, false);
+    }
   }
 
   @Override
   protected boolean canAcceptMessage(int source, int target) {
-    if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
-        || sourceStates.get(source) == ReceiverState.SYNCED) {
+    if (sourceAcceptMessages.containsKey(source) && !sourceAcceptMessages.get(source)) {
       return false;
     }
 
@@ -175,9 +203,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       sourceStates.put(source, ReceiverState.RECEIVING);
     }
 
-    List<Object> msgQueue = messages.get(target);
-    int size = msgQueue.size();
-    return size < highWaterMark;
+    return targetAcceptMessages.get(target);
   }
 
   @Override
@@ -296,5 +322,7 @@ public class TargetPartialReceiver extends TargetReceiver {
     syncState = SyncState.SYNC;
     barriers.clear();
     stateCleared = false;
+    sourceAcceptMessages.clear();
+    targetAcceptMessages.clear();
   }
 }
