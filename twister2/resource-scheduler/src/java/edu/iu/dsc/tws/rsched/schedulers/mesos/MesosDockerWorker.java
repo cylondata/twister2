@@ -63,8 +63,8 @@ public class MesosDockerWorker {
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
@@ -117,7 +117,7 @@ public class MesosDockerWorker {
     LOG.info("Worker Count..: " + workerCount);
 
     LOG.info(workerController.getWorkerInfo().toString());
-   //start job master client
+    //start job master client
     worker.startJobMasterAgent(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
         workerCount);
 

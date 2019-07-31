@@ -47,7 +47,9 @@ public final class MesosMPIWorkerStarter {
   private static int resourceIndex = 0;
   private static int startingPort = 30000;
 
-  private MesosMPIWorkerStarter() { }
+  private MesosMPIWorkerStarter() {
+  }
+
   public static void main(String[] args) {
 
     try {
@@ -65,8 +67,8 @@ public final class MesosMPIWorkerStarter {
     jobName = args[0];
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     MesosWorkerLogger logger = new MesosWorkerLogger(config,
         "/persistent-volume/logs", "worker" + workerID);

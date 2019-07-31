@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.worker.K8sWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
+
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 /**
@@ -53,7 +53,8 @@ public final class MPIMasterStarter {
   private static Config config = null;
   private static String jobName = null;
 
-  private MPIMasterStarter() { }
+  private MPIMasterStarter() {
+  }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
@@ -69,8 +70,7 @@ public final class MPIMasterStarter {
       throw new RuntimeException("JobName is null");
     }
 
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
-        + KUBERNETES_CLUSTER_TYPE;
+    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
 
@@ -174,7 +174,6 @@ public final class MPIMasterStarter {
    * first line in the file is the ip of this pod
    * other lines are unordered
    * each line has one ip
-   * @return
    */
   public static boolean createHostFile(ArrayList<String> ipList) {
 
@@ -183,7 +182,7 @@ public final class MPIMasterStarter {
       BufferedWriter writer = new BufferedWriter(
           new OutputStreamWriter(new FileOutputStream(HOSTFILE_NAME)));
 
-      for (String ip: ipList) {
+      for (String ip : ipList) {
         writer.write(ip + System.lineSeparator());
         bufferToLog.append(ip + System.lineSeparator());
       }
@@ -257,7 +256,7 @@ public final class MPIMasterStarter {
 
   public static String commandAsAString(String[] commandArray) {
     String command = "";
-    for (String cmd: commandArray) {
+    for (String cmd : commandArray) {
       command += cmd + " ";
     }
 
@@ -289,7 +288,7 @@ public final class MPIMasterStarter {
     command[0] = "./check_pwd_free_ssh.sh";
 
     int index = 1;
-    for (String ip: podIPs) {
+    for (String ip : podIPs) {
       command[index] = ip;
       index++;
     }
