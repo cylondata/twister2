@@ -9,27 +9,14 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets.streaming;
+package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 
-public interface StreamingTupleTSet<K, V, T> extends TupleTSet<K, V, T> {
+public interface TupleTSet<K, V, T> extends BuildableTSet {
 
-  /**
-   * Name of the tset
-   */
-  @Override
-  StreamingTupleTSet<K, V, T> setName(String name);
+  TupleTSet<K, V, T> setName(String name);
 
-  /**
-   * Partition by key
-   *
-   * @param partitionFn partition function
-   * @return this set
-   */
-  @Override
-  StreamingTLink<Tuple<K, V>, Tuple<K, V>> keyedPartition(PartitionFunc<K> partitionFn);
+  TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
 }

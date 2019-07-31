@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
 public interface StreamingTSet<T> extends TSet<T> {
   @Override
@@ -47,7 +46,7 @@ public interface StreamingTSet<T> extends TSet<T> {
   StreamingTLink<Iterator<Tuple<Integer, T>>, T> allGather();
 
   @Override
-  <K, V> BatchTupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> StreamingTupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   @Override
   StreamingTLink<T, T> replicate(int replications);

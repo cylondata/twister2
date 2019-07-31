@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.api.tset.link.streaming.SPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.SReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.SReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
@@ -101,7 +100,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> SKeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
     throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
   }
 
