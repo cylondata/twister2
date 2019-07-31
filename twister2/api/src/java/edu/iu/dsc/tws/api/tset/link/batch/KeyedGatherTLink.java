@@ -29,18 +29,18 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 
 public class KeyedGatherTLink<K, V> extends BIteratorLink<Tuple<K, Iterator<V>>> {
   private PartitionFunc<K> partitionFunction;
 
-  public KeyedGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism);
   }
 
-  public KeyedGatherTLink(TSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
+  public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism);
     this.partitionFunction = partitionFn;

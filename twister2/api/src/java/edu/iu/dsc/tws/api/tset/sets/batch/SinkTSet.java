@@ -13,8 +13,8 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 
 public class SinkTSet<T> extends BBaseTSet<T> {
@@ -26,7 +26,7 @@ public class SinkTSet<T> extends BBaseTSet<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s The Sink function to be used
    */
-  public SinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s) {
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkOp<T> s) {
     this(tSetEnv, s, 1);
   }
 
@@ -37,7 +37,7 @@ public class SinkTSet<T> extends BBaseTSet<T> {
    * @param s The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("sink"), parallelism);
     this.sink = s;
   }

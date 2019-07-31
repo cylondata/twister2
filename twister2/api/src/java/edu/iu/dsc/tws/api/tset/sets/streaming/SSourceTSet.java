@@ -13,15 +13,15 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.task.nodes.INode;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 
 public class SSourceTSet<T> extends SBaseTSet<T> {
   private SourceFunc<T> source;
 
-  public SSourceTSet(TSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+  public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("ssource"), parallelism);
     this.source = src;
   }

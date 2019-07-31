@@ -16,8 +16,8 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapTupleValueIterCompute;
@@ -39,11 +39,11 @@ import edu.iu.dsc.tws.api.tset.sinks.CacheTupleValueIterSink;
 public abstract class BTupleValueIteratorLink<K, T> extends
     BBaseTLink<Iterator<Tuple<K, T>>, T> {
 
-  BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP) {
+  BTupleValueIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  BTupleValueIteratorLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BTupleValueIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 /*  public <P> ComputeTSet<P, Iterator<T>>

@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
@@ -21,24 +21,24 @@ import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 public class SComputeTSet<O, I> extends SBaseTSet<O> {
   private BaseComputeOp<I> computeOp;
 
-  public SComputeTSet(TSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
                       int parallelism) {
     this(tSetEnv, TSetUtils.generateName("scompute"), computeFunction, parallelism);
   }
 
-  public SComputeTSet(TSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
                       int parallelism) {
     this(tSetEnv, TSetUtils.generateName("scomputec"), compOp, parallelism);
   }
 
-  public SComputeTSet(TSetEnvironment tSetEnv, String name, ComputeOp<O, I> computeFunction,
-                      int parallelism) {
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+                      ComputeOp<O, I> computeFunction, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeOp = computeFunction;
   }
 
-  public SComputeTSet(TSetEnvironment tSetEnv, String name, ComputeCollectorOp<O, I> compOp,
-                      int parallelism) {
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
+                      ComputeCollectorOp<O, I> compOp, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeOp = compOp;
   }

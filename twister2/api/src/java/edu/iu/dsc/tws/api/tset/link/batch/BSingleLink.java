@@ -38,8 +38,8 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -55,11 +55,11 @@ import edu.iu.dsc.tws.api.tset.sinks.CacheSingleSink;
 public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
     BatchTupleMappableLink<T> {
 
-  BSingleLink(TSetEnvironment env, String n, int sourceP) {
+  BSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  BSingleLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

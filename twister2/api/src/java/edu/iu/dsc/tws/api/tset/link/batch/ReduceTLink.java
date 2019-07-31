@@ -26,14 +26,14 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 
 public class ReduceTLink<T> extends BSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
-  public ReduceTLink(TSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism) {
+  public ReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("reduce"), sourceParallelism, 1);
     this.reduceFn = rFn;
   }

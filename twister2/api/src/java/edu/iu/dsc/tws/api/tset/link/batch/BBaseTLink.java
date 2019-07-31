@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link.batch;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -25,8 +25,13 @@ import edu.iu.dsc.tws.api.tset.sets.batch.SinkTSet;
 public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  BBaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BBaseTLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
+  }
+
+  @Override
+  public BatchTSetEnvironment getTSetEnv() {
+    return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
   protected <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {

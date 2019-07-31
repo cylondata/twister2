@@ -13,8 +13,8 @@
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -28,11 +28,11 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.SKeyedTSet;
 public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
     StreamingTupleMappableLink<T> {
 
-  SSingleLink(TSetEnvironment env, String n, int sourceP) {
+  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  SSingleLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
@@ -50,8 +50,6 @@ public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
   public void forEach(ApplyFunc<T> applyFunction) {
     SComputeTSet<Object, T> set = compute(TSetUtils.generateName("sforeach"),
         new ForEachCompute<>(applyFunction));
-
-    getTSetEnv().run(set);
   }
 
   @Override

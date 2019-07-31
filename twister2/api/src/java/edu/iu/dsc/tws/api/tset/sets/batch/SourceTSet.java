@@ -25,15 +25,15 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.task.nodes.INode;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 
 public class SourceTSet<T> extends BBaseTSet<T> {
   private SourceFunc<T> source;
 
-  public SourceTSet(TSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+  public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("source"), parallelism);
     this.source = src;
   }

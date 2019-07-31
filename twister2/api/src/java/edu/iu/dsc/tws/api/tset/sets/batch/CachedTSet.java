@@ -28,8 +28,8 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -62,7 +62,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
-  public CachedTSet(TSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
+  public CachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("cached"), parallelism);
     this.data = new DataObjectImpl<>(tSetEnv.getConfig());
 

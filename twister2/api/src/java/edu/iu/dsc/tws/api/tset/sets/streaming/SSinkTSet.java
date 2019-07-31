@@ -13,8 +13,8 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
 
 public class SSinkTSet<T> extends SBaseTSet<T> {
@@ -26,7 +26,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s The Sink function to be used
    */
-  public SSinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s) {
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkOp<T> s) {
     this(tSetEnv, s, 1);
   }
 
@@ -37,7 +37,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * @param s The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SSinkTSet(TSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("ssink"), parallelism);
     this.sink = s;
   }

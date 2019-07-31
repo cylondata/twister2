@@ -26,7 +26,6 @@ package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -42,7 +41,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
-  SBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  SBaseTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 

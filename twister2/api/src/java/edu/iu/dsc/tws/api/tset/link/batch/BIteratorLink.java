@@ -16,8 +16,8 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapIterCompute;
@@ -33,11 +33,11 @@ import edu.iu.dsc.tws.api.tset.sinks.CacheIterSink;
 public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {
 
-  BIteratorLink(TSetEnvironment env, String n, int sourceP) {
+  BIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  BIteratorLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  BIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

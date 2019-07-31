@@ -27,14 +27,14 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 
 public class KeyedPartitionTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
 
-  public KeyedPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<K> parFn,
+  public KeyedPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
                              int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("kpartition"), sourceParallelism);
     this.partitionFunction = parFn;

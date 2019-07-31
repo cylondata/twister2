@@ -15,8 +15,8 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapTupleValueIterCompute;
@@ -37,11 +37,11 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
 public abstract class STupleValueIteratorLink<K, T> extends
     SBaseTLink<Iterator<Tuple<K, T>>, T> {
 
-  protected STupleValueIteratorLink(TSetEnvironment env, String n, int sourceP) {
+  protected STupleValueIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  protected STupleValueIteratorLink(TSetEnvironment env, String n, int sourceP,
+  protected STupleValueIteratorLink(StreamingTSetEnvironment env, String n, int sourceP,
                                     int targetP) {
     super(env, n, sourceP, targetP);
   }
@@ -76,6 +76,5 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
     SComputeTSet<Object, Iterator<Tuple<K, T>>> foreach =
         compute(TSetUtils.generateName("sforeach"), comp);
     addChildToGraph(foreach);
-    getTSetEnv().run(foreach);
   }
 }

@@ -26,12 +26,12 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 
 public class ReplicateTLink<T> extends BIteratorLink<T> {
 
-  public ReplicateTLink(TSetEnvironment tSetEnv, int reps) {
+  public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
     super(tSetEnv, TSetUtils.generateName("replicate"), 1, reps);
   }
 

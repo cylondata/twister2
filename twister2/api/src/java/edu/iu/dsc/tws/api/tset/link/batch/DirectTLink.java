@@ -15,12 +15,12 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 
 public class DirectTLink<T> extends BIteratorLink<T> {
 
-  public DirectTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism,
         sourceParallelism);
   }

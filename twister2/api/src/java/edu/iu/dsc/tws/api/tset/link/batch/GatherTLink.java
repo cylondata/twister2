@@ -26,8 +26,8 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 
 /**
  * Create a gather data set
@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
  */
 public class GatherTLink<T> extends BTupleValueIteratorLink<Integer, T> {
 
-  public GatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public GatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism, 1);
   }
 

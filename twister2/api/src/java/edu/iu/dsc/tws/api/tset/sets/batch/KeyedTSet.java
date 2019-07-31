@@ -25,8 +25,8 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
@@ -46,16 +46,22 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 public class KeyedTSet<K, V, T> extends BaseTSet<V> implements BatchTupleTSet<K, V, T> {
   private BaseComputeOp<?> mapToTupleOp;
 
-  public KeyedTSet(TSetEnvironment tSetEnv,
+  public KeyedTSet(BatchTSetEnvironment tSetEnv,
                    MapToTupleIterOp<K, V, T> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
-  public KeyedTSet(TSetEnvironment tSetEnv,
+  public KeyedTSet(BatchTSetEnvironment tSetEnv,
                    MapToTupleOp<K, V, T> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
+  }
+
+  // since keyed tset is the base impl for BatchTupleTSet, it needs to override the env getter
+  @Override
+  public BatchTSetEnvironment getTSetEnv() {
+    return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
   @Override

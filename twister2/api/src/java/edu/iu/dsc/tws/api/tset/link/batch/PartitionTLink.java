@@ -26,24 +26,24 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 
 public class PartitionTLink<T> extends BIteratorLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 
-  public PartitionTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public PartitionTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     this(tSetEnv, null, sourceParallelism);
   }
 
-  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+  public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism) {
     this(tSetEnv, parFn, sourceParallelism, sourceParallelism);
   }
 
-  public PartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+  public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism, int targetParallelism) {
     super(tSetEnv, TSetUtils.generateName("partition"),
         sourceParallelism, targetParallelism);

@@ -15,8 +15,8 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapIterCompute;
@@ -30,11 +30,11 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.SKeyedTSet;
 public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
     implements StreamingTupleMappableLink<T> {
 
-  SIteratorLink(TSetEnvironment env, String n, int sourceP) {
+  SIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  SIteratorLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  SIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
@@ -53,8 +53,6 @@ public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
     SComputeTSet<Object, Iterator<T>> set = compute(TSetUtils.generateName("sforeach"),
         new ForEachIterCompute<>(applyFunction)
     );
-
-    getTSetEnv().run(set);
   }
 
   @Override

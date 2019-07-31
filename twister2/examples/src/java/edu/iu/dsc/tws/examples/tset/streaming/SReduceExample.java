@@ -17,23 +17,22 @@ import java.util.HashMap;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.link.streaming.SDirectTLink;
+import edu.iu.dsc.tws.api.tset.link.streaming.SReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 
-public class SDirectExample extends StreamingTsetExample {
+public class SReduceExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
     SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    SDirectTLink<Integer> direct = src.direct();
+    SReduceTLink<Integer> reduce = src.reduce(Integer::sum);
 
-    buildSingleTlink(direct);
-
+    buildSingleTlink(reduce);
   }
 
 
@@ -41,6 +40,6 @@ public class SDirectExample extends StreamingTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, SDirectExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, SReduceExample.class.getName());
   }
 }

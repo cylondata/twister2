@@ -13,8 +13,8 @@
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.SKeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.ops.BaseComputeOp;
@@ -31,16 +31,21 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 public class SKeyedTSet<K, V, T> extends BaseTSet<V> implements StreamingTupleTSet<K, V, T> {
   private BaseComputeOp<?> mapToTupleOp;
 
-  public SKeyedTSet(TSetEnvironment tSetEnv,
+  public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
                     MapToTupleIterOp<K, V, T> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
-  public SKeyedTSet(TSetEnvironment tSetEnv,
+  public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
                     MapToTupleOp<K, V, T> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
+  }
+
+  @Override
+  public StreamingTSetEnvironment getTSetEnv() {
+    return (StreamingTSetEnvironment) super.getTSetEnv();
   }
 
   @Override

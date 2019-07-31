@@ -123,26 +123,8 @@ public abstract class TSetEnvironment {
     executeDataFlowGraph(graph, null);
   }
 
-  /**
-   * Runs a subgraph of TSets from the specified TSet
-   *
-   * @param leafTset leaf tset
-   */
-  public void run(BaseTSet leafTset) {
-    DataFlowTaskGraph dataflowGraph = tsetGraph.build(leafTset);
-    executeDataFlowGraph(dataflowGraph, null);
-  }
-
-  /**
-   * Runs a subgraph of TSets from the specified TSet and output results as a tset
-   *
-   * @param leafTset leaf tset
-   * @param <T> type of the output data object
-   * @return output result as a data object
-   */
-  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-    DataFlowTaskGraph dataflowGraph = tsetGraph.build(leafTset);
-    return executeDataFlowGraph(dataflowGraph, leafTset);
+  protected TSetGraph getTSetGraph() {
+    return tsetGraph;
   }
 
   /**
@@ -153,8 +135,8 @@ public abstract class TSetEnvironment {
    * @param <T> type of the output data object
    * @return output as a data object if outputTset is not null. Else null
    */
-  private <T> DataObject<T> executeDataFlowGraph(DataFlowTaskGraph dataflowGraph,
-                                                 BuildableTSet outputTset) {
+  protected <T> DataObject<T> executeDataFlowGraph(DataFlowTaskGraph dataflowGraph,
+                                                   BuildableTSet outputTset) {
     ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
 
     LOG.fine(executionPlan::toString);

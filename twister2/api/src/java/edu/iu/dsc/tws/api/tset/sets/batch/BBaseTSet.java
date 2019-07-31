@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -41,7 +40,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 
 public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
-  BBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+  BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 

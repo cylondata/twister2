@@ -27,14 +27,14 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 
 public class KeyedReduceTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
   private ReduceFunc<V> reduceFn;
 
-  public KeyedReduceTLink(TSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism) {
+  public KeyedReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<V> rFn, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("kreduce"), sourceParallelism);
     this.reduceFn = rFn;
   }

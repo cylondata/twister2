@@ -26,8 +26,8 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 
 /**
  * Represent a data set created by an all gather operation
@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
  */
 public class AllGatherTLink<T> extends BTupleValueIteratorLink<Integer, T> {
 
-  public AllGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("allgather"), sourceParallelism);
   }
 

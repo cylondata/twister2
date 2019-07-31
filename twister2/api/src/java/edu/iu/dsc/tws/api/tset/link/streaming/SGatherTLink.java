@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.api.tset.link.streaming;
 
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 
 /**
  * Create a gather data set
@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
  */
 public class SGatherTLink<T> extends STupleValueIteratorLink<Integer, T> {
 
-  public SGatherTLink(TSetEnvironment tSetEnv, int sourceParallelism) {
+  public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("sgather"), sourceParallelism, 1);
   }
 

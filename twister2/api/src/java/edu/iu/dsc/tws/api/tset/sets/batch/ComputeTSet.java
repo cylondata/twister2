@@ -13,8 +13,8 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
@@ -22,23 +22,23 @@ import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 public class ComputeTSet<O, I> extends BBaseTSet<O> {
   private BaseComputeOp<I> computeOp;
 
-  public ComputeTSet(TSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
                      int parallelism) {
     this(tSetEnv, TSetUtils.generateName("compute"), computeFunction, parallelism);
   }
 
-  public ComputeTSet(TSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
                      int parallelism) {
     this(tSetEnv, TSetUtils.generateName("computec"), compOp, parallelism);
   }
 
-  public ComputeTSet(TSetEnvironment tSetEnv, String name, ComputeOp<O, I> computeFunction,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeOp<O, I> computeFunction,
                      int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeOp = computeFunction;
   }
 
-  public ComputeTSet(TSetEnvironment tSetEnv, String name, ComputeCollectorOp<O, I> compOp,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeCollectorOp<O, I> compOp,
                      int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeOp = compOp;

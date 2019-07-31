@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -26,8 +26,13 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.SSinkTSet;
 public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
 
-  SBaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+  SBaseTLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
+  }
+
+  @Override
+  public StreamingTSetEnvironment getTSetEnv() {
+    return (StreamingTSetEnvironment) super.getTSetEnv();
   }
 
   protected <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
@@ -74,6 +79,5 @@ public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), new SinkOp<>(sinkFunction),
         getTargetParallelism());
     addChildToGraph(sinkTSet);
-    getTSetEnv().run(sinkTSet);
   }
 }
