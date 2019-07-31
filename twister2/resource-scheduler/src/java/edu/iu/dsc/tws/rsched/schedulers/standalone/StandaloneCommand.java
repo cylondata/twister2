@@ -59,7 +59,7 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
 
-    //making use of -cpus-per-proc of MPI
+    //making use of PE of -map-by of MPI
     int cpusPerProc = 1;
     if (job.getComputeResourceCount() > 0) {
       double cpu = job.getComputeResource(0).getCpu();
