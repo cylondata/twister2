@@ -31,6 +31,10 @@ twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
 # read more at https://www.open-mpi.org/faq/?category=running#mpirun-scheduling
 twister2.resource.scheduler.mpi.mapby: "node"
 
+# use mpi map-by modifier PE. If this option is enabled, cpu count of compute resource
+# specified in job definition will be taken into consideration
+twister2.resource.scheduler.mpi.mapby.use-pe: false
+
 # Indicates whether bootstrap process needs to be run and distribute job file and core
 # between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set
 # to true, else it will run the bootstrap process
