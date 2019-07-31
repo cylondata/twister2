@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.task.executor.IExecution;
  * This executor will be returned to the user in such cases, since twister2
  * doesn't expect users to handle such cases manually.
  */
-public class LifelessExecutor implements IExecution {
+public class NullExecutor implements IExecution {
 
   @Override
   public boolean waitForCompletion() {
