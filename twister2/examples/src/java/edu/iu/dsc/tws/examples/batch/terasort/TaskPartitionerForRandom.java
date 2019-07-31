@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.terasort;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.task.TaskPartitioner;
@@ -21,7 +19,7 @@ import edu.iu.dsc.tws.api.task.TaskPartitioner;
 public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
 
   protected int keysToOneTask;
-  protected List<Integer> destinationsList;
+  protected int[] destinationsList;
 
   public TaskPartitionerForRandom() {
   }
@@ -30,8 +28,12 @@ public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
   public void prepare(Set<Integer> sources, Set<Integer> destinations) {
     int totalPossibilities = 256 * 256; //considering only most significant bytes of array
     this.keysToOneTask = (int) Math.ceil(totalPossibilities / (double) destinations.size());
-    this.destinationsList = new ArrayList<>(destinations);
-    Collections.sort(this.destinationsList);
+    this.destinationsList = new int[destinations.size()];
+    int index = 0;
+    for (int i : destinations) {
+      destinationsList[index++] = i;
+    }
+    Arrays.sort(this.destinationsList);
   }
 
   protected int getIndex(byte[] array) {
@@ -41,7 +43,7 @@ public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
 
   @Override
   public int partition(int source, byte[] data) {
-    return this.destinationsList.get(this.getIndex(data));
+    return this.destinationsList[this.getIndex(data)];
   }
 
   @Override
