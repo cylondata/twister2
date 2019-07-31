@@ -59,7 +59,9 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
 
   @Override
   public SReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    return null;
+    SReduceTLink<T> reduce = new SReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    addChildToGraph(reduce);
+    return reduce;
   }
 
   @Override

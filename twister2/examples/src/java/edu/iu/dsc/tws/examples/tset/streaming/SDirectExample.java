@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
@@ -25,15 +26,24 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class SDirectExample extends StreamingTsetExample {
   private static final long serialVersionUID = -2753072757838198105L;
+  private static final Logger LOG = Logger.getLogger(SDirectExample.class.getName());
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
     SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    SDirectTLink<Integer> direct = src.direct();
+    SDirectTLink<Integer> link = src.direct();
 
-    buildSingleTlink(direct);
+    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
 
+    link.flatmap((i, c) -> c.collect("fm" + i))
+        .direct().forEach(i -> LOG.info(i.toString()));
+
+    link.compute(i -> i + "C")
+        .direct().forEach(i -> LOG.info(i));
+
+    link.compute((input, output) -> output.collect(input + "DD"))
+        .direct().forEach(s -> LOG.info(s.toString()));
   }
 
 
