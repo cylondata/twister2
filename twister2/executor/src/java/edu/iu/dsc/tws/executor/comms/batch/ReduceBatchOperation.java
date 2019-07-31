@@ -57,7 +57,7 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   public static class ReduceFnImpl implements ReduceFunction {
@@ -106,6 +106,6 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }
