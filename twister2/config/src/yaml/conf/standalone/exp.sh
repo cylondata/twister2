@@ -9,9 +9,8 @@ fi
 if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
     profile=-agentpath:/home/skamburu/tools/jprofiler10/bin/linux-x64/libjprofilerti.so=port=8849
     debug=
-    #if final arg is debug them enable debug
-    for i; do :; done
-    if [ "$i" = "debug" ]; then
+    #if 15th arg is debug them enable debug
+    if [ "${15}" = "debug" ]; then
         debug=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006
     fi
 fi
