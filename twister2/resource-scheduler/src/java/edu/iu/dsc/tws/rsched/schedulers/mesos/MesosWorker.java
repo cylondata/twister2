@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
 import static java.lang.Math.toIntExact;
 
 public class MesosWorker implements Executor {
@@ -116,7 +117,7 @@ public class MesosWorker implements Executor {
 //    String reply = id.toString();
 //    executorDriver.sendFrameworkMessage(reply.getBytes());
 
-    LOG.info("Task " + id +  " has finished");
+    LOG.info("Task " + id + " has finished");
     status = Protos.TaskStatus.newBuilder()
         .setTaskId(taskInfo.getTaskId())
         .setState(Protos.TaskState.TASK_FINISHED).build();
@@ -148,8 +149,8 @@ public class MesosWorker implements Executor {
     //worker.printArgs(args);
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    worker.config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    worker.config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     // we can not initialize the logger fully yet,
     // but we need to set the format as the first thing
@@ -159,7 +160,7 @@ public class MesosWorker implements Executor {
     worker.jobName = args[0];
     String workerName = args[1];
     initLogging(worker.config, SchedulerContext.nfsServerPath(worker.config)
-            + "/" + worker.jobName + "/logs", workerName);
+        + "/" + worker.jobName + "/logs", workerName);
 
     System.out.println(worker.config);
     MesosExecutorDriver driver = new MesosExecutorDriver(
@@ -170,9 +171,6 @@ public class MesosWorker implements Executor {
 
   /**
    * Initialize the logger
-   * @param cnfg
-   * @param logDir
-   * @param logFileName
    */
   public static void initLogging(Config cnfg, String logDir, String logFileName) {
     // set logging level

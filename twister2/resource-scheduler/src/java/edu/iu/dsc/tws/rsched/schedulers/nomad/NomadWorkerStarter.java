@@ -104,6 +104,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -168,7 +169,7 @@ public final class NomadWorkerStarter {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
@@ -228,7 +229,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Create the resource plan
-   * @return
    */
   private IWorkerController createWorkerController() {
     // first get the worker id
@@ -321,6 +321,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Get the ports from the environment variable
+   *
    * @param cfg the configuration
    * @return port name -> port map
    */
@@ -339,6 +340,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */

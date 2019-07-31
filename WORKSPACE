@@ -86,21 +86,21 @@ http_archive(
 #http_archive(
 #    name = "nomad_linux",
 #    build_file = "@//:third_party/nomad/nomad.BUILD",
-#   urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
+#    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
 #)
 
 http_archive(
-    name = "nomad_mac",
-    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_darwin_amd64.zip"],
-    build_file = "@//:third_party/nomad/nomad.BUILD",
-    sha256 = "53452f5bb27131f1fe5a5f9178324511bcbc54e4fef5bec4e25b049ac38e0632",
+   name = "nomad_mac",
+   urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_darwin_amd64.zip"],
+   build_file = "@//:third_party/nomad/nomad.BUILD",
+   sha256 = "53452f5bb27131f1fe5a5f9178324511bcbc54e4fef5bec4e25b049ac38e0632",
 )
 
 http_archive(
-    name = "nomad_linux",
-    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
-    build_file = "@//:third_party/nomad/nomad.BUILD",
-    sha256 = "b3b78dccbdbd54ddc7a5ffdad29bce2d745cac93ea9e45f94e078f57b756f511",
+   name = "nomad_linux",
+   urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
+   build_file = "@//:third_party/nomad/nomad.BUILD",
+   sha256 = "b3b78dccbdbd54ddc7a5ffdad29bce2d745cac93ea9e45f94e078f57b756f511",
 )
 
 http_archive(
