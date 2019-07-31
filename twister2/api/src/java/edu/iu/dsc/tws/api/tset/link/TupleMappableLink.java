@@ -26,9 +26,9 @@ package edu.iu.dsc.tws.api.tset.link;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
 public interface TupleMappableLink<I> {
 
-  <K, O> TupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
+  <K, O> BatchTupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
 }

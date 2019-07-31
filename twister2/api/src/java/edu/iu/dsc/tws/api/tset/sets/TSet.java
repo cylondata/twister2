@@ -41,6 +41,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
 /**
  * Twister data set.
@@ -107,7 +108,7 @@ public interface TSet<T> {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> BatchTupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   /**
    * Create a cloned dataset

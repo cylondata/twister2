@@ -17,6 +17,12 @@ import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
 
 public interface StreamingTupleTSet<K, V, T> extends BuildableTSet {
+
+  /**
+   * Name of the tset
+   */
+  StreamingTupleTSet<K, V, T> setName(String name);
+
   /**
    * Partition by key
    *

@@ -25,8 +25,9 @@ package edu.iu.dsc.tws.api.tset.sets;
 
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
-public abstract class BaseTupleTSet<K, V, T> implements TupleTSet<K, V, T> {
+public abstract class BaseTupleTSet<K, V, T> implements BatchTupleTSet<K, V, T> {
 
   /**
    * The TSet Env to use for runtime operations of the Tset

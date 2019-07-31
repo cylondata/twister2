@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
   @Override
@@ -60,7 +59,7 @@ public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
   BatchTLink<Iterator<Tuple<Integer, T>>, T> allGather();
 
   @Override
-  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> BatchTupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   @Override
   BatchTLink<Iterator<T>, T> replicate(int replications);
