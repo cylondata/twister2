@@ -17,32 +17,57 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
-import edu.iu.dsc.tws.comms.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.examples.batch.terasort.TeraSort;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
+import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_FILE_SIZE;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
 public class SortJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(SortJob.class.getName());
 
-  private BKeyedPartition partition;
+  public static final String ARG_INPUT_FILE = "inputFile";
+  public static final String ARG_OUTPUT_FOLDER = "outputFolder";
+
+  public static final String ARG_SIZE = "size";
+  public static final String ARG_KEY_SIZE = "keySize";
+  public static final String ARG_VALUE_SIZE = "valueSize";
+  public static final String ARG_KEY_SEED = "keySeed";
+
+  public static final String ARG_RESOURCE_CPU = "instanceCPUs";
+  public static final String ARG_RESOURCE_MEMORY = "instanceMemory";
+  public static final String ARG_RESOURCE_INSTANCES = "instances";
+
+  public static final String ARG_TASKS_SOURCES = "sources";
+  public static final String ARG_TASKS_SINKS = "sinks";
+
+  public static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
+  public static final String ARG_TUNE_MAX_SHUFFLE_FILE_SIZE = "fileSizeBytes";
+
+  private BKeyedGather gather;
 
   private static final int NO_OF_TASKS = 4;
 
@@ -52,7 +77,6 @@ public class SortJob implements IWorker {
   private Set<Integer> destinations;
   private LogicalPlan logicalPlan;
   private List<Integer> taskStages = new ArrayList<>();
-  private Set<RecordSource> recordSources = new HashSet<>();
   private WorkerEnvironment workerEnv;
 
   @Override
@@ -68,25 +92,24 @@ public class SortJob implements IWorker {
 
     taskStages.add(NO_OF_TASKS);
     taskStages.add(NO_OF_TASKS);
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+
     // lets create the task plan
     this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
 
     // set up the tasks
     setupTasks();
 
-    partition = new BKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
-        MessageTypes.INTEGER, MessageTypes.BYTE_ARRAY,
-        new RecordSave(), new HashingSelector(), new IntegerComparator());
+    gather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
+        MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY,
+        new RecordSave(), new ByteSelector(), true, new IntegerComparator(), true);
 
-    // start the threads
-    scheduleTasks();
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
+    int thisSource = tasksOfExecutor.iterator().next();
+    RecordSource source = new RecordSource(cfg, workerId, gather, thisSource, 1000, 10000);
+    // run until we send
+    source.run();
+
+    // wait until we receive
     progress();
   }
 
@@ -103,73 +126,147 @@ public class SortJob implements IWorker {
         logicalPlan.getThisExecutor(), sources, destinations));
   }
 
-  private void scheduleTasks() {
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
-    // now initialize the workers
-    for (int t : tasksOfExecutor) {
-      // the map thread where data is produced
-      RecordSource target = new RecordSource(workerId, partition, t, 1000, 10000);
-      // the map thread where data is produced
-      recordSources.add(target);
-      Thread mapThread = new Thread(target);
-      mapThread.start();
-    }
-  }
-
   private class IntegerComparator implements Comparator<Object> {
     @Override
     public int compare(Object o1, Object o2) {
-      int o11 = (int) o1;
-      int o21 = (int) o2;
-      return Integer.compare(o11, o21);
+      byte[] left = (byte[]) o1;
+      byte[] right = (byte[]) o2;
+      for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
+        int a = left[i] & 0xff;
+        int b = right[j] & 0xff;
+        if (a != b) {
+          return a - b;
+        }
+      }
+      return left.length - right.length;
     }
   }
 
   private void progress() {
     // we need to communicationProgress the communication
-    boolean done = false;
-    while (!done) {
-      done = true;
-      // communicationProgress the channel
-      workerEnv.getChannel().progress();
-
-      // we should communicationProgress the communication directive
-      boolean needsProgress = partition.progress();
-      if (needsProgress) {
-        done = false;
-      }
-
-      if (!partition.isComplete()) {
-        done = false;
-      }
-
-      for (RecordSource b : recordSources) {
-        if (!b.isDone()) {
-          done = false;
-        }
-      }
+    while (gather.isComplete()) {
+      gather.progressChannel();
     }
   }
 
-  public static void main(String[] args) {
-    // first load the configurations from command line and config files
+  private static Option createOption(String opt, boolean hasArg,
+                                     String description, boolean mandatory) {
+    Option option = new Option(opt, hasArg, description);
+    option.setRequired(mandatory);
+    return option;
+  }
+
+  public static void main(String[] args) throws ParseException {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    // build JobConfig
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 8);
-
-    // build JobConfig
     JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
 
-    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("sort-job");
-    jobBuilder.setWorkerClass(SortJob.class.getName());
-    jobBuilder.addComputeResource(1, 512, NO_OF_TASKS);
-    jobBuilder.setConfig(jobConfig);
+    Options options = new Options();
 
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);
+    //file based mode configuration
+    options.addOption(createOption(ARG_INPUT_FILE, true,
+        "Path to the file containing input tuples. "
+            + "Path can be specified with %d, where it will be replaced by task index. For example,"
+            + "input-%d, will be considered as input-0 in source task having index 0.",
+        false));
+
+    //non-file based mode configurations
+    options.addOption(createOption(ARG_SIZE, true, "Data Size in GigaBytes. "
+            + "A source will generate this much of data. Including size of both key and value.",
+        false));
+    options.addOption(createOption(ARG_KEY_SIZE, true,
+        "Size of the key in bytes of a single Tuple", true));
+    options.addOption(createOption(ARG_KEY_SEED, true,
+        "Size of the key in bytes of a single Tuple", false));
+    options.addOption(createOption(ARG_VALUE_SIZE, true,
+        "Size of the value in bytes of a single Tuple", true));
+
+    //resources
+    options.addOption(createOption(ARG_RESOURCE_CPU, true,
+        "Amount of CPUs to allocate per instance", true));
+    options.addOption(createOption(ARG_RESOURCE_MEMORY, true,
+        "Amount of Memory in mega bytes to allocate per instance", true));
+    options.addOption(createOption(ARG_RESOURCE_INSTANCES, true,
+        "No. of instances", true));
+
+    //tasks and sources counts
+    options.addOption(createOption(ARG_TASKS_SOURCES, true,
+        "No of source tasks", true));
+    options.addOption(createOption(ARG_TASKS_SINKS, true,
+        "No of sink tasks", true));
+
+    //optional configurations (tune performance)
+    options.addOption(createOption(
+        ARG_TUNE_MAX_BYTES_IN_MEMORY, true, "Maximum bytes to keep in memory",
+        false
+    ));
+    options.addOption(createOption(
+        ARG_TUNE_MAX_SHUFFLE_FILE_SIZE, true, "Maximum records to keep in memory",
+        false
+    ));
+
+    options.addOption(createOption(
+        ARG_BENCHMARK_METADATA, true,
+        "Auto generated argument by benchmark suite",
+        false
+    ));
+
+    //output folder
+    options.addOption(createOption(
+        ARG_OUTPUT_FOLDER, true,
+        "Folder to save output files",
+        false
+    ));
+
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
+    if (cmd.hasOption(ARG_INPUT_FILE)) {
+      jobConfig.put(ARG_INPUT_FILE, cmd.getOptionValue(ARG_INPUT_FILE));
+    } else {
+      jobConfig.put(ARG_SIZE, Double.valueOf(cmd.getOptionValue(ARG_SIZE)));
+      jobConfig.put(ARG_VALUE_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_VALUE_SIZE)));
+      jobConfig.put(ARG_KEY_SIZE, Integer.valueOf(cmd.getOptionValue(ARG_KEY_SIZE)));
+    }
+
+    jobConfig.put(ARG_TASKS_SOURCES, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SOURCES)));
+    jobConfig.put(ARG_TASKS_SINKS, Integer.valueOf(cmd.getOptionValue(ARG_TASKS_SINKS)));
+
+    jobConfig.put(ARG_RESOURCE_INSTANCES,
+        Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES)));
+
+    if (cmd.hasOption(ARG_TUNE_MAX_BYTES_IN_MEMORY)) {
+      long maxBytesInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_BYTES_IN_MEMORY));
+      jobConfig.put(SHUFFLE_MAX_BYTES_IN_MEMORY, maxBytesInMemory);
+      jobConfig.put(ARG_TUNE_MAX_BYTES_IN_MEMORY, maxBytesInMemory); //for benchmark service
+    }
+
+    if (cmd.hasOption(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE)) {
+      long maxRecordsInMemory = Long.valueOf(cmd.getOptionValue(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE));
+      jobConfig.put(SHUFFLE_MAX_FILE_SIZE, maxRecordsInMemory);
+      jobConfig.put(ARG_TUNE_MAX_SHUFFLE_FILE_SIZE, maxRecordsInMemory);
+    }
+
+    if (cmd.hasOption(ARG_BENCHMARK_METADATA)) {
+      jobConfig.put(ARG_BENCHMARK_METADATA,
+          cmd.getOptionValue(ARG_BENCHMARK_METADATA));
+      jobConfig.put(ARG_RUN_BENCHMARK, true);
+    }
+
+    if (cmd.hasOption(ARG_OUTPUT_FOLDER)) {
+      jobConfig.put(ARG_OUTPUT_FOLDER, cmd.getOptionValue(ARG_OUTPUT_FOLDER));
+    }
+
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(TeraSort.class.getName())
+        .setWorkerClass(TeraSort.class.getName())
+        .addComputeResource(
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),
+            Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_INSTANCES))
+        )
+        .setConfig(jobConfig)
+        .build();
+    Twister2Submitter.submitJob(twister2Job, config);
   }
 }
