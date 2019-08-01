@@ -29,7 +29,13 @@ public class StreamingPartitionTLink<T> extends SingleLink<T> {
 
   public StreamingPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                                  int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("spartition"), sourceParallelism);
+    this(tSetEnv, parFn, sourceParallelism, sourceParallelism);
+  }
+
+  public StreamingPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<T> parFn,
+                                 int sourceParallelism, int targetParallelism) {
+    super(tSetEnv, TSetUtils.generateName("spartition"), sourceParallelism,
+        targetParallelism);
     this.partitionFunction = parFn;
   }
 

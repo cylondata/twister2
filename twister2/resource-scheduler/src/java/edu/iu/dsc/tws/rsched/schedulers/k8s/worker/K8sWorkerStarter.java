@@ -32,8 +32,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
-import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
 public final class K8sWorkerStarter {
@@ -69,8 +69,7 @@ public final class K8sWorkerStarter {
     }
 
     // load the configuration parameters from configuration directory
-    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY + "/"
-        + KUBERNETES_CLUSTER_TYPE;
+    String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
     jobMasterIP = updateJobMasterIp(jobMasterIP);

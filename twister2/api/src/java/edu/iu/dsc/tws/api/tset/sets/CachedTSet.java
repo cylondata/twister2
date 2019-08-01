@@ -77,10 +77,15 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
-    return cacheSource.partition(partitionFn);
+    return cacheSource.partition(partitionFn, targetParallelism);
+  }
+
+  @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+    return partition(partitionFn, getParallelism());
   }
 
   @Override

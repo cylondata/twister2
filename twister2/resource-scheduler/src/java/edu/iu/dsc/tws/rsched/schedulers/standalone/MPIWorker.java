@@ -334,7 +334,7 @@ public final class MPIWorker {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).

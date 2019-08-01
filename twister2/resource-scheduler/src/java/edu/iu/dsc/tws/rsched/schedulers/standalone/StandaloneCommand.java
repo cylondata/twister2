@@ -58,9 +58,19 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add("-Xms" + getMemory(job) + "m");
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
-    mpiCommand.add(MPIContext.mpiMapBy(config));
+
+    //making use of PE of -map-by of MPI
+    int cpusPerProc = 1;
+    if (job.getComputeResourceCount() > 0) {
+      double cpu = job.getComputeResource(0).getCpu();
+      cpusPerProc = (int) Math.ceil(cpu);
+    }
+    mpiCommand.add(MPIContext.mpiMapBy(config, cpusPerProc));
+
     if (config.getBooleanValue(SchedulerContext.DEBUG, false)) {
       mpiCommand.add("debug");
+    } else {
+      mpiCommand.add("no-debug");
     }
     return mpiCommand;
   }
