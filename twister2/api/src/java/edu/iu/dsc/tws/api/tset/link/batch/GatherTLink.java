@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
  *
  * @param <T> the type of data
  */
-public class GatherTLink<T> extends BTupleValueIteratorLink<Integer, T> {
+public class GatherTLink<T> extends BBaseGatherLink<T> {
 
   public GatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism, 1);
