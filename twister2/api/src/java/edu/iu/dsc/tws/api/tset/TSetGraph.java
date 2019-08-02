@@ -37,6 +37,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -144,12 +145,12 @@ public class TSetGraph {
    */
   public DataFlowTaskGraph build() {
     List<BuildableTLink> links = new ArrayList<>();
-    Set<BuildableTSet> sets = new HashSet<>();
+    List<BuildableTSet> sets = new ArrayList<>();
 
     List<TBase> buildOrder = new ArrayList<>();
 
     for (BuildableTSet src : sources) {
-      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
+      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors, false));
     }
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
@@ -165,9 +166,9 @@ public class TSetGraph {
    */
   public DataFlowTaskGraph build(BuildableTSet leafTSet) {
     List<BuildableTLink> links = new ArrayList<>();
-    Set<BuildableTSet> sets = new HashSet<>();
+    List<BuildableTSet> sets = new ArrayList<>();
 
-    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
+    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors, true);
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
 
@@ -183,8 +184,11 @@ public class TSetGraph {
 
     LOG.fine(() -> "Edge build plan: " + links);
     // links need to be built in order. check issue #519
-    for (int i = 0; i < links.size(); i++) {
+/*    for (int i = 0; i < links.size(); i++) {
       links.get(links.size() - i - 1).build(this, sets);
+    }*/
+    for (BuildableTLink link : links) {
+      link.build(this, sets);
     }
 
     DataFlowTaskGraph dataflowGraph = getDfwGraphBuilder().build();
@@ -198,8 +202,8 @@ public class TSetGraph {
     return dataflowGraph;
   }
 
-  private List<TBase> bfs(BuildableTSet s, Collection<BuildableTLink> links,
-                          Collection<BuildableTSet> sets, AdjNodesExtractor adjNodesExtractor) {
+  private List<TBase> bfs(BuildableTSet s, List<BuildableTLink> links, List<BuildableTSet> sets,
+                          AdjNodesExtractor adjNodesExtractor, boolean reverse) {
     List<TBase> buildOrder = new ArrayList<>();
 
     Map<TBase, Boolean> visited = new HashMap<>();
@@ -226,9 +230,11 @@ public class TSetGraph {
       }
     }
 
-//    if (reverse) {
-//      Collections.reverse(buildOrder);
-//    }
+    if (reverse) {
+      Collections.reverse(buildOrder);
+      Collections.reverse(sets);
+      Collections.reverse(links);
+    }
 
     return buildOrder;
   }

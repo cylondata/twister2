@@ -38,17 +38,14 @@ package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
-/**
- * Twister data set.
- *
- * @param <T> type of the data set
- */
 public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
   /**
    * Name of the tset
@@ -63,14 +60,14 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
    * @return this set
    */
   @Override
-  TLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedPartition(PartitionFunc<K> partitionFn);
+  BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedPartition(PartitionFunc<K> partitionFn);
 
   /**
    * Gather by key
    *
    * @return this TSet
    */
-  TLink<Iterator<Tuple<K, Iterator<V>>>, Tuple<K, Iterator<V>>> keyedGather();
+  BatchTLink<Iterator<Tuple<K, Iterator<V>>>, Tuple<K, Iterator<V>>> keyedGather();
 
   /**
    * Reduce by key
@@ -78,5 +75,8 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
    * @param reduceFn the reduce function
    * @return this set
    */
-  TLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedReduce(ReduceFunc<V> reduceFn);
+  BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedReduce(ReduceFunc<V> reduceFn);
+
+  <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
+      join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type);
 }

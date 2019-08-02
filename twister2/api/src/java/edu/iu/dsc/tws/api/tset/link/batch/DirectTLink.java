@@ -21,8 +21,7 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 public class DirectTLink<T> extends BIteratorLink<T> {
 
   public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism,
-        sourceParallelism);
+    super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism);
   }
 
   @Override

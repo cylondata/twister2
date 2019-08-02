@@ -24,11 +24,17 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.JoinTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
@@ -87,6 +93,17 @@ public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V>
     return gather;
   }
 
+  @Override
+  public <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
+        join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type) {
+    JoinTLink<K, V, VR> join = new JoinTLink<>(getTSetEnv(), type, getParallelism());
+    addChildToGraph(join);
+
+    // add the right tset connection
+    getTSetEnv().getGraph().connectTSets(rightTSet, join);
+
+    return join;
+  }
 
   @Override
   public KeyedTSet<K, V> setName(String n) {
