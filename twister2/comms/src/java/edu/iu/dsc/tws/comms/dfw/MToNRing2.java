@@ -681,10 +681,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     throw new UnsupportedOperationException("Operation is not supported");
   }
 
+  private long sendCount = 0;
+
   @Override
   public boolean send(int source, Object message, int flags, int target) {
     partialLock.lock();
     try {
+      sendCount++;
       if (merger.onMessage(source, 0, target, flags, message)) {
         if ((flags & MessageFlags.SYNC_EMPTY) != MessageFlags.SYNC_EMPTY) {
           mergerInMemoryMessages++;
@@ -797,11 +800,21 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   private boolean lastRound = false;
 
+  private int progressCount = 0;
+
+  private enum ProgressState {
+    MERGED,
+    ROUND_DONE,
+    SYNC_STARTED
+  }
+
+  private ProgressState progressState = ProgressState.ROUND_DONE;
+
   @Override
   public boolean progress() {
     // lets progress the controlled operation
     delegate.progress();
-
+    progressCount++;
     swapLock.lock();
     boolean completed = false;
     boolean needFurtherMerging = true;
@@ -813,12 +826,15 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
       // if we have enough things in memory or some sources finished lets call progress on merger
       int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
-      if (mergerInMemoryMessages >= highWaterMark * targetsArray.length
-          || mergerBlocked || mergeFinishSources.size() > 0) {
+      // we can call merge only after a round is done
+      if (progressState == ProgressState.ROUND_DONE
+          && (mergerInMemoryMessages >= highWaterMark * targetsArray.length
+              || mergerBlocked || mergeFinishSources.size() > 0)) {
         if (partialLock.tryLock()) {
           try {
             needFurtherMerging = merger.progress();
             mergeCalled = true;
+            progressState = ProgressState.MERGED;
           } finally {
             partialLock.unlock();
           }
@@ -828,24 +844,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // now we can send to group
       boolean syncsDone = false;
       boolean sendsDone = true;
-      if (mergeCalled && !allSyncsReceives) {
+      if (progressState == ProgressState.MERGED) {
         sendsDone = sendToGroup();
-      } else {
-        if (containsDataToSend()) {
-          if (startedSyncRound) {
-            throw new RuntimeException("Cannot have data after sync started");
-          }
-          sendsDone = sendToGroup();
-        } else {
-          if (startedSyncRound) {
-            syncsDone = sendSyncs();
-            sendsDone = syncsDone;
-          } else {
-            if (allSyncsReceives) {
-              syncsReady = true;
-            }
-          }
-        }
+      } else if (progressState == ProgressState.SYNC_STARTED) {
+        syncsDone = sendSyncs();
+        sendsDone = syncsDone;
+        needFurtherMerging = false;
       }
 
       boolean sendsCompleted = competedSends == sendsToComplete;
@@ -873,8 +877,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         // lets advance the send group and receive group
         if (finishedSendGroups.size() == sendingGroupsWorkers.size()
             && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
-          if (syncsReady && !containsAnyDataToSend()) {
+          if (allSyncsReceives && !containsAnyDataToSend()) {
             startedSyncRound = true;
+            progressState = ProgressState.SYNC_STARTED;
+          } else {
+            progressState = ProgressState.ROUND_DONE;
           }
           roundCompleted = true;
           roundNumber++;
@@ -1196,6 +1203,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
+    LOG.info("Send count: " + sendCount + " progressCt: " + progressCount);
     // add to finished sources
     mergeFinishSources.add(source);
 

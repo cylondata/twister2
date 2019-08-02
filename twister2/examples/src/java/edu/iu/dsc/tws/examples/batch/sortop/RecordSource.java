@@ -11,55 +11,63 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.sortop;
 
-import java.util.logging.Level;
+import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 
 public class RecordSource implements Runnable {
   private static final Logger LOG = Logger.getLogger(RecordSource.class.getName());
 
-  private BKeyedPartition operation;
-
-  private int noOfWords;
+  private BKeyedGather operation;
 
   private int taskId;
 
   private int executor;
 
-  private RecordGenerator recordGenerator;
+  private long toSend;
+  private byte[] value;
+  private Random random;
+  private int keySize;
 
-  private boolean isDone;
-
-  public RecordSource(int workerId, BKeyedPartition op,
-                      int tIndex, int noOfRecords, int range) {
+  public RecordSource(Config cfg, int workerId, BKeyedGather op, int tIndex) {
     this.operation = op;
-    this.noOfWords = noOfRecords;
     this.taskId = tIndex;
     this.executor = workerId;
-    this.recordGenerator = new RecordGenerator(range);
+
+    int valueSize = cfg.getIntegerValue(SortJob.ARG_VALUE_SIZE, 90);
+    this.keySize = cfg.getIntegerValue(SortJob.ARG_KEY_SIZE, 10);
+
+    int noOfSources = cfg.getIntegerValue(SortJob.ARG_TASKS_SOURCES, 4);
+    int totalSize = valueSize + keySize;
+    this.toSend = (long) (cfg.getDoubleValue(
+        SortJob.ARG_SIZE, 1.0
+    ) * 1024 * 1024 * 1024 / totalSize / noOfSources);
+
+    this.value = new byte[valueSize];
+    Arrays.fill(this.value, (byte) 1);
+    this.random = new Random(cfg.getIntegerValue(SortJob.ARG_KEY_SEED, 1000));
+
+    if (workerId == 0) {
+      LOG.info(String.format("Each source will send %d "
+          + "messages of size %d bytes", this.toSend, totalSize));
+    }
   }
 
   @Override
   public void run() {
-    try {
-      for (int i = 0; i < noOfWords; i++) {
-        Record word = recordGenerator.next();
-        int flags = 0;
-
-        // lets try to process if send doesn't succeed
-        while (!operation.partition(taskId, word.getKey(), word.getData(), flags)) {
-          operation.progress();
+    for (int i = 0; i < toSend; i++) {
+      byte[] randomKey = new byte[this.keySize];
+      this.random.nextBytes(randomKey);
+      // lets try to process if send doesn't succeed
+      while (!operation.gather(taskId, randomKey, this.value, 0)) {
+        for (int j = 0; j < 4; j++) {
+          operation.progressChannel();
         }
       }
-    } catch (Throwable t) {
-      LOG.log(Level.SEVERE, "Error: " + executor, t);
     }
     operation.finish(taskId);
-    isDone = true;
-  }
-
-  public boolean isDone() {
-    return isDone;
   }
 }
