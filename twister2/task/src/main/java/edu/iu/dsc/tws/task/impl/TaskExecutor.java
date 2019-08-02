@@ -50,6 +50,7 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
@@ -125,8 +126,13 @@ public class TaskExecutor {
 
     WorkerPlan workerPlan = createWorkerPlan();
 
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
     //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
+
+    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);

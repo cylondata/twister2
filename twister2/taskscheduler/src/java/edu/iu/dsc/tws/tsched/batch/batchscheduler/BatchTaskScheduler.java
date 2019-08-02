@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.utils.DataTransferTimeCalculator;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
 
@@ -86,16 +85,24 @@ public class BatchTaskScheduler implements ITaskScheduler {
     this.workerId = workerid;
   }
 
-
   /**
    * This is the base method for the data locality aware task scheduling for scheduling the batch
    * task instances. It retrieves the task vertex set of the task graph and send the set to the
    * data locality aware scheduling algorithm to allocate the batch task instances which are closer
    * to the data nodes.
    */
+  public TaskSchedulePlan schedule(WorkerPlan workerPlan, DataFlowTaskGraph... dataFlowTaskGraph) {
+    DataFlowTaskGraph graph;
+    TaskSchedulePlan taskSchedulePlan = null;
+    for (int ii = 0; ii < dataFlowTaskGraph.length; ii++) {
+      graph = dataFlowTaskGraph[ii];
+      taskSchedulePlan = schedule(graph, workerPlan);
+    }
+    return taskSchedulePlan;
+  }
+
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
-
     LinkedHashMap<Integer, WorkerSchedulePlan> containerPlans = new LinkedHashMap<>();
     for (int i = 0; i < workerPlan.getNumberOfWorkers(); i++) {
       batchTaskAllocation.put(i, new ArrayList<>());
@@ -106,7 +113,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
     List<Set<Vertex>> taskVertexList = taskVertexParser.parseVertexSet(graph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
-
       Map<Integer, List<TaskInstanceId>> containerInstanceMap;
 
       if (vertexSet.size() > 1) {
@@ -175,8 +181,9 @@ public class BatchTaskScheduler implements ITaskScheduler {
         }
       }
     }
-    TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
-        new HashSet<>(containerPlans.values()));
+
+    TaskSchedulePlan taskSchedulePlan
+        = new TaskSchedulePlan(0, new HashSet<>(containerPlans.values()));
     Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
     for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
       Integer integer = entry.getKey();
@@ -231,16 +238,15 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> attributeBasedAllocation(
       Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph, WorkerPlan workerPlan) {
 
-    List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
-    int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
+    List<String> workerNodeList = getWorkerNodeList(workerPlan);
+    int containerIndex = Integer.parseInt(workerNodeList.get(0));
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
 
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
       for (int taskIndex = 0, maxTaskObject = 0; taskIndex < taskParallelism; taskIndex++) {
-        batchTaskAllocation.get(containerIndex).add(
-            new TaskInstanceId(task, gTaskId, taskIndex));
+        batchTaskAllocation.get(containerIndex).add(new TaskInstanceId(task, gTaskId, taskIndex));
         maxTaskObject++;
         if (maxTaskObject == instancesPerContainer) {
           ++containerIndex;
@@ -255,16 +261,20 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> nonAttributeBasedAllocation(
       Map<String, Integer> parallelTaskMap, WorkerPlan workerPlan) {
 
-    List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
+    for (int i = 0; i < workerPlan.getNumberOfWorkers(); i++) {
+      Worker worker = workerPlan.getWorker(i);
+      LOG.info("worker values:" + worker.getId());
+    }
+
+    List<String> workerNodeList = getWorkerNodeList(workerPlan);
     int instancesPerContainer = TaskSchedulerContext.defaultTaskInstancesPerContainer(config);
-    int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
+    int containerIndex = Integer.parseInt(workerNodeList.get(0));
 
     for (Map.Entry<String, Integer> e : parallelTaskMap.entrySet()) {
       String task = e.getKey();
       int taskParallelism = e.getValue();
       for (int taskIndex = 0, maxTaskObject = 0; taskIndex < taskParallelism; taskIndex++) {
-        batchTaskAllocation.get(containerIndex).add(
-            new TaskInstanceId(task, gTaskId, taskIndex));
+        batchTaskAllocation.get(containerIndex).add(new TaskInstanceId(task, gTaskId, taskIndex));
         maxTaskObject++;
         if (maxTaskObject == instancesPerContainer) {
           ++containerIndex;
@@ -276,7 +286,26 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return batchTaskAllocation;
   }
 
-  private List<DataTransferTimeCalculator> getWorkerNodeList(WorkerPlan workerPlan) {
-    return null;
+  private List<String> getWorkerNodeList(WorkerPlan workerPlan) {
+    List<String> inputDataList = getInputFilesList(workerPlan);
+    List<String> workerNodeList = findDataNodesLocation(inputDataList);
+    return workerNodeList;
+  }
+
+  private List<String> getInputFilesList(WorkerPlan workerPlan) {
+
+    List<String> inputDataList = new ArrayList<>();
+
+    //TODO: Retrieve the data input file name and add in to the list.
+
+    return inputDataList;
+  }
+
+  public List<String> findDataNodesLocation(List<String> inputFileList) {
+    List<String> workerNodes = new ArrayList<>();
+    for (String anInputFileList : inputFileList) {
+      workerNodes.add(anInputFileList);
+    }
+    return workerNodes;
   }
 }

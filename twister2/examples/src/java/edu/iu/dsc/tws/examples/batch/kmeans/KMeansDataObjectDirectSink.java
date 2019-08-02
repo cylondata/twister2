@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -59,8 +60,13 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   @Override
   public DataPartition<double[][]> get() {
-    LOG.info("worker:" + context.getWorker() + "\tworker id" + context.getWorkerId()
+    LOG.fine("worker:" + context.getWorker() + "\tworker id" + context.getWorkerId()
         + "\ttask index" + context.taskIndex());
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+  @Override
+  public Set<String> getCollectibleNames() {
+    return null;
   }
 }

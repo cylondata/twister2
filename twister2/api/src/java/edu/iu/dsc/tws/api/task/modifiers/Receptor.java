@@ -35,7 +35,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.task.modifiers;
 
-import java.util.Collections;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -61,7 +60,14 @@ public interface Receptor {
    * {@link Receptor} R of task graph TG2 is interested in receiving "var1", R's parallelism should
    * be equal to n and, R should have the same distribution as C among the workers.
    */
-  default Set<String> getReceivableNames() {
+
+   /*default Set<String> getReceivableNames() {
     return Collections.emptySet();
+  }*/
+
+  default Set<String> getReceivableNames() {
+    return null;
   }
+
+  //Set<String> getReceivableNames();
 }
