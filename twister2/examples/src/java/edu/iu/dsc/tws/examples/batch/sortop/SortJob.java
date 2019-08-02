@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.examples.batch.terasort.TeraSort;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
@@ -97,7 +96,7 @@ public class SortJob implements IWorker {
     this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
 
     // set up the tasks
-    setupTasks();
+    setupTasks(cfg);
 
     gather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
         MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY,
@@ -105,22 +104,27 @@ public class SortJob implements IWorker {
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
     int thisSource = tasksOfExecutor.iterator().next();
-    RecordSource source = new RecordSource(cfg, workerId, gather, thisSource, 1000, 10000);
+    RecordSource source = new RecordSource(cfg, workerId, gather, thisSource);
+    long start = System.currentTimeMillis();
     // run until we send
     source.run();
 
     // wait until we receive
     progress();
+    LOG.info("Time: " + (System.currentTimeMillis() - start));
   }
 
-  private void setupTasks() {
+  private void setupTasks(Config cfg) {
+    int noOfSources = cfg.getIntegerValue(SortJob.ARG_TASKS_SOURCES, 4);
+    int noOfTargets = cfg.getIntegerValue(SortJob.ARG_TASKS_SINKS, 4);
+
     sources = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS; i++) {
+    for (int i = 0; i < noOfSources; i++) {
       sources.add(i);
     }
     destinations = new HashSet<>();
-    for (int i = 0; i < NO_OF_TASKS; i++) {
-      destinations.add(NO_OF_TASKS + i);
+    for (int i = 0; i < noOfTargets; i++) {
+      destinations.add(noOfSources + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
         logicalPlan.getThisExecutor(), sources, destinations));
@@ -144,7 +148,7 @@ public class SortJob implements IWorker {
 
   private void progress() {
     // we need to communicationProgress the communication
-    while (gather.isComplete()) {
+    while (!gather.isComplete()) {
       gather.progressChannel();
     }
   }
@@ -258,8 +262,8 @@ public class SortJob implements IWorker {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(TeraSort.class.getName())
-        .setWorkerClass(TeraSort.class.getName())
+        .setJobName(SortJob.class.getName())
+        .setWorkerClass(SortJob.class.getName())
         .addComputeResource(
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_CPU)),
             Integer.valueOf(cmd.getOptionValue(ARG_RESOURCE_MEMORY)),

@@ -23,32 +23,24 @@ public class RecordSource implements Runnable {
 
   private BKeyedGather operation;
 
-  private int noOfWords;
-
   private int taskId;
 
   private int executor;
-
-  private RecordGenerator recordGenerator;
 
   private long toSend;
   private byte[] value;
   private Random random;
   private int keySize;
 
-  public RecordSource(Config cfg, int workerId, BKeyedGather op,
-                      int tIndex, int noOfRecords, int range) {
+  public RecordSource(Config cfg, int workerId, BKeyedGather op, int tIndex) {
     this.operation = op;
-    this.noOfWords = noOfRecords;
     this.taskId = tIndex;
     this.executor = workerId;
-    this.recordGenerator = new RecordGenerator(range);
 
     int valueSize = cfg.getIntegerValue(SortJob.ARG_VALUE_SIZE, 90);
     this.keySize = cfg.getIntegerValue(SortJob.ARG_KEY_SIZE, 10);
 
     int noOfSources = cfg.getIntegerValue(SortJob.ARG_TASKS_SOURCES, 4);
-
     int totalSize = valueSize + keySize;
     this.toSend = (long) (cfg.getDoubleValue(
         SortJob.ARG_SIZE, 1.0
@@ -66,12 +58,14 @@ public class RecordSource implements Runnable {
 
   @Override
   public void run() {
-    for (int i = 0; i < noOfWords; i++) {
+    for (int i = 0; i < toSend; i++) {
       byte[] randomKey = new byte[this.keySize];
       this.random.nextBytes(randomKey);
       // lets try to process if send doesn't succeed
       while (!operation.gather(taskId, randomKey, this.value, 0)) {
-        operation.progress();
+        for (int j = 0; j < 4; j++) {
+          operation.progressChannel();
+        }
       }
     }
     operation.finish(taskId);
