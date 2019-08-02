@@ -65,7 +65,7 @@ public interface Receptor {
     return Collections.emptySet();
   }*/
 
-  default Set<String> getReceivableNames() {
+  default Set<String> getReceivableNames(String name) {
     return null;
   }
 

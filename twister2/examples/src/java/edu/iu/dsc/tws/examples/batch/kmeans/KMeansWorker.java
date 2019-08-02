@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -252,29 +251,26 @@ public class KMeansWorker extends TaskWorker {
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
 
+      LOG.info("receivable name set:" + receivableNameSet.size());
       context.writeEnd("all-reduce", kMeansCenters);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      receivableNameSet = Stream.of(name).collect(Collectors.toSet());
-      LOG.log(Level.INFO, "Received input: " + name);
+      //LOG.log(Level.INFO, "Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
       if ("centroids".equals(name)) {
         this.centroidsObject = data;
       }
-      LOG.info("receivable name set:" + receivableNameSet.size());
     }
 
     @Override
-    public Set<String> getReceivableNames() {
-      Iterator<String> iterator =  receivableNameSet.iterator();
-      while (iterator.hasNext()) {
-        LOG.info("iterator values:" + iterator.next());
-      }
+    public Set<String> getReceivableNames(String name) {
+      LOG.info("input key name:" + name);
+      receivableNameSet = Stream.of(name).collect(Collectors.toSet());
       return receivableNameSet;
     }
   }
