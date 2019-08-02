@@ -9,23 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.terasort;
+package edu.iu.dsc.tws.examples.batch.sortop;
 
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
 
-public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
-
+public class ByteSelector implements DestinationSelector {
   protected int keysToOneTask;
+
   protected int[] destinationsList;
 
-  public TaskPartitionerForRandom() {
-  }
-
   @Override
-  public void prepare(Set<Integer> sources, Set<Integer> destinations) {
+  public void prepare(Communicator comm, Set<Integer> sources, Set<Integer> destinations) {
     int totalPossibilities = 256 * 256; //considering only most significant bytes of array
     this.keysToOneTask = (int) Math.ceil(totalPossibilities / (double) destinations.size());
     this.destinationsList = new int[destinations.size()];
@@ -36,18 +34,22 @@ public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
     Arrays.sort(this.destinationsList);
   }
 
-  protected int getIndex(byte[] array) {
+  private int getIndex(byte[] array) {
     int key = ((array[0] & 0xff) << 8) + (array[1] & 0xff);
     return key / keysToOneTask;
   }
 
   @Override
-  public int partition(int source, byte[] data) {
-    return this.destinationsList[this.getIndex(data)];
+  public int next(int source, Object data) {
+    return this.destinationsList[this.getIndex((byte[]) data)];
   }
 
   @Override
-  public void commit(int source, int partition) {
+  public int next(int source, Object key, Object data) {
+    return this.destinationsList[this.getIndex((byte[]) key)];
+  }
 
+  @Override
+  public void commit(int source, int obtained) {
   }
 }

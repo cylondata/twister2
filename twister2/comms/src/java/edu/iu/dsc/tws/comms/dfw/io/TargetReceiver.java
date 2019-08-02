@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,7 +35,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * Lets keep track of the messages, we need to keep track of the messages for each target
    * and source, Map<target, Queue<messages>>
    */
-  protected Int2ObjectOpenHashMap<Queue<Object>> messages = new Int2ObjectOpenHashMap<>();
+  protected Int2ObjectOpenHashMap<List<Object>> messages = new Int2ObjectOpenHashMap<>();
 
   /**
    * The worker id this receiver is in
@@ -150,8 +149,8 @@ public abstract class TargetReceiver implements MessageReceiver {
           ((ChannelMessage) object).incrementRefCount();
         }
 
-        Queue<Object> msgQueue = messages.get(target);
-        addMessage(msgQueue, object);
+        List<Object> msgQueue = messages.get(target);
+        addMessage(target, msgQueue, object);
 
         if (msgQueue.size() > lowWaterMark) {
           merge(target, msgQueue);
@@ -169,7 +168,7 @@ public abstract class TargetReceiver implements MessageReceiver {
     return false;
   }
 
-  protected void addMessage(Queue<Object> msgQueue, Object value) {
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
     if (value instanceof AggregatedObjects) {
       msgQueue.addAll((Collection<?>) value);
     } else {
@@ -208,7 +207,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  protected abstract void merge(int dest, Queue<Object> dests);
+  protected abstract void merge(int dest, List<Object> dests);
 
 
 
@@ -218,7 +217,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param target target
    */
   protected void clearTarget(int target) {
-    Queue<Object> messagesPerTarget = messages.get(target);
+    List<Object> messagesPerTarget = messages.get(target);
     messagesPerTarget.clear();
   }
 
