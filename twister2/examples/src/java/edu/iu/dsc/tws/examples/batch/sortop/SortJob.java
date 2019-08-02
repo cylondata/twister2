@@ -89,8 +89,10 @@ public class SortJob implements IWorker {
     this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
         volatileVolume);
 
-    taskStages.add(NO_OF_TASKS);
-    taskStages.add(NO_OF_TASKS);
+    int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);
+    int noOfTargets = cfg.getIntegerValue(ARG_TASKS_SINKS, 4);
+    taskStages.add(noOfSources);
+    taskStages.add(noOfTargets);
 
     // lets create the task plan
     this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
