@@ -49,12 +49,12 @@ import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
  *
  * @param <T> type of the data set
  */
-public interface BatchTupleTSet<K, V, T> extends TupleTSet<K, V, T> {
+public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
   /**
    * Name of the tset
    */
   @Override
-  BatchTupleTSet<K, V, T> setName(String name);
+  BatchTupleTSet<K, V> setName(String name);
 
   /**
    * Partition by key

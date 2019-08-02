@@ -61,8 +61,8 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
-    KeyedTSet<K, V, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+    KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
         getTargetParallelism());
 
     addChildToGraph(set);

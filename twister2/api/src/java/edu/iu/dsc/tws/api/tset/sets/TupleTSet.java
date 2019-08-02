@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.api.tset.sets;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
-public interface TupleTSet<K, V, T> extends BuildableTSet {
+public interface TupleTSet<K, V> extends BuildableTSet {
 
-  TupleTSet<K, V, T> setName(String name);
+  TupleTSet<K, V> setName(String name);
 
   TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
 }

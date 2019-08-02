@@ -18,5 +18,5 @@ import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 
 public interface BatchTupleMappableLink<I> {
 
-  <K, O> BatchTupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
+  <K, O> BatchTupleTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
 }

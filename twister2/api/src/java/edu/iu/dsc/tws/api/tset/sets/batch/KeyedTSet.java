@@ -43,17 +43,17 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public class KeyedTSet<K, V, T> extends BaseTSet<V> implements BatchTupleTSet<K, V, T> {
+public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V> {
   private BaseComputeOp<?> mapToTupleOp;
 
   public KeyedTSet(BatchTSetEnvironment tSetEnv,
-                   MapToTupleIterOp<K, V, T> genTupleOp, int parallelism) {
+                   MapToTupleIterOp<K, V, ?> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
   public KeyedTSet(BatchTSetEnvironment tSetEnv,
-                   MapToTupleOp<K, V, T> genTupleOp, int parallelism) {
+                   MapToTupleOp<K, V, ?> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
@@ -89,7 +89,7 @@ public class KeyedTSet<K, V, T> extends BaseTSet<V> implements BatchTupleTSet<K,
 
 
   @Override
-  public KeyedTSet<K, V, T> setName(String n) {
+  public KeyedTSet<K, V> setName(String n) {
     rename(n);
     return this;
   }

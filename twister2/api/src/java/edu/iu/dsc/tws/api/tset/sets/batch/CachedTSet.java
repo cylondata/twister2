@@ -122,7 +122,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
         getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.mapToTuple(generateTuple);

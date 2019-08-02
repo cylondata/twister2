@@ -101,8 +101,9 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public <K, V> SKeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
-    throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+    return direct().mapToTuple(mapToTupleFn);
+//    throw new UnsupportedOperationException("Groupby is not avilable in streaming operations");
   }
 
   @Override

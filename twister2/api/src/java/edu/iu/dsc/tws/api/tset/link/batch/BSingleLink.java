@@ -82,8 +82,8 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
   }
 
   @Override
-  public <K, O> KeyedTSet<K, O, T> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    KeyedTSet<K, O, T> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+  public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
         getTargetParallelism());
 
     addChildToGraph(set);
