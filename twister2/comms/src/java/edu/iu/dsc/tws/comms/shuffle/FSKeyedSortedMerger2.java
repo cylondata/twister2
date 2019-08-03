@@ -146,7 +146,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.concurrentIOs = new Semaphore(parallelIOAllowance);
 
     this.target = tar;
-    LOG.info("Disk merger configured. Folder : " + folder
+    LOG.fine("Disk merger configured. Folder : " + folder
         + ", Bytes in memory :" + maxBytesInMemory);
   }
 
@@ -174,7 +174,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   public synchronized void switchToReading() {
-    LOG.info("Switching to read...");
     try {
       //wait if there are ongoing disk IOs
       fileWriteLock.acquire();
@@ -557,14 +556,14 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         throw new RuntimeException("Couldn't find a valid restore point to restore from.");
       }
       this.meta.reset();
-      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get(RP_SAME_KEY_READER);
+      this.sameKeyReader = (ControlledReader) this.restorePoint.get(RP_SAME_KEY_READER);
       if (this.sameKeyReader != null) {
         this.sameKeyReader.restore();
       }
 
       this.controlledFileReaders.clear();
-      List<ControlledFileReader> fileReaderList =
-          (List<ControlledFileReader>) this.restorePoint.get(RP_FILE_READERS);
+      List<ControlledReader> fileReaderList =
+          (List<ControlledReader>) this.restorePoint.get(RP_FILE_READERS);
 
       fileReaderList.forEach(fr -> {
         fr.restore();

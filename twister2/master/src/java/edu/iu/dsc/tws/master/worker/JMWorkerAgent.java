@@ -341,7 +341,7 @@ public final class JMWorkerAgent {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
+        LOG.fine("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
@@ -575,11 +575,25 @@ public final class JMWorkerAgent {
           workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
         }
 
+      } else if (message instanceof JobMasterAPI.Recover) {
+
+        LOG.info("Worker id ..." + ((JobMasterAPI.Recover) message).getWorkerID()
+            + "  came from failure. This worker is going back to last checkpoint");
+        setBackToLAstCheckpoint();
+
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }
 
     }
+  }
+
+  //set back everything in a worker to last checkpoint
+  //TODO: going back to last checkpoint should be implemented here.
+  public void setBackToLAstCheckpoint() {
+
+    //System.exit(3);
+
   }
 
   public class ClientConnectHandler implements ConnectHandler {
@@ -591,7 +605,7 @@ public final class JMWorkerAgent {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
+        LOG.fine(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

@@ -34,12 +34,12 @@ Twister2 build needs several software installed on your system.
   brew install maven
 ```
 
-5. Install bazel 0.18.1
+5. Install bazel 0.28.1
 
    ```bash
-      wget https://github.com/bazelbuild/bazel/releases/download/0.18.1/bazel-0.18.1-installer-darwin-x86_64.sh
-      chmod +x bazel-0.18.1-installer-darwin-x86_64.sh
-      ./bazel-0.18.1-installer-darwin-x86_64.sh –user
+      wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-darwin-x86_64.sh
+      chmod +x bazel-0.28.1-installer-darwin-x86_64.sh
+      ./bazel-0.28.1-installer-darwin-x86_64.sh –user
    ```
 
    Make sure to add the bazel bin to PATH

@@ -1,4 +1,4 @@
-load("//tools:rules/java_tests.bzl", "java_tests")
+load("//tools/rules:java_tests.bzl", "java_tests")
 
 java_library(
     name = "tsched-tests",
@@ -47,6 +47,7 @@ java_library(
 
 java_tests(
     test_classes = [
+        "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskSchedulerTest",
         "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
         "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
         "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",

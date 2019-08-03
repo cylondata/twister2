@@ -12,164 +12,121 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
 import edu.iu.dsc.tws.api.tset.link.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
-import edu.iu.dsc.tws.api.tset.sink.CacheSink;
 import edu.iu.dsc.tws.api.tset.sources.CacheSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
+/**
+ * Cached tset
+ *
+ * @param <T> base type of the tset
+ */
 public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
-  private static final Logger LOG = Logger.getLogger(CachedTSet.class.getName());
-
-  private static final long serialVersionUID = -1L;
-
-  private BaseTLink<T> parent;
   // todo: This dataobject should bind to the executor, I think! because tsets would not be
   //  visible to the executor
-  private DataObject<T> data = null;
+  private DataObject<T> data;
 
-  public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "cache-" + parent.getName();
-    data = new DataObjectImpl<>(config);
-    this.parallel = 1;
+  private SinkOp<?> sinkOp;
+
+  /*
+  Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
+  so, we would need to have several types of sink functions that can convert the comms message to
+   T. example: for direct, sink func would convert Iterator<T> to T.
+   */
+  public CachedTSet(TSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("cached"), parallelism);
+    this.data = new DataObjectImpl<>(tSetEnv.getConfig());
+
+    this.sinkOp = new SinkOp<>(sinkFunc);
   }
-
-  public CachedTSet(Config cfg, TSetEnv tSetEnv, BaseTLink<T> prnt, int parallelism) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.name = "cache-" + parent.getName();
-    data = new DataObjectImpl<>(config);
-    this.parallel = parallelism;
-  }
-
-  // todo: operations like map is different on a cached tset, because map will be done on data in
-  //  the execution runtime, rather than a source task
 
   @Override
-  public boolean baseBuild() {
-    boolean isIterable = TSetUtils.isIterableInput(parent, tSetEnv.getTSetBuilder().getOpMode());
-    boolean keyed = TSetUtils.isKeyedInput(parent);
-    // lets override the parallelism
-    int para = calculateParallelism(parent);
-    Sink<T> cacheSink = new CacheSink();
-    ComputeConnection connection = tSetEnv.getTSetBuilder().getTaskGraphBuilder().addSink(getName(),
-        new SinkOp<>(cacheSink, isIterable, keyed), para);
-    parent.buildConnection(connection);
-    return true;
-  }
-
-  public <P1> IterableMapTSet<T, P1> map(IterableMapFunction<T, P1> mFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.map(mFn);
-  }
-
-  public <P1> IterableFlatMapTSet<T, P1> flatMap(IterableFlatMapFunction<T, P1> mFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.flatMap(mFn);
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.sink(sink);
+  public ICompute getINode() {
+    return sinkOp;
   }
 
   @Override
   public DirectTLink<T> direct() {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.direct();
   }
 
   @Override
-  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+  public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.reduce(reduceFn);
   }
 
   @Override
-  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.partition(partitionFn);
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+    return cacheSource.partition(partitionFn, targetParallelism);
+  }
+
+  @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+    return partition(partitionFn, getParallelism());
   }
 
   @Override
   public GatherTLink<T> gather() {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.gather();
   }
 
   @Override
-  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+  public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.allReduce(reduceFn);
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.allGather();
   }
 
   @Override
-  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<K, T> selector) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
-    return cacheSource.groupBy(partitionFunction, selector);
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+    return cacheSource.mapToTuple(generateTuple);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
-    BatchSourceTSet<T> cacheSource = tSetEnv.createBatchSource(new CacheSource(data), parallel);
+    BatchSourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
+        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
     return cacheSource.replicate(replications);
   }
 
   @Override
   public CachedTSet<T> cache() {
-    throw new IllegalStateException("Calling Cache on an already cached Object");
-  }
-
-  @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public List<T> getData() {
-    if (data == null) {
-      LOG.fine("Data has not been added to the data object");
-      return new ArrayList<>();
-    }
-    DataPartition<T>[] parts = data.getPartitions();
-    List<T> results = new ArrayList();
-    for (DataPartition<T> part : parts) {
-      results.add(part.getConsumer().next());
-    }
-    return results;
+    return this;
+//    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
 
   @Override
@@ -177,7 +134,11 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
     return data;
   }
 
-  @Override
+  private String generatePrefix() {
+    return "csource(" + data.getID() + ")";
+  }
+
+/*  @Override
   public T getPartitionData(int partitionId) {
     return null;
   }
@@ -190,7 +151,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 //    int curr = data.getPartitionCount();
 //    data.addPartition(new EntityPartition<T>(curr, value)); //
     return false;
-  }
+  }*/
 
   public void setData(DataObject<T> inData) {
     this.data = inData;
@@ -198,7 +159,7 @@ public class CachedTSet<T> extends BatchBaseTSet<T> implements Cacheable<T> {
 
   @Override
   public CachedTSet<T> setName(String n) {
-    this.name = n;
+    rename(n);
     return this;
   }
 }

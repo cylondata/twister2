@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
@@ -26,13 +27,8 @@ import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
 /**
  * Streaming Reduce Operation
  */
-public class SReduce {
+public class SReduce extends BaseOperation {
   private static final Logger LOG = Logger.getLogger(SReduce.class.getName());
-
-  /**
-   * The actual operation
-   */
-  private MToOneTree reduce;
 
   /**
    * Construct a Streaming Reduce operation
@@ -48,10 +44,12 @@ public class SReduce {
   public SReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr, int edgeId) {
-    reduce = new MToOneTree(comm.getChannel(), sources, target,
+    super(comm.getChannel());
+    MToOneTree reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
         new ReduceStreamingPartialReceiver(target, fnc));
     reduce.init(comm.getConfig(), dataType, plan, edgeId);
+    op = reduce;
   }
 
   public SReduce(Communicator comm, LogicalPlan plan,
@@ -69,45 +67,6 @@ public class SReduce {
    * @return true if the message is accepted
    */
   public boolean reduce(int src, Object message, int flags) {
-    return reduce.send(src, message, flags);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !reduce.isComplete();
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return reduce.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    reduce.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    reduce.reset();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param src the source that is ending
-   */
-  public void finish(int src) {
-    reduce.finish(src);
+    return op.send(src, message, flags);
   }
 }

@@ -65,9 +65,10 @@ public final class JobMasterExample {
     // we assume that the twister2Home is the current directory
     String configDir = "conf/kubernetes/";
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     config = updateConfig(config);
-    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
+    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: "
+        + configDir);
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
     JobAPI.Job job = twister2Job.serialize();

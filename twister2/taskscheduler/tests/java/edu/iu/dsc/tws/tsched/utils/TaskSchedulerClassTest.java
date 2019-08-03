@@ -11,19 +11,37 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.task.IFunction;
 import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.task.modifiers.Collector;
+import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 
 public class TaskSchedulerClassTest {
 
-  public static class TestSource extends BaseSource {
+  public static class TestSource extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264903510284748L;
+
+    private Set<String> inputSet = new HashSet<>();
 
     @Override
     public void execute() {
+    }
+
+    @Override
+    public void add(String name, DataObject<?> data) {
+    }
+
+    @Override
+    public Set<String> getReceivableNames(String name) {
+      return inputSet;
     }
   }
 
@@ -45,12 +63,29 @@ public class TaskSchedulerClassTest {
     }
   }
 
-  public static class TestSink extends BaseSink {
+  public static class TestSink extends BaseSink implements Collector {
     private static final long serialVersionUID = -254264903510284748L;
+
+    private Set<String> inputSet = new HashSet<>();
 
     @Override
     public boolean execute(IMessage message) {
       return false;
+    }
+
+    @Override
+    public DataPartition<?> get() {
+      return null;
+    }
+
+    @Override
+    public DataPartition<?> get(String name) {
+      return null;
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      return null;
     }
   }
 

@@ -1,6 +1,6 @@
 ---
 id: download
-title: Download
+title: Twister2 Download
 sidebar_label: Download
 ---
 
@@ -10,7 +10,7 @@ You can download the source from the [GitHub](https://github.com/DSC-SPIDAL/twis
 
 Twister2 is released as source code tarballs. The downloads are distributed via Github.
 
-## Download
+### Download
 
 | Version | Release Date | Binary Download | Source Release | Release Notes |
 | :--- | :--- | :--- | :--- | :--- |

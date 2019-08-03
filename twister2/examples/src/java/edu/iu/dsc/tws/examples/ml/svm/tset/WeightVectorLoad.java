@@ -17,15 +17,16 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.tset.BaseSource;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
-import edu.iu.dsc.tws.examples.ml.svm.integration.test.LocalTextInputPartitioner1;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class WeightVectorLoad extends BaseSource<double[]> {
+public class WeightVectorLoad extends BaseSourceFunc<double[]> {
 
   private static final long serialVersionUID = -8333645489977825619L;
 
@@ -65,16 +66,18 @@ public class WeightVectorLoad extends BaseSource<double[]> {
   }
 
   @Override
-  public void prepare() {
+  public void prepare(TSetContext context) {
+    super.prepare(context);
+
     this.config = context.getConfig();
     this.parallelism = context.getParallelism();
-    LOG.info(String.format("%d, %d, %d", this.context.getIndex(),
-        this.svmJobParameters.getParallelism(), this.context.getParallelism()));
+    LOG.info(String.format("%d, %d, %d", this.getTSetContext().getIndex(),
+        this.svmJobParameters.getParallelism(), context.getParallelism()));
     this.dimension = this.binaryBatchModel.getFeatures();
     this.localPoints = new double[this.dimension];
     this.source = new DataSource<double[], InputSplit<double[]>>(config,
-        new LocalTextInputPartitioner1(new Path(this.svmJobParameters.getWeightVectorDataDir()),
-            this.parallelism, config), this.parallelism);
+        new LocalFixedInputPartitioner(new Path(this.svmJobParameters.getWeightVectorDataDir()),
+            this.parallelism, config, 1), this.parallelism);
 
   }
 
@@ -94,7 +97,7 @@ public class WeightVectorLoad extends BaseSource<double[]> {
   }
 
   private void traverseFile() {
-    InputSplit inputSplit = this.source.getNextSplit(context.getIndex());
+    InputSplit inputSplit = this.source.getNextSplit(getTSetContext().getIndex());
     while (inputSplit != null) {
       try {
         int count = 0;
@@ -106,7 +109,7 @@ public class WeightVectorLoad extends BaseSource<double[]> {
           this.localPoints = DataUtils.arrayFromString(value, DELIMITER, true);
           count++;
         }
-        inputSplit = this.source.getNextSplit(context.getIndex());
+        inputSplit = this.source.getNextSplit(getTSetContext().getIndex());
       } catch (IOException ex) {
         LOG.log(Level.SEVERE, "Failed to read the input", ex);
       }

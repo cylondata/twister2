@@ -133,7 +133,7 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    boolean b = sourcesDone && !keyedGather.hasPending();
+    boolean b = sourcesDone && keyedGather.isComplete();
     if (b) {
       LOG.info(String.format("%d is done", workerId));
     }

@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Iterators;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
@@ -64,7 +65,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
         MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), false,
-        Comparator.comparingInt(o -> (Integer) o));
+        Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
@@ -91,7 +92,7 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !join.hasPending();
+    return sourcesDone && join.isComplete();
   }
 
   @Override

@@ -12,90 +12,29 @@
 
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.MapFunction;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.ops.TaskPartitionFunction;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingFlatMapTSet;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingMapTSet;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.SelectorFunc;
+import edu.iu.dsc.tws.api.tset.link.SingleLink;
 
-public class StreamingKeyedPartitionTLink<T, K> extends StreamingKeyValueTLink<T, K> {
-  private BaseTSet<T> parent;
+public class StreamingKeyedPartitionTLink<K, V> extends SingleLink<Tuple<K, V>> {
 
-  private PartitionFunction<K> partitionFunction;
-
-  private Selector<T, K> selector;
-
-  public StreamingKeyedPartitionTLink(Config cfg, TSetEnv tSetEnv, BaseTSet<T> prnt,
-                                      PartitionFunction<K> parFn, Selector<T, K> selc) {
-    super(cfg, tSetEnv);
-    this.parent = prnt;
-    this.partitionFunction = parFn;
-    this.selector = selc;
-    this.name = "keyed-partition-" + parent.getName();
+  public StreamingKeyedPartitionTLink(TSetEnvironment tSetEnv, PartitionFunc<K> parFn,
+                                      SelectorFunc<K, V> selec, int sourceParallelism) {
+    super(tSetEnv, TSetUtils.generateName("skpartition"), sourceParallelism);
   }
 
   @Override
-  public String getName() {
-    return parent.getName();
-  }
-
-  public <P> StreamingMapTSet<P, T> map(MapFunction<T, P> mapFn, int parallelism) {
-    StreamingMapTSet<P, T> set = new StreamingMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public <P> StreamingFlatMapTSet<P, T> flatMap(FlatMapFunction<T, P> mapFn, int parallelism) {
-    StreamingFlatMapTSet<P, T> set = new StreamingFlatMapTSet<P, T>(config, tSetEnv,
-        this, mapFn, parallelism);
-    children.add(set);
-    return set;
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink, int parallelism) {
-    SinkTSet<T> sinkTSet = new SinkTSet<>(config, tSetEnv, this, sink, parallelism);
-    children.add(sinkTSet);
-    tSetEnv.run();
-    return sinkTSet;
+  public Edge getEdge() {
+    return null;
   }
 
   @Override
-  public boolean baseBuild() {
-    return true;
-  }
-
-  public PartitionFunction<K> getPartitionFunction() {
-    return partitionFunction;
-  }
-
-  public Selector<T, K> getSelector() {
-    return selector;
-  }
-
-  public void buildConnection(ComputeConnection connection) {
-    MessageType keyType = TSetUtils.getDataType(getClassK());
-    MessageType dataType = TSetUtils.getDataType(getClassT());
-    connection.keyedPartition(parent.getName())
-        .viaEdge(Constants.DEFAULT_EDGE)
-        .withKeyType(keyType).withDataType(dataType)
-        .withTaskPartitioner(new TaskPartitionFunction<>(partitionFunction));
-  }
-
-  @Override
-  public StreamingKeyedPartitionTLink<T, K> setName(String n) {
-    super.setName(n);
+  public StreamingKeyedPartitionTLink<K, V> setName(String n) {
+    rename(n);
     return this;
   }
 }

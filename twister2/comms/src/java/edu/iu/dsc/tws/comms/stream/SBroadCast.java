@@ -17,15 +17,14 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
 
 /**
  * Streaming Broadcast Operation
  */
-public class SBroadCast {
-  private TreeBroadcast bCast;
-
+public class SBroadCast extends BaseOperation {
   /**
    * Construct a Streaming Broadcast operation
    *
@@ -39,9 +38,11 @@ public class SBroadCast {
   public SBroadCast(Communicator comm, LogicalPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr, int edgeId) {
-    this.bCast = new TreeBroadcast(comm.getChannel(), source, targets,
+    super(comm.getChannel());
+    TreeBroadcast bCast = new TreeBroadcast(comm.getChannel(), source, targets,
         new DirectStreamingFinalReceiver(rcvr));
-    this.bCast.init(comm.getConfig(), dataType, plan, edgeId);
+    bCast.init(comm.getConfig(), dataType, plan, edgeId);
+    op = bCast;
   }
 
   public SBroadCast(Communicator comm, LogicalPlan plan,
@@ -59,35 +60,6 @@ public class SBroadCast {
    * @return true if the message is accepted
    */
   public boolean bcast(int source, Object message, int flags) {
-    return bCast.send(source, message, flags);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return bCast.progress();
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !bCast.isComplete();
-  }
-
-  public void close() {
-    bCast.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    bCast.reset();
+    return op.send(source, message, flags);
   }
 }

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,6 +23,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
@@ -74,15 +74,12 @@ public class BJoinStudentExample extends KeyedBenchWorker {
         MessageTypes.INTEGER,
         MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
         new SimpleKeyBasedSelector(), false,
-        new Comparator<Object>() {
-          @Override
-          public int compare(Object o1, Object o2) {
-            if (o1 instanceof String && o2 instanceof String) {
-              return ((String) o1).compareTo((String) o2);
-            }
-            return 0;
+        (o1, o2) -> {
+          if (o1 instanceof String && o2 instanceof String) {
+            return ((String) o1).compareTo((String) o2);
           }
-        });
+          return 0;
+        }, CommunicationContext.JoinType.INNER);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
@@ -127,7 +124,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return sourcesDone && !join.hasPending();
+    return sourcesDone && join.isComplete();
   }
 
   @Override

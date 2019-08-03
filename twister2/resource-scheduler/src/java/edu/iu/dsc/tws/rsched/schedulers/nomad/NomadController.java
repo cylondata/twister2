@@ -44,6 +44,7 @@ import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class NomadController implements IController {
@@ -298,6 +299,9 @@ public class NomadController implements IController {
 
     mpiCommand.add(SchedulerContext.jobPackageUrl(config));
     mpiCommand.add(SchedulerContext.corePackageUrl(config));
+    mpiCommand.add(SchedulerContext.downloadMethod(config));
+    mpiCommand.add(ScpContext.uploaderJobDirectory(config));
+
 
     LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 

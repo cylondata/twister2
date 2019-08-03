@@ -94,7 +94,7 @@ public final class MPIWorker {
   private MPIWorker(String[] args) {
     Options cmdOptions = null;
     try {
-      MPI.Init(args);
+      MPI.InitThread(args, MPI.THREAD_MULTIPLE);
       int rank = MPI.COMM_WORLD.getRank();
 
       cmdOptions = setupOptions();
@@ -237,7 +237,7 @@ public final class MPIWorker {
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
 
     // now lets send the starting message
@@ -334,7 +334,7 @@ public final class MPIWorker {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).

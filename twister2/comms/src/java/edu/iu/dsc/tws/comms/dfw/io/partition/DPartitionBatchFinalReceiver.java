@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -125,6 +127,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
    */
   private int[] targetsArray;
 
+  private Lock lock = new ReentrantLock();
+
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                       List<String> shuffleDirs,
                                       Comparator<Object> com,
@@ -190,96 +194,110 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
 
   @Override
   @SuppressWarnings("unchecked")
-  public synchronized boolean onMessage(int source, int path,
-                                        int target, int flags, Object object) {
-    Shuffle sortedMerger = sortedMergers.get(target);
-    if (sortedMerger == null) {
-      throw new RuntimeException("Un-expected target id: " + target);
-    }
-
-    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-        || targetStates.get(target) == ReceiverState.SYNCED) {
-      return false;
-    }
-
-    if (targetStates.get(target) == ReceiverState.INIT) {
-      targetStates.put(target, ReceiverState.RECEIVING);
-    }
-
-    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-      Set<Integer> finished = finishedSources.get(target);
-      if (finished.contains(source)) {
-        LOG.log(Level.WARNING,
-            String.format("%d Duplicate finish from source id %d -> %d",
-                this.thisWorker, source, target));
-      } else {
-        finished.add(source);
-      }
-      if (finished.size() == partition.getSources().size()) {
-        finishedTargets.add(target);
-        targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
-      }
-      return true;
-    }
-
-    // add the object to the map
-    if (keyed) {
-      List<Tuple> tuples = (List<Tuple>) object;
-      for (Tuple kc : tuples) {
-        Object data = kc.getValue();
-        byte[] d;
-        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
-            || !(data instanceof byte[])) {
-          d = partition.getDataType().getDataPacker().packToByteArray(data);
-        } else {
-          d = (byte[]) data;
+  public boolean onMessage(int source, int path,
+                          int target, int flags, Object object) {
+    if (lock.tryLock()) {
+      try {
+        Shuffle sortedMerger = sortedMergers.get(target);
+        if (sortedMerger == null) {
+          throw new RuntimeException("Un-expected target id: " + target);
         }
-        sortedMerger.add(kc.getKey(), d, d.length);
-      }
-    } else {
-      List<Object> contents = (List<Object>) object;
-      for (Object kc : contents) {
-        byte[] d;
-        if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
-          d = partition.getDataType().getDataPacker().packToByteArray(kc);
-        } else {
-          d = (byte[]) kc;
+
+        if (targetStates.get(target) == ReceiverState.INIT) {
+          targetStates.put(target, ReceiverState.RECEIVING);
         }
-        sortedMerger.add(d, d.length);
+
+        if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+          Set<Integer> finished = finishedSources.get(target);
+          if (finished.contains(source)) {
+            LOG.log(Level.FINE,
+                String.format("%d Duplicate finish from source id %d -> %d",
+                    this.thisWorker, source, target));
+          } else {
+            finished.add(source);
+          }
+          if (finished.size() == partition.getSources().size()) {
+            if (!finishedTargets.contains(target)) {
+              finishedTargets.add(target);
+            }
+            targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
+          }
+          return true;
+        }
+
+        if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+            || targetStates.get(target) == ReceiverState.SYNCED) {
+          return false;
+        }
+
+        // add the object to the map
+        if (keyed) {
+          List<Tuple> tuples = (List<Tuple>) object;
+          for (Tuple kc : tuples) {
+            Object data = kc.getValue();
+            byte[] d;
+            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
+                || !(data instanceof byte[])) {
+              d = partition.getDataType().getDataPacker().packToByteArray(data);
+            } else {
+              d = (byte[]) data;
+            }
+            sortedMerger.add(kc.getKey(), d, d.length);
+          }
+        } else {
+          List<Object> contents = (List<Object>) object;
+          for (Object kc : contents) {
+            byte[] d;
+            if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY) {
+              d = partition.getDataType().getDataPacker().packToByteArray(kc);
+            } else {
+              d = (byte[]) kc;
+            }
+            sortedMerger.add(d, d.length);
+          }
+        }
+        return true;
+      } finally {
+        lock.unlock();
       }
     }
-    return true;
+    return false;
   }
 
   @Override
-  public synchronized boolean progress() {
-    boolean needFurtherProgress = false;
-    for (int i = 0; i < targetsArray.length; i++) {
-      int target = targetsArray[i];
-      Shuffle sorts = sortedMergers.get(target);
-      sorts.run();
+  public boolean progress() {
+    if (lock.tryLock()) {
+      try {
+        boolean needFurtherProgress = false;
+        for (int i = 0; i < targetsArray.length; i++) {
+          int target = targetsArray[i];
+          Shuffle sorts = sortedMergers.get(target);
+          sorts.run();
 
-      ReceiverState state = targetStates.get(target);
-      if (state != ReceiverState.INIT) {
-        needFurtherProgress = true;
+          ReceiverState state = targetStates.get(target);
+          if (state != ReceiverState.SYNCED) {
+            needFurtherProgress = true;
+          }
+        }
+
+        if (!needFurtherProgress) {
+          return needFurtherProgress;
+        }
+
+        for (int i = 0; i < finishedTargets.size(); i++) {
+          int target = finishedTargets.get(i);
+          if (!finishedTargetsCompleted.contains(target) && partition.isDelegateComplete()) {
+            finishTarget(target);
+            targetStates.put(target, ReceiverState.SYNCED);
+            onSyncEvent(target, null);
+            finishedTargetsCompleted.add(target);
+          }
+        }
+      } finally {
+        lock.unlock();
       }
     }
-
-    if (!needFurtherProgress) {
-      return needFurtherProgress;
-    }
-
-    for (int i = 0; i < finishedTargets.size(); i++) {
-      int target = finishedTargets.get(i);
-      if (!finishedTargetsCompleted.contains(target) && partition.isDelegateComplete()) {
-        finishTarget(target);
-        targetStates.put(target, ReceiverState.SYNCED);
-        onSyncEvent(target, null);
-        finishedTargetsCompleted.add(target);
-      }
-    }
-
-    return finishedTargets.size() != targets.size();
+    return finishedTargetsCompleted.size() != targets.size();
   }
 
   private void finishTarget(int target) {

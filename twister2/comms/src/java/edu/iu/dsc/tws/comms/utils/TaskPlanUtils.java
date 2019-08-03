@@ -44,6 +44,13 @@ public final class TaskPlanUtils {
     return tasksOfThisExec;
   }
 
+  public static Set<Integer> getTasksOfWorker(LogicalPlan plan, int worker, Set<Integer> tasks) {
+    Set<Integer> workerTasks = plan.getChannelsOfExecutor(worker);
+    Set<Integer> newTasks = new HashSet<>(workerTasks);
+    newTasks.retainAll(tasks);
+    return newTasks;
+  }
+
   public static Set<Integer> getWorkersOfTasks(LogicalPlan plan, Set<Integer> tasks) {
     Set<Integer> workersOfTasks = new HashSet<>();
 

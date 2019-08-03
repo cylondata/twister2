@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.config.Config;
@@ -44,6 +45,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
    * The user provided receiver
    */
   private BulkReceiver bulkReceiver;
+  private CommunicationContext.JoinType joinType;
 
   /**
    * The iterators returned by left
@@ -56,8 +58,11 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
   private Map<Integer, Iterator<Object>> rightValues;
 
   public DJoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
-                                  List<String> shuffleDirs, Comparator<Object> com) {
+                                  List<String> shuffleDirs,
+                                  Comparator<Object> com,
+                                  CommunicationContext.JoinType joinType) {
     this.bulkReceiver = bulkReceiver;
+    this.joinType = joinType;
     this.leftReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(0),
         true, shuffleDirs, com, false);
     this.rightReceiver = new DPartitionBatchFinalReceiver(new InnerBulkReceiver(1),
@@ -137,20 +142,20 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
         leftValues.put(target, it);
 
         if (rightValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.innerJoin(
+          bulkReceiver.receive(target, JoinUtils.join(
               (RestorableIterator) it,
               (RestorableIterator) rightValues.get(target),
-              comparator)
+              comparator, joinType)
           );
         }
       } else {
         rightValues.put(target, it);
 
         if (leftValues.containsKey(target)) {
-          bulkReceiver.receive(target, JoinUtils.innerJoin(
+          bulkReceiver.receive(target, JoinUtils.join(
               (RestorableIterator) leftValues.get(target),
               (RestorableIterator) it,
-              comparator)
+              comparator, joinType)
           );
         }
       }

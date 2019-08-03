@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 /**
  * This class receives the message from the DataObjectSource and writes the output into the

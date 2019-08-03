@@ -48,7 +48,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
   }
 
   public InputSplit<T> getNextSplit(int id) {
-    InputSplitAssigner assigner = input.getInputSplitAssigner(splits);
+    InputSplitAssigner<T> assigner = input.getInputSplitAssigner(splits);
     InputSplit<T> split = assigner.getNextInputSplit("localhost", id);
     if (split != null) {
       try {

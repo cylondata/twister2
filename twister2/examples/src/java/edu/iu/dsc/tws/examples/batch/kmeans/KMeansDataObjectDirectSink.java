@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -22,7 +23,7 @@ import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 /**
  * This class receives the message object from the DataObjectCompute and write into their
@@ -59,6 +60,13 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   @Override
   public DataPartition<double[][]> get() {
+    LOG.fine("worker:" + context.getWorker() + "\tworker id" + context.getWorkerId()
+        + "\ttask index" + context.taskIndex());
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+  @Override
+  public Set<String> getCollectibleNames() {
+    return null;
   }
 }

@@ -134,7 +134,7 @@ public class WordCountWorker implements IWorker {
         done = false;
       }
 
-      if (keyGather.hasPending()) {
+      if (!keyGather.isComplete()) {
         done = false;
       }
 

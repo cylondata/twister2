@@ -111,11 +111,11 @@ public class IterativePredictionDataStreamer extends BaseSource implements IRece
   }
 
   public void getData() {
-    DataPartition<double[][]> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+    DataPartition<double[][]> dataPartition = dataPointsObject.getPartition(context.taskIndex());
     this.datapoints = dataPartition.getConsumer().next();
-    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartitions(context
+    DataPartition<double[]> weightVectorPartition = weightVectorObject.getPartition(context
         .taskIndex());
-    this.weightVector =  weightVectorPartition.getConsumer().next();
+    this.weightVector = weightVectorPartition.getConsumer().next();
 
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
@@ -168,8 +168,10 @@ public class IterativePredictionDataStreamer extends BaseSource implements IRece
     } catch (MatrixMultiplicationException e) {
       e.printStackTrace();
     }
-    LOG.info(String.format("Accuracy : %f, Context Id : %d, Weight Vector : %s, Data Size : %d",
-        accuracy, context.taskIndex(), Arrays.toString(w), x.length));
+    if (debug) {
+      LOG.info(String.format("Accuracy : %f, Context Id : %d, Weight Vector : %s, Data Size : %d",
+          accuracy, context.taskIndex(), Arrays.toString(w), x.length));
+    }
     finalAccuracy = accuracy / (double) context.getParallelism();
     this.context.write(Constants.SimpleGraphConfig
         .PREDICTION_EDGE, finalAccuracy);

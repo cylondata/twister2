@@ -17,9 +17,11 @@ import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -49,6 +51,11 @@ public class BJoin {
   private DestinationSelector destinationSelector;
 
   /**
+   * THe channel
+   */
+  private TWSChannel channel;
+
+  /**
    * Construct a Batch partition operation
    *
    * @param comm the communicator
@@ -63,15 +70,17 @@ public class BJoin {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId) {
+               Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
+               CommunicationContext.JoinType joinType) {
     this.destinationSelector = destSelector;
+    this.channel = comm.getChannel();
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
     MessageReceiver finalRcvr;
     if (shuffle) {
-      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator);
+      finalRcvr = new DJoinBatchFinalReceiver2(rcvr, shuffleDirs, comparator, joinType);
     } else {
-      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator);
+      finalRcvr = new JoinBatchFinalReceiver2(rcvr, comparator, joinType);
     }
 
 
@@ -92,9 +101,9 @@ public class BJoin {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
-               Comparator<Object> comparator) {
+               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
-        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge());
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(), joinType);
   }
 
   /**
@@ -133,8 +142,8 @@ public class BJoin {
    *
    * @return true if there are messages pending
    */
-  public boolean hasPending() {
-    return !(partitionLeft.isComplete() && partitionRight.isComplete());
+  public boolean isComplete() {
+    return partitionLeft.isComplete() && partitionRight.isComplete();
   }
 
   /**
@@ -153,7 +162,6 @@ public class BJoin {
    * @return true if further progress is needed
    */
   public boolean progress() {
-
     return partitionLeft.progress() | partitionRight.progress();
   }
 
@@ -170,12 +178,13 @@ public class BJoin {
     partitionRight.reset();
   }
 
-  private class IntegerComparator implements Comparator<Object> {
-    @Override
-    public int compare(Object o1, Object o2) {
-      int o11 = (int) o1;
-      int o21 = (int) o2;
-      return Integer.compare(o11, o21);
-    }
+  /**
+   * Progress the channel and the operation
+   * @return true if further progress is required
+   */
+  public boolean progressChannel() {
+    boolean p = progress();
+    channel.progress();
+    return p;
   }
 }

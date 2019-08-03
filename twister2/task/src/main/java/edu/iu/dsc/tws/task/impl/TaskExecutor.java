@@ -50,6 +50,7 @@ import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
@@ -127,6 +128,11 @@ public class TaskExecutor {
 
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
     //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
+
+    //TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
@@ -237,6 +243,7 @@ public class TaskExecutor {
       INode task = node.getNode();
       if (task instanceof Receptor) {
         ((Receptor) task).add(inputKey, input);
+        ((Receptor) task).getReceivableNames(inputKey);
       } else {
         throw new RuntimeException("Cannot add input to non input instance: " + node);
       }
@@ -283,7 +290,7 @@ public class TaskExecutor {
       throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
     }
 
-    DataObject<T> dataSet = new DataObjectImpl<>(config);
+    DataObject<T> dataSet = new DataObjectImpl<>(taskName, config);
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
       INodeInstance node = e.getValue();
       INode task = node.getNode();

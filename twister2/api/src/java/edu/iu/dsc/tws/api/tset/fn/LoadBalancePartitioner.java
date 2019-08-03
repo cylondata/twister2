@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class LoadBalancePartitioner<T> implements PartitionFunction<T> {
+public class LoadBalancePartitioner<T> implements PartitionFunc<T> {
   private Map<Integer, List<Integer>> destination = new HashMap<>();
 
   private Map<Integer, Integer> destinationIndexes = new HashMap<>();

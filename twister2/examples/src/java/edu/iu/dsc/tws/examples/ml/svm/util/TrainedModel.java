@@ -24,7 +24,11 @@ public class TrainedModel extends Model {
 
   private double accuracy;
 
+  private double trainingTime;
+
   private String modelName;
+
+  private int parallelism;
 
   public TrainedModel() {
   }
@@ -66,12 +70,37 @@ public class TrainedModel extends Model {
     this.modelName = modelname;
   }
 
+  public TrainedModel(BinaryBatchModel binaryBatchModel, double accuracy, double trTime,
+                      String modelname) {
+    this.samples = binaryBatchModel.getSamples();
+    this.features = binaryBatchModel.getFeatures();
+    this.labels = binaryBatchModel.getLabels();
+    this.w = binaryBatchModel.getW();
+    this.alpha = binaryBatchModel.getAlpha();
+    this.accuracy = accuracy;
+    this.modelName = modelname;
+    this.trainingTime = trTime;
+  }
+
+  public TrainedModel(BinaryBatchModel binaryBatchModel, double accuracy, double trTime,
+                      String modelname, int par) {
+    this.samples = binaryBatchModel.getSamples();
+    this.features = binaryBatchModel.getFeatures();
+    this.labels = binaryBatchModel.getLabels();
+    this.w = binaryBatchModel.getW();
+    this.alpha = binaryBatchModel.getAlpha();
+    this.accuracy = accuracy;
+    this.modelName = modelname;
+    this.trainingTime = trTime;
+    this.parallelism = par;
+  }
+
   @Override
   public void saveModel(String file) {
     FileWriter fileWriter = null;
     try {
-      fileWriter = new FileWriter(new File(file));
-      fileWriter.write(this.toString());
+      fileWriter = new FileWriter(new File(file), true);
+      fileWriter.write(this.toCSVString());
       fileWriter.write("/n");
     } catch (IOException e) {
       LOG.severe(String.format("IO Exception : %s", e.getMessage()));
@@ -104,12 +133,20 @@ public class TrainedModel extends Model {
   public String toString() {
     return "TrainedModel{"
         + "accuracy=" + accuracy
+        + ", training_time=" + trainingTime
         + ", modelName='" + modelName + '\''
         + ", samples=" + samples
         + ", features=" + features
         + ", labels=" + Arrays.toString(labels)
-        + ", w=" + Arrays.toString(w)
+        //+ ", w=" + Arrays.toString(w)
         + ", alpha=" + alpha
         + '}';
+  }
+
+  public String toCSVString() {
+    String s = "";
+    s += parallelism + "," + accuracy + "," + trainingTime + "," + modelName + ", " + samples
+        + "," + features + "," + alpha + "\n";
+    return s;
   }
 }

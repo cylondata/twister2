@@ -63,7 +63,7 @@ public class BTJoinExample extends BenchTaskWorker {
 
     taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
     computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
-    computeConnection.join(SOURCE, SOURCE)
+    computeConnection.innerJoin(SOURCE, SOURCE)
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
         .withKeyType(keyType)

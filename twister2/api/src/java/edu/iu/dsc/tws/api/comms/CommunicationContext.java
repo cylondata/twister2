@@ -75,6 +75,23 @@ public class CommunicationContext extends Context {
   public static final String KEY_COMPARATOR = "key-comparator";
 
   /**
+   * Type of the join algorithm to apply with join operation
+   */
+  public static final String JOIN_TYPE = "join-type";
+
+  public enum JoinType {
+    INNER, FULL_OUTER, LEFT, RIGHT;
+
+    public boolean includeLeft() {
+      return this == FULL_OUTER || this == LEFT || this == INNER;
+    }
+
+    public boolean includeRight() {
+      return this == FULL_OUTER || this == RIGHT || this == INNER;
+    }
+  }
+
+  /**
    * Some keyed communication operations are capable of sorting the outputs by key. This
    * property can be used to configure such operators.
    */

@@ -12,61 +12,29 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.Random;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Sink;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.fn.IterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
+import edu.iu.dsc.tws.api.task.nodes.INode;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
-import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class BatchSourceTSet<T> extends BatchBaseTSet<T> {
-  private Source<T> source;
+  private SourceFunc<T> source;
 
-  public BatchSourceTSet(Config cfg, TSetEnv tSetEnv, Source<T> src, int parallelism) {
-    super(cfg, tSetEnv);
+  public BatchSourceTSet(TSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
+    super(tSetEnv, TSetUtils.generateName("source"), parallelism);
     this.source = src;
-    this.name = "source-" + new Random(System.nanoTime()).nextInt(10);
-    this.parallel = parallelism;
-  }
-
-  public <P> IterableMapTSet<T, P> map(IterableMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.map(mapFn);
-  }
-
-  public <P> IterableFlatMapTSet<T, P> flatMap(IterableFlatMapFunction<T, P> mapFn) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.flatMap(mapFn);
-  }
-
-  public SinkTSet<T> sink(Sink<T> sink) {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    return direct.sink(sink);
   }
 
   @Override
-  public boolean baseBuild() {
-    tSetEnv.getTSetBuilder().getTaskGraphBuilder().
-        addSource(getName(), new SourceOp<T>(source), parallel);
-    return true;
+  public INode getINode() {
+    return new SourceOp<>(source);
   }
 
   @Override
-  public void buildConnection(ComputeConnection connection) {
-    throw new IllegalStateException("Build connections should not be called on a TSet");
-  }
-
-  @Override
-  public BatchSourceTSet<T> setName(String n) {
-    this.name = n;
+  public BatchSourceTSet<T> setName(String name) {
+    rename(name);
     return this;
   }
+
 }

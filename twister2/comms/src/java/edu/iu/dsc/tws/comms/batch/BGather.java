@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
@@ -28,12 +29,7 @@ import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
 /**
  * Batch Gather Operation
  */
-public class BGather {
-  /**
-   * The actual operation
-   */
-  private MToOneTree gather;
-
+public class BGather extends BaseOperation {
   /**
    * The data type
    */
@@ -61,6 +57,7 @@ public class BGather {
                  Set<Integer> sources, int target,
                  MessageType dataType,
                  BulkReceiver rcvr, boolean shuffle, int edgeId) {
+    super(comm.getChannel());
     MessageReceiver finalRcvr;
     if (!shuffle) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);
@@ -68,10 +65,11 @@ public class BGather {
       finalRcvr = new DGatherBatchFinalReceiver(rcvr, comm.getPersistentDirectory(target));
     }
     this.dataType = dataType;
-    this.gather = new MToOneTree(comm.getChannel(), sources, target,
+    MToOneTree gather = new MToOneTree(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
         0, 0, true, MessageTypes.INTEGER, dataType);
-    this.gather.init(comm.getConfig(), dataType, plan, edgeId);
+    gather.init(comm.getConfig(), dataType, plan, edgeId);
+    this.op = gather;
   }
 
   /**
@@ -84,45 +82,6 @@ public class BGather {
    */
   public boolean gather(int source, Object message, int flags) {
     Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
-    return gather.send(source, tuple, flags);
-  }
-
-  /**
-   * Weather we have messages pending
-   *
-   * @return true if there are messages pending
-   */
-  public boolean hasPending() {
-    return !gather.isComplete();
-  }
-
-  /**
-   * Indicate the end of the communication
-   *
-   * @param source the source that is ending
-   */
-  public void finish(int source) {
-    gather.finish(source);
-  }
-
-  /**
-   * Progress the operation, if not called, messages will not be processed
-   *
-   * @return true if further progress is needed
-   */
-  public boolean progress() {
-    return gather.progress();
-  }
-
-  public void close() {
-    // deregister from the channel
-    gather.close();
-  }
-
-  /**
-   * Clean the operation, this doesn't close it
-   */
-  public void reset() {
-    gather.reset();
+    return op.send(source, tuple, flags);
   }
 }

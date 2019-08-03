@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
+//import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -47,6 +48,8 @@ public class DataFileReplicatedReadSource extends BaseSource {
 
   private String dataDirectory;
 
+  private int dataSize;
+
   public String getDataDirectory() {
     return dataDirectory;
   }
@@ -58,6 +61,12 @@ public class DataFileReplicatedReadSource extends BaseSource {
   public DataFileReplicatedReadSource(String edgename, String directory) {
     this.edgeName = edgename;
     this.dataDirectory = directory;
+  }
+
+  public DataFileReplicatedReadSource(String edgename, String directory, int dSize) {
+    this.edgeName = edgename;
+    this.dataDirectory = directory;
+    this.dataSize = dSize;
   }
 
   /**
@@ -105,7 +114,9 @@ public class DataFileReplicatedReadSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+    /*this.source = runtime.createInput(cfg, context, new LocalFixedInputPartitioner(
+          new Path(getDataDirectory()), context.getParallelism(), config, dataSize));*/
     this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), config));
+        new Path(getDataDirectory()), context.getParallelism(), config));
   }
 }

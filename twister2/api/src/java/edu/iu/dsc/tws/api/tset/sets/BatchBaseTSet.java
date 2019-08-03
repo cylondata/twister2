@@ -11,14 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunction;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.DirectTLink;
@@ -28,87 +26,83 @@ import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
 
 public abstract class BatchBaseTSet<T> extends BaseTSet<T> {
-  private static final Logger LOG = Logger.getLogger(BatchBaseTSet.class.getName());
 
-  public BatchBaseTSet(Config cfg, TSetEnv tSetEnv) {
-    super(cfg, tSetEnv);
+  public BatchBaseTSet(TSetEnvironment tSetEnv, String name, int parallelism) {
+    super(tSetEnv, name, parallelism);
+  }
+
+  @Override
+  public BatchTSetEnvironment getTSetEnv() {
+    return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
   @Override
   public DirectTLink<T> direct() {
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
+    DirectTLink<T> direct = new DirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
     return direct;
   }
 
   @Override
-  public ReduceTLink<T> reduce(ReduceFunction<T> reduceFn) {
-    ReduceTLink<T> reduce = new ReduceTLink<T>(config, tSetEnv, this, reduceFn);
-    children.add(reduce);
+  public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
+    ReduceTLink<T> reduce = new ReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    addChildToGraph(reduce);
     return reduce;
   }
 
-  public PartitionTLink<T> partition(PartitionFunction<T> partitionFn) {
-    PartitionTLink<T> partition = new PartitionTLink<>(config, tSetEnv, this, partitionFn);
-    children.add(partition);
+  @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
+    PartitionTLink<T> partition = new PartitionTLink<>(getTSetEnv(), partitionFn, getParallelism(),
+        targetParallelism);
+    addChildToGraph(partition);
     return partition;
   }
 
   @Override
+  public PartitionTLink<T> partition(PartitionFunc<T> partitionFn) {
+    return partition(partitionFn, getParallelism());
+  }
+
+  @Override
   public GatherTLink<T> gather() {
-    GatherTLink<T> gather = new GatherTLink<>(config, tSetEnv, this);
-    children.add(gather);
+    GatherTLink<T> gather = new GatherTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(gather);
     return gather;
   }
 
   @Override
-  public AllReduceTLink<T> allReduce(ReduceFunction<T> reduceFn) {
-    AllReduceTLink<T> reduce = new AllReduceTLink<>(config, tSetEnv, this, reduceFn);
-    children.add(reduce);
+  public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
+    AllReduceTLink<T> reduce = new AllReduceTLink<>(getTSetEnv(), reduceFn, getParallelism());
+    addChildToGraph(reduce);
     return reduce;
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    AllGatherTLink<T> gather = new AllGatherTLink<>(config, tSetEnv, this);
-    children.add(gather);
+    AllGatherTLink<T> gather = new AllGatherTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(gather);
     return gather;
   }
 
+  // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
-  public <K> GroupedTSet<K, T> groupBy(PartitionFunction<K> partitionFunction,
-                                       Selector<K, T> selector) {
-    GroupedTSet<K, T> groupedTSet = new GroupedTSet<>(config, tSetEnv, this,
-        partitionFunction, selector);
-    children.add(groupedTSet);
-    return groupedTSet;
+  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+    return direct().mapToTuple(mapToTupleFn);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
-    if (parallel != 1) {
-      String msg = "TSets with parallelism 1 can be replicated: " + parallel;
-      LOG.log(Level.SEVERE, msg);
-      throw new RuntimeException(msg);
+    if (getParallelism() != 1) {
+      throw new RuntimeException("Replication can not be done on tsets with parallelism != 1");
     }
 
-    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(config, tSetEnv, this, replications);
-    children.add(cloneTSet);
+    ReplicateTLink<T> cloneTSet = new ReplicateTLink<>(getTSetEnv(), replications);
+    addChildToGraph(cloneTSet);
     return cloneTSet;
   }
 
   @Override
   public CachedTSet<T> cache() {
-    // todo: why cant we add a single cache tset here?
-    DirectTLink<T> direct = new DirectTLink<>(config, tSetEnv, this);
-    children.add(direct);
-    CachedTSet<T> cacheTSet = new CachedTSet<>(config, tSetEnv, direct, parallel);
-    direct.getChildren().add(cacheTSet);
-    cacheTSet.setData(tSetEnv.runAndGet(cacheTSet.getName()));
-
-    tSetEnv.reset();
-    return cacheTSet;
+    return direct().cache();
   }
-
-
 }

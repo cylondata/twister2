@@ -12,8 +12,12 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
@@ -31,7 +35,7 @@ import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -90,7 +94,6 @@ public class KMeansWorker extends TaskWorker {
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
-
     /* Second Graph to read the centroids **/
     DataFlowTaskGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
         parallelismValue, dimension, config);
@@ -103,7 +106,6 @@ public class KMeansWorker extends TaskWorker {
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
     long endTimeData = System.currentTimeMillis();
-
 
     /* Third Graph to do the actual calculation **/
     DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
@@ -123,7 +125,7 @@ public class KMeansWorker extends TaskWorker {
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
@@ -161,7 +163,6 @@ public class KMeansWorker extends TaskWorker {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
-
     datapointsTaskGraphBuilder.setTaskGraphName("datapointsTG");
 
     //Build the first taskgraph
@@ -197,7 +198,6 @@ public class KMeansWorker extends TaskWorker {
     centroidsTaskGraphBuilder.setMode(OperationMode.BATCH);
     centroidsTaskGraphBuilder.setTaskGraphName("centTG");
 
-
     //Build the second taskgraph
     return centroidsTaskGraphBuilder.build();
   }
@@ -219,7 +219,6 @@ public class KMeansWorker extends TaskWorker {
         .withReductionFunction(new CentroidAggregator())
         .withDataType(MessageTypes.OBJECT);
     kmeansTaskGraphBuilder.setMode(OperationMode.BATCH);
-
     kmeansTaskGraphBuilder.setTaskGraphName("kmeansTG");
 
     return kmeansTaskGraphBuilder.build();
@@ -235,31 +234,44 @@ public class KMeansWorker extends TaskWorker {
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
 
+    private Set<String> receivableNameSet;
+    private String inputName;
+
     @Override
     public void execute() {
+      LOG.info("I am in execute method");
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
 
-      DataPartition<?> centroidPartition = centroidsObject.getPartitions(context.taskIndex());
+      DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
       centroid = (double[][]) centroidPartition.getConsumer().next();
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
+
+      LOG.info("receivable name set:" + receivableNameSet.size());
       context.writeEnd("all-reduce", kMeansCenters);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-//      LOG.log(Level.INFO, "Received input: " + name);
+      //LOG.log(Level.INFO, "Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
       if ("centroids".equals(name)) {
         this.centroidsObject = data;
       }
+    }
+
+    @Override
+    public Set<String> getReceivableNames(String name) {
+      LOG.info("input key name:" + name);
+      receivableNameSet = Stream.of(name).collect(Collectors.toSet());
+      return receivableNameSet;
     }
   }
 
@@ -270,11 +282,12 @@ public class KMeansWorker extends TaskWorker {
     private double[][] newCentroids;
 
     private DataObject<Object> datapoints = null;
+    private String inputName;
 
     @Override
     public boolean execute(IMessage message) {
-//      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-//          + ":" + context.globalTaskId());
+      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
@@ -289,6 +302,11 @@ public class KMeansWorker extends TaskWorker {
     @Override
     public DataPartition<double[][]> get() {
       return new EntityPartition<>(context.taskIndex(), newCentroids);
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      return new HashSet<>();
     }
 
     @Override

@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.WindowingConstants;
+import edu.iu.dsc.tws.task.window.constant.WindowType;
 
 /**
  * This class is used to define the Job Parameters needed to launch
@@ -60,8 +62,8 @@ public final class SVMJobParameters implements Serializable {
 
 
   /*
-  * Weight vector directory {csv format data is expected {features}}
-  * */
+   * Weight vector directory {csv format data is expected {features}}
+   * */
 
   private String weightVectorDataDir;
 
@@ -101,6 +103,11 @@ public final class SVMJobParameters implements Serializable {
    */
 
   private String experimentName = "";
+
+  /**
+   * WindowParameter object holds the window type, window length, slide size
+   */
+  private WindowArguments windowArguments;
 
 
   private SVMJobParameters() {
@@ -143,6 +150,21 @@ public final class SVMJobParameters implements Serializable {
         .getIntegerValue(WorkerConstants.PARALLELISM, 4);
     svmJobParameters.experimentName = cfg
         .getStringValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
+
+    //set up window params
+    WindowType windowType = cfg.getStringValue(WindowingConstants.WINDOW_TYPE)
+        .equalsIgnoreCase("tumbling") ? WindowType.TUMBLING : WindowType.SLIDING;
+    long windowLength = Long.parseLong(cfg.getStringValue(WindowingConstants.WINDOW_LENGTH));
+    long slidingLength = 0;
+    if (cfg.getStringValue(WindowingConstants
+        .SLIDING_WINDOW_LENGTH) != null) {
+      slidingLength = Long.parseLong(cfg.getStringValue(WindowingConstants
+          .SLIDING_WINDOW_LENGTH));
+    }
+
+    WindowArguments windowArguments = new WindowArguments(windowType, windowLength, slidingLength,
+        cfg.getBooleanValue(WindowingConstants.WINDOW_CAPACITY_TYPE));
+    svmJobParameters.windowArguments = windowArguments;
 
     return svmJobParameters;
   }
@@ -275,6 +297,14 @@ public final class SVMJobParameters implements Serializable {
     this.weightVectorDataDir = weightVectorDataDir;
   }
 
+  public WindowArguments getWindowArguments() {
+    return windowArguments;
+  }
+
+  public void setWindowArguments(WindowArguments windowArguments) {
+    this.windowArguments = windowArguments;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
@@ -294,6 +324,7 @@ public final class SVMJobParameters implements Serializable {
         + ", isDummy=" + isDummy
         + ", parallelism=" + parallelism
         + ", experimentName=" + experimentName
+        + ", windowArguments=" + windowArguments.toString()
         + '}';
   }
 }

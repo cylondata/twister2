@@ -13,10 +13,11 @@ package edu.iu.dsc.tws.task.impl.ops;
 
 import java.util.Comparator;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.executor.core.OperationNames;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeConnectionUtils;
 
@@ -32,19 +33,21 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
   private String group;
 
   public JoinConfig(String leftParent, String rightParent,
-                    ComputeConnection computeConnection) {
+                    ComputeConnection computeConnection,
+                    CommunicationContext.JoinType joinType) {
     super(leftParent, OperationNames.JOIN, computeConnection);
     this.rightSource = rightParent;
-    this.withProperty("use-disk", false);
+    this.withProperty(CommunicationContext.USE_DISK, false);
+    this.withProperty(CommunicationContext.JOIN_TYPE, joinType);
   }
 
   public JoinConfig useDisk(boolean useDisk) {
-    return this.withProperty("use-disk", useDisk);
+    return this.withProperty(CommunicationContext.USE_DISK, useDisk);
   }
 
   public <T> JoinConfig withComparator(Comparator<T> keyComparator) {
     this.keyCompartor = keyComparator;
-    return this.withProperty("key-comparator", keyComparator);
+    return this.withProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
   }
 
   public JoinConfig viaLeftEdge(String edge) {

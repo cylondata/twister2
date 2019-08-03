@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.KUBERNETES_CLUSTER_TYPE;
 
 public final class K8sWorkerUtils {
@@ -54,7 +55,7 @@ public final class K8sWorkerUtils {
 
     LOG.info(String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));
-    Config conf1 = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config conf1 = ConfigLoader.loadConfig(twister2Home, configDir, KUBERNETES_CLUSTER_TYPE);
     LOG.info("Loaded: " + conf1.size() + " parameters from configuration directory: " + configDir);
 
     Config conf2 = Config.newBuilder().
@@ -72,23 +73,21 @@ public final class K8sWorkerUtils {
    * We assign worker ids based on statefulset indexes, pod indexes and container indexes
    * In OpenMPI jobs, we assign workerIDs based on their MPI rank
    * However, in OpenMPI jobs, scaling up/down of jobs is not supported.
-   *
+   * <p>
    * Assigning workerIDs by Kubernetes Twister2 utilities is a must
    * when scaling down workers in a Twister2 job
-   *
+   * <p>
    * We always want to delete the last workers in a job with highest workerIDs,
    * when scaling down jobs.
    * Deleting pods in a statefulset is performed by scaling down the statefulset.
    * When statefulsets are scaled down, the last pods with highest indexes are killed.
-   *
+   * <p>
    * if the worker in the last pod of a statefulset does not have the highest workerID,
    * then when scaling down the statefulset, we may not kill the last worker in the job.
    * This happens when JobMaster assigns workerIDs.
    * Workers do not get ids based on their pod indexes,
    * but rather based on their registration order with the JobMaster.
    * Therefore, we can not support workerID assignment by JobMaster in Kubernetes.
-   * @param config
-   * @return
    */
   public static Config unsetWorkerIDAssigment(Config config) {
     if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
@@ -249,8 +248,6 @@ public final class K8sWorkerUtils {
 
   /**
    * get job master service IP from job master service name
-   * @param jobName
-   * @return
    */
   public static String getJobMasterServiceIP(String namespace, String jobName) {
     String jobMasterServiceName = KubernetesUtils.createJobMasterServiceName(jobName);
@@ -264,9 +261,6 @@ public final class K8sWorkerUtils {
 
   /**
    * generate the additional requested ports for this worker
-   * @param config
-   * @param workerPort
-   * @return
    */
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
@@ -278,13 +272,12 @@ public final class K8sWorkerUtils {
 
     HashMap<String, Integer> ports = new HashMap<>();
     int i = 1;
-    for (String portName: portNames) {
+    for (String portName : portNames) {
       ports.put(portName, workerPort + i++);
     }
 
     return ports;
   }
-
 
 
   /**
