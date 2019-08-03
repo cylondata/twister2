@@ -243,7 +243,7 @@ public class TaskExecutor {
       INode task = node.getNode();
       if (task instanceof Receptor) {
         ((Receptor) task).add(inputKey, input);
-        ((Receptor) task).getReceivableNames(inputKey);
+        //((Receptor) task).getReceivableNames(inputKey);
       } else {
         throw new RuntimeException("Cannot add input to non input instance: " + node);
       }

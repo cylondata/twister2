@@ -40,7 +40,7 @@ public class TaskSchedulerClassTest {
     }
 
     @Override
-    public Set<String> getReceivableNames(String name) {
+    public Set<String> getReceivableNames() {
       return inputSet;
     }
   }

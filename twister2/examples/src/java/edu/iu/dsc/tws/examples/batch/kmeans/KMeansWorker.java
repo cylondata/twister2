@@ -12,12 +12,11 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
@@ -268,10 +267,11 @@ public class KMeansWorker extends TaskWorker {
     }
 
     @Override
-    public Set<String> getReceivableNames(String name) {
-      LOG.info("input key name:" + name);
-      receivableNameSet = Stream.of(name).collect(Collectors.toSet());
-      return receivableNameSet;
+    public Set<String> getReceivableNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("points");
+      inputKeys.add("centroids");
+      return inputKeys;
     }
   }
 
@@ -306,7 +306,7 @@ public class KMeansWorker extends TaskWorker {
 
     @Override
     public Set<String> getCollectibleNames() {
-      return new HashSet<>();
+      return Collections.singleton("centroids");
     }
 
     @Override
