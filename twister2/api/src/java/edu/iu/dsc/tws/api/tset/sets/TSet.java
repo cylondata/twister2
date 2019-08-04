@@ -80,8 +80,11 @@ public interface TSet<T> extends BuildableTSet {
    * Partition the data according the to partition function
    *
    * @param partitionFn partition function
+   * @param targetParallelism target parallelism
    * @return this set
    */
+  TLink<?, T> partition(PartitionFunc<T> partitionFn, int targetParallelism);
+
   TLink<?, T> partition(PartitionFunc<T> partitionFn);
 
   /**

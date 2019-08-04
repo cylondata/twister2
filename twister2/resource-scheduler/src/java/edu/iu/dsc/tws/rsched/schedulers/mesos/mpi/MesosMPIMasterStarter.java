@@ -75,8 +75,8 @@ public final class MesosMPIMasterStarter {
     resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    mpiMaster.config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    mpiMaster.config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     MesosWorkerLogger logger = new MesosWorkerLogger(mpiMaster.config,
         "/persistent-volume/logs", "mpiMaster");
@@ -110,7 +110,6 @@ public final class MesosMPIMasterStarter {
     }
 
 
-
     ZKJobMasterFinder finder = new ZKJobMasterFinder(mpiMaster.config);
     finder.initialize();
 
@@ -124,7 +123,6 @@ public final class MesosMPIMasterStarter {
     }
 
     finder.close();
-
 
 
     //old way of finding

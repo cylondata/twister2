@@ -157,7 +157,7 @@ public class DataLocalityBatchTaskSchedulerTest {
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
