@@ -27,6 +27,12 @@ import java.io.Serializable;
 
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
+/**
+ * This is now deprecated. Use {@link edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment} instead!
+ *
+ * @deprecated deprecated abstract class
+ */
+@Deprecated
 public abstract class TSetStreamingWorker extends TaskWorker implements Serializable {
 
   @Override

@@ -37,7 +37,6 @@ package edu.iu.dsc.tws.api.tset;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,7 +53,7 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
 
 public class TSetGraph {
   private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
@@ -227,7 +226,9 @@ public class TSetGraph {
       }
     }
 
-    Collections.reverse(buildOrder);
+//    if (reverse) {
+//      Collections.reverse(buildOrder);
+//    }
 
     return buildOrder;
   }
