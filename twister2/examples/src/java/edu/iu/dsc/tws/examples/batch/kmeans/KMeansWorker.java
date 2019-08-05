@@ -238,7 +238,6 @@ public class KMeansWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      LOG.info("I am in execute method");
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
       DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
@@ -249,8 +248,6 @@ public class KMeansWorker extends TaskWorker {
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
-
-      LOG.info("receivable name set:" + receivableNameSet.size());
       context.writeEnd("all-reduce", kMeansCenters);
     }
 
