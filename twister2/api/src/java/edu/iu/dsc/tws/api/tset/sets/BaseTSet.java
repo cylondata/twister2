@@ -16,11 +16,10 @@ import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 
-public abstract class BaseTSet<T> implements TSet<T> {
+public abstract class BaseTSet<T> implements BuildableTSet {
 
   /**
    * The TSet Env to use for runtime operations of the Tset
@@ -114,12 +113,6 @@ public abstract class BaseTSet<T> implements TSet<T> {
     TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
     };
     return typeToken.getRawType();
-  }
-
-  @Override
-  public boolean addInput(String key, Cacheable<?> input) {
-    tSetEnv.addInput(getName(), key, input);
-    return true;
   }
 
   protected void addChildToGraph(TBase child) {

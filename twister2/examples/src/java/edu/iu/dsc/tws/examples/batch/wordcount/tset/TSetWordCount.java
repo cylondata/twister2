@@ -45,10 +45,10 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
@@ -65,7 +65,7 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     int sourcePar = 1;
 //    int sinkPar = 1;
 
-    BatchSourceTSet<String> lines =
+    SourceTSet<String> lines =
         env.createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")),
             sourcePar).setName("source");
 

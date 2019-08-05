@@ -66,7 +66,7 @@ load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
 
 #UNIFIED JAR
 proto_library(
-    name = "protop",
+    name = "proto",
     srcs = [
         "checkpoint.proto",
         "htgjob.proto",
@@ -82,7 +82,7 @@ t2_proto_java_lib(
     name = "proto-java",
     artifact_name = "Twister2 Proto",
     deps = [
-        ":protop",
+        ":proto",
     ],
 )
 
