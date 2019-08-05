@@ -1056,7 +1056,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean isComplete() {
-    delegate.progress();
     boolean done = delegate.isComplete();
     boolean needsFurtherProgress = progress();
     return done && !needsFurtherProgress;
