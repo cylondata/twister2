@@ -41,7 +41,7 @@ public class JoinExample extends BatchTsetExample {
 
     BatchTLink<Iterator<JoinedTuple<Integer, Integer, Integer>>,
         JoinedTuple<Integer, Integer, Integer>> join =
-        left.join(right, CommunicationContext.JoinType.FULL_OUTER);
+        left.join(right, CommunicationContext.JoinType.FULL_OUTER).setName("ajoin");
 
     join.forEach(t -> LOG.info("out" + t.toString()));
   }

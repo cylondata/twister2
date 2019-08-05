@@ -69,7 +69,7 @@ public class TSetGraph {
 
   private Set<BuildableTSet> sources;
 
-  public TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
+  TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
     this.env = tSetEnv;
     this.graph = GraphBuilder.directed()
         .allowsSelfLoops(false) // because this is a DAG
@@ -193,12 +193,12 @@ public class TSetGraph {
 
   private DataFlowTaskGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
 
-    LOG.fine(() -> "Node build plan: " + sets);
+    LOG.info(() -> "Node build order: " + sets);
     for (BuildableTSet baseTSet : sets) {
       baseTSet.build(this);
     }
 
-    LOG.fine(() -> "Edge build plan: " + links);
+    LOG.info(() -> "Edge build order: " + links);
     // links need to be built in order. check issue #519
 /*    for (int i = 0; i < links.size(); i++) {
       links.get(links.size() - i - 1).build(this, sets);

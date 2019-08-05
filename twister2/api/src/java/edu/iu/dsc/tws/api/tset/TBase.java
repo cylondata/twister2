@@ -17,7 +17,13 @@ package edu.iu.dsc.tws.api.tset;
  */
 public interface TBase {
 
+  /**
+   * ID of the data set
+   */
   String getId();
 
+  /**
+   * Name of the data set
+   */
   String getName();
 }

@@ -25,15 +25,22 @@ import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> {
   private CommunicationContext.JoinType joinType;
 
   private TaskPartitioner partitioner = new LoadBalancePartitioner();
 
-  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type, int sourceP) {
-    super(env, TSetUtils.generateName("join"), sourceP);
+  private TupleTSet leftTSet;
+  private TupleTSet rightTSet;
+
+  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type, TupleTSet leftT,
+                   TupleTSet rightT) {
+    super(env, TSetUtils.generateName("join"), leftT.getParallelism());
     this.joinType = type;
+    this.leftTSet = leftT;
+    this.rightTSet = rightT;
   }
 
   @Override
@@ -54,28 +61,25 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     ArrayList<TBase> sources = new ArrayList<>(tSetGraph.getPredecessors(this));
     sources.retainAll(tSets);
 
-    // filter out the relevant sources out of the successors
-    HashSet<TBase> targets = new HashSet<>(tSetGraph.getSuccessors(this));
-    targets.retainAll(tSets);
-
     if (sources.size() != 2) {
       throw new RuntimeException("Join TLink predecessor count should be 2: Received "
           + sources.size());
     }
 
-    TBase left = sources.get(0);
-    TBase right = sources.get(1);
+    // filter out the relevant sources out of the successors
+    HashSet<TBase> targets = new HashSet<>(tSetGraph.getSuccessors(this));
+    targets.retainAll(tSets);
 
     for (TBase target : targets) {
       // group name = left_right_join_target
-      String groupName = left.getId() + "_" + right.getId() + "_" + getId() + "_"
+      String groupName = leftTSet.getId() + "_" + rightTSet.getId() + "_" + getId() + "_"
           + target.getId();
 
       // build left
-      buildJoin(tSetGraph, left, target, 0, groupName);
+      buildJoin(tSetGraph, leftTSet, target, 0, groupName);
 
       // build right
-      buildJoin(tSetGraph, right, target, 1, groupName);
+      buildJoin(tSetGraph, rightTSet, target, 1, groupName);
     }
   }
 

@@ -51,6 +51,7 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
  */
 public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V> {
   private BaseComputeOp<?> mapToTupleOp;
+  private int precedence = 0;
 
   public KeyedTSet(BatchTSetEnvironment tSetEnv,
                    MapToTupleIterOp<K, V, ?> genTupleOp, int parallelism) {
@@ -96,7 +97,7 @@ public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V>
   @Override
   public <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
         join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type) {
-    JoinTLink<K, V, VR> join = new JoinTLink<>(getTSetEnv(), type, getParallelism());
+    JoinTLink<K, V, VR> join = new JoinTLink<>(getTSetEnv(), type, this, rightTSet);
     addChildToGraph(join);
 
     // add the right tset connection
