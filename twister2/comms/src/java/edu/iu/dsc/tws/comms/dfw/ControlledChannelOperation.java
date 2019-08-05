@@ -452,7 +452,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     if (sendProgressTracker.canProgress()) {
       int sendId = sendProgressTracker.next();
       if (sendId != Integer.MIN_VALUE) {
-        sendProgress(pendingSendMessagesPerSource.get(sendId), sendId);
+        sendProgress(sendId);
         sendProgressTracker.finish(sendId);
       }
     }
@@ -508,12 +508,11 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Go through the out messages, create channel messages by using the serializer send them
    *
-   * @param pendingSendMessages the pending message queue
    * @param sendId send target
    */
-  private void sendProgress(Queue<OutMessage> pendingSendMessages, int sendId) {
+  public void sendProgress(int sendId) {
     boolean canProgress = true;
-
+    Queue<OutMessage> pendingSendMessages = pendingSendMessagesPerSource.get(sendId);
     while (pendingSendMessages.size() > 0 && canProgress) {
       // take out pending messages
       OutMessage outMessage = pendingSendMessages.peek();
