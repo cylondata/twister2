@@ -32,6 +32,11 @@ public abstract class BaseTSet<T> implements BuildableTSet {
   private String name;
 
   /**
+   * ID of the tset
+   */
+  private String id;
+
+  /**
    * The parallelism of the set
    */
   private int parallelism;
@@ -71,12 +76,19 @@ public abstract class BaseTSet<T> implements BuildableTSet {
 
   public BaseTSet(TSetEnvironment env, String n, int parallel) {
     this.tSetEnv = env;
-    this.name = n;
+    this.id = n;
     this.parallelism = parallel;
+
+    this.name = id;
   }
 
   protected void rename(String n) {
     this.name = n;
+  }
+
+  @Override
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -121,7 +133,7 @@ public abstract class BaseTSet<T> implements BuildableTSet {
 
   @Override
   public String toString() {
-    return "S{" + getName() + "[" + getParallelism() + "]}";
+    return getName() + "(" + getId() + ")[" + getParallelism() + "]";
   }
 
   @Override
@@ -135,11 +147,11 @@ public abstract class BaseTSet<T> implements BuildableTSet {
     }
 
     BaseTSet<?> baseTSet = (BaseTSet<?>) o;
-    return Objects.equals(name, baseTSet.name);
+    return Objects.equals(id, baseTSet.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(id);
   }
 }

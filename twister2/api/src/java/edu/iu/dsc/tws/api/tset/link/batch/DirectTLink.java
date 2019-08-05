@@ -32,6 +32,6 @@ public class DirectTLink<T> extends BIteratorLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.DIRECT, getMessageType());
+    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 }

@@ -42,7 +42,7 @@ public class AllGatherTLink<T> extends BBaseGatherLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
+    return new Edge(getId(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

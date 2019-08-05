@@ -44,7 +44,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.JOIN, getMessageType());
+    return new Edge(getId(), OperationNames.JOIN, getMessageType());
   }
 
   @Override
@@ -68,8 +68,8 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
 
     for (TBase target : targets) {
       // group name = left_right_join_target
-      String groupName = left.getName() + "_" + right.getName() + "_" + getName() + "_"
-          + target.getName();
+      String groupName = left.getId() + "_" + right.getId() + "_" + getId() + "_"
+          + target.getId();
 
       // build left
       buildJoin(tSetGraph, left, target, 0, groupName);
@@ -82,7 +82,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
   private void buildJoin(TSetGraph tSetGraph, TBase s, TBase t, int idx, String groupName) {
     Edge e = getEdge();
     // override edge name with join_source_target
-    e.setName(e.getName() + "_" + s.getName() + "_" + t.getName());
+    e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
     e.setKeyed(true);
     e.setPartitioner(partitioner);
 
@@ -90,6 +90,6 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     e.setNumberOfEdges(2);
     e.setTargetEdge(groupName);
 
-    tSetGraph.getDfwGraphBuilder().connect(s.getName(), t.getName(), e);
+    tSetGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
   }
 }

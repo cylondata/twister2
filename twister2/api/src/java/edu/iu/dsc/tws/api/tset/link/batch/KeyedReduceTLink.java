@@ -41,7 +41,7 @@ public class KeyedReduceTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getName(), OperationNames.KEYED_REDUCE, getMessageType(), reduceFn);
+    Edge e = new Edge(getId(), OperationNames.KEYED_REDUCE, getMessageType(), reduceFn);
     e.setKeyed(true);
     return e;
   }

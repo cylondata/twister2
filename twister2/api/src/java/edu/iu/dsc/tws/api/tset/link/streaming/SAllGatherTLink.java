@@ -30,7 +30,7 @@ public class SAllGatherTLink<T> extends SBaseGatherLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
+    return new Edge(getId(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

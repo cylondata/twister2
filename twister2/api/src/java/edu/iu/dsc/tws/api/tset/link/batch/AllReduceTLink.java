@@ -45,7 +45,7 @@ public class AllReduceTLink<T> extends BSingleLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.ALLREDUCE, getMessageType(), reduceFn);
+    return new Edge(getId(), OperationNames.ALLREDUCE, getMessageType(), reduceFn);
   }
 
   @Override

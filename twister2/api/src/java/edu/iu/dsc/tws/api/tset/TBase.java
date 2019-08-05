@@ -17,5 +17,7 @@ package edu.iu.dsc.tws.api.tset;
  */
 public interface TBase {
 
+  String getId();
+
   String getName();
 }

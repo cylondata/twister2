@@ -32,11 +32,12 @@ public class JoinExample extends BatchTsetExample {
   @Override
   public void execute(BatchTSetEnvironment env) {
     int para = 1;
-    SourceTSet<Integer> src0 = dummySource(env, COUNT, para);
-    KeyedTSet<Integer, Integer> left = src0.mapToTuple(i -> new Tuple<>(i % 2, i));
+    SourceTSet<Integer> src0 = dummySource(env, COUNT, para).setName("src0");
+    KeyedTSet<Integer, Integer> left = src0.mapToTuple(i -> new Tuple<>(i % 2, i)).setName("left");
 
-    SourceTSet<Integer> src1 = dummySource(env, COUNT, para);
-    KeyedTSet<Integer, Integer> right = src1.mapToTuple(i -> new Tuple<>(i % 2, i));
+    SourceTSet<Integer> src1 = dummySource(env, COUNT, para).setName("src1");
+    KeyedTSet<Integer, Integer> right = src1.mapToTuple(i -> new Tuple<>(i % 2, i)).setName(
+        "right");
 
     BatchTLink<Iterator<JoinedTuple<Integer, Integer, Integer>>,
         JoinedTuple<Integer, Integer, Integer>> join =

@@ -121,7 +121,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getName(), key, input);
+    getTSetEnv().addInput(getId(), key, input);
     return true;
   }
 }

@@ -35,8 +35,8 @@ public interface BuildableTLink extends TBase {
 
     for (TBase source : relevantSources) {
       for (TBase target : relevantTargets) {
-        String s = source.getName();
-        String t = target.getName();
+        String s = source.getId();
+        String t = target.getId();
 
         Edge edge = getEdge();
         edge.setName(edge.getName() + "_" + s + "_" + t);

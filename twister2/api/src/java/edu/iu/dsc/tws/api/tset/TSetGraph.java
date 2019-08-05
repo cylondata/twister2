@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.google.common.graph.ElementOrder;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
@@ -73,6 +74,7 @@ public class TSetGraph {
     this.graph = GraphBuilder.directed()
         .allowsSelfLoops(false) // because this is a DAG
         .expectedNodeCount(100000) // use config and change this value
+        .nodeOrder(ElementOrder.insertion())
         .build();
 
     this.opMode = operationMode;
@@ -89,6 +91,14 @@ public class TSetGraph {
    * @param origin origin tset
    */
   public void addTSet(TBase origin, TBase target) {
+    if (nodeNotExists(origin)) {
+      this.graph.addNode(origin);
+    }
+
+    if (nodeNotExists(target)) {
+      this.graph.addNode(target);
+    }
+
     this.graph.putEdge(origin, target);
   }
 
@@ -98,8 +108,10 @@ public class TSetGraph {
    * @param source source
    */
   public void addSourceTSet(BuildableTSet source) {
-    this.sources.add(source);
-    this.graph.addNode(source);
+    if (nodeNotExists(source)) {
+      this.sources.add(source);
+      this.graph.addNode(source);
+    }
   }
 
   /**
@@ -109,7 +121,11 @@ public class TSetGraph {
    * @param origin origin
    */
   public void connectTSets(TBase origin, TBase target) {
-    this.graph.putEdge(origin, target);
+    this.addTSet(origin, target);
+  }
+
+  private boolean nodeNotExists(TBase tBase) {
+    return !this.graph.nodes().contains(tBase);
   }
 
   public Set<TBase> getSuccessors(TBase tSet) {
