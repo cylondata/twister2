@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.api.task.graph.Vertex;
 import edu.iu.dsc.tws.api.task.modifiers.Collector;
 import edu.iu.dsc.tws.api.task.modifiers.Receptor;
@@ -203,22 +204,38 @@ public class BatchTaskScheduler implements ITaskScheduler {
     orderedTaskSet.addAll(taskVertexSet);
 
     int globalTaskIndex = 0;
+
+    Set<String> receivableNamesSet;
+    Set<String> collectibleNamesSet;
+
     for (Vertex vertex : taskVertexSet) {
       INode iNode = vertex.getTask();
 
+      /*Set<Edge> edges = graph.outEdges(vertex);
+      for (Edge e : edges) {
+        Vertex child = graph.childOfTask(vertex, e.getName());
+
+        if (child.getParallelism() == vertex.getParallelism()) {
+          LOG.info("Parent and Child Parallelism values are equal");
+        } else {
+          LOG.info("Parent and Child Parallelism values are not equal");
+        }
+      }*/
+
       if (iNode instanceof Receptor) {
         if (((Receptor) iNode).getReceivableNames() != null) {
-          Set<String> receivableNamesSet = ((Receptor) iNode).getReceivableNames();
+          receivableNamesSet = ((Receptor) iNode).getReceivableNames();
           for (String name : receivableNamesSet) {
             LOG.info("Receivable Names:" + name);
           }
         }
       } else if (iNode instanceof Collector) {
         if (((Collector) iNode).getCollectibleNames() != null) {
-          Set<String> collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
+          collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
           LOG.info("Collectible Name Set:" + collectibleNamesSet);
         }
       }
+
       int totalTaskInstances;
       if (!graph.getNodeConstraints().isEmpty()) {
         totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
