@@ -11,13 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.sortop;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import com.google.common.collect.Ordering;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -35,16 +31,13 @@ public class RecordSave implements BulkReceiver {
   @Override
   public boolean receive(int target, Iterator<Object> it) {
     int count = 0;
-    List<Integer> received = new ArrayList<>();
     while (it.hasNext()) {
       Object next = it.next();
       if (next instanceof Tuple) {
-        received.add((Integer) ((Tuple) next).getKey());
         count++;
       }
     }
-    boolean sorted = Ordering.natural().isOrdered(received);
-    LOG.info(String.format("Received message for target: %d %s", count, sorted));
+    LOG.info(String.format("Received message for target: %d", count));
     return true;
   }
 }

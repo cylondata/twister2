@@ -30,10 +30,10 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -48,7 +48,7 @@ public class HelloTSet implements BatchTSetIWorker, Serializable {
     LOG.info("Strating Hello TSet Example");
     int para = env.getConfig().getIntegerValue("para", 4);
 
-    BatchSourceTSet<int[]> source = env.createSource(new SourceFunc<int[]>() {
+    SourceTSet<int[]> source = env.createSource(new SourceFunc<int[]>() {
       private int count = 0;
 
       @Override

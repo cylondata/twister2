@@ -31,8 +31,15 @@ public interface StreamingTSetIWorker extends IWorker {
 
     StreamingTSetEnvironment tSetEnv = TSetEnvironment.initStreaming(workerEnv);
 
-    execute(tSetEnv);
+    buildGraph(tSetEnv);
+
+    tSetEnv.run();
   }
 
-  void execute(StreamingTSetEnvironment env);
+  /**
+   * Build the tset graph according to the streaming logic
+   *
+   * @param env streaming tset env
+   */
+  void buildGraph(StreamingTSetEnvironment env);
 }
