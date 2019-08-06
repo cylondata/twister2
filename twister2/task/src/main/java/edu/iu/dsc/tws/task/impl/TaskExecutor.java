@@ -139,6 +139,59 @@ public class TaskExecutor {
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
 
+  public ExecutionPlan plan(DataFlowTaskGraph graph,
+                            Map<DataFlowTaskGraph, TaskSchedulePlan> graphTaskSchedulePlanMap) {
+
+    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    roundRobinTaskScheduler.initialize(config);
+
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
+
+    WorkerPlan workerPlan = createWorkerPlan();
+
+    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
+
+    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(
+        graph, workerPlan, graphTaskSchedulePlanMap);
+
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        workerID, workerInfoList, communicator, this.checkpointingClient);
+    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+  }
+
+  public TaskSchedulePlan taskSchedulePlan(DataFlowTaskGraph graph) {
+
+    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
+    roundRobinTaskScheduler.initialize(config);
+
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
+
+    WorkerPlan workerPlan = createWorkerPlan();
+
+    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
+
+    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
+
+    return taskSchedulePlan;
+  }
+
+  public ExecutionPlan executionPlan(DataFlowTaskGraph graph, TaskSchedulePlan taskSchedulePlan) {
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        workerID, workerInfoList, communicator, this.checkpointingClient);
+    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+  }
+
+
   /**
    * Execute a plan and a graph. This call blocks until the execution finishes. In case of
    * streaming, this call doesn't return while for batch computations it returns after
