@@ -86,9 +86,7 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
   protected boolean isAllEmpty(int target) {
     if (readyToSend.containsKey(target)) {
       Queue<Object> queue = readyToSend.get(target);
-      if (queue.size() > 0) {
-        return false;
-      }
+      return queue.size() <= 0;
     }
     return true;
   }
