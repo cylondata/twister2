@@ -24,16 +24,15 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
-import java.util.Iterator;
+import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
+import edu.iu.dsc.tws.api.task.TaskPartitioner;
 import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.JoinTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
@@ -95,15 +94,30 @@ public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V>
   }
 
   @Override
-  public <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
-        join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type) {
-    JoinTLink<K, V, VR> join = new JoinTLink<>(getTSetEnv(), type, this, rightTSet);
+  public <VR> JoinTLink<K, V, VR> join(BatchTupleTSet<K, VR> rightTSet,
+                                       CommunicationContext.JoinType type,
+                                       Comparator<K> keyComparator,
+                                       TaskPartitioner<K> partitioner) {
+    JoinTLink<K, V, VR> join;
+    if (partitioner != null) {
+      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, partitioner, this, rightTSet);
+    } else {
+      join = new JoinTLink<>(getTSetEnv(), type, keyComparator, this, rightTSet);
+    }
+
     addChildToGraph(join);
 
     // add the right tset connection
     getTSetEnv().getGraph().connectTSets(rightTSet, join);
 
     return join;
+  }
+
+  @Override
+  public <VR> JoinTLink<K, V, VR> join(BatchTupleTSet<K, VR> rightTSet,
+                                       CommunicationContext.JoinType type,
+                                       Comparator<K> keyComparator) {
+    return join(rightTSet, type, keyComparator, null);
   }
 
   @Override

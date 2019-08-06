@@ -31,7 +31,7 @@ public class JoinExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    int para = 1;
+    int para = 2;
     SourceTSet<Integer> src0 = dummySource(env, COUNT, para).setName("src0");
     KeyedTSet<Integer, Integer> left = src0.mapToTuple(i -> new Tuple<>(i % 2, i)).setName("left");
 
@@ -41,7 +41,8 @@ public class JoinExample extends BatchTsetExample {
 
     BatchTLink<Iterator<JoinedTuple<Integer, Integer, Integer>>,
         JoinedTuple<Integer, Integer, Integer>> join =
-        left.join(right, CommunicationContext.JoinType.FULL_OUTER).setName("ajoin");
+        left.join(right, CommunicationContext.JoinType.INNER, Integer::compareTo)
+            .setName("join");
 
     join.forEach(t -> LOG.info("out" + t.toString()));
   }

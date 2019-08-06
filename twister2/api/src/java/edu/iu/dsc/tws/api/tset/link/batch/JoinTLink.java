@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.api.tset.link.batch;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
@@ -24,24 +25,34 @@ import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.api.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> {
-  private TaskPartitioner partitioner = new LoadBalancePartitioner();
 
   private CommunicationContext.JoinType joinType;
+  private TaskPartitioner<K> partitioner;
+  private Comparator<K> keyComparator;
+
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
 
   // guava graph does not guarantee the insertion order for predecessors and successors. hence
   // the left and right tsets needs to be taken in explicitly
-  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type, TupleTSet leftT,
+  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
+                   Comparator<K> kComparator, TupleTSet leftT, TupleTSet rightT) {
+    this(env, type, kComparator, new HashingPartitioner<>(), leftT, rightT);
+  }
+
+  public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
+                   Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
                    TupleTSet rightT) {
     super(env, TSetUtils.generateName("join"), leftT.getParallelism());
     this.joinType = type;
     this.leftTSet = leftT;
     this.rightTSet = rightT;
+    this.keyComparator = kComparator;
+    this.partitioner = partitioner;
   }
 
   @Override
@@ -95,6 +106,8 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     e.setNumberOfEdges(2);
     e.setTargetEdge(groupName);
     e.addProperty(CommunicationContext.JOIN_TYPE, joinType);
+    e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
+    e.addProperty(CommunicationContext.USE_DISK, false);
 
     tSetGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
   }

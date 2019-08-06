@@ -36,11 +36,13 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
+import java.util.Comparator;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.task.TaskPartitioner;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
@@ -78,5 +80,10 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
   BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedReduce(ReduceFunc<V> reduceFn);
 
   <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
-      join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type);
+      join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type,
+           Comparator<K> keyComparator);
+
+  <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
+      join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type,
+           Comparator<K> keyComparator, TaskPartitioner<K> partitioner);
 }
