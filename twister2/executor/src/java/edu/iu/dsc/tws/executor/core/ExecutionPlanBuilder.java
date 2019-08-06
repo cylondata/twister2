@@ -259,6 +259,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       // so along with the operation mode, the windowing mode must be tested
       if (operationMode == OperationMode.STREAMING) {
         for (Integer i : sourcesOfThisWorker) {
+          boolean found = false;
           // we can have multiple source tasks for an operation
           for (int sIndex = 0; sIndex < c.getSourceTask().size(); sIndex++) {
             String sourceTask = c.getSourceTask().get(sIndex);
@@ -268,11 +269,14 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                   = streamingTaskInstances.get(sourceTask, i);
               taskStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
               op.registerSync(i, taskStreamingInstance);
+              found = true;
             } else if (streamingSourceInstances.contains(sourceTask, i)) {
               SourceStreamingInstance sourceStreamingInstance
                   = streamingSourceInstances.get(sourceTask, i);
               sourceStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
-            } else {
+              found = true;
+            }
+            if (!found) {
               throw new RuntimeException("Not found: " + c.getSourceTask());
             }
           }
@@ -301,19 +305,23 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
       if (operationMode == OperationMode.BATCH) {
         for (Integer i : sourcesOfThisWorker) {
+          boolean found = false;
           // we can have multiple source tasks for an operation
           for (int sIndex = 0; sIndex < c.getSourceTask().size(); sIndex++) {
             String sourceTask = c.getSourceTask().get(sIndex);
             if (batchTaskInstances.contains(sourceTask, i)) {
               TaskBatchInstance taskBatchInstance = batchTaskInstances.get(sourceTask, i);
               taskBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+              found = true;
             } else if (batchSourceInstances.contains(sourceTask, i)) {
               SourceBatchInstance sourceBatchInstance
                   = batchSourceInstances.get(sourceTask, i);
               sourceBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
-            } else {
-              throw new RuntimeException("Not found: " + c.getSourceTask());
+              found = true;
             }
+          }
+          if (!found) {
+            throw new RuntimeException("Not found: " + c.getSourceTask());
           }
         }
 
@@ -353,6 +361,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       if (parOpTable.contains(parent.getName(), e.getTargetEdge())) {
         Communication comm = parOpTable.get(parent.getName(), e.getTargetEdge());
         comm.addEdge(e.getEdgeIndex(), e);
+        comm.addSourceTasks(srcTasks);
         comm.addSourceTask(e.getEdgeIndex(), parent.getName());
       } else {
         if (!targetParOpTable.containsKey(e.getTargetEdge())) {
@@ -365,6 +374,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         } else {
           Communication comm = targetParOpTable.get(e.getTargetEdge());
           comm.addEdge(e.getEdgeIndex(), e);
+          comm.addSourceTasks(srcTasks);
           comm.addSourceTask(e.getEdgeIndex(), parent.getName());
         }
       }
@@ -501,6 +511,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         edge.add(edgeMap.get(i));
         sourceTask.add(sourceTaskMap.get(i));
       }
+    }
+
+    public void addSourceTasks(Set<Integer> sources) {
+      this.sourceTasks.addAll(sources);
     }
 
     void addEdge(int index, Edge e) {
