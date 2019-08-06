@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 public class ControlledProgressTracker {
   /**
    * The actual items
@@ -33,7 +35,7 @@ public class ControlledProgressTracker {
    */
   private Map<Integer, Integer> invertedItems = new HashMap<>();
 
-  public ControlledProgressTracker(List<List<Integer>> items) {
+  public ControlledProgressTracker(List<IntArrayList> items) {
     if (items.size() == 0) {
       canProgress = false;
     } else {
