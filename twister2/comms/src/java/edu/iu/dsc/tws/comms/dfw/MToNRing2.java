@@ -877,6 +877,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (sendsDone && sendsCompleted && receiveCompleted) {
           completed = true;
         }
+        count++;
       }
 
       // lets progress the last receiver at last
