@@ -848,28 +848,35 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
       // progress the send
       boolean sendsCompleted = competedSends == sendsToComplete;
-      if (!sendsCompleted) {
-        for (int i = 0; i < thisSourceArray.length; i++) {
-          delegate.sendProgress(thisSourceArray[i]);
-        }
-        channel2.progress();
-      }
-
-      // lets try to send the syncs
       boolean receiveCompleted =
           receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
-      if (sendsDone && sendsCompleted && receiveCompleted) {
-        completed = true;
-      }
 
-      if (!receiveCompleted) {
-        IntArrayList receiveList = receiveGroupsSources.get(receiveGroupIndex);
-        for (int i = 0; i < receiveList.size(); i++) {
-          int receiveId = receiveList.getInt(i);
-          delegate.receiveDeserializeProgress(receiveId);
-          delegate.receiveProgress(receiveId);
+      int count = 0;
+      while (count < 4 && !completed) {
+        if (!sendsCompleted) {
+          for (int i = 0; i < thisSourceArray.length; i++) {
+            delegate.sendProgress(thisSourceArray[i]);
+          }
+          channel2.progress();
         }
-        channel2.progressReceives(receiveGroupIndex);
+
+        if (!receiveCompleted) {
+          IntArrayList receiveList = receiveGroupsSources.get(receiveGroupIndex);
+          for (int i = 0; i < receiveList.size(); i++) {
+            int receiveId = receiveList.getInt(i);
+            delegate.receiveDeserializeProgress(receiveId);
+            delegate.receiveProgress(receiveId);
+          }
+          channel2.progressReceives(receiveGroupIndex);
+        }
+
+        sendsCompleted = competedSends == sendsToComplete;
+        receiveCompleted = receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
+
+        // lets try to send the syncs
+        if (sendsDone && sendsCompleted && receiveCompleted) {
+          completed = true;
+        }
       }
 
       // lets progress the last receiver at last
