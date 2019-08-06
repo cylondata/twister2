@@ -109,6 +109,10 @@ public class KMeansWorker extends TaskWorker {
     /* Third Graph to do the actual calculation **/
     DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
+    DataFlowTaskGraph[] graphs = new DataFlowTaskGraph[2];
+    graphs[0] = datapointsTaskGraph;
+    graphs[1] = centroidsTaskGraph;
+
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
@@ -233,12 +237,8 @@ public class KMeansWorker extends TaskWorker {
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
 
-    private Set<String> receivableNameSet;
-    private String inputName;
-
     @Override
     public void execute() {
-      LOG.info("I am in execute method");
       int dim = Integer.parseInt(config.getStringValue("dim"));
 
       DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
@@ -249,8 +249,6 @@ public class KMeansWorker extends TaskWorker {
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
-
-      LOG.info("receivable name set:" + receivableNameSet.size());
       context.writeEnd("all-reduce", kMeansCenters);
     }
 

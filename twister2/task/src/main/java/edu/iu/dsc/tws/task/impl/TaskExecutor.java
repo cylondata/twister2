@@ -126,13 +126,13 @@ public class TaskExecutor {
 
     WorkerPlan workerPlan = createWorkerPlan();
 
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
     //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
     batchTaskScheduler.initialize(config);
 
-    //TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
+    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
@@ -243,7 +243,6 @@ public class TaskExecutor {
       INode task = node.getNode();
       if (task instanceof Receptor) {
         ((Receptor) task).add(inputKey, input);
-        //((Receptor) task).getReceivableNames(inputKey);
       } else {
         throw new RuntimeException("Cannot add input to non input instance: " + node);
       }
