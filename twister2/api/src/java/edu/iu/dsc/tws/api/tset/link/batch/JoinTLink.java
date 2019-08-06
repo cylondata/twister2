@@ -28,13 +28,14 @@ import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
 public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> {
-  private CommunicationContext.JoinType joinType;
-
   private TaskPartitioner partitioner = new LoadBalancePartitioner();
 
+  private CommunicationContext.JoinType joinType;
   private TupleTSet leftTSet;
   private TupleTSet rightTSet;
 
+  // guava graph does not guarantee the insertion order for predecessors and successors. hence
+  // the left and right tsets needs to be taken in explicitly
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type, TupleTSet leftT,
                    TupleTSet rightT) {
     super(env, TSetUtils.generateName("join"), leftT.getParallelism());
@@ -93,6 +94,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     e.setEdgeIndex(idx);
     e.setNumberOfEdges(2);
     e.setTargetEdge(groupName);
+    e.addProperty(CommunicationContext.JOIN_TYPE, joinType);
 
     tSetGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
   }
