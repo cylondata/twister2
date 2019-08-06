@@ -29,6 +29,8 @@ import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
 public final class TSetUtils {
   private static long genCount = 0;
 
+  private static int keyedTSetCount = 0;
+
   private TSetUtils() {
   }
 

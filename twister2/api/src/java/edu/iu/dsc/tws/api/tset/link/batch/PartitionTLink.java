@@ -53,7 +53,7 @@ public class PartitionTLink<T> extends BIteratorLink<T> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getName(), OperationNames.PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.PARTITION, getMessageType());
     if (partitionFunction != null) {
       e.setPartitioner(partitionFunction);
     }

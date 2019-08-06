@@ -28,17 +28,17 @@ import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public class SKeyedTSet<K, V, T> extends BaseTSet<V> implements StreamingTupleTSet<K, V, T> {
+public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<K, V> {
   private BaseComputeOp<?> mapToTupleOp;
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
-                    MapToTupleIterOp<K, V, T> genTupleOp, int parallelism) {
+                    MapToTupleIterOp<K, V, ?> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
-                    MapToTupleOp<K, V, T> genTupleOp, int parallelism) {
+                    MapToTupleOp<K, V, ?> genTupleOp, int parallelism) {
     super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
     this.mapToTupleOp = genTupleOp;
   }
@@ -57,7 +57,7 @@ public class SKeyedTSet<K, V, T> extends BaseTSet<V> implements StreamingTupleTS
   }
 
   @Override
-  public SKeyedTSet<K, V, T> setName(String n) {
+  public SKeyedTSet<K, V> setName(String n) {
     rename(n);
     return this;
   }

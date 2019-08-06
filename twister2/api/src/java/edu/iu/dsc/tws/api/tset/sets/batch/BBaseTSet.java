@@ -99,7 +99,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
   // todo: remove this direct() --> would be more efficient. can handle at the context write level
   @Override
-  public <K, V> KeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
+  public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn) {
     return direct().mapToTuple(mapToTupleFn);
   }
 
@@ -121,7 +121,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getName(), key, input);
+    getTSetEnv().addInput(getId(), key, input);
     return true;
   }
 }

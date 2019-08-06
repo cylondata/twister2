@@ -56,8 +56,8 @@ public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public <K, V> SKeyedTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
-    SKeyedTSet<K, V, T> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleIterOp<>(mapToTupFn),
         getTargetParallelism());
 
     addChildToGraph(set);

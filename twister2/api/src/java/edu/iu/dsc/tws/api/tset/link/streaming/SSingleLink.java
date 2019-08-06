@@ -53,8 +53,8 @@ public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
   }
 
   @Override
-  public <K, O> SKeyedTSet<K, O, T> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    SKeyedTSet<K, O, T> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
+    SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
         getTargetParallelism());
 
     addChildToGraph(set);

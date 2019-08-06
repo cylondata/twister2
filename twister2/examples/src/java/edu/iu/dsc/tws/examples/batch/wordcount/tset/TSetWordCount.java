@@ -78,7 +78,7 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
               }
             });
 
-    KeyedTSet<String, Integer, String> groupedWords = words.mapToTuple(w -> new Tuple<>(w, 1));
+    KeyedTSet<String, Integer> groupedWords = words.mapToTuple(w -> new Tuple<>(w, 1));
 
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 

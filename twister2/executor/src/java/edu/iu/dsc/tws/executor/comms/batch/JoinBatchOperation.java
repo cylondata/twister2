@@ -65,7 +65,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
       keyComparator = (Comparator) leftEdge.getProperty(
           CommunicationContext.KEY_COMPARATOR);
     } catch (Exception ex) {
-      //ignore
+      throw new RuntimeException("Unable to get properties", ex);
     }
 
     CommunicationContext.JoinType joinType = (CommunicationContext.JoinType) leftEdge.getProperty(

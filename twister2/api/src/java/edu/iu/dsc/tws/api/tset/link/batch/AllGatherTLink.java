@@ -34,7 +34,7 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
  *
  * @param <T> type of data
  */
-public class AllGatherTLink<T> extends BTupleValueIteratorLink<Integer, T> {
+public class AllGatherTLink<T> extends BBaseGatherLink<T> {
 
   public AllGatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, TSetUtils.generateName("allgather"), sourceParallelism);
@@ -42,7 +42,7 @@ public class AllGatherTLink<T> extends BTupleValueIteratorLink<Integer, T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
+    return new Edge(getId(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

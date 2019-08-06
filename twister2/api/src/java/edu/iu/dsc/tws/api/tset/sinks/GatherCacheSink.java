@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
-public class CacheTupleValueIterSink<K, T> extends BaseSinkFunc<Iterator<Tuple<K, T>>> {
+public class GatherCacheSink<T> extends BaseSinkFunc<Iterator<Tuple<Integer, T>>> {
 
   private CollectionPartition<T> partition;
 
@@ -31,7 +31,7 @@ public class CacheTupleValueIterSink<K, T> extends BaseSinkFunc<Iterator<Tuple<K
   }
 
   @Override
-  public boolean add(Iterator<Tuple<K, T>> value) {
+  public boolean add(Iterator<Tuple<Integer, T>> value) {
     while (value.hasNext()) {
       partition.add(value.next().getValue()); // key will be dropped. Only value is cached.
     }

@@ -29,11 +29,10 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class ForEachTupleValueIterCompute<K, T> implements
-    ComputeFunc<Object, Iterator<Tuple<K, T>>> {
+public class GatherForEachCompute<T> implements ComputeFunc<Object, Iterator<Tuple<Integer, T>>> {
   private ApplyFunc<T> applyFn;
 
-  public ForEachTupleValueIterCompute(ApplyFunc<T> applyFunction) {
+  public GatherForEachCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }
 
@@ -43,7 +42,7 @@ public class ForEachTupleValueIterCompute<K, T> implements
   }
 
   @Override
-  public Object compute(Iterator<Tuple<K, T>> input) {
+  public Object compute(Iterator<Tuple<Integer, T>> input) {
     while (input.hasNext()) {
       applyFn.apply(input.next().getValue());
     }

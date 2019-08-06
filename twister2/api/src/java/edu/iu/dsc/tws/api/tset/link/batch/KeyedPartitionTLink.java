@@ -42,7 +42,7 @@ public class KeyedPartitionTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getName(), OperationNames.KEYED_PARTITION, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_PARTITION, getMessageType());
     e.setKeyed(true);
     e.setPartitioner(partitionFunction);
     return e;

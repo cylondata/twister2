@@ -18,5 +18,5 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 
 public interface StreamingTupleMappableLink<I> {
 
-  <K, O> StreamingTupleTSet<K, O, I> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
+  <K, O> StreamingTupleTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, I> genTupleFn);
 }
