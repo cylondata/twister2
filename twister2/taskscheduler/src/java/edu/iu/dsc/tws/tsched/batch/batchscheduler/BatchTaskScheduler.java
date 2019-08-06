@@ -120,7 +120,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
   }
 
 
-
+  private Set<String> collectibleNamesSet;
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
@@ -137,7 +137,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
         INode iNode = vertex.getTask();
         if (iNode instanceof Collector) {
           if (((Collector) iNode).getCollectibleNames() != null) {
-            Set<String> collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
+            collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
             LOG.info("%%%% Collectible Name Set: %%%%" + collectibleNamesSet);
           }
         }
