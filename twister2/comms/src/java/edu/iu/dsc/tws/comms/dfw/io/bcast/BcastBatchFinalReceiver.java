@@ -121,7 +121,9 @@ public class BcastBatchFinalReceiver extends TargetFinalReceiver {
   @Override
   protected boolean isFilledToSend(int target) {
     return targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
-        && messages.get(target).isEmpty();
+        && messages.get(target).isEmpty()
+        && (readyToSend.get(target) == null
+        || readyToSend.get(target) != null && !readyToSend.get(target).isEmpty());
   }
 
   @Override

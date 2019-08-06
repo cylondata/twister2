@@ -11,11 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.allgather;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
+import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.gather.BaseGatherBatchReceiver;
 
 public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
+  private static final Logger LOG = Logger.getLogger(AllGatherBatchFinalReceiver.class.getName());
+
   private TreeBroadcast gatherReceiver;
 
   public AllGatherBatchFinalReceiver(TreeBroadcast bCast) {
@@ -44,6 +49,11 @@ public class AllGatherBatchFinalReceiver extends BaseGatherBatchReceiver {
     if (!sync) {
       return false;
     }
-    return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+    boolean b = targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        && gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
+    if (b) {
+      LOG.info("Gather ready: " + b);
+    }
+    return b;
   }
 }

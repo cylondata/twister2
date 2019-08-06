@@ -137,8 +137,17 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
           needsFurtherProgress = true;
         }
 
-        if (!val.isEmpty() || !isAllEmpty(key) || !sync(key)) {
+        if (!val.isEmpty() || !isAllEmpty(key)) {
           needsFurtherProgress = true;
+        }
+      }
+
+      if (!needsFurtherProgress) {
+        for (int i = 0; i < targets.length; i++) {
+          int key = targets[i];
+          if (!isAllEmpty(key) || !sync(key)) {
+            needsFurtherProgress = true;
+          }
         }
       }
     } finally {
@@ -151,20 +160,16 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected abstract boolean isAllEmpty(int target);
 
   protected boolean sync(int target) {
-    boolean allSynced = true;
+    boolean allSynced = false;
     // if we have synced no need to go forward
-    if (targetStates.get(target) == ReceiverState.INIT
-        || targetStates.get(target) == ReceiverState.SYNCED) {
-      return allSynced;
-    }
-
-    if (targetStates.get(target) == ReceiverState.RECEIVING) {
-      allSynced = false;
+    if (targetStates.get(target) == ReceiverState.SYNCED) {
+      return true;
     }
 
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
       targetStates.put(target, ReceiverState.SYNCED);
       onSyncEvent(target, barriers.get(target));
+      allSynced = true;
     }
 
     return allSynced;
