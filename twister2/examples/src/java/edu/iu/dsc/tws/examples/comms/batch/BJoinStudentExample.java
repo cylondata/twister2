@@ -20,12 +20,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BJoin;
@@ -147,8 +146,9 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       while (it.hasNext()) {
-        ImmutablePair item = (ImmutablePair) it.next();
-        LOG.info("Key " + item.getKey() + " : Value " + item.getValue());
+        JoinedTuple item = (JoinedTuple) it.next();
+        LOG.info("Key " + item.getKey() + " : left " + item.getLeftValue()
+            + " right: " + item.getRightValue());
       }
       joinDone = true;
 

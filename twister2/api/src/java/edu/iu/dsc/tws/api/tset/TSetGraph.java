@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.google.common.graph.ElementOrder;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
@@ -54,7 +55,7 @@ import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
-import edu.iu.dsc.tws.api.tset.sets.CachedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
 
 public class TSetGraph {
   private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
@@ -68,11 +69,12 @@ public class TSetGraph {
 
   private Set<BuildableTSet> sources;
 
-  public TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
+  TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
     this.env = tSetEnv;
     this.graph = GraphBuilder.directed()
         .allowsSelfLoops(false) // because this is a DAG
         .expectedNodeCount(100000) // use config and change this value
+        .nodeOrder(ElementOrder.insertion())
         .build();
 
     this.opMode = operationMode;
@@ -89,6 +91,14 @@ public class TSetGraph {
    * @param origin origin tset
    */
   public void addTSet(TBase origin, TBase target) {
+    if (nodeNotExists(origin)) {
+      this.graph.addNode(origin);
+    }
+
+    if (nodeNotExists(target)) {
+      this.graph.addNode(target);
+    }
+
     this.graph.putEdge(origin, target);
   }
 
@@ -98,8 +108,10 @@ public class TSetGraph {
    * @param source source
    */
   public void addSourceTSet(BuildableTSet source) {
-    this.sources.add(source);
-    this.graph.addNode(source);
+    if (nodeNotExists(source)) {
+      this.sources.add(source);
+      this.graph.addNode(source);
+    }
   }
 
   /**
@@ -109,7 +121,11 @@ public class TSetGraph {
    * @param origin origin
    */
   public void connectTSets(TBase origin, TBase target) {
-    this.graph.putEdge(origin, target);
+    this.addTSet(origin, target);
+  }
+
+  private boolean nodeNotExists(TBase tBase) {
+    return !this.graph.nodes().contains(tBase);
   }
 
   public Set<TBase> getSuccessors(TBase tSet) {
@@ -145,12 +161,12 @@ public class TSetGraph {
    */
   public DataFlowTaskGraph build() {
     List<BuildableTLink> links = new ArrayList<>();
-    Set<BuildableTSet> sets = new HashSet<>();
+    List<BuildableTSet> sets = new ArrayList<>();
 
     List<TBase> buildOrder = new ArrayList<>();
 
     for (BuildableTSet src : sources) {
-      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
+      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors, false));
     }
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
@@ -166,9 +182,9 @@ public class TSetGraph {
    */
   public DataFlowTaskGraph build(BuildableTSet leafTSet) {
     List<BuildableTLink> links = new ArrayList<>();
-    Set<BuildableTSet> sets = new HashSet<>();
+    List<BuildableTSet> sets = new ArrayList<>();
 
-    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
+    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors, true);
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
 
@@ -177,15 +193,18 @@ public class TSetGraph {
 
   private DataFlowTaskGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
 
-    LOG.fine(() -> "Node build plan: " + sets);
+    LOG.info(() -> "Node build order: " + sets);
     for (BuildableTSet baseTSet : sets) {
       baseTSet.build(this);
     }
 
-    LOG.fine(() -> "Edge build plan: " + links);
+    LOG.info(() -> "Edge build order: " + links);
     // links need to be built in order. check issue #519
-    for (int i = 0; i < links.size(); i++) {
+/*    for (int i = 0; i < links.size(); i++) {
       links.get(links.size() - i - 1).build(this, sets);
+    }*/
+    for (BuildableTLink link : links) {
+      link.build(this, sets);
     }
 
     DataFlowTaskGraph dataflowGraph = getDfwGraphBuilder().build();
@@ -199,8 +218,8 @@ public class TSetGraph {
     return dataflowGraph;
   }
 
-  private List<TBase> bfs(BuildableTSet s, Collection<BuildableTLink> links,
-                          Collection<BuildableTSet> sets, AdjNodesExtractor adjNodesExtractor) {
+  private List<TBase> bfs(BuildableTSet s, List<BuildableTLink> links, List<BuildableTSet> sets,
+                          AdjNodesExtractor adjNodesExtractor, boolean reverse) {
     List<TBase> buildOrder = new ArrayList<>();
 
     Map<TBase, Boolean> visited = new HashMap<>();
@@ -227,7 +246,11 @@ public class TSetGraph {
       }
     }
 
-    Collections.reverse(buildOrder);
+    if (reverse) {
+      Collections.reverse(buildOrder);
+      Collections.reverse(sets);
+      Collections.reverse(links);
+    }
 
     return buildOrder;
   }

@@ -21,7 +21,7 @@ public interface ChannelListener {
    *
    * @param id the rank from which the receive happens
    */
-  void onReceiveComplete(int id, int stream, DataBuffer message, boolean free);
+  void onReceiveComplete(int id, int stream, DataBuffer message);
 
   /**
    * After a send is complete this function gets called

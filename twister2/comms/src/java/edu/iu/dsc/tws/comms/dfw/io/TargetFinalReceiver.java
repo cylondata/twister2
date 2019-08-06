@@ -11,13 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -63,7 +62,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     int index = 0;
     targets = new int[thisDestinations.size()];
     for (int target : thisDestinations) {
-      messages.put(target, new LinkedBlockingQueue<>());
+      messages.put(target, new ArrayList<>());
       targets[index++] = target;
     }
   }
@@ -110,7 +109,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
       targetStates.put(target, ReceiverState.RECEIVING);
     }
 
-    Queue<Object> msgQueue = messages.get(target);
+    List<Object> msgQueue = messages.get(target);
     return msgQueue.size() < highWaterMark;
   }
 
@@ -122,7 +121,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     try {
       for (int i = 0; i < targets.length; i++) {
         int key = targets[i];
-        Queue<Object> val = messages.get(key);
+        List<Object> val = messages.get(key);
 
         if (val.size() > 0) {
           merge(key, val);
@@ -138,8 +137,17 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
           needsFurtherProgress = true;
         }
 
-        if (!val.isEmpty() || !isAllEmpty(key) || !sync(key)) {
+        if (!val.isEmpty() || !isAllEmpty(key)) {
           needsFurtherProgress = true;
+        }
+      }
+
+      if (!needsFurtherProgress) {
+        for (int i = 0; i < targets.length; i++) {
+          int key = targets[i];
+          if (!isAllEmpty(key) || !sync(key)) {
+            needsFurtherProgress = true;
+          }
         }
       }
     } finally {
@@ -152,20 +160,16 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected abstract boolean isAllEmpty(int target);
 
   protected boolean sync(int target) {
-    boolean allSynced = true;
+    boolean allSynced = false;
     // if we have synced no need to go forward
-    if (targetStates.get(target) == ReceiverState.INIT
-        || targetStates.get(target) == ReceiverState.SYNCED) {
-      return allSynced;
-    }
-
-    if (targetStates.get(target) == ReceiverState.RECEIVING) {
-      allSynced = false;
+    if (targetStates.get(target) == ReceiverState.SYNCED) {
+      return true;
     }
 
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
       targetStates.put(target, ReceiverState.SYNCED);
       onSyncEvent(target, barriers.get(target));
+      allSynced = true;
     }
 
     return allSynced;

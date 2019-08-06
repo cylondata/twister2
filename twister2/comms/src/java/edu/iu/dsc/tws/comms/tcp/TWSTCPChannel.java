@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.tcp;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -161,7 +160,7 @@ public class TWSTCPChannel implements TWSChannel {
 
 
     this.pendingSends = new ArrayBlockingQueue<>(1024);
-    this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
+    this.registeredReceives = new ArrayList<>(1024);
     this.waitForCompletionSends = new IterativeLinkedList<>();
     this.executor = wController.getWorkerInfo().getWorkerID();
     this.comm = channel;
@@ -321,15 +320,9 @@ public class TWSTCPChannel implements TWSChannel {
           // lets call the callback about the receive complete
           r.buffer.setSize(r.buffer.getByteBuffer().limit());
 
-          if (receiveRequests.pendingRequests.size() == 0
-              && receiveRequests.availableBuffers.size() == 0) {
-            //We do not have any buffers to receive messages so we need to free a buffer
-            receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.edge, r.buffer, true);
-          } else {
-            receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.edge, r.buffer, false);
-          }
+          //We do not have any buffers to receive messages so we need to free a buffer
+          receiveRequests.callback.onReceiveComplete(
+              receiveRequests.rank, receiveRequests.edge, r.buffer);
           requestIterator.remove();
         }
       }

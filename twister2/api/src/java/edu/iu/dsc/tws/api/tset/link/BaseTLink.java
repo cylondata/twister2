@@ -19,14 +19,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
-import edu.iu.dsc.tws.api.tset.ops.SinkOp;
-import edu.iu.dsc.tws.api.tset.sets.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
 
 /**
  * Base link impl for all the links
@@ -34,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.sets.SinkTSet;
  * @param <T1> output type from the comms
  * @param <T0> base type
  */
-public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
+public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   /**
    * The TSet Env used for runtime operations
@@ -45,6 +37,11 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
    * Name of the data set
    */
   private String name;
+
+  /**
+   * ID of the tlink
+   */
+  private String id;
 
   private int sourceParallelism;
 
@@ -60,54 +57,19 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
 
   public BaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
     this.tSetEnv = env;
-    this.name = n;
+    this.id = n;
     this.sourceParallelism = sourceP;
     this.targetParallelism = targetP;
-  }
 
-  protected <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
-    ComputeTSet<P, T1> set;
-    if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(tSetEnv, n, new ComputeOp<>(computeFunction), targetParallelism);
-    } else {
-      set = new ComputeTSet<>(tSetEnv, new ComputeOp<>(computeFunction), targetParallelism);
-    }
-    addChildToGraph(set);
-
-    return set;
-  }
-
-  protected <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
-    ComputeTSet<P, T1> set;
-    if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(tSetEnv, n, new ComputeCollectorOp<>(computeFunction),
-          targetParallelism);
-    } else {
-      set = new ComputeTSet<>(tSetEnv, new ComputeCollectorOp<>(computeFunction),
-          targetParallelism);
-    }
-    addChildToGraph(set);
-
-    return set;
+    this.name = n;
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(ComputeFunc<P, T1> computeFunction) {
-    return compute(null, computeFunction);
+  public String getId() {
+    return id;
   }
 
   @Override
-  public <P> ComputeTSet<P, T1> compute(ComputeCollectorFunc<P, T1> computeFunction) {
-    return compute(null, computeFunction);
-  }
-
-  @Override
-  public void sink(SinkFunc<T1> sinkFunction) {
-    SinkTSet<T1> sinkTSet = new SinkTSet<>(tSetEnv, new SinkOp<>(sinkFunction), targetParallelism);
-    addChildToGraph(sinkTSet);
-    tSetEnv.run(sinkTSet);
-  }
-
   public String getName() {
     return name;
   }
@@ -145,7 +107,7 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
 
   @Override
   public String toString() {
-    return "L{" + getName()
+    return getName() + "(" + getId() + "){"
         + tSetEnv.getGraph().getPredecessors(this)
         + "->" + tSetEnv.getGraph().getSuccessors(this)
         + "}";
@@ -159,13 +121,12 @@ public abstract class BaseTLink<T1, T0> implements TLink<T1, T0> {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
-    return Objects.equals(name, baseTLink.name);
+    return id.equals(baseTLink.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(id);
   }
 }

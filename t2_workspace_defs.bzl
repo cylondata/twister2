@@ -7,6 +7,8 @@ _MAVEN_MIRRORS = [
     "http://bazel-mirror.storage.googleapis.com/repo1.maven.org/maven2/",
     "http://repo1.maven.org/maven2/",
     "http://maven.ibiblio.org/maven2/",
+    "http://repo.exist.com/maven2/",
+    "http://www.ibiblio.net/pub/packages/maven2/",
 ]
 
 deps = []

@@ -16,11 +16,10 @@ import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 
-public abstract class BaseTSet<T> implements TSet<T> {
+public abstract class BaseTSet<T> implements BuildableTSet {
 
   /**
    * The TSet Env to use for runtime operations of the Tset
@@ -31,6 +30,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
    * Name of the data set
    */
   private String name;
+
+  /**
+   * ID of the tset
+   */
+  private String id;
 
   /**
    * The parallelism of the set
@@ -72,12 +76,19 @@ public abstract class BaseTSet<T> implements TSet<T> {
 
   public BaseTSet(TSetEnvironment env, String n, int parallel) {
     this.tSetEnv = env;
-    this.name = n;
+    this.id = n;
     this.parallelism = parallel;
+
+    this.name = id;
   }
 
   protected void rename(String n) {
     this.name = n;
+  }
+
+  @Override
+  public String getId() {
+    return id;
   }
 
   @Override
@@ -116,19 +127,13 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return typeToken.getRawType();
   }
 
-  @Override
-  public boolean addInput(String key, Cacheable<?> input) {
-    tSetEnv.addInput(getName(), key, input);
-    return true;
-  }
-
   protected void addChildToGraph(TBase child) {
     tSetEnv.getGraph().addTSet(this, child);
   }
 
   @Override
   public String toString() {
-    return "S{" + getName() + "[" + getParallelism() + "]}";
+    return getName() + "(" + getId() + ")[" + getParallelism() + "]";
   }
 
   @Override
@@ -142,11 +147,11 @@ public abstract class BaseTSet<T> implements TSet<T> {
     }
 
     BaseTSet<?> baseTSet = (BaseTSet<?>) o;
-    return Objects.equals(name, baseTSet.name);
+    return Objects.equals(id, baseTSet.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(id);
   }
 }

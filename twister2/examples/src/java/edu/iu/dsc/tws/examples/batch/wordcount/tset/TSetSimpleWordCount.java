@@ -38,9 +38,9 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
-import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -56,11 +56,11 @@ public class TSetSimpleWordCount implements BatchTSetIWorker, Serializable {
 
     Config config = env.getConfig();
 
-    BatchSourceTSet<String> source = env.createSource(
+    SourceTSet<String> source = env.createSource(
         new WordGenerator((int) config.get("NO_OF_SAMPLE_WORDS"), (int) config.get("MAX_CHARS")),
         sourcePar).setName("source");
 
-    KeyedTSet<String, Integer, String> groupedWords = source.mapToTuple(w -> new Tuple<>(w, 1));
+    KeyedTSet<String, Integer> groupedWords = source.mapToTuple(w -> new Tuple<>(w, 1));
 
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 

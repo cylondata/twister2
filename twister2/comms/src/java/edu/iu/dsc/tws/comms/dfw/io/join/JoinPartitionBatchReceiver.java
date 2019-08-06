@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.comms.dfw.io.join;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -52,7 +51,7 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected void merge(int dest, Queue<Object> dests) {
+  protected void merge(int dest, List<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
       readyToSend.put(dest, new AggregatedObjects<>(dests));
     } else {

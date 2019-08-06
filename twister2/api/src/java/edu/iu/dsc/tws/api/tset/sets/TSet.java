@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
  *
  * @param <T> type of the data set
  */
-public interface TSet<T> extends BuildableTSet {
+public interface TSet<T> {
   /**
    * Name of the tset
    */
@@ -107,7 +107,7 @@ public interface TSet<T> extends BuildableTSet {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   /**
    * Create a cloned dataset
@@ -115,13 +115,6 @@ public interface TSet<T> extends BuildableTSet {
    * @return the cloned set
    */
   TLink<?, T> replicate(int replications);
-
-  /**
-   * Executes TSet and saves any generated data as a in-memory data object
-   *
-   * @return the resulting TSet
-   */
-  TSet<T> cache();
 
   /**
    * Allows users to pass in other TSets as inputs for a TSet

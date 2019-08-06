@@ -12,11 +12,14 @@
 
 package edu.iu.dsc.tws.api.tset.env;
 
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
+import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
 
@@ -30,10 +33,32 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   @Override
-  public <T> BatchSourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
-    BatchSourceTSet<T> sourceT = new BatchSourceTSet<>(this, source, parallelism);
+  public <T> SourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
+    SourceTSet<T> sourceT = new SourceTSet<>(this, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
+  }
+
+  /**
+   * Runs a subgraph of TSets from the specified TSet
+   *
+   * @param leafTset leaf tset
+   */
+  public void run(BaseTSet leafTset) {
+    DataFlowTaskGraph dataflowGraph = getTSetGraph().build(leafTset);
+    executeDataFlowGraph(dataflowGraph, null);
+  }
+
+  /**
+   * Runs a subgraph of TSets from the specified TSet and output results as a tset
+   *
+   * @param leafTset leaf tset
+   * @param <T> type of the output data object
+   * @return output result as a data object
+   */
+  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
+    DataFlowTaskGraph dataflowGraph = getTSetGraph().build(leafTset);
+    return executeDataFlowGraph(dataflowGraph, leafTset);
   }
 }

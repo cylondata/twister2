@@ -63,7 +63,7 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected void addMessage(Queue<Object> msgQueue, Object value) {
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
     msgQueue.add(value);
   }
 
@@ -72,7 +72,7 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  protected void merge(int dest, Queue<Object> dests) {
+  protected void merge(int dest, List<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
       readyToSend.put(dest, new LinkedBlockingQueue<>(dests));
     } else {
@@ -86,9 +86,7 @@ public class BcastGatheStreamingReceiver extends TargetFinalReceiver {
   protected boolean isAllEmpty(int target) {
     if (readyToSend.containsKey(target)) {
       Queue<Object> queue = readyToSend.get(target);
-      if (queue.size() > 0) {
-        return false;
-      }
+      return queue.size() <= 0;
     }
     return true;
   }
