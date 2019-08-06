@@ -316,7 +316,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   @Override
-  public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
+  public void onReceiveComplete(int id, int e, DataBuffer buffer) {
     // we need to try to build the message here, we may need many more messages to complete
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());

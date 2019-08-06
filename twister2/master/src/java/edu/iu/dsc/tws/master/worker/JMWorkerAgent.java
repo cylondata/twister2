@@ -575,11 +575,25 @@ public final class JMWorkerAgent {
           workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
         }
 
+      } else if (message instanceof JobMasterAPI.Recover) {
+
+        LOG.info("Worker id ..." + ((JobMasterAPI.Recover) message).getWorkerID()
+            + "  came from failure. This worker is going back to last checkpoint");
+        setBackToLAstCheckpoint();
+
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }
 
     }
+  }
+
+  //set back everything in a worker to last checkpoint
+  //TODO: going back to last checkpoint should be implemented here.
+  public void setBackToLAstCheckpoint() {
+
+    //System.exit(3);
+
   }
 
   public class ClientConnectHandler implements ConnectHandler {

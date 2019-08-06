@@ -95,6 +95,9 @@ public class WorkerWithState {
     return workerInfo.getNodeInfo().getDataCenterName().isEmpty() ? false : true;
   }
 
+  public void setWorkerInfo(JobMasterAPI.WorkerInfo workerInfo) {
+    this.workerInfo = workerInfo;
+  }
   public void setPingTimestamp(long pingTimestamp) {
     this.pingTimestamp = pingTimestamp;
   }

@@ -38,10 +38,10 @@ public class TaskPartitionerForSampledData extends TaskPartitionerForRandom {
     this.minIndexForSample = super.getIndex(min);
     this.maxIndexMaxIndexForSample = super.getIndex(max);
 
-    this.ratio = (double) (this.destinationsList.size() - 1)
+    this.ratio = (double) (this.destinationsList.length - 1)
         / (maxIndexMaxIndexForSample - minIndexForSample);
 
-    this.lowestTaskIndex = this.destinationsList.size() - 1;
+    this.lowestTaskIndex = this.destinationsList.length - 1;
   }
 
   @Override
@@ -60,6 +60,6 @@ public class TaskPartitionerForSampledData extends TaskPartitionerForRandom {
 
   @Override
   public int partition(int source, byte[] data) {
-    return this.destinationsList.get(this.getIndex(data));
+    return this.destinationsList[this.getIndex(data)];
   }
 }

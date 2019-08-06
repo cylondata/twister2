@@ -25,7 +25,6 @@ package edu.iu.dsc.tws.comms.mpi;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -153,7 +152,7 @@ public class TWSMPIChannel implements TWSChannel {
     }
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
-    this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
+    this.registeredReceives = new ArrayList<>(1024);
     this.waitForCompletionSends = new IterativeLinkedList<>();
     this.workerId = wController.getWorkerInfo().getWorkerID();
   }
@@ -285,7 +284,7 @@ public class TWSMPIChannel implements TWSChannel {
           Status status = r.request.testStatus();
           // this request has finished
           if (status != null) {
-            completedSendCount++;
+//            completedSendCount++;
             requestIterator.remove();
           } else {
             break;
@@ -304,12 +303,12 @@ public class TWSMPIChannel implements TWSChannel {
       }
     }
 
-    if (debug) {
-      LOG.info(String.format(
-          "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-          workerId, sendCount, completedSendCount, receiveCount,
-          pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
-    }
+//    if (debug) {
+//      LOG.info(String.format(
+//          "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
+//          workerId, sendCount, completedSendCount, receiveCount,
+//          pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
+//    }
 
     for (int i = 0; i < registeredReceives.size(); i++) {
       MPIReceiveRequests receiveRequests = registeredReceives.get(i);
@@ -325,19 +324,14 @@ public class TWSMPIChannel implements TWSChannel {
           Status status = r.request.testStatus();
           if (status != null) {
             if (!status.isCancelled()) {
-              ++receiveCount;
+//              ++receiveCount;
               // lets call the callback about the receive complete
               r.buffer.setSize(status.getCount(MPI.BYTE));
 
-              if (receiveRequests.pendingRequests.size() == 0
-                  && receiveRequests.availableBuffers.size() == 0) {
-                //We do not have any buffers to receive messages so we need to free a buffer
-                receiveRequests.callback.onReceiveComplete(
-                    receiveRequests.rank, receiveRequests.edge, r.buffer, true);
-              } else {
-                receiveRequests.callback.onReceiveComplete(
-                    receiveRequests.rank, receiveRequests.edge, r.buffer, false);
-              }
+              //We do not have any buffers to receive messages so we need to free a buffer
+              receiveRequests.callback.onReceiveComplete(
+                  receiveRequests.rank, receiveRequests.edge, r.buffer);
+
               pendingReceiveCount--;
               requestIterator.remove();
             } else {
