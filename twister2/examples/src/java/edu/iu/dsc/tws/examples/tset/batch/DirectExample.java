@@ -46,20 +46,20 @@ public class DirectExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
-    DirectTLink<Integer> direct = src.direct();
+    DirectTLink<Integer> direct = src.direct().setName("direct");
 
     LOG.info("test foreach");
     direct.forEach(i -> LOG.info("foreach: " + i));
 
     LOG.info("test map");
-    direct.map(i -> i.toString() + "$$")
+    direct.map(i -> i.toString() + "$$").setName("map")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
     LOG.info("test flat map");
-    direct.flatmap((i, c) -> c.collect(i.toString() + "##"))
+    direct.flatmap((i, c) -> c.collect(i.toString() + "##")).setName("flatmap")
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
@@ -70,7 +70,7 @@ public class DirectExample extends BatchTsetExample {
         sum += input.next();
       }
       return "sum" + sum;
-    })
+    }).setName("compute")
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
@@ -82,7 +82,7 @@ public class DirectExample extends BatchTsetExample {
             sum += input.next();
           }
           output.collect("sum" + sum);
-        })
+        }).setName("ccompute")
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 

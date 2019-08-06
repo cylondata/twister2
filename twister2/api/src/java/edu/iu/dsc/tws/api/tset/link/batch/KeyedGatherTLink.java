@@ -48,7 +48,7 @@ public class KeyedGatherTLink<K, V> extends BIteratorLink<Tuple<K, Iterator<V>>>
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getName(), OperationNames.KEYED_GATHER, getMessageType());
+    Edge e = new Edge(getId(), OperationNames.KEYED_GATHER, getMessageType());
     e.setKeyed(true);
     e.setPartitioner(partitionFunction);
     return e;

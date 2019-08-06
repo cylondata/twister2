@@ -24,7 +24,7 @@ public class SReplicateTLink<T> extends SSingleLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.BROADCAST, getMessageType());
+    return new Edge(getId(), OperationNames.BROADCAST, getMessageType());
   }
 
   @Override

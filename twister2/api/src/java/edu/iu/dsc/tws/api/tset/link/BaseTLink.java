@@ -38,6 +38,11 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
    */
   private String name;
 
+  /**
+   * ID of the tlink
+   */
+  private String id;
+
   private int sourceParallelism;
 
   private int targetParallelism;
@@ -52,11 +57,19 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   public BaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
     this.tSetEnv = env;
-    this.name = n;
+    this.id = n;
     this.sourceParallelism = sourceP;
     this.targetParallelism = targetP;
+
+    this.name = n;
   }
 
+  @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
   public String getName() {
     return name;
   }
@@ -94,7 +107,7 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   @Override
   public String toString() {
-    return "L{" + getName()
+    return getName() + "(" + getId() + "){"
         + tSetEnv.getGraph().getPredecessors(this)
         + "->" + tSetEnv.getGraph().getSuccessors(this)
         + "}";
@@ -109,11 +122,11 @@ public abstract class BaseTLink<T1, T0> implements BuildableTLink {
       return false;
     }
     BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
-    return name.equals(baseTLink.name);
+    return id.equals(baseTLink.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name);
+    return Objects.hash(id);
   }
 }

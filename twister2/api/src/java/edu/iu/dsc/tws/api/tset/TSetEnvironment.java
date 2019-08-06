@@ -152,8 +152,8 @@ public abstract class TSetEnvironment {
     // output tset alone does not guarantees that there will be an output available.
     // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
     // executor 1 would have an output to get.
-    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getName())) {
-      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getName());
+    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getId())) {
+      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getId());
     }
 
     // if there is no output, an empty data object needs to be returned!

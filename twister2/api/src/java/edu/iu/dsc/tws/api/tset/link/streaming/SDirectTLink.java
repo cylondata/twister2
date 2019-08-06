@@ -25,7 +25,7 @@ public class SDirectTLink<T> extends SSingleLink<T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.DIRECT, getMessageType());
+    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 
   @Override

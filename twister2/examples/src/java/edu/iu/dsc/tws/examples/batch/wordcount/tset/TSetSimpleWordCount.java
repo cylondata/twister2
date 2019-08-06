@@ -60,7 +60,7 @@ public class TSetSimpleWordCount implements BatchTSetIWorker, Serializable {
         new WordGenerator((int) config.get("NO_OF_SAMPLE_WORDS"), (int) config.get("MAX_CHARS")),
         sourcePar).setName("source");
 
-    KeyedTSet<String, Integer, String> groupedWords = source.mapToTuple(w -> new Tuple<>(w, 1));
+    KeyedTSet<String, Integer> groupedWords = source.mapToTuple(w -> new Tuple<>(w, 1));
 
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 

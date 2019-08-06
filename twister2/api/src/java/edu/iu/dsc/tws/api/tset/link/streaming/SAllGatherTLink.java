@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
  *
  * @param <T> type of data
  */
-public class SAllGatherTLink<T> extends STupleValueIteratorLink<Integer, T> {
+public class SAllGatherTLink<T> extends SBaseGatherLink<T> {
 
   public SAllGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParalellism) {
     super(tSetEnv, TSetUtils.generateName("sallgather"), sourceParalellism);
@@ -30,7 +30,7 @@ public class SAllGatherTLink<T> extends STupleValueIteratorLink<Integer, T> {
 
   @Override
   public Edge getEdge() {
-    return new Edge(getName(), OperationNames.ALLGATHER, getMessageType());
+    return new Edge(getId(), OperationNames.ALLGATHER, getMessageType());
   }
 
   @Override

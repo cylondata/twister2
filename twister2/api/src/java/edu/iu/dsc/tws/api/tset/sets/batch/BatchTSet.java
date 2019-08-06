@@ -59,7 +59,7 @@ public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
   BatchTLink<Iterator<Tuple<Integer, T>>, T> allGather();
 
   @Override
-  <K, V> BatchTupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> BatchTupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   @Override
   BatchTLink<Iterator<T>, T> replicate(int replications);

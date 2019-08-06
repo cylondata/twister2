@@ -19,10 +19,10 @@ import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapTupleValueIterCompute;
-import edu.iu.dsc.tws.api.tset.fn.ForEachTupleValueIterCompute;
+import edu.iu.dsc.tws.api.tset.fn.GatherFlatMapCompute;
+import edu.iu.dsc.tws.api.tset.fn.GatherForEachCompute;
+import edu.iu.dsc.tws.api.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.fn.MapTupleValueIterCompute;
 import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
 
 /**
@@ -31,18 +31,15 @@ import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
  * forcibly attached at the communication level). If the key information is required, users can
  * use the compute methods which enables the use of Iterator<Tuple<K, T>>
  *
- * @param <K> key type
  * @param <T> value type
  */
-public abstract class STupleValueIteratorLink<K, T> extends
-    SBaseTLink<Iterator<Tuple<K, T>>, T> {
+public abstract class SBaseGatherLink<T> extends SBaseTLink<Iterator<Tuple<Integer, T>>, T> {
 
-  protected STupleValueIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
+  SBaseGatherLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  protected STupleValueIteratorLink(StreamingTSetEnvironment env, String n, int sourceP,
-                                    int targetP) {
+  SBaseGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 /*  public <P> StreamingComputeTSet<P, Iterator<T>>
@@ -59,21 +56,21 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   }*/
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<K, T>>> map(MapFunc<O, T> mapFn) {
-    MapTupleValueIterCompute<O, K, T> comp = new MapTupleValueIterCompute<>(mapFn);
+  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
+    GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
     return compute(TSetUtils.generateName("smap"), comp);
   }
 
   @Override
-  public <O> SComputeTSet<O, Iterator<Tuple<K, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
-    FlatMapTupleValueIterCompute<O, K, T> comp = new FlatMapTupleValueIterCompute<>(mapFn);
+  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
+    GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
     return compute(TSetUtils.generateName("smap"), comp);
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ForEachTupleValueIterCompute<K, T> comp = new ForEachTupleValueIterCompute<>(applyFunction);
-    SComputeTSet<Object, Iterator<Tuple<K, T>>> foreach =
+    GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
+    SComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
         compute(TSetUtils.generateName("sforeach"), comp);
     addChildToGraph(foreach);
   }

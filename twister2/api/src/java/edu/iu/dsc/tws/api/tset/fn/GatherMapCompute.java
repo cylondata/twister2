@@ -30,23 +30,25 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public class FlatMapTupleValueIterCompute<O, K, I> implements
-    ComputeCollectorFunc<O, Iterator<Tuple<K, I>>> {
-  private FlatMapFunc<O, I> mapFn;
+public class GatherMapCompute<O, I> implements
+    ComputeCollectorFunc<O, Iterator<Tuple<Integer, I>>> {
 
-  public FlatMapTupleValueIterCompute(FlatMapFunc<O, I> mapFunction) {
+  private MapFunc<O, I> mapFn;
+
+  public GatherMapCompute(MapFunc<O, I> mapFunction) {
     this.mapFn = mapFunction;
+  }
+
+  @Override
+  public void compute(Iterator<Tuple<Integer, I>> input, Collector<O> output) {
+    while (input.hasNext()) {
+      O result = mapFn.map(input.next().getValue());
+      output.collect(result);
+    }
   }
 
   @Override
   public void prepare(TSetContext context) {
     mapFn.prepare(context);
-  }
-
-  @Override
-  public void compute(Iterator<Tuple<K, I>> input, Collector<O> output) {
-    while (input.hasNext()) {
-      mapFn.flatMap(input.next().getValue(), output);
-    }
   }
 }

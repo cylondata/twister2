@@ -16,13 +16,13 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTLink;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 
-public interface StreamingTupleTSet<K, V, T> extends TupleTSet<K, V, T> {
+public interface StreamingTupleTSet<K, V> extends TupleTSet<K, V> {
 
   /**
    * Name of the tset
    */
   @Override
-  StreamingTupleTSet<K, V, T> setName(String name);
+  StreamingTupleTSet<K, V> setName(String name);
 
   /**
    * Partition by key

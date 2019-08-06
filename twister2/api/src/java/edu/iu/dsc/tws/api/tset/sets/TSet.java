@@ -107,7 +107,7 @@ public interface TSet<T> {
    * @param <K> the type for partitioning
    * @return grouped set
    */
-  <K, V> TupleTSet<K, V, T> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
+  <K, V> TupleTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupleFn);
 
   /**
    * Create a cloned dataset

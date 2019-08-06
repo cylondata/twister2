@@ -41,11 +41,11 @@ public interface BuildableTSet extends TBase {
     GraphBuilder dfwGraphBuilder = tSetGraph.getDfwGraphBuilder();
 
     if (getINode() instanceof ICompute) {
-      dfwGraphBuilder.addTask(getName(), (ICompute) getINode(), getParallelism());
+      dfwGraphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
     } else if (getINode() instanceof ISource) {
-      dfwGraphBuilder.addSource(getName(), (ISource) getINode(), getParallelism());
+      dfwGraphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
     } else if (getINode() instanceof ISink) {
-      dfwGraphBuilder.addSink(getName(), (ISink) getINode(), getParallelism());
+      dfwGraphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
     } else {
       throw new RuntimeException("Unknown INode " + getINode());
     }
