@@ -194,12 +194,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * The sending groups
    */
-  private List<List<Integer>> sendingGroupsTargets = new ArrayList<>();
+  private List<IntArrayList> sendingGroupsTargets = new ArrayList<>();
 
   /**
    * The sending groups
    */
-  private List<List<Integer>> receiveGroupsSources = new ArrayList<>();
+  private List<IntArrayList> receiveGroupsSources = new ArrayList<>();
 
   /**
    * Send group index
@@ -586,7 +586,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
     int index = 0;
     for (List<Integer> sendGroup : sendingGroupsWorkers) {
-      List<Integer> ts = new ArrayList<>();
+      IntArrayList ts = new IntArrayList();
       // calculate the sends to complete
       int sendComplete = 0;
       for (int worker : sendGroup) {
@@ -600,7 +600,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
 
     for (List<Integer> receiveGroup : receiveGroupsWorkers) {
-      List<Integer> srcs = new ArrayList<>();
+      IntArrayList srcs = new IntArrayList();
       int receiveComplete = 0;
       // calculate the receives to complete
       for (int worker : receiveGroup) {
@@ -814,7 +814,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean progress() {
     // lets progress the controlled operation
-    delegate.progress();
     progressCount++;
     swapLock.lock();
     boolean completed = false;
@@ -850,12 +849,29 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         needFurtherMerging = false;
       }
 
+      // progress the send
       boolean sendsCompleted = competedSends == sendsToComplete;
+      if (!sendsCompleted) {
+        for (int i = 0; i < thisSourceArray.length; i++) {
+          delegate.sendProgress(thisSourceArray[i]);
+        }
+      }
       // lets try to send the syncs
-      boolean receiveCompleted = receivesNeedsToComplete.get(receiveGroupIndex) == competedReceives;
+      boolean receiveCompleted =
+          receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
       if (sendsDone && sendsCompleted && receiveCompleted) {
         completed = true;
       }
+
+      if (!receiveCompleted) {
+        IntArrayList receiveList = receiveGroupsSources.get(receiveGroupIndex);
+        for (int i = 0; i < receiveList.size(); i++) {
+          int receiveId = receiveList.getInt(i);
+          delegate.receiveDeserializeProgress(receiveId);
+          delegate.receiveProgress(receiveId);
+        }
+      }
+
       // lets progress the last receiver at last
       if (!receivingFinalSyncs) {
         finalReceiver.progress();
@@ -1040,10 +1056,12 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean isComplete() {
-    delegate.progress();
-    boolean done = delegate.isComplete();
-    boolean needsFurtherProgress = progress();
-    return done && !needsFurtherProgress;
+    if (!doneProgress) {
+      return false;
+    } else {
+      boolean done = delegate.isComplete();
+      return done;
+    }
   }
 
   @Override

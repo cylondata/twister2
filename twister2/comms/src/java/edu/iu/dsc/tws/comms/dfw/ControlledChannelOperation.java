@@ -42,6 +42,8 @@ import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+
 public class ControlledChannelOperation implements ChannelListener, ChannelMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(ControlledChannelOperation.class.getName());
 
@@ -164,17 +166,17 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * The receive task id groups
    */
-  private List<List<Integer>> receiveIdGroups;
+  private List<IntArrayList> receiveIdGroups;
 
   /**
    * The sending groups
    */
-  private List<List<Integer>> sendingGroupsTargets;
+  private List<IntArrayList> sendingGroupsTargets;
 
   /**
    * The sending groups
    */
-  private List<List<Integer>> receiveGroupsSources;
+  private List<IntArrayList> receiveGroupsSources;
 
   /**
    * Number of targets for each worker in the group
@@ -185,8 +187,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * The current receives for each worker in the current group
    */
   private Map<Integer, Integer> currentReceives = new HashMap<>();
-
-  private int freedBuffersPoll;
 
   /**
    * Create the channel operation
@@ -219,8 +219,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                              Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
                              Map<Integer, MessageSerializer> serializer,
                              Map<Integer, MessageDeSerializer> deSerializer, boolean keyed,
-                             List<List<Integer>> sendingGrpTargets,
-                             List<List<Integer>> receiveGrpsSources) {
+                             List<IntArrayList> sendingGrpTargets,
+                             List<IntArrayList> receiveGrpsSources) {
     this.channel = channel;
     this.config = cfg;
     this.instancePlan = plan;
@@ -308,7 +308,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * Start receiving from the next set of ids
    */
-  public void setupReceiveGroups(List<List<Integer>> receivingIds) {
+  public void setupReceiveGroups(List<IntArrayList> receivingIds) {
     this.receiveIdGroups = receivingIds;
     int max = Integer.MIN_VALUE;
     // first lets validate
@@ -343,7 +343,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       // we offer the buffer only if we are expecting some messages
       if (expected > 0) {
         Queue<DataBuffer> list = receiveBuffers.get(exec);
-        freedBuffersPoll++;
         // poll the free receive buffers and ad to the receive
         DataBuffer buffer = freeReceiveBuffers.poll();
         if (buffer == null) {
@@ -459,16 +458,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     if (receiveProgressTracker.canProgress()) {
       int deserializeId = receiveProgressTracker.next();
       if (deserializeId != Integer.MIN_VALUE) {
-        Queue<InMessage> msgQueue = pendingReceiveDeSerializations.get(deserializeId);
-        if (msgQueue != null) {
-          receiveDeserializeProgress(msgQueue, deserializeId);
-        }
-
-        Queue<InMessage> pendingReceiveMessages =
-            pendingReceiveMessagesPerSource.get(deserializeId);
-        if (pendingReceiveMessages != null) {
-          receiveProgress(pendingReceiveMessages);
-        }
+        receiveDeserializeProgress(deserializeId);
+        receiveProgress(deserializeId);
         receiveProgressTracker.finish(deserializeId);
       }
     }
@@ -625,7 +616,12 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     return canProgress;
   }
 
-  private void receiveDeserializeProgress(Queue<InMessage> msgQueue, int receiveId) {
+  /**
+   * Progress deserialize
+   * @param receiveId
+   */
+  public void receiveDeserializeProgress(int receiveId) {
+    Queue<InMessage> msgQueue = pendingReceiveDeSerializations.get(receiveId);
     InMessage currentMessage = msgQueue.peek();
     if (currentMessage == null) {
       return;
@@ -663,7 +659,13 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     }
   }
 
-  private void receiveProgress(Queue<InMessage> pendingReceiveMessages) {
+  /**
+   * Progress the receive
+   *
+   * @param receiveId
+   */
+  public void receiveProgress(int receiveId) {
+    Queue<InMessage> pendingReceiveMessages = pendingReceiveMessagesPerSource.get(receiveId);
     boolean canProgress = true;
     while (pendingReceiveMessages.size() > 0 && canProgress) {
       InMessage currentMessage = pendingReceiveMessages.peek();
@@ -697,7 +699,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
               Objects.requireNonNull(releaseMsg).release();
 
               if (receivedState == InMessage.ReceivedState.BUILDING) {
-                freedBuffersPoll++;
                 DataBuffer buffer = freeReceiveBuffers.poll();
                 Queue<DataBuffer> list = receiveBuffers.get(workerId);
                 if (buffer == null) {
@@ -707,7 +708,6 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                 list.offer(buffer);
               } else {
                 if (expected > count) {
-                  freedBuffersPoll++;
                   DataBuffer buffer = freeReceiveBuffers.poll();
                   Queue<DataBuffer> list = receiveBuffers.get(workerId);
                   if (buffer == null) {
