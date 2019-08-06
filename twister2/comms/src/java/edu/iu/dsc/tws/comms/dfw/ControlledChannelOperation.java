@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
-import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
@@ -41,6 +40,7 @@ import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel2;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -64,7 +64,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * The network channel
    */
-  private TWSChannel channel;
+  private TWSMPIChannel2 channel;
   /**
    * Set of de-serializers
    */
@@ -209,7 +209,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * @param sendingGrpTargets
    * @param receiveGrpsSources
    */
-  ControlledChannelOperation(TWSChannel channel, Config cfg,
+  ControlledChannelOperation(TWSMPIChannel2 channel, Config cfg,
                              MessageType messageType, MessageType rcvDataType,
                              MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
                              int graphEdge, Set<Integer> recvExecutors,

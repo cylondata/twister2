@@ -44,6 +44,7 @@ import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel2;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
@@ -350,24 +351,21 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private IntArraySet targetsOfThisWorker;
 
   /**
-   * The merge factor
-   */
-  private double mergeFactor;
-
-  /**
    * Low water mark
    */
-  private int lowWaterMark = 8;
+  private int lowWaterMark;
 
   /**
    * High water mark to keep track of objects
    */
-  private int highWaterMark = 16;
+  private int highWaterMark;
 
   /**
    * The grouping size
    */
   private long groupingSize;
+
+  private TWSMPIChannel2 channel2;
 
   /**
    * Create a ring partition communication
@@ -402,8 +400,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.inMemoryMessageThreshold =
         DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
-    this.mergeFactor = DataFlowContext.getRingMergeFactor(cfg);
-
+    this.channel2 = new TWSMPIChannel2(config, tPlan.getThisExecutor());
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
@@ -531,7 +528,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
 
     // create the delegate
-    this.delegate = new ControlledChannelOperation(channel, cfg, dataType,
+    this.delegate = new ControlledChannelOperation(channel2, cfg, dataType,
         rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
@@ -757,7 +754,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
-//          LOG.info(String.format("%d Sync group %d to: %d", thisWorker, sendGroupIndex, target));
+          // LOG.info(String.format("%d Sync group %d to: %d", thisWorker, sendGroupIndex, target));
           finishedDestPerSource.add(target);
           if (finishedDestPerSource.size() == targetsArray.length) {
             sourceStates.put(source, ReceiverState.SYNCED);
@@ -855,7 +852,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         for (int i = 0; i < thisSourceArray.length; i++) {
           delegate.sendProgress(thisSourceArray[i]);
         }
+        channel2.progress();
       }
+
       // lets try to send the syncs
       boolean receiveCompleted =
           receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
@@ -870,6 +869,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           delegate.receiveDeserializeProgress(receiveId);
           delegate.receiveProgress(receiveId);
         }
+        channel2.progressReceives(receiveGroupIndex);
       }
 
       // lets progress the last receiver at last
@@ -880,7 +880,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // if this step is completed and we need to progress the final receiver
       boolean needsProgress = !allTargetsReceivedSyncs || needFurtherMerging;
       if (completed && !needsProgress) {
-//        LOG.info(thisWorker + " Finished receiving");
+        // LOG.info(thisWorker + " Finished receiving");
         finishedReceiving = true;
       }
 
@@ -899,7 +899,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           }
           roundCompleted = true;
           roundNumber++;
-//          LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
+          // LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
           finishedReceiveGroups.clear();
           finishedSendGroups.clear();
 
@@ -922,17 +922,17 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!lastRound || !roundCompleted) {
           sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
           receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
-//          LOG.info(
-//              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
-//              thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
-//              finishedSendGroups.size(), roundNumber, lastRound));
+          // LOG.info(
+          // String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
+          //    thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
+          //    finishedSendGroups.size(), roundNumber, lastRound));
           startNextStep();
         }
       }
 
       boolean progress = true;
       if (doneProgress) {
-//        LOG.info(String.format("%d round %d", thisWorker, roundNumber));
+        // LOG.info(String.format("%d round %d", thisWorker, roundNumber));
         progress = finalReceiver.progress();
       }
 
@@ -976,8 +976,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-//          LOG.info(String.format("%d Send to %d size %d, inMemory %d merged %d",
-//              thisWorker, target, data.size(), mergerInMemoryMessages, mergedInMemoryMessages));
+          // LOG.info(String.format("%d Send to %d size %d, inMemory %d merged %d",
+          //    thisWorker, target, data.size(), mergerInMemoryMessages, mergedInMemoryMessages));
           sent = true;
           // we are going to decrease the amount of messages in memory
           mergedInMemoryMessages -= data.size();
@@ -1059,8 +1059,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     if (!doneProgress) {
       return false;
     } else {
-      boolean done = delegate.isComplete();
-      return done;
+      return delegate.isComplete();
     }
   }
 
