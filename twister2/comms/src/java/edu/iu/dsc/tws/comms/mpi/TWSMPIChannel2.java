@@ -141,6 +141,11 @@ public class TWSMPIChannel2 implements TWSChannel {
   private boolean debug = false;
   private int completedReceives = 0;
 
+  /**
+   * Create the mpi channel
+   * @param config configuration
+   * @param workerId controller
+   */
   public TWSMPIChannel2(Config config, int workerId) {
     this.comm = MPI.COMM_WORLD;
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
@@ -168,7 +173,7 @@ public class TWSMPIChannel2 implements TWSChannel {
    * @param wId worker id to listen to
    * @return true if the message is accepted
    */
-  public boolean receiveMessage(int wId, int e,
+  public boolean receiveMessage(int group, int wId, int e,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
     return registeredReceives.add(new MPIReceiveRequests(wId, e, callback, receiveBuffers));
   }
@@ -238,7 +243,7 @@ public class TWSMPIChannel2 implements TWSChannel {
     }
   }
 
-  public void sendProgress() {
+  public void progressSends() {
     while (pendingSends.size() > 0) {
       // post the message
       MPISendRequests sendRequests = pendingSends.poll();

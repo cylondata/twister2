@@ -44,7 +44,6 @@ import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
-import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel2;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
@@ -365,7 +364,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    */
   private long groupingSize;
 
-  private TWSMPIChannel2 channel2;
+  /**
+   * The channel
+   */
+  private TWSChannel channel;
 
   private int roundNumber = 0;
 
@@ -428,9 +430,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.receiveDataType = rcvType;
     this.receiveKeyType = rcvKType;
     this.config = cfg;
+    this.channel = channel;
     this.inMemoryMessageThreshold =
         DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
-    this.channel2 = new TWSMPIChannel2(config, tPlan.getThisExecutor());
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
@@ -558,11 +560,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
 
     // create the delegate
-    this.delegate = new ControlledChannelOperation(channel2, cfg, dataType,
+    this.delegate = new ControlledChannelOperation(channel, cfg, dataType,
         rcvType, kType, rcvKType, tPlan, edge, receiveWorkers,
         this, pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed,
-        sendingGroupsTargets, receiveGroupsSources);
+        sendingGroupsTargets, receiveGroupsSources, receiveGroupsWorkers);
 
     // start the first step
     startNextStep();
@@ -873,7 +875,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           for (int i = 0; i < thisSourceArray.length; i++) {
             delegate.sendProgress(thisSourceArray[i]);
           }
-          channel2.progress();
+          channel.progressSends();
         }
 
         if (!receiveCompleted) {
@@ -883,7 +885,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             delegate.receiveDeserializeProgress(receiveId);
             delegate.receiveProgress(receiveId);
           }
-          channel2.progressReceives(receiveGroupIndex);
+          channel.progressReceives(receiveGroupIndex);
         }
 
         sendsCompleted = competedSends == sendsToComplete;
@@ -949,7 +951,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
             doneProgress = true;
           } else {
             delegate.progress();
-            channel2.progress();
+            channel.progress();
           }
         }
 

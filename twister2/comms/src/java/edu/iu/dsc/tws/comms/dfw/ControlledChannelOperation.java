@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
 import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
@@ -40,7 +41,6 @@ import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.mpi.TWSMPIChannel2;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -64,7 +64,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   /**
    * The network channel
    */
-  private TWSMPIChannel2 channel;
+  private TWSChannel channel;
   /**
    * Set of de-serializers
    */
@@ -188,6 +188,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    */
   private Map<Integer, Integer> currentReceives = new HashMap<>();
 
+  private List<IntArrayList> receiveGroupsWorkers;
+
   /**
    * Create the channel operation
    * @param channel
@@ -209,7 +211,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    * @param sendingGrpTargets
    * @param receiveGrpsSources
    */
-  ControlledChannelOperation(TWSMPIChannel2 channel, Config cfg,
+  ControlledChannelOperation(TWSChannel channel, Config cfg,
                              MessageType messageType, MessageType rcvDataType,
                              MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
                              int graphEdge, Set<Integer> recvExecutors,
@@ -220,7 +222,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
                              Map<Integer, MessageSerializer> serializer,
                              Map<Integer, MessageDeSerializer> deSerializer, boolean keyed,
                              List<IntArrayList> sendingGrpTargets,
-                             List<IntArrayList> receiveGrpsSources) {
+                             List<IntArrayList> receiveGrpsSources,
+                             List<IntArrayList> receiveGroupsWorkers) {
     this.channel = channel;
     this.config = cfg;
     this.instancePlan = plan;
@@ -243,6 +246,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
 
     this.sendingGroupsTargets = sendingGrpTargets;
     this.receiveGroupsSources = receiveGrpsSources;
+    this.receiveGroupsWorkers = receiveGroupsWorkers;
 
     int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
     int sendBufferSize = DataFlowContext.bufferSize(config);
@@ -288,12 +292,15 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
    */
   private void setupCommunication() {
     // we will receive from these
-    for (Integer recv : receivingExecutors) {
-      Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
-      // register with the channel
-      LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
-      channel.receiveMessage(recv, edge, this, recvList);
-      receiveBuffers.put(recv, recvList);
+    for (int i = 0; i < receiveGroupsWorkers.size(); i++) {
+      IntArrayList wokersForGroup = receiveGroupsWorkers.get(i);
+      for (Integer recv : wokersForGroup) {
+        Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
+        // register with the channel
+        LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
+        channel.receiveMessage(i, recv, edge, this, recvList);
+        receiveBuffers.put(recv, recvList);
+      }
     }
 
     // configure the send sendBuffers

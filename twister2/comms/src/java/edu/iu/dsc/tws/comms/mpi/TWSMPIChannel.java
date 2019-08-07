@@ -44,6 +44,7 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import mpi.Intracomm;
 import mpi.MPI;
 import mpi.MPIException;
@@ -118,6 +119,11 @@ public class TWSMPIChannel implements TWSChannel {
   private List<MPIReceiveRequests> registeredReceives;
 
   /**
+   * The grouped receives
+   */
+  private Int2ObjectArrayMap<List<MPIReceiveRequests>> groupedRegisteredReceives;
+
+  /**
    * Wait for completion sends
    */
   private IterativeLinkedList<MPISendRequests> waitForCompletionSends;
@@ -142,6 +148,11 @@ public class TWSMPIChannel implements TWSChannel {
   private boolean debug = false;
   private int completedReceives = 0;
 
+  /**
+   * Create the mpi channel
+   * @param config configuration
+   * @param wController controller
+   */
   public TWSMPIChannel(Config config,
                        IWorkerController wController) {
     Object commObject = wController.getRuntimeObject("comm");
@@ -153,6 +164,7 @@ public class TWSMPIChannel implements TWSChannel {
     int pendingSize = DataFlowContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
     this.registeredReceives = new ArrayList<>(1024);
+    this.groupedRegisteredReceives = new Int2ObjectArrayMap<>();
     this.waitForCompletionSends = new IterativeLinkedList<>();
     this.workerId = wController.getWorkerInfo().getWorkerID();
   }
@@ -175,9 +187,20 @@ public class TWSMPIChannel implements TWSChannel {
    * @param wId worker id to listen to
    * @return true if the message is accepted
    */
-  public boolean receiveMessage(int wId, int e,
+  public boolean receiveMessage(int group, int wId, int e,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
-    return registeredReceives.add(new MPIReceiveRequests(wId, e, callback, receiveBuffers));
+    // add the request to both lists
+    MPIReceiveRequests requests = new MPIReceiveRequests(wId, e, callback, receiveBuffers);
+    registeredReceives.add(requests);
+    List<MPIReceiveRequests> list;
+    if (groupedRegisteredReceives.containsKey(group)) {
+      list = groupedRegisteredReceives.get(group);
+    } else {
+      list = new ArrayList<>();
+      groupedRegisteredReceives.put(group, list);
+    }
+    list.add(requests);
+    return true;
   }
 
   @Override
@@ -245,10 +268,8 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
-  /**
-   * Progress the communications that are pending
-   */
-  public void progress() {
+  @Override
+  public void progressSends() {
     // we should rate limit here
     while (pendingSends.size() > 0) {
       // post the message
@@ -259,18 +280,6 @@ public class TWSMPIChannel implements TWSChannel {
         waitForCompletionSends.add(sendRequests);
       }
     }
-
-//    for (int i = 0; i < registeredReceives.size(); i++) {
-//      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
-//      if (debug) {
-//        LOG.info(String.format("%d available receive %d %d %s", workerId, receiveRequests.rank,
-//            receiveRequests.availableBuffers.size(), receiveRequests.availableBuffers.peek()));
-//      }
-//      // okay we have more buffers to be posted
-//      if (receiveRequests.availableBuffers.size() > 0) {
-//        postReceive(receiveRequests);
-//      }
-//    }
 
     IterativeLinkedList.ILLIterator sendRequestsIterator
         = waitForCompletionSends.iterator();
@@ -302,16 +311,18 @@ public class TWSMPIChannel implements TWSChannel {
         sendRequestsIterator.remove();
       }
     }
+  }
 
-//    if (debug) {
-//      LOG.info(String.format(
-//          "%d sending - sent %d comp send %d receive %d pend recv %d pending sends %d waiting %d",
-//          workerId, sendCount, completedSendCount, receiveCount,
-//          pendingReceiveCount, pendingSends.size(), waitForCompletionSends.size()));
-//    }
+  @Override
+  public void progressReceives(int receiveGroupIndex) {
+    progressInternalReceives(groupedRegisteredReceives.get(receiveGroupIndex));
+    // if there are pending close requests, lets handle them
+    handlePendingCloseRequests();
+  }
 
-    for (int i = 0; i < registeredReceives.size(); i++) {
-      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+  private void progressInternalReceives(List<MPIReceiveRequests> requests) {
+    for (int i = 0; i < requests.size(); i++) {
+      MPIReceiveRequests receiveRequests = requests.get(i);
       // okay we have more buffers to be posted
       if (receiveRequests.availableBuffers.size() > 0) {
         postReceive(receiveRequests);
@@ -347,7 +358,16 @@ public class TWSMPIChannel implements TWSChannel {
         throw new RuntimeException("Twister2Network failure", e);
       }
     }
+  }
 
+  /**
+   * Progress the communications that are pending
+   */
+  public void progress() {
+    // first progress sends
+    progressSends();
+    // we progress all
+    progressInternalReceives(registeredReceives);
     // if there are pending close requests, lets handle them
     handlePendingCloseRequests();
   }
