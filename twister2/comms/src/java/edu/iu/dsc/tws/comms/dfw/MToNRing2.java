@@ -1234,7 +1234,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public void finish(int source) {
-    LOG.info("Send count: " + sendCount + " progressCt: " + progressCount);
+//    LOG.info("Send count: " + sendCount + " progressCt: " + progressCount);
     // add to finished sources
     mergeFinishSources.add(source);
 
