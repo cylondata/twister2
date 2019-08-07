@@ -285,7 +285,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   /**
    * Weather all syncs received from the sources
    */
-  private boolean allSyncsReceives = false;
+  private boolean thisSourcesSynced = false;
 
   /**
    * The configuration
@@ -366,6 +366,36 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   private long groupingSize;
 
   private TWSMPIChannel2 channel2;
+
+  private int roundNumber = 0;
+
+  /**
+   * Weather we are in the last round
+   */
+  private boolean lastRound = false;
+
+  private int progressCount = 0;
+
+  /**
+   * Progress states
+   */
+  private enum ProgressState {
+    MERGED,
+    ROUND_DONE,
+    SYNC_STARTED
+  }
+
+  /**
+   * Progress state
+   */
+  private ProgressState progressState = ProgressState.ROUND_DONE;
+
+  /**
+   * Empty data set to send
+   */
+  private AggregatedObjects<Object> empty = new AggregatedObjects<>();
+
+  private long sendCount = 0;
 
   /**
    * Create a ring partition communication
@@ -678,8 +708,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     throw new UnsupportedOperationException("Operation is not supported");
   }
 
-  private long sendCount = 0;
-
   @Override
   public boolean send(int source, Object message, int flags, int target) {
     partialLock.lock();
@@ -707,7 +735,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
         syncedSources.add(source);
         if (syncedSources.size() == thisSourceArray.length) {
-          allSyncsReceives = true;
+          thisSourcesSynced = true;
         }
         return true;
       }
@@ -793,20 +821,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   public void sendCompleted(Object message) {
     competedSends++;
   }
-
-  private int roundNumber = 0;
-
-  private boolean lastRound = false;
-
-  private int progressCount = 0;
-
-  private enum ProgressState {
-    MERGED,
-    ROUND_DONE,
-    SYNC_STARTED
-  }
-
-  private ProgressState progressState = ProgressState.ROUND_DONE;
 
   @Override
   public boolean progress() {
@@ -899,7 +913,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         // lets advance the send group and receive group
         if (finishedSendGroups.size() == sendingGroupsWorkers.size()
             && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
-          if (allSyncsReceives && !containsAnyDataToSend()) {
+          if (thisSourcesSynced && !containsAnyDataToSend()) {
             startedSyncRound = true;
             progressState = ProgressState.SYNC_STARTED;
           } else {
@@ -930,10 +944,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!lastRound || !roundCompleted) {
           sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
           receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
-          // LOG.info(
-          // String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
-          //    thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
-          //    finishedSendGroups.size(), roundNumber, lastRound));
+          LOG.info(
+              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
+                  thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
+                  finishedSendGroups.size(), roundNumber, lastRound));
           startNextStep();
         }
       }
@@ -960,8 +974,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
     return false;
   }
-
-  private AggregatedObjects<Object> empty = new AggregatedObjects<>();
 
   private boolean sendToGroup() {
     boolean sent = false;
@@ -1040,7 +1052,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     finishedReceiveGroups.clear();
     finishedSendGroups.clear();
     mergerBlocked = false;
-    allSyncsReceives = false;
+    thisSourcesSynced = false;
     mergeFinishSources.clear();
     finishedReceiving = false;
 
