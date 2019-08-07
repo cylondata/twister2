@@ -956,6 +956,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!lastRound || !roundCompleted) {
           sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
           receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
+          if (roundCompleted) {
+            LOG.info("Starting round number: " + roundNumber);
+          }
 //          LOG.info(
 //              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
 //                  thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
