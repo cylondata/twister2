@@ -317,9 +317,7 @@ public class TWSTCPChannel implements TWSChannel {
     handlePendingCloseRequests();
   }
 
-  /**
-   * Progress the communications that are pending
-   */
+  @Override
   public void progress() {
     progressSends();
 
