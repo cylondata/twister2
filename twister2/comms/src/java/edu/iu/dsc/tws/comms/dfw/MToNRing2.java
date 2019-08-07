@@ -822,6 +822,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     competedSends++;
   }
 
+  private boolean roundCompleted = false;
+
   @Override
   public boolean progress() {
     // lets progress the controlled operation
@@ -906,7 +908,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         finishedReceiving = true;
       }
 
-      boolean roundCompleted = false;
       if (completed) {
         finishedReceiveGroups.add(receiveGroupIndex);
 
@@ -943,7 +944,13 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (roundCompleted && !lastRound && finishedReceiving) {
           lastRound = true;
         } else if (lastRound && roundCompleted) {
-          doneProgress = true;
+          // at last we wait until everything is flushed
+          if (delegate.isComplete()) {
+            doneProgress = true;
+          } else {
+            delegate.progress();
+            channel2.progress();
+          }
         }
 
         if (!lastRound || !roundCompleted) {
@@ -953,6 +960,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
               String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
                   thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
                   finishedSendGroups.size(), roundNumber, lastRound));
+          roundCompleted = false;
           startNextStep();
         }
       }
