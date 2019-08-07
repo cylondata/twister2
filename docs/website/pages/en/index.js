@@ -54,7 +54,7 @@ const ProjectTitle = () => (
 </div>
 
 <h2 style={{marginTop : "0.5em"}}>
-Flexible, High performance data analytics.
+Flexible, High performance data processing.
 </h2>
 </React.Fragment>
 );
@@ -111,13 +111,6 @@ className={props.className}
 const FeaturesTop = props => (
 <Block layout="fourColumn" className="rowContainer featureBlock">
     {[
-            {
-                content: "Offers a set of modular components for building data analytic applications",
-                //image: imgUrl('icon/time.png'),
-                image : imgUrl("cogs.svg"),
-                imageAlign: 'top',
-                title: "Flexible"
-            },
 {
     content: "Work with high performance networks to efficiently execute IO intensive applications",
         image: imgUrl('speed.svg'),
@@ -136,6 +129,13 @@ const FeaturesTop = props => (
     imageAlign: 'top',
     title: "API Support"
 },
+{
+    content: "Offers a set of modular components for building data analytic applications",
+        //image: imgUrl('icon/time.png'),
+        image : imgUrl("cogs.svg"),
+    imageAlign: 'top',
+    title: "Flexible"
+},
 ]}
 </Block>
 );
@@ -144,17 +144,43 @@ const Twister2Apps = props => (
 <Block layout="twoColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "This graph shows the performance of K-Means compared to popular engines",
+                content: "Multiple API's for designing applications according to your requirements",
                 //image: imgUrl('icon/time.png'),
                 image : imgUrl("cogs.svg"),
                 imageAlign: 'top',
-                title: "K-Means"
+                title: "Machine Learning"
             },
 {
-    content: "This graph shows the performance of Terasort compared to popular engines",
+    content: "5X performance than popular data processing engines",
         image: imgUrl('speed.svg'),
     imageAlign: 'top',
-    title: "Terasort"
+    title: "Data Processing"
+},
+]}
+</Block>
+);
+
+
+const Twister2Apps2 = props => (
+<Block layout="fourColumn" className="rowContainer featureBlock">
+    {[
+            {
+                content: "TSet (Twister Set) API similar to Spark RDD, BEAM PCollection",
+                image: imgUrl('speed.svg'),
+                imageAlign: 'top',
+                title: "Data Abstractions"
+            },
+{
+    content: "Similar APIs for Apache Storm for streaming analytics",
+        image: imgUrl('speed.svg'),
+    imageAlign: 'top',
+    title: "Streaming Analytics"
+},
+{
+    content: "Support for Apache Storm and Apache BEAM APIs",
+        image: imgUrl('speed.svg'),
+    imageAlign: 'top',
+    title: "Storm and BEAM Support"
 },
 ]}
 </Block>
@@ -198,6 +224,10 @@ class Index extends React.Component {
             <Container className="libsContainer" wrapper={false}>
 
             <Twister2Apps/>
+            </Container>
+            <Container className="libsContainer" wrapper={false}>
+
+            <Twister2Apps2/>
             </Container>
             <Container background="light">
             <Community/>
