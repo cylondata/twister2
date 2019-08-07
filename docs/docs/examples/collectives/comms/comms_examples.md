@@ -51,7 +51,7 @@ After building the project, you can run the batch mode examples as follows.
     7. bcast
     8. partition
     9. keyed-partition
-5. stages : has to params 
+5. stages : has two params 
     1. source_parallelism : depending on the collective communication that you prefer select this number
     2. sink_parallelism : depending on the collective communication that you prefer select this number
     Example : For reduce communication it can be 4,1 as sink has to be a single point of receive in the reduction 

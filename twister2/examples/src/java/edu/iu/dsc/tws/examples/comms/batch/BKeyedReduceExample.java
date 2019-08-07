@@ -47,7 +47,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   private BKeyedReduce keyedReduce;
 
-  private boolean reduceDone;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
@@ -75,12 +74,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-    reduceDone = true;
-    for (int target : targets) {
-      if (logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
-        reduceDone = false;
-      }
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
@@ -150,7 +143,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        reduceDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -164,7 +156,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      reduceDone = true;
       return true;
     }
   }

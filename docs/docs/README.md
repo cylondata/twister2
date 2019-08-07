@@ -37,6 +37,10 @@ and run following command to start an application
 
 It is that easy!
 
+## Why Twister2
+
+
+
 ## Software used by Twister2
 
 Harp is a separate project and its documentation can be found in [website](https://dsc-spidal.github.io/harp/)

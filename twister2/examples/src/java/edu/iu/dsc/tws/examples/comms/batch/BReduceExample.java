@@ -38,7 +38,6 @@ public class BReduceExample extends BenchWorker {
 
   private BReduce reduce;
 
-  private boolean reduceDone;
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
@@ -62,10 +61,6 @@ public class BReduceExample extends BenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      reduceDone = true;
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
@@ -113,7 +108,6 @@ public class BReduceExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        reduceDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -127,7 +121,6 @@ public class BReduceExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      reduceDone = true;
       return true;
     }
   }
