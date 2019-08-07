@@ -16,12 +16,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
@@ -42,6 +42,8 @@ import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
+
+//import java.util.Collections;
 
 //import edu.iu.dsc.tws.api.dataset.DataPartition;
 
@@ -109,18 +111,17 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return taskSchedulePlan;
   }
 
-  private Map<DataFlowTaskGraph, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
+  private Map<DataFlowTaskGraph, TaskSchedulePlan> graphTaskSchedulePlanMap = new LinkedHashMap<>();
 
   public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan,
                                    Map<DataFlowTaskGraph, TaskSchedulePlan>
                                        schedulePlanMap) {
-    this.taskSchedulePlanMap = schedulePlanMap;
+    this.graphTaskSchedulePlanMap = schedulePlanMap;
     TaskSchedulePlan taskSchedulePlan = schedule(graph, workerPlan);
     return taskSchedulePlan;
   }
 
 
-  private Set<String> collectibleNamesSet;
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
@@ -129,37 +130,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
    */
   @Override
   public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
-
-    for (Map.Entry<DataFlowTaskGraph, TaskSchedulePlan> entry : taskSchedulePlanMap.entrySet()) {
-      DataFlowTaskGraph graph = entry.getKey();
-      Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-      for (Vertex vertex : taskVertexSet) {
-        INode iNode = vertex.getTask();
-        if (iNode instanceof Collector) {
-          if (((Collector) iNode).getCollectibleNames() != null) {
-            collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
-            LOG.info("%%%% Collectible Name Set: %%%%" + collectibleNamesSet);
-          }
-        }
-      }
-
-      TaskSchedulePlan taskSchedulePlan = entry.getValue();
-      LOG.info("Graph:" + graph.getGraphName() + "\t" + taskSchedulePlan.getContainersMap());
-      Map<Integer, WorkerSchedulePlan> containersMap
-          = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, WorkerSchedulePlan> centry : containersMap.entrySet()) {
-        Integer integer = centry.getKey();
-        WorkerSchedulePlan workerSchedulePlan = centry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances
-            = workerSchedulePlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
-              + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
-        }
-      }
-    }
 
     //Allocate the task instances into the containers/workers
     Set<WorkerSchedulePlan> workerSchedulePlans = new LinkedHashSet<>();
@@ -232,6 +202,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return new TaskSchedulePlan(0, workerSchedulePlans);
   }
 
+  private Set<String> collectibleNamesSet;
+  private Set<String> receivableNamesSet;
 
   /**
    * This method retrieves the parallel task map and the total number of task instances for the task
@@ -241,42 +213,47 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> batchSchedulingAlgorithm(
       DataFlowTaskGraph graph, int numberOfContainers) throws ScheduleException {
 
-    IntStream.range(0, numberOfContainers).forEach(
-        i -> batchTaskAllocation.put(i, new ArrayList<>()));
+    for (int i1 = 0; i1 < numberOfContainers; i1++) {
+      batchTaskAllocation.put(i1, new ArrayList<>());
+    }
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
 
     int globalTaskIndex = 0;
-
-    Set<String> receivableNamesSet;
-    //Set<String> collectibleNamesSet;
+    List<Integer> workerIdList = null;
 
     for (Vertex vertex : taskVertexSet) {
-      INode iNode = vertex.getTask();
-      //For Validation
-      if (iNode instanceof Receptor) {
-        validate(graph, vertex);
-        if (((Receptor) iNode).getReceivableNames() != null) {
-          receivableNamesSet = ((Receptor) iNode).getReceivableNames();
-          LOG.info("Receivable Name Set:" + receivableNamesSet);
-        }
-      }
-
-      /*else if (iNode instanceof Collector) {
-        if (((Collector) iNode).getCollectibleNames() != null) {
-          collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
-          LOG.info("Collectible Name Set:" + collectibleNamesSet);
-        }
-      }*/
-
       int totalTaskInstances;
       if (!graph.getNodeConstraints().isEmpty()) {
         totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
             graph.getNodeConstraints());
       } else {
         totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+      }
+      INode iNode = vertex.getTask();
+
+      //For Validation
+      if (iNode instanceof Receptor) {
+        validate(graph, vertex);
+        if (((Receptor) iNode).getReceivableNames() != null) {
+          receivableNamesSet = ((Receptor) iNode).getReceivableNames();
+          LOG.fine("Vertex:" + vertex.getName() + "\tReceivable Name Set:" + receivableNamesSet);
+          workerIdList = getDataNodeList(receivableNamesSet);
+        }
+      }
+
+      /*else if (iNode instanceof Collector) {
+        validate(graph, vertex);
+        if (((Collector) iNode).getCollectibleNames() != null) {
+          collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
+          LOG.fine("Vertex:" + vertex.getName() + "\tCollectible Name Set:" + collectibleNamesSet);
+        }
+      }*/
+
+      if (workerIdList != null) {
+        LOG.info("Worker Id List:" + workerIdList);
       }
 
       if (!graph.getNodeConstraints().isEmpty()) {
@@ -298,6 +275,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
         }
       } else {
         String task = vertex.getName();
+        LOG.info("%%% Task Name:%%%" + task);
         int containerIndex;
         for (int i = 0; i < totalTaskInstances; i++) {
           containerIndex = i % numberOfContainers;
@@ -308,6 +286,51 @@ public class BatchTaskScheduler implements ITaskScheduler {
       globalTaskIndex++;
     }
     return batchTaskAllocation;
+  }
+
+  private List<Integer> getDataNodeList(Set<String> receivablenameSet) {
+    List<Integer> dataNodesList = null;
+    for (Map.Entry<DataFlowTaskGraph, TaskSchedulePlan> entry
+        : graphTaskSchedulePlanMap.entrySet()) {
+      DataFlowTaskGraph graph = entry.getKey();
+      Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
+      for (Vertex vertex : taskVertexSet) {
+        INode iNode = vertex.getTask();
+        if (iNode instanceof Collector) {
+          if (((Collector) iNode).getCollectibleNames() != null) {
+            collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
+            LOG.info("%%%% Collectible Name Set: %%%%" + collectibleNamesSet);
+            dataNodesList = processDateNodeList(receivablenameSet, collectibleNamesSet, entry);
+          }
+        }
+      }
+    }
+    return dataNodesList;
+  }
+
+  private List<Integer> processDateNodeList(Set<String> receivablenameSet,
+                                            Set<String> collectiblenamesSet,
+                                            Map.Entry<DataFlowTaskGraph, TaskSchedulePlan> entry) {
+    List<Integer> dataNodesList = null;
+    for (String receivablename : receivablenameSet) {
+      if (collectiblenamesSet.contains(receivablename)) {
+        TaskSchedulePlan taskSchedulePlan = entry.getValue();
+        Map<Integer, WorkerSchedulePlan> containersMap
+            = taskSchedulePlan.getContainersMap();
+        dataNodesList = getWorkerNodes(containersMap);
+      }
+    }
+    return dataNodesList;
+  }
+
+
+  private List<Integer> getWorkerNodes(Map<Integer, WorkerSchedulePlan> containersMap) {
+    List<Integer> workerNodeList = new LinkedList<>();
+    for (Map.Entry<Integer, WorkerSchedulePlan> centry : containersMap.entrySet()) {
+      Integer integer = centry.getKey();
+      workerNodeList.add(integer);
+    }
+    return workerNodeList;
   }
 
   private void validate(DataFlowTaskGraph graph, Vertex vertex) {
