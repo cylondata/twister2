@@ -996,7 +996,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         if (!delegate.sendMessage(representSource, data, target, 0, parameters)) {
           return false;
         } else {
-           LOG.info(String.format("%d Send to %d size %d, inMemory %d merged %d",
+          LOG.info(String.format("%d Send to %d size %d, inMemory %d merged %d",
               thisWorker, target, data.size(), mergerInMemoryMessages, mergedInMemoryMessages));
           sent = true;
           // we are going to decrease the amount of messages in memory
