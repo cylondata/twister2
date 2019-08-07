@@ -935,6 +935,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
           }
         }
 
+        if (lastRound) {
+          LOG.info(String.format("finishReceiving %b, roundCompleted %b, delegate %b",
+              finishedReceiving, roundCompleted, delegate.isComplete()));
+        }
+
         if (roundCompleted && !lastRound && finishedReceiving) {
           lastRound = true;
         } else if (lastRound && roundCompleted && delegate.isComplete()) {
