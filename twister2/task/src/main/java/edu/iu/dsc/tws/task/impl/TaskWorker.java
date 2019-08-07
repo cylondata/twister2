@@ -23,20 +23,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl;
 
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.Network;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -46,14 +42,9 @@ public abstract class TaskWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(TaskWorker.class.getName());
 
   /**
-   * The channel
+   * Worker environment
    */
-  protected TWSChannel channel;
-
-  /**
-   * Communicator
-   */
-  protected Communicator communicator;
+  protected WorkerEnvironment workerEnvironment;
 
   /**
    * This id
@@ -95,37 +86,20 @@ public abstract class TaskWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
-    try {
-      workerInfoList = wController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
-    String persistent = null;
-    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
-      persistent = vVolume.getWorkerDirPath();
-    }
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    // create the executor
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList,
-        communicator, wController.getCheckpointingClient());
+    workerEnvironment = WorkerEnvironment.init(config, workerID,
+        workerController, pVolume, vVolume);
     // call execute
     execute();
     // wait for the sync
     try {
-      workerController.waitOnBarrier();
+      workerEnvironment.getWorkerController().waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
     // close the task executor
     taskExecutor.close();
     // lets terminate the network
-    communicator.close();
+    workerEnvironment.close();
     // we are done executing
     LOG.log(Level.FINE, String.format("%d Worker done", workerID));
   }

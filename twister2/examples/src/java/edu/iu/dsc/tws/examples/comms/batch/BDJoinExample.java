@@ -36,8 +36,6 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
   private BJoin join;
 
-  private boolean joinDone = false;
-
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
     while (!join.join(task, key, data, flag, tag)) {
@@ -113,8 +111,6 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
     public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d",
           workerId, target, Iterators.size(it)));
-      joinDone = true;
-
       return true;
     }
   }

@@ -1,10 +1,8 @@
 ---
 id: svm
-title: SVM
+title: Support Vector Machines
 sidebar_label: SVM
 ---
-
-# Support Vector Machines
 
 Support Vector Machines (SVM) is a supervised learning algorithm which is mainly used for the
 purpose of classifying data. SVM algorithm is a light-weight classifier compared to Deep Neural

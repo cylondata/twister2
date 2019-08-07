@@ -219,7 +219,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     int threads = CommonThreadPool.getThreadCount() + 1; //this thread is also counted
     List<Future<Boolean>> deserializeFutures = new ArrayList<>();
-    long st = System.currentTimeMillis();
     int chunkSize = this.recordsInMemory.size() / threads;
 
     if (this.recordsInMemory.size() % threads != 0) {
@@ -263,7 +262,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         throw new RuntimeException("Error in deserializing records in memory", e);
       }
     }
-    LOG.info("Memory deserialize time: " + (System.currentTimeMillis() - st));
   }
 
   /**

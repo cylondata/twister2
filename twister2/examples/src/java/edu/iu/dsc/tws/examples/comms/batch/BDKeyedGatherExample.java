@@ -47,7 +47,6 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
   private BKeyedGather keyedGather;
 
-  private boolean gatherDone;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
 
   @Override
@@ -77,13 +76,6 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-
-    gatherDone = true;
-    for (int target : targets) {
-      if (logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
-        gatherDone = false;
-      }
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
@@ -164,7 +156,6 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        gatherDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -179,7 +170,6 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      gatherDone = true;
       return true;
     }
   }
