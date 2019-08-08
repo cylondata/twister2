@@ -39,7 +39,9 @@ It is that easy!
 
 ## Why Twister2
 
-
+Twister2 provides streaming and batch capabilities similar to big data platforms such as Apache Hadoop, Apache Spark,
+Apache Flink and Apache Storm in a single platform. Twister2 is built from bottom up to be used in both cloud
+and HPC environments making it an ideal candidate for someone taking advantage of both Cloud systems and HPC systems.
 
 ## Software used by Twister2
 
