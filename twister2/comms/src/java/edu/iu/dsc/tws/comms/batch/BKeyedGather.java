@@ -37,6 +37,8 @@ public class BKeyedGather extends BaseOperation {
 
   private MessageType dataType;
 
+  private boolean simple = true;
+
   /**
    * Creates an instance of BKeyedGather without shuffling
    */
@@ -95,11 +97,13 @@ public class BKeyedGather extends BaseOperation {
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
           keyType, keyType, edgeId);
+      this.simple = true;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
           dataType, receiveDataType, keyType, keyType, edgeId);
+      this.simple = false;
     }
 
     this.destinationSelector = destSelector;
@@ -110,5 +114,14 @@ public class BKeyedGather extends BaseOperation {
     int dest = destinationSelector.next(source, key, data);
     return op.send(source, Tuple.of(key, data, keyType,
         dataType), flags, dest);
+  }
+
+  @Override
+  public boolean progressChannel() {
+    if (simple) {
+      return super.progressChannel();
+    } else {
+      return super.progress();
+    }
   }
 }
