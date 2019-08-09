@@ -25,6 +25,7 @@
 package edu.iu.dsc.tws.task;
 
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,6 +105,10 @@ public final class TaskEnvironment {
     ExecutionPlan plan = this.getTaskExecutor().plan(dataFlowTaskGraph);
     this.getTaskExecutor().execute(dataFlowTaskGraph, plan);
     return this.getTaskExecutor();
+  }
+
+  public  Map<String, ExecutionPlan> build(DataFlowTaskGraph ...dataFlowTaskGraphs) {
+    return this.getTaskExecutor().plan(dataFlowTaskGraphs);
   }
 
   public TaskGraphBuilder newTaskGraph(OperationMode operationMode) {
