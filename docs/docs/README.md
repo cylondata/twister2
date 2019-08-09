@@ -41,7 +41,16 @@ It is that easy!
 
 Twister2 provides streaming and batch capabilities similar to big data platforms such as Apache Hadoop, Apache Spark,
 Apache Flink and Apache Storm in a single platform. Twister2 is built from bottom up to be used in both cloud
-and HPC environments making it an ideal candidate for someone taking advantage of both Cloud systems and HPC systems.
+and HPC environments making it an ideal candidate for bridging the gap between High performance computing and big data
+computing.
+
+Twister2 doesn't use a driver program as in Spark giving instance creation of tasks. Also it can support pure streaming
+similar to Apache Storm or Apache Heron. 
+
+Flink is mostly a streaming engine and it uses those capabilities to support batch applications. For example
+Flink cannot support nested iteration. Twister2 supports iterations natively and unlike in Spark where iterations happen
+in the driver (high overhead) Twister2 iterations happens in the workers.
+ 
 
 ## Software used by Twister2
 
