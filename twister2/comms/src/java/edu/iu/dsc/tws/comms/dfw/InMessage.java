@@ -182,21 +182,6 @@ public class InMessage {
     }
   }
 
-  public InMessage(int originatingId, MessageType messageType,
-                   ChannelMessageReleaseCallback releaseListener,
-                   MessageHeader header, int workerId) {
-    this.releaseListener = releaseListener;
-    this.originatingId = originatingId;
-    this.complete = false;
-    this.dataType = messageType;
-    this.receivedState = ReceivedState.INIT;
-    this.header = header;
-    if (header.getNumberTuples() > 0) {
-      deserializedData = new AggregatedObjects<>();
-    }
-    this.workerId = workerId;
-  }
-
   public void setDataType(MessageType dataType) {
     this.dataType = dataType;
   }
