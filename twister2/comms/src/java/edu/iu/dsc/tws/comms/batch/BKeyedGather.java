@@ -120,7 +120,7 @@ public class BKeyedGather extends BaseOperation {
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
-          dataType, receiveDataType, keyType, keyType, edgeId);
+          dataType, receiveDataType, keyType, keyType, edgeId, messageSchema);
     }
 
     this.destinationSelector = destSelector;
