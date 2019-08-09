@@ -232,14 +232,13 @@ public class BatchTaskScheduler implements ITaskScheduler {
     int globalTaskIndex = 0;
 
     if (dependentGraphs) {
-      int index = 0;
+
       for (Vertex vertex : taskVertexSet) {
         INode iNode = vertex.getTask();
         if (iNode instanceof Receptor) {
           validate(graph, vertex);
         }
 
-        int containerIndex;
         int totalTaskInstances;
         if (!graph.getNodeConstraints().isEmpty()) {
           totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
@@ -247,6 +246,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
           int instancesPerWorker
               = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
           int maxTaskInstancesPerContainer = 0;
+          int containerIndex;
 
           for (int i = 0; i < totalTaskInstances; i++) {
             if (workerIdList.size() == 0) {
@@ -267,23 +267,17 @@ public class BatchTaskScheduler implements ITaskScheduler {
         } else {
           totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
           String task = vertex.getName();
-          int maxContainerTaskObjectSize = 0;
-          int instancesPerContainer = 2;
+          int containerIndex;
           for (int i = 0; i < totalTaskInstances; i++) {
             if (workerIdList.size() == 0) {
               containerIndex = i % numberOfContainers;
               batchTaskAllocation.get(containerIndex).add(
                   new TaskInstanceId(task, globalTaskIndex, i));
             } else {
-              LOG.info("i value:" + i + "\t" + workerIdList.size());
-              //containerIndex = i % workerIdList.size();
-              containerIndex = workerIdList.get(index);
-              if (maxContainerTaskObjectSize < instancesPerContainer) {
-                batchTaskAllocation.get(containerIndex).add(
-                    new TaskInstanceId(task, globalTaskIndex, i));
-                ++maxContainerTaskObjectSize;
-              }
-              ++index;
+              containerIndex = i % workerIdList.size();
+              LOG.fine("container index at else block:" + containerIndex);
+              batchTaskAllocation.get(containerIndex).add(
+                  new TaskInstanceId(task, globalTaskIndex, i));
             }
             /*batchTaskAllocation.get(containerIndex).add(
                 new TaskInstanceId(task, globalTaskIndex, i));*/
