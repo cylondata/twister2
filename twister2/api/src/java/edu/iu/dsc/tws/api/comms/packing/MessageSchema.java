@@ -20,16 +20,16 @@ public class MessageSchema {
   private int keySize;
   private boolean fixedSchema = true;
 
-  public MessageSchema(int messageSize, int keySize) {
+  private MessageSchema(int messageSize, int keySize) {
     this.messageSize = messageSize;
     this.keySize = keySize;
   }
 
-  public MessageSchema(int messageSize) {
+  private MessageSchema(int messageSize) {
     this.messageSize = messageSize;
   }
 
-  public MessageSchema() {
+  private MessageSchema() {
     this.fixedSchema = false;
   }
 
@@ -47,6 +47,14 @@ public class MessageSchema {
 
   public static MessageSchema noSchema() {
     return NO_SCHEMA;
+  }
+
+  public static MessageSchema ofSize(int totalMessageSize) {
+    return new MessageSchema(totalMessageSize);
+  }
+
+  public static MessageSchema ofSize(int totalMessageSize, int keySize) {
+    return new MessageSchema(totalMessageSize, keySize);
   }
 
   /**
