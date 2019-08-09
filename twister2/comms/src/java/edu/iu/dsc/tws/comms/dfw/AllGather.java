@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.allgather.AllGatherBatchFinalReceiver;
@@ -87,11 +88,13 @@ public class AllGather implements DataFlowOperation {
    * Task plan
    */
   private LogicalPlan logicalPlan;
+  private MessageSchema messageSchema;
 
   public AllGather(Config config, TWSChannel chnl, LogicalPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
                    BulkReceiver finalRecv, MessageType type,
-                   int redEdge, int broadEdge, boolean stream) {
+                   int redEdge, int broadEdge, boolean stream,
+                   MessageSchema messageSchema) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -102,6 +105,7 @@ public class AllGather implements DataFlowOperation {
     this.streaming = stream;
     this.dataType = type;
     this.logicalPlan = instancePlan;
+    this.messageSchema = messageSchema;
     init(config, type, instancePlan);
   }
 
@@ -128,7 +132,7 @@ public class AllGather implements DataFlowOperation {
 
     gather = new MToOneTree(channel, sources, middleTask,
         finalRecvr, partialReceiver, 0, 0, true,
-        MessageTypes.INTEGER, type);
+        MessageTypes.INTEGER, type, messageSchema);
     gather.init(config, type, instancePlan, gatherEdge);
   }
 

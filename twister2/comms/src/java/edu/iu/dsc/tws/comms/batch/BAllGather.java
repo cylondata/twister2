@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.AllGather;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 
@@ -36,7 +37,8 @@ public class BAllGather extends BaseOperation {
    */
   public BAllGather(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
-                    BulkReceiver rcvr, MessageType dataType, int gatherEdgeId, int broadEdgeId) {
+                    BulkReceiver rcvr, MessageType dataType, int gatherEdgeId,
+                    int broadEdgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
@@ -51,13 +53,14 @@ public class BAllGather extends BaseOperation {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     op = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets, middleTask,
-        rcvr, dataType, gatherEdgeId, broadEdgeId, false);
+        rcvr, dataType, gatherEdgeId, broadEdgeId, false, messageSchema);
   }
 
   public BAllGather(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets,
                     BulkReceiver rcvr, MessageType dataType) {
-    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), comm.nextEdge());
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(),
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**

@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
@@ -50,13 +51,22 @@ public class BGather extends BaseOperation {
                  Set<Integer> sources, int target,
                  MessageType dataType,
                  BulkReceiver rcvr, boolean shuffle) {
-    this(comm, plan, sources, target, dataType, rcvr, shuffle, comm.nextEdge());
+    this(comm, plan, sources, target, dataType, rcvr, shuffle,
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public BGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType,
-                 BulkReceiver rcvr, boolean shuffle, int edgeId) {
+                 BulkReceiver rcvr, boolean shuffle, MessageSchema messageSchema) {
+    this(comm, plan, sources, target, dataType, rcvr, shuffle,
+        comm.nextEdge(), messageSchema);
+  }
+
+  public BGather(Communicator comm, LogicalPlan plan,
+                 Set<Integer> sources, int target,
+                 MessageType dataType,
+                 BulkReceiver rcvr, boolean shuffle, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     MessageReceiver finalRcvr;
     if (!shuffle) {
@@ -67,7 +77,7 @@ public class BGather extends BaseOperation {
     this.dataType = dataType;
     MToOneTree gather = new MToOneTree(comm.getChannel(), sources, target,
         finalRcvr, new GatherBatchPartialReceiver(target),
-        0, 0, true, MessageTypes.INTEGER, dataType);
+        0, 0, true, MessageTypes.INTEGER, dataType, messageSchema);
     gather.init(comm.getConfig(), dataType, plan, edgeId);
     this.op = gather;
   }

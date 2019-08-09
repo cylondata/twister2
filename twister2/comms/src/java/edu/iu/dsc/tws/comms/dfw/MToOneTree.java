@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
@@ -88,6 +89,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
 
   private ChannelDataFlowOperation delegete;
+  private MessageSchema messageSchema;
   private LogicalPlan instancePlan;
   private MessageType dataType;
   private MessageType keyType;
@@ -102,7 +104,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
                     MessageReceiver finalRcvr,
-                    MessageReceiver partialRcvr, int indx, int p) {
+                    MessageReceiver partialRcvr, int indx, int p,
+                    MessageSchema messageSchema) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -110,6 +113,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
+    this.messageSchema = messageSchema;
     this.targets = new HashSet<>();
     this.targets.add(destination);
   }
@@ -117,7 +121,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
                     MessageReceiver finalRcvr,
                     MessageReceiver partialRcvr, int indx, int p, boolean keyed,
-                    MessageType kType, MessageType dType) {
+                    MessageType kType, MessageType dType,
+                    MessageSchema messageSchema) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -128,13 +133,15 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = keyed;
     this.keyType = kType;
     this.dataType = dType;
+    this.messageSchema = messageSchema;
     this.targets = new HashSet<>();
     this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
-                    MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+                    MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                    MessageSchema messageSchema) {
+    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0, messageSchema);
   }
 
 

@@ -42,7 +42,8 @@ public class ReduceBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BReduce(newComm, logicalPlan, sources, dests.iterator().next(),
         new ReduceFnImpl(edge.getFunction()),
-        new FinalSingularReceiver(), edge.getDataType(), edge.getEdgeID().nextId());
+        new FinalSingularReceiver(), edge.getDataType(),
+        edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

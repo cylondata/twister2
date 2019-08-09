@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.allreduce.AllReduceStreamingFinalReceiver;
@@ -89,13 +90,14 @@ public class AllReduce implements DataFlowOperation {
    * Weather streaming mode
    */
   private boolean streaming;
+  private MessageSchema messageSchema;
 
   public AllReduce(Config config, TWSChannel chnl, LogicalPlan instancePlan,
                    Set<Integer> sources, Set<Integer> destination, int middleTask,
                    ReduceFunction reduceFn,
                    SingularReceiver finalRecv, MessageType t,
                    int redEdge, int broadEdge,
-                   boolean strm) {
+                   boolean strm, MessageSchema messageSchema) {
     this.channel = chnl;
     this.sources = sources;
     this.destinations = destination;
@@ -105,6 +107,7 @@ public class AllReduce implements DataFlowOperation {
     this.middleTask = middleTask;
     this.reduceFunction = reduceFn;
     this.streaming = strm;
+    this.messageSchema = messageSchema;
     init(config, t, instancePlan);
   }
 
@@ -130,7 +133,7 @@ public class AllReduce implements DataFlowOperation {
     }
 
     reduce = new MToOneTree(channel, sources, middleTask,
-        receiver, partialReceiver);
+        receiver, partialReceiver, this.messageSchema);
     reduce.init(config, t, instancePlan, reduceEdge);
   }
 
