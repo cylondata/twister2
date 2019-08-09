@@ -76,7 +76,7 @@ public class BPartition extends BaseOperation {
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
-          dataType, dataType, null, null, edgeId);
+          dataType, dataType, null, null, edgeId, messageSchema);
     }
     this.destinationSelector.prepare(comm, op.getSources(), op.getTargets());
   }

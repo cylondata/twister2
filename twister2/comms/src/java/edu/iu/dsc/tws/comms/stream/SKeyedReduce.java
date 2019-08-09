@@ -81,7 +81,7 @@ public class SKeyedReduce extends BaseOperation {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc),
-          dataType, dataType, keyType, keyType, edgeId);
+          dataType, dataType, keyType, keyType, edgeId, messageSchema);
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);

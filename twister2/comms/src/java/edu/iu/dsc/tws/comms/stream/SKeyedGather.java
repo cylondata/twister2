@@ -80,7 +80,7 @@ public class SKeyedGather extends BaseOperation {
       op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1),
-          dataType, dataType, keyType, keyType, edgeId);
+          dataType, dataType, keyType, keyType, edgeId, messageSchema);
     }
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, targets);
