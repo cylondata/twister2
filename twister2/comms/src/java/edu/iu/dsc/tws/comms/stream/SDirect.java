@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
@@ -35,17 +36,23 @@ public class SDirect extends BaseOperation {
    */
   public SDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
-                 SingularReceiver rcvr, int edgeId) {
+                 SingularReceiver rcvr, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     op = new OneToOne(comm.getChannel(), sources, targets,
         new DirectStreamingFinalReceiver(rcvr), comm.getConfig(),
-        dataType, plan, edgeId);
+        dataType, plan, edgeId, messageSchema);
   }
 
   public SDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
                  SingularReceiver rcvr) {
-    this(comm, plan, sources, targets, dataType, rcvr, comm.nextEdge());
+    this(comm, plan, sources, targets, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SDirect(Communicator comm, LogicalPlan plan,
+                 List<Integer> sources, List<Integer> targets, MessageType dataType,
+                 SingularReceiver rcvr, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, dataType, rcvr, comm.nextEdge(), messageSchema);
   }
 
   /**
