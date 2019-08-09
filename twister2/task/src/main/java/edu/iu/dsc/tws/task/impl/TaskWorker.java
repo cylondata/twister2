@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.task.TaskEnvironment;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -76,6 +77,8 @@ public abstract class TaskWorker implements IWorker {
    */
   protected TaskExecutor taskExecutor;
 
+  protected TaskEnvironment taskEnvironment;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController wController, IPersistentVolume pVolume,
@@ -88,6 +91,12 @@ public abstract class TaskWorker implements IWorker {
 
     workerEnvironment = WorkerEnvironment.init(config, workerID,
         workerController, pVolume, vVolume);
+
+    taskEnvironment = TaskEnvironment.init(workerEnvironment);
+
+    // to keep backward compatibility
+    taskExecutor = taskEnvironment.getTaskExecutor();
+
     // call execute
     execute();
     // wait for the sync
@@ -96,8 +105,9 @@ public abstract class TaskWorker implements IWorker {
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
-    // close the task executor
-    taskExecutor.close();
+
+    taskEnvironment.close();
+
     // lets terminate the network
     workerEnvironment.close();
     // we are done executing
