@@ -76,8 +76,8 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     return (T) this;
   }
 
-  public T withMessageSchema(MessageSchema messageSchema) {
-    this.messageSchema = messageSchema;
+  public T withMessageSchema(MessageSchema mc) {
+    this.messageSchema = mc;
     return (T) this;
   }
 

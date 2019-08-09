@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
@@ -62,7 +63,8 @@ public class SKeyedReduce extends BaseOperation {
   public SKeyedReduce(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
-                      DestinationSelector destSelector, int edgeId) {
+                      DestinationSelector destSelector, int edgeId,
+                      MessageSchema messageSchema) {
     super(comm.getChannel());
     this.keyType = kType;
     this.dataType = dType;
@@ -73,7 +75,7 @@ public class SKeyedReduce extends BaseOperation {
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
-          keyType, keyType, edgeId);
+          keyType, keyType, edgeId, messageSchema);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
@@ -89,7 +91,16 @@ public class SKeyedReduce extends BaseOperation {
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
                       DestinationSelector destSelector) {
-    this(comm, plan, sources, targets, kType, dType, fnc, rcvr, destSelector, comm.nextEdge());
+    this(comm, plan, sources, targets, kType, dType, fnc, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SKeyedReduce(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> targets, MessageType kType,
+                      MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
+                      DestinationSelector destSelector, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, kType, dType, fnc, rcvr, destSelector,
+        comm.nextEdge(), messageSchema);
   }
 
   /**

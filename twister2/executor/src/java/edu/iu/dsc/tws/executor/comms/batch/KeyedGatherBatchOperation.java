@@ -61,7 +61,8 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedGather(newComm, logicalPlan, sources, dests,
         edge.getKeyType(), edge.getDataType(), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator, groupByKey, edge.getEdgeID().nextId());
+        destSelector, useDisk, keyComparator, groupByKey,
+        edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

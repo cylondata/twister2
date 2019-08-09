@@ -48,7 +48,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
     //LOG.info("ParitionOperation Prepare 1");
     op = new BPartition(newComm, logicalPlan, sources, targets,
         dataType, new PartitionReceiver(),
-        new LoadBalanceSelector(), shuffle, edge.getEdgeID().nextId());
+        new LoadBalanceSelector(), shuffle, edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   public void send(int source, IMessage message) {

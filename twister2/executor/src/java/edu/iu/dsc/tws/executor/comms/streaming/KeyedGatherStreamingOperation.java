@@ -45,7 +45,7 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedGather(newComm, logicalPlan, sources, dests,
         edge.getKeyType(), edge.getDataType(), new GatherRecvrImpl(),
-        destSelector, edge.getEdgeID().nextId());
+        destSelector, edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

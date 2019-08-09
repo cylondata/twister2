@@ -16,7 +16,6 @@ import java.nio.ByteBuffer;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
-import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 public class FixedSchemaDataSerializer extends DataSerializer {
 

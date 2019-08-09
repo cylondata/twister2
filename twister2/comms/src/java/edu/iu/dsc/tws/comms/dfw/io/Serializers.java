@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 
-public class Serializers {
+public final class Serializers {
 
   private Serializers() {
 

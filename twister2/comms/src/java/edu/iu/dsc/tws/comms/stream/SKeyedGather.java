@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
@@ -61,7 +62,8 @@ public class SKeyedGather extends BaseOperation {
   public SKeyedGather(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, BulkReceiver rcvr,
-                      DestinationSelector destSelector, int edgeId) {
+                      DestinationSelector destSelector,
+                      int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     this.keyType = kType;
     this.dataType = dType;
@@ -72,7 +74,7 @@ public class SKeyedGather extends BaseOperation {
           plan, sources, targets,
           new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
-          keyType, keyType, edgeId);
+          keyType, keyType, edgeId, messageSchema);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
       op = new MToNRing(comm.getConfig(), comm.getChannel(),
@@ -89,7 +91,17 @@ public class SKeyedGather extends BaseOperation {
                       Set<Integer> sources, Set<Integer> targets, MessageType kType,
                       MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector) {
-    this(comm, plan, sources, targets, kType, dType, rcvr, destSelector, comm.nextEdge());
+    this(comm, plan, sources, targets, kType, dType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+
+  }
+
+  public SKeyedGather(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> targets, MessageType kType,
+                      MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, kType, dType, rcvr, destSelector,
+        comm.nextEdge(), messageSchema);
 
   }
 

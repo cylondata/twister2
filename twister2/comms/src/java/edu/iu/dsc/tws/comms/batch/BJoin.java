@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
@@ -71,7 +72,8 @@ public class BJoin {
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
-               CommunicationContext.JoinType joinType) {
+               CommunicationContext.JoinType joinType,
+               MessageSchema leftSchema, MessageSchema rightSchema) {
     this.destinationSelector = destSelector;
     this.channel = comm.getChannel();
     List<String> shuffleDirs = comm.getPersistentDirectories();
@@ -86,11 +88,11 @@ public class BJoin {
 
     this.partitionLeft = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(0, finalRcvr), new PartitionPartialReceiver(),
-        leftDataType, keyType);
+        leftDataType, keyType, leftSchema);
 
     this.partitionRight = new MToNSimple(comm.getChannel(), sources, targets,
         new JoinBatchPartialReceiver(1, finalRcvr), new PartitionPartialReceiver(),
-        rightDataType, keyType);
+        rightDataType, keyType, rightSchema);
 
     this.partitionLeft.init(comm.getConfig(), leftDataType, plan, leftEdgeId);
     this.partitionRight.init(comm.getConfig(), rightDataType, plan, rightEdgeId);
@@ -101,9 +103,21 @@ public class BJoin {
                Set<Integer> sources, Set<Integer> targets, MessageType keyType,
                MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
                DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator, CommunicationContext.JoinType joinType,
+               MessageSchema leftSchema, MessageSchema rightSchema) {
+    this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
+        joinType, leftSchema, rightSchema);
+  }
+
+  public BJoin(Communicator comm, LogicalPlan plan,
+               Set<Integer> sources, Set<Integer> targets, MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
                Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
-        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(), joinType);
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
+        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
   }
 
   /**
@@ -180,6 +194,7 @@ public class BJoin {
 
   /**
    * Progress the channel and the operation
+   *
    * @return true if further progress is required
    */
   public boolean progressChannel() {

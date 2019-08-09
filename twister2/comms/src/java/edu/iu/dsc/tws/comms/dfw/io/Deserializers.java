@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 
-public class Deserializers {
+public final class Deserializers {
 
   private Deserializers() {
 

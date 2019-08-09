@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing2;
@@ -45,7 +46,27 @@ public class BKeyedGather extends BaseOperation {
                       MessageType kType, MessageType dType,
                       BulkReceiver rcvr, DestinationSelector destSelector) {
     this(comm, plan, sources, destinations, kType, dType, rcvr,
-        destSelector, false, null, true);
+        destSelector, false, null, true, MessageSchema.noSchema());
+  }
+
+  public BKeyedGather(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> destinations,
+                      MessageType kType, MessageType dType,
+                      BulkReceiver rcvr, DestinationSelector destSelector,
+                      MessageSchema messageSchema) {
+    this(comm, plan, sources, destinations, kType, dType, rcvr,
+        destSelector, false, null, true, messageSchema);
+  }
+
+  public BKeyedGather(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> destinations,
+                      MessageType kType, MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector,
+                      boolean useDisk,
+                      Comparator<Object> comparator,
+                      boolean groupByKey, MessageSchema messageSchema) {
+    this(comm, plan, sources, destinations, kType, dType, rcvr, destSelector,
+        useDisk, comparator, groupByKey, comm.nextEdge(), messageSchema);
   }
 
   public BKeyedGather(Communicator comm, LogicalPlan plan,
@@ -56,7 +77,7 @@ public class BKeyedGather extends BaseOperation {
                       Comparator<Object> comparator,
                       boolean groupByKey) {
     this(comm, plan, sources, destinations, kType, dType, rcvr, destSelector,
-        useDisk, comparator, groupByKey, comm.nextEdge());
+        useDisk, comparator, groupByKey, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**
@@ -70,7 +91,7 @@ public class BKeyedGather extends BaseOperation {
                       DestinationSelector destSelector,
                       boolean useDisk,
                       Comparator<Object> comparator,
-                      boolean groupByKey, int edgeId) {
+                      boolean groupByKey, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
@@ -94,7 +115,7 @@ public class BKeyedGather extends BaseOperation {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
-          keyType, keyType, edgeId);
+          keyType, keyType, edgeId, messageSchema);
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
