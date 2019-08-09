@@ -144,7 +144,7 @@ const Twister2Apps = props => (
 <Block layout="threeColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "Multiple API's for designing applications according to your requirements",
+                content: "Better APIs and performance for ML applications",
                 //image: imgUrl('icon/time.png'),
                 image : imgUrl("ai.png"),
                 imageAlign: 'top',
