@@ -28,6 +28,9 @@ public final class Serializers {
       }
       return new DataSerializer();
     } else {
+      if (messageSchema.isFixedSchema()) {
+        return new FixedSchemaKeyedDataSerializer(messageSchema);
+      }
       return new KeyedDataSerializer();
     }
   }

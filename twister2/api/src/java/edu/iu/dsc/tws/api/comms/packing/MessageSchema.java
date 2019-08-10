@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.comms.packing;
 
-public class MessageSchema {
+public final class MessageSchema {
 
   private static final MessageSchema NO_SCHEMA = new MessageSchema();
 

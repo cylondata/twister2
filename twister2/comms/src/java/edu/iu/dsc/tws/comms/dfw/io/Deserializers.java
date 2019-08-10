@@ -27,6 +27,9 @@ public final class Deserializers {
       }
       return new DataDeserializer();
     } else {
+      if (messageSchema.isFixedSchema()) {
+        return new FixedSchemaKeyedDataDeSerializer(messageSchema);
+      }
       return new KeyedDataDeSerializer();
     }
   }

@@ -117,7 +117,7 @@ public class AllGather implements DataFlowOperation {
       finalRcvr = new BcastGatherBatchReceiver(finalReceiver);
     }
     broadcast = new TreeBroadcast(channel, middleTask,
-        destinations, finalRcvr, MessageTypes.INTEGER, type);
+        destinations, finalRcvr, MessageTypes.INTEGER, type, this.messageSchema);
     broadcast.init(config, type, instancePlan, broadCastEdge);
 
     MessageReceiver partialReceiver;

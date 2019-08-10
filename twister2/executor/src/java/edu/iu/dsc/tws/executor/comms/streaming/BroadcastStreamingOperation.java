@@ -41,7 +41,8 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SBroadCast(newComm, logicalPlan, sources.iterator().next(), dests,
-        edge.getDataType(), new BcastReceiver(), edge.getEdgeID().nextId());
+        edge.getDataType(), new BcastReceiver(), edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   @Override

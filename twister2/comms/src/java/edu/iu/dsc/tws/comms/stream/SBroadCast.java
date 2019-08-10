@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
@@ -37,10 +38,10 @@ public class SBroadCast extends BaseOperation {
    */
   public SBroadCast(Communicator comm, LogicalPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
-                    SingularReceiver rcvr, int edgeId) {
+                    SingularReceiver rcvr, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     TreeBroadcast bCast = new TreeBroadcast(comm.getChannel(), source, targets,
-        new DirectStreamingFinalReceiver(rcvr));
+        new DirectStreamingFinalReceiver(rcvr), messageSchema);
     bCast.init(comm.getConfig(), dataType, plan, edgeId);
     op = bCast;
   }
@@ -48,7 +49,13 @@ public class SBroadCast extends BaseOperation {
   public SBroadCast(Communicator comm, LogicalPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr) {
-    this(comm, plan, source, targets, dataType, rcvr, comm.nextEdge());
+    this(comm, plan, source, targets, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SBroadCast(Communicator comm, LogicalPlan plan,
+                    int source, Set<Integer> targets, MessageType dataType,
+                    SingularReceiver rcvr, MessageSchema messageSchema) {
+    this(comm, plan, source, targets, dataType, rcvr, comm.nextEdge(), messageSchema);
   }
 
   /**

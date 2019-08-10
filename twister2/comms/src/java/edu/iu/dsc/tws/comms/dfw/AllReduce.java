@@ -120,7 +120,7 @@ public class AllReduce implements DataFlowOperation {
     } else {
       finalRcvr = new BcastBatchFinalReceiver(finalReceiver);
     }
-    broadcast = new TreeBroadcast(channel, middleTask, destinations, finalRcvr);
+    broadcast = new TreeBroadcast(channel, middleTask, destinations, finalRcvr, this.messageSchema);
     broadcast.init(config, t, instancePlan, broadCastEdge);
 
     MessageReceiver receiver;
