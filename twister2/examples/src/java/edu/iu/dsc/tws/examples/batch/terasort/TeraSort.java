@@ -39,6 +39,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -187,6 +188,7 @@ public class TeraSort extends TaskWorker {
         .withTaskPartitioner(taskPartitioner)
         .useDisk(true)
         .sortBatchByKey(true, ByteArrayComparator.getInstance())
+        .withMessageSchema(MessageSchema.ofSize(100, 10))
         .groupBatchByKey(false);
 
 
