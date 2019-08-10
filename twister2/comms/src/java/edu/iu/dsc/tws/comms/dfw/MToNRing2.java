@@ -832,15 +832,9 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     if (progressState == ProgressState.ROUND_DONE
         && (mergerInMemoryMessages >= highWaterMark * targetsArray.length
             || mergerBlocked || mergeFinishSources.size() > 0)) {
-      if (partialLock.tryLock()) {
-        try {
-          needFurtherMerging = merger.progress();
-          progressState = ProgressState.MERGED;
-        } finally {
-          partialLock.unlock();
-        }
+        needFurtherMerging = merger.progress();
+        progressState = ProgressState.MERGED;
       }
-    }
 
     // now we can send to group
     boolean syncsDone;
