@@ -110,15 +110,19 @@ public class SsspInitialCompute extends BaseCompute {
         HashMap<String, Integer> hashMap = new HashMap<>();
         String val = String.valueOf(((Iterator) message.getContent()).next());
         String[] data = val.split("\\s+");
-        ssspVertexStatus.setId(data[0]);
-        if (sourceVertex.equals(data[0])) {
-          ssspVertexStatus.setValue(0);
-        } else {
-          ssspVertexStatus.setValue(Integer.MAX_VALUE);
-        }
+        if (data.length == 1 && data[0].equals("")) {
+          continue;
+        } else if (!data[0].equals("")) {
+          ssspVertexStatus.setId(data[0]);
+          if (sourceVertex.equals(data[0])) {
+            ssspVertexStatus.setValue(0);
+          } else {
+            ssspVertexStatus.setValue(Integer.MAX_VALUE);
+          }
 
-        hashMappartition.put(data[0], ssspVertexStatus);
-        context.write(getEdgeName(), hashMappartition);
+          hashMappartition.put(data[0], ssspVertexStatus);
+          context.write(getEdgeName(), hashMappartition);
+        }
       }
     }
     context.end(getEdgeName());

@@ -110,23 +110,28 @@ public class GraphDataCompute extends BaseCompute {
         HashMap<String, Integer> hashMap = new HashMap<>();
         String val = String.valueOf(((Iterator) message.getContent()).next());
         String[] data = val.split("\\s+");
-        ssspVertex.setId(data[0]);
-        ArrayList<String> adjList = new ArrayList<String>(Arrays.asList(data));
-        adjList.remove(0);
-        for (int i = 0; i < (adjList.size()) / 2; i++) {
+        System.out.println(Arrays.toString(data));
+        if (data.length == 1 && data[0].equals("")) {
+          continue;
+        } else if (!data[0].equals("")) {
+          ssspVertex.setId(data[0]);
+          ArrayList<String> adjList = new ArrayList<String>(Arrays.asList(data));
+          adjList.remove(0);
+          for (int i = 0; i < (adjList.size()) / 2; i++) {
 
-          hashMap.put(adjList.get(2 * i), Integer.parseInt(adjList.get(2 * i + 1)));
-        }
+            hashMap.put(adjList.get(2 * i), Integer.parseInt(adjList.get(2 * i + 1)));
+          }
 
-        ssspVertex.setHashMap(hashMap);
-        ssspVertex.setStatus(false);
-        if (sourceVertex.equals(data[0])) {
-          ssspVertex.setValue(0);
-        } else {
-          ssspVertex.setValue(Integer.MAX_VALUE);
+          ssspVertex.setHashMap(hashMap);
+          ssspVertex.setStatus(false);
+          if (sourceVertex.equals(data[0])) {
+            ssspVertex.setValue(0);
+          } else {
+            ssspVertex.setValue(Integer.MAX_VALUE);
+          }
+          hashMappartition.put(data[0], ssspVertex);
+          context.write(getEdgeName(), hashMappartition);
         }
-        hashMappartition.put(data[0], ssspVertex);
-        context.write(getEdgeName(), hashMappartition);
       }
     }
     context.end(getEdgeName());

@@ -269,40 +269,43 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
           for (int i = 0; i < graphData.size(); i++) {
             Object key = graphData.keySet().toArray()[i];
-            SsspVertex ssspVertex = graphData.get(key);
-            SsspVertexStatus ssspVertexStatus = graphSsspStatus.get(key);
-            if (ssspVertexStatus != null) {
+            if (!key.equals("")) {
+              SsspVertex ssspVertex = graphData.get(key);
+              SsspVertexStatus ssspVertexStatus = graphSsspStatus.get(key);
+              if (ssspVertexStatus != null) {
 
-              if (ssspVertexStatus.getValue() != Integer.MAX_VALUE) {
-                if (ssspVertex.getId().equals(sourceVertexGlobal)) {
-                  HashMap<String, Integer> hashMap = ssspVertex.getHashMap();
-                  for (int j = 0; j < hashMap.size(); j++) {
-                    Object key1 = hashMap.keySet().toArray()[j];
-                    context.write("keyedreduce", key1, new int[]{hashMap.get(key1)});
-                  }
-
-                  ssspVertex.setStatus(true);
-                } else {
-                  if (ssspVertex.getValue() > ssspVertexStatus.getValue()) {
-                    ssspVertex.setValue(ssspVertexStatus.getValue());
+                if (ssspVertexStatus.getValue() != Integer.MAX_VALUE) {
+                  if (ssspVertex.getId().equals(sourceVertexGlobal)) {
                     HashMap<String, Integer> hashMap = ssspVertex.getHashMap();
                     for (int j = 0; j < hashMap.size(); j++) {
                       Object key1 = hashMap.keySet().toArray()[j];
-
-                      context.write("keyedreduce", key1, new int[]
-                          {hashMap.get(key1) + ssspVertex.getValue()});
+                      context.write("keyedreduce", key1, new int[]{hashMap.get(key1)});
                     }
 
                     ssspVertex.setStatus(true);
+                  } else {
+                    if (ssspVertex.getValue() > ssspVertexStatus.getValue()) {
+                      ssspVertex.setValue(ssspVertexStatus.getValue());
+                      HashMap<String, Integer> hashMap = ssspVertex.getHashMap();
+                      for (int j = 0; j < hashMap.size(); j++) {
+                        Object key1 = hashMap.keySet().toArray()[j];
+
+                        context.write("keyedreduce", key1, new int[]
+                            {hashMap.get(key1) + ssspVertex.getValue()});
+                      }
+
+                      ssspVertex.setStatus(true);
+                    }
+
                   }
-
                 }
-              }
 
+              }
+              count++;
             }
-            count++;
           }
         } else {
+          count = 0;
           context.writeEnd("keyedreduce", "taskend", new int[]{10});
         }
       } else {

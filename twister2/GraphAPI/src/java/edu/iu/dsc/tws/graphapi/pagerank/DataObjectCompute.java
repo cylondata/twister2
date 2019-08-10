@@ -113,7 +113,6 @@ public class DataObjectCompute extends BaseCompute {
           context.write(getEdgeName(), map);
         }
       }
-      System.out.println(map);
     }
     context.end(getEdgeName());
     return true;
