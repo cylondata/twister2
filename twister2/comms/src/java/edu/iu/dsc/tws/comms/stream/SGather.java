@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
@@ -48,13 +49,13 @@ public class SGather extends BaseOperation {
    */
   public SGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
-                 BulkReceiver rcvr, int edgeId) {
+                 BulkReceiver rcvr, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     this.dataType = dataType;
     MToOneTree gather = new MToOneTree(comm.getChannel(), sources, target,
         new GatherStreamingFinalReceiver(rcvr),
         new GatherStreamingPartialReceiver(), 0, 0,
-        true, MessageTypes.INTEGER, dataType);
+        true, MessageTypes.INTEGER, dataType, messageSchema);
     gather.init(comm.getConfig(), dataType, plan, edgeId);
     op = gather;
   }
@@ -62,7 +63,7 @@ public class SGather extends BaseOperation {
   public SGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
                  BulkReceiver rcvr) {
-    this(comm, plan, sources, target, dataType, rcvr, comm.nextEdge());
+    this(comm, plan, sources, target, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**

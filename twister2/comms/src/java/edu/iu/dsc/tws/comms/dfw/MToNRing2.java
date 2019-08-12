@@ -36,14 +36,13 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
@@ -363,6 +362,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
    * The grouping size
    */
   private long groupingSize;
+  private MessageSchema messageSchema;
 
   /**
    * The channel
@@ -419,7 +419,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
                    Set<Integer> targets, MessageReceiver finalRcvr,
                    MessageReceiver partialRcvr,
                    MessageType dType, MessageType rcvType,
-                   MessageType kType, MessageType rcvKType, int edge) {
+                   MessageType kType, MessageType rcvKType, int edge,
+                   MessageSchema messageSchema) {
     this.merger = partialRcvr;
     this.finalReceiver = finalRcvr;
     this.taskPlan = tPlan;
@@ -436,6 +437,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
     this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    this.messageSchema = messageSchema;
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
       LOG.fine("Changing the grouping size to: " + groupingSize);
@@ -524,11 +526,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
-      if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer());
-      } else {
-        serializerMap.put(s, new DataSerializer());
-      }
+      serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -540,11 +538,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
-      if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDataDeSerializer());
-      } else {
-        deSerializerMap.put(ex, new DataDeserializer());
-      }
+      deSerializerMap.put(ex, Deserializers.get(isKeyed, this.messageSchema));
     }
 
     // calculate the receive groups
@@ -643,7 +637,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   }
 
   private int createGroup(List<Integer> sendingWorkersSorted, int numGroups,
-                           List<IntArrayList> groups) {
+                          List<IntArrayList> groups) {
     int valuesPerGroup = sendingWorkersSorted.size() / numGroups;
     IntArrayList list = new IntArrayList();
     int thisGroup = 0;

@@ -41,7 +41,8 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BDirect(newComm, logicalPlan, sources, targets,
-        new PartitionReceiver(), edge.getDataType(), edge.getEdgeID().nextId());
+        new PartitionReceiver(), edge.getDataType(), edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   public void send(int source, IMessage message) {

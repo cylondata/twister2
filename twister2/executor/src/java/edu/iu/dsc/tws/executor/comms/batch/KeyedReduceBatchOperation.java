@@ -54,7 +54,8 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BKeyedReduce(newComm, logicalPlan, sources, dests,
         new ReduceFunctionImpl(edge.getFunction()),
-        new BulkReceiverImpl(), edge.getKeyType(), edge.getDataType(), destSelector);
+        new BulkReceiverImpl(), edge.getKeyType(), edge.getDataType(),
+        destSelector, edge.getMessageSchema());
   }
 
   @Override

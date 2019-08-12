@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
@@ -51,7 +52,8 @@ public class BPartition extends BaseOperation {
   public BPartition(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
-                    DestinationSelector destSelector, boolean shuffle, int edgeId) {
+                    DestinationSelector destSelector, boolean shuffle,
+                    int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
@@ -67,14 +69,14 @@ public class BPartition extends BaseOperation {
     if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
-          finalRcvr, new PartitionPartialReceiver(), dataType);
+          finalRcvr, new PartitionPartialReceiver(), dataType, messageSchema);
       p.init(comm.getConfig(), dataType, plan, edgeId);
       this.op = p;
     } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
         CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
-          dataType, dataType, null, null, edgeId);
+          dataType, dataType, null, null, edgeId, messageSchema);
     }
     this.destinationSelector.prepare(comm, op.getSources(), op.getTargets());
   }
@@ -82,8 +84,18 @@ public class BPartition extends BaseOperation {
   public BPartition(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     BulkReceiver rcvr,
+                    DestinationSelector destSelector, boolean shuffle,
+                    MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector, shuffle,
+        comm.nextEdge(), messageSchema);
+  }
+
+  public BPartition(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle) {
-    this(comm, plan, sources, targets, dataType, rcvr, destSelector, shuffle, comm.nextEdge());
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector, shuffle,
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**
