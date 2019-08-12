@@ -44,7 +44,7 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BAllGather(newComm, logicalPlan, sources, dest,
         new FinalGatherReceive(), edge.getDataType(), edge.getEdgeID().nextId(),
-        edge.getEdgeID().nextId());
+        edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

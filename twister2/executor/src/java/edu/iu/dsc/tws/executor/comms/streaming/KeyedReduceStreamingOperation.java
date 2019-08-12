@@ -62,7 +62,8 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SKeyedReduce(newComm, logicalPlan, sources, dests, keyType, dataType,
         new ReduceFunctionImpl(edge.getFunction()),
-        new SingularRecvrImpl(), destSelector, edge.getEdgeID().nextId());
+        new SingularRecvrImpl(), destSelector, edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   @Override

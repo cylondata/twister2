@@ -48,7 +48,7 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     op = new SPartition(newComm, logicalPlan, srcs, dests,
         edge.getDataType(),
         new PartitionBulkReceiver(),
-        new LoadBalanceSelector(), edge.getEdgeID().nextId());
+        new LoadBalanceSelector(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   public boolean send(int source, IMessage message, int flags) {

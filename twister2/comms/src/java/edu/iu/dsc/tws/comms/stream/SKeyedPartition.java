@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
@@ -46,12 +47,13 @@ public class SKeyedPartition extends BaseOperation {
   public SKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> targets,
                          MessageType keyType, MessageType dataType, SingularReceiver rcvr,
-                         DestinationSelector destSelector, int edgeId) {
+                         DestinationSelector destSelector, int edgeId,
+                         MessageSchema messageSchema) {
     super(comm.getChannel());
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr), new PartitionStreamingPartialReceiver(),
-        dataType, keyType);
+        dataType, keyType, messageSchema);
 
     partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
@@ -62,7 +64,16 @@ public class SKeyedPartition extends BaseOperation {
                          Set<Integer> sources, Set<Integer> targets,
                          MessageType keyType, MessageType dataType, SingularReceiver rcvr,
                          DestinationSelector destSelector) {
-    this(comm, plan, sources, targets, keyType, dataType, rcvr, destSelector, comm.nextEdge());
+    this(comm, plan, sources, targets, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SKeyedPartition(Communicator comm, LogicalPlan plan,
+                         Set<Integer> sources, Set<Integer> targets,
+                         MessageType keyType, MessageType dataType, SingularReceiver rcvr,
+                         DestinationSelector destSelector, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), messageSchema);
   }
 
   /**
