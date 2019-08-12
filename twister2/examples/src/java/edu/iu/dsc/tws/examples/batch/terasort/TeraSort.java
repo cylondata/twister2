@@ -63,6 +63,7 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.impl.ops.KeyedGatherConfig;
 import edu.iu.dsc.tws.task.typed.AllReduceCompute;
 import edu.iu.dsc.tws.task.typed.batch.BKeyedGatherUnGroupedCompute;
 
@@ -93,6 +94,8 @@ public class TeraSort extends TaskWorker {
   private static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
   private static final String ARG_TUNE_MAX_SHUFFLE_FILE_SIZE = "fileSizeBytes";
 
+  private static final String ARG_FIXED_SCHEMA = "fixedSchema";
+
   private static final String TASK_SOURCE = "sort-source";
   private static final String TASK_RECV = "sort-recv";
   private static final String TASK_SAMPLER = "sample-source";
@@ -108,7 +111,10 @@ public class TeraSort extends TaskWorker {
     resultsRecorder = new BenchmarkResultsRecorder(config, workerId == 0);
     Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
 
-    String filePath = config.getStringValue(ARG_INPUT_FILE, null);
+    final String filePath = config.getStringValue(ARG_INPUT_FILE, null);
+
+    final int keySize = config.getIntegerValue(ARG_KEY_SIZE, 10);
+    final int valueSize = config.getIntegerValue(ARG_VALUE_SIZE, 90);
 
     //Sampling Graph : if file based only
     TaskPartitioner taskPartitioner;
@@ -119,8 +125,6 @@ public class TeraSort extends TaskWorker {
       Sampler samplerTask = new Sampler();
       samplingGraph.addSource(TASK_SAMPLER, samplerTask,
           config.getIntegerValue(ARG_TASKS_SOURCES, 4));
-
-      final int keySize = config.getIntegerValue(ARG_KEY_SIZE, 10);
 
       SamplerReduce samplerReduce = new SamplerReduce();
       samplingGraph.addCompute(TASK_SAMPLER_REDUCE, samplerReduce,
@@ -179,7 +183,7 @@ public class TeraSort extends TaskWorker {
         config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    teraSortTaskGraph.addSink(TASK_RECV, receiver,
+    KeyedGatherConfig keyedGatherConfig = teraSortTaskGraph.addSink(TASK_RECV, receiver,
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE)
         .viaEdge(EDGE)
@@ -188,8 +192,15 @@ public class TeraSort extends TaskWorker {
         .withTaskPartitioner(taskPartitioner)
         .useDisk(true)
         .sortBatchByKey(true, ByteArrayComparator.getInstance())
-        .withMessageSchema(MessageSchema.ofSize(100, 10))
         .groupBatchByKey(false);
+
+    if (config.getBooleanValue(ARG_FIXED_SCHEMA, false)) {
+      LOG.info("Using fixed schema feature with message size : "
+          + (keySize + valueSize) + " and key size : " + keySize);
+      keyedGatherConfig.withMessageSchema(
+          MessageSchema.ofSize(keySize + valueSize, keySize)
+      );
+    }
 
 
     DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
@@ -568,6 +579,11 @@ public class TeraSort extends TaskWorker {
         false
     ));
 
+    //fixed schema
+    options.addOption(createOption(
+        ARG_FIXED_SCHEMA, false, "Use fixed schema feature", false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -605,6 +621,10 @@ public class TeraSort extends TaskWorker {
 
     if (cmd.hasOption(ARG_OUTPUT_FOLDER)) {
       jobConfig.put(ARG_OUTPUT_FOLDER, cmd.getOptionValue(ARG_OUTPUT_FOLDER));
+    }
+
+    if (cmd.hasOption(ARG_FIXED_SCHEMA)) {
+      jobConfig.put(ARG_FIXED_SCHEMA, true);
     }
 
     Twister2Job twister2Job;
