@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -62,6 +63,8 @@ public class SortJob implements IWorker {
 
   public static final String ARG_TASKS_SOURCES = "sources";
   public static final String ARG_TASKS_SINKS = "sinks";
+
+  private static final String ARG_FIXED_SCHEMA = "fixedSchema";
 
   public static final String ARG_TUNE_MAX_BYTES_IN_MEMORY = "memoryBytesLimit";
   public static final String ARG_TUNE_MAX_SHUFFLE_FILE_SIZE = "fileSizeBytes";
@@ -100,9 +103,20 @@ public class SortJob implements IWorker {
     // set up the tasks
     setupTasks(cfg);
 
+    int valueSize = cfg.getIntegerValue(SortJob.ARG_VALUE_SIZE, 90);
+    int keySize = cfg.getIntegerValue(SortJob.ARG_KEY_SIZE, 10);
+
+    MessageSchema schema = MessageSchema.noSchema();
+
+    if (cfg.getBooleanValue(ARG_FIXED_SCHEMA, false)) {
+      LOG.info("Using fixed schema feature with message size : "
+          + (keySize + valueSize) + " and key size : " + keySize);
+      schema = MessageSchema.ofSize(keySize + valueSize, keySize);
+    }
+
     gather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
         MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY,
-        new RecordSave(), new ByteSelector(), true, new IntegerComparator(), true);
+        new RecordSave(), new ByteSelector(), true, new IntegerComparator(), true, schema);
 
     Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
     int thisSource = tasksOfExecutor.iterator().next();
@@ -138,8 +152,8 @@ public class SortJob implements IWorker {
       byte[] left = (byte[]) o1;
       byte[] right = (byte[]) o2;
       for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) {
-        int a = left[i] & 0xff;
-        int b = right[j] & 0xff;
+        byte a = left[i];
+        byte b = right[j];
         if (a != b) {
           return a - b;
         }
@@ -223,6 +237,11 @@ public class SortJob implements IWorker {
         false
     ));
 
+    //fixed schema
+    options.addOption(createOption(
+        ARG_FIXED_SCHEMA, false, "Use fixed schema feature", false
+    ));
+
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
@@ -260,6 +279,10 @@ public class SortJob implements IWorker {
 
     if (cmd.hasOption(ARG_OUTPUT_FOLDER)) {
       jobConfig.put(ARG_OUTPUT_FOLDER, cmd.getOptionValue(ARG_OUTPUT_FOLDER));
+    }
+
+    if (cmd.hasOption(ARG_FIXED_SCHEMA)) {
+      jobConfig.put(ARG_FIXED_SCHEMA, true);
     }
 
     Twister2Job twister2Job;
