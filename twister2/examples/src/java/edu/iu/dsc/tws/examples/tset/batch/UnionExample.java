@@ -28,8 +28,8 @@ public class UnionExample extends BatchTsetExample {
   @Override
   public void execute(BatchTSetEnvironment env) {
 //    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
-    SourceTSet<Integer> src1 = dummySource(env, COUNT, 1).setName("src1");
-    SourceTSet<Integer> src2 = dummySourceOther(env, COUNT, 1).setName("src2");
+    SourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
+    SourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
 //    src.direct().forEach(s -> LOG.info("map sssss: " + s));
     ComputeTSet unionTSet = (ComputeTSet) src1.union(src2);
     LOG.info("test source union");
