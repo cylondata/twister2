@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.AllReduce;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 
@@ -37,7 +38,8 @@ public class SAllReduce extends BaseOperation {
    */
   public SAllReduce(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
-                    ReduceFunction fnc, SingularReceiver rcvr, int reduceEdgeId, int bcastEdgeId) {
+                    ReduceFunction fnc, SingularReceiver rcvr, int reduceEdgeId,
+                    int bcastEdgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
@@ -52,13 +54,14 @@ public class SAllReduce extends BaseOperation {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     op = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources, targets,
-        middleTask, fnc, rcvr, dataType, reduceEdgeId, bcastEdgeId, true);
+        middleTask, fnc, rcvr, dataType, reduceEdgeId, bcastEdgeId, true, messageSchema);
   }
 
   public SAllReduce(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     ReduceFunction fnc, SingularReceiver rcvr) {
-    this(comm, plan, sources, targets, dataType, fnc, rcvr, comm.nextEdge(), comm.nextEdge());
+    this(comm, plan, sources, targets, dataType, fnc, rcvr, comm.nextEdge(),
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**

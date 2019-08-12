@@ -51,6 +51,11 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
                                 int alreadyCopied, int leftToCopy, int spaceLeft,
                                 ByteBuffer targetBuffer) {
     byte[] datBytes = packerStore.retrieve();
+    if (datBytes == null) { // could be due to fixed schema
+      datBytes = serializer.get().serialize(data);
+      // storing since this will be useful for next iteration
+      packerStore.store(datBytes);
+    }
     targetBuffer.put(datBytes, alreadyCopied, Math.min(leftToCopy, spaceLeft));
   }
 

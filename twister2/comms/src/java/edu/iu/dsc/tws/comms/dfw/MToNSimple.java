@@ -32,12 +32,11 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.routing.PartitionRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -143,10 +142,12 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
    */
   private List<Integer> externalDestinations = new ArrayList<>();
 
+  private MessageSchema messageSchema;
+
   public MToNSimple(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                     MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                    MessageType dataType, MessageType keyType) {
-    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
+                    MessageType dataType, MessageType keyType, MessageSchema messageSchema) {
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, messageSchema);
     this.isKeyed = true;
     this.keyType = keyType;
     this.dataType = dataType;
@@ -156,29 +157,30 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
 
   public MToNSimple(TWSChannel channel, Set<Integer> sourceTasks, Set<Integer> destTasks,
                     MessageReceiver finalRcvr, MessageReceiver partialRcvr,
-                    MessageType dataType) {
-    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr);
+                    MessageType dataType, MessageSchema messageSchema) {
+    this(channel, sourceTasks, destTasks, finalRcvr, partialRcvr, messageSchema);
     this.dataType = dataType;
   }
 
   public MToNSimple(TWSChannel channel, Set<Integer> srcs,
                     Set<Integer> dests, MessageReceiver finalRcvr,
-                    MessageReceiver partialRcvr) {
+                    MessageReceiver partialRcvr, MessageSchema messageSchema) {
     this.sources = srcs;
     this.destinations = dests;
     this.delegete = new ChannelDataFlowOperation(channel);
 
     this.finalReceiver = finalRcvr;
     this.partialReceiver = partialRcvr;
+    this.messageSchema = messageSchema;
   }
 
   public MToNSimple(Config cfg, TWSChannel channel, LogicalPlan tPlan, Set<Integer> srcs,
                     Set<Integer> dests, MessageReceiver finalRcvr,
                     MessageReceiver partialRcvr,
                     MessageType dType, MessageType rcvType,
-                    int e) {
+                    int e, MessageSchema messageSchema) {
     this(cfg, channel, tPlan, srcs, dests, finalRcvr, partialRcvr, dType, rcvType,
-        null, null, e);
+        null, null, e, messageSchema);
     this.isKeyed = false;
   }
 
@@ -187,7 +189,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
                     MessageReceiver partialRcvr,
                     MessageType dType, MessageType rcvType,
                     MessageType kType, MessageType rcvKType,
-                    int e) {
+                    int e, MessageSchema messageSchema) {
     this.instancePlan = tPlan;
     this.sources = srcs;
     this.destinations = dests;
@@ -197,6 +199,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     this.keyType = kType;
     this.receiveKeyType = rcvKType;
     this.edge = e;
+    this.messageSchema = messageSchema;
 
     if (keyType != null) {
       this.isKeyed = true;
@@ -268,11 +271,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
-      if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer());
-      } else {
-        serializerMap.put(s, new DataSerializer());
-      }
+      serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -284,11 +283,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
-      if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDataDeSerializer());
-      } else {
-        deSerializerMap.put(ex, new DataDeserializer());
-      }
+      deSerializerMap.put(ex, Deserializers.get(isKeyed, this.messageSchema));
     }
 
     for (int src : srcs) {

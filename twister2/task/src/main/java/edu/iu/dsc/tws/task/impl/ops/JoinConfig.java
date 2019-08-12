@@ -16,6 +16,7 @@ import java.util.Comparator;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.task.OperationNames;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
@@ -31,6 +32,9 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
   private MessageType rightOpDataType = MessageTypes.OBJECT;
 
   private String group;
+
+  private MessageSchema leftMessageSchema = MessageSchema.noSchema();
+  private MessageSchema rightMessageSchema = MessageSchema.noSchema();
 
   public JoinConfig(String leftParent, String rightParent,
                     ComputeConnection computeConnection,
@@ -70,6 +74,23 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     return this;
   }
 
+  @Override
+  public JoinConfig withMessageSchema(MessageSchema messageSchema) {
+    this.leftMessageSchema = messageSchema;
+    this.rightMessageSchema = messageSchema;
+    return this;
+  }
+
+  public JoinConfig withLeftMessageSchema(MessageSchema messageSchema) {
+    this.leftMessageSchema = messageSchema;
+    return this;
+  }
+
+  public JoinConfig withRightMessageSchema(MessageSchema messageSchema) {
+    this.rightMessageSchema = messageSchema;
+    return this;
+  }
+
   public JoinConfig withTargetEdge(String g) {
     this.group = g;
     return this;
@@ -90,10 +111,12 @@ public class JoinConfig extends AbstractKeyedOpsConfig<JoinConfig> {
     Edge leftEdge = this.buildEdge();
     leftEdge.setEdgeIndex(0);
     leftEdge.setNumberOfEdges(2);
+    leftEdge.setMessageSchema(this.leftMessageSchema);
 
     Edge rightEdge = this.buildRightEdge();
     rightEdge.setEdgeIndex(1);
     rightEdge.setNumberOfEdges(2);
+    rightEdge.setMessageSchema(this.rightMessageSchema);
 
     // we generate the name
     if (group == null) {

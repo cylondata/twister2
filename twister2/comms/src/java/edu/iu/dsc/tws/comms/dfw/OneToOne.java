@@ -32,10 +32,11 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -70,6 +71,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
    * The delegate
    */
   private ChannelDataFlowOperation delegate;
+  private MessageSchema messageSchema;
 
 
   private Lock lock;
@@ -133,11 +135,12 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   public OneToOne(TWSChannel channel,
                   List<Integer> src, List<Integer> target,
                   MessageReceiver finalRcvr, Config cfg, MessageType t,
-                  LogicalPlan plan, int edge) {
+                  LogicalPlan plan, int edge, MessageSchema messageSchema) {
     this.sources = src;
     this.targets = target;
     this.finalReceiver = finalRcvr;
     this.delegate = new ChannelDataFlowOperation(channel);
+    this.messageSchema = messageSchema;
     this.lock = new ReentrantLock();
     this.edgeValue = edge;
     this.logicalPlan = plan;
@@ -192,7 +195,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new DataSerializer());
+      serializerMap.put(s, Serializers.get(false, this.messageSchema));
     }
 
     for (int tar : thisTargets) {
@@ -202,8 +205,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
 
-      MessageDeSerializer messageDeSerializer = new DataDeserializer();
-      deSerializerMap.put(tar, messageDeSerializer);
+      deSerializerMap.put(tar, Deserializers.get(false, this.messageSchema));
     }
 
     // calculate the routing parameters
