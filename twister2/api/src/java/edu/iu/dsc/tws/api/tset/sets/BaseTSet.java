@@ -132,7 +132,7 @@ public abstract class BaseTSet<T> implements BuildableTSet {
   }
 
   protected void addChildToGraph(TBase parent, TBase child) {
-    tSetEnv.getGraph().addTSet(this, child);
+    tSetEnv.getGraph().addTSet(parent, child);
   }
 
   @Override

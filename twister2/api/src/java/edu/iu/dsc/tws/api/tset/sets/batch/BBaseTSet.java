@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
-import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
+import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorUnionOp;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
@@ -106,9 +106,9 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     DirectTLink<T> directCurrent = new DirectTLink<>(getTSetEnv(), getParallelism());
     DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(this, directCurrent);
-    addChildToGraph((BBaseTSet) other, directCurrent);
+    addChildToGraph((BBaseTSet) other, directOther);
     ComputeTSet<T, T> unionTSet = new ComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorOp<T, T>(new MapIterCompute(input -> input)),
+        new ComputeCollectorUnionOp<T, T>(new MapIterCompute(input -> input), 2),
         getParallelism());
     addChildToGraph(directCurrent, unionTSet);
     addChildToGraph(directOther, unionTSet);
@@ -122,7 +122,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     addChildToGraph(this, directCurrent);
 
     ComputeTSet<T, T> unionTSet = new ComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorOp<T, T>(new MapIterCompute(input -> input)),
+        new ComputeCollectorUnionOp<T, T>(new MapIterCompute(input -> input), tSets.size() + 1),
         getParallelism());
 
     addChildToGraph(directCurrent, unionTSet);
