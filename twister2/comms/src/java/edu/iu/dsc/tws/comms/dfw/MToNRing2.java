@@ -706,51 +706,41 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean send(int source, Object message, int flags, int target) {
-    partialLock.lock();
-    try {
-      sendCount++;
-      if (merger.onMessage(source, 0, target, flags, message)) {
-        if ((flags & MessageFlags.SYNC_EMPTY) != MessageFlags.SYNC_EMPTY) {
-          mergerInMemoryMessages++;
-        }
-        mergerBlocked = false;
-        return true;
-      } else {
-        mergerBlocked = true;
-        return false;
+    sendCount++;
+    if (merger.onMessage(source, 0, target, flags, message)) {
+      if ((flags & MessageFlags.SYNC_EMPTY) != MessageFlags.SYNC_EMPTY) {
+        mergerInMemoryMessages++;
       }
-    } finally {
-      partialLock.unlock();
+      mergerBlocked = false;
+      return true;
+    } else {
+      mergerBlocked = true;
+      return false;
     }
   }
 
   @Override
   public boolean sendPartial(int source, Object message, int flags, int target) {
-    swapLock.lock();
-    try {
-      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-        syncedSources.add(source);
-        if (syncedSources.size() == thisSourceArray.length) {
-          thisSourcesSynced = true;
-        }
-        return true;
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+      syncedSources.add(source);
+      if (syncedSources.size() == thisSourceArray.length) {
+        thisSourcesSynced = true;
       }
+      return true;
+    }
 
-      if (mergedInMemoryMessages >= highWaterMark * targetsArray.length) {
-        return false;
-      }
+    if (mergedInMemoryMessages >= highWaterMark * targetsArray.length) {
+      return false;
+    }
 
-      // we add to the merged
-      Queue<AggregatedObjects<Object>> messages = merged.get(target);
-      if (message instanceof AggregatedObjects) {
-        messages.add((AggregatedObjects) message);
-        mergedInMemoryMessages += ((AggregatedObjects) message).size();
-        mergerInMemoryMessages -= ((AggregatedObjects) message).size();
-      } else {
-        throw new RuntimeException("Un-expected message");
-      }
-    } finally {
-      swapLock.unlock();
+    // we add to the merged
+    Queue<AggregatedObjects<Object>> messages = merged.get(target);
+    if (message instanceof AggregatedObjects) {
+      messages.add((AggregatedObjects) message);
+      mergedInMemoryMessages += ((AggregatedObjects) message).size();
+      mergerInMemoryMessages -= ((AggregatedObjects) message).size();
+    } else {
+      throw new RuntimeException("Un-expected message");
     }
     return true;
   }
@@ -827,153 +817,145 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     swapLock.lock();
     boolean completed = false;
     boolean needFurtherMerging = true;
-    try {
-      if (doneProgress) {
-        return false;
+    if (doneProgress) {
+      return false;
+    }
+    // if we have enough things in memory or some sources finished lets call progress on merger
+    int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
+    // we can call merge only after a round is done
+    if (progressState == ProgressState.ROUND_DONE
+        && (mergerInMemoryMessages >= highWaterMark * targetsArray.length
+        || mergerBlocked || mergeFinishSources.size() > 0)) {
+      if (partialLock.tryLock()) {
+        needFurtherMerging = merger.progress();
+        progressState = ProgressState.MERGED;
       }
-      // if we have enough things in memory or some sources finished lets call progress on merger
-      int sendsToComplete = sendsNeedsToComplete.get(sendGroupIndex);
-      // we can call merge only after a round is done
-      if (progressState == ProgressState.ROUND_DONE
-          && (mergerInMemoryMessages >= highWaterMark * targetsArray.length
-          || mergerBlocked || mergeFinishSources.size() > 0)) {
-        if (partialLock.tryLock()) {
-          try {
-            needFurtherMerging = merger.progress();
-            progressState = ProgressState.MERGED;
-          } finally {
-            partialLock.unlock();
+    }
+
+    // now we can send to group
+    boolean syncsDone;
+    boolean sendsDone = true;
+    if (progressState == ProgressState.MERGED) {
+      sendsDone = sendToGroup();
+    } else if (progressState == ProgressState.SYNC_STARTED) {
+      syncsDone = sendSyncs();
+      sendsDone = syncsDone;
+      needFurtherMerging = false;
+    }
+
+    // progress the send
+    boolean sendsCompleted = competedSends == sendsToComplete;
+    boolean receiveCompleted =
+        receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
+
+    int count = 0;
+    while (count < 4 && !completed) {
+      if (!sendsCompleted) {
+        for (int i = 0; i < thisSourceArray.length; i++) {
+          delegate.sendProgress(thisSourceArray[i]);
+        }
+        channel.progressSends();
+      }
+
+      if (!receiveCompleted) {
+        IntArrayList receiveList = receiveGroupsSources.get(receiveGroupIndex);
+        for (int i = 0; i < receiveList.size(); i++) {
+          int receiveId = receiveList.getInt(i);
+          delegate.receiveDeserializeProgress(receiveId);
+          delegate.receiveProgress(receiveId);
+        }
+        channel.progressReceives(receiveGroupIndex);
+      }
+
+      sendsCompleted = competedSends == sendsToComplete;
+      receiveCompleted = receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
+
+      // lets try to send the syncs
+      if (sendsDone && sendsCompleted && receiveCompleted) {
+        completed = true;
+      }
+      count++;
+    }
+
+    // lets progress the last receiver at last
+    if (!receivingFinalSyncs) {
+      finalReceiver.progress();
+    }
+
+    // if this step is completed and we need to progress the final receiver
+    boolean needsProgress = !allTargetsReceivedSyncs || needFurtherMerging;
+    if (completed && !needsProgress) {
+      // LOG.info(thisWorker + " Finished receiving");
+      finishedReceiving = true;
+    }
+
+    if (completed) {
+      finishedReceiveGroups.add(receiveGroupIndex);
+
+      // lets advance the send group and receive group
+      if (finishedSendGroups.size() == sendingGroupsWorkers.size()
+          && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
+        if (thisSourcesSynced && !containsAnyDataToSend()) {
+          startedSyncRound = true;
+          progressState = ProgressState.SYNC_STARTED;
+        } else {
+          progressState = ProgressState.ROUND_DONE;
+        }
+        roundCompleted = true;
+        roundNumber++;
+        // LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
+        finishedReceiveGroups.clear();
+        finishedSendGroups.clear();
+
+        // we need to have all the syncs received in a single round to terminate
+        if (startedSyncRound && !allTargetsReceivedSyncs) {
+          finishedTargets.clear();
+          for (int i : targetsOfThisWorker) {
+            Set<Integer> fin = finishedSources.get(i);
+            fin.clear();
           }
         }
       }
-
-      // now we can send to group
-      boolean syncsDone;
-      boolean sendsDone = true;
-      if (progressState == ProgressState.MERGED) {
-        sendsDone = sendToGroup();
-      } else if (progressState == ProgressState.SYNC_STARTED) {
-        syncsDone = sendSyncs();
-        sendsDone = syncsDone;
-        needFurtherMerging = false;
-      }
-
-      // progress the send
-      boolean sendsCompleted = competedSends == sendsToComplete;
-      boolean receiveCompleted =
-          receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
-
-      int count = 0;
-      while (count < 4 && !completed) {
-        if (!sendsCompleted) {
-          for (int i = 0; i < thisSourceArray.length; i++) {
-            delegate.sendProgress(thisSourceArray[i]);
-          }
-          channel.progressSends();
-        }
-
-        if (!receiveCompleted) {
-          IntArrayList receiveList = receiveGroupsSources.get(receiveGroupIndex);
-          for (int i = 0; i < receiveList.size(); i++) {
-            int receiveId = receiveList.getInt(i);
-            delegate.receiveDeserializeProgress(receiveId);
-            delegate.receiveProgress(receiveId);
-          }
-          channel.progressReceives(receiveGroupIndex);
-        }
-
-        sendsCompleted = competedSends == sendsToComplete;
-        receiveCompleted = receivesNeedsToComplete.getInt(receiveGroupIndex) == competedReceives;
-
-        // lets try to send the syncs
-        if (sendsDone && sendsCompleted && receiveCompleted) {
-          completed = true;
-        }
-        count++;
-      }
-
-      // lets progress the last receiver at last
-      if (!receivingFinalSyncs) {
-        finalReceiver.progress();
-      }
-
-      // if this step is completed and we need to progress the final receiver
-      boolean needsProgress = !allTargetsReceivedSyncs || needFurtherMerging;
-      if (completed && !needsProgress) {
-        // LOG.info(thisWorker + " Finished receiving");
-        finishedReceiving = true;
-      }
-
-      if (completed) {
-        finishedReceiveGroups.add(receiveGroupIndex);
-
-        // lets advance the send group and receive group
-        if (finishedSendGroups.size() == sendingGroupsWorkers.size()
-            && finishedReceiveGroups.size() == receiveGroupsWorkers.size()) {
-          if (thisSourcesSynced && !containsAnyDataToSend()) {
-            startedSyncRound = true;
-            progressState = ProgressState.SYNC_STARTED;
-          } else {
-            progressState = ProgressState.ROUND_DONE;
-          }
-          roundCompleted = true;
-          roundNumber++;
-          // LOG.info(thisWorker + " Round of send and receive done " + roundNumber);
-          finishedReceiveGroups.clear();
-          finishedSendGroups.clear();
-
-          // we need to have all the syncs received in a single round to terminate
-          if (startedSyncRound && !allTargetsReceivedSyncs) {
-            finishedTargets.clear();
-            for (int i : targetsOfThisWorker) {
-              Set<Integer> fin = finishedSources.get(i);
-              fin.clear();
-            }
-          }
-        }
 
 //        if (lastRound) {
 //          LOG.info(String.format("finishReceiving %b, roundCompleted %b, delegate %b",
 //              finishedReceiving, roundCompleted, delegate.isComplete()));
 //        }
 
-        if (roundCompleted && !lastRound && finishedReceiving) {
-          lastRound = true;
-        } else if (lastRound && roundCompleted) {
-          // at last we wait until everything is flushed
-          if (delegate.isComplete()) {
-            doneProgress = true;
-          } else {
-            delegate.progress();
-            channel.progress();
-          }
+      if (roundCompleted && !lastRound && finishedReceiving) {
+        lastRound = true;
+      } else if (lastRound && roundCompleted) {
+        // at last we wait until everything is flushed
+        if (delegate.isComplete()) {
+          doneProgress = true;
+        } else {
+          delegate.progress();
+          channel.progress();
         }
+      }
 
-        if (!lastRound || !roundCompleted) {
-          sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
-          receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
-          if (roundCompleted) {
-            LOG.info("Starting round number: " + roundNumber);
-          }
+      if (!lastRound || !roundCompleted) {
+        sendGroupIndex = decrement(sendGroupIndex, sendingGroupsWorkers.size());
+        receiveGroupIndex = increment(receiveGroupIndex, receiveGroupsWorkers.size());
+        if (roundCompleted) {
+          LOG.info("Starting round number: " + roundNumber);
+        }
 //          LOG.info(
 //              String.format("%d Starting next send %d receive %d synced %b %d round %d last %b",
 //                  thisWorker, sendGroupIndex, receiveGroupIndex, startedSyncRound,
 //                  finishedSendGroups.size(), roundNumber, lastRound));
-          roundCompleted = false;
-          startNextStep();
-        }
+        roundCompleted = false;
+        startNextStep();
       }
-
-      boolean progress = true;
-      if (doneProgress) {
-        // LOG.info(String.format("%d round %d", thisWorker, roundNumber));
-        progress = finalReceiver.progress();
-      }
-
-      return progress;
-    } finally {
-      swapLock.unlock();
     }
+
+    boolean progress = true;
+    if (doneProgress) {
+      // LOG.info(String.format("%d round %d", thisWorker, roundNumber));
+      progress = finalReceiver.progress();
+    }
+
+    return progress;
   }
 
   private boolean containsAnyDataToSend() {
@@ -1167,41 +1149,36 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean receiveSendInternally(int source, int target, int path,
                                        int flags, Object message) {
-    lock.lock();
-    try {
-      if (finishedReceiving) {
+    if (finishedReceiving) {
+      competedReceives++;
+      return true;
+    }
+    if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+      boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
+      if (recv) {
         competedReceives++;
-        return true;
+        addSync(source, target);
       }
-      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+      return recv;
+    }
+
+    if (message instanceof AggregatedObjects) {
+      if (((AggregatedObjects) message).size() > 0) {
         boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
         if (recv) {
           competedReceives++;
-          addSync(source, target);
         }
         return recv;
-      }
-
-      if (message instanceof AggregatedObjects) {
-        if (((AggregatedObjects) message).size() > 0) {
-          boolean recv = finalReceiver.onMessage(source, 0, target, flags, message);
-          if (recv) {
-            competedReceives++;
-          }
-          return recv;
-        } else {
-          // we received an empty value, lets increase but not call final receiver
-          competedReceives++;
-          return true;
-        }
-      } else if (message == null) {
+      } else {
+        // we received an empty value, lets increase but not call final receiver
         competedReceives++;
         return true;
-      } else {
-        throw new RuntimeException("we can only receive Aggregator objects");
       }
-    } finally {
-      lock.unlock();
+    } else if (message == null) {
+      competedReceives++;
+      return true;
+    } else {
+      throw new RuntimeException("we can only receive Aggregator objects");
     }
   }
 
