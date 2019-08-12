@@ -13,35 +13,8 @@
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.graphapi.pagerank;
-
-
-//import java.io.BufferedWriter;
-//import java.io.File;
-//import java.io.FileWriter;
-//import java.io.IOException;
-//import java.io.Writer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -166,15 +139,6 @@ public class PageRankWorker extends TaskWorker {
 
 
     if (workerId == 0) {
-//      Writer output = null;
-//      File toptenurllist = new File("/home/anushan/Documents/dinput/output");
-//      try {
-//        output = new BufferedWriter(new FileWriter(toptenurllist));
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
-
-
       DataPartition<?> finaloutput = graphInitialPagerankValue.getPartition(workerId);
       HashMap<String, Double> finalone = (HashMap<String, Double>) finaloutput.getConsumer().next();
       LOG.info("Final output After " + iterations + "iterations ");
@@ -192,14 +156,6 @@ public class PageRankWorker extends TaskWorker {
           System.out.print("Vertex Id: " + pair.getKey());
           System.out.printf(" and it's pagerank value: %.15f \n", finalPagerankValue);
 
-//          try {
-//            output.write("Vertex Id: " + pair.getKey()
-//                + " and it's pagerank value: "
-//                + String.format("%.15f", finalPagerankValue) + "\n");
-//
-//          } catch (IOException e) {
-//            e.printStackTrace();
-//          }
           cummulativepagerankvalue += finalPagerankValue;
           num += 1;
         }
