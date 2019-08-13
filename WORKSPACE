@@ -111,7 +111,7 @@ http_archive(
 )
 
 http_archive(
-    name = "ompi4darwin",
+    name = "ompi3darwin",
     build_file = "@//:third_party/ompi3darwin/ompi.darwin.BUILD",
     strip_prefix = "openmpi-4.0.1",
     urls = ["https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz"],
