@@ -111,6 +111,15 @@ public class KMeansWorker implements IWorker {
     Map<String, ExecutionPlan> taskSchedulePlanMap =
         taskEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);
 
+    LOG.info("1st plan:" + taskSchedulePlanMap.get(
+        datapointsTaskGraph.getGraphName()));
+
+    LOG.info("2nd plan:" + taskSchedulePlanMap.get(
+        centroidsTaskGraph.getGraphName()));
+
+    LOG.info("3rd plan:" + taskSchedulePlanMap.get(
+        kmeansTaskGraph.getGraphName()));
+
     //Get the execution plan for the first task graph
     //ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
@@ -140,6 +149,7 @@ public class KMeansWorker implements IWorker {
     //Perform the iterations from 0 to 'n' number of iterations
     //ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
+
     for (int i = 0; i < iterations; i++) {
       //add the datapoints and centroids as input to the kmeanssource task.
       taskExecutor.addInput(

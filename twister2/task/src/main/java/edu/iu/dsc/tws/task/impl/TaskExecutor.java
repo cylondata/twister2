@@ -126,7 +126,6 @@ public class TaskExecutor {
     taskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan();
-
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
@@ -145,12 +144,12 @@ public class TaskExecutor {
     Map<String, TaskSchedulePlan> schedulePlanMap = batchTaskScheduler.schedule(workerPlan, graph);
     Map<String, ExecutionPlan> executionPlanMap = new LinkedHashMap<>();
 
-    for (int i = 0; i < graph.length; i++) {
-      TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(graph[i].getGraphName());
+    for (DataFlowTaskGraph aGraph : graph) {
+      TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(aGraph.getGraphName());
       ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
           workerID, workerInfoList, communicator, this.checkpointingClient);
-      ExecutionPlan executionPlan = executionPlanBuilder.build(config, graph[i], taskSchedulePlan);
-      executionPlanMap.put(graph[i].getGraphName(), executionPlan);
+      ExecutionPlan executionPlan = executionPlanBuilder.build(config, aGraph, taskSchedulePlan);
+      executionPlanMap.put(aGraph.getGraphName(), executionPlan);
     }
     return executionPlanMap;
   }
