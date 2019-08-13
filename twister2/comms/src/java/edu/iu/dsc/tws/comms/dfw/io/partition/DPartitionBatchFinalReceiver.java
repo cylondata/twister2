@@ -239,10 +239,9 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
             if (partition.getReceiveDataType() != MessageTypes.BYTE_ARRAY
                 || !(data instanceof byte[])) {
               d = partition.getDataType().getDataPacker().packToByteArray(data);
-            } else {
-              d = (byte[]) data;
+              kc.setValue(d);
             }
-            sortedMerger.add(kc.getKey(), d, d.length);
+            sortedMerger.add(kc);
           }
         } else {
           List<Object> contents = (List<Object>) object;
