@@ -324,5 +324,8 @@ public class TargetPartialReceiver extends TargetReceiver {
     stateCleared = false;
     sourceAcceptMessages.clear();
     targetAcceptMessages.clear();
+    for (int target : thisDestinations) {
+      targetAcceptMessages.put(target, true);
+    }
   }
 }

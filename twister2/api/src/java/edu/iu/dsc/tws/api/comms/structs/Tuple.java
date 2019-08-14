@@ -22,10 +22,6 @@ public class Tuple<K, V> {
 
   private V value;
 
-  private MessageType keyType;
-
-  private MessageType contentType;
-
   public Tuple() {
   }
 
@@ -38,8 +34,6 @@ public class Tuple<K, V> {
                MessageType keyType, MessageType dataType) {
     this.key = k;
     this.value = data;
-    this.keyType = keyType;
-    this.contentType = dataType;
   }
 
   public static <K, V> Tuple of(K key, V value,
@@ -52,14 +46,6 @@ public class Tuple<K, V> {
     return new Tuple<>(key, value);
   }
 
-  public MessageType getKeyType() {
-    return keyType;
-  }
-
-  public void setKeyType(MessageType keyType) {
-    this.keyType = keyType;
-  }
-
   public K getKey() {
     return key;
   }
@@ -68,20 +54,12 @@ public class Tuple<K, V> {
     return value;
   }
 
-  public MessageType getContentType() {
-    return contentType;
-  }
-
   public void setKey(K key) {
     this.key = key;
   }
 
   public void setValue(V value) {
     this.value = value;
-  }
-
-  public void setContentType(MessageType contentType) {
-    this.contentType = contentType;
   }
 
   @Override

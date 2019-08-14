@@ -37,7 +37,9 @@ public class Executor implements IExecutor {
     this.workerId = wId;
 
     //initialize common thread pool
-    CommonThreadPool.init(config);
+    if (!CommonThreadPool.isActive()) {
+      CommonThreadPool.init(config);
+    }
 
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {
