@@ -111,17 +111,7 @@ public class KMeansWorker implements IWorker {
     Map<String, ExecutionPlan> taskSchedulePlanMap =
         taskEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);
 
-    LOG.info("1st plan:" + taskSchedulePlanMap.get(
-        datapointsTaskGraph.getGraphName()));
-
-    LOG.info("2nd plan:" + taskSchedulePlanMap.get(
-        centroidsTaskGraph.getGraphName()));
-
-    LOG.info("3rd plan:" + taskSchedulePlanMap.get(
-        kmeansTaskGraph.getGraphName()));
-
     //Get the execution plan for the first task graph
-    //ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
         datapointsTaskGraph.getGraphName());
 
@@ -147,7 +137,6 @@ public class KMeansWorker implements IWorker {
     long endTimeData = System.currentTimeMillis();
 
     //Perform the iterations from 0 to 'n' number of iterations
-    //ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
 
     for (int i = 0; i < iterations; i++) {
@@ -164,16 +153,20 @@ public class KMeansWorker implements IWorker {
     taskExecutor.waitFor(kmeansTaskGraph, plan);
     taskEnv.close();
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
-    double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
-    long endTime = System.currentTimeMillis();
     if (workerId == 0) {
-      LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
-          + "Total Time : " + (endTime - startTime)
-          + "Compute Time : " + (endTime - endTimeData));
+      DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
+      double[][] centroid = null;
+      if (centroidPartition.getConsumer().hasNext()) {
+        centroid = (double[][]) centroidPartition.getConsumer().next();
+      }
+      long endTime = System.currentTimeMillis();
+
+      LOG.info("Total Time : " + (endTime - startTime)
+          + "\tData Load time : " + (endTimeData - startTime)
+          + "\tCompute Time : " + (endTime - endTimeData));
+      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+          + Arrays.deepToString(centroid));
     }
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
   }
 
   public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
@@ -246,9 +239,9 @@ public class KMeansWorker implements IWorker {
     TaskGraphBuilder kmeansTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
 
     //Add source, and sink tasks to the task graph builder for the third task graph
-    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
+    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, 2);
     ComputeConnection kMeanscomputeConnection = kmeansTaskGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, parallelismValue);
+        "kmeanssink", kMeansAllReduceTask, 2);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")

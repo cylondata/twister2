@@ -13,8 +13,6 @@
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.ArrayList;
-//import java.util.Collections;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,9 +81,7 @@ public final class TaskPlanBuilder {
         Set<Integer> tasksInNode = nodeToTasks.computeIfAbsent(
             workerInfo.getNodeInfo().getNodeIP(),
             k -> new HashSet<>());
-        //tasksInNode.addAll(containersToTasks.get(workerInfo.getWorkerID()));
-        tasksInNode.addAll(containersToTasks.getOrDefault(workerInfo.getWorkerID(),
-            Collections.emptySet()));
+        tasksInNode.addAll(containersToTasks.get(workerInfo.getWorkerID()));
       }
       groupsToTasks.put(i, executorsOfGroup);
       i++;
