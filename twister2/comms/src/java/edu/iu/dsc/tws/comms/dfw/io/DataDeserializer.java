@@ -65,11 +65,11 @@ public class DataDeserializer implements MessageDeSerializer {
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
 
       if (currentMessage.getUnPkBuffers() == 0) {
-        currentLocation = 16;
-        remaining = remaining - 16;
+        currentLocation = DFWIOUtils.HEADER_SIZE;
+        remaining = remaining - DFWIOUtils.HEADER_SIZE;
       } else {
-        currentLocation = 4;
-        remaining = remaining - 4;
+        currentLocation = DFWIOUtils.SHORT_HEADER_SIZE; // source(int) + last_buffer_indicator(byte)
+        remaining = remaining - DFWIOUtils.SHORT_HEADER_SIZE;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {

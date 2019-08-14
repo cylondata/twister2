@@ -33,13 +33,12 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -111,6 +110,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
    * This worker id
    */
   private int thisWorker;
+  private MessageSchema messageSchema;
 
   /**
    * The target index to send for each worker
@@ -197,7 +197,8 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
                   Set<Integer> targets, MessageReceiver finalRcvr,
                   MessageReceiver partialRcvr,
                   MessageType dType, MessageType rcvType,
-                  MessageType kType, MessageType rcvKType, int edge) {
+                  MessageType kType, MessageType rcvKType, int edge,
+                  MessageSchema messageSchema) {
     this.merger = partialRcvr;
     this.finalReceiver = finalRcvr;
     this.logicalPlan = tPlan;
@@ -211,6 +212,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
+    this.messageSchema = messageSchema;
 
     // get the tasks of this executor
     Set<Integer> targetsOfThisWorker = TaskPlanUtils.getTasksOfThisWorker(tPlan, targets);
@@ -276,11 +278,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(cfg)));
-      if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer());
-      } else {
-        serializerMap.put(s, new DataSerializer());
-      }
+      serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -292,11 +290,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
       int capacity = maxReceiveBuffers * 2 * receiveExecutorsSize;
       pendingReceiveMessagesPerSource.put(ex, new ArrayBlockingQueue<>(capacity));
       pendingReceiveDeSerializations.put(ex, new ArrayBlockingQueue<>(capacity));
-      if (isKeyed) {
-        deSerializerMap.put(ex, new KeyedDataDeSerializer());
-      } else {
-        deSerializerMap.put(ex, new DataDeserializer());
-      }
+      deSerializerMap.put(ex, Deserializers.get(isKeyed, this.messageSchema));
     }
     // create the delegate
     this.delegate = new ChannelDataFlowOperation(channel);

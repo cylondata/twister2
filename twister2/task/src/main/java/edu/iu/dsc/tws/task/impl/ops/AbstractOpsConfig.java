@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.task.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeConnectionUtils;
@@ -44,6 +45,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
   protected String edgeName = TaskConfigurations.DEFAULT_EDGE;
   protected MessageType opDataType = MessageTypes.OBJECT;
   protected Map<String, Object> propertiesMap;
+  protected MessageSchema messageSchema = MessageSchema.noSchema();
 
   protected AbstractOpsConfig(String source,
                               String operationName,
@@ -71,6 +73,11 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
 
   public T withDataType(MessageType dataType) {
     this.opDataType = dataType;
+    return (T) this;
+  }
+
+  public T withMessageSchema(MessageSchema mc) {
+    this.messageSchema = mc;
     return (T) this;
   }
 
@@ -111,6 +118,7 @@ public abstract class AbstractOpsConfig<T extends AbstractOpsConfig> {
     Edge edge = new Edge(this.edgeName, this.operationName);
     edge.setDataType(opDataType);
     edge.addProperties(propertiesMap);
+    edge.setMessageSchema(messageSchema);
     return this.updateEdge(edge);
   }
 }

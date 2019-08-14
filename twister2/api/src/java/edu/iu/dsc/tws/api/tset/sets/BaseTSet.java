@@ -131,6 +131,10 @@ public abstract class BaseTSet<T> implements BuildableTSet {
     tSetEnv.getGraph().addTSet(this, child);
   }
 
+  protected void addChildToGraph(TBase parent, TBase child) {
+    tSetEnv.getGraph().addTSet(parent, child);
+  }
+
   @Override
   public String toString() {
     return getName() + "(" + getId() + ")[" + getParallelism() + "]";

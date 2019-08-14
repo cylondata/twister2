@@ -43,7 +43,6 @@ public class BGatherExample extends BenchWorker {
 
   private BGather gather;
 
-  private boolean gatherDone;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
@@ -65,10 +64,6 @@ public class BGatherExample extends BenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      gatherDone = true;
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
@@ -133,7 +128,6 @@ public class BGatherExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        gatherDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -146,7 +140,6 @@ public class BGatherExample extends BenchWorker {
       BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
-      gatherDone = true;
       verifyResults(resultsVerifier, itr, null);
       return true;
     }

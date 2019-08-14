@@ -38,7 +38,7 @@ public interface Collector {
   }
 
   /**
-   * This method should return a set of collectible names, that can be collect from this
+   * This method should return a set of collectible names, that can be collected from this
    * collector. These names will be used by task plan builder to cross validate parallelism
    * between two task graphs.
    * <p>

@@ -51,6 +51,10 @@ public class JoinedTuple<K, L, R> {
     return rightValue;
   }
 
+  public static <K, L, R> JoinedTuple of(K key, L left, R right) {
+    return new JoinedTuple<>(key, left, right);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

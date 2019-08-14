@@ -43,7 +43,7 @@ const siteConfig = {
     headerLinks: [
         {doc: 'introduction', label: 'Docs'},
         {page: 'docs/download', label: 'Download'},
-        {href: "http://twister2.org", label: "GitHub"},
+        {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub"},
         {blog: true, label: 'Blog'},
     ],
 

@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
@@ -40,7 +41,7 @@ public class BKeyedReduce extends BaseOperation {
   public BKeyedReduce(Communicator comm, LogicalPlan plan,
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
                       BulkReceiver rcvr, MessageType kType, MessageType dType,
-                      DestinationSelector destSelector, int edgeId) {
+                      DestinationSelector destSelector, int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     this.keyType = kType;
     this.dataType = dType;
@@ -50,7 +51,7 @@ public class BKeyedReduce extends BaseOperation {
         plan, sources, destinations,
         new KReduceBatchFinalReceiver(fnc, rcvr),
         partialReceiver, dataType, dataType,
-        keyType, keyType, edgeId);
+        keyType, keyType, edgeId, messageSchema);
     this.destinationSelector = destSelector;
     this.destinationSelector.prepare(comm, sources, destinations);
   }
@@ -59,7 +60,16 @@ public class BKeyedReduce extends BaseOperation {
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
                       BulkReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector) {
-    this(comm, plan, sources, destinations, fnc, rcvr, kType, dType, destSelector, comm.nextEdge());
+    this(comm, plan, sources, destinations, fnc, rcvr, kType, dType, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BKeyedReduce(Communicator comm, LogicalPlan plan,
+                      Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
+                      BulkReceiver rcvr, MessageType kType, MessageType dType,
+                      DestinationSelector destSelector, MessageSchema messageSchema) {
+    this(comm, plan, sources, destinations, fnc, rcvr, kType, dType, destSelector,
+        comm.nextEdge(), messageSchema);
   }
 
   public boolean reduce(int src, Object key, Object data, int flags) {

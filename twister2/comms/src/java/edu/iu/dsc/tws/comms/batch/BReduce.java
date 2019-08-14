@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
@@ -40,11 +41,12 @@ public class BReduce extends BaseOperation {
    */
   public BReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, ReduceFunction fnc,
-                 SingularReceiver rcvr, MessageType dataType, int edgeId) {
+                 SingularReceiver rcvr, MessageType dataType,
+                 int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     MToOneTree reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceBatchFinalReceiver(fnc, rcvr),
-        new ReduceBatchPartialReceiver(target, fnc));
+        new ReduceBatchPartialReceiver(target, fnc), messageSchema);
     reduce.init(comm.getConfig(), dataType, plan, edgeId);
     op = reduce;
   }
@@ -52,7 +54,8 @@ public class BReduce extends BaseOperation {
   public BReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, ReduceFunction fnc,
                  SingularReceiver rcvr, MessageType dataType) {
-    this(comm, plan, sources, target, fnc, rcvr, dataType, comm.nextEdge());
+    this(comm, plan, sources, target, fnc, rcvr, dataType,
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**

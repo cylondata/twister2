@@ -39,7 +39,6 @@ public class BBroadcastExample extends BenchWorker {
 
   private BBroadcast bcast;
 
-  private boolean bCastDone;
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
@@ -80,9 +79,6 @@ public class BBroadcastExample extends BenchWorker {
 
     Set<Integer> sinksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
-    if (sinksOfExecutor.isEmpty()) {
-      bCastDone = true;
-    }
 
     // the map thread where data is produced
     if (workerId == 0) {
@@ -125,7 +121,6 @@ public class BBroadcastExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        bCastDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -139,7 +134,6 @@ public class BBroadcastExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      bCastDone = true;
       return true;
     }
   }

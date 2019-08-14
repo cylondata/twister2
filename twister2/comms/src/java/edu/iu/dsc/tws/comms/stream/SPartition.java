@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
@@ -45,12 +46,13 @@ public class SPartition extends BaseOperation {
   public SPartition(Communicator comm, LogicalPlan plan,
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr,
-                    DestinationSelector destSelector, int edgeId) {
+                    DestinationSelector destSelector, int edgeId,
+                    MessageSchema messageSchema) {
     super(comm.getChannel());
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr),
-        new PartitionStreamingPartialReceiver(), dataType);
+        new PartitionStreamingPartialReceiver(), dataType, messageSchema);
     partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
     op = partition;
@@ -60,7 +62,16 @@ public class SPartition extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr,
                     DestinationSelector destSelector) {
-    this(comm, plan, sources, targets, dataType, rcvr, destSelector, comm.nextEdge());
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SPartition(Communicator comm, LogicalPlan plan,
+                    Set<Integer> sources, Set<Integer> targets, MessageType dataType,
+                    SingularReceiver rcvr,
+                    DestinationSelector destSelector, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, dataType, rcvr, destSelector,
+        comm.nextEdge(), messageSchema);
   }
 
   /**

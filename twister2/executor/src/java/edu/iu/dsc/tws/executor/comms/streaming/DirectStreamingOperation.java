@@ -47,7 +47,7 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SDirect(newComm, logicalPlan, sources, targets, edge.getDataType(),
-        new DirectReceiver(), edge.getEdgeID().nextId());
+        new DirectReceiver(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   public boolean send(int source, IMessage message, int flags) {

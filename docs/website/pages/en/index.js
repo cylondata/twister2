@@ -141,20 +141,26 @@ const FeaturesTop = props => (
 );
 
 const Twister2Apps = props => (
-<Block layout="twoColumn" className="rowContainer featureBlock">
+<Block layout="threeColumn" className="rowContainer featureBlock">
     {[
             {
-                content: "Multiple API's for designing applications according to your requirements",
+                content: "Better APIs and performance for ML applications",
                 //image: imgUrl('icon/time.png'),
-                image : imgUrl("cogs.svg"),
+                image : imgUrl("ai.png"),
                 imageAlign: 'top',
                 title: "Machine Learning"
             },
 {
     content: "5X performance than popular data processing engines",
-        image: imgUrl('speed.svg'),
+        image: imgUrl('dataprocessing.png'),
     imageAlign: 'top',
     title: "Data Processing"
+},
+{
+    content: "Applications can be developed as dataflow programs",
+        image: imgUrl('dataflow.png'),
+    imageAlign: 'top',
+    title: "Dataflow "
 },
 ]}
 </Block>
@@ -172,13 +178,13 @@ const Twister2Apps2 = props => (
             },
 {
     content: "Similar APIs for Apache Storm for streaming analytics",
-        image: imgUrl('speed.svg'),
+        image: imgUrl('streamgraph.png'),
     imageAlign: 'top',
     title: "Streaming Analytics"
 },
 {
     content: "Support for Apache Storm and Apache BEAM APIs",
-        image: imgUrl('speed.svg'),
+        image: imgUrl('api_2.png'),
     imageAlign: 'top',
     title: "Storm and BEAM Support"
 },
