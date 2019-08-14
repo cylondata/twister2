@@ -31,8 +31,8 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.TaskEnvironment;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class CheckpointingTaskExample implements IWorker {
 
@@ -42,25 +42,26 @@ public class CheckpointingTaskExample implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    TaskEnvironment taskEnvironment = TaskEnvironment.init(
-        config, workerID, workerController, volatileVolume);
+    ComputeEnvironment computeEnvironment = ComputeEnvironment.init(
+        config, workerID, workerController, persistentVolume, volatileVolume);
 
-    TaskGraphBuilder taskGraphBuilder = taskEnvironment.newTaskGraph(OperationMode.STREAMING);
+    ComputeGraphBuilder computeGraphBuilder =
+        computeEnvironment.newTaskGraph(OperationMode.STREAMING);
 
     int parallelism = config.getIntegerValue("parallelism", 1);
 
-    taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
+    computeGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
-    taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
+    computeGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
         .direct("source").viaEdge("so-c").withDataType(MessageTypes.INTEGER);
 
-    taskGraphBuilder.addSink("sink", new SinkTask(), parallelism)
+    computeGraphBuilder.addSink("sink", new SinkTask(), parallelism)
         .direct("compute")
         .viaEdge("c-si")
         .withDataType(MessageTypes.INTEGER);
 
-    taskEnvironment.buildAndExecute(taskGraphBuilder);
-    taskEnvironment.close();
+    computeEnvironment.buildAndExecute(computeGraphBuilder);
+    computeEnvironment.close();
   }
 
   public static class ComputeTask extends BaseCompute<Integer> implements CheckpointableTask {

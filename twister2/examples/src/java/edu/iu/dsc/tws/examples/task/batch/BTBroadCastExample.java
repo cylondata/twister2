@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntIteratorComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BBroadCastCompute;
 
 public class BTBroadCastExample extends BenchTaskWorker {
@@ -34,19 +34,19 @@ public class BTBroadCastExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTBroadCastExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new BroadcastSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
 
     computeConnection.broadcast(SOURCE).viaEdge(edge);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class BroadcastSinkTask extends BBroadCastCompute<int[]> implements ISink {

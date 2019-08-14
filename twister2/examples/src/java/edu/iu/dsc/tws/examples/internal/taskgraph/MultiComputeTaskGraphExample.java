@@ -49,7 +49,7 @@ import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 /**
@@ -77,7 +77,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
 
     int parallel = Integer.parseInt((String) config.get(DataObjectConstants.PARALLELISM_VALUE));
 

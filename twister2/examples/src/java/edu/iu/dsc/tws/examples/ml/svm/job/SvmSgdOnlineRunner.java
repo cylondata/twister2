@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.WindowArguments;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.constant.WindowType;
@@ -62,8 +62,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   private OperationMode operationMode;
   private SVMJobParameters svmJobParameters;
   private BinaryBatchModel binaryBatchModel;
-  private TaskGraphBuilder trainingBuilder;
-  private TaskGraphBuilder testingBuilder;
+  private ComputeGraphBuilder trainingBuilder;
+  private ComputeGraphBuilder testingBuilder;
   private DataFlowTaskGraph iterativeSVMTrainingTaskGraph;
   private ExecutionPlan iterativeSVMTrainingExecutionPlan;
   private DataFlowTaskGraph iterativeSVMTestingTaskGraph;
@@ -125,8 +125,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     LOG.info(this.binaryBatchModel.toString());
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;
-    trainingBuilder = TaskGraphBuilder.newBuilder(config);
-    testingBuilder = TaskGraphBuilder.newBuilder(config);
+    trainingBuilder = ComputeGraphBuilder.newBuilder(config);
+    testingBuilder = ComputeGraphBuilder.newBuilder(config);
   }
 
   public SvmSgdOnlineRunner initialize() {

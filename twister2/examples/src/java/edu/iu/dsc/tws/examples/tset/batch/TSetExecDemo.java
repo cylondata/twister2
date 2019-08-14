@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.TaskEnvironment;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public class TSetExecDemo implements IWorker, Serializable {
@@ -63,7 +63,7 @@ public class TSetExecDemo implements IWorker, Serializable {
     WorkerEnvironment env = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
 
-    TaskEnvironment tenv = TaskEnvironment.init(env);
+    ComputeEnvironment tenv = ComputeEnvironment.init(env);
 
     GraphBuilder graph = GraphBuilder.newBuilder();
     graph.operationMode(OperationMode.BATCH);

@@ -30,14 +30,14 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BPartitionCompute;
 
 public class BTPartitionExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTPartitionExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -45,12 +45,12 @@ public class BTPartitionExample extends BenchTaskWorker {
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ISink r = new PartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE)
         .viaEdge(edge)
         .withDataType(dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class TaskGraphBuildTest {
 
@@ -56,19 +56,19 @@ public class TaskGraphBuildTest {
     TestSink1 testCompute = new TestSink1();
     TestSink2 testSink = new TestSink2();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(getConfig());
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(getConfig());
 
-    taskGraphBuilder.addSource("source", testSource, 4);
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    computeGraphBuilder.addSource("source", testSource, 4);
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
+    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
-    DataFlowTaskGraph graph = taskGraphBuilder.build();
+    DataFlowTaskGraph graph = computeGraphBuilder.build();
     return graph;
   }
 

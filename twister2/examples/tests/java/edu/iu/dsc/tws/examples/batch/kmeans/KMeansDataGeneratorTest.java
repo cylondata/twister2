@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class KMeansDataGeneratorTest {
 
@@ -55,15 +55,15 @@ public class KMeansDataGeneratorTest {
         numFiles, dsize, 100, dimension, config);
 
     int parallelismValue = 1;
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("kmeans");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
-    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
+    computeGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection1 = computeGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
     computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalTextInputPartitioner localTextInputPartitioner = new
         LocalTextInputPartitioner(new Path(dinputDirectory), parallelismValue, config);
@@ -90,15 +90,15 @@ public class KMeansDataGeneratorTest {
         numFiles, dsize, 100, dimension, config);
 
     int parallelismValue = 2;
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("kmeans");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
-    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection1 = taskGraphBuilder.addSink("sink", sinkTask,
+    computeGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection1 = computeGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
     computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
     LocalFixedInputPartitioner localFixedInputPartitioner = new
         LocalFixedInputPartitioner(new Path(dinputDirectory), parallelismValue, config, dsize);
@@ -124,12 +124,12 @@ public class KMeansDataGeneratorTest {
     KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
         numFiles, csize, 100, dimension, config);
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("kmeans");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("kmeans");
     DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
         Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
-    taskGraphBuilder.addSource("map", task, parallelismValue);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.addSource("map", task, parallelismValue);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
     Path path = new Path(cinputDirectory);
     final FileSystem fs = FileSystemUtils.get(path);
@@ -157,13 +157,13 @@ public class KMeansDataGeneratorTest {
     KMeansDataGenerator.generateData("txt", new Path(cinputDirectory),
         numFiles, csize, 100, dimension, config);
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("kmeans");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("kmeans");
     DataFileReplicatedReadSource task = new DataFileReplicatedReadSource(
         Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
-    taskGraphBuilder.addSource("map", task, parallelismValue);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.addSource("map", task, parallelismValue);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
+    DataFlowTaskGraph dataFlowTaskGraph = computeGraphBuilder.build();
 
     Path path = new Path(cinputDirectory);
     final FileSystem fs = FileSystemUtils.get(path);

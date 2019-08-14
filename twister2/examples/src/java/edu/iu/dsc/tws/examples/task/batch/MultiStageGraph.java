@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class MultiStageGraph extends TaskWorker {
@@ -42,7 +42,7 @@ public class MultiStageGraph extends TaskWorker {
     ReduceTask rt = new ReduceTask();
     PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source")

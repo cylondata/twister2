@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BKeyedReduceCompute;
 
 public class BTKeyedReduceExample extends BenchTaskWorker {
@@ -44,7 +44,7 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(BTKeyedReduceExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelsim = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -54,13 +54,13 @@ public class BTKeyedReduceExample extends BenchTaskWorker {
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE)
         .viaEdge(edge)
         .withOperation(operation, dataType)
         .withKeyType(keyType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

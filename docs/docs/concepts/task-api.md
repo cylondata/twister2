@@ -1,27 +1,40 @@
 ---
 id: task_api
-title: Task API
-sidebar_label: Task API
+title: Compute API
+sidebar_label: Compute API
 ---
 
-The Task API is the middle tier API that provides both flexibility and performance. A user directly
-models an application as a graph and program it using the Task Graph API.  
+The Compute API is the middle tier API that provides both flexibility and performance. A user directly
+models an application as a graph and program it using the graph constructs.   
 
-### Overview of Task Graph API
+### Overview of Compute API
 
-The TaskGraphBuilder is the entry point for the task graph API which helps the user to define their 
-application in terms of task graph. It consists of various methods to define the source task, compute 
-task, and sink task. Also, it provides the methods to define the edges between the source, compute, 
-and sink tasks. The TaskGraphBuilder creates the corresponding task vertices for those tasks. In 
-addition to that, the user can define their task constraints and the type of the tasks such as 
-Streaming or Batch using the Task Graph API. 
+The ```TaskGraphBuilder``` is the entry point for the task compute API which helps the user to define their 
+application in terms of a graph. Every computation with this API, consists of at least a ```Source``` task. 
+One can have ```Compute``` tasks and ```Sink``` tasks in the same computation.  
 
-### Defining
+The API defines methods to create the tasks as well as links between them. A link between two tasks ultimately
+translates to a distributed operations such as a ```reduce``` or a ```gather```. The types of links supported 
+by the system is predefined and one can extend the system by adding additional links as well.
+
+Once the compute graph is defined, it needs be scheduled and executed. The framework provides a set of predifined schedulers
+and executors. One can add their own schedulers and executors as well.
+
+### Streaming & Batch
+
+The computation graph as an option to set weather it is going to do a streaming or batch computation. 
+Once this is set the executors and schedulers can act accordingly.  
+
+### Example Program
+
+The following shows an example program based on the compute API.
+
+
 
 #### Creating and Initializing the TaskGraph Builder
 
 ```java 
-TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+TaskGraphBuilder computeGraphBuilder = TaskGraphBuilder.newBuilder(config);
 ```
 
 #### API for defining Source Task 
@@ -68,7 +81,7 @@ public ComputeConnection addSink(String name, IWindowedSink sink, int parallel)
 
 ```java 
 SinkTask sinkTask = new SinkTask();
-ComputeConnection computeConnectionSink = taskGraphBuilder.addSink("sinktaskname", sinkTask, parallelismValue)
+ComputeConnection computeConnectionSink = computeGraphBuilder.addSink("sinktaskname", sinkTask, parallelismValue)
 ```
 
 #### Defining the Task Edges
@@ -120,7 +133,7 @@ Once the task graph is defined, the user has to call the build() to build the de
  task graph. 
  
  ```java 
-   DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+   DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
  ```
  
 #### Task Graph Execution
@@ -147,13 +160,13 @@ and return the data points in an array which consists of source, compute, and si
     DataObjectCompute dataObjectCompute = new DataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
     DataObjectDirectSink dataObjectSink = new DataObjectDirectSink();
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    TaskGraphBuilder computeGraphBuilder = TaskGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsTaskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    datapointsComputeGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection computeConnectionSink = taskGraphBuilder.addSink(
+    ComputeConnection computeConnectionSink = computeGraphBuilder.addSink(
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -161,10 +174,10 @@ and return the data points in an array which consists of source, compute, and si
         DataType.OBJECT);
     computeConnectionSink.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    datapointsTaskGraphBuilder.setMode(OperationMode.BATCH);
+    datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
     
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = datapointsTaskGraphBuilder.build();
+    DataFlowTaskGraph datapointsTaskGraph = datapointsComputeGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph

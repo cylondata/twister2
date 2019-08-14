@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
@@ -163,16 +163,16 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
         .withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
@@ -180,16 +180,16 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
         .withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
-    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
@@ -200,12 +200,12 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
 
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, parallel);
-    ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
+    ComputeConnection sinkComputeConnection = computeGraphBuilder.addSink(
         "sink", testSink, parallel);
 
     computeConnection.direct("source")
@@ -216,10 +216,10 @@ public class DataLocalityTaskSchedulerTest {
         .viaEdge("sdirect-edge")
         .withDataType(MessageTypes.OBJECT);
 
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 }

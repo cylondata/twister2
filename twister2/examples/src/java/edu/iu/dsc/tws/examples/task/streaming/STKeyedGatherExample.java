@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.KeyedGatherCompute;
 
 /**
@@ -47,7 +47,7 @@ public class STKeyedGatherExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STKeyedGatherExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -56,13 +56,13 @@ public class STKeyedGatherExample extends BenchTaskWorker {
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedGatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE)
         .viaEdge(edge)
         .withKeyType(keyType)
         .withDataType(dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class KeyedGatherSinkTask extends KeyedGatherCompute<Integer, int[]>

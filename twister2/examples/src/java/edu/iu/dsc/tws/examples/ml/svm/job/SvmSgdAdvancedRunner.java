@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class SvmSgdAdvancedRunner extends TaskWorker {
@@ -55,8 +55,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
   private OperationMode operationMode;
   private SVMJobParameters svmJobParameters;
   private BinaryBatchModel binaryBatchModel;
-  private TaskGraphBuilder trainingBuilder;
-  private TaskGraphBuilder testingBuilder;
+  private ComputeGraphBuilder trainingBuilder;
+  private ComputeGraphBuilder testingBuilder;
   private InputDataStreamer dataStreamer;
   private SVMCompute svmCompute;
   private IterativeSVMCompute iterativeSVMCompute;
@@ -104,8 +104,8 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * Initializing the execute method
    */
   public void initializeExecute() {
-    trainingBuilder = TaskGraphBuilder.newBuilder(config);
-    testingBuilder = TaskGraphBuilder.newBuilder(config);
+    trainingBuilder = ComputeGraphBuilder.newBuilder(config);
+    testingBuilder = ComputeGraphBuilder.newBuilder(config);
 
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;

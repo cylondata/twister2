@@ -42,8 +42,8 @@ import edu.iu.dsc.tws.task.window.api.IWindowedSink;
 /**
  * This is the entry point for creating a task graph by the user.
  */
-public final class TaskGraphBuilder {
-  private static final Logger LOG = Logger.getLogger(TaskGraphBuilder.class.getName());
+public final class ComputeGraphBuilder {
+  private static final Logger LOG = Logger.getLogger(ComputeGraphBuilder.class.getName());
 
   /**
    * Keep track of the nodes with their names
@@ -78,11 +78,11 @@ public final class TaskGraphBuilder {
    * @param cfg configuration
    * @return new task graph builder instance
    */
-  public static TaskGraphBuilder newBuilder(Config cfg) {
-    return new TaskGraphBuilder(cfg);
+  public static ComputeGraphBuilder newBuilder(Config cfg) {
+    return new ComputeGraphBuilder(cfg);
   }
 
-  private TaskGraphBuilder(Config cfg) {
+  private ComputeGraphBuilder(Config cfg) {
     this.defaultParallelism = TaskConfigurations.getDefaultParallelism(cfg, 1);
   }
 

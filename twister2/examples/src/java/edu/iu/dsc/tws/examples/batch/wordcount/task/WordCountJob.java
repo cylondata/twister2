@@ -25,6 +25,10 @@ import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
@@ -35,15 +39,15 @@ import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.function.ReduceFn;
 
 /**
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated
  */
-public class WordCountJob extends TaskWorker {
+public class WordCountJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
 
   private static final int NUMBER_MESSAGES = 100;
@@ -55,13 +59,16 @@ public class WordCountJob extends TaskWorker {
   private static final int NO_OF_SAMPLE_WORDS = 100;
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+        persistentVolume, volatileVolume);
     // source and aggregator
     WordSource source = new WordSource();
     WordAggregator counter = new WordAggregator();
 
     // build the task graph
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4)
         .keyedReduce("word-source")
@@ -74,8 +81,8 @@ public class WordCountJob extends TaskWorker {
 
     // execute the graph
     DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, plan);
+    ExecutionPlan plan = cEnv.getTaskExecutor().plan(graph);
+    cEnv.getTaskExecutor().execute(graph, plan);
   }
 
   private static class WordSource extends BaseSource {

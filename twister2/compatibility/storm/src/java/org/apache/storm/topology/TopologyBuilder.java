@@ -28,13 +28,13 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class TopologyBuilder implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(TopologyBuilder.class.getName());
 
-  private transient TaskGraphBuilder taskGraphBuilder;
+  private transient ComputeGraphBuilder computeGraphBuilder;
   private HashMap<String, Twister2StormNode> nodes = new HashMap<>();
 
   private Set<String> sinkNodes = new HashSet<>(); //these are the sinks in twister2
@@ -42,7 +42,7 @@ public class TopologyBuilder implements Serializable {
   private Set<String> computeNodes = new HashSet<>(); //these are the computes in twister2
 
   public TopologyBuilder() {
-    this.taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    this.computeGraphBuilder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
   }
 
   private String generateEdgeName(Twister2BoltGrouping t2BoltGrouping, String destination) {
@@ -110,7 +110,7 @@ public class TopologyBuilder implements Serializable {
     this.sourceNodes.forEach(source -> {
       Twister2Spout twister2Spout = (Twister2Spout) nodes.get(source);
       LOG.info("Adding source : " + source);
-      this.taskGraphBuilder.addSource(
+      this.computeGraphBuilder.addSource(
           source,
           twister2Spout,
           twister2Spout.getParallelism()
@@ -119,7 +119,7 @@ public class TopologyBuilder implements Serializable {
 
     this.computeNodes.forEach(compute -> {
       Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(compute);
-      ComputeConnection computeConnection = this.taskGraphBuilder.addCompute(
+      ComputeConnection computeConnection = this.computeGraphBuilder.addCompute(
           compute,
           twister2Bolt,
           twister2Bolt.getParallelism()
@@ -129,7 +129,7 @@ public class TopologyBuilder implements Serializable {
 
     this.sinkNodes.forEach(sink -> {
       Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(sink);
-      ComputeConnection computeConnection = this.taskGraphBuilder.addSink(
+      ComputeConnection computeConnection = this.computeGraphBuilder.addSink(
           sink,
           twister2Bolt,
           twister2Bolt.getParallelism()
@@ -137,9 +137,9 @@ public class TopologyBuilder implements Serializable {
       this.defineGrouping(twister2Bolt, computeConnection);
     });
 
-    this.taskGraphBuilder.setMode(OperationMode.STREAMING);
+    this.computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    return new StormTopology(this.taskGraphBuilder.build());
+    return new StormTopology(this.computeGraphBuilder.build());
   }
 
   public BoltDeclarer setBolt(String id, IRichBolt bolt) {

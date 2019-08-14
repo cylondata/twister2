@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.task.nodes.ISource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class StormBenchmark extends TaskWorker {
@@ -51,24 +51,24 @@ public class StormBenchmark extends TaskWorker {
     Integer parallelSources = this.config.getIntegerValue(
         "parallel-sources", 256
     );
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(
         Config.newBuilder().build());
     Generator generator = new Generator();
     DataSink dataSink = new DataSink();
-    taskGraphBuilder.addSource("generator", generator, parallelSources);
+    computeGraphBuilder.addSource("generator", generator, parallelSources);
 
     if ("reduce".equals(config.get(PARAM_OPERATION))) {
-      taskGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addSink("sink", dataSink)
           .reduce("generator").viaEdge("edge").withOperation(Op.SUM,
           MessageTypes.DOUBLE_ARRAY);
     } else {
-      taskGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addSink("sink", dataSink)
           .gather("generator").viaEdge("edge");
     }
 
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph build = taskGraphBuilder.build();
+    DataFlowTaskGraph build = computeGraphBuilder.build();
 
     this.taskExecutor.execute(build, taskExecutor.plan(build));
   }

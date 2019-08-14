@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
 public final class TwoDataFlowsExample {
@@ -144,7 +144,7 @@ public final class TwoDataFlowsExample {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelism);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelism);
@@ -166,7 +166,7 @@ public final class TwoDataFlowsExample {
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelism);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
     reduceConn.reduce("source1")

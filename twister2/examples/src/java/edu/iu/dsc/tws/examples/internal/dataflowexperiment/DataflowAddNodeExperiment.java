@@ -1,4 +1,4 @@
-package edu.iu.dsc.tws.examples.batch.dataflowexperiment;
+package edu.iu.dsc.tws.examples.internal.dataflowexperiment;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.task.IFunction;
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
@@ -30,12 +29,12 @@ import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
-public class DataflowNodeExperiment extends TaskWorker {
+public class DataflowAddNodeExperiment extends TaskWorker {
 
-  private static final Logger LOG = Logger.getLogger(DataflowNodeExperiment.class.getName());
+  private static final Logger LOG = Logger.getLogger(DataflowAddNodeExperiment.class.getName());
 
   @SuppressWarnings("unchecked")
   @Override
@@ -44,38 +43,47 @@ public class DataflowNodeExperiment extends TaskWorker {
 
     SourceTask sourceTask = new SourceTask();
     ReduceTask reduceTask = new ReduceTask();
-    ComputeTask computeTask = new ComputeTask();
+    FirstComputeTask firstComputeTask = new FirstComputeTask();
+    SecondComputeTask secondComputeTask = new SecondComputeTask();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     DataflowJobParameters dataflowJobParameters = DataflowJobParameters.build(config);
 
     int parallel = dataflowJobParameters.getParallelismValue();
     int iter = dataflowJobParameters.getIterations();
 
     builder.addSource("source", sourceTask, parallel);
-    ComputeConnection computeConnection = builder.addCompute("compute", computeTask, parallel);
+    ComputeConnection computeConnection
+        = builder.addCompute("firstcompute", firstComputeTask, parallel);
+    ComputeConnection computeConnection1
+        = builder.addCompute("secondcompute", secondComputeTask, parallel);
     ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
 
     computeConnection.direct("source")
-        .viaEdge("direct")
+        .viaEdge("fdirect")
         .withDataType(MessageTypes.OBJECT);
 
-    rc.allreduce("compute")
+    computeConnection1.direct("firstcompute")
+        .viaEdge("sdirect")
+        .withDataType(MessageTypes.OBJECT);
+
+    rc.allreduce("secondcompute")
         .viaEdge("all-reduce")
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
     DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
+
+    //ExecutionPlan plan = taskExecutor.plan(graph);
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < iter; i++) {
-      taskExecutor.execute(graph, plan);
+      //taskExecutor.execute(graph, plan);
       LOG.info("Completed Iteration:" + i);
     }
     long stopTime = System.currentTimeMillis();
     long executionTime = stopTime - startTime;
-    LOG.info("Total Execution Time to Complete Dataflow Node Experiment"
+    LOG.info("Total Execution Time to complete Dataflow Additional Node Experiment"
         + "\t" + executionTime + "(in milliseconds)");
   }
 
@@ -94,7 +102,7 @@ public class DataflowNodeExperiment extends TaskWorker {
         double randomValue = r.nextDouble();
         datapoints[i] = randomValue;
       }
-      context.writeEnd("direct", datapoints);
+      context.writeEnd("fdirect", datapoints);
     }
 
     public void prepare(Config cfg, TaskContext context) {
@@ -103,13 +111,36 @@ public class DataflowNodeExperiment extends TaskWorker {
     }
   }
 
-  private static class ComputeTask extends BaseCompute {
+  private static class FirstComputeTask extends BaseCompute {
     private static final long serialVersionUID = -254264120110286748L;
 
     private int count = 0;
 
     @Override
     public boolean execute(IMessage message) {
+      LOG.log(Level.FINE, "Received Points (First Compute Task): " + context.getWorkerId()
+          + ":" + context.globalTaskId());
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          count += 1;
+          context.write("sdirect", it.next());
+        }
+      }
+      context.end("sdirect");
+      return true;
+    }
+  }
+
+  private static class SecondComputeTask extends BaseCompute {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.FINE, "Received Points (Second Compute Task): " + context.getWorkerId()
+          + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
         while (it.hasNext()) {
@@ -124,7 +155,6 @@ public class DataflowNodeExperiment extends TaskWorker {
 
   private static class ReduceTask extends BaseSink {
     private static final long serialVersionUID = -5190777711234234L;
-
     private double[] datapoints;
 
     @Override
@@ -172,6 +202,7 @@ public class DataflowNodeExperiment extends TaskWorker {
     }
   }
 
+
   public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -204,8 +235,8 @@ public class DataflowNodeExperiment extends TaskWorker {
     jobConfig.putAll(configurations);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("Experiment1");
-    jobBuilder.setWorkerClass(DataflowNodeExperiment.class.getName());
+    jobBuilder.setJobName("Experiment2");
+    jobBuilder.setWorkerClass(DataflowAddNodeExperiment.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
@@ -213,5 +244,3 @@ public class DataflowNodeExperiment extends TaskWorker {
     Twister2Submitter.submitJob(jobBuilder.build(), config);
   }
 }
-
-

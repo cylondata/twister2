@@ -1,4 +1,4 @@
-package edu.iu.dsc.tws.examples.batch.dataflowexperiment;
+package edu.iu.dsc.tws.examples.internal.dataflowexperiment;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;

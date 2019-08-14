@@ -44,6 +44,10 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.task.TaskContext;
 import edu.iu.dsc.tws.api.task.TaskPartitioner;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
@@ -61,8 +65,8 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.ops.KeyedGatherConfig;
 import edu.iu.dsc.tws.task.typed.AllReduceCompute;
 import edu.iu.dsc.tws.task.typed.batch.BKeyedGatherUnGroupedCompute;
@@ -72,8 +76,7 @@ import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_FILE_SIZE;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
-public class TeraSort extends TaskWorker {
-
+public class TeraSort implements IWorker {
   private static final Logger LOG = Logger.getLogger(TeraSort.class.getName());
 
   private static final String ARG_INPUT_FILE = "inputFile";
@@ -107,8 +110,12 @@ public class TeraSort extends TaskWorker {
   private static volatile AtomicInteger tasksCount = new AtomicInteger();
 
   @Override
-  public void execute() {
-    resultsRecorder = new BenchmarkResultsRecorder(config, workerId == 0);
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+        persistentVolume, volatileVolume);
+
+    resultsRecorder = new BenchmarkResultsRecorder(config, workerID == 0);
     Timing.setDefaultTimingUnit(TimingUnit.MILLI_SECONDS);
 
     final String filePath = config.getStringValue(ARG_INPUT_FILE, null);
@@ -119,7 +126,7 @@ public class TeraSort extends TaskWorker {
     //Sampling Graph : if file based only
     TaskPartitioner taskPartitioner;
     if (filePath != null) {
-      TaskGraphBuilder samplingGraph = TaskGraphBuilder.newBuilder(config);
+      ComputeGraphBuilder samplingGraph = ComputeGraphBuilder.newBuilder(config);
       samplingGraph.setMode(OperationMode.BATCH);
 
       Sampler samplerTask = new Sampler();
@@ -156,9 +163,9 @@ public class TeraSort extends TaskWorker {
             return newMinMax;
           });
       DataFlowTaskGraph sampleGraphBuild = samplingGraph.build();
-      ExecutionPlan sampleTaskPlan = taskExecutor.plan(sampleGraphBuild);
-      taskExecutor.execute(sampleGraphBuild, sampleTaskPlan);
-      DataObject<byte[]> output = taskExecutor.getOutput(sampleGraphBuild,
+      ExecutionPlan sampleTaskPlan = cEnv.getTaskExecutor().plan(sampleGraphBuild);
+      cEnv.getTaskExecutor().execute(sampleGraphBuild, sampleTaskPlan);
+      DataObject<byte[]> output = cEnv.getTaskExecutor().getOutput(sampleGraphBuild,
           sampleTaskPlan, TASK_SAMPLER_REDUCE);
       LOG.info("Sample output received");
       taskPartitioner = new TaskPartitionerForSampledData(
@@ -171,7 +178,7 @@ public class TeraSort extends TaskWorker {
 
 
     // Sort Graph
-    TaskGraphBuilder teraSortTaskGraph = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder teraSortTaskGraph = ComputeGraphBuilder.newBuilder(config);
     teraSortTaskGraph.setMode(OperationMode.BATCH);
     BaseSource dataSource;
     if (filePath == null) {
@@ -204,8 +211,8 @@ public class TeraSort extends TaskWorker {
 
 
     DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
-    ExecutionPlan executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, executionPlan);
+    ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(dataFlowTaskGraph);
+    cEnv.getTaskExecutor().execute(dataFlowTaskGraph, executionPlan);
     LOG.info("Stopping execution...");
   }
 

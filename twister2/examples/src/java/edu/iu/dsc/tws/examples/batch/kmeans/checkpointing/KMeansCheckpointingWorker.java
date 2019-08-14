@@ -45,7 +45,7 @@ import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import edu.iu.dsc.tws.task.TaskEnvironment;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 /**
@@ -77,8 +77,8 @@ public class KMeansCheckpointingWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TaskEnvironment taskEnv = TaskEnvironment.init(config, workerId, workerController,
-        volatileVolume);
+    ComputeEnvironment taskEnv = ComputeEnvironment.init(config, workerId,
+        workerController, persistentVolume, volatileVolume);
 
     CheckpointingWorkerEnv checkpointingEnv =
         CheckpointingWorkerEnv.newBuilder(config, workerId, workerController)

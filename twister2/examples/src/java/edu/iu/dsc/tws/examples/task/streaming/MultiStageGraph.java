@@ -19,6 +19,10 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
@@ -26,23 +30,25 @@ import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.task.nodes.BaseSink;
 import edu.iu.dsc.tws.api.task.nodes.BaseSource;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
-public class MultiStageGraph extends TaskWorker {
+public class MultiStageGraph implements IWorker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+        workerController, persistentVolume, volatileVolume);
     GeneratorTask g = new GeneratorTask();
     ReduceTask rt = new ReduceTask();
     PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source").viaEdge("partition-edge").withDataType(MessageTypes.OBJECT);
@@ -53,7 +59,7 @@ public class MultiStageGraph extends TaskWorker {
     builder.setMode(OperationMode.STREAMING);
 
     DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, workerId, graph, workerController);
+    cEnv.getTaskExecutor().execute(graph, cEnv.getTaskExecutor().plan(graph));
   }
 
   private static class GeneratorTask extends BaseSource {

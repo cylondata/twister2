@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.extract.EventTimeExtractor;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.DirectCompute;
 import edu.iu.dsc.tws.task.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.window.api.ITimestampExtractor;
@@ -48,7 +48,7 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STWindowEventTimeExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -96,12 +96,12 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         .withAllowedLateness(0, TimeUnit.MILLISECONDS)
         .withWatermarkInterval(1, TimeUnit.MILLISECONDS)
         .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
     computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
     //computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class DirectReceiveTask extends DirectCompute<int[]> implements ISink {

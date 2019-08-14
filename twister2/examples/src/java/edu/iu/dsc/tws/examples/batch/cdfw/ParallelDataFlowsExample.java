@@ -53,7 +53,7 @@ import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
 public final class ParallelDataFlowsExample {
@@ -162,7 +162,7 @@ public final class ParallelDataFlowsExample {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelismValue);
@@ -185,7 +185,7 @@ public final class ParallelDataFlowsExample {
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelismValue);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
         1);

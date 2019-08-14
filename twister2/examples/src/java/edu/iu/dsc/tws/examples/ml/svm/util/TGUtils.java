@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectDirectS
 import edu.iu.dsc.tws.examples.ml.svm.data.SVMDataObjectSource;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public final class TGUtils {
 
@@ -53,14 +53,14 @@ public final class TGUtils {
         samples, numOfFeatures, DELIMITER);
     IterativeSVMDataObjectDirectSink iterativeSVMPrimaryDataObjectDirectSink
         = new IterativeSVMDataObjectDirectSink();
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    datapointsTaskGraphBuilder.addSource(dataObjectSourceStr,
+    ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    datapointsComputeGraphBuilder.addSource(dataObjectSourceStr,
         sourceTask,
         parallelism);
     ComputeConnection datapointComputeConnection
-        = datapointsTaskGraphBuilder.addCompute(dataObjectComputeStr,
+        = datapointsComputeGraphBuilder.addCompute(dataObjectComputeStr,
         dataObjectCompute, parallelism);
-    ComputeConnection computeConnectionSink = datapointsTaskGraphBuilder
+    ComputeConnection computeConnectionSink = datapointsComputeGraphBuilder
         .addSink(dataObjectSinkStr,
             iterativeSVMPrimaryDataObjectDirectSink,
             parallelism);
@@ -70,11 +70,11 @@ public final class TGUtils {
     computeConnectionSink.direct(dataObjectComputeStr)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    datapointsTaskGraphBuilder.setMode(opMode);
+    datapointsComputeGraphBuilder.setMode(opMode);
 
-    datapointsTaskGraphBuilder.setTaskGraphName(graphName);
+    datapointsComputeGraphBuilder.setTaskGraphName(graphName);
     //Build the first taskgraph
-    return datapointsTaskGraphBuilder.build();
+    return datapointsComputeGraphBuilder.build();
   }
 
   public static DataFlowTaskGraph buildTrainingDataPointsTG(int dataStreamerParallelism,
@@ -116,15 +116,15 @@ public final class TGUtils {
         svmJobParameters.getFeatures());
     IterativeSVMWeightVectorObjectDirectSink weightVectorObjectSink
         = new IterativeSVMWeightVectorObjectDirectSink();
-    TaskGraphBuilder weightVectorTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder weightVectorComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
-    weightVectorTaskGraphBuilder
+    weightVectorComputeGraphBuilder
         .addSource(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SOURCE,
             dataFileReplicatedReadSource, dataStreamerParallelism);
-    ComputeConnection weightVectorComputeConnection = weightVectorTaskGraphBuilder
+    ComputeConnection weightVectorComputeConnection = weightVectorComputeGraphBuilder
         .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE,
             weightVectorObjectCompute, dataStreamerParallelism);
-    ComputeConnection weightVectorSinkConnection = weightVectorTaskGraphBuilder
+    ComputeConnection weightVectorSinkConnection = weightVectorComputeGraphBuilder
         .addSink(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
             dataStreamerParallelism);
 
@@ -134,11 +134,11 @@ public final class TGUtils {
     weightVectorSinkConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.DOUBLE_ARRAY);
-    weightVectorTaskGraphBuilder.setMode(opMode);
-    weightVectorTaskGraphBuilder
+    weightVectorComputeGraphBuilder.setMode(opMode);
+    weightVectorComputeGraphBuilder
         .setTaskGraphName(IterativeSVMConstants.WEIGHT_VECTOR_LOADING_TASK_GRAPH);
 
-    return weightVectorTaskGraphBuilder.build();
+    return weightVectorComputeGraphBuilder.build();
   }
 
 

@@ -28,6 +28,10 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.api.task.IMessage;
 import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
@@ -41,17 +45,21 @@ import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class MDSWorker extends TaskWorker {
+public class MDSWorker implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(MDSWorker.class.getName());
 
   @Override
-  public void execute() {
-
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+        workerController, persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
     MDSWorkerParameters mdsWorkerParameters = MDSWorkerParameters.build(config);
 
     int parallel = mdsWorkerParameters.getParallelismValue();
@@ -77,7 +85,7 @@ public class MDSWorker extends TaskWorker {
         directory, datasize);
     MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink(matrixColumLength);
 
-    TaskGraphBuilder mdsDataProcessingGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder mdsDataProcessingGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     mdsDataProcessingGraphBuilder.setTaskGraphName("MDSDataProcessing");
     mdsDataProcessingGraphBuilder.addSource("dataobjectsource", mdsDataObjectSource, parallel);
 
@@ -103,7 +111,7 @@ public class MDSWorker extends TaskWorker {
     MDSSourceTask generatorTask = new MDSSourceTask();
     MDSReceiverTask receiverTask = new MDSReceiverTask();
 
-    TaskGraphBuilder mdsComputeProcessingGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder mdsComputeProcessingGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     mdsComputeProcessingGraphBuilder.setTaskGraphName("MDSCompute");
     mdsComputeProcessingGraphBuilder.addSource("generator", generatorTask, parallel);
     ComputeConnection computeConnection = mdsComputeProcessingGraphBuilder.addSink("receiver",

@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BJoinCompute;
 
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
@@ -50,7 +50,7 @@ public class BTJoinExample extends BenchTaskWorker {
   private static final String LEFT_EDGE = "left";
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -61,8 +61,8 @@ public class BTJoinExample extends BenchTaskWorker {
     BaseSource g = new JoinSource();
     ISink r = new JoinSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.innerJoin(SOURCE, SOURCE)
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
@@ -88,7 +88,7 @@ public class BTJoinExample extends BenchTaskWorker {
           }
         })
         .withComparator(Integer::compareTo);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class JoinSinkTask

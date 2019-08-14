@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.streaming.SPartitionKeyedCompute;
 
 public class STPartitionKeyedExample extends BenchTaskWorker {
@@ -40,7 +40,7 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STPartitionKeyedExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -49,13 +49,13 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new SKeyedPartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE)
         .viaEdge(edge)
         .withKeyType(keyType)
         .withDataType(dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

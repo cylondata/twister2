@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 
 public class RecordSave implements BulkReceiver {
@@ -31,12 +30,12 @@ public class RecordSave implements BulkReceiver {
   @Override
   public boolean receive(int target, Iterator<Object> it) {
     int count = 0;
-    while (it.hasNext()) {
-      Object next = it.next();
-      if (next instanceof Tuple) {
-        count++;
-      }
-    }
+//    while (it.hasNext()) {
+//      Object next = it.next();
+//      if (next instanceof Tuple) {
+//        count++;
+//      }
+//    }
     LOG.info(String.format("Received message for target: %d", count));
     return true;
   }

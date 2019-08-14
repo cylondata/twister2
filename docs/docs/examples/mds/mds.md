@@ -86,7 +86,7 @@ the communication edges between the tasks for the first task graph.
     mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
 ```
 
-Next, invoke the taskGraphBuilder to build the data processing task graph, get the task schedule plan 
+Next, invoke the computeGraphBuilder to build the data processing task graph, get the task schedule plan 
 and execution plan for the dataprocessing task graph, and call the execute() method to execute the 
 dataprocessing task graph. Once the execution is finished, the output values are retrieved in the 
 "dataobjectsink".
