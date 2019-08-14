@@ -108,10 +108,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
    * have multiple dataflow graphs. First, it will do the validation of the parallelism values for
    * the receptor and collector tasks and then invoke the schedule() method to schedule the
    * individual task graphs.
-   *
-   * @param workerPlan
-   * @param dataFlowTaskGraph
-   * @return
    */
   public Map<String, TaskSchedulePlan> schedule(WorkerPlan workerPlan,
                                                 DataFlowTaskGraph... dataFlowTaskGraph) {
@@ -135,8 +131,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
   /**
    * This method is to validate the receptor and collector task in the dataflow task graphs. The
    * validation starts from the last leaf of the task graph.
-   * @param dataFlowTaskGraph
-   * @return
    */
   private boolean validateDependentGraphs(DataFlowTaskGraph... dataFlowTaskGraph) {
     boolean flag = false;
@@ -150,8 +144,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   /**
    * This method is to validate the receptor task and it also has the receivable name set.
-   * @param dataFlowTaskGraph
-   * @return
    */
   private boolean receptorTaskValidation(DataFlowTaskGraph dataFlowTaskGraph) {
     Set<Vertex> childTaskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
@@ -170,8 +162,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
   /**
    * This method is to validate the collector task and it validates that the parallelism value of
    * collector task with the receptor tasks.
-   * @param dataFlowTaskGraph
-   * @return
    */
   private boolean collectorTaskValidation(DataFlowTaskGraph... dataFlowTaskGraph) {
     for (int i = 0; i < dataFlowTaskGraph.length - 1; i++) {
@@ -273,7 +263,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
         workerIdList.add(containerId);
       }
     }
-
+    ++index;
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, workerSchedulePlans);
     if (workerId == 0) {
       Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
@@ -290,7 +280,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
         }
       }
     }
-    ++index;
     return taskSchedulePlan;
   }
 
@@ -331,10 +320,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
   /**
    * This method is for allocating the multiple dependent task graphs. First, it stores the
    * scheduled worker list in the list for scheduling the next task graphs.
-   * @param graph
-   * @param vertex
-   * @param numberOfContainers
-   * @param globalTaskIndex
    */
   private void dependentTaskWorkerAllocation(DataFlowTaskGraph graph, Vertex vertex,
                                              int numberOfContainers, int globalTaskIndex) {
@@ -380,10 +365,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   /**
    * This method is to schedule the individual task graph which is independent in nature.
-   * @param graph
-   * @param vertex
-   * @param numberOfContainers
-   * @param globalTaskIndex
    */
   private void independentTaskWorkerAllocation(DataFlowTaskGraph graph, Vertex vertex,
                                                int numberOfContainers, int globalTaskIndex) {
