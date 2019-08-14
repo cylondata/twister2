@@ -77,7 +77,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
   //Batch Task Allocation Map
   private List<Integer> workerIdList = new ArrayList<>();
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
-  private Map<String, List<Integer>> graphWorkerIdsMap = new LinkedHashMap<>();
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
 
   private int parallelism = 0;
@@ -338,8 +337,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
             new TaskInstanceId(task, globalTaskIndex, i));
       }
     } else {
-      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
-          graph.getNodeConstraints());
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(
+          vertex, graph.getNodeConstraints());
       int instancesPerWorker = taskAttributes.getInstancesPerWorker(
           graph.getGraphConstraints());
       int maxTaskInstancesPerContainer = 0;
@@ -351,8 +350,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
           containerIndex = i % workerIdList.size();
         }
         if (maxTaskInstancesPerContainer < instancesPerWorker) {
-          batchTaskAllocation.get(containerIndex).add(new TaskInstanceId(
-              vertex.getName(), globalTaskIndex, i));
+          batchTaskAllocation.get(containerIndex).add(
+              new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
           ++maxTaskInstancesPerContainer;
         } else {
           throw new ScheduleException("Task Scheduling couldn't be possible for the present"
@@ -370,8 +369,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
                                                int numberOfContainers, int globalTaskIndex) {
     int totalTaskInstances;
     if (!graph.getNodeConstraints().isEmpty()) {
-      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
-          graph.getNodeConstraints());
+      totalTaskInstances
+          = taskAttributes.getTotalNumberOfInstances(vertex, graph.getNodeConstraints());
     } else {
       totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
     }
