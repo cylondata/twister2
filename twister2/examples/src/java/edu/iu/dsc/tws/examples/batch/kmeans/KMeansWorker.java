@@ -239,9 +239,9 @@ public class KMeansWorker implements IWorker {
     TaskGraphBuilder kmeansTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
 
     //Add source, and sink tasks to the task graph builder for the third task graph
-    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, 2);
+    kmeansTaskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
     ComputeConnection kMeanscomputeConnection = kmeansTaskGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, 2);
+        "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")
