@@ -43,7 +43,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SAllGather(newComm, logicalPlan, sources, dest,
         new FinalReduceReceive(), edge.getDataType(),
-        edge.getEdgeID().nextId(), edge.getEdgeID().nextId());
+        edge.getEdgeID().nextId(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

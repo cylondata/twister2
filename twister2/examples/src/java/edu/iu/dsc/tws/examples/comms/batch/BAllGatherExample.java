@@ -43,8 +43,6 @@ public class BAllGatherExample extends BenchWorker {
 
   private BAllGather gather;
 
-  private boolean gatherDone;
-
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
@@ -116,7 +114,7 @@ public class BAllGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && gather.isComplete();
+    return sourcesDone && gather.isComplete();
   }
 
   public class FinalSingularReceiver implements BulkReceiver {
@@ -126,7 +124,6 @@ public class BAllGatherExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        gatherDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -134,12 +131,12 @@ public class BAllGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
+      LOG.info("Received values");
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
           workerId == 0 && target == lowestTarget);
       BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
-      gatherDone = true;
       verifyResults(resultsVerifier, itr, null);
       return true;
     }

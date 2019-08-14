@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
@@ -24,7 +25,8 @@ import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
 public class BDirect extends BaseOperation {
   public BDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets,
-                 BulkReceiver rcvr, MessageType dataType, int edgeId) {
+                 BulkReceiver rcvr, MessageType dataType, int edgeId,
+                 MessageSchema messageSchema) {
     super(comm.getChannel());
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
@@ -39,7 +41,8 @@ public class BDirect extends BaseOperation {
     plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
 
     op = new OneToOne(comm.getChannel(), sources, targets,
-        new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan, edgeId);
+        new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan,
+        edgeId, messageSchema);
   }
 
   /**
@@ -55,7 +58,13 @@ public class BDirect extends BaseOperation {
   public BDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets,
                  BulkReceiver rcvr, MessageType dataType) {
-    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge());
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BDirect(Communicator comm, LogicalPlan plan,
+                 List<Integer> sources, List<Integer> targets,
+                 BulkReceiver rcvr, MessageType dataType, MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), messageSchema);
   }
 
   /**

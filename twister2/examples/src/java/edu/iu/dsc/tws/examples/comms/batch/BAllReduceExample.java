@@ -39,7 +39,6 @@ public class BAllReduceExample extends BenchWorker {
 
   private BAllReduce reduce;
 
-  private boolean reduceDone;
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
@@ -111,7 +110,6 @@ public class BAllReduceExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        reduceDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -125,7 +123,6 @@ public class BAllReduceExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      reduceDone = true;
       return true;
     }
   }

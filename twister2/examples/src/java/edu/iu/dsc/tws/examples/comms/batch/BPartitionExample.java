@@ -40,7 +40,6 @@ public class BPartitionExample extends BenchWorker {
 
   private BPartition partition;
 
-  private boolean partitionDone = false;
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
@@ -121,7 +120,6 @@ public class BPartitionExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        partitionDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -135,7 +133,6 @@ public class BPartitionExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      partitionDone = true;
       return true;
     }
   }

@@ -56,7 +56,7 @@ public class KeyedDataSerializer extends BaseSerializer {
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeKeyedData(Object payload, Object key,
+  protected boolean serializeKeyedData(Object payload, Object key,
                                      DataPacker dataPacker, DataPacker keyPacker,
                                      SerializeState state,
                                      DataBuffer targetBuffer) {

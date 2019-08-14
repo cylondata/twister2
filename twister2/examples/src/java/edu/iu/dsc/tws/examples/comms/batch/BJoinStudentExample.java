@@ -136,11 +136,9 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * key and value pairs of each result from the join operation
    */
   public class JoinReceiver implements BulkReceiver {
-    private int expected;
 
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = expectedIds.size() * jobParameters.getIterations();
     }
 
     @Override

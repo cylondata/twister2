@@ -263,7 +263,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
-      channel.receiveMessage(recv, edge, this, recvList);
+      channel.receiveMessage(0, recv, edge, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
 

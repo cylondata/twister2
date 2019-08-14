@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.batch;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
@@ -20,11 +18,10 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
-import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 
@@ -34,12 +31,13 @@ public class BKeyedPartition extends BaseOperation {
   public BKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType keyType, MessageType dataType,
-                         BulkReceiver rcvr, DestinationSelector destSelector, int edgeId) {
+                         BulkReceiver rcvr, DestinationSelector destSelector,
+                         int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
-        new PartitionPartialReceiver(), dataType, keyType);
+        new PartitionPartialReceiver(), dataType, keyType, messageSchema);
     partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
     this.op = partition;
@@ -49,25 +47,17 @@ public class BKeyedPartition extends BaseOperation {
                          Set<Integer> sources, Set<Integer> destinations,
                          MessageType keyType, MessageType dataType,
                          BulkReceiver rcvr, DestinationSelector destSelector) {
-    this(comm, plan, sources, destinations, keyType, dataType, rcvr, destSelector, comm.nextEdge());
+    this(comm, plan, sources, destinations, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public BKeyedPartition(Communicator comm, LogicalPlan plan,
                          Set<Integer> sources, Set<Integer> destinations,
-                         MessageType dataType, MessageType keyType, BulkReceiver rcvr,
-                         DestinationSelector destSelector, Comparator<Object> comparator) {
-    super(comm.getChannel());
-    this.destinationSelector = destSelector;
-    List<String> shuffleDirs = comm.getPersistentDirectories();
-    int e = comm.nextEdge();
-    MToNSimple partition = new MToNSimple(comm.getConfig(), comm.getChannel(), plan,
-        sources, destinations,
-        new DPartitionBatchFinalReceiver(rcvr, true, shuffleDirs, comparator, true),
-        new PartitionPartialReceiver(), dataType, MessageTypes.BYTE_ARRAY, keyType,
-        keyType, e);
-    partition.init(comm.getConfig(), dataType, plan, e);
-    this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
-    this.op = partition;
+                         MessageType keyType, MessageType dataType,
+                         BulkReceiver rcvr, DestinationSelector destSelector,
+                         MessageSchema messageSchema) {
+    this(comm, plan, sources, destinations, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), messageSchema);
   }
 
   public boolean partition(int source, Object key, Object message, int flags) {

@@ -47,7 +47,6 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   private BKeyedPartition partition;
 
-  private boolean partitionDone = false;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
@@ -137,7 +136,6 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        partitionDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -151,7 +149,6 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      partitionDone = true;
       return true;
     }
   }

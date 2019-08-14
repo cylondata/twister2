@@ -42,7 +42,8 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BBroadcast(newComm, logicalPlan, sources.iterator().next(), targets,
-        new BcastReceiver(), edge.getDataType(), edge.getEdgeID().nextId());
+        new BcastReceiver(), edge.getDataType(), edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   @Override

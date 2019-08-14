@@ -37,6 +37,21 @@ and run following command to start an application
 
 It is that easy!
 
+## Why Twister2
+
+Twister2 provides streaming and batch capabilities similar to big data platforms such as Apache Hadoop, Apache Spark,
+Apache Flink and Apache Storm in a single platform. Twister2 is built from bottom up to be used in both cloud
+and HPC environments making it an ideal candidate for bridging the gap between High performance computing and big data
+computing.
+
+Twister2 doesn't use a driver program as in Spark giving instance creation of tasks. Also it can support pure streaming
+similar to Apache Storm or Apache Heron. 
+
+Flink is mostly a streaming engine and it uses those capabilities to support batch applications. For example
+Flink cannot support nested iteration. Twister2 supports iterations natively and unlike in Spark where iterations happen
+in the driver (high overhead) Twister2 iterations happens in the workers.
+ 
+
 ## Software used by Twister2
 
 Harp is a separate project and its documentation can be found in [website](https://dsc-spidal.github.io/harp/)

@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.comms.shuffle;
 
 import java.util.Iterator;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+
 /**
  * Different interfaces to go to disk
  */
@@ -27,6 +29,14 @@ public interface Shuffle {
    * @return an iterator
    */
   Iterator<Object> readIterator();
+
+  /**
+   * Add tuple with byte value and key
+   * @param tuple tuple
+   */
+  default void add(Tuple tuple) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
 
   /**
    * Add an object with a key

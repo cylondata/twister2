@@ -35,6 +35,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+import java.util.Collection;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -125,4 +127,19 @@ public interface TSet<T> {
    */
   boolean addInput(String key, Cacheable<?> input);
 
+  /**
+   * Union operation which results in a single TSet, In order for this to work both TSet's should
+   * have the same type
+   * @param unionTSet TSet to union with
+   * @return A TSet that is a union of the two TSets
+   */
+  TSet<T> union(TSet<T> unionTSet);
+
+  /**
+   * Union operation which results in a single TSet, In order for this to work all TSet's should
+   * have the same type
+   * @param tSets a collection of TSet's to union with
+   * @return A TSet that is a union of all the TSets
+   */
+  TSet<T> union(Collection<TSet<T>> tSets);
 }

@@ -74,13 +74,23 @@ public interface TWSChannel {
    * @param receiveBuffers the list of receive buffers
    * @return true if sending is accepted
    */
-  boolean receiveMessage(int id, int edge,
+  boolean receiveMessage(int group, int id, int edge,
                          ChannelListener callback, Queue<DataBuffer> receiveBuffers);
 
   /**
-   * Progress the channel
+   * Progress both sends and receives
    */
   void progress();
+
+  /**
+   * Progress only the sends
+   */
+  void progressSends();
+
+  /**
+   * Progress only receives belonging to a group
+   */
+  void progressReceives(int group);
 
   /**
    * Check weather we have any pending sends

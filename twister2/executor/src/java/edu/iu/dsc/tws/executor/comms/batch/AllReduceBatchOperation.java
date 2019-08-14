@@ -38,7 +38,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
     op = new BAllReduce(newComm, logicalPlan, sources, dest,
         new ReduceFnImpl(edge.getFunction()),
         new FinalSingularReceiver(), edge.getDataType(),
-        edge.getEdgeID().nextId(), edge.getEdgeID().nextId());
+        edge.getEdgeID().nextId(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

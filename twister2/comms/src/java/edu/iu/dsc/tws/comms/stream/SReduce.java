@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
@@ -43,11 +44,12 @@ public class SReduce extends BaseOperation {
    */
   public SReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
-                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr, int edgeId) {
+                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr,
+                 int edgeId, MessageSchema messageSchema) {
     super(comm.getChannel());
     MToOneTree reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
-        new ReduceStreamingPartialReceiver(target, fnc));
+        new ReduceStreamingPartialReceiver(target, fnc), messageSchema);
     reduce.init(comm.getConfig(), dataType, plan, edgeId);
     op = reduce;
   }
@@ -55,7 +57,8 @@ public class SReduce extends BaseOperation {
   public SReduce(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,
                  MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
-    this(comm, plan, sources, target, dataType, fnc, rcvr, comm.nextEdge());
+    this(comm, plan, sources, target, dataType, fnc, rcvr, comm.nextEdge(),
+        MessageSchema.noSchema());
   }
 
   /**

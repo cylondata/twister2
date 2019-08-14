@@ -48,6 +48,7 @@ import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
 import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
+import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -256,8 +257,7 @@ public class TaskExecutor {
                        String taskName, String inputKey, DataObject<?> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
-      throw new RuntimeException(String.format("%d Failed to set input for non-existing "
-          + "task name: %s existing sources: %s", workerID, taskName, plan.getNodeNames()));
+      return;
     }
 
     for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
@@ -308,7 +308,7 @@ public class TaskExecutor {
   public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String taskName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
-      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
+      return new EmptyDataObject<>();
     }
 
     DataObject<T> dataSet = new DataObjectImpl<>(taskName, config);
@@ -370,7 +370,7 @@ public class TaskExecutor {
                                      String taskName, String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
-      throw new RuntimeException("Failed to get output from non-existing task name: " + taskName);
+      return new EmptyDataObject<>();
     }
 
     DataObject<T> dataSet = new DataObjectImpl<T>(config);

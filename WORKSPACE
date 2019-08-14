@@ -106,15 +106,15 @@ http_archive(
 http_archive(
     name = "ompi3",
     build_file = "@//:third_party/ompi3/ompi.BUILD",
-    strip_prefix = "openmpi-3.1.2",
-    urls = ["https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz"],
+    strip_prefix = "openmpi-4.0.1",
+    urls = ["https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz"],
 )
 
 http_archive(
     name = "ompi3darwin",
     build_file = "@//:third_party/ompi3darwin/ompi.darwin.BUILD",
-    strip_prefix = "openmpi-3.1.2",
-    urls = ["https://github.com/DSC-SPIDAL/twister2-thridparty-bin/raw/master/mpi/openmpi-3.1.2.tar.gz"],
+    strip_prefix = "openmpi-4.0.1",
+    urls = ["https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz"],
 )
 
 load("//:t2_workspace_defs.bzl", "load_modules")

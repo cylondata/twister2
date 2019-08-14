@@ -51,7 +51,7 @@ public class AllReduceStreamingOperation extends AbstractParallelOperation {
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new SAllReduce(newComm, logicalPlan, sources, dest, edge.getDataType(),
         new ReduceFnImpl(function), new FinalSingularReceive(),
-        edge.getEdgeID().nextId(), edge.getEdgeID().nextId());
+        edge.getEdgeID().nextId(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override

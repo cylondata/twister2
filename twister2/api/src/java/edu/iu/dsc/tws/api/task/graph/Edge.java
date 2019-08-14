@@ -28,6 +28,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.task.IFunction;
 import edu.iu.dsc.tws.api.task.TaskPartitioner;
 
@@ -89,6 +90,8 @@ public class Edge {
    * Number of edges for a particular operation
    */
   private int numberOfEdges;
+
+  private MessageSchema messageSchema = MessageSchema.noSchema();
 
   /**
    * ID generator for configuring comm ops
@@ -158,6 +161,14 @@ public class Edge {
     this.keyType = keyType;
     this.keyed = true;
     this.partitioner = part;
+  }
+
+  public void setMessageSchema(MessageSchema messageSchema) {
+    this.messageSchema = messageSchema;
+  }
+
+  public MessageSchema getMessageSchema() {
+    return messageSchema;
   }
 
   /**

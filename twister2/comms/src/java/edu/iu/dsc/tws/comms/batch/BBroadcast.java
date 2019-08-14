@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
@@ -34,10 +35,11 @@ public class BBroadcast extends BaseOperation {
    */
   public BBroadcast(Communicator comm, LogicalPlan plan,
                     int sources, Set<Integer> target,
-                    BulkReceiver rcvr, MessageType dataType, int edgeID) {
+                    BulkReceiver rcvr, MessageType dataType, int edgeID,
+                    MessageSchema messageSchema) {
     super(comm.getChannel());
     TreeBroadcast bcast = new TreeBroadcast(comm.getChannel(), sources, target,
-        new DirectBatchFinalReceiver(rcvr));
+        new DirectBatchFinalReceiver(rcvr), messageSchema);
     bcast.init(comm.getConfig(), dataType, plan, edgeID);
     op = bcast;
   }
@@ -55,7 +57,13 @@ public class BBroadcast extends BaseOperation {
   public BBroadcast(Communicator comm, LogicalPlan plan,
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType) {
-    this(comm, plan, sources, target, rcvr, dataType, comm.nextEdge());
+    this(comm, plan, sources, target, rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BBroadcast(Communicator comm, LogicalPlan plan,
+                    int sources, Set<Integer> target,
+                    BulkReceiver rcvr, MessageType dataType, MessageSchema messageSchema) {
+    this(comm, plan, sources, target, rcvr, dataType, comm.nextEdge(), messageSchema);
   }
 
   /**
