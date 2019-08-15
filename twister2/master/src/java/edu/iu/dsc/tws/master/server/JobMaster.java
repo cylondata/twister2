@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
-import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -101,7 +100,7 @@ public class JobMaster {
   /**
    * the network object to receive and send messages
    */
-  private RRServer rrServer;
+  private JMRRServer rrServer;
 
   /**
    * the object to monitor workers
@@ -247,7 +246,7 @@ public class JobMaster {
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
     rrServer =
-        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+        new JMRRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     // init Driver if it exists
     // this ha to be done before WorkerMonitor initialization

@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.common.net.tcp.ChannelHandler;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.Server;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * RRServer class is used by Job Master
@@ -61,42 +60,42 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class RRServer {
   private static final Logger LOG = Logger.getLogger(RRServer.class.getName());
 
-  private Server server;
+  protected Server server;
 
   /**
    * We keep track of connected channels here to make sure we close them
    */
-  private List<SocketChannel> connectedChannels = new ArrayList<>();
+  protected List<SocketChannel> connectedChannels = new ArrayList<>();
 
   /**
    * worker channels with workerIDs
    */
-  private HashBiMap<SocketChannel, Integer> workerChannels = HashBiMap.create();
+  protected HashBiMap<SocketChannel, Integer> workerChannels = HashBiMap.create();
 
   /**
    * the client channel,
    */
-  private SocketChannel clientChannel;
+  protected SocketChannel clientChannel;
 
   /**
    * Keep track of the request handler using protocol buffer message types
    */
-  private Map<String, MessageHandler> requestHandlers = new HashMap<>();
+  protected Map<String, MessageHandler> requestHandlers = new HashMap<>();
 
   /**
    * Message type name to builder
    */
-  private Map<String, Message.Builder> messageBuilders = new HashMap<>();
+  protected Map<String, Message.Builder> messageBuilders = new HashMap<>();
 
   /**
    * Keep track of the requests
    */
-  private Map<RequestID, SocketChannel> requestChannels = new HashMap<>();
+  protected Map<RequestID, SocketChannel> requestChannels = new HashMap<>();
 
   /**
    * Job Master ID
    */
-  private int serverID;
+  protected int serverID;
 
   /**
    * The client id
@@ -106,24 +105,24 @@ public class RRServer {
   /**
    * Connection handler
    */
-  private ConnectHandler connectHandler;
+  protected ConnectHandler connectHandler;
 
   /**
    * when register message is received from a worker that will get its workerID from Job Master
    * we keep its channel on this variable
    * then WorkerMonitor calls setWorkerChannel method and set the id of that channel
    */
-  private SocketChannel workerChannelToRegister;
+  protected SocketChannel workerChannelToRegister;
 
   /**
    * The loop that executes the selector
    */
-  private Progress loop;
+  protected Progress loop;
 
   /**
    * We keep track of pending send count to determine weather all the sends are completed
    */
-  private int pendingSendCount = 0;
+  protected int pendingSendCount = 0;
 
   public RRServer(Config cfg, String host, int port, Progress looper, int serverID,
                   ConnectHandler cHandler) {
@@ -233,7 +232,7 @@ public class RRServer {
     return tcpMessage != null;
   }
 
-  private TCPMessage sendMessage(Message message, RequestID requestID, SocketChannel channel) {
+  protected TCPMessage sendMessage(Message message, RequestID requestID, SocketChannel channel) {
     byte[] data = message.toByteArray();
     String messageType = message.getDescriptorForType().getFullName();
 
@@ -389,19 +388,6 @@ public class RRServer {
    */
   private void saveChannel(SocketChannel channel, int senderID, Message message) {
 
-    // if a worker is coming from failure and re-registering,
-    // replace the previous channel with this one
-    if (message instanceof JobMasterAPI.RegisterWorker
-        && ((JobMasterAPI.RegisterWorker) message).getFromFailure()) {
-
-      // first remove the previous channel if any
-      removeWorkerChannel(senderID);
-
-      LOG.fine("Worker is re-registering after failure, previous channel is reset.");
-      workerChannels.forcePut(channel, senderID);
-      return;
-    }
-
     // if the channel already exist, do nothing
     if (workerChannels.containsKey(channel)) {
       return;
@@ -418,8 +404,8 @@ public class RRServer {
 
     // if this is RegisterWorker message and JobMaster assigns workerIDs
     // keep the channel in the variable
-    if (senderID == RRClient.WORKER_UNASSIGNED_ID
-        && message instanceof JobMasterAPI.RegisterWorker) {
+    if (senderID == RRClient.WORKER_UNASSIGNED_ID) {
+//        && message instanceof JobMasterAPI.RegisterWorker) {
 
       this.workerChannelToRegister = channel;
       return;
