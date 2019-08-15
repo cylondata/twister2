@@ -17,7 +17,7 @@ This is the highest level of API supported by Twister2 at this time. If you are 
 Apache RDD API or Apache Flink API or Apache Beam API you will feel right at home with this API. It models a
 data as a distributed set and views processing as set of transformations on this distributed data.
 
-## Task API 
+## Compute API 
 
 This API is similar to Apache Storm for streaming analytics and Apache Hadoop for batch analysis. 
 It provides more flexibility to the programmer than the TSet API for some applications. We believe 

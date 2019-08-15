@@ -27,194 +27,173 @@ Once this is set the executors and schedulers can act accordingly.
 
 ### Example Program
 
-The following shows an example program based on the compute API.
+The following pseudocode demonstrates the use of compute API. First user creates the ```ComputeEnvironment```.
+Then a ```ComputeGraphBuilder``` is created and the graph is constructed. After this tasks are added to the 
+graph and graph is built. THen we can use the ```ComputeEnvironment``` to execute the graph.
 
-
-
-#### Creating and Initializing the TaskGraph Builder
-
-```java 
-TaskGraphBuilder computeGraphBuilder = TaskGraphBuilder.newBuilder(config);
-```
-
-#### API for defining Source Task 
-
-The method to define the source task with the task parallelism is 
-
-```java  
-public SourceConnection addSource(String name, ISource source, int parallel)
-public SourceConnection addSource(String name, ISource source)
-```
-#### Defining Source Task 
-
-```java 
-SourceTask sourceTask = new SourceTask();
-taskgrapbuilder.addSource("sourcetaskname", sourceTask, parallelismvalue);
-```
- 
-#### API for defining Compute Task
-
-The method to define the compute task with the task parallelism is
-
-```java 
-public ComputeConnection addCompute(String name, ICompute compute, int parallel)
-public ComputeConnection addCompute(String name, ICompute compute)
-``` 
-
-#### Defining Compute Task 
-```java 
-ComputeTask computeTask = new ComputeTask();
-ComputeConnection computeConnection = taskgrapbuilder.addCompute("computetaskname", computeTask, parallelismValue);
-```
-
-#### API for defining Sink Task
-
-The method to define the sink task with the task parallelism is 
-
-```java 
-public ComputeConnection addSink(String name, ISink sink, int parallel)
-public ComputeConnection addSink(String name, ISink sink) 
-public ComputeConnection addSink(String name, IWindowedSink sink, int parallel)
-```
-
-#### Defining Sink Task
-
-```java 
-SinkTask sinkTask = new SinkTask();
-ComputeConnection computeConnectionSink = computeGraphBuilder.addSink("sinktaskname", sinkTask, parallelismValue)
-```
-
-#### Defining the Task Edges
-
-It is essential to create the task edges between the source, compute, and sink tasks. If the user
-task graph has only source and sink tasks they may have to establish the communication between
-the source and sink tasks. 
-
-#### API for defining Task Edges
-
-This API is for creating the "direct" communication edge between the source, compute, and sink tasks. It 
-could be used for creating the "direct" communication edge between the source and sink tasks. The 
-ComputeConnection has various methods to establish the communication edges namely "broadcast", "reduce",
-"allreduce", "allgather", "partition", "keyedreduce, "keyedgather", and "keyedpartition". 
-
-```java 
- public ComputeConnection direct(String parent, String name, DataType dataType) {
-    Edge edge = new Edge(name, OperationNames.DIRECT, dataType);
-    inputs.put(parent, edge);
-    return this;
-  }
-```
-
-For defining other communication perations, please look into 
-
-```java 
-edu.iu.dsc.tws.api.task.ComputeConnection
-```
-
-#### Task Edge Creation Example
-
-```java 
-computeConnection.direct("sourcetaskname", Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-computeConnectionSink.direct("computetaskname", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-```
-
-#### Setting the operation Mode
-
-The user can define the task graph as either "batch" or "streaming" mode using the OperationMode.
-
-```java 
-builder.setMode(OperationMode.BATCH);
-```
- 
-#### Building the taskgraph
-
-Once the task graph is defined, the user has to call the build() to build the defined 
- task graph. 
- 
- ```java 
-   DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
- ```
- 
-#### Task Graph Execution
-
-The user pass the generated task graph to the TaskExecutor to get the execution plan. The task executor
-first calls the Task Scheduler API to retrieve the task schedule plan. The task schedule plan consists of
-the container/worker details and allocation of task instances to each container/worker. Next, using the 
-task schedule plan the ExecutionPlanBuilder generate the task execution plan. 
- 
- ```java 
-ExecutionPlan executionPlan = taskExecutor.plan(taskGraph);
-taskExecutor.execute(taskGraph, executionPlan);
-```
- 
-#### Task API Example 
-
-This is the task API example for reading the data points from the file, partition the data points, 
-and return the data points in an array which consists of source, compute, and sink tasks.
-
-```java 
-    //Defining source, compute, and sink tasks.
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
-    DataObjectCompute dataObjectCompute = new DataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-    DataObjectDirectSink dataObjectSink = new DataObjectDirectSink();
-    TaskGraphBuilder computeGraphBuilder = TaskGraphBuilder.newBuilder(config);
-
-    //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    datapointsComputeGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
-        "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection computeConnectionSink = computeGraphBuilder.addSink(
-        "datapointsink", dataObjectSink, parallelismValue);
-
-    //Creating the communication edges between the tasks for the second task graph
-    computeConnection.direct("datapointsource", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    computeConnectionSink.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
-        DataType.OBJECT);
-    datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
-    
-    //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = datapointsComputeGraphBuilder.build();
-    //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-    //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-            datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-
-``` 
- 
- 
-### Task API Example for wordcount 
-
-This is the task API example for calculating the wordcount which has only source and sink tasks.
-
-```java 
+```java
+public class HelloTwister2 implements IWorker {
   @Override
-  public void execute() {
-    // source task
-    WordSource source = new WordSource();
-    // sink task
-    WordAggregator counter = new WordAggregator();
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+            workerController, persistentVolume, volatileVolume);
+    ComputeGraphBuilder computeGraphBuilder = cEnv.newTaskGraph(OperationMode.BATCH);
+    
+    // build the graph by creating the tasks and adding them
+    BaseSource g = new SourceTask();
+    ISink r = new ReduceSinkTask();
 
-    // build the task graph
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
-    // add the source with parallelism of 4
-    builder.addSource("word-source", source, 4);
-    // add the sink with parallelism of 4 and connect it to source with keyed reduce operator
-    builder.addSink("word-aggregator", counter, 4).keyedReduce("word-source", EDGE,
-        new ReduceFn(Op.SUM, DataType.INTEGER), DataType.OBJECT, DataType.INTEGER);
-    // set the operation mode to batch
-    builder.setMode(OperationMode.BATCH);
-
+    // add the sources, ops and connect them
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection.reduce(SOURCE)
+        .viaEdge("reduce-edge")
+        .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
+    
+    ComputeGraph computeGraph = computeGraphBuilder.build();
+    
     // execute the graph
-    DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, plan);
+    cEnv.execute(computeGraph);
   }
-
+}
 ```
+
+### Tasks
+
+A compute graph can have three types of tasks. They are 
+
+* Source task
+* Compute task
+* Sink task
+
+Every compute graph must have a source task. 
+
+#### TaskContext
+
+Every task is pass a ```TaskContext``` object. This object can be used to write values through connections, get 
+information about the task graph and environment. 
+
+#### Source task
+
+A source task marks the begining of a computation. The execute method of the source tasks are called 
+by the executor until the task notifies the framework that it doesn't have anymore input via the ```TaskContext```
+
+#### Compute Task
+
+A compute task does computation based on messages and outputs values via its output edges.
+
+#### Sink Task
+
+Sink task is a leaf node of the graph and cannot have outputs. Otherthan that it is same as a compute task.
+
+### Compute Connections
+
+Compute connections are edges in the graph that identify different communication channels between the tasks. Each edge 
+can have a name (if not specified a default name is assigned). If there are multiple task edges between two tasks,
+the user needs to specify their names. 
+
+These are properties supported by each edge. They have a name, a data type and set of properties. Different edges
+can add to this base set. 
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| name     | viaEdge       | Name of the edge | default |
+| data type | withDataType | Data type of the edge | OBJECT |     
+| property | withProperty  | Specify properties    | none |
+
+#### Reduce  
+
+Reduce values in N tasks to a single task.
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| operation     | withOperation       | A predifined operation. These only works on array data types | none |
+| funtion     | withReductionFunction       | A user defined function to reduce two values into one | none |
+
+Only one of these properties can be speficied.
+
+#### AllReduce
+
+Reduce values in N tasks to M tasks.
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| operation     | withOperation       | A predifined operation. These only works on array data types | none |
+| funtion     | withReductionFunction       | A user defined function to reduce two values into one | none |
+
+Only one of these properties can be speficied.
+
+#### KeyedReduce
+
+Reduce values based on a key. This is a N tasks to M tasks operation. 
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| operation     | withOperation       | A predifined operation. These only works on array data types | none |
+| funtion     | withReductionFunction       | A user defined function to reduce two values into one | none |
+| key type    | withKeyType      | The data type of the key | OBJECT |
+| partitioner | withTaskPartitioner | The partitioner that defines where the data is sent | HashPartitioner |
+ 
+#### Gather 
+
+Gathers values from N tasks to a single task.
+
+No specific properties.
+
+### Keyed Gather 
+
+This operation gathers values based on keys.
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| operation     | withOperation       | A predifined operation. These only works on array data types | none |
+| funtion     | withReductionFunction       | A user defined function to reduce two values into one | none |
+| key type    | withKeyType      | The data type of the key | OBJECT |
+| partitioner | withTaskPartitioner | The partitioner that defines where the data is sent | HashPartitioner |
+| disk    | useDisk | Weather to use disk for operation | false |
+| sort    | sortBatchByKey | sort based on keys | false |
+| group   | groupBatchByKey | returns values grouped by keyes | true |
+
+
+#### Direct 
+
+N to N operation where N tasks sends values to N tasks. Each source has a corresponding target tasks. Mostly 
+targeted for in-memory operations.
+
+No specific properties
+
+#### Partition 
+
+All to all operation that sends values from N tasks to M tasks. 
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| partitioner | withTaskPartitioner | The partitioner that defines where the data is sent | HashPartitioner |
+| disk    | useDisk | Weather to use disk for operation | false |
+| sort    | sortBatchByKey | sort based on keys | false |
+| group   | groupBatchByKey | returns values grouped by keyes | true |
+
+#### Keyed Partition 
+
+All to all operation that sends values from N tasks to M tasks. 
+
+| Property | How specified | Description | Default      |
+| :---     | :---          | :---        | :---         |
+| operation     | withOperation       | A predifined operation. These only works on array data types | none |
+| funtion     | withReductionFunction       | A user defined function to reduce two values into one | none |
+| key type    | withKeyType      | The data type of the key | OBJECT |
+| partitioner | withTaskPartitioner | The partitioner that defines where the data is sent | HashPartitioner |
+| disk    | useDisk | Weather to use disk for operation | false |
+| sort    | sortBatchByKey | sort based on keys | false |
+| group   | groupBatchByKey | returns values grouped by keyes | true |
+
+### Inputs & Outputs
+
+Every compute graph can have inputs and outputs. These inputs and outputs are marked by two interfaces.
+
+* Receptor
+* Collector
+
+A task implementing the ```Receptor``` can accept a named input. A task implementing ```Collector``` interface
+should have a named output defined by its contract.
