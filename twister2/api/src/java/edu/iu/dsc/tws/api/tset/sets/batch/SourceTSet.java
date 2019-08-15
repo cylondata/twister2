@@ -24,7 +24,7 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.task.nodes.INode;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;

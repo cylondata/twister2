@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.batch.terasort;
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 
 public class TaskPartitionerForRandom implements TaskPartitioner<byte[]> {
 

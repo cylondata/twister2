@@ -16,7 +16,7 @@ import java.util.List;
 
 import com.google.protobuf.ByteString;
 
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;

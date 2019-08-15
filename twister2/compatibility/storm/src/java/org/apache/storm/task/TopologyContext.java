@@ -33,7 +33,7 @@ import org.apache.storm.generated.GlobalStreamId;
 import org.apache.storm.topology.twister2.Twister2BoltDeclarer;
 import org.apache.storm.topology.twister2.Twister2BoltGrouping;
 
-import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 
 /**
  * A TopologyContext is given to bolts and spouts in their "prepare" and "open"

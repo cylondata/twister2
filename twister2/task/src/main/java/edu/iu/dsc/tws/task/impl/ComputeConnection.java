@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.task.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.task.impl.ops.AbstractOpsConfig;
 import edu.iu.dsc.tws.task.impl.ops.AllGatherConfig;
 import edu.iu.dsc.tws.task.impl.ops.AllReduceConfig;

@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 
 import org.apache.storm.generated.StormTopology;
 
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public abstract class Twister2StormWorker extends TaskWorker {

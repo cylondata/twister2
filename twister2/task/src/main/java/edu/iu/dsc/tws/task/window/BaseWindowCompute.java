@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window;
 
-import edu.iu.dsc.tws.api.task.nodes.BaseNode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseNode;
 
 public abstract class BaseWindowCompute<T> extends BaseNode implements IWindowCompute<T> {
 }

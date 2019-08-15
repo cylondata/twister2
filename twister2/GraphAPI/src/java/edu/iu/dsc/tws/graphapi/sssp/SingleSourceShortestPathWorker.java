@@ -19,31 +19,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertexStatus;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 
@@ -147,7 +146,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
     GraphDataSink graphDataSink = new GraphDataSink();
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsTaskGraphBuilder.addSource("Graphdatasource", dataObjectSource,
@@ -186,7 +185,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     SsspInitialSink ssspInitialSink = new SsspInitialSink();
 
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsTaskGraphBuilder.addSource("ssspInitialDatasource", ssspInitialDatasource,
@@ -218,7 +217,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     SsspKeyedReduce ssspKeyedReduce = new SsspKeyedReduce();
     SsspSink ssspSink = new SsspSink();
 
-    TaskGraphBuilder ssspTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder ssspTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     ssspTaskGraphBuilder.addSource("pageranksource",
         ssspSource, parallelismValue);

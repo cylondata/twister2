@@ -26,7 +26,7 @@ package org.apache.storm.generated;
 
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
 
 public class StormTopology {
 

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;

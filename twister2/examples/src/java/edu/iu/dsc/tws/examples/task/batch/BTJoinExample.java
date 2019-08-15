@@ -24,12 +24,12 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
-import edu.iu.dsc.tws.api.task.nodes.ISink;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -40,7 +40,6 @@ import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BJoinCompute;
-
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 
 public class BTJoinExample extends BenchTaskWorker {

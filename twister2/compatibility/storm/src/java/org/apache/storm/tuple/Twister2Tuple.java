@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.apache.storm.generated.GlobalStreamId;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public class Twister2Tuple implements Tuple {
 

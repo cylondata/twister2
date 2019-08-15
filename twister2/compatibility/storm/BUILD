@@ -13,7 +13,7 @@ common_deps_files = [
     "//twister2/resource-scheduler/src/java:resource-scheduler-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
-    "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
     "@com_google_code_gson_gson//:com_google_code_gson_gson",
     "@com_esotericsoftware_kryo//jar",
 ]

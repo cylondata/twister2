@@ -47,8 +47,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.worker;
 
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 /**

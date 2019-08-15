@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.typed.batch;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
 
 public abstract class BBroadCastCompute<T> extends AbstractIterableDataCompute<T> {

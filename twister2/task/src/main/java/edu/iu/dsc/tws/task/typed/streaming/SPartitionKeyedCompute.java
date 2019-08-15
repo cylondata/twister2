@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.task.typed.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.typed.AbstractSingleDataCompute;
 
 public abstract class SPartitionKeyedCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {

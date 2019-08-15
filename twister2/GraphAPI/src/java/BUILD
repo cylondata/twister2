@@ -16,7 +16,7 @@ common_deps_files = [
     "//twister2/executor/src/java:executor-java",
     "//twister2/master/src/java:master-java",
     "//third_party:ompi_javabinding_java",
-    "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",

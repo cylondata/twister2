@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.api.tset.fn;
 import java.io.Serializable;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 // todo: remove task partitioner and partition function duplicate interfaces! check destination
 //  selector
 
