@@ -9,17 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.tsched.batch.batchscheduler;
 
 import java.util.Map;
@@ -52,7 +41,7 @@ public class BatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    DataFlowTaskGraph graph = createGraph(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
@@ -76,7 +65,7 @@ public class BatchTaskSchedulerTest {
   public void testUniqueSchedules2() {
 
     int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    DataFlowTaskGraph graph = createGraph(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -94,7 +83,7 @@ public class BatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -108,6 +97,42 @@ public class BatchTaskSchedulerTest {
       Assert.assertEquals(containerPlanTaskInstances.size() / graph.getTaskVertexSet().size(),
           Integer.parseInt(graph.getGraphConstraints().get(
               Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER)));
+    }
+  }
+
+  @Test
+  public void testUniqueSchedules4() {
+
+    int parallel = 16;
+    int workers = 2;
+
+    DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
+    for (int i = 0; i < graph.length; i++) {
+      graph[i] = createGraph(parallel, "graph" + i);
+    }
+    BatchTaskScheduler scheduler = new BatchTaskScheduler();
+    scheduler.initialize(Config.newBuilder().build());
+    WorkerPlan workerPlan = createWorkPlan(workers);
+    Map<String, TaskSchedulePlan> plan1
+        = scheduler.schedule(workerPlan, graph[0], graph[1], graph[2]);
+
+    for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry : plan1.entrySet()) {
+      TaskSchedulePlan plan2 = taskSchedulePlanEntry.getValue();
+      Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+        LOG.info("Task Details for Container Id:"
+            + graph[0].getGraphName() + "\tcontainer id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.info("Task Id:" + ip.getTaskId()
+              + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
+        }
+        Assert.assertEquals(containerPlanTaskInstances.size(),
+            graph[0].vertex("source").getParallelism());
+      }
     }
   }
 
@@ -127,7 +152,8 @@ public class BatchTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
+  private DataFlowTaskGraph createGraph(int parallel,
+                                        String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
@@ -142,10 +168,12 @@ public class BatchTaskSchedulerTest {
     builder.setMode(OperationMode.BATCH);
 
     DataFlowTaskGraph graph = builder.build();
+    graph.setGraphName(graphName);
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel,
+                                                                     String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
@@ -168,6 +196,7 @@ public class BatchTaskSchedulerTest {
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");
     DataFlowTaskGraph graph = builder.build();
+    graph.setGraphName(graphName);
     return graph;
   }
 }

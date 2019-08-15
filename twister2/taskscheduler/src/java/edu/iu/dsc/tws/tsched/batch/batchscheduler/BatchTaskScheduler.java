@@ -43,9 +43,6 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
-//import java.util.Collections;
-//import java.util.HashSet;
-
 public class BatchTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskScheduler.class.getName());
@@ -72,14 +69,14 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   private int index;
 
+  private int parallelism = 0;
+
   private boolean dependentGraphs = false;
 
   //Batch Task Allocation Map
   private List<Integer> workerIdList = new ArrayList<>();
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
-
-  private int parallelism = 0;
   private Set<String> receivableNameSet = null;
 
   /**
@@ -258,7 +255,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
           new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
       workerSchedulePlans.add(taskWorkerSchedulePlan);
 
-      if (index == 0) {
+      if (dependentGraphs && index == 0) {
         workerIdList.add(containerId);
       }
     }
@@ -350,13 +347,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
           containerIndex = i % workerIdList.size();
         }
         if (maxTaskInstancesPerContainer < instancesPerWorker) {
-          batchTaskAllocation.get(containerIndex).add(
-              new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
+          batchTaskAllocation.get(containerIndex).
+              add(new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
           ++maxTaskInstancesPerContainer;
         } else {
           throw new ScheduleException("Task Scheduling couldn't be possible for the present"
-              + "configuration, please check the number of workers, "
-              + "maximum instances per worker");
+              + "configuration, please check the number of workers maximum instances per worker");
         }
       }
     }
