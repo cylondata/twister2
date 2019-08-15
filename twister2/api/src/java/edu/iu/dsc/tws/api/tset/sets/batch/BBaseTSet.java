@@ -97,7 +97,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public TSet<T> union(TSet<T> other) {
+  public BBaseTSet<T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((BBaseTSet) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
@@ -116,7 +116,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public TSet<T> union(Collection<TSet<T>> tSets) {
+  public BBaseTSet<T> union(Collection<TSet<T>> tSets) {
     BBaseTSet<T> other;
     DirectTLink<T> directCurrent = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(this, directCurrent);
@@ -136,7 +136,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
       addChildToGraph(other, directOther);
       addChildToGraph(directOther, unionTSet);
     }
-    return null;
+    return unionTSet;
   }
 
   @Override

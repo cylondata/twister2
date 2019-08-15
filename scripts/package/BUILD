@@ -122,6 +122,7 @@ pack_tw2(
         ":twister2-ompi-etc",
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
+        ":twister2-ompi-jars",
     ],
 )
 
@@ -162,6 +163,16 @@ pack_tw2(
         "//conditions:default": ["@ompi3//:ompi-etc-files"],
     }),
     package_dir = "ompi/etc",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-ompi-jars",
+    srcs = select({
+        "//tools/platform:darwin": ["@ompi3darwin//:ompi-jar-files"],
+        "//conditions:default": ["@ompi3//:ompi-jar-files"],
+    }),
+    package_dir = "lib",
     version = T2_VERSION,
 )
 

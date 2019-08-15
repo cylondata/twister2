@@ -253,7 +253,6 @@ lib_files = ["lib/libmca_common_sm.la",
              "lib/libmpi_java.la",
              "lib/libmca_common_monitoring.so",
              "lib/libopen-pal.so.40",
-             "lib/mpi.jar",
              "lib/libmca_common_monitoring.so.50",
              "lib/libmca_common_sm.so.40",
              "lib/libmca_common_sm.so.40.20.0",
@@ -335,7 +334,9 @@ lib_files = ["lib/libmca_common_sm.la",
              "lib/pmix/mca_gds_ds21.la",
              "lib/libopen-pal.so.40.20.1",]
 
-out_files = bin_files + etc_files + include_files + lib_files
+jar_files = ["lib/mpi.jar",]
+
+out_files = bin_files + etc_files + include_files + lib_files + jar_files
 
 genrule(
     name = "ompi-srcs",
@@ -371,5 +372,10 @@ filegroup(
 filegroup(
     name = "ompi-etc-files",
     srcs = etc_files,
+)
+
+filegroup(
+    name = "ompi-jar-files",
+    srcs = jar_files,
 )
 

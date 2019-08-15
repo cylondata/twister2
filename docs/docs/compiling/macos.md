@@ -21,6 +21,13 @@ Twister2 build needs several software installed on your system.
      JAVA_HOME=$(/usr/libexec/java_home)
      export JAVA_HOME
      ```
+ 
+You can check weather Java is installed correctly
+
+```java
+which java
+``` 
+     
 3. Install Homebrew
    
 ```bash
@@ -39,14 +46,34 @@ Twister2 build needs several software installed on your system.
    ```bash
       wget https://github.com/bazelbuild/bazel/releases/download/0.28.1/bazel-0.28.1-installer-darwin-x86_64.sh
       chmod +x bazel-0.28.1-installer-darwin-x86_64.sh
-      ./bazel-0.28.1-installer-darwin-x86_64.sh –user
+      ./bazel-0.28.1-installer-darwin-x86_64.sh --user
    ```
 
-   Make sure to add the bazel bin to PATH
+   Make sure to add the bazel bin to PATH. You can add the following line to ```~/.bash_profile``` file.
 
    ```text
    export PATH="$PATH:$HOME/bin"
    ```
+   
+ Now you check with the following command to check weather bazel is install.
+ 
+ ```bash
+ souce ~/.bash_profile 
+ 
+ bazel version
+ ```  
+ 
+ It will give the following output
+ 
+ ```bash
+ Build label: 0.28.1
+ Build target: bazel-out/k8-opt/bin/src/main/java/com/google/devtools/build/lib/bazel/BazelServer_deploy.jar
+ Build time: Fri Jul 19 15:19:51 2019 (1563549591)
+ Build timestamp: 1563549591
+ Build timestamp as int: 1563549591
+ ```
+
+Okay now you are ready to compile Twister2.
 
 ## Compiling Twister2 
 
