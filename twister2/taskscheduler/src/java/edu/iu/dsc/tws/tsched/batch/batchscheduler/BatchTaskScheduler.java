@@ -43,12 +43,14 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
+/**
+ * This scheduler is capable of handling of single task graph as well as multiple task graphs.
+ * It first validates the parallelism of receptor and collector tasks then it invoke the schedule
+ * method to schedule the individual task graphs.
+ */
 public class BatchTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskScheduler.class.getName());
-
-  //Represents global task Id
-  private int gTaskId = 0;
 
   //Represents the task instance ram
   private Double instanceRAM;
@@ -129,13 +131,9 @@ public class BatchTaskScheduler implements ITaskScheduler {
    * validation starts from the last leaf of the task graph.
    */
   private boolean validateDependentGraphs(DataFlowTaskGraph... dataFlowTaskGraph) {
-    boolean flag = false;
     int length = dataFlowTaskGraph.length;
-    if (receptorTaskValidation(dataFlowTaskGraph[length - 1])
-        && collectorTaskValidation(dataFlowTaskGraph)) {
-      flag = true;
-    }
-    return flag;
+    return receptorTaskValidation(dataFlowTaskGraph[length - 1])
+        && collectorTaskValidation(dataFlowTaskGraph);
   }
 
   /**
@@ -365,8 +363,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
                                                int numberOfContainers, int globalTaskIndex) {
     int totalTaskInstances;
     if (!graph.getNodeConstraints().isEmpty()) {
-      totalTaskInstances
-          = taskAttributes.getTotalNumberOfInstances(vertex, graph.getNodeConstraints());
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(
+          vertex, graph.getNodeConstraints());
     } else {
       totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
     }

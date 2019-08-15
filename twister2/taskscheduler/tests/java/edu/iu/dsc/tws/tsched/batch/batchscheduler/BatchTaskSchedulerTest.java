@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.batch.batchscheduler;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -80,9 +81,9 @@ public class BatchTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules3() {
-
     int parallel = 16;
     int workers = 2;
+
     DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
@@ -102,36 +103,62 @@ public class BatchTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules4() {
-
-    int parallel = 16;
-    int workers = 2;
+    int parallel = 40;
+    int workers = 20;
 
     DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
-    for (int i = 0; i < graph.length; i++) {
-      graph[i] = createGraph(parallel, "graph" + i);
-    }
+    Arrays.setAll(graph, i -> createGraph(parallel, "graph" + i));
+
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
-    Map<String, TaskSchedulePlan> plan1
+
+    Map<String, TaskSchedulePlan> taskSchedulePlanMap
         = scheduler.schedule(workerPlan, graph[0], graph[1], graph[2]);
+
+    for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry
+        : taskSchedulePlanMap.entrySet()) {
+      TaskSchedulePlan taskSchedulePlan = taskSchedulePlanEntry.getValue();
+      Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+        Assert.assertEquals(containerPlanTaskInstances.size(),
+            (parallel / workers) * graph[0].getTaskVertexSet().size());
+      }
+    }
+  }
+
+  @Test
+  public void testUniqueSchedules5() {
+
+    int parallel = 20;
+    int workers = 40;
+
+    DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
+    Arrays.setAll(graph, i -> createGraph(parallel, "graph" + i));
+
+    BatchTaskScheduler scheduler = new BatchTaskScheduler();
+    scheduler.initialize(Config.newBuilder().build());
+    WorkerPlan workerPlan = createWorkPlan(workers);
+
+    Map<String, TaskSchedulePlan> plan1
+        = scheduler.schedule(workerPlan, graph[0], graph[1]);
 
     for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry : plan1.entrySet()) {
       TaskSchedulePlan plan2 = taskSchedulePlanEntry.getValue();
       Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
+      int index = 0;
       for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
         WorkerSchedulePlan workerSchedulePlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:"
-            + graph[0].getGraphName() + "\tcontainer id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
-              + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
+        index++;
+        if (index <= parallel) {
+          Assert.assertEquals(containerPlanTaskInstances.size(),
+              workers / parallel);
+        } else {
+          Assert.assertEquals(containerPlanTaskInstances.size(), 0);
         }
-        Assert.assertEquals(containerPlanTaskInstances.size(),
-            graph[0].vertex("source").getParallelism());
       }
     }
   }
