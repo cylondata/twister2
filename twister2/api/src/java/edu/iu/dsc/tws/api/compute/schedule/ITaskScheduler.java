@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.compute.schedule;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.config.Config;
@@ -26,5 +26,5 @@ public interface ITaskScheduler {
 
   void initialize(Config cfg, int workerId);
 
-  TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan);
+  TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan);
 }

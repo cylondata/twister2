@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
@@ -42,7 +42,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
@@ -66,7 +66,7 @@ public class RoundRobinBatchTaskSchedulerTest {
   public void testUniqueSchedules2() {
 
     int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -84,7 +84,7 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     RoundRobinBatchTaskScheduler scheduler = new RoundRobinBatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -117,7 +117,7 @@ public class RoundRobinBatchTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
+  private ComputeGraph createGraph(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
@@ -132,11 +132,11 @@ public class RoundRobinBatchTaskSchedulerTest {
 
     builder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
@@ -158,7 +158,7 @@ public class RoundRobinBatchTaskSchedulerTest {
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     return graph;
   }
 }

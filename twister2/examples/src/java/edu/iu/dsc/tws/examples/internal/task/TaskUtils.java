@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
@@ -40,7 +40,7 @@ public final class TaskUtils {
   }
 
   public static void executeBatch(Config config, int workerID,
-                                  DataFlowTaskGraph graph, IWorkerController workerController) {
+                                  ComputeGraph graph, IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
 
@@ -64,7 +64,7 @@ public final class TaskUtils {
     executor.execute(plan);
   }
 
-  public static void execute(Config config, int workerID, DataFlowTaskGraph graph,
+  public static void execute(Config config, int workerID, ComputeGraph graph,
                              IWorkerController workerController) {
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);

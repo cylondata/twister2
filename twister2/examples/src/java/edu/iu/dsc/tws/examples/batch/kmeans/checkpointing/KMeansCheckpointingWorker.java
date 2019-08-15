@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.checkpointing.Snapshot;
 import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
 import edu.iu.dsc.tws.api.comms.packing.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -112,7 +112,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -125,7 +125,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     DataObject<Object> centroidsDataObject;
     if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
-      DataFlowTaskGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
+      ComputeGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
       //Get the execution plan for the second task graph
       ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
@@ -142,7 +142,7 @@ public class KMeansCheckpointingWorker implements IWorker {
 
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);

@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
@@ -40,7 +40,7 @@ public class RoundRobinTaskSchedulerTest {
   @Test
   public void testUniqueSchedules() {
     int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -63,7 +63,7 @@ public class RoundRobinTaskSchedulerTest {
   @Test
   public void testUniqueSchedules2() {
     int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -89,7 +89,7 @@ public class RoundRobinTaskSchedulerTest {
   public void testUniqueSchedules3() {
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraphWithGraphConstraints(parallel);
+    ComputeGraph graph = createGraphWithGraphConstraints(parallel);
     RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -111,7 +111,7 @@ public class RoundRobinTaskSchedulerTest {
   public void testUniqueSchedules4() {
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     RoundRobinTaskScheduler scheduler = new RoundRobinTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -163,7 +163,7 @@ public class RoundRobinTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
+  private ComputeGraph createGraph(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -177,7 +177,7 @@ public class RoundRobinTaskSchedulerTest {
     return builder.build();
   }
 
-  private DataFlowTaskGraph createGraphWithGraphConstraints(int parallel) {
+  private ComputeGraph createGraphWithGraphConstraints(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -188,11 +188,11 @@ public class RoundRobinTaskSchedulerTest {
     builder.setMode(OperationMode.STREAMING);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "16");
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
@@ -218,7 +218,7 @@ public class RoundRobinTaskSchedulerTest {
     computeGraphBuilder.setMode(OperationMode.STREAMING);
 
     computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "24");
-    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 }

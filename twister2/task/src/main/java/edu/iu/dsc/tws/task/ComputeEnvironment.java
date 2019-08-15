@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -73,9 +73,9 @@ public final class ComputeEnvironment {
    * for single task graph runs
    */
   public TaskExecutor buildAndExecute(ComputeGraphBuilder computeGraphBuilder) {
-    DataFlowTaskGraph dataFlowTaskGraph = computeGraphBuilder.build();
-    ExecutionPlan plan = this.getTaskExecutor().plan(dataFlowTaskGraph);
-    this.getTaskExecutor().execute(dataFlowTaskGraph, plan);
+    ComputeGraph computeGraph = computeGraphBuilder.build();
+    ExecutionPlan plan = this.getTaskExecutor().plan(computeGraph);
+    this.getTaskExecutor().execute(computeGraph, plan);
     return this.getTaskExecutor();
   }
 

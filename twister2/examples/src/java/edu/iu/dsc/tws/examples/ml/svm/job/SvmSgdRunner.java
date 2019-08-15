@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -99,7 +99,7 @@ public class SvmSgdRunner extends TaskWorker {
         .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(operationMode);
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
 

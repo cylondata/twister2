@@ -20,7 +20,7 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
@@ -45,7 +45,7 @@ public class DataLocalityTaskSchedulerTest {
   public void testUniqueSchedules1() {
     int parallel = 8;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config, 1);
@@ -74,7 +74,7 @@ public class DataLocalityTaskSchedulerTest {
     int parallel = 1000;
     int workers = 2;
 
-    DataFlowTaskGraph graph = createGraphWithConstraints(parallel);
+    ComputeGraph graph = createGraphWithConstraints(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
 
@@ -100,7 +100,7 @@ public class DataLocalityTaskSchedulerTest {
     int parallel = 1000;
     int workers = 3;
 
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
 
@@ -158,7 +158,7 @@ public class DataLocalityTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
+  private ComputeGraph createGraph(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
@@ -173,11 +173,11 @@ public class DataLocalityTaskSchedulerTest {
         .withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
-  private DataFlowTaskGraph createGraphWithConstraints(int parallel) {
+  private ComputeGraph createGraphWithConstraints(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -191,12 +191,12 @@ public class DataLocalityTaskSchedulerTest {
         .withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.STREAMING);
     computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
@@ -222,7 +222,7 @@ public class DataLocalityTaskSchedulerTest {
     computeGraphBuilder.setMode(OperationMode.STREAMING);
 
     computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = computeGraphBuilder.build();
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 }

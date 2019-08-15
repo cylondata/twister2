@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -58,7 +58,7 @@ public class MultiStageGraph implements IWorker {
         .withReductionFunction((object1, object2) -> object1);
     builder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     cEnv.getTaskExecutor().execute(graph, cEnv.getTaskExecutor().plan(graph));
   }
 

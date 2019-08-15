@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
@@ -96,7 +96,7 @@ public class MDSWorker implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
+    ComputeGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan plan = taskExecutor.plan(dataObjectTaskGraph);
 
@@ -121,7 +121,7 @@ public class MDSWorker implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     mdsComputeProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();
+    ComputeGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();
 
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(mdsTaskGraph);

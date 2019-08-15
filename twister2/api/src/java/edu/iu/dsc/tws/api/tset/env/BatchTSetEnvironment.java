@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.env;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
@@ -46,7 +46,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param leafTset leaf tset
    */
   public void run(BaseTSet leafTset) {
-    DataFlowTaskGraph dataflowGraph = getTSetGraph().build(leafTset);
+    ComputeGraph dataflowGraph = getTSetGraph().build(leafTset);
     executeDataFlowGraph(dataflowGraph, null);
   }
 
@@ -58,7 +58,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @return output result as a data object
    */
   public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-    DataFlowTaskGraph dataflowGraph = getTSetGraph().build(leafTset);
+    ComputeGraph dataflowGraph = getTSetGraph().build(leafTset);
     return executeDataFlowGraph(dataflowGraph, leafTset);
   }
 }

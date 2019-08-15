@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -170,7 +170,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(MessageTypes.OBJECT);
     trainingBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.build();
+    ComputeGraph datapointsTaskGraph = trainingBuilder.build();
     datapointsTaskGraph.setGraphName("training-data-loading-graph");
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
@@ -204,7 +204,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(MessageTypes.OBJECT);
     trainingBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph datapointsTaskGraph = trainingBuilder.build();
+    ComputeGraph datapointsTaskGraph = trainingBuilder.build();
     datapointsTaskGraph.setGraphName("weight-vector-loading-graph");
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
@@ -241,7 +241,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .viaEdge(TEST_DATA_LOAD_EDGE_DIRECT).withDataType(MessageTypes.OBJECT);
     testingBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph datapointsTaskGraph1 = testingBuilder.build();
+    ComputeGraph datapointsTaskGraph1 = testingBuilder.build();
     datapointsTaskGraph1.setGraphName("testing-data-loading-graph");
     ExecutionPlan firstGraphExecutionPlan1 = taskExecutor.plan(datapointsTaskGraph1);
     taskExecutor.execute(datapointsTaskGraph1, firstGraphExecutionPlan1);
@@ -297,7 +297,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .withDataType(MessageTypes.OBJECT);
 
     trainingBuilder.setMode(operationMode);
-    DataFlowTaskGraph graph = trainingBuilder.build();
+    ComputeGraph graph = trainingBuilder.build();
     graph.setGraphName("training-graph");
     ExecutionPlan plan = taskExecutor.plan(graph);
 
@@ -359,7 +359,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .withDataType(MessageTypes.OBJECT);
 
     trainingBuilder.setMode(operationMode);
-    DataFlowTaskGraph graph = trainingBuilder.build();
+    ComputeGraph graph = trainingBuilder.build();
     graph.setGraphName("training-graph");
 
 
@@ -398,7 +398,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * @param plan1 ExecutionPlan from which we retrive the final weight vector
    * @return Twister2 DataObject containing the final reduced weight vector is retrieved
    */
-  public DataObject<double[]> retrieveWeightVectorFromTaskGraph(DataFlowTaskGraph graph1,
+  public DataObject<double[]> retrieveWeightVectorFromTaskGraph(ComputeGraph graph1,
                                                                 ExecutionPlan plan1) {
 
     DataObject<double[]> dataSet = taskExecutor.getOutput(graph1, plan1,
@@ -451,7 +451,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .withReductionFunction(new PredictionAggregator())
         .withDataType(MessageTypes.OBJECT);
     testingBuilder.setMode(operationMode);
-    DataFlowTaskGraph predictionGraph = testingBuilder.build();
+    ComputeGraph predictionGraph = testingBuilder.build();
     predictionGraph.setGraphName("testing-graph");
     ExecutionPlan predictionPlan = taskExecutor.plan(predictionGraph);
     // adding test data set
@@ -475,11 +475,11 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
   /**
    * This method retrieves the accuracy data object from the prediction task graph
    *
-   * @param predictionGraph DataFlowTaskGraph from which the final accuracy is retrieved
+   * @param predictionGraph ComputeGraph from which the final accuracy is retrieved
    * @param predictionPlan PredictionTaskGraph from which the final accuracy is retrieved
    * @return returns the Twister2 DataObject containing the accuracy object
    */
-  public DataObject<Object> retrieveTestingAccuracyObject(DataFlowTaskGraph predictionGraph,
+  public DataObject<Object> retrieveTestingAccuracyObject(ComputeGraph predictionGraph,
                                                           ExecutionPlan predictionPlan) {
     DataObject<Object> finalRes = taskExecutor.getOutput(predictionGraph, predictionPlan,
         Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK);

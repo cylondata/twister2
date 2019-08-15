@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
@@ -146,7 +146,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     //builder.addNodeConstraints("sink", sinkTaskConstraintsMap);
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints()
         + "\tNode Constraints:%%%" + graph.getNodeConstraints().entrySet());
     ExecutionPlan plan = taskExecutor.plan(graph);

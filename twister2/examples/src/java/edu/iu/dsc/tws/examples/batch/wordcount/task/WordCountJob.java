@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -80,7 +80,7 @@ public class WordCountJob implements IWorker {
     builder.setMode(OperationMode.BATCH);
 
     // execute the graph
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     ExecutionPlan plan = cEnv.getTaskExecutor().plan(graph);
     cEnv.getTaskExecutor().execute(graph, plan);
   }

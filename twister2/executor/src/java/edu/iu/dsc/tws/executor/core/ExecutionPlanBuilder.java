@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.IExecutionPlanBuilder;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -112,7 +112,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
   }
 
   @Override
-  public ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
+  public ExecutionPlan build(Config cfg, ComputeGraph taskGraph,
                              TaskSchedulePlan taskSchedule) {
     // we need to build the task plan
     LogicalPlan logicalPlan =

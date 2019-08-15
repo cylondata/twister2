@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -66,7 +66,7 @@ public class DataflowNodeExperiment extends TaskWorker {
         .withDataType(MessageTypes.OBJECT);
 
     builder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < iter; i++) {

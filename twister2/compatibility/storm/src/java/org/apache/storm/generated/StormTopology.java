@@ -26,21 +26,21 @@ package org.apache.storm.generated;
 
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 
 public class StormTopology {
 
-  private DataFlowTaskGraph t2DataFlowTaskGraph;
+  private ComputeGraph t2ComputeGraph;
 
   private Map<String, SpoutSpec> spouts; // required
   private Map<String, Bolt> bolts; // required
 
-  public StormTopology(DataFlowTaskGraph t2DataFlowTaskGraph) {
-    this.t2DataFlowTaskGraph = t2DataFlowTaskGraph;
+  public StormTopology(ComputeGraph t2ComputeGraph) {
+    this.t2ComputeGraph = t2ComputeGraph;
   }
 
-  public DataFlowTaskGraph getT2DataFlowTaskGraph() {
-    return t2DataFlowTaskGraph;
+  public ComputeGraph getT2ComputeGraph() {
+    return t2ComputeGraph;
   }
 
   public int get_bolts_size() {

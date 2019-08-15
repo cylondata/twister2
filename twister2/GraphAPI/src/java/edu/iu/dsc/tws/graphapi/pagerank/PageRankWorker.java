@@ -56,7 +56,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
@@ -99,7 +99,7 @@ public class PageRankWorker extends TaskWorker {
     graphsize = dsize;
 
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, config);
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -118,7 +118,7 @@ public class PageRankWorker extends TaskWorker {
 
     //the second task graph for assign initial pagerank values for vertex.
 
-    DataFlowTaskGraph graphInitialValueTaskGraph = buildGraphInitialValueTG(dataDirectory, dsize,
+    ComputeGraph graphInitialValueTaskGraph = buildGraphInitialValueTG(dataDirectory, dsize,
         parallelismValue, config);
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan1 = taskExecutor.plan(graphInitialValueTaskGraph);
@@ -140,7 +140,7 @@ public class PageRankWorker extends TaskWorker {
 
     long startime = System.currentTimeMillis();
     //third task graph for computations
-    DataFlowTaskGraph pageranktaskgraph = buildComputationTG(parallelismValue, config);
+    ComputeGraph pageranktaskgraph = buildComputationTG(parallelismValue, config);
 
 
     ExecutionPlan plan = taskExecutor.plan(pageranktaskgraph);
@@ -220,9 +220,9 @@ public class PageRankWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue,
-                                                    Config conf) {
+  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                               int parallelismValue,
+                                               Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     DataObjectCompute dataObjectCompute = new DataObjectCompute(
@@ -254,9 +254,9 @@ public class PageRankWorker extends TaskWorker {
     return datapointsTaskGraphBuilder.build();
   }
 
-  public  static DataFlowTaskGraph buildGraphInitialValueTG(String dataDirectory, int dsize,
-                                                            int parallelismValue,
-                                                            Config conf) {
+  public  static ComputeGraph buildGraphInitialValueTG(String dataDirectory, int dsize,
+                                                       int parallelismValue,
+                                                       Config conf) {
     DataObjectSource pageRankValueHolder = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     PageRankValueHolderCompute pageRankValueHolderCompute = new PageRankValueHolderCompute(
@@ -290,7 +290,7 @@ public class PageRankWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildComputationTG(int parallelismValue, Config conf) {
+  public static ComputeGraph buildComputationTG(int parallelismValue, Config conf) {
 
     PageRankSource pageRankSource = new PageRankSource();
     PageRankKeyedReduce pageRankKeyedReduce = new PageRankKeyedReduce();

@@ -18,7 +18,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -163,7 +163,7 @@ public class KMeansDataGeneratorTest {
         Context.TWISTER2_DIRECT_EDGE, cinputDirectory);
     computeGraphBuilder.addSource("map", task, parallelismValue);
     computeGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph dataFlowTaskGraph = computeGraphBuilder.build();
+    ComputeGraph computeGraph = computeGraphBuilder.build();
 
     Path path = new Path(cinputDirectory);
     final FileSystem fs = FileSystemUtils.get(path);

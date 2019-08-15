@@ -24,7 +24,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
@@ -91,7 +91,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * @return TaskSchedulePlan
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan) {
 
     int taskSchedulePlanId = 0;
 
@@ -179,7 +179,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
    * own scheduling algorithm.
    */
   private static Map<Integer, List<TaskInstanceId>> userDefinedSchedulingAlgorithm(
-      DataFlowTaskGraph graph, int numberOfContainers) {
+      ComputeGraph graph, int numberOfContainers) {
 
     Map<Integer, List<TaskInstanceId>> userDefinedAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.IExecution;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
@@ -50,7 +50,7 @@ public abstract class BenchTaskWorker implements IWorker {
 
   protected static final String SINK = "sink";
 
-  protected DataFlowTaskGraph dataFlowTaskGraph;
+  protected ComputeGraph computeGraph;
 
   protected ComputeGraphBuilder computeGraphBuilder;
 
@@ -92,9 +92,9 @@ public abstract class BenchTaskWorker implements IWorker {
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 
     buildTaskGraph();
-    dataFlowTaskGraph = computeGraphBuilder.build();
-    executionPlan = cEnv.getTaskExecutor().plan(dataFlowTaskGraph);
-    IExecution execution = cEnv.getTaskExecutor().iExecute(dataFlowTaskGraph, executionPlan);
+    computeGraph = computeGraphBuilder.build();
+    executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
+    IExecution execution = cEnv.getTaskExecutor().iExecute(computeGraph, executionPlan);
 
     if (jobParameters.isStream()) {
       while (execution.progress()

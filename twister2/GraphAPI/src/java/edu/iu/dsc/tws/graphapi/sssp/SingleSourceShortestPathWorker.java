@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
@@ -69,7 +69,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     /* First Graph to partition and read the partitioned adjacency list datas **/
 
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, soruceVertex, config);
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -87,7 +87,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
 
     //Build the second taskgraph
-    DataFlowTaskGraph graphInitialValueTaskGraph = buildSsspInitialTG(dataDirectory, dsize,
+    ComputeGraph graphInitialValueTaskGraph = buildSsspInitialTG(dataDirectory, dsize,
         parallelismValue, soruceVertex, config);
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(graphInitialValueTaskGraph);
@@ -103,7 +103,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
+    ComputeGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
 
 
     ExecutionPlan plan = taskExecutor.plan(sssptaskgraph);
@@ -137,9 +137,9 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue, String soruceVertex,
-                                                    Config conf) {
+  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                               int parallelismValue, String soruceVertex,
+                                               Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     GraphDataCompute graphDataCompute = new GraphDataCompute(
@@ -174,9 +174,9 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildSsspInitialTG(String dataDirectory, int dsize,
-                                                     int parallelismValue, String soruceVertex,
-                                                     Config conf) {
+  public static ComputeGraph buildSsspInitialTG(String dataDirectory, int dsize,
+                                                int parallelismValue, String soruceVertex,
+                                                Config conf) {
     //the second task graph for assign initial pagerank values for vertex.
     DataObjectSource ssspInitialDatasource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
@@ -212,7 +212,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildComputationSsspTG(int parallelismValue, Config conf) {
+  public static ComputeGraph buildComputationSsspTG(int parallelismValue, Config conf) {
     SsspSource ssspSource = new SsspSource();
     SsspKeyedReduce ssspKeyedReduce = new SsspKeyedReduce();
     SsspSink ssspSink = new SsspSink();

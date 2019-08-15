@@ -23,12 +23,12 @@ import java.util.logging.Logger;
  * This class extends the base data flow task graph which is mainly responsible for building the
  * task graph for the task vertex and the task edge.
  * <p>
- * todo redundant {@link DataFlowTaskGraph} <- {@link BaseDataflowTaskGraph} <- {@link ITaskGraph}
+ * todo redundant {@link ComputeGraph} <- {@link BaseDataflowTaskGraph} <- {@link ITaskGraph}
  * chain
  */
-public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
+public class ComputeGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
-  private static final Logger LOG = Logger.getLogger(DataFlowTaskGraph.class.getName());
+  private static final Logger LOG = Logger.getLogger(ComputeGraph.class.getName());
 
   private Map<String, Vertex> taskMap = new HashMap<>();
 
@@ -39,15 +39,15 @@ public class DataFlowTaskGraph extends BaseDataflowTaskGraph<Vertex, Edge> {
 
   private String graphName;
 
-  public DataFlowTaskGraph() {
+  public ComputeGraph() {
     super(new VertexComparator(), new EdgeComparator());
   }
 
-  public DataFlowTaskGraph(OperationMode mode) {
+  public ComputeGraph(OperationMode mode) {
     this(mode, "unnamed-task-graph");
   }
 
-  public DataFlowTaskGraph(OperationMode mode, String graphName) {
+  public ComputeGraph(OperationMode mode, String graphName) {
     super(new VertexComparator(), new EdgeComparator());
     this.operationMode = mode;
     this.graphName = graphName;

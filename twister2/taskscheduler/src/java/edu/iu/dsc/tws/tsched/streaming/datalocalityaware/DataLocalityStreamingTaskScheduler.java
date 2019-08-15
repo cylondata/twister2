@@ -24,7 +24,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
@@ -104,7 +104,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * which are closer to the data nodes.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan) {
 
     //Represents task schedule plan Id
     int taskSchedulePlanId = 0;
@@ -173,7 +173,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
   private Map<Integer, List<TaskInstanceId>> dataLocalityStreamingSchedulingAlgorithm(
-      DataFlowTaskGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
+      ComputeGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.graph;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -28,10 +28,10 @@ import edu.iu.dsc.tws.api.compute.nodes.ISource;
  */
 public final class GraphBuilder {
 
-  private DataFlowTaskGraph graph;
+  private ComputeGraph graph;
 
   private GraphBuilder() {
-    graph = new DataFlowTaskGraph();
+    graph = new ComputeGraph();
   }
 
   public static GraphBuilder newBuilder() {
@@ -137,7 +137,7 @@ public final class GraphBuilder {
   }
 
 
-  public DataFlowTaskGraph build() {
+  public ComputeGraph build() {
     graph.validate();
     graph.build();
     return graph;
@@ -146,7 +146,7 @@ public final class GraphBuilder {
   /**
    * Set the operation mode of the graph, default is set to stream
    */
-  public DataFlowTaskGraph operationMode(OperationMode mode) {
+  public ComputeGraph operationMode(OperationMode mode) {
     graph.setOperationMode(mode);
     return graph;
   }

@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
@@ -68,7 +68,7 @@ public class StormBenchmark extends TaskWorker {
 
     computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph build = computeGraphBuilder.build();
+    ComputeGraph build = computeGraphBuilder.build();
 
     this.taskExecutor.execute(build, taskExecutor.plan(build));
   }

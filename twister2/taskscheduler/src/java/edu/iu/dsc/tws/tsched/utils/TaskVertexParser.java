@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 
 /**
@@ -32,17 +32,17 @@ public final class TaskVertexParser {
 
   private Set<Vertex> targetVertexSet = new LinkedHashSet<>();
 
-  public List<Set<Vertex>> parseVertexSet(DataFlowTaskGraph dataFlowTaskGraph) {
-    Set<Vertex> taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+  public List<Set<Vertex>> parseVertexSet(ComputeGraph computeGraph) {
+    Set<Vertex> taskVertexSet = computeGraph.getTaskVertexSet();
     for (Vertex vertex : taskVertexSet) {
-      if (dataFlowTaskGraph.inDegreeOfTask(vertex) == 0) {
+      if (computeGraph.inDegreeOfTask(vertex) == 0) {
         add(vertex);
         targetVertexSet.add(vertex);
-        if (dataFlowTaskGraph.childrenOfTask(vertex).size() >= 1) {
-          checkChildTasks(dataFlowTaskGraph, vertex);
+        if (computeGraph.childrenOfTask(vertex).size() >= 1) {
+          checkChildTasks(computeGraph, vertex);
         }
       } else {
-        if (checkChildTasks(dataFlowTaskGraph, vertex)) {
+        if (checkChildTasks(computeGraph, vertex)) {
           if (!targetVertexSet.contains(vertex)) {
             add(vertex);
             targetVertexSet.add(vertex);
@@ -59,10 +59,10 @@ public final class TaskVertexParser {
     return taskVertexList;
   }
 
-  private boolean checkChildTasks(DataFlowTaskGraph dataFlowTaskGraph, Vertex vertex) {
+  private boolean checkChildTasks(ComputeGraph computeGraph, Vertex vertex) {
     boolean flag = false;
-    if (dataFlowTaskGraph.outDegreeOfTask(vertex) >= 1) {
-      Set<Vertex> childTask = dataFlowTaskGraph.childrenOfTask(vertex);
+    if (computeGraph.outDegreeOfTask(vertex) >= 1) {
+      Set<Vertex> childTask = computeGraph.childrenOfTask(vertex);
       if (!targetVertexSet.containsAll(childTask)) {
         add(childTask);
         targetVertexSet.addAll(childTask);

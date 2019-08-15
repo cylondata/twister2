@@ -38,7 +38,7 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
@@ -59,7 +59,7 @@ public class TaskIdGenerator {
     return taskId * 100000 + taskIndex;
   }
 
-  public Set<Integer> getTaskIds(String taskName, int taskId, DataFlowTaskGraph graph) {
+  public Set<Integer> getTaskIds(String taskName, int taskId, ComputeGraph graph) {
     Vertex v = graph.vertex(taskName);
     int parallel = v.getParallelism();
 

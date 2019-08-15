@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
@@ -89,7 +89,7 @@ public class KMeansWorker implements IWorker {
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
     //Get the execution plan for the first task graph
@@ -102,7 +102,7 @@ public class KMeansWorker implements IWorker {
 
 
     /* Second Graph to read the centroids **/
-    DataFlowTaskGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
+    ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
         parallelismValue, dimension, config);
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
@@ -116,7 +116,7 @@ public class KMeansWorker implements IWorker {
 
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
@@ -145,9 +145,9 @@ public class KMeansWorker implements IWorker {
         + Arrays.deepToString(centroid));
   }
 
-  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue, int dimension,
-                                                    Config conf) {
+  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                               int parallelismValue, int dimension,
+                                               Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
@@ -179,9 +179,9 @@ public class KMeansWorker implements IWorker {
   }
 
 
-  public static DataFlowTaskGraph buildCentroidsTG(String centroidDirectory, int csize,
-                                                   int parallelismValue, int dimension,
-                                                   Config conf) {
+  public static ComputeGraph buildCentroidsTG(String centroidDirectory, int csize,
+                                              int parallelismValue, int dimension,
+                                              Config conf) {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
@@ -213,7 +213,7 @@ public class KMeansWorker implements IWorker {
   }
 
 
-  public static DataFlowTaskGraph buildKMeansTG(int parallelismValue, Config conf) {
+  public static ComputeGraph buildKMeansTG(int parallelismValue, Config conf) {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);

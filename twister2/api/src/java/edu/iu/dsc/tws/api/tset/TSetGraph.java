@@ -51,7 +51,7 @@ import com.google.common.graph.ElementOrder;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BuildableTLink;
 import edu.iu.dsc.tws.api.tset.sets.BuildableTSet;
@@ -159,7 +159,7 @@ public class TSetGraph {
    *
    * @return data flow graph to execute
    */
-  public DataFlowTaskGraph build() {
+  public ComputeGraph build() {
     List<BuildableTLink> links = new ArrayList<>();
     List<BuildableTSet> sets = new ArrayList<>();
 
@@ -180,7 +180,7 @@ public class TSetGraph {
    * @param leafTSet leaf tset
    * @return data flow graph to execute the subgraph of TSets
    */
-  public DataFlowTaskGraph build(BuildableTSet leafTSet) {
+  public ComputeGraph build(BuildableTSet leafTSet) {
     List<BuildableTLink> links = new ArrayList<>();
     List<BuildableTSet> sets = new ArrayList<>();
 
@@ -191,7 +191,7 @@ public class TSetGraph {
     return buildGraph(links, sets);
   }
 
-  private DataFlowTaskGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
+  private ComputeGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
 
     LOG.info(() -> "Node build order: " + sets);
     for (BuildableTSet baseTSet : sets) {
@@ -207,7 +207,7 @@ public class TSetGraph {
       link.build(this, sets);
     }
 
-    DataFlowTaskGraph dataflowGraph = getDfwGraphBuilder().build();
+    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
 
     // clean the upstream of the cached tsets

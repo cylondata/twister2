@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
@@ -34,7 +34,7 @@ public abstract class BenchWindowTaskWorker extends TaskWorker {
 
   protected static final String SINK = "sink";
 
-  protected DataFlowTaskGraph dataFlowTaskGraph;
+  protected ComputeGraph computeGraph;
 
   protected ComputeGraphBuilder computeGraphBuilder;
 
@@ -65,8 +65,8 @@ public abstract class BenchWindowTaskWorker extends TaskWorker {
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 
     buildTaskGraph();
-    dataFlowTaskGraph = computeGraphBuilder.build();
-    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    computeGraph = computeGraphBuilder.build();
+    executionPlan = taskExecutor.plan(computeGraph);
   }
 
   public abstract ComputeGraphBuilder buildTaskGraph();

@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -119,7 +119,7 @@ public abstract class TSetEnvironment {
    * Runs the entire TSet graph
    */
   public void run() {
-    DataFlowTaskGraph graph = tsetGraph.build();
+    ComputeGraph graph = tsetGraph.build();
     executeDataFlowGraph(graph, null);
   }
 
@@ -135,7 +135,7 @@ public abstract class TSetEnvironment {
    * @param <T> type of the output data object
    * @return output as a data object if outputTset is not null. Else null
    */
-  protected <T> DataObject<T> executeDataFlowGraph(DataFlowTaskGraph dataflowGraph,
+  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
                                                    BuildableTSet outputTset) {
     ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
 
@@ -178,7 +178,7 @@ public abstract class TSetEnvironment {
    *
    * @param executionPlan the built execution plan
    */
-  private void pushInputsToFunctions(DataFlowTaskGraph graph, ExecutionPlan executionPlan) {
+  private void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
     for (String taskName : tSetInputMap.keySet()) {
       Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
       for (String keyName : tempMap.keySet()) {

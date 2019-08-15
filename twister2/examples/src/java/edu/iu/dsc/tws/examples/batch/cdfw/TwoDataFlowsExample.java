@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -153,7 +153,7 @@ public final class TwoDataFlowsExample {
         .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
+    ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
         setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
@@ -175,7 +175,7 @@ public final class TwoDataFlowsExample {
         .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
+    ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
         setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");

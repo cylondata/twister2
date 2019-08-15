@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.examples.task.dataparallel;
 import java.io.IOException;
 
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
@@ -51,9 +51,9 @@ public class DataParallelWorker extends TaskWorker {
     computeGraphBuilder.addSource("map", task, parallel);
     computeGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataFlowTaskGraph = computeGraphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, plan);
+    ComputeGraph computeGraph = computeGraphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(computeGraph);
+    taskExecutor.execute(computeGraph, plan);
   }
 
 }

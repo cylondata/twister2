@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.OperationNames;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.GraphConstants;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -71,7 +71,7 @@ public class StreamingTaskExampleKafka implements IWorker {
 
     builder.addConfiguration("source", "inputdataset", sourceInputDataset);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
 
     TaskUtils.execute(config, workerID, graph, workerController);
   }

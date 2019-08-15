@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
@@ -68,7 +68,7 @@ public class IterativeJob implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = graphBuilder.build();
+    ComputeGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     for (int i = 0; i < 10; i++) {
       LOG.info("Starting iteration: " + i);

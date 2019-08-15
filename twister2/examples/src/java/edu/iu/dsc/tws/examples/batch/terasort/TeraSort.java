@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -161,7 +161,7 @@ public class TeraSort implements IWorker {
 
             return newMinMax;
           });
-      DataFlowTaskGraph sampleGraphBuild = samplingGraph.build();
+      ComputeGraph sampleGraphBuild = samplingGraph.build();
       ExecutionPlan sampleTaskPlan = cEnv.getTaskExecutor().plan(sampleGraphBuild);
       cEnv.getTaskExecutor().execute(sampleGraphBuild, sampleTaskPlan);
       DataObject<byte[]> output = cEnv.getTaskExecutor().getOutput(sampleGraphBuild,
@@ -209,9 +209,9 @@ public class TeraSort implements IWorker {
     }
 
 
-    DataFlowTaskGraph dataFlowTaskGraph = teraSortTaskGraph.build();
-    ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(dataFlowTaskGraph);
-    cEnv.getTaskExecutor().execute(dataFlowTaskGraph, executionPlan);
+    ComputeGraph computeGraph = teraSortTaskGraph.build();
+    ExecutionPlan executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
+    cEnv.getTaskExecutor().execute(computeGraph, executionPlan);
     LOG.info("Stopping execution...");
   }
 

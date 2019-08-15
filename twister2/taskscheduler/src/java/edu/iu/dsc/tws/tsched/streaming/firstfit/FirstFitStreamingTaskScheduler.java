@@ -21,7 +21,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
@@ -131,8 +131,8 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * builder to allocate the task instances into the containers.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
-    this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+  public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
+    this.taskVertexSet = computeGraph.getTaskVertexSet();
     TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
     try {
       taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);

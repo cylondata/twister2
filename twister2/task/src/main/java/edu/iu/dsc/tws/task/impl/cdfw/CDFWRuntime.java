@@ -24,7 +24,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
@@ -122,7 +122,7 @@ public class CDFWRuntime implements JobListener {
 
       // get the subgraph from the map
       CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
-      DataFlowTaskGraph taskGraph = (DataFlowTaskGraph) serializer.deserialize(
+      ComputeGraph taskGraph = (ComputeGraph) serializer.deserialize(
           subGraph.getGraphSerialized().toByteArray());
       if (taskGraph == null) {
         LOG.severe(workerId + " Unable to find the subgraph " + subGraph.getName());

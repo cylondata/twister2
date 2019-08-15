@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -58,7 +58,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 //        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
 //    computeGraphBuilder.setMode(OperationMode.BATCH);
 //
-//    DataFlowTaskGraph datapointsTaskGraph = computeGraphBuilder.build();
+//    ComputeGraph datapointsTaskGraph = computeGraphBuilder.build();
 //    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 //    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 //    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
@@ -79,7 +79,7 @@ public class SourceTaskDataLoader extends TaskWorker {
         .withReductionFunction(new SimpleDataAggregator())
         .withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph simpleTaskGraph = computeGraphBuilder.build();
+    ComputeGraph simpleTaskGraph = computeGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);
 //    taskExecutor.addInput(
 //        simpleTaskGraph, plan, "kmeanssource", "points", dataPointsObject);

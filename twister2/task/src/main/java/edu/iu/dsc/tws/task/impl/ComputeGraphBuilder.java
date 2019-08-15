@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
@@ -258,8 +258,8 @@ public final class ComputeGraphBuilder {
   }
 
 
-  public DataFlowTaskGraph build() {
-    DataFlowTaskGraph graph = new DataFlowTaskGraph();
+  public ComputeGraph build() {
+    ComputeGraph graph = new ComputeGraph();
     graph.setOperationMode(mode);
     graph.setGraphName(taskGraphName);
     graph.addGraphConstraints(graphConstraints);

@@ -12,7 +12,7 @@
 package edu.iu.dsc.tws.examples.ml.svm.util;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -36,15 +36,15 @@ public final class TGUtils {
 
   }
 
-  public static DataFlowTaskGraph generateGenericDataPointLoader(int samples, int parallelism,
-                                                                 int numOfFeatures,
-                                                                 String dataSourcePathStr,
-                                                                 String dataObjectSourceStr,
-                                                                 String dataObjectComputeStr,
-                                                                 String dataObjectSinkStr,
-                                                                 String graphName,
-                                                                 Config config,
-                                                                 OperationMode opMode) {
+  public static ComputeGraph generateGenericDataPointLoader(int samples, int parallelism,
+                                                            int numOfFeatures,
+                                                            String dataSourcePathStr,
+                                                            String dataObjectSourceStr,
+                                                            String dataObjectComputeStr,
+                                                            String dataObjectSinkStr,
+                                                            String graphName,
+                                                            Config config,
+                                                            OperationMode opMode) {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataSourcePathStr);
@@ -77,9 +77,9 @@ public final class TGUtils {
     return datapointsComputeGraphBuilder.build();
   }
 
-  public static DataFlowTaskGraph buildTrainingDataPointsTG(int dataStreamerParallelism,
-                                                      SVMJobParameters svmJobParameters,
-                                                      Config config, OperationMode opMode) {
+  public static ComputeGraph buildTrainingDataPointsTG(int dataStreamerParallelism,
+                                                       SVMJobParameters svmJobParameters,
+                                                       Config config, OperationMode opMode) {
     return generateGenericDataPointLoader(svmJobParameters.getSamples(),
         dataStreamerParallelism, svmJobParameters.getFeatures(),
         svmJobParameters.getTrainingDataDir(),
@@ -91,9 +91,9 @@ public final class TGUtils {
 
   }
 
-  public static DataFlowTaskGraph buildTestingDataPointsTG(int dataStreamerParallelism,
-                                                     SVMJobParameters svmJobParameters,
-                                                     Config config, OperationMode opMode) {
+  public static ComputeGraph buildTestingDataPointsTG(int dataStreamerParallelism,
+                                                      SVMJobParameters svmJobParameters,
+                                                      Config config, OperationMode opMode) {
     return generateGenericDataPointLoader(svmJobParameters.getTestingSamples(),
         dataStreamerParallelism, svmJobParameters.getFeatures(),
         svmJobParameters.getTestingDataDir(),
@@ -105,9 +105,9 @@ public final class TGUtils {
 
   }
 
-  public static DataFlowTaskGraph buildWeightVectorTG(Config config, int dataStreamerParallelism,
-                                                SVMJobParameters svmJobParameters,
-                                                OperationMode opMode) {
+  public static ComputeGraph buildWeightVectorTG(Config config, int dataStreamerParallelism,
+                                                 SVMJobParameters svmJobParameters,
+                                                 OperationMode opMode) {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE,
         svmJobParameters.getWeightVectorDataDir());

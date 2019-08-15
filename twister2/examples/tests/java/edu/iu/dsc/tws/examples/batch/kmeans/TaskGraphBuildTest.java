@@ -19,7 +19,7 @@ import org.junit.Test;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -35,23 +35,23 @@ public class TaskGraphBuildTest {
 
   @Test
   public void testUniqueSchedules1() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
-    Assert.assertNotNull(dataFlowTaskGraph);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().iterator().next().getName(),
+    ComputeGraph computeGraph = createGraph();
+    Assert.assertNotNull(computeGraph);
+    Assert.assertEquals(computeGraph.taskEdgeSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
   @Test
   public void testUniqueSchedules2() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
+    ComputeGraph computeGraph = createGraph();
 
-    Assert.assertEquals(dataFlowTaskGraph.getTaskVertexSet().iterator().next().getName(),
+    Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
-  private DataFlowTaskGraph createGraph() {
+  private ComputeGraph createGraph() {
     TestSource testSource = new TestSource();
     TestSink1 testCompute = new TestSink1();
     TestSink2 testSink = new TestSink2();
@@ -68,7 +68,7 @@ public class TaskGraphBuildTest {
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
-    DataFlowTaskGraph graph = computeGraphBuilder.build();
+    ComputeGraph graph = computeGraphBuilder.build();
     return graph;
   }
 

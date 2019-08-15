@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tsched.taskscheduler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
@@ -30,7 +30,7 @@ public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules1() {
     int parallel = 2;
-    DataFlowTaskGraph graph = createStreamingGraph(parallel);
+    ComputeGraph graph = createStreamingGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
@@ -47,7 +47,7 @@ public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules2() {
     int parallel = 2;
-    DataFlowTaskGraph graph = createBatchGraph(parallel);
+    ComputeGraph graph = createBatchGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
@@ -72,7 +72,7 @@ public class TaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createStreamingGraph(int parallel) {
+  private ComputeGraph createStreamingGraph(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -87,7 +87,7 @@ public class TaskSchedulerTest {
     return builder.build();
   }
 
-  private DataFlowTaskGraph createBatchGraph(int parallel) {
+  private ComputeGraph createBatchGraph(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 

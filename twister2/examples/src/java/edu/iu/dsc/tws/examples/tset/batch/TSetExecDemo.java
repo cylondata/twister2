@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -101,7 +101,7 @@ public class TSetExecDemo implements IWorker, Serializable {
 
     graph.connect("compute", "foreach", "e2", OperationNames.DIRECT);
 
-    DataFlowTaskGraph build = graph.build();
+    ComputeGraph build = graph.build();
     ExecutionPlan plan = tenv.getTaskExecutor().plan(build);
 
     tenv.getTaskExecutor().execute(build, plan);

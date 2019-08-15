@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.compute.executor;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 
@@ -23,6 +23,6 @@ public interface IExecutionPlanBuilder {
    * @param taskSchedule the task schedule
    * @return the execution created and null if nothing to execute
    */
-  ExecutionPlan build(Config cfg, DataFlowTaskGraph taskGraph,
+  ExecutionPlan build(Config cfg, ComputeGraph taskGraph,
                       TaskSchedulePlan taskSchedule);
 }

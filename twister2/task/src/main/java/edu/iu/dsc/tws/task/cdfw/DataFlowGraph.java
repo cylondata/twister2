@@ -16,14 +16,14 @@ import java.util.List;
 
 import com.google.protobuf.ByteString;
 
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class DataFlowGraph {
   // the data flow graph
-  private DataFlowTaskGraph graph;
+  private ComputeGraph graph;
 
   // resources for cpu
   private int cpu;
@@ -54,13 +54,13 @@ public final class DataFlowGraph {
   //schedule plan which has the workers to run the dataflow
   private CDFWJobAPI.CDFWSchedulePlan cdfwSchedulePlans;
 
-  private DataFlowGraph(String name, DataFlowTaskGraph g) {
+  private DataFlowGraph(String name, ComputeGraph g) {
     this.graph = g;
     this.kryoSerializer = new KryoSerializer();
     this.graphName = name;
   }
 
-  public static DataFlowGraph newSubGraphJob(String name, DataFlowTaskGraph g) {
+  public static DataFlowGraph newSubGraphJob(String name, ComputeGraph g) {
     return new DataFlowGraph(name, g);
   }
 
@@ -88,7 +88,7 @@ public final class DataFlowGraph {
     return this;
   }
 
-  public DataFlowTaskGraph getGraph() {
+  public ComputeGraph getGraph() {
     return graph;
   }
 

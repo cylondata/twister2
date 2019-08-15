@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -68,7 +68,7 @@ public final class HelloExample {
           .withDataType(MessageTypes.OBJECT);
 
       graphBuilderX.setMode(OperationMode.BATCH);
-      DataFlowTaskGraph batchGraph = graphBuilderX.build();
+      ComputeGraph batchGraph = graphBuilderX.build();
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).

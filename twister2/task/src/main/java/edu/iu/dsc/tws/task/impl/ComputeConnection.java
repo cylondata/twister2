@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.task.impl.ops.AbstractOpsConfig;
@@ -280,7 +280,7 @@ public class ComputeConnection {
     this.autoConnectConfig.clear();
   }
 
-  void build(DataFlowTaskGraph graph) {
+  void build(ComputeGraph graph) {
     this.doAutoConnect();
     this.inputs.forEach((source, edges) -> {
       edges.forEach((edgeName, edge) -> {

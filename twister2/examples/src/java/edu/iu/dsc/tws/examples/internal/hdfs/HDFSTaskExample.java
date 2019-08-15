@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -121,7 +121,7 @@ public class HDFSTaskExample implements IWorker {
       return;
     }
     WorkerPlan workerPlan = createWorkerPlan(workerList);
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
 
     TaskSchedulePlan taskSchedulePlan;
 
