@@ -138,7 +138,5 @@ public final class ComputeEnvironment {
     }
     // close the task executor
     taskExecutor.close();
-    // lets terminate the network
-    workerEnvironment.getCommunicator().close();
   }
 }
