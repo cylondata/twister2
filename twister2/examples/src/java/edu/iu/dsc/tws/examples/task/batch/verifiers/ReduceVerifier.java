@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.task.batch.verifiers;
 
-import edu.iu.dsc.tws.api.task.TaskContext;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;

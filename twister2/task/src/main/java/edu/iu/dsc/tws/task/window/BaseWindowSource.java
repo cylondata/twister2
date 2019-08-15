@@ -23,8 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window;
 
-import edu.iu.dsc.tws.api.task.nodes.BaseNode;
-import edu.iu.dsc.tws.api.task.nodes.ISource;
+import edu.iu.dsc.tws.api.compute.nodes.BaseNode;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
 
 public abstract class BaseWindowSource extends BaseNode implements ISource {
 

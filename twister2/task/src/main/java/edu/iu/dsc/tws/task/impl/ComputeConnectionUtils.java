@@ -17,7 +17,7 @@
 //  http://www.apache.org/licenses/LICENSE-2.0
 package edu.iu.dsc.tws.task.impl;
 
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 
 public final class ComputeConnectionUtils {
 

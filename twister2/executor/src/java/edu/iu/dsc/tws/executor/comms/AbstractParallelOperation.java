@@ -17,10 +17,10 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
-import edu.iu.dsc.tws.api.task.executor.ISync;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
   protected Config config;

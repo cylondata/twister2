@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.examples.ml.svm.data;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
 

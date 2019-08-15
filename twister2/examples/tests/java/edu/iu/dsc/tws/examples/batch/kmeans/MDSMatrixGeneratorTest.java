@@ -16,9 +16,9 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSink;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSource;
 import edu.iu.dsc.tws.examples.batch.mds.MatrixGenerator;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 //import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 
@@ -47,15 +47,15 @@ public class MDSMatrixGeneratorTest {
     matrixGen.generate(datasize, matrixColumLength, directory, byteType);
 
     int parallelismValue = 16;
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("mdsdataprocessing");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("mdsdataprocessing");
     MDSDataObjectSource sourceTask = new MDSDataObjectSource("direct", directory, datasize);
     MDSDataObjectSink sinkTask = new MDSDataObjectSink(matrixColumLength);
-    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
+    computeGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
     computeConnection.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
     BinaryInputPartitioner binaryInputPartitioner =
         new BinaryInputPartitioner(new Path(directory), datasize * Short.BYTES);

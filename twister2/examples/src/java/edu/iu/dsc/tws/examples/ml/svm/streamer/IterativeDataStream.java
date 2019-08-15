@@ -27,10 +27,10 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;

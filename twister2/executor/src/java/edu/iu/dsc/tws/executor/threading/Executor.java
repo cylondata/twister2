@@ -12,12 +12,12 @@
 package edu.iu.dsc.tws.executor.threading;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
-import edu.iu.dsc.tws.api.task.executor.IExecution;
-import edu.iu.dsc.tws.api.task.executor.IExecutor;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 public class Executor implements IExecutor {

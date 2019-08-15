@@ -46,11 +46,11 @@ import org.apache.storm.tuple.Twister2TupleWrapper;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.utils.Utils;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.task.nodes.ISink;
 
 public class Twister2Bolt implements ICompute, ISink, Twister2StormNode {
 

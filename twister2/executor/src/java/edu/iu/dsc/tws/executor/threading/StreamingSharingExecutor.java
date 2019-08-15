@@ -20,11 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.executor.IExecution;
-import edu.iu.dsc.tws.api.task.executor.INodeInstance;
-import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
 
 public class StreamingSharingExecutor extends ThreadSharingExecutor {
   private static final Logger LOG = Logger.getLogger(StreamingSharingExecutor.class.getName());

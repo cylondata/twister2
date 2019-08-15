@@ -25,8 +25,8 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;

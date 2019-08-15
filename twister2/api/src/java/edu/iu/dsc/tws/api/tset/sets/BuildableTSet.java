@@ -23,10 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.task.nodes.INode;
-import edu.iu.dsc.tws.api.task.nodes.ISink;
-import edu.iu.dsc.tws.api.task.nodes.ISource;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;

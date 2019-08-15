@@ -27,12 +27,12 @@ import java.util.logging.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import edu.iu.dsc.tws.api.task.exceptions.TaskSchedulerException;
-import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
 
 /**

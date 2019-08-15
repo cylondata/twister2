@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import edu.iu.dsc.tws.api.task.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
 
 /**
  * If task count is lesser than no. of workers, that worker will remain idle.

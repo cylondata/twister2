@@ -17,19 +17,19 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 
@@ -47,18 +47,18 @@ public class SourceTaskDataLoader extends TaskWorker {
     /*
      * First data is loaded from files
      * */
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 //    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
 //        dataSource);
 //    DataObjectSink sinkTask = new DataObjectSink();
-//    taskGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
-//    ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
+//    computeGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
+//    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink(
 //        "datapointsink", sinkTask, parallelism);
 //    firstGraphComputeConnection.direct("datapointsource",
 //        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-//    taskGraphBuilder.setMode(OperationMode.BATCH);
+//    computeGraphBuilder.setMode(OperationMode.BATCH);
 //
-//    DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
+//    ComputeGraph datapointsTaskGraph = computeGraphBuilder.build();
 //    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 //    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 //    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
@@ -71,15 +71,15 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     DataSourceTask kMeansSourceTask = new DataSourceTask();
     SimpleDataAllReduceTask kMeansAllReduceTask = new SimpleDataAllReduceTask();
-    taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink(
+    computeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelism);
     computeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
         .withReductionFunction(new SimpleDataAggregator())
         .withDataType(MessageTypes.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph simpleTaskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.setMode(OperationMode.BATCH);
+    ComputeGraph simpleTaskGraph = computeGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);
 //    taskExecutor.addInput(
 //        simpleTaskGraph, plan, "kmeanssource", "points", dataPointsObject);

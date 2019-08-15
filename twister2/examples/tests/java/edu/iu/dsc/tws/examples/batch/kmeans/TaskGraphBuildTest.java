@@ -17,17 +17,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
 
 public class TaskGraphBuildTest {
 
@@ -35,40 +35,40 @@ public class TaskGraphBuildTest {
 
   @Test
   public void testUniqueSchedules1() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
-    Assert.assertNotNull(dataFlowTaskGraph);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().iterator().next().getName(),
+    ComputeGraph computeGraph = createGraph();
+    Assert.assertNotNull(computeGraph);
+    Assert.assertEquals(computeGraph.taskEdgeSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
   @Test
   public void testUniqueSchedules2() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
+    ComputeGraph computeGraph = createGraph();
 
-    Assert.assertEquals(dataFlowTaskGraph.getTaskVertexSet().iterator().next().getName(),
+    Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
-  private DataFlowTaskGraph createGraph() {
+  private ComputeGraph createGraph() {
     TestSource testSource = new TestSource();
     TestSink1 testCompute = new TestSink1();
     TestSink2 testSink = new TestSink2();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(getConfig());
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(getConfig());
 
-    taskGraphBuilder.addSource("source", testSource, 4);
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    computeGraphBuilder.addSource("source", testSource, 4);
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
+    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
-    DataFlowTaskGraph graph = taskGraphBuilder.build();
+    ComputeGraph graph = computeGraphBuilder.build();
     return graph;
   }
 

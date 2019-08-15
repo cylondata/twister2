@@ -9,7 +9,7 @@ t2_java_lib(
     deps = [
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
         "//twister2/data/src/main/java:data-java",
         "@com_fasterxml_woodstox_woodstox_core//jar",
         "@com_google_code_findbugs_jsr305//jar",
