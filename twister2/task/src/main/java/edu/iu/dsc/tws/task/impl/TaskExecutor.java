@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.task.impl;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -126,64 +127,32 @@ public class TaskExecutor {
     taskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan();
-
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
-
-    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
-    batchTaskScheduler.initialize(config);
-
-    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
 
-  public ExecutionPlan plan(DataFlowTaskGraph graph,
-                            Map<DataFlowTaskGraph, TaskSchedulePlan> graphTaskSchedulePlanMap) {
 
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
-    TaskScheduler taskScheduler = new TaskScheduler();
-    taskScheduler.initialize(config);
+  public Map<String, ExecutionPlan> plan(DataFlowTaskGraph... graph) {
 
     WorkerPlan workerPlan = createWorkerPlan();
-
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
     batchTaskScheduler.initialize(config);
 
-    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(
-        graph, workerPlan, graphTaskSchedulePlanMap);
+    Map<String, TaskSchedulePlan> schedulePlanMap = batchTaskScheduler.schedule(workerPlan, graph);
+    Map<String, ExecutionPlan> executionPlanMap = new LinkedHashMap<>();
 
-    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
-        workerID, workerInfoList, communicator, this.checkpointingClient);
-    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
-  }
-
-  public TaskSchedulePlan taskSchedulePlan(DataFlowTaskGraph graph) {
-
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
-    TaskScheduler taskScheduler = new TaskScheduler();
-    taskScheduler.initialize(config);
-
-    WorkerPlan workerPlan = createWorkerPlan();
-
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
-
-    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
-    batchTaskScheduler.initialize(config);
-
-    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(workerPlan, graph);
-
-    return taskSchedulePlan;
+    for (DataFlowTaskGraph aGraph : graph) {
+      TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(aGraph.getGraphName());
+      ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+          workerID, workerInfoList, communicator, this.checkpointingClient);
+      ExecutionPlan executionPlan = executionPlanBuilder.build(config, aGraph, taskSchedulePlan);
+      executionPlanMap.put(aGraph.getGraphName(), executionPlan);
+    }
+    return executionPlanMap;
   }
 
   public ExecutionPlan executionPlan(DataFlowTaskGraph graph, TaskSchedulePlan taskSchedulePlan) {

@@ -41,6 +41,8 @@ public class TaskSchedulerClassTest {
 
     @Override
     public Set<String> getReceivableNames() {
+      inputSet.add("points");
+      inputSet.add("centroids");
       return inputSet;
     }
   }
@@ -85,7 +87,8 @@ public class TaskSchedulerClassTest {
 
     @Override
     public Set<String> getCollectibleNames() {
-      return null;
+      inputSet.add("centroids");
+      return inputSet;
     }
   }
 

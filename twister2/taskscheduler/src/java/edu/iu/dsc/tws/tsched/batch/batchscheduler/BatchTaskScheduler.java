@@ -16,12 +16,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
@@ -43,10 +43,6 @@ import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
-//import java.util.Collections;
-
-//import edu.iu.dsc.tws.api.dataset.DataPartition;
-
 public class BatchTaskScheduler implements ITaskScheduler {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskScheduler.class.getName());
@@ -66,11 +62,22 @@ public class BatchTaskScheduler implements ITaskScheduler {
   //Config object
   private Config config;
 
-  //Batch Task Allocation Map
-  private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
-
   //Task Attributes Object
   private TaskAttributes taskAttributes;
+
+  private int workerId;
+
+  private int index;
+
+  private int parallelism = 0;
+
+  private boolean dependentGraphs = false;
+
+  //Batch Task Allocation Map
+  private List<Integer> workerIdList = new ArrayList<>();
+  private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
+  private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
+  private Set<String> receivableNameSet = null;
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -89,35 +96,88 @@ public class BatchTaskScheduler implements ITaskScheduler {
   @Override
   public void initialize(Config cfg, int workerid) {
     this.initialize(cfg);
-    //WorkerId
-    int workerId = workerid;
+    this.workerId = workerid;
   }
 
   /**
-   * This is the base method for the data locality aware task scheduling for scheduling the batch
-   * task instances. It retrieves the task vertex set of the task graph and send the set to the
-   * data locality aware scheduling algorithm to allocate the batch task instances which are closer
-   * to the data nodes.
+   * This method receives the worker plan and the dataflow graph as a variable argument which may
+   * have multiple dataflow graphs. First, it will do the validation of the parallelism values for
+   * the receptor and collector tasks and then invoke the schedule() method to schedule the
+   * individual task graphs.
    */
-  public TaskSchedulePlan schedule(WorkerPlan workerPlan, DataFlowTaskGraph... dataFlowTaskGraph) {
-    DataFlowTaskGraph graph;
-    TaskSchedulePlan taskSchedulePlan = null;
-    for (DataFlowTaskGraph aDataFlowTaskGraph : dataFlowTaskGraph) {
-      graph = aDataFlowTaskGraph;
-      taskSchedulePlan = schedule(graph, workerPlan);
+  public Map<String, TaskSchedulePlan> schedule(WorkerPlan workerPlan,
+                                                DataFlowTaskGraph... dataFlowTaskGraph) {
+    if (dataFlowTaskGraph.length > 1) {
+      if (validateDependentGraphs(dataFlowTaskGraph)) {
+        dependentGraphs = true;
+      }
     }
-    return taskSchedulePlan;
+
+    if (dependentGraphs) {
+      for (DataFlowTaskGraph aDataFlowTaskGraph : dataFlowTaskGraph) {
+        TaskSchedulePlan taskSchedulePlan = schedule(aDataFlowTaskGraph, workerPlan);
+        if (taskSchedulePlan != null) {
+          taskSchedulePlanMap.put(aDataFlowTaskGraph.getGraphName(), taskSchedulePlan);
+        }
+      }
+    }
+    return taskSchedulePlanMap;
   }
 
-  private Map<DataFlowTaskGraph, TaskSchedulePlan> graphTaskSchedulePlanMap = new LinkedHashMap<>();
-
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan,
-                                   Map<DataFlowTaskGraph, TaskSchedulePlan>
-                                       schedulePlanMap) {
-    this.graphTaskSchedulePlanMap = schedulePlanMap;
-    return schedule(graph, workerPlan);
+  /**
+   * This method is to validate the receptor and collector task in the dataflow task graphs. The
+   * validation starts from the last leaf of the task graph.
+   */
+  private boolean validateDependentGraphs(DataFlowTaskGraph... dataFlowTaskGraph) {
+    boolean flag = false;
+    int length = dataFlowTaskGraph.length;
+    if (receptorTaskValidation(dataFlowTaskGraph[length - 1])
+        && collectorTaskValidation(dataFlowTaskGraph)) {
+      flag = true;
+    }
+    return flag;
   }
 
+  /**
+   * This method is to validate the receptor task and it also has the receivable name set.
+   */
+  private boolean receptorTaskValidation(DataFlowTaskGraph dataFlowTaskGraph) {
+    Set<Vertex> childTaskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    for (Vertex vertex : childTaskVertexSet) {
+      parallelism = vertex.getParallelism();
+      INode iNode = vertex.getTask();
+      if (iNode instanceof Receptor) {
+        if (((Receptor) iNode).getReceivableNames() != null) {
+          receivableNameSet = ((Receptor) iNode).getReceivableNames();
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * This method is to validate the collector task and it validates that the parallelism value of
+   * collector task with the receptor tasks.
+   */
+  private boolean collectorTaskValidation(DataFlowTaskGraph... dataFlowTaskGraph) {
+    for (int i = 0; i < dataFlowTaskGraph.length - 1; i++) {
+      Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph[i].getTaskVertexSet());
+      for (Vertex vertex : taskVertexSet) {
+        INode iNode = vertex.getTask();
+        if (iNode instanceof Collector) {
+          int collectorParallelism = vertex.getParallelism();
+          Set<String> collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+          if (receivableNameSet.containsAll(collectibleNameSet)) {
+            if (parallelism != collectorParallelism) {
+              throw new RuntimeException("Specify the same parallelism value for "
+                  + "the dependent task in the task graphs");
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
 
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
@@ -194,23 +254,29 @@ public class BatchTaskScheduler implements ITaskScheduler {
       WorkerSchedulePlan taskWorkerSchedulePlan = new WorkerSchedulePlan(containerId,
           new LinkedHashSet<>(taskInstancePlanMap.values()), containerResource);
       workerSchedulePlans.add(taskWorkerSchedulePlan);
-    }
 
+      if (dependentGraphs && index == 0) {
+        workerIdList.add(containerId);
+      }
+    }
+    ++index;
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, workerSchedulePlans);
-    Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-      LOG.info("Task Details for Container Id:" + integer);
-      for (TaskInstancePlan ip : containerPlanTaskInstances) {
-        LOG.info("Task Id:" + ip.getTaskId()
-            + "\tTask Index" + ip.getTaskIndex()
-            + "\tTask Name:" + ip.getTaskName());
+    if (workerId == 0) {
+      Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+        LOG.fine("Task Details for Container Id:" + dataFlowTaskGraph.getGraphName()
+            + "\tcontainer id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.fine("Task Id:" + ip.getTaskId()
+              + "\tTask Index" + ip.getTaskIndex()
+              + "\tTask Name:" + ip.getTaskName());
+        }
       }
     }
     return taskSchedulePlan;
-    //return new TaskSchedulePlan(0, workerSchedulePlans);
   }
 
   /**
@@ -221,163 +287,125 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> batchSchedulingAlgorithm(
       DataFlowTaskGraph graph, int numberOfContainers) throws ScheduleException {
 
-    for (int i1 = 0; i1 < numberOfContainers; i1++) {
-      batchTaskAllocation.put(i1, new ArrayList<>());
-    }
-
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(taskVertexSet);
 
+    IntStream.range(0, numberOfContainers).forEach(
+        i1 -> batchTaskAllocation.put(i1, new ArrayList<>()));
+
     int globalTaskIndex = 0;
-    List<Integer> workerIdList = null;
-
-    for (Vertex vertex : taskVertexSet) {
-      int totalTaskInstances;
-
-      int instancesPerNode;
-      if (!graph.getNodeConstraints().isEmpty()) {
-        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex,
-            graph.getNodeConstraints());
-      } else {
-        totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
-      }
-
-      INode iNode = vertex.getTask();
-      //For Validation
-      if (iNode instanceof Receptor) {
-        validate(graph, vertex);
-        if (((Receptor) iNode).getReceivableNames() != null) {
-          Set<String> receivableNamesSet = ((Receptor) iNode).getReceivableNames();
-          LOG.fine("Vertex:" + vertex.getName() + "\tReceivable Name Set:" + receivableNamesSet);
-          workerIdList = getDataNodeList(receivableNamesSet);
-          allocate(vertex.getName(), totalTaskInstances, workerIdList, globalTaskIndex);
+    if (dependentGraphs) {
+      for (Vertex vertex : taskVertexSet) {
+        INode iNode = vertex.getTask();
+        if (iNode instanceof Receptor) {
+          validateReceptor(graph, vertex);
         }
-      } else {
-        if (!graph.getNodeConstraints().isEmpty()) {
-          int instancesPerWorker
-              = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
-          int maxTaskInstancesPerContainer = 0;
-          int containerIndex;
-          for (int i = 0; i < totalTaskInstances; i++) {
-            containerIndex = i % numberOfContainers;
-            if (maxTaskInstancesPerContainer < instancesPerWorker) {
-              batchTaskAllocation.get(containerIndex).add(
-                  new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
-              ++maxTaskInstancesPerContainer;
-            } else {
-              throw new ScheduleException("Task Scheduling couldn't be possible for the present"
-                  + "configuration, please check the number of workers, "
-                  + "maximum instances per worker");
-            }
-          }
-        } else {
-          String task = vertex.getName();
-          int containerIndex;
-          for (int i = 0; i < totalTaskInstances; i++) {
-            containerIndex = i % numberOfContainers;
-            batchTaskAllocation.get(containerIndex).add(
-                new TaskInstanceId(task, globalTaskIndex, i));
-          }
-        }
+        dependentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
+        globalTaskIndex++;
       }
-      globalTaskIndex++;
+    } else {
+      for (Vertex vertex : taskVertexSet) {
+        independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
+        globalTaskIndex++;
+      }
     }
-
     return batchTaskAllocation;
   }
 
-  private void allocate(String task, int totalTaskInstances, List<Integer> workerIdList,
-                        int globalTaskIndex) {
-//    int containerIndex;
-//    for (int i = 0; i < totalTaskInstances; i++) {
-//      containerIndex = i % workerIdList.size();
-//      batchTaskAllocation.get(containerIndex).add(
-//          new TaskInstanceId(task, globalTaskIndex, i));
-//    }
-//
-
-    for (int i = 0; i < workerIdList.size(); i++) {
-      int cdx = workerIdList.get(i);
-      LOG.info("cdx value:" + cdx);
-      for (int j = 0; j < totalTaskInstances; j++) {
-        batchTaskAllocation.get(cdx).add(
+  /**
+   * This method is for allocating the multiple dependent task graphs. First, it stores the
+   * scheduled worker list in the list for scheduling the next task graphs.
+   */
+  private void dependentTaskWorkerAllocation(DataFlowTaskGraph graph, Vertex vertex,
+                                             int numberOfContainers, int globalTaskIndex) {
+    int totalTaskInstances;
+    if (graph.getNodeConstraints().isEmpty()) {
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+      String task = vertex.getName();
+      int containerIndex;
+      for (int i = 0; i < totalTaskInstances; i++) {
+        if (workerIdList.size() == 0) {
+          containerIndex = i % numberOfContainers;
+        } else {
+          containerIndex = i % workerIdList.size();
+        }
+        batchTaskAllocation.get(containerIndex).add(
             new TaskInstanceId(task, globalTaskIndex, i));
       }
-    }
-
-//    int instancesPerWorker = 2;
-//    int maxTaskInstancesPerContainer = 0;
-//    int containerIndex;
-//
-//    for (int i = 0; i < workerIdList.size(); i++) {
-//      containerIndex = workerIdList.get(i);
-//      for (int ii = 0; ii < totalTaskInstances; ii++) {
-//        if (maxTaskInstancesPerContainer < instancesPerWorker) {
-//          batchTaskAllocation.get(containerIndex).add(
-//              new TaskInstanceId(task, globalTaskIndex, ii));
-//          ++maxTaskInstancesPerContainer;
-//        } else {
-//          throw new ScheduleException("Task Scheduling couldn't be possible for the present"
-//              + "configuration, please check the number of workers, "
-//              + "maximum instances per worker");
-//        }
-//      }
-//    }
-  }
-
-  private List<Integer> getDataNodeList(Set<String> receivablenameSet) {
-    List<Integer> dataNodesList = null;
-    for (Map.Entry<DataFlowTaskGraph, TaskSchedulePlan> entry
-        : graphTaskSchedulePlanMap.entrySet()) {
-      DataFlowTaskGraph graph = entry.getKey();
-      Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
-      for (Vertex vertex : taskVertexSet) {
-        INode iNode = vertex.getTask();
-        if (iNode instanceof Collector) {
-          if (((Collector) iNode).getCollectibleNames() != null) {
-            Set<String> collectibleNamesSet = ((Collector) iNode).getCollectibleNames();
-            LOG.info("%%%% Collectible Name Set: %%%%" + collectibleNamesSet);
-            dataNodesList = processDataNodeList(receivablenameSet, collectibleNamesSet, entry);
-          }
+    } else {
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(
+          vertex, graph.getNodeConstraints());
+      int instancesPerWorker = taskAttributes.getInstancesPerWorker(
+          graph.getGraphConstraints());
+      int maxTaskInstancesPerContainer = 0;
+      int containerIndex;
+      for (int i = 0; i < totalTaskInstances; i++) {
+        if (workerIdList.size() == 0) {
+          containerIndex = i % numberOfContainers;
+        } else {
+          containerIndex = i % workerIdList.size();
+        }
+        if (maxTaskInstancesPerContainer < instancesPerWorker) {
+          batchTaskAllocation.get(containerIndex).
+              add(new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
+          ++maxTaskInstancesPerContainer;
+        } else {
+          throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+              + "configuration, please check the number of workers maximum instances per worker");
         }
       }
     }
-    return dataNodesList;
   }
 
-  private List<Integer> processDataNodeList(Set<String> receivablenameSet,
-                                            Set<String> collectiblenameSet,
-                                            Map.Entry<DataFlowTaskGraph, TaskSchedulePlan> entry) {
-    List<Integer> dataNodesList = null;
-    for (String receivablename : receivablenameSet) {
-      if (collectiblenameSet.contains(receivablename)) {
-        TaskSchedulePlan taskSchedulePlan = entry.getValue();
-        Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
-        dataNodesList = getWorkerNodes(containersMap);
+  /**
+   * This method is to schedule the individual task graph which is independent in nature.
+   */
+  private void independentTaskWorkerAllocation(DataFlowTaskGraph graph, Vertex vertex,
+                                               int numberOfContainers, int globalTaskIndex) {
+    int totalTaskInstances;
+    if (!graph.getNodeConstraints().isEmpty()) {
+      totalTaskInstances
+          = taskAttributes.getTotalNumberOfInstances(vertex, graph.getNodeConstraints());
+    } else {
+      totalTaskInstances = taskAttributes.getTotalNumberOfInstances(vertex);
+    }
+
+    if (!graph.getNodeConstraints().isEmpty()) {
+      int instancesPerWorker = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());
+      int maxTaskInstancesPerContainer = 0;
+      int containerIndex;
+      for (int i = 0; i < totalTaskInstances; i++) {
+        containerIndex = i % numberOfContainers;
+        if (maxTaskInstancesPerContainer < instancesPerWorker) {
+          batchTaskAllocation.get(containerIndex).add(
+              new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
+          ++maxTaskInstancesPerContainer;
+        } else {
+          throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+              + "configuration, please check the number of workers, "
+              + "maximum instances per worker");
+        }
+      }
+    } else {
+      String task = vertex.getName();
+      int containerIndex;
+      for (int i = 0; i < totalTaskInstances; i++) {
+        containerIndex = i % numberOfContainers;
+        batchTaskAllocation.get(containerIndex).add(
+            new TaskInstanceId(task, globalTaskIndex, i));
       }
     }
-    return dataNodesList;
   }
 
-
-  private List<Integer> getWorkerNodes(Map<Integer, WorkerSchedulePlan> containersMap) {
-    List<Integer> workerNodeList = new LinkedList<>();
-    for (Map.Entry<Integer, WorkerSchedulePlan> centry : containersMap.entrySet()) {
-      Integer integer = centry.getKey();
-      workerNodeList.add(integer);
-    }
-    return workerNodeList;
-  }
-
-  private void validate(DataFlowTaskGraph graph, Vertex vertex) {
+  private void validateReceptor(DataFlowTaskGraph graph, Vertex vertex) {
     Set<Edge> edges = graph.outEdges(vertex);
     for (Edge e : edges) {
       Vertex child = graph.childOfTask(vertex, e.getName());
       if (child.getTask() instanceof Collector) {
         if (child.getParallelism() != vertex.getParallelism()) {
-          throw new RuntimeException("Specify the same parallelism for parent and child which "
-              + "depends on the input from the parent in\t" + graph.getGraphName() + "\tgraph");
+          throw new RuntimeException("Specify the same parallelism for parent and child tasks"
+              + " which depends on the input from the parent in" + graph.getGraphName() + " graph");
         }
       }
     }
