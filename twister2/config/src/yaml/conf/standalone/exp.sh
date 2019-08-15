@@ -38,4 +38,4 @@ if [ "$9" = "twister2-core/ompi/bin/mpirun" ]; then
   lib_path="-Djava.library.path=twister2-core/ompi/lib"
 fi
 
-$JAVA_HOME/bin/java --illegal-access=deny --add-opens java.base/java.lang=ALL-UNNAMED $lib_path $debug $profile -Djava.util.logging.config.file=standalone/logger.properties -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp ${10} ${11} $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 --job_master_port ${12} --job_master_ip ${13} &
+$JAVA_HOME/bin/java $lib_path $debug $profile -Djava.util.logging.config.file=standalone/logger.properties -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp ${10} ${11} $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 --job_master_port ${12} --job_master_ip ${13} &
