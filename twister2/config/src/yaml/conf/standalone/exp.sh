@@ -3,7 +3,7 @@
 em="\"\""
 cp=""
 if [ $em != $2 ]; then
-    cp = $2
+  cp = $2
 fi
 
 if [ $OMPI_COMM_WORLD_RANK = "0" ]; then
@@ -34,8 +34,8 @@ fi
 
 # set the lib path to bundled mpi, if that mpirun is used
 lib_path=
-if ["$9" == "twister2-core/ompi/bin/mpirun"]; then
-    lib_path = "-Djava.library.path=twister2-core/ompi/lib"
+if [ "$9" = "twister2-core/ompi/bin/mpirun" ]; then
+  lib_path="-Djava.library.path=twister2-core/ompi/lib"
 fi
 
 $JAVA_HOME/bin/java $lib_path $debug $profile -Djava.util.logging.config.file=standalone/logger.properties -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp ${10} ${11} $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 --job_master_port ${12} --job_master_ip ${13} &
