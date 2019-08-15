@@ -22,6 +22,11 @@ Twister2 build needs several software installed on your system.
      PATH=$JAVA_HOME/bin:$PATH
      export JAVA_HOME PATH
      ```
+     
+```java
+which java
+``` 
+     
 3. Install the required tools
 
 ```bash
@@ -54,7 +59,7 @@ Extract this to a directory called maven configure the environmental variables
    ./bazel-0.28.1-installer-linux-x86_64.sh --user
    ```
 
-   Make sure to add the bazel bin to PATH
+   Make sure to add the bazel bin to PATH. You can add this line to ```~\.bashrc``` file.
 
    ```text
    export PATH=$PATH:~/bin

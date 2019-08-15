@@ -2,7 +2,10 @@ package(default_visibility = ["//visibility:public"])
 
 java_import(
     name = "ompi_javabinding_java",
-    jars = ["ompi/ompijavabinding-4.0.1.jar"],
+    jars = select({
+                   "//tools/platform:darwin": ["@ompi3darwin//:ompi-jar-files"],
+                   "//conditions:default": ["@ompi3//:ompi-jar-files"],
+               }),
     visibility = ["//visibility:public"],
 )
 
