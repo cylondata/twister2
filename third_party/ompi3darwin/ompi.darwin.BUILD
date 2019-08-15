@@ -53,7 +53,6 @@ lib_files_darwin = ["lib/libmca_common_monitoring.50.dylib",
                     "lib/libmca_common_sm.40.dylib",
                     "lib/libmpi_java.40.dylib",
                     "lib/libopen-pal.40.dylib",
-                    "lib/mpi.jar",
                     "lib/libmca_common_monitoring.dylib",
                     "lib/libmca_common_sm.dylib",
                     "lib/libmpi_java.dylib",
@@ -318,8 +317,9 @@ lib_files_darwin = ["lib/libmca_common_monitoring.50.dylib",
                     "lib/pkgconfig/ompi-f77.pc",
                     "lib/pkgconfig/orte.pc",]
 
+jar_files_darwin = ["lib/mpi.jar",]
 
-out_files_darwin = bin_files_darwin + etc_files_darwin + include_files_darwin + lib_files_darwin
+out_files_darwin = bin_files_darwin + etc_files_darwin + include_files_darwin + lib_files_darwin + jar_files_darwin
 
 genrule(
     name = "ompi-srcs-darwin",
@@ -355,4 +355,9 @@ filegroup(
 filegroup(
     name = "ompi-etc-files",
     srcs = etc_files_darwin,
+)
+
+filegroup(
+    name = "ompi-jar-files",
+    srcs = jar_files_darwin,
 )
