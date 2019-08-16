@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.stream;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -39,7 +40,7 @@ public class SBroadCast extends BaseOperation {
   public SBroadCast(Communicator comm, LogicalPlan plan,
                     int source, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.BROADCAST);
     TreeBroadcast bCast = new TreeBroadcast(comm.getChannel(), source, targets,
         new DirectStreamingFinalReceiver(rcvr), messageSchema);
     bCast.init(comm.getConfig(), dataType, plan, edgeId);

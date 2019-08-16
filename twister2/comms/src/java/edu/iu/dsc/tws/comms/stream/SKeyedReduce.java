@@ -65,19 +65,19 @@ public class SKeyedReduce extends BaseOperation {
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
                       DestinationSelector destSelector, int edgeId,
                       MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.KEYED_REDUCE);
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
           keyType, keyType, edgeId, messageSchema);
-    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc),

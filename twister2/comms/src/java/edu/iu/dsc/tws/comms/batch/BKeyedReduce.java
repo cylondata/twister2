@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -42,7 +43,7 @@ public class BKeyedReduce extends BaseOperation {
                       Set<Integer> sources, Set<Integer> destinations, ReduceFunction fnc,
                       BulkReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.KEYED_REDUCE);
     this.keyType = kType;
     this.dataType = dType;
     MessageReceiver partialReceiver = new PartitionPartialReceiver();

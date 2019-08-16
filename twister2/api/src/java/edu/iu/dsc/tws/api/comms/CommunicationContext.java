@@ -22,46 +22,43 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.config.TokenSub;
 
 public class CommunicationContext extends Context {
+  public static final String REDUCE = "reduce";
+  public static final String GATHER = "gather";
+  public static final String PARTITION = "partition";
+  public static final String ALLGATHER = "allgather";
+  public static final String ALLREDUCE = "allreduce";
+  public static final String BROADCAST = "broadcast";
+  public static final String KEYED_PARTITION = "keyed_partition";
+  public static final String KEYED_REDUCE = "keyed_reduce";
+  public static final String KEYED_GATHER = "keyed_gather";
+  public static final String DIRECT = "direct";
+  public static final String JOIN = "join";
+
   private static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
   private static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
   public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
-  public static final String COMMUNICATION_TYPE = "network.type";
-  public static final String MPI_COMMUNICATION_TYPE = "mpi";
-  public static final String TCP_COMMUNICATION_TYPE = "tcp";
-  public static final String PERSISTENT_DIRECTORIES = "network.ops.persistent.dirs";
+  public static final String PERSISTENT_DIRECTORIES = "twister2.network.ops.persistent.dirs";
   public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
 
-  public static final String TWISTER2_STREAM_KEYED_REDUCE_OP = "twister2.stream.keyed.reduce.op";
-  public static final String TWISTER2_BATCH_KEYED_REDUCE_OP = "twister2.batch.keyed.reduce.op";
-  public static final String TWISTER2_KEYED_REDUCE_OP_PARTITION = "partition";
-  public static final String TWISTER2_KEYED_REDUCE_OP_REDUCE = "reduce";
-
-  public static final String TWISTER2_STREAM_KEYED_GATHER_OP = "twister2.stream.keyed.gather.op";
-  public static final String TWISTER2_BATCH_KEYED_GATHER_OP = "twister2.batch.keyed.gather.op";
-  public static final String TWISTER2_KEYED_GATHER_OP_PARTITION = "partition";
-  public static final String TWISTER2_KEYED_GATHER_OP_GATHER = "gather";
-
-  public static final String TWISTER2_STREAM_PARTITION_ALGO_KEY =
-      "twister2.stream.partition.algorithm";
-  public static final String TWISTER2_BATCH_PARTITION_ALGO_KEY =
-      "twister2.batch.partition.algorithm";
-  public static final String TWISTER2_PARTITION_ALGO_SIMPLE = "simple";
-  public static final String TWISTER2_PARTITION_ALGO_RING = "ring";
+  public static final String PARTITION_ALGO_KEY =
+      "twister2.network.partition.algorithm";
+  public static final String PARTITION_ALGO_SIMPLE = "simple";
+  public static final String PARTITION_ALGO_RING = "ring";
 
   private static final String BUFFER_SIZE = "twister2.network.buffer.size";
 
   private static final String SEND_BUFFERS_COUNT = "twister2.network.sendBuffer.count";
   private static final String RECEIVE_BUFFERS_COUNT = "twister2.network.receiveBuffer.count";
   private static final String SEND_PENDING_MAX = "twister2.network.send.pending.max";
-  private static final String NETWORK_CHANNEL_PENDING_SIZE
+  private static final String CHANNEL_PENDING_SIZE
       = "twister2.network.channel.pending.size";
-  private static final String NETWORK_PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
+  private static final String PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
       "twister2.network.partition.message.group.low_water_mark";
-  private static final String NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
+  private static final String PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
       "twister2.network.partition.message.group.high_water_mark";
 
-  public static final String NETWORK_PARTITION_BATCH_GROUPING_SIZE
-      = "network.partition.batch.grouping.size";
+  public static final String PARTITION_BATCH_GROUPING_SIZE
+      = "twister2.network.partition.batch.grouping.size";
 
   public static final String SHUFFLE_MAX_BYTES_IN_MEMORY =
       "twister2.network.shuffle.memory.bytes.max";
@@ -73,9 +70,6 @@ public class CommunicationContext extends Context {
       "twister2.network.shuffle.parallel.io";
   public static final String RING_GROUPING_WORKER_PER_GROUPS =
       "twister2.network.partition.ring.group.workers";
-
-  public static final String RING_MERGE_FACTOR = "twister2.network.partition.ring.merge.factor";
-
 
   public static final int DEFAULT_DESTINATION = 0;
 
@@ -131,15 +125,11 @@ public class CommunicationContext extends Context {
   public static final String GROUP_BY_KEY = "group-by-key";
 
   public static int interNodeDegree(Config cfg, int defaultValue) {
-    return cfg.getIntegerValue(INTER_NODE_DEGREE, defaultValue);
+    return getIntPropertyValue(cfg, INTER_NODE_DEGREE, defaultValue);
   }
 
   public static int intraNodeDegree(Config cfg, int defaultValue) {
-    return cfg.getIntegerValue(INTRA_NODE_DEGREE, defaultValue);
-  }
-
-  public static String communicationType(Config cfg) {
-    return cfg.getStringValue(COMMUNICATION_TYPE, MPI_COMMUNICATION_TYPE);
+    return getIntPropertyValue(cfg, INTRA_NODE_DEGREE, defaultValue);
   }
 
   public static List<String> persistentDirectory(Config cfg) {
@@ -149,69 +139,48 @@ public class CommunicationContext extends Context {
         .collect(Collectors.toList());
   }
 
-  public static String streamKeyedReduceOp(Config cfg) {
-    return cfg.getStringValue(TWISTER2_STREAM_KEYED_REDUCE_OP, TWISTER2_KEYED_REDUCE_OP_PARTITION);
+  public static String partitionAlgorithm(Config cfg) {
+    return getStringPropertyValue(cfg, PARTITION_ALGO_KEY, PARTITION_ALGO_RING);
   }
-
-  public static String batchKeyedReduceOp(Config cfg) {
-    return cfg.getStringValue(TWISTER2_BATCH_KEYED_REDUCE_OP, TWISTER2_KEYED_REDUCE_OP_PARTITION);
-  }
-
-  public static String batchKeyedGatherOp(Config cfg) {
-    return cfg.getStringValue(TWISTER2_BATCH_KEYED_GATHER_OP, TWISTER2_KEYED_GATHER_OP_PARTITION);
-  }
-
-  public static String streamKeyedGatherOp(Config cfg) {
-    return cfg.getStringValue(TWISTER2_STREAM_KEYED_GATHER_OP, TWISTER2_KEYED_GATHER_OP_PARTITION);
-  }
-
-  public static String partitionStreamAlgorithm(Config cfg) {
-    return cfg.getStringValue(TWISTER2_STREAM_PARTITION_ALGO_KEY, TWISTER2_PARTITION_ALGO_RING);
-  }
-
-  public static String partitionBatchAlgorithm(Config cfg) {
-    return cfg.getStringValue(TWISTER2_BATCH_PARTITION_ALGO_KEY, TWISTER2_PARTITION_ALGO_RING);
-  }
-
 
   public static int bufferSize(Config cfg) {
-    return cfg.getIntegerValue(BUFFER_SIZE, 2048000);
+    return getIntPropertyValue(cfg, BUFFER_SIZE, 2048000);
   }
 
   public static int sendBuffersCount(Config cfg) {
-    return cfg.getIntegerValue(SEND_BUFFERS_COUNT, 32);
+    return getIntPropertyValue(cfg, SEND_BUFFERS_COUNT, 32);
   }
 
   public static int receiveBufferCount(Config cfg) {
-    return cfg.getIntegerValue(RECEIVE_BUFFERS_COUNT, 32);
+    return getIntPropertyValue(cfg, RECEIVE_BUFFERS_COUNT, 32);
   }
 
   public static int sendPendingMax(Config cfg) {
-    return cfg.getIntegerValue(SEND_PENDING_MAX, 16);
+    return getIntPropertyValue(cfg, SEND_PENDING_MAX, 16);
   }
 
   public static int networkChannelPendingSize(Config cfg) {
-    return cfg.getIntegerValue(NETWORK_CHANNEL_PENDING_SIZE, 1024);
+    return getIntPropertyValue(cfg, CHANNEL_PENDING_SIZE, 1024);
   }
 
   public static int getNetworkPartitionMessageGroupLowWaterMark(Config cfg) {
-    return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_LOW_WATERMARK, 8);
+    return getIntPropertyValue(cfg, PARTITION_MESSAGE_GROUP_LOW_WATERMARK, 8);
   }
 
   public static int getNetworkPartitionMessageGroupHighWaterMark(Config cfg) {
-    return cfg.getIntegerValue(NETWORK_PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
+    return getIntPropertyValue(cfg, PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
   }
 
   public static long getShuffleMaxRecordsInMemory(Config cfg) {
-    return cfg.getLongValue(SHUFFLE_MAX_RECORDS_IN_MEMORY, 64L);
+    return getLongPropertyValue(cfg, SHUFFLE_MAX_RECORDS_IN_MEMORY, 64L);
   }
 
   public static long getShuffleMaxBytesInMemory(Config cfg) {
-    return cfg.getLongValue(SHUFFLE_MAX_BYTES_IN_MEMORY, 6400L);
+    return getLongPropertyValue(cfg, SHUFFLE_MAX_BYTES_IN_MEMORY, 6400L);
   }
 
-  public static int getNetworkPartitionBatchGroupingSize(Config config) {
-    return config.getIntegerValue(NETWORK_PARTITION_BATCH_GROUPING_SIZE, 100);
+  public static int getNetworkPartitionBatchGroupingSize(Config cfg) {
+    return getIntPropertyValue(cfg, PARTITION_BATCH_GROUPING_SIZE, 100);
   }
 
   public static long getShuffleFileSize(Config cfg) {
@@ -219,14 +188,61 @@ public class CommunicationContext extends Context {
   }
 
   public static int getParallelIOAllowance(Config cfg) {
-    return cfg.getIntegerValue(SHUFFLE_PARALLEL_IO, 1);
+    return getIntPropertyValue(cfg, SHUFFLE_PARALLEL_IO, 1);
   }
 
   public static int getRingWorkersPerGroup(Config cfg) {
-    return cfg.getIntegerValue(RING_GROUPING_WORKER_PER_GROUPS, 128);
+    return getIntPropertyValue(cfg, RING_GROUPING_WORKER_PER_GROUPS, 128);
   }
 
-  public static double getRingMergeFactor(Config cfg) {
-    return cfg.getDoubleValue(RING_MERGE_FACTOR, 1.0);
+  private static String getStringPropertyValue(Config cfg, String name, String def) {
+    String first = cfg.getStringValue(name, def);
+    String second = cfg.getStringValue(
+        getModeSpecificPropertyName(cfg, name), first);
+    return cfg.getStringValue(
+        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
+  }
+
+  private static long getLongPropertyValue(Config cfg, String name, long def) {
+    long first = cfg.getLongValue(name, def);
+    long second = cfg.getLongValue(
+        getModeSpecificPropertyName(cfg, name), first);
+    return cfg.getLongValue(
+        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
+  }
+
+  private static double getDoublePropertyValue(Config cfg, String name, double def) {
+    double first = cfg.getDoubleValue(name, def);
+    double second = cfg.getDoubleValue(
+        getModeSpecificPropertyName(cfg, name), first);
+    return cfg.getDoubleValue(
+        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
+  }
+
+  private static int getIntPropertyValue(Config cfg, String name, int def) {
+    int first = cfg.getIntegerValue(name, def);
+    int second = cfg.getIntegerValue(
+        getModeSpecificPropertyName(cfg, name), first);
+    return cfg.getIntegerValue(
+        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
+  }
+
+  private static String getModeSpecificPropertyName(Config cfg, String name) {
+    boolean stream = cfg.getBooleanValue(STREAMING, false);
+    if (stream) {
+      return name + "." + "stream";
+    } else {
+      return name + "." + "batch";
+    }
+  }
+
+  private static String getOpSpecificPropertyName(Config cfg, String name) {
+    boolean stream = cfg.getBooleanValue(STREAMING, false);
+    String op = cfg.getStringValue(OPERATION_NAME, "");
+    if (stream) {
+      return name + "." + "stream" + "." + op;
+    } else {
+      return name + "." + "batch" + "." + op;
+    }
   }
 }
