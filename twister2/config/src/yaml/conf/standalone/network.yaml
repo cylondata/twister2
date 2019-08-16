@@ -42,20 +42,8 @@ twister2.network.shuffle.file.bytes.max: 10000000
 # no of parallel IO operations permitted
 twister2.network.shuffle.parallel.io: 2
 
-# the keyed reduce algorithm
-twister2.stream.keyed.reduce.op: "partition"
-
-# the algorithm for gathering data
-twister2.stream.keyed.gather.op: "partition"
+# the partitioning algorithm
+twister2.network.partition.algorithm.stream: "simple"
 
 # the partitioning algorithm
-twister2.network.partition.algorithm: "simple"
-
-# the keyed reduce algorithm
-twister2.batch.keyed.reduce.op: "partition"
-
-# the algorithm for gathering data
-twister2.batch.keyed.gather.op: "partition"
-
-# the partitioning algorithm
-twister2.batch.partition.algorithm: "simple"
+twister2.network.partition.algorithm.batch: "simple"
