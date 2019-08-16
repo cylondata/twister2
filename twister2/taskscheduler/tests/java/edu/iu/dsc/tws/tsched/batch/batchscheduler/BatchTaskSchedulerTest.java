@@ -20,17 +20,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class BatchTaskSchedulerTest {
@@ -42,7 +42,7 @@ public class BatchTaskSchedulerTest {
 
     int parallel = 16;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraph(parallel, "graph");
+    ComputeGraph graph = createGraph(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
@@ -66,7 +66,7 @@ public class BatchTaskSchedulerTest {
   public void testUniqueSchedules2() {
 
     int parallel = 256;
-    DataFlowTaskGraph graph = createGraph(parallel, "graph");
+    ComputeGraph graph = createGraph(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(parallel);
@@ -84,7 +84,7 @@ public class BatchTaskSchedulerTest {
     int parallel = 16;
     int workers = 2;
 
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel, "graph");
+    ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
 
@@ -106,7 +106,7 @@ public class BatchTaskSchedulerTest {
     int parallel = 400;
     int workers = 200;
 
-    DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
+    ComputeGraph[] graph = new ComputeGraph[3];
     Arrays.setAll(graph, i -> createGraph(parallel, "graph" + i));
 
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
@@ -135,7 +135,7 @@ public class BatchTaskSchedulerTest {
     int parallel = 200;
     int workers = 400;
 
-    DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
+    ComputeGraph[] graph = new ComputeGraph[3];
     Arrays.setAll(graph, i -> createGraph(parallel, "graph" + i));
 
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
@@ -169,7 +169,7 @@ public class BatchTaskSchedulerTest {
     int parallel = 200;
     int workers = 400;
 
-    DataFlowTaskGraph[] graph = new DataFlowTaskGraph[3];
+    ComputeGraph[] graph = new ComputeGraph[3];
     Arrays.setAll(graph, i -> createGraphWithDifferentParallelism(parallel, "graph" + i));
 
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
@@ -213,13 +213,13 @@ public class BatchTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel,
+  private ComputeGraph createGraph(int parallel,
                                         String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
 
@@ -228,18 +228,18 @@ public class BatchTaskSchedulerTest {
         .withDataType(MessageTypes.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     graph.setGraphName(graphName);
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithDifferentParallelism(int parallel,
+  private ComputeGraph createGraphWithDifferentParallelism(int parallel,
                                         String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, 2);
 
@@ -248,19 +248,19 @@ public class BatchTaskSchedulerTest {
         .withDataType(MessageTypes.OBJECT);
     builder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     graph.setGraphName(graphName);
     return graph;
   }
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel,
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel,
                                                                      String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
     ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
@@ -276,7 +276,7 @@ public class BatchTaskSchedulerTest {
     builder.setMode(OperationMode.BATCH);
 
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "8");
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     graph.setGraphName(graphName);
     return graph;
   }

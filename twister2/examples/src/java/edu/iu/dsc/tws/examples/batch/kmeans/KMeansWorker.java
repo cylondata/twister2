@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
@@ -67,18 +66,13 @@ public class KMeansWorker implements IWorker {
    */
   @SuppressWarnings("unchecked")
   @Override
-  public void execute(Config config,
-                      int workerId,
-                      IWorkerController workerController,
-                      IPersistentVolume persistentVolume,
-                      IVolatileVolume volatileVolume) {
-
   public void execute(Config config, int workerId, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     LOG.log(Level.FINE, "Task worker starting: " + workerId);
 
     ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
@@ -101,18 +95,17 @@ public class KMeansWorker implements IWorker {
     /* First Graph to partition and read the partitioned data points **/
     ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
-    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     /* Second Graph to read the centroids **/
-    DataFlowTaskGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
+    ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
         parallelismValue, dimension, config);
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Get the execution plan before executing the dependent task graphs
     Map<String, ExecutionPlan> taskSchedulePlanMap =
-        taskEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);
+        cEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
@@ -126,9 +119,6 @@ public class KMeansWorker implements IWorker {
         datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
 
 
-    /* Second Graph to read the centroids **/
-    ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
-        parallelismValue, dimension, config);
     //Get the execution plan for the second task graph
     //ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
@@ -142,10 +132,6 @@ public class KMeansWorker implements IWorker {
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
     long endTimeData = System.currentTimeMillis();
-
-
-    /* Third Graph to do the actual calculation **/
-    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
@@ -162,7 +148,7 @@ public class KMeansWorker implements IWorker {
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
-    taskEnv.close();
+    cEnv.close();
 
     if (workerId == 0) {
       DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);

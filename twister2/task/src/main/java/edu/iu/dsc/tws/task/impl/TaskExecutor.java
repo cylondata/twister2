@@ -135,7 +135,7 @@ public class TaskExecutor {
   }
 
 
-  public Map<String, ExecutionPlan> plan(DataFlowTaskGraph... graph) {
+  public Map<String, ExecutionPlan> plan(ComputeGraph... graph) {
 
     WorkerPlan workerPlan = createWorkerPlan();
 
@@ -145,7 +145,7 @@ public class TaskExecutor {
     Map<String, TaskSchedulePlan> schedulePlanMap = batchTaskScheduler.schedule(workerPlan, graph);
     Map<String, ExecutionPlan> executionPlanMap = new LinkedHashMap<>();
 
-    for (DataFlowTaskGraph aGraph : graph) {
+    for (ComputeGraph aGraph : graph) {
       TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(aGraph.getGraphName());
       ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
           workerID, workerInfoList, communicator, this.checkpointingClient);
@@ -155,7 +155,7 @@ public class TaskExecutor {
     return executionPlanMap;
   }
 
-  public ExecutionPlan executionPlan(DataFlowTaskGraph graph, TaskSchedulePlan taskSchedulePlan) {
+  public ExecutionPlan executionPlan(ComputeGraph graph, TaskSchedulePlan taskSchedulePlan) {
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
