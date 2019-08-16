@@ -15,20 +15,20 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSink;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class TaskWorkerDataLoader extends TaskWorker {
@@ -42,21 +42,21 @@ public class TaskWorkerDataLoader extends TaskWorker {
   @Override
   public void execute() {
     getParams();
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataSource);
     DataObjectSink sinkTask = new DataObjectSink();
-    taskGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
-    ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
+    computeGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
+    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink(
         "datapointsink", sinkTask, parallelism);
 
     firstGraphComputeConnection.direct("datapointsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
 
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
+    ComputeGraph datapointsTaskGraph = computeGraphBuilder.build();
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
     DataObject<Object> dataPointsObject = taskExecutor.getOutput(

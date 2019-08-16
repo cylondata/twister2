@@ -18,19 +18,19 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 public class MultiStageGraph extends TaskWorker {
@@ -42,7 +42,7 @@ public class MultiStageGraph extends TaskWorker {
     ReduceTask rt = new ReduceTask();
     PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
     pc.partition("source")
@@ -55,7 +55,7 @@ public class MultiStageGraph extends TaskWorker {
 
     builder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
   }

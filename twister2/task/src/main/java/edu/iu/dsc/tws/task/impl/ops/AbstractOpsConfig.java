@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeConnectionUtils;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;

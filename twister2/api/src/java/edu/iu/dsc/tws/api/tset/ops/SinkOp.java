@@ -11,15 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.modifiers.Closable;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 

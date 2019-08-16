@@ -17,11 +17,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeAccuracyReduceFunction;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMAccuracyReduce;
 import edu.iu.dsc.tws.examples.ml.svm.aggregate.IterativeSVMWeightVectorReduce;
@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.examples.ml.svm.util.TGUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.TrainedModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.WindowArguments;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.constant.WindowType;
@@ -62,13 +62,13 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   private OperationMode operationMode;
   private SVMJobParameters svmJobParameters;
   private BinaryBatchModel binaryBatchModel;
-  private TaskGraphBuilder trainingBuilder;
-  private TaskGraphBuilder testingBuilder;
-  private DataFlowTaskGraph iterativeSVMTrainingTaskGraph;
+  private ComputeGraphBuilder trainingBuilder;
+  private ComputeGraphBuilder testingBuilder;
+  private ComputeGraph iterativeSVMTrainingTaskGraph;
   private ExecutionPlan iterativeSVMTrainingExecutionPlan;
-  private DataFlowTaskGraph iterativeSVMTestingTaskGraph;
+  private ComputeGraph iterativeSVMTestingTaskGraph;
   private ExecutionPlan iterativeSVMTestingExecutionPlan;
-  private DataFlowTaskGraph weightVectorTaskGraph;
+  private ComputeGraph weightVectorTaskGraph;
   private ExecutionPlan weightVectorExecutionPlan;
   private IterativeDataStream iterativeDataStream;
   private IterativeStreamingDataStreamer iterativeStreamingDataStreamer;
@@ -125,8 +125,8 @@ public class SvmSgdOnlineRunner extends TaskWorker {
     LOG.info(this.binaryBatchModel.toString());
     this.operationMode = this.svmJobParameters.isStreaming()
         ? OperationMode.STREAMING : OperationMode.BATCH;
-    trainingBuilder = TaskGraphBuilder.newBuilder(config);
-    testingBuilder = TaskGraphBuilder.newBuilder(config);
+    trainingBuilder = ComputeGraphBuilder.newBuilder(config);
+    testingBuilder = ComputeGraphBuilder.newBuilder(config);
   }
 
   public SvmSgdOnlineRunner initialize() {
@@ -169,7 +169,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
 
 
   private void loadTrainingData() {
-    DataFlowTaskGraph trainingDFTG = TGUtils
+    ComputeGraph trainingDFTG = TGUtils
         .buildTrainingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan trainingEP = taskExecutor.plan(trainingDFTG);
@@ -191,7 +191,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   }
 
   private void loadTestingData() {
-    DataFlowTaskGraph testingDFTG = TGUtils
+    ComputeGraph testingDFTG = TGUtils
         .buildTestingDataPointsTG(this.dataStreamerParallelism,
         this.svmJobParameters, this.config, this.operationMode);
     ExecutionPlan testingEP = taskExecutor.plan(testingDFTG);
@@ -262,7 +262,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
   }
 
   private void streamData() {
-    DataFlowTaskGraph streamingTrainingTG = buildStreamingTrainingTG();
+    ComputeGraph streamingTrainingTG = buildStreamingTrainingTG();
     ExecutionPlan executionPlan = taskExecutor.plan(streamingTrainingTG);
     taskExecutor.addInput(
         streamingTrainingTG, executionPlan,
@@ -283,7 +283,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
 //    LOG.info(String.format("DataPoint[%d] : %s", count++, Arrays.toString(dp)));
   }
 
-  private DataFlowTaskGraph buildStreamingTrainingTG() {
+  private ComputeGraph buildStreamingTrainingTG() {
     iterativeStreamingDataStreamer = new IterativeStreamingDataStreamer(this.svmJobParameters
         .getFeatures(), OperationMode.STREAMING, this.svmJobParameters.isDummy(),
         this.binaryBatchModel);

@@ -18,17 +18,17 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.INodeInstance;
-import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
-import edu.iu.dsc.tws.api.task.executor.ISync;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Closable;
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
-import edu.iu.dsc.tws.api.task.nodes.INode;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
 
 public class SinkBatchInstance implements INodeInstance, ISync {

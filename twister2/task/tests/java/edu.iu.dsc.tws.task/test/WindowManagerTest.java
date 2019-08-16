@@ -22,8 +22,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.task.window.api.Event;
 import edu.iu.dsc.tws.task.window.api.IEvictionPolicy;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;

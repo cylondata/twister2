@@ -31,22 +31,22 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.executor.IExecution;
-import edu.iu.dsc.tws.api.task.executor.INodeInstance;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.INode;
-import edu.iu.dsc.tws.api.task.nodes.ISink;
-import edu.iu.dsc.tws.api.task.nodes.ISource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
@@ -118,7 +118,7 @@ public class TaskExecutor {
    * @param graph task graph
    * @return the data set
    */
-  public ExecutionPlan plan(DataFlowTaskGraph graph) {
+  public ExecutionPlan plan(ComputeGraph graph) {
 
     RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
     roundRobinTaskScheduler.initialize(config);
@@ -171,7 +171,7 @@ public class TaskExecutor {
    * @param graph the dataflow graph
    * @param plan the execution plan
    */
-  public void execute(Config taskConfig, DataFlowTaskGraph graph, ExecutionPlan plan) {
+  public void execute(Config taskConfig, ComputeGraph graph, ExecutionPlan plan) {
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
     if (executor == null) {
@@ -190,7 +190,7 @@ public class TaskExecutor {
    * @param graph the dataflow graph
    * @param plan the execution plan
    */
-  public void execute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+  public void execute(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       executor = new Executor(config, workerID, communicator.getChannel(),
           graph.getOperationMode());
@@ -207,7 +207,7 @@ public class TaskExecutor {
    * @param graph the dataflow graph
    * @param plan the execution plan
    */
-  public void itrExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+  public void itrExecute(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       executor = new Executor(config, workerID, communicator.getChannel(),
           graph.getOperationMode());
@@ -221,7 +221,7 @@ public class TaskExecutor {
    * @param plan the dataflow graph
    * @param graph the task graph
    */
-  public void waitFor(DataFlowTaskGraph graph, ExecutionPlan plan) {
+  public void waitFor(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       throw new IllegalStateException("Cannot call waifor before calling execute");
     }
@@ -236,7 +236,7 @@ public class TaskExecutor {
    * @param graph the dataflow graph
    * @param plan the execution plan
    */
-  public IExecution iExecute(DataFlowTaskGraph graph, ExecutionPlan plan) {
+  public IExecution iExecute(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       executor = new Executor(config, workerID, communicator.getChannel(),
           graph.getOperationMode());
@@ -253,7 +253,7 @@ public class TaskExecutor {
    * @param inputKey inputkey
    * @param input input
    */
-  public void addInput(DataFlowTaskGraph graph, ExecutionPlan plan,
+  public void addInput(ComputeGraph graph, ExecutionPlan plan,
                        String taskName, String inputKey, DataObject<?> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
@@ -279,7 +279,7 @@ public class TaskExecutor {
    * @param inputKey inputkey
    * @param input input
    */
-  public void addSourceInput(DataFlowTaskGraph graph, ExecutionPlan plan,
+  public void addSourceInput(ComputeGraph graph, ExecutionPlan plan,
                              String inputKey, DataObject<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
     if (nodes == null) {
@@ -305,7 +305,7 @@ public class TaskExecutor {
    * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan, String taskName) {
+  public <T> DataObject<T> getOutput(ComputeGraph graph, ExecutionPlan plan, String taskName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {
       return new EmptyDataObject<>();
@@ -335,7 +335,7 @@ public class TaskExecutor {
    * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public <T> DataObject<T> getSinkOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+  public <T> DataObject<T> getSinkOutput(ComputeGraph graph, ExecutionPlan plan,
                                          String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
@@ -366,7 +366,7 @@ public class TaskExecutor {
    * @return a DataObjectImpl with set of partitions from each task in this executor
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public <T> DataObject<T> getOutput(DataFlowTaskGraph graph, ExecutionPlan plan,
+  public <T> DataObject<T> getOutput(ComputeGraph graph, ExecutionPlan plan,
                                      String taskName, String dataName) {
     Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
     if (nodes == null) {

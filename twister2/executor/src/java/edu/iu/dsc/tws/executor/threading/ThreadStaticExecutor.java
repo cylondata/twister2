@@ -19,9 +19,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.executor.INodeInstance;
-import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 
 public class ThreadStaticExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadStaticExecutor.class.getName());

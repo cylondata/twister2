@@ -17,11 +17,11 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutorContext;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;

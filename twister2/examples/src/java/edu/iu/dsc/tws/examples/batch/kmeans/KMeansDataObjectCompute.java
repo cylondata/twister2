@@ -16,10 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 
 /**
  * This class is responsible for handling the data objects and converting into two-dimensional array

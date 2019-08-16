@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window;
 
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 
 public interface IWindowCompute<T> extends ICompute<T> {
   boolean execute(IMessage<T> message);

@@ -72,6 +72,13 @@ public class StandaloneCommand extends MPICommand {
     } else {
       mpiCommand.add("no-debug");
     }
+
+    //todo remove this once kryo is updated to 5+
+    if (getJavaVersion() >= 9) {
+      mpiCommand.add("suppress_illegal_access_warn");
+    } else {
+      mpiCommand.add("allow_illegal_access_warn");
+    }
     return mpiCommand;
   }
 
@@ -79,5 +86,24 @@ public class StandaloneCommand extends MPICommand {
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
     return slurmCmd;
+  }
+
+  /**
+   * Temp util method to determine the java version. This will be used to
+   * add java9+ flags, to resolve some reflection access warnings.
+   * todo remove once Kryo is updated to 5+
+   */
+  private static int getJavaVersion() {
+    String version = System.getProperty("java.version");
+    if (version.startsWith("1.")) {
+      version = version.substring(2, 3);
+    } else {
+      int dot = version.indexOf(".");
+      if (dot != -1) {
+        version = version.substring(0, dot);
+      }
+    }
+    LOG.info("Java version : " + version);
+    return Integer.parseInt(version);
   }
 }

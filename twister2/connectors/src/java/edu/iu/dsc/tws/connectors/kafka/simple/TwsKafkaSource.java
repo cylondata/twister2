@@ -11,9 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors.kafka.simple;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 
 public class TwsKafkaSource extends BaseSource {
   @Override

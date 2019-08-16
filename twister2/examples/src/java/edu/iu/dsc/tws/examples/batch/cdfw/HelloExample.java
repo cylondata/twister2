@@ -24,15 +24,15 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
 public final class HelloExample {
@@ -58,7 +58,7 @@ public final class HelloExample {
       DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
-      TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(execEnv.getConfig());
+      ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(execEnv.getConfig());
       graphBuilderX.addSource("source1", firstSource, 4);
       ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
           1);
@@ -68,7 +68,7 @@ public final class HelloExample {
           .withDataType(MessageTypes.OBJECT);
 
       graphBuilderX.setMode(OperationMode.BATCH);
-      DataFlowTaskGraph batchGraph = graphBuilderX.build();
+      ComputeGraph batchGraph = graphBuilderX.build();
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).

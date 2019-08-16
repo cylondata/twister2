@@ -23,22 +23,22 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.Vertex;
-import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
-import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.data.utils.FileSystemUtils;
@@ -104,7 +104,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * which are closer to the data nodes.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan) {
 
     //Represents task schedule plan Id
     int taskSchedulePlanId = 0;
@@ -173,7 +173,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
   private Map<Integer, List<TaskInstanceId>> dataLocalityStreamingSchedulingAlgorithm(
-      DataFlowTaskGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
+      ComputeGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();

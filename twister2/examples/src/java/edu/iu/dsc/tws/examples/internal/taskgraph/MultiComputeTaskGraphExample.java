@@ -28,28 +28,28 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 /**
@@ -77,7 +77,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
 
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
 
     int parallel = Integer.parseInt((String) config.get(DataObjectConstants.PARALLELISM_VALUE));
 
@@ -146,7 +146,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     //builder.addNodeConstraints("sink", sinkTaskConstraintsMap);
     builder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "4");
 
-    DataFlowTaskGraph graph = builder.build();
+    ComputeGraph graph = builder.build();
     LOG.info("%%% Graph Constraints:%%%" + graph.getGraphConstraints()
         + "\tNode Constraints:%%%" + graph.getNodeConstraints().entrySet());
     ExecutionPlan plan = taskExecutor.plan(graph);

@@ -11,7 +11,7 @@ The BSP APIs are provided by Harp and MPI specification (OpenMPI).
 
 The DataFlow operators are implemented by Twister2 as a Twister:Net library.
 
-We will focus on the DataFlow operators in this guide as Harp API's and MPI APIs are discussed in their documentation.
+We will focus on the DataFlow operators in this guide as Harp API's and MPI APIs are discussed in their own documentation.
 
 ## DataFlow Operator Overview
 
