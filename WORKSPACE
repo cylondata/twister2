@@ -40,6 +40,7 @@ http_file(
     name = "wheel_src",
     downloaded_file_path = "wheel-0.29.0.tar.gz",
     urls = [WHEEL_SRC],
+    sha256 = "1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648"
 )
 
 http_file(
