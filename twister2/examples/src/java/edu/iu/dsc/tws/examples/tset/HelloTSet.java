@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.tset;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -23,36 +24,31 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.tset.Source;
-import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.IterableMapFunction;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableMapTSet;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class HelloTSet extends TSetBatchWorker implements Serializable {
+public class HelloTSet implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(HelloTSet.class.getName());
 
   private static final long serialVersionUID = -2;
 
   @Override
-  public void execute(TwisterBatchContext tc) {
+  public void execute(BatchTSetEnvironment env) {
     LOG.info("Strating Hello TSet Example");
-    int para = config.getIntegerValue("para", 4);
-    BatchSourceTSet<int[]> source = tc.createSource(new Source<int[]>() {
+    int para = env.getConfig().getIntegerValue("para", 4);
 
-      @Override
-      public void prepare() {
-
-      }
-
+    SourceTSet<int[]> source = env.createSource(new SourceFunc<int[]>() {
       private int count = 0;
 
       @Override
@@ -65,20 +61,13 @@ public class HelloTSet extends TSetBatchWorker implements Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, para).setName("Source");
+    }, para).setName("aaa");
 
-    PartitionTLink<int[]> partitioned = source.
-        partition(new LoadBalancePartitioner<>());
-    IterableMapTSet<int[], int[]> mapedPartition =
-        partitioned.map((IterableMapFunction<int[], int[]>) ints -> {
-          LOG.info("tests");
-          if (ints.iterator().hasNext()) {
-            return ints.iterator().next();
-          } else {
-            return new int[0];
-          }
-        },
-            para);
+    PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
+
+    ComputeTSet<int[], Iterator<int[]>> mapedPartition = partitioned.map(
+        (MapFunc<int[], int[]>) input -> Arrays.stream(input).map(a -> a * 2).toArray()
+    );
 
     ReduceTLink<int[]> reduce = mapedPartition.reduce((t1, t2) -> {
       int[] ret = new int[t1.length];

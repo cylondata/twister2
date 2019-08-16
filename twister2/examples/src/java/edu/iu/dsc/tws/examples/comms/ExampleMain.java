@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.examples.comms.batch.*;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -24,10 +22,23 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BBroadcastExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDJoinExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDKeyedGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BDirectExample;
+import edu.iu.dsc.tws.examples.comms.batch.BGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BJoinExample;
+import edu.iu.dsc.tws.examples.comms.batch.BJoinStudentExample;
+import edu.iu.dsc.tws.examples.comms.batch.BKeyedGatherExample;
+import edu.iu.dsc.tws.examples.comms.batch.BKeyedPartitionExample;
+import edu.iu.dsc.tws.examples.comms.batch.BKeyedReduceExample;
+import edu.iu.dsc.tws.examples.comms.batch.BPartitionExample;
+import edu.iu.dsc.tws.examples.comms.batch.BReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample;
 import edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample;
 import edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample;
@@ -40,6 +51,7 @@ import edu.iu.dsc.tws.examples.comms.stream.SPartitionExample;
 import edu.iu.dsc.tws.examples.comms.stream.SReduceExample;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class ExampleMain {
   private static final Logger LOG = Logger.getLogger(ExampleMain.class.getName());

@@ -18,20 +18,21 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import static edu.iu.dsc.tws.common.config.Context.JOB_ARCHIVE_DIRECTORY;
+
+import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 
 public final class AuroraWorkerStarter {
   public static final Logger LOG = Logger.getLogger(AuroraWorkerStarter.class.getName());
@@ -79,12 +80,11 @@ public final class AuroraWorkerStarter {
 
   /**
    * create a AuroraWorkerStarter object by getting values from system property
-   * @return
    */
   public static AuroraWorkerStarter createAuroraWorker() {
     AuroraWorkerStarter workerStarter = new AuroraWorkerStarter();
-    String hostname =  System.getProperty("hostname");
-    String portStr =  System.getProperty("tcpPort");
+    String hostname = System.getProperty("hostname");
+    String portStr = System.getProperty("tcpPort");
     workerStarter.mesosTaskID = System.getProperty("taskID");
     try {
       workerStarter.workerAddress = InetAddress.getByName(hostname);
@@ -127,7 +127,6 @@ public final class AuroraWorkerStarter {
 
   /**
    * loadConfig from config files
-   * @return
    */
   public void loadConfig() {
 
@@ -138,7 +137,7 @@ public final class AuroraWorkerStarter {
 
     LOG.log(Level.INFO, String.format("Loading configuration with twister2_home: %s and "
         + "configuration: %s", twister2Home, configDir));
-    Config conf = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config conf = ConfigLoader.loadConfig(twister2Home, JOB_ARCHIVE_DIRECTORY, clusterType);
     config = Config.newBuilder().
         putAll(conf).
         put(Context.TWISTER2_HOME.getKey(), twister2Home).
@@ -151,7 +150,6 @@ public final class AuroraWorkerStarter {
 
   /**
    * configs from job object will override the ones in config from files if any
-   * @return
    */
   public void overrideConfigsFromJob() {
 
@@ -221,7 +219,6 @@ public final class AuroraWorkerStarter {
 
   /**
    * a test method to print a job
-   * @param job
    */
   public static void logJobInfo(JobAPI.Job job) {
     StringBuffer sb = new StringBuffer("Job Details:");
@@ -229,7 +226,7 @@ public final class AuroraWorkerStarter {
     sb.append("\nJob file: " + job.getJobFormat().getJobFile());
     sb.append("\nnumber of workers: " + job.getNumberOfWorkers());
     sb.append("\nCPUs: " + job.getComputeResource(0).getCpu());
-    sb.append("\nRAM: "  + job.getComputeResource(0).getRamMegaBytes());
+    sb.append("\nRAM: " + job.getComputeResource(0).getRamMegaBytes());
     sb.append("\nDisk: " + job.getComputeResource(0).getDiskGigaBytes());
 
     JobAPI.Config conf = job.getConfig();

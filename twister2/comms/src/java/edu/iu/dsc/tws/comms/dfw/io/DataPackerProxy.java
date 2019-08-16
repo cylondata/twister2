@@ -9,13 +9,37 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 
 public final class DataPackerProxy {
 
@@ -50,7 +74,7 @@ public final class DataPackerProxy {
   }
 
   static int getKeyLengthLeft(MessageType typeDefinition,
-                                             DataBuffer buffer, int location) {
+                              DataBuffer buffer, int location) {
     if (!typeDefinition.getDataPacker().isHeaderRequired()) {
       return typeDefinition.getUnitSizeInBytes();
     } else {
@@ -59,7 +83,7 @@ public final class DataPackerProxy {
   }
 
   static int getKeyLengthRight(MessageType typeDefinition,
-                              DataBuffer buffer, int location) {
+                               DataBuffer buffer, int location) {
     if (!typeDefinition.getDataPacker().isHeaderRequired()) {
       return 0;
     } else {

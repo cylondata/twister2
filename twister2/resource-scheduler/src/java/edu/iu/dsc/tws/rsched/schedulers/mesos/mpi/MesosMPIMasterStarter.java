@@ -31,12 +31,11 @@ import java.io.Writer;
 import java.net.Inet4Address;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-//import java.util.List;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -47,6 +46,8 @@ import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerLogger;
 import edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorkerUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
+
+//import java.util.List;
 
 
 public final class MesosMPIMasterStarter {
@@ -74,8 +75,8 @@ public final class MesosMPIMasterStarter {
     resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    mpiMaster.config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    mpiMaster.config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     MesosWorkerLogger logger = new MesosWorkerLogger(mpiMaster.config,
         "/persistent-volume/logs", "mpiMaster");
@@ -109,7 +110,6 @@ public final class MesosMPIMasterStarter {
     }
 
 
-
     ZKJobMasterFinder finder = new ZKJobMasterFinder(mpiMaster.config);
     finder.initialize();
 
@@ -123,7 +123,6 @@ public final class MesosMPIMasterStarter {
     }
 
     finder.close();
-
 
 
     //old way of finding

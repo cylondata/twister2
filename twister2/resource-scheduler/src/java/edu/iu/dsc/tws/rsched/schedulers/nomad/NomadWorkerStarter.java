@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.rsched.schedulers.nomad;
 
 import java.io.File;
-//import java.nio.file.Paths;
-//import java.nio.file.Paths;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,20 +28,21 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
 import edu.iu.dsc.tws.common.logging.LoggingContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class NomadWorkerStarter {
@@ -103,6 +104,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private Options setupOptions() {
@@ -167,7 +169,7 @@ public final class NomadWorkerStarter {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
@@ -196,7 +198,11 @@ public final class NomadWorkerStarter {
     JobMasterAPI.WorkerInfo workerNetworkInfo = workerController.getWorkerInfo();
 
     String workerClass = SchedulerContext.workerClass(config);
-
+    try {
+      LOG.log(Level.INFO, "Worker IP..:" + Inet4Address.getLocalHost().getHostAddress());
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
     try {
       List<JobMasterAPI.WorkerInfo> workerInfos = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
@@ -223,7 +229,6 @@ public final class NomadWorkerStarter {
 
   /**
    * Create the resource plan
-   * @return
    */
   private IWorkerController createWorkerController() {
     // first get the worker id
@@ -238,13 +243,11 @@ public final class NomadWorkerStarter {
     Map<String, Integer> ports = getPorts(config);
     Map<String, String> localIps = getIPAddress(ports);
 
-    String jobMasterIP = JobMasterContext.jobMasterIP(config);
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-
     String jobName = NomadContext.jobName(config);
     String jobDescFile = JobUtils.getJobDescriptionFilePath(jobName, config);
     JobAPI.Job job = JobUtils.readJobFile(null, jobDescFile);
     int numberOfWorkers = job.getNumberOfWorkers();
+    LOG.info("Worker Count..: " + numberOfWorkers);
     JobAPI.ComputeResource computeResource = JobUtils.getComputeResource(job, 0);
     //Map<String, Integer> additionalPorts =
     //    NomadContext.generateAdditionalPorts(config, startingPort);
@@ -254,6 +257,40 @@ public final class NomadWorkerStarter {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, host, port, nodeInfo,
             computeResource, ports);
+
+    int jobMasterPort = 0;
+    String jobMasterIP = null;
+
+    //find the jobmaster
+    if (!JobMasterContext.jobMasterRunsInClient(config)) {
+      ZKJobMasterFinder finder = new ZKJobMasterFinder(config);
+      finder.initialize();
+
+      String jobMasterIPandPort = finder.getJobMasterIPandPort();
+      if (jobMasterIPandPort == null) {
+        LOG.info("Job Master has not joined yet. Will wait and try to get the address ...");
+        jobMasterIPandPort = finder.waitAndGetJobMasterIPandPort(20000);
+        LOG.info("Job Master address: " + jobMasterIPandPort);
+      } else {
+        LOG.info("Job Master address: " + jobMasterIPandPort);
+      }
+
+      finder.close();
+
+      String jobMasterPortStr = jobMasterIPandPort.substring(jobMasterIPandPort.lastIndexOf(":")
+          + 1);
+      jobMasterPort = Integer.parseInt(jobMasterPortStr);
+      jobMasterIP = jobMasterIPandPort.substring(0, jobMasterIPandPort.lastIndexOf(":"));
+    } else {
+      jobMasterIP = JobMasterContext.jobMasterIP(config);
+      jobMasterPort = JobMasterContext.jobMasterPort(config);
+    }
+
+    config = JobUtils.overrideConfigs(job, config);
+    config = JobUtils.updateConfigs(job, config);
+
+    int workerCount = job.getNumberOfWorkers();
+    LOG.info("Worker Count..: " + workerCount);
 
     this.masterClient = createMasterAgent(config, jobMasterIP, jobMasterPort,
         workerInfo, numberOfWorkers);
@@ -270,7 +307,8 @@ public final class NomadWorkerStarter {
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
+
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
@@ -283,6 +321,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Get the ports from the environment variable
+   *
    * @param cfg the configuration
    * @return port name -> port map
    */
@@ -301,6 +340,7 @@ public final class NomadWorkerStarter {
 
   /**
    * Initialize the loggers to log into the task local directory
+   *
    * @param cfg the configuration
    * @param workerID worker id
    */
@@ -364,4 +404,5 @@ public final class NomadWorkerStarter {
     masterClient.sendWorkerCompletedMessage();
     masterClient.close();
   }
+
 }

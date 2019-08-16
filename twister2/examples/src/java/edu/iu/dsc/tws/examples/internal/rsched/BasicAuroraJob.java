@@ -14,12 +14,12 @@ package edu.iu.dsc.tws.examples.internal.rsched;
 import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class BasicAuroraJob {
@@ -87,7 +87,7 @@ public final class BasicAuroraJob {
     System.out.println("job worker class name: " + job.getWorkerClassName());
     System.out.println("job workers: " + job.getNumberOfWorkers());
     System.out.println("CPUs: " + job.getComputeResource(0).getCpu());
-    System.out.println("RAM: "  + job.getComputeResource(0).getRamMegaBytes());
+    System.out.println("RAM: " + job.getComputeResource(0).getRamMegaBytes());
     System.out.println("Disk: " + job.getComputeResource(0).getDiskGigaBytes());
     JobAPI.Config conf = job.getConfig();
     System.out.println("number of key-values in job conf: " + conf.getKvsCount());

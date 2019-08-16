@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,15 +28,21 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
+import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class ChannelDataFlowOperation implements ChannelListener, ChannelMessageReleaseCallback {
   private static final Logger LOG = Logger.getLogger(ChannelDataFlowOperation.class.getName());
@@ -50,7 +55,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   // the configuration
   private Config config;
   // the task plan
-  private TaskPlan instancePlan;
+  private LogicalPlan instancePlan;
 
   /**
    * The edge used
@@ -161,7 +166,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   public void init(Config cfg, MessageType messageType, MessageType rcvDataType,
-                   MessageType kType, MessageType rcvKeyType, TaskPlan plan,
+                   MessageType kType, MessageType rcvKeyType, LogicalPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
@@ -209,7 +214,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     initProgressTrackers();
   }
 
-  public void init(Config cfg, MessageType messageType, TaskPlan plan,
+  public void init(Config cfg, MessageType messageType, LogicalPlan plan,
                    int graphEdge, Set<Integer> recvExecutors,
                    ChannelReceiver msgReceiver,
                    Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
@@ -258,7 +263,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
       // register with the channel
       LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
-      channel.receiveMessage(recv, edge, this, recvList);
+      channel.receiveMessage(0, recv, edge, this, recvList);
       receiveBuffers.put(recv, recvList);
     }
 
@@ -311,7 +316,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
   }
 
   @Override
-  public void onReceiveComplete(int id, int e, DataBuffer buffer, boolean releaseBuffer) {
+  public void onReceiveComplete(int id, int e, DataBuffer buffer) {
     // we need to try to build the message here, we may need many more messages to complete
     ByteBuffer byteBuffer = buffer.getByteBuffer();
     byteBuffer.position(buffer.getSize());
@@ -476,7 +481,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
           break;
         }
 
-        List<Integer> externalRoutes = new ArrayList<>(outMessage.getExternalSends());
+        List<Integer> externalRoutes = outMessage.getExternalSends();
         // okay we build the message, send it
         if (outMessage.getSendState() == OutMessage.SendState.SERIALIZED) {
           int startOfExternalRouts = chMessage.getAcceptedExternalSends();
@@ -535,7 +540,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (outMessage.getSendState() == OutMessage.SendState.INIT) {
       // send it internally
       int startOfInternalRouts = outMessage.getAcceptedInternalSends();
-      List<Integer> inRoutes = new ArrayList<>(outMessage.getInternalSends());
+      List<Integer> inRoutes = outMessage.getInternalSends();
       for (int i = startOfInternalRouts; i < outMessage.getInternalSends().size(); i++) {
         boolean receiveAccepted;
         lock.lock();
@@ -695,7 +700,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
   }
 
-  public TaskPlan getInstancePlan() {
+  public LogicalPlan getInstancePlan() {
     return instancePlan;
   }
 

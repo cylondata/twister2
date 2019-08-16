@@ -17,13 +17,14 @@ import java.util.Random;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import edu.iu.dsc.tws.data.fs.FSDataOutputStream;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.FSDataOutputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * Generate a data set
- *
+ * <p>
  * 1. We can generate in each worker
  * 2. We can generate in a common location shared by workers, such as HDFS or NFS
  */
@@ -54,7 +55,7 @@ public final class DataGenerator {
 
   private static void generateText(Path directory, int numOfFiles,
                                    int sizeOfFile, int sizeMargin) throws IOException {
-    FileSystem fs = FileSystem.get(directory.toUri());
+    FileSystem fs = FileSystemUtils.get(directory.toUri());
     Random random = new Random(System.currentTimeMillis());
 
     for (int i = 0; i < numOfFiles; i++) {
@@ -76,7 +77,7 @@ public final class DataGenerator {
    */
   private static void generateCSV(Path directory, int numOfFiles, int sizeOfFile,
                                   int sizeMargin) throws IOException {
-    FileSystem fs = FileSystem.get(directory.toUri());
+    FileSystem fs = FileSystemUtils.get(directory.toUri());
     Random random = new Random(System.currentTimeMillis());
 
     for (int i = 0; i < numOfFiles; i++) {

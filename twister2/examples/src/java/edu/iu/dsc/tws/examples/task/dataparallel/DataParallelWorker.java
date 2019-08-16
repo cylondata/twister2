@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.examples.task.dataparallel;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.utils.DataGenerator;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 /**
  * This example demonstrates the use of a data parallel job. Here we will generate set of random
@@ -31,7 +31,7 @@ public class DataParallelWorker extends TaskWorker {
 
   @Override
   public void execute() {
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
     String inputDirectory = config.getStringValue(Constants.ARGS_INPUT_DIRECTORY);
     boolean shared = config.getBooleanValue(Constants.ARGS_SHARED_FILE_SYSTEM);
@@ -48,12 +48,12 @@ public class DataParallelWorker extends TaskWorker {
     }
 
     DataParallelTask task = new DataParallelTask();
-    taskGraphBuilder.addSource("map", task, parallel);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.addSource("map", task, parallel);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataFlowTaskGraph = taskGraphBuilder.build();
-    ExecutionPlan plan = taskExecutor.plan(dataFlowTaskGraph);
-    taskExecutor.execute(dataFlowTaskGraph, plan);
+    ComputeGraph computeGraph = computeGraphBuilder.build();
+    ExecutionPlan plan = taskExecutor.plan(computeGraph);
+    taskExecutor.execute(computeGraph, plan);
   }
 
 }

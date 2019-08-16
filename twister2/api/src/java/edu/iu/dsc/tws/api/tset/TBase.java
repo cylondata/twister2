@@ -11,29 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-
 /**
  * All classes that are part of the TSet API need to implement this interface if they are
  * included in the execution graph
  */
-public interface TBase<T> {
+public interface TBase {
 
   /**
-   * Build this tset
+   * ID of the data set
    */
-  void build();
+  String getId();
 
   /**
-   * method to be called to build self
-   * @return
+   * Name of the data set
    */
-  boolean baseBuild();
-
-  /**
-   * Build the connection
-   *
-   * @param connection connection
-   */
-  void buildConnection(ComputeConnection connection);
+  String getName();
 }

@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.OutputCollection;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.OutputCollection;
 
 public class DefaultOutputCollection implements OutputCollection {
   private static final Logger LOG = Logger.getLogger(DefaultOutputCollection.class.getName());

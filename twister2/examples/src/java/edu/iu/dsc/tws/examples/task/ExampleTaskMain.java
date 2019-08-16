@@ -21,9 +21,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
@@ -39,18 +38,19 @@ import edu.iu.dsc.tws.examples.task.batch.BTReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STAllReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STBroadCastExample;
-import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
-import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowEventTimeExample;
-import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.STGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedGatherExample;
 import edu.iu.dsc.tws.examples.task.streaming.STKeyedReduceExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionExample;
 import edu.iu.dsc.tws.examples.task.streaming.STPartitionKeyedExample;
 import edu.iu.dsc.tws.examples.task.streaming.STReduceExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowCustomExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowEventTimeExample;
+import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowExample;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.STWindowMPI;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 
 public class ExampleTaskMain {

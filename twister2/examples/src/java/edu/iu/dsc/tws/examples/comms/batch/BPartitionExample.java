@@ -20,12 +20,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BPartition;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BPartition;
+import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -40,14 +40,10 @@ public class BPartitionExample extends BenchWorker {
 
   private BPartition partition;
 
-  private boolean partitionDone = false;
   private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -60,7 +56,7 @@ public class BPartitionExample extends BenchWorker {
     }
 
     // create the communication
-    partition = new BPartition(communicator, taskPlan, sources, targets,
+    partition = new BPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
         new LoadBalanceSelector(), false);
 
@@ -84,7 +80,7 @@ public class BPartitionExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -106,7 +102,7 @@ public class BPartitionExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return sourcesDone && partition.isComplete();
   }
 
   @Override
@@ -124,7 +120,6 @@ public class BPartitionExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        partitionDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -138,7 +133,6 @@ public class BPartitionExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      partitionDone = true;
       return true;
     }
   }

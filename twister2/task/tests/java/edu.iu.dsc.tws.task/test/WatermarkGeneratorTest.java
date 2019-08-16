@@ -21,10 +21,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.task.api.window.api.Event;
-import edu.iu.dsc.tws.task.api.window.api.GlobalStreamId;
-import edu.iu.dsc.tws.task.api.window.event.WatermarkEventGenerator;
-import edu.iu.dsc.tws.task.api.window.manage.WindowManager;
+import edu.iu.dsc.tws.task.window.api.Event;
+import edu.iu.dsc.tws.task.window.api.GlobalStreamId;
+import edu.iu.dsc.tws.task.window.event.WatermarkEventGenerator;
+import edu.iu.dsc.tws.task.window.manage.WindowManager;
 import static org.junit.Assert.*;
 
 public class WatermarkGeneratorTest {

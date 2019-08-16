@@ -19,21 +19,21 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
@@ -45,7 +45,7 @@ public class DataLocalityTaskSchedulerTest {
   public void testUniqueSchedules1() {
     int parallel = 8;
     int workers = 2;
-    DataFlowTaskGraph graph = createGraph(parallel);
+    ComputeGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config, 1);
@@ -59,10 +59,10 @@ public class DataLocalityTaskSchedulerTest {
 
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
 
-      Map<Integer, ContainerPlan> containersMap = plan2.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-        ContainerPlan containerPlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         Assert.assertEquals(containerPlanTaskInstances.size(),
             TaskSchedulerContext.defaultTaskInstancesPerContainer(config));
       }
@@ -74,7 +74,7 @@ public class DataLocalityTaskSchedulerTest {
     int parallel = 1000;
     int workers = 2;
 
-    DataFlowTaskGraph graph = createGraphWithConstraints(parallel);
+    ComputeGraph graph = createGraphWithConstraints(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
 
@@ -83,11 +83,11 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
 
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(),
           Integer.parseInt(graph.getGraphConstraints().get(
@@ -100,7 +100,7 @@ public class DataLocalityTaskSchedulerTest {
     int parallel = 1000;
     int workers = 3;
 
-    DataFlowTaskGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
+    ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
 
@@ -109,11 +109,11 @@ public class DataLocalityTaskSchedulerTest {
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
-    Map<Integer, ContainerPlan> containersMap = plan1.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+    Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
 
-      ContainerPlan containerPlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = containerPlan.getTaskInstances();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
 
       Assert.assertEquals(containerPlanTaskInstances.size(),
           Integer.parseInt(graph.getGraphConstraints().get(
@@ -123,12 +123,12 @@ public class DataLocalityTaskSchedulerTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
@@ -158,68 +158,71 @@ public class DataLocalityTaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createGraph(int parallel) {
+  private ComputeGraph createGraph(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
+    ComputeGraphBuilder computeGraphBuilder =
+        ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
+        .withDataType(MessageTypes.OBJECT);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
-  private DataFlowTaskGraph createGraphWithConstraints(int parallel) {
+  private ComputeGraph createGraphWithConstraints(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", testSink,
+    ComputeGraphBuilder computeGraphBuilder =
+        ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
-        .withDataType(DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
-    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+        .withDataType(MessageTypes.OBJECT);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 
 
-  private DataFlowTaskGraph createGraphWithComputeTaskAndConstraints(int parallel) {
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
-    taskGraphBuilder.addSource("source", testSource, parallel);
+    ComputeGraphBuilder computeGraphBuilder =
+        ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    computeGraphBuilder.addSource("source", testSource, parallel);
 
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, parallel);
-    ComputeConnection sinkComputeConnection = taskGraphBuilder.addSink(
+    ComputeConnection sinkComputeConnection = computeGraphBuilder.addSink(
         "sink", testSink, parallel);
 
     computeConnection.direct("source")
         .viaEdge("cdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     sinkComputeConnection.direct("compute")
         .viaEdge("sdirect-edge")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
-    taskGraphBuilder.setMode(OperationMode.STREAMING);
+    computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    taskGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
-    DataFlowTaskGraph taskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1000");
+    ComputeGraph taskGraph = computeGraphBuilder.build();
     return taskGraph;
   }
 }

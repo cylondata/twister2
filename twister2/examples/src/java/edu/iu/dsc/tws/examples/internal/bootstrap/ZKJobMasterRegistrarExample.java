@@ -25,8 +25,8 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
@@ -34,19 +34,20 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 public final class ZKJobMasterRegistrarExample {
   private static final Logger LOG = Logger.getLogger(ZKJobMasterRegistrarExample.class.getName());
 
-  private ZKJobMasterRegistrarExample() { }
+  private ZKJobMasterRegistrarExample() {
+  }
 
   /**
    * we assume that we have the Job Master IP address and the port number
    * We will register this pair of information on a ZooKeeper server
    * Workers will discover the Job Master address by querying this ZooKeeper server
-   *
+   * <p>
    * If there is already a znode on the ZooKeeper with the same name,
    * we delete that znode. It must be from a previous registration session
-   *
+   * <p>
    * Parameters:
-   *   the only parameter is the ZooKeeper server address
-   *
+   * the only parameter is the ZooKeeper server address
+   * <p>
    * This class is used together with ZKJobMasterFinderExample.java
    * This class registers the Job Master and that class discovers it
    */
@@ -86,7 +87,6 @@ public final class ZKJobMasterRegistrarExample {
 
   /**
    * construct a Config object
-   * @return
    */
   public static Config buildConfig(String zkAddress, String jobName) {
     return Config.newBuilder()

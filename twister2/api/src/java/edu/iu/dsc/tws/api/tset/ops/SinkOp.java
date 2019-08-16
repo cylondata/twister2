@@ -11,73 +11,39 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
-import java.util.Iterator;
-
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.tset.CacheableImpl;
-import edu.iu.dsc.tws.api.tset.Sink;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.IComputableSink;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 
-public class SinkOp<T> implements IComputableSink, Closable, Collector, Receptor {
+public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Receptor {
   private static final long serialVersionUID = -9398832570L;
 
-  private Sink<T> sink;
+  private SinkFunc<T> sink;
 
-  private boolean iterable;
+  private TSetContext tSetContext;
 
-  private boolean keyed;
-
-  public SinkOp() {
-  }
-
-  public SinkOp(Sink<T> sink, boolean itr, boolean kyd) {
+  public SinkOp(SinkFunc<T> sink) {
     this.sink = sink;
-    this.iterable = itr;
-    this.keyed = kyd;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public boolean execute(IMessage message) {
-    if (!keyed) {
-      if (!iterable) {
-        T data = (T) message.getContent();
-        sink.add(data);
-      } else {
-        Iterator<T> data = (Iterator<T>) message.getContent();
-        while (data.hasNext()) {
-          sink.add(data.next());
-        }
-      }
-    } else {
-      if (!iterable) {
-        Tuple data = (Tuple) message.getContent();
-        sink.add((T) data.getValue());
-      } else {
-        Iterator<Tuple> data = (Iterator<Tuple>) message.getContent();
-        while (data.hasNext()) {
-          sink.add((T) data.next().getValue());
-        }
-      }
-    }
-    return true;
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
-        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
-
+    tSetContext = new TSetContext(cfg, ctx);
     sink.prepare(tSetContext);
+  }
+
+  @Override
+  public boolean execute(IMessage<T> message) {
+    sink.add(message.getContent());
+    return true;
   }
 
   @Override
@@ -92,6 +58,6 @@ public class SinkOp<T> implements IComputableSink, Closable, Collector, Receptor
 
   @Override
   public void add(String name, DataObject<?> data) {
-    sink.addInput(name, new CacheableImpl<>(data));
+    tSetContext.addInput(name, data);
   }
 }

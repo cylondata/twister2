@@ -11,26 +11,35 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.tset.link.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.AllReduceTLink;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.DirectTLink;
-import edu.iu.dsc.tws.api.tset.link.GatherTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedPartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.ReplicateTLink;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.link.batch.AllGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.AllReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.DirectTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.GatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
+import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
 
 public final class TSetUtils {
+  private static long genCount = 0;
+
+  private static int keyedTSetCount = 0;
 
   private TSetUtils() {
   }
 
-  public static <T> boolean isKeyedInput(BaseTLink<T> parent) {
+  public static String generateName(String prefix) {
+    return prefix + (++genCount);
+  }
+
+
+  public static <T> boolean isKeyedInput(BaseTLink parent) {
     return parent instanceof KeyedGatherTLink || parent instanceof KeyedReduceTLink
         || parent instanceof KeyedPartitionTLink;
   }
@@ -38,7 +47,7 @@ public final class TSetUtils {
   /**
    * Check if the link is Iterable
    */
-  public static <T> boolean isIterableInput(BaseTLink<T> parent, OperationMode mode) {
+  public static <T> boolean isIterableInput(BaseTLink parent, OperationMode mode) {
     if (mode == OperationMode.STREAMING) {
       if (parent instanceof DirectTLink) {
         return true;
@@ -82,39 +91,39 @@ public final class TSetUtils {
     }
   }
 
-  public static DataType getDataType(Class type) {
+  public static MessageType getDataType(Class type) {
     if (type == int[].class) {
-      return DataType.INTEGER_ARRAY;
+      return MessageTypes.INTEGER_ARRAY;
     } else if (type == double[].class) {
-      return DataType.DOUBLE_ARRAY;
+      return MessageTypes.DOUBLE_ARRAY;
     } else if (type == short[].class) {
-      return DataType.SHORT_ARRAY;
+      return MessageTypes.SHORT_ARRAY;
     } else if (type == byte[].class) {
-      return DataType.BYTE_ARRAY;
+      return MessageTypes.BYTE_ARRAY;
     } else if (type == long[].class) {
-      return DataType.LONG_ARRAY;
+      return MessageTypes.LONG_ARRAY;
     } else if (type == char[].class) {
-      return DataType.CHAR_ARRAY;
+      return MessageTypes.CHAR_ARRAY;
     } else {
-      return DataType.OBJECT;
+      return MessageTypes.OBJECT;
     }
   }
 
-  public static DataType getKeyType(Class type) {
+  public static MessageType getKeyType(Class type) {
     if (type == Integer.class) {
-      return DataType.INTEGER_ARRAY;
+      return MessageTypes.INTEGER_ARRAY;
     } else if (type == Double.class) {
-      return DataType.DOUBLE_ARRAY;
+      return MessageTypes.DOUBLE_ARRAY;
     } else if (type == Short.class) {
-      return DataType.SHORT_ARRAY;
+      return MessageTypes.SHORT_ARRAY;
     } else if (type == Byte.class) {
-      return DataType.BYTE_ARRAY;
+      return MessageTypes.BYTE_ARRAY;
     } else if (type == Long.class) {
-      return DataType.LONG_ARRAY;
+      return MessageTypes.LONG_ARRAY;
     } else if (type == Character.class) {
-      return DataType.CHAR_ARRAY;
+      return MessageTypes.CHAR_ARRAY;
     } else {
-      return DataType.OBJECT;
+      return MessageTypes.OBJECT;
     }
   }
 }

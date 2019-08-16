@@ -18,11 +18,15 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -32,34 +36,31 @@ import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.typed.batch.BKeyedReduceCompute;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.typed.batch.BKeyedReduceCompute;
 
 public class BTKeyedReduceExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(BTKeyedReduceExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelsim = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.INTEGER;
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType keyType = MessageTypes.INTEGER;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE)
         .viaEdge(edge)
         .withOperation(operation, dataType)
         .withKeyType(keyType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

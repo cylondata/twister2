@@ -16,25 +16,25 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.api.IWindowMessage;
-import edu.iu.dsc.tws.task.api.window.config.SlidingCountWindow;
-import edu.iu.dsc.tws.task.api.window.config.SlidingDurationWindow;
-import edu.iu.dsc.tws.task.api.window.config.TumblingCountWindow;
-import edu.iu.dsc.tws.task.api.window.config.TumblingDurationWindow;
-import edu.iu.dsc.tws.task.api.window.config.WindowConfig;
-import edu.iu.dsc.tws.task.api.window.core.BaseWindowedSink;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
+import edu.iu.dsc.tws.task.window.api.IWindowMessage;
+import edu.iu.dsc.tws.task.window.config.SlidingCountWindow;
+import edu.iu.dsc.tws.task.window.config.SlidingDurationWindow;
+import edu.iu.dsc.tws.task.window.config.TumblingCountWindow;
+import edu.iu.dsc.tws.task.window.config.TumblingDurationWindow;
+import edu.iu.dsc.tws.task.window.config.WindowConfig;
+import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 
 public class STWindowCustomExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(STWindowCustomExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -56,13 +56,13 @@ public class STWindowCustomExample extends BenchTaskWorker {
     BaseWindowedSink sdwDuration = new DirectCustomWindowReceiver()
         .withWindow(SlidingDurationWindow.of(windowLength, slidingLength));
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, sdwDuration, sinkParallelism);
     computeConnection.direct(SOURCE)
         .viaEdge(edge)
-        .withDataType(DataType.INTEGER);
+        .withDataType(MessageTypes.INTEGER);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class DirectCustomWindowReceiver extends BaseWindowedSink<int[]> {

@@ -38,10 +38,13 @@ import com.hashicorp.nomad.javasdk.NomadApiConfiguration;
 import com.hashicorp.nomad.javasdk.NomadException;
 import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.scheduler.IController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.rsched.interfaces.IController;
+import edu.iu.dsc.tws.rsched.uploaders.scp.ScpContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public class NomadController implements IController {
@@ -161,7 +164,11 @@ public class NomadController implements IController {
 
   private TaskGroup getTaskGroup(JobAPI.Job job) {
     TaskGroup taskGroup = new TaskGroup();
-    taskGroup.setCount(job.getNumberOfWorkers());
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      taskGroup.setCount(job.getNumberOfWorkers());
+    } else {
+      taskGroup.setCount(job.getNumberOfWorkers() + 1);
+    }
     taskGroup.setName(job.getJobName());
     taskGroup.addTasks(getShellDriver(job));
     return taskGroup;
@@ -265,6 +272,7 @@ public class NomadController implements IController {
   }
 
   private String[] workerProcessCommand(String workingDirectory, JobAPI.Job job) {
+
     String twister2Home = Paths.get(workingDirectory, job.getJobName()).toString();
     //String configDirectoryName = Paths.get(workingDirectory,
     //    job.getJobName(), SchedulerContext.clusterType(config)).toString();
@@ -272,14 +280,29 @@ public class NomadController implements IController {
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
     Map<String, Object> map = workerCommandArguments(config, workingDirectory, job);
-
-    mpiCommand.add(map.get("procs").toString());
+    Config configCopy = JobUtils.resolveJobId(config, job.getJobName());
+    String jobId = configCopy.getStringValue(Context.JOB_ID);
+    String runIncLient = null;
+    if (JobMasterContext.jobMasterRunsInClient(config)) {
+      runIncLient = "true";
+    } else {
+      runIncLient = "false";
+    }
+    //mpiCommand.add(map.get("procs").toString());
+    mpiCommand.add(runIncLient);
     mpiCommand.add(map.get("java_props").toString());
     mpiCommand.add(map.get("classpath").toString());
     mpiCommand.add(map.get("container_class").toString());
     mpiCommand.add(job.getJobName());
     mpiCommand.add(twister2Home);
-    mpiCommand.add(twister2Home);
+    mpiCommand.add(jobId);
+
+    mpiCommand.add(SchedulerContext.jobPackageUrl(config));
+    mpiCommand.add(SchedulerContext.corePackageUrl(config));
+    mpiCommand.add(SchedulerContext.downloadMethod(config));
+    mpiCommand.add(ScpContext.uploaderJobDirectory(config));
+
+
     LOG.log(Level.FINE, String.format("Command %s", mpiCommand));
 
     String[] array = new String[mpiCommand.size()];

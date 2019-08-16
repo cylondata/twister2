@@ -16,15 +16,15 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.NullDataSetException;
 import edu.iu.dsc.tws.examples.ml.svm.sgd.pegasos.PegasosSgdSvm;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class SVMCompute extends BaseCompute {
 

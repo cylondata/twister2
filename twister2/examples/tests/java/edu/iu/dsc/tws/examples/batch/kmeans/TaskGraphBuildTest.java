@@ -16,18 +16,18 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskConfigurations;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskConfigurations;
 
 public class TaskGraphBuildTest {
 
@@ -35,40 +35,40 @@ public class TaskGraphBuildTest {
 
   @Test
   public void testUniqueSchedules1() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
-    Assert.assertNotNull(dataFlowTaskGraph);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().iterator().next().getName(),
+    ComputeGraph computeGraph = createGraph();
+    Assert.assertNotNull(computeGraph);
+    Assert.assertEquals(computeGraph.taskEdgeSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
   @Test
   public void testUniqueSchedules2() {
-    DataFlowTaskGraph dataFlowTaskGraph = createGraph();
+    ComputeGraph computeGraph = createGraph();
 
-    Assert.assertEquals(dataFlowTaskGraph.getTaskVertexSet().iterator().next().getName(),
+    Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
         TaskConfigurations.DEFAULT_EDGE);
-    Assert.assertEquals(dataFlowTaskGraph.taskEdgeSet().size(), 2);
+    Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
-  private DataFlowTaskGraph createGraph() {
+  private ComputeGraph createGraph() {
     TestSource testSource = new TestSource();
     TestSink1 testCompute = new TestSink1();
     TestSink2 testSink = new TestSink2();
 
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(getConfig());
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(getConfig());
 
-    taskGraphBuilder.addSource("source", testSource, 4);
-    ComputeConnection computeConnection = taskGraphBuilder.addCompute(
+    computeGraphBuilder.addSource("source", testSource, 4);
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
-        .withDataType(DataType.OBJECT);
-    ComputeConnection rc = taskGraphBuilder.addSink("sink", testSink, 1);
+        .withDataType(MessageTypes.OBJECT);
+    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT);
-    DataFlowTaskGraph graph = taskGraphBuilder.build();
+        .withDataType(MessageTypes.OBJECT);
+    ComputeGraph graph = computeGraphBuilder.build();
     return graph;
   }
 
@@ -92,11 +92,11 @@ public class TaskGraphBuildTest {
 
   private Config getConfig() {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
     return Config.newBuilder().putAll(config).build();
   }
 

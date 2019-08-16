@@ -15,13 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.InMessage;
-import edu.iu.dsc.tws.comms.dfw.MessageDirection;
 
 public class DataDeserializer implements MessageDeSerializer {
 
@@ -64,11 +65,11 @@ public class DataDeserializer implements MessageDeSerializer {
       int currentObjectLength = currentMessage.getUnPkCurrentObjectLength();
 
       if (currentMessage.getUnPkBuffers() == 0) {
-        currentLocation = 16;
-        remaining = remaining - 16;
+        currentLocation = DFWIOUtils.HEADER_SIZE;
+        remaining = remaining - DFWIOUtils.HEADER_SIZE;
       } else {
-        currentLocation = 4;
-        remaining = remaining - 4;
+        currentLocation = DFWIOUtils.SHORT_HEADER_SIZE; // source(int) + last_buffer_indicator(byte)
+        remaining = remaining - DFWIOUtils.SHORT_HEADER_SIZE;
       }
 
       if (currentObjectLength == -1 || currentMessage.getUnPkBuffers() == 0) {

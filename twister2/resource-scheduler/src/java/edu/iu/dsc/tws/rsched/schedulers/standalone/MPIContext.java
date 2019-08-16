@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.schedulers.standalone;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.config.TokenSub;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.config.TokenSub;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public class MPIContext extends SchedulerContext {
   public static final String WORKING_DIRECTORY =
@@ -29,6 +29,7 @@ public class MPIContext extends SchedulerContext {
   public static final String NODES_FILE = "twister2.resource.scheduler.mpi.nodes.file";
   public static final String MPIRUN_FILE = "twister2.resource.scheduler.mpi.mpirun.file";
   public static final String MPI_MAP_BY = "twister2.resource.scheduler.mpi.mapby";
+  public static final String MPI_MAP_BY_PE = "twister2.resource.scheduler.mpi.mapby.use-pe";
 
   public static final String NODES_ON_SHARED_FS = "twister2.resource.sharedfs";
 
@@ -67,8 +68,16 @@ public class MPIContext extends SchedulerContext {
     return cfg.getStringValue(MPIRUN_FILE, "mpirun");
   }
 
-  public static String mpiMapBy(Config cfg) {
-    return cfg.getStringValue(MPI_MAP_BY, "node");
+  public static String mpiMapBy(Config cfg, int cpusPerProc) {
+    String mapBy = cfg.getStringValue(MPI_MAP_BY, "node");
+    if (mpiMapByUsePE(cfg)) {
+      return mapBy + ":PE=" + cpusPerProc;
+    }
+    return mapBy;
+  }
+
+  private static boolean mpiMapByUsePE(Config cfg) {
+    return cfg.getBooleanValue(MPI_MAP_BY_PE, false);
   }
 
   public static boolean isSharedFs(Config cfg) {

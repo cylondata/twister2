@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.tsched.utils;
 
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
 
 /**
  * This is the util class for the task scheduler to get the resource value of task instance and

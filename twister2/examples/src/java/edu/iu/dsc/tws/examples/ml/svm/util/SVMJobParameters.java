@@ -14,9 +14,11 @@ package edu.iu.dsc.tws.examples.ml.svm.util;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.WindowingConstants;
+import edu.iu.dsc.tws.task.window.constant.WindowType;
 
 /**
  * This class is used to define the Job Parameters needed to launch
@@ -25,98 +27,96 @@ import edu.iu.dsc.tws.data.utils.WorkerConstants;
 public final class SVMJobParameters implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(SVMJobParameters.class.getName());
-
-  private SVMJobParameters() { }
-
   /**
    * Number of features in a data point
    */
   private int features;
-
   /**
    * Number of data points
-   * */
+   */
   private int samples;
-
   /**
    * Number of testing data points
-   * */
+   */
   private int testingSamples;
-
-  /*
-  * A streaming or batch mode operation
-  * */
-
   private boolean isStreaming;
 
+  /*
+   * A streaming or batch mode operation
+   * */
   /**
    * Training data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String trainingDataDir;
-
   /**
    * Testing data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String testingDataDir;
-
   /**
    * Cross-Validation data directory {csv format data is expected {label, features}}
-   * */
+   */
 
   private String crossValidationDataDir;
+
+
+  /*
+   * Weight vector directory {csv format data is expected {features}}
+   * */
+
+  private String weightVectorDataDir;
 
   /**
    * Saving trained model
    */
   private String modelSaveDir;
-
   /**
    * Iterations in training model
    * Stream mode , iterations = 1
    */
   private int iterations = 100;
-
   /**
    * Learning rate
    */
   private double alpha = 0.001;
-
-
   /**
    * Hyper Parameter ; default is 1.0
    */
   private double c = 1.0;
-
   /**
    * Is data split from a single source [training, cross-validation, testing]
    */
   private boolean isSplit = false;
-
-  /*
-  * Run using dummy data
-  * */
-
   private boolean isDummy = false;
 
   /*
-  * Runs the algorithm with the given parallelism
-  * */
-
+   * Run using dummy data
+   * */
   private int parallelism = 4;
 
-
+  /*
+   * Runs the algorithm with the given parallelism
+   * */
   /**
    * Experiment name == Job Name
-   * */
+   */
 
   private String experimentName = "";
 
   /**
+   * WindowParameter object holds the window type, window length, slide size
+   */
+  private WindowArguments windowArguments;
+
+
+  private SVMJobParameters() {
+  }
+
+  /**
    * Builds the Job Parameters relevant SVM Algorithm
+   *
    * @param cfg : this must be initialized where Job is initialized.
-   * @return
    */
   public static SVMJobParameters build(Config cfg) {
     SVMJobParameters svmJobParameters = new SVMJobParameters();
@@ -131,6 +131,8 @@ public final class SVMJobParameters implements Serializable {
     svmJobParameters.isSplit = cfg.getBooleanValue(MLDataObjectConstants.SPLIT, false);
     svmJobParameters.trainingDataDir = cfg.getStringValue(MLDataObjectConstants.TRAINING_DATA_DIR);
     svmJobParameters.testingDataDir = cfg.getStringValue(MLDataObjectConstants.TESTING_DATA_DIR);
+    svmJobParameters.weightVectorDataDir = cfg.getStringValue(MLDataObjectConstants
+        .WEIGHT_VECTOR_DATA_DIR);
     svmJobParameters.crossValidationDataDir = cfg
         .getStringValue(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR);
     svmJobParameters.modelSaveDir = cfg
@@ -149,7 +151,22 @@ public final class SVMJobParameters implements Serializable {
     svmJobParameters.experimentName = cfg
         .getStringValue(MLDataObjectConstants.SgdSvmDataObjectConstants.EXP_NAME);
 
-    return  svmJobParameters;
+    //set up window params
+    WindowType windowType = cfg.getStringValue(WindowingConstants.WINDOW_TYPE)
+        .equalsIgnoreCase("tumbling") ? WindowType.TUMBLING : WindowType.SLIDING;
+    long windowLength = Long.parseLong(cfg.getStringValue(WindowingConstants.WINDOW_LENGTH));
+    long slidingLength = 0;
+    if (cfg.getStringValue(WindowingConstants
+        .SLIDING_WINDOW_LENGTH) != null) {
+      slidingLength = Long.parseLong(cfg.getStringValue(WindowingConstants
+          .SLIDING_WINDOW_LENGTH));
+    }
+
+    WindowArguments windowArguments = new WindowArguments(windowType, windowLength, slidingLength,
+        cfg.getBooleanValue(WindowingConstants.WINDOW_CAPACITY_TYPE));
+    svmJobParameters.windowArguments = windowArguments;
+
+    return svmJobParameters;
   }
 
   public int getFeatures() {
@@ -272,6 +289,22 @@ public final class SVMJobParameters implements Serializable {
     this.testingSamples = testingSamples;
   }
 
+  public String getWeightVectorDataDir() {
+    return weightVectorDataDir;
+  }
+
+  public void setWeightVectorDataDir(String weightVectorDataDir) {
+    this.weightVectorDataDir = weightVectorDataDir;
+  }
+
+  public WindowArguments getWindowArguments() {
+    return windowArguments;
+  }
+
+  public void setWindowArguments(WindowArguments windowArguments) {
+    this.windowArguments = windowArguments;
+  }
+
   @Override
   public String toString() {
     return "SVMJobParameters{"
@@ -282,6 +315,7 @@ public final class SVMJobParameters implements Serializable {
         + ", trainingDataDir='" + trainingDataDir + '\''
         + ", testingDataDir='" + testingDataDir + '\''
         + ", crossValidationDataDir='" + crossValidationDataDir + '\''
+        + ", weightVecotorDataDir='" + weightVectorDataDir + '\''
         + ", modelSaveDir='" + modelSaveDir + '\''
         + ", iterations=" + iterations
         + ", alpha=" + alpha
@@ -290,6 +324,7 @@ public final class SVMJobParameters implements Serializable {
         + ", isDummy=" + isDummy
         + ", parallelism=" + parallelism
         + ", experimentName=" + experimentName
+        + ", windowArguments=" + windowArguments.toString()
         + '}';
   }
 }

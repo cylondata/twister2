@@ -14,19 +14,19 @@ package edu.iu.dsc.tws.examples.ml.svm.streamer;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 /**
  * Initial Implementation of Twister2 SVM
- * @deprecated
- * This class is deprecated
+ *
+ * @deprecated This class is deprecated
  * This is the DataStreamer for both batch and streaming mode
  * In streaming mode a single data point is sent continously.
  * But in the batch application an array of data points is sent once.
@@ -35,13 +35,9 @@ import edu.iu.dsc.tws.task.graph.OperationMode;
 public class DataStreamer extends BaseSource {
 
   private static final Logger LOG = Logger.getLogger(DataStreamer.class.getName());
-
-  private int features = 10;
-
-  private OperationMode operationMode;
-
   private final double[] labels = {-1, +1};
-
+  private int features = 10;
+  private OperationMode operationMode;
   private boolean isDummy = false;
 
   private BinaryBatchModel binaryBatchModel;
@@ -86,7 +82,6 @@ public class DataStreamer extends BaseSource {
    * This method is used to deal with dummy data based data stream generation
    * Here data points are generated using a Gaussian Distribution and labels are assigned
    * +1 or -1 randomly for a given data point.
-   * @throws InputDataFormatException
    */
   public void dummyDataStreamer() throws InputDataFormatException {
     if (this.operationMode.equals(OperationMode.STREAMING)) {

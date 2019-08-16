@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.dataset;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -48,7 +48,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
   }
 
   public InputSplit<T> getNextSplit(int id) {
-    InputSplitAssigner assigner = input.getInputSplitAssigner(splits);
+    InputSplitAssigner<T> assigner = input.getInputSplitAssigner(splits);
     InputSplit<T> split = assigner.getNextInputSplit("localhost", id);
     if (split != null) {
       try {

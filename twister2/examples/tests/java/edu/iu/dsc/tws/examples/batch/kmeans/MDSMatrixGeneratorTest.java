@@ -15,21 +15,22 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.data.api.formatters.BinaryInputPartitioner;
-//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSink;
 import edu.iu.dsc.tws.examples.batch.mds.MDSDataObjectSource;
 import edu.iu.dsc.tws.examples.batch.mds.MatrixGenerator;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+
+//import edu.iu.dsc.tws.data.api.formatters.LocalBinaryInputPartitioner;
 
 public class MDSMatrixGeneratorTest {
 
@@ -46,15 +47,15 @@ public class MDSMatrixGeneratorTest {
     matrixGen.generate(datasize, matrixColumLength, directory, byteType);
 
     int parallelismValue = 16;
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
-    taskGraphBuilder.setTaskGraphName("mdsdataprocessing");
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    computeGraphBuilder.setTaskGraphName("mdsdataprocessing");
     MDSDataObjectSource sourceTask = new MDSDataObjectSource("direct", directory, datasize);
     MDSDataObjectSink sinkTask = new MDSDataObjectSink(matrixColumLength);
-    taskGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink("sink", sinkTask,
+    computeGraphBuilder.addSource("source", sourceTask, parallelismValue);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", sinkTask,
         parallelismValue);
-    computeConnection.direct("source").viaEdge("direct").withDataType(DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeConnection.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 
     BinaryInputPartitioner binaryInputPartitioner =
         new BinaryInputPartitioner(new Path(directory), datasize * Short.BYTES);
@@ -70,14 +71,14 @@ public class MDSMatrixGeneratorTest {
 
   private Config getConfig(int datasize) {
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(DataObjectConstants.DSIZE, datasize);
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
     return Config.newBuilder().putAll(config).putAll(jobConfig).build();
   }
 }

@@ -22,7 +22,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 
 public final class RuntimeManagerMain {
@@ -76,7 +77,7 @@ public final class RuntimeManagerMain {
             + "twister_home: %s command: %s config_dir: %s cluster_type: %s",
         twister2Home, command, configDir, cluster));
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + cluster);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, cluster);
 
     return Config.newBuilder().putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
@@ -87,6 +88,7 @@ public final class RuntimeManagerMain {
 
   /**
    * Setup the command line options for the MPI process
+   *
    * @return cli options
    */
   private static Options setupOptions() {

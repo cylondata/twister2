@@ -14,15 +14,15 @@ package edu.iu.dsc.tws.tsched.taskscheduler;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class TaskSchedulerTest {
@@ -30,7 +30,7 @@ public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules1() {
     int parallel = 2;
-    DataFlowTaskGraph graph = createStreamingGraph(parallel);
+    ComputeGraph graph = createStreamingGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
@@ -47,7 +47,7 @@ public class TaskSchedulerTest {
   @Test
   public void testUniqueSchedules2() {
     int parallel = 2;
-    DataFlowTaskGraph graph = createBatchGraph(parallel);
+    ComputeGraph graph = createBatchGraph(parallel);
     TaskScheduler scheduler = new TaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config);
@@ -72,7 +72,7 @@ public class TaskSchedulerTest {
     return plan;
   }
 
-  private DataFlowTaskGraph createStreamingGraph(int parallel) {
+  private ComputeGraph createStreamingGraph(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -87,7 +87,7 @@ public class TaskSchedulerTest {
     return builder.build();
   }
 
-  private DataFlowTaskGraph createBatchGraph(int parallel) {
+  private ComputeGraph createBatchGraph(int parallel) {
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
 
@@ -105,12 +105,12 @@ public class TaskSchedulerTest {
   private Config getConfig() {
 
     String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.2.1";
+        + "/twister2/bazel-bin/scripts/package/twister2-0.2.2";
     String configDir = "/home/" + System.getProperty("user.dir")
         + "/twister2/twister2/taskscheduler/tests/conf/";
     String clusterType = "standalone";
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
     return Config.newBuilder().putAll(config).build();
   }
 }

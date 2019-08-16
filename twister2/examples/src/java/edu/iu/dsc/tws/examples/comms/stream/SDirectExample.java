@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.stream.SDirect;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.stream.SDirect;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 
 public class SDirectExample extends BenchWorker {
@@ -42,10 +43,7 @@ public class SDirectExample extends BenchWorker {
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     List<Integer> sources = new ArrayList<>();
     List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -58,10 +56,10 @@ public class SDirectExample extends BenchWorker {
     }
 
     // create the communication
-    direct = new SDirect(communicator, taskPlan, sources, targets,
+    direct = new SDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver());
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {
@@ -73,7 +71,7 @@ public class SDirectExample extends BenchWorker {
       }
     }
 
-    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
@@ -94,7 +92,7 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return directDone && sourcesDone && !direct.hasPending();
+    return directDone && sourcesDone && direct.isComplete();
   }
 
   @Override

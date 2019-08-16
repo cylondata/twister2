@@ -10,20 +10,10 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.executor.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,11 +22,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public final class TaskPlanBuilder {
   private TaskPlanBuilder() {
@@ -49,16 +39,16 @@ public final class TaskPlanBuilder {
    * @param idGenerator global task id generator
    * @return the task plan
    */
-  public static TaskPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                               TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
-    Set<ContainerPlan> cPlanList = schedulePlan.getContainers();
+  public static LogicalPlan build(int workerID, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                                  TaskSchedulePlan schedulePlan, TaskIdGenerator idGenerator) {
+    Set<WorkerSchedulePlan> cPlanList = schedulePlan.getContainers();
     Map<Integer, Set<Integer>> containersToTasks = new HashMap<>();
     Map<Integer, Set<Integer>> groupsToTasks = new HashMap<>();
 
     // we need to sort to keep the order
     workerInfoList.sort(Comparator.comparingInt(JobMasterAPI.WorkerInfo::getWorkerID));
 
-    for (ContainerPlan c : cPlanList) {
+    for (WorkerSchedulePlan c : cPlanList) {
       Set<TaskInstancePlan> tSet = c.getTaskInstances();
       Set<Integer> instances = new HashSet<>();
 
@@ -92,12 +82,13 @@ public final class TaskPlanBuilder {
         Set<Integer> tasksInNode = nodeToTasks.computeIfAbsent(
             workerInfo.getNodeInfo().getNodeIP(),
             k -> new HashSet<>());
-        tasksInNode.addAll(containersToTasks.get(workerInfo.getWorkerID()));
+        tasksInNode.addAll(containersToTasks.getOrDefault(workerInfo.getWorkerID(),
+            Collections.emptySet()));
       }
       groupsToTasks.put(i, executorsOfGroup);
       i++;
     }
 
-    return new TaskPlan(containersToTasks, groupsToTasks, nodeToTasks, workerID);
+    return new LogicalPlan(containersToTasks, groupsToTasks, nodeToTasks, workerID);
   }
 }

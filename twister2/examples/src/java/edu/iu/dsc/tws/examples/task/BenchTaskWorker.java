@@ -17,10 +17,18 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.task.streaming.windowing.data.EventTimeData;
@@ -28,36 +36,27 @@ import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.utils.bench.TimingUnit;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.api.window.policy.trigger.WindowingPolicy;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
-
-public abstract class BenchTaskWorker extends TaskWorker {
-
+public abstract class BenchTaskWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(BenchTaskWorker.class.getName());
 
   protected static final String SOURCE = "source";
 
   protected static final String SINK = "sink";
 
-  protected DataFlowTaskGraph dataFlowTaskGraph;
+  protected ComputeGraph computeGraph;
 
-  protected TaskGraphBuilder taskGraphBuilder;
+  protected ComputeGraphBuilder computeGraphBuilder;
 
   protected ExecutionPlan executionPlan;
 
   protected ComputeConnection computeConnection;
-
-  protected WindowingPolicy windowingPolicy = null;
 
   protected static JobParameters jobParameters;
 
@@ -70,28 +69,32 @@ public abstract class BenchTaskWorker extends TaskWorker {
   protected static AtomicInteger receiversInProgress = new AtomicInteger();
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+        workerController, persistentVolume, volatileVolume);
+
     if (resultsRecorder == null) {
       resultsRecorder = new BenchmarkResultsRecorder(
           config,
-          workerId == 0
+          workerID == 0
       );
     }
     Timing.setDefaultTimingUnit(TimingUnit.NANO_SECONDS);
     jobParameters = JobParameters.build(config);
-    taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
-      taskGraphBuilder.setMode(OperationMode.STREAMING);
+      computeGraphBuilder.setMode(OperationMode.STREAMING);
     } else {
-      taskGraphBuilder.setMode(OperationMode.BATCH);
+      computeGraphBuilder.setMode(OperationMode.BATCH);
     }
 
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 
     buildTaskGraph();
-    dataFlowTaskGraph = taskGraphBuilder.build();
-    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
-    IExecution execution = taskExecutor.iExecute(dataFlowTaskGraph, executionPlan);
+    computeGraph = computeGraphBuilder.build();
+    executionPlan = cEnv.getTaskExecutor().plan(computeGraph);
+    IExecution execution = cEnv.getTaskExecutor().iExecute(computeGraph, executionPlan);
 
     if (jobParameters.isStream()) {
       while (execution.progress()
@@ -116,7 +119,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
     execution.close();
   }
 
-  public abstract TaskGraphBuilder buildTaskGraph();
+  public abstract ComputeGraphBuilder buildTaskGraph();
 
   /**
    * This method will verify results and append the output to the results recorder
@@ -186,7 +189,7 @@ public abstract class BenchTaskWorker extends TaskWorker {
       sendersInProgress.incrementAndGet();
     }
 
-    private void notifyEnd() {
+    protected void notifyEnd() {
       if (endNotified) {
         return;
       }
@@ -241,15 +244,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
     public SourceWindowTask(String e) {
       this.iterations = jobParameters.getIterations() + jobParameters.getWarmupIterations();
       this.edge = e;
-    }
-
-    public SourceWindowTask(String e, boolean keyed) {
-      this(e);
-      this.keyed = keyed;
-    }
-
-    public void setMarkTimingOnlyForLowestTarget(boolean markTimingOnlyForLowestTarget) {
-      this.markTimingOnlyForLowestTarget = markTimingOnlyForLowestTarget;
     }
 
     @Override
@@ -318,15 +312,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
       this.edge = e;
     }
 
-    public SourceWindowTimeStampTask(String e, boolean keyed) {
-      this(e);
-      this.keyed = keyed;
-    }
-
-    public void setMarkTimingOnlyForLowestTarget(boolean markTimingOnlyForLowestTarget) {
-      this.markTimingOnlyForLowestTarget = markTimingOnlyForLowestTarget;
-    }
-
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
       super.prepare(cfg, ctx);
@@ -351,11 +336,6 @@ public abstract class BenchTaskWorker extends TaskWorker {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
         long timestamp = System.currentTimeMillis();
-//        IntData intData = new IntData();
-//        intData.setData(inputDataArray);
-//        intData.setTime(System.currentTimeMillis());
-//        LOG.info(String.format("Worker Id %d, EventTime Diff : %s", this.context.getWorkerId(),
-//            String.valueOf(timestamp - prevTime)));
         EventTimeData eventTimeData = new EventTimeData(inputDataArray, count,
             timestamp);
         prevTime = timestamp;

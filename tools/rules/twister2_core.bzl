@@ -6,6 +6,7 @@ def twister2_core_files():
 def twister2_core_conf_files():
     return [
         "//twister2/config/src/yaml:config-system-yaml",
+        "//twister2/config/src/yaml:common-conf-yaml",
     ]
 
 def twister2_core_lib_files():
@@ -83,6 +84,7 @@ def twister2_core_lib_data_lmdb_files():
 
 def twister2_harp_integration_files():
     return [
+        "//twister2/compatibility/harp:twister2-harp",
         "//third_party:harp_collective",
         "@it_unimi_dsi_fastutil//jar",
     ]

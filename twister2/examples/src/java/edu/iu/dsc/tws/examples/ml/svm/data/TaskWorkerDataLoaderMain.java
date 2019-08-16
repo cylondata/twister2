@@ -14,13 +14,13 @@ package edu.iu.dsc.tws.examples.ml.svm.data;
 import java.util.HashMap;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InvalidArguments;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public class TaskWorkerDataLoaderMain {
 
@@ -31,7 +31,7 @@ public class TaskWorkerDataLoaderMain {
   private static String dataSource = "";
 
   public static void main(String[] args) throws InvalidArguments {
-    if(args.length == 3 ) {
+    if (args.length == 3) {
       workers = Integer.parseInt(args[0]);
       parallelism = Integer.parseInt(args[1]);
       dataSource = args[2];

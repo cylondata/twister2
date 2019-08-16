@@ -37,8 +37,8 @@ import org.lmdbjava.EnvFlags;
 import org.lmdbjava.KeyRange;
 import org.lmdbjava.Txn;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.AbstractMemoryManager;
 import edu.iu.dsc.tws.data.memory.MemoryManagerContext;
 import edu.iu.dsc.tws.data.memory.OperationMemoryManager;

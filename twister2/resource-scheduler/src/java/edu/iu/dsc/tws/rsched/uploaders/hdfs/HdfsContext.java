@@ -11,8 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.uploaders.hdfs;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 
 final class HdfsContext extends Context {
   public static final String HADOOP_CONFIG_DIRECTORY = "twister2.uploader.hdfs.config.directory";

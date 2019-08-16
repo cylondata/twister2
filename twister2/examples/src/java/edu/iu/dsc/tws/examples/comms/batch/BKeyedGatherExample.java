@@ -21,13 +21,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BKeyedGather;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -43,15 +43,10 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   private BKeyedGather keyedGather;
 
-  private boolean gatherDone;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, Iterator<int[]>>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -63,11 +58,11 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
     // create the communication
-    keyedGather = new BKeyedGather(communicator, taskPlan, sources, targets,
+    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     for (int t : tasksOfExecutor) {
@@ -75,13 +70,6 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-
-    gatherDone = true;
-    for (int target : targets) {
-      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-        gatherDone = false;
-      }
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
@@ -137,7 +125,7 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    boolean b = gatherDone && sourcesDone && !keyedGather.hasPending();
+    boolean b = sourcesDone && keyedGather.isComplete();
     if (b) {
       LOG.info(String.format("%d is done", workerId));
     }
@@ -164,7 +152,6 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        gatherDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -178,7 +165,6 @@ public class BKeyedGatherExample extends KeyedBenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      gatherDone = true;
       return true;
     }
   }

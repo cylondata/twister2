@@ -18,12 +18,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.JoinUtils;
 import edu.iu.dsc.tws.comms.utils.KeyComparatorWrapper;
 
@@ -44,6 +45,7 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
    * The user provided receiver
    */
   private BulkReceiver bulkReceiver;
+  private CommunicationContext.JoinType joinType;
 
   /**
    * The iterators returned by left
@@ -60,8 +62,11 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
    */
   private KeyComparatorWrapper comparator;
 
-  public JoinBatchFinalReceiver2(BulkReceiver bulkReceiver, Comparator<Object> com) {
+  public JoinBatchFinalReceiver2(BulkReceiver bulkReceiver,
+                                 Comparator<Object> com,
+                                 CommunicationContext.JoinType joinType) {
     this.bulkReceiver = bulkReceiver;
+    this.joinType = joinType;
     this.leftReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(0), 0);
     this.rightReceiver = new JoinPartitionBatchReceiver(new InnerBulkReceiver(1), 1);
     this.leftValues = new HashMap<>();
@@ -139,16 +144,16 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
         leftValues.put(target, (List<Tuple>) it);
 
         if (rightValues.containsKey(target)) {
-          List<Object> results = JoinUtils.innerJoin(leftValues.get(target),
-              rightValues.get(target), comparator);
+          List<Object> results = JoinUtils.join(leftValues.get(target),
+              rightValues.get(target), comparator, joinType);
           bulkReceiver.receive(target, results.iterator());
         }
       } else {
         rightValues.put(target, (List<Tuple>) it);
 
         if (leftValues.containsKey(target)) {
-          List<Object> results = JoinUtils.innerJoin(leftValues.get(target),
-              rightValues.get(target), comparator);
+          List<Object> results = JoinUtils.join(leftValues.get(target),
+              rightValues.get(target), comparator, joinType);
           bulkReceiver.receive(target, results.iterator());
         }
       }

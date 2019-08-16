@@ -16,7 +16,7 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.common.kryo.KryoSerializer;
+import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.data.memory.utils.DataMessageType;
 
 /**

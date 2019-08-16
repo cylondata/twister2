@@ -29,14 +29,14 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
@@ -44,29 +44,31 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
 
-  private JobMasterExample() { }
+  private JobMasterExample() {
+  }
 
   /**
    * this main method is for locally testing only
    * A JobMaster instance is started locally on the default port:
-   *   edu.iu.dsc.tws.master.JobMasterContext.JOB_MASTER_PORT_DEFAULT = 11011
-   *
+   * edu.iu.dsc.tws.master.JobMasterContext.JOB_MASTER_PORT_DEFAULT = 11011
+   * <p>
    * numberOfWorkers to join is expected as a parameter
-   *
+   * <p>
    * When all workers joined and all have sent completed messages,
    * this server also completes and exits
-   *
+   * <p>
    * En example usage of JobMaster can be seen in:
-   *    edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
+   * edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobMasterStarter
    */
   public static void main(String[] args) {
 
     // we assume that the twister2Home is the current directory
     String configDir = "conf/kubernetes/";
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     config = updateConfig(config);
-    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
+    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: "
+        + configDir);
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
     JobAPI.Job job = twister2Job.serialize();
@@ -97,7 +99,6 @@ public final class JobMasterExample {
 
   /**
    * construct a Config object
-   * @return
    */
   public static Config updateConfig(Config config) {
     return Config.newBuilder()

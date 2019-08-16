@@ -15,12 +15,12 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class PredictionReduceTask extends BaseSink implements Collector {
 

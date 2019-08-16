@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.nio.ByteBuffer;
 
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 /**
@@ -67,7 +67,7 @@ public class DataSerializer extends BaseSerializer {
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeData(Object payload, SerializeState state,
+  protected boolean serializeData(Object payload, SerializeState state,
                                 DataBuffer targetBuffer, DataPacker dataPacker) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header

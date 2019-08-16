@@ -21,20 +21,20 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
+import edu.iu.dsc.tws.api.net.StatusCode;
+import edu.iu.dsc.tws.api.net.request.ConnectHandler;
+import edu.iu.dsc.tws.api.net.request.MessageHandler;
+import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
-import edu.iu.dsc.tws.common.config.Config;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
-import edu.iu.dsc.tws.common.net.tcp.StatusCode;
-import edu.iu.dsc.tws.common.net.tcp.request.BlockingSendException;
-import edu.iu.dsc.tws.common.net.tcp.request.ConnectHandler;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
-import edu.iu.dsc.tws.common.net.tcp.request.RequestID;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.common.worker.JobListener;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 /**
  * JMWorkerAgent class
@@ -341,7 +341,7 @@ public final class JMWorkerAgent {
       duration = System.currentTimeMillis() - startTime;
 
       if (duration > nextLogTime) {
-        LOG.info("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
+        LOG.fine("Still trying to connect to the Job Master: " + masterAddress + ":" + masterPort);
         nextLogTime += logInterval;
       }
     }
@@ -575,11 +575,25 @@ public final class JMWorkerAgent {
           workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
         }
 
+      } else if (message instanceof JobMasterAPI.Recover) {
+
+        LOG.info("Worker id ..." + ((JobMasterAPI.Recover) message).getWorkerID()
+            + "  came from failure. This worker is going back to last checkpoint");
+        setBackToLAstCheckpoint();
+
       } else {
         LOG.warning("Received message unrecognized. \n" + message);
       }
 
     }
+  }
+
+  //set back everything in a worker to last checkpoint
+  //TODO: going back to last checkpoint should be implemented here.
+  public void setBackToLAstCheckpoint() {
+
+    //System.exit(3);
+
   }
 
   public class ClientConnectHandler implements ConnectHandler {
@@ -591,7 +605,7 @@ public final class JMWorkerAgent {
     @Override
     public void onConnect(SocketChannel channel, StatusCode status) {
       if (status == StatusCode.SUCCESS) {
-        LOG.info(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
+        LOG.fine(thisWorker.getWorkerID() + " JMWorkerAgent connected to JobMaster: " + channel);
       }
 
       if (status == StatusCode.CONNECTION_REFUSED) {

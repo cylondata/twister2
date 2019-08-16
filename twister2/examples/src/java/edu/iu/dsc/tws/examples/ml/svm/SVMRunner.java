@@ -22,18 +22,21 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.ml.svm.comms.InputDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
+import edu.iu.dsc.tws.examples.ml.svm.constant.WindowingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdAdvancedRunner;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdIterativeRunner;
+import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdOnlineRunner;
 import edu.iu.dsc.tws.examples.ml.svm.job.SvmSgdTsetRunner;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 public final class SVMRunner {
 
@@ -104,9 +107,26 @@ public final class SVMRunner {
     options.addOption(Utils.createOption(MLDataObjectConstants.TESTING_DATA_DIR,
         true, "Testing data directory", false));
     options.addOption(Utils.createOption(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR,
-        true, "Training data directory", false));
+        true, "Cross-Validation data directory", false));
+    options.addOption(Utils.createOption(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR,
+        true, "Weight Vector data directory", true));
     options.addOption(Utils.createOption(MLDataObjectConstants.MODEL_SAVE_PATH,
         true, "Model Save Directory", false));
+
+    //windowing conifgs (optional)
+    options.addOption(Utils.createOption(WindowingConstants.WINDOW_TYPE,
+        true, "Windowing Type : tumbling, sliding, global (not supported), "
+            + "session (not supported)", false));
+    options.addOption(Utils.createOption(WindowingConstants.WINDOW_LENGTH,
+        true, "Length of the window (needed for all kinds of window types)",
+        false));
+    options.addOption(Utils.createOption(WindowingConstants.SLIDING_WINDOW_LENGTH,
+        true, "Length of the slide in windowing (needed for only sliding windows"
+            + "for other windows the slide equals to window length)",
+        false));
+    options.addOption(WindowingConstants.WINDOW_CAPACITY_TYPE, false,
+        "time (if time the time based window is used else count based window is used)");
+
 
     // optional running choice based params
     options.addOption(MLDataObjectConstants.DUMMY, false, "Dummy data used for experiment");
@@ -129,7 +149,7 @@ public final class SVMRunner {
     options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants.ITERATIONS,
         true, "Iterations", false));
     options.addOption(Utils.createOption(MLDataObjectConstants.SgdSvmDataObjectConstants
-            .TESTING_SAMPLES, true, "Testing Samples", true));
+        .TESTING_SAMPLES, true, "Testing Samples", true));
 
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
@@ -160,7 +180,17 @@ public final class SVMRunner {
         cmd.getOptionValue(MLDataObjectConstants.CROSS_VALIDATION_DATA_DIR));
     jobConfig.put(MLDataObjectConstants.MODEL_SAVE_PATH,
         cmd.getOptionValue(MLDataObjectConstants.MODEL_SAVE_PATH));
+    jobConfig.put(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR,
+        cmd.getOptionValue(MLDataObjectConstants.WEIGHT_VECTOR_DATA_DIR));
 
+    jobConfig.put(WindowingConstants.WINDOW_TYPE,
+        cmd.getOptionValue(WindowingConstants.WINDOW_TYPE));
+    jobConfig.put(WindowingConstants.WINDOW_LENGTH,
+        cmd.getOptionValue(WindowingConstants.WINDOW_LENGTH));
+    jobConfig.put(WindowingConstants.SLIDING_WINDOW_LENGTH,
+        cmd.getOptionValue(WindowingConstants.SLIDING_WINDOW_LENGTH));
+    jobConfig.put(WindowingConstants.WINDOW_CAPACITY_TYPE,
+        cmd.hasOption(WindowingConstants.WINDOW_CAPACITY_TYPE));
 
     jobConfig.put(MLDataObjectConstants.DUMMY, cmd.hasOption(MLDataObjectConstants.DUMMY));
     jobConfig.put(MLDataObjectConstants.STREAMING, cmd.hasOption(MLDataObjectConstants.STREAMING));
@@ -208,6 +238,12 @@ public final class SVMRunner {
     }
     if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.COMMS_RUNNER)) {
       jobBuilder.setWorkerClass(InputDataStreamer.class.getName());
+    }
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.ITERATIVE_TASK_RUNNER)) {
+      jobBuilder.setWorkerClass(SvmSgdIterativeRunner.class.getName());
+    }
+    if (svmRunType.equalsIgnoreCase(Constants.SimpleGraphConfig.ITERATIVE_TASK_STREAMING_RUNNER)) {
+      jobBuilder.setWorkerClass(SvmSgdOnlineRunner.class.getName());
     }
 
     jobBuilder.addComputeResource(cpus, ramMb, diskGb, instances);

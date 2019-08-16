@@ -15,38 +15,39 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.batch.verifiers.GatherVerifier;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.typed.AllGatherCompute;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.typed.AllGatherCompute;
 
 public class BTAllGatherExample extends BenchTaskWorker {
 
   private static final Logger LOG = Logger.getLogger(BTAllGatherExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     ISource g = new SourceTask(edge);
     ISink r = new AllGatherSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE).viaEdge(edge).withDataType(dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

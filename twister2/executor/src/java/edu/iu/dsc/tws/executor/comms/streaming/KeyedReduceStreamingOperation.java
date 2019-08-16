@@ -16,29 +16,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedReduce;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
   private SKeyedReduce op;
 
-  public KeyedReduceStreamingOperation(Config config, Communicator network, TaskPlan tPlan,
+  public KeyedReduceStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
                                        Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
@@ -57,12 +56,14 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
       destSelector = new HashingSelector();
     }
 
-    MessageType dataType = Utils.dataTypeToMessageType(edge.getDataType());
-    MessageType keyType = Utils.dataTypeToMessageType(edge.getKeyType());
+    MessageType dataType = edge.getDataType();
+    MessageType keyType = edge.getKeyType();
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SKeyedReduce(newComm, taskPlan, sources, dests, keyType, dataType,
-        new ReduceFunctionImpl(edge.getFunction()), new SingularRecvrImpl(), destSelector);
+    op = new SKeyedReduce(newComm, logicalPlan, sources, dests, keyType, dataType,
+        new ReduceFunctionImpl(edge.getFunction()),
+        new SingularRecvrImpl(), destSelector, edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   @Override
@@ -120,11 +121,11 @@ public class KeyedReduceStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public void reset() {
-    op.refresh();
+    op.reset();
   }
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

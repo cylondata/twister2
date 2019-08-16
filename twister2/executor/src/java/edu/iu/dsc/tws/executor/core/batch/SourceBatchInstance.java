@@ -16,20 +16,21 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.OutputCollection;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SourceBatchInstance implements INodeInstance, ISync {
   private static final Logger LOG = Logger.getLogger(SourceBatchInstance.class.getName());
@@ -161,7 +162,8 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     outputBatchCollection = new DefaultOutputCollection(outBatchQueue);
 
     taskContext = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, batchTaskName,
-        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule);
+        parallelism, workerId, outputBatchCollection, nodeConfigs, outputEdges, taskSchedule,
+        OperationMode.BATCH);
     batchTask.prepare(cfg, taskContext);
 
     /// we will use this array for iteration

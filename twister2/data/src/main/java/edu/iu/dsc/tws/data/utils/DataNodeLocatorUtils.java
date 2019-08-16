@@ -28,12 +28,12 @@ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.tools.DFSck;
 import org.apache.hadoop.util.ToolRunner;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.IDataNodeLocatorUtils;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
 
 /**
  * This class is to find out the location of the datanodes corresponding to the input file names.
@@ -61,7 +61,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     try {
       for (String anInputFileList : inputFileList) {
         Path path = new Path(anInputFileList);
-        fileSystem = FileSystem.get(path.toUri(), config);
+        fileSystem = FileSystemUtils.get(path.toUri(), config);
         this.datasetName = anInputFileList;
         if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
           FileStatus fileStatus = fileSystem.getFileStatus(new Path(datasetName));
@@ -96,7 +96,7 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
     FileSystem fileSystem;
     try {
       Path path = new Path(inputFileName);
-      fileSystem = FileSystem.get(path.toUri(), config);
+      fileSystem = FileSystemUtils.get(path.toUri(), config);
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
           Context.TWISTER2_HDFS_FILESYSTEM)) {
         FileStatus fileStatus = fileSystem.getFileStatus(path);
@@ -142,9 +142,6 @@ public class DataNodeLocatorUtils implements IDataNodeLocatorUtils {
 
   /**
    * This method retrieve the datanode name of the file in the hdfs cluster
-   * @param fName
-   * @return
-   * @throws IOException
    */
   private List<String> getDataNodes(String[] fName) throws IOException {
 

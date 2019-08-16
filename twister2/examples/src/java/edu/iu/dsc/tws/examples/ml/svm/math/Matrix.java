@@ -11,17 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.ml.svm.math;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
 
 
-public final class Matrix {
+public final class Matrix implements Serializable {
+
+  private static final Logger LOG = Logger.getLogger(Matrix.class.getName());
+  private static final long serialVersionUID = -5712263538644901408L;
 
   private Matrix() {
   }
-
-  private static final Logger LOG = Logger.getLogger(Matrix.class.getName());
 
   public static double[] scalarMultiply(double[] x, double y) {
     double[] result = new double[x.length];

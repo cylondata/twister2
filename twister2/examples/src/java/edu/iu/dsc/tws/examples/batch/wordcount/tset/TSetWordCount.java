@@ -30,73 +30,62 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.tset.BaseIterableFlatMapFunction;
-import edu.iu.dsc.tws.api.tset.BaseSink;
-import edu.iu.dsc.tws.api.tset.BaseSource;
-import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.Selector;
-import edu.iu.dsc.tws.api.tset.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.TwisterBatchContext;
-import edu.iu.dsc.tws.api.tset.fn.HashingPartitioner;
-import edu.iu.dsc.tws.api.tset.fn.ReduceFunction;
-import edu.iu.dsc.tws.api.tset.link.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.BatchSourceTSet;
-import edu.iu.dsc.tws.api.tset.sets.GroupedTSet;
-import edu.iu.dsc.tws.api.tset.sets.IterableFlatMapTSet;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class TSetWordCount extends TSetBatchWorker implements Serializable {
+public class TSetWordCount implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetWordCount.class.getName());
 
   @Override
-  public void execute(TwisterBatchContext tc) {
+  public void execute(BatchTSetEnvironment env) {
     int sourcePar = 1;
-    int sinkPar = 1;
+//    int sinkPar = 1;
 
-    BatchSourceTSet<String> source =
-        tc.createSource(new WordCountFileSource((String) tc.getConfig().get("INPUT_FILE")),
+    SourceTSet<String> lines =
+        env.createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")),
             sourcePar).setName("source");
 
-    IterableFlatMapTSet<String, WordCountPair> mappedSource =
-        source.flatMap(new BaseIterableFlatMapFunction<String, WordCountPair>() {
-          @Override
-          public void flatMap(Iterable<String> t, Collector<WordCountPair> collector) {
-            for (String s : t) {
-              StringTokenizer itr = new StringTokenizer(s);
+    ComputeTSet<String, Iterator<String>> words =
+        lines.direct()
+            .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
+              StringTokenizer itr = new StringTokenizer(l);
               while (itr.hasMoreTokens()) {
-                collector.collect(new WordCountPair(itr.nextToken(), 1));
+                collector.collect(itr.nextToken());
               }
-            }
-          }
-        });
+            });
 
-    GroupedTSet<String, WordCountPair> groupedWords = mappedSource.groupBy(
-        new HashingPartitioner<>(),
-        (Selector<String, WordCountPair>) WordCountPair::getWord);
+    KeyedTSet<String, Integer> groupedWords = words.mapToTuple(w -> new Tuple<>(w, 1));
 
-    KeyedReduceTLink<String, WordCountPair> keyedReduce =
-        groupedWords.keyedReduce(
-            (ReduceFunction<WordCountPair>) (t1, t2) ->
-                new WordCountPair(t1.getWord(), t1.getCount() + t2.getCount())
-        );
+    KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
-    keyedReduce.sink(new WordCountFileLogger((String) tc.getConfig().get("OUTPUT_FILE")), sinkPar);
+    keyedReduce.sink(new WordCountFileLogger((String) env.getConfig().get("OUTPUT_FILE")));
   }
 
-  class WordCountFileSource extends BaseSource<String> {
+  class WordCountFileSource extends BaseSourceFunc<String> {
 
     private String inputFile;
     private DataSource<String, FileInputSplit<String>> dataSource;
@@ -107,9 +96,11 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
     }
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext context) {
+      super.prepare(context);
+
       // load the split
-      this.dataSource = new DataSource<>(config,
+      this.dataSource = new DataSource<>(context.getConfig(),
           new LocalTextInputPartitioner(new Path(inputFile), context.getParallelism()),
           context.getParallelism());
       this.dataSplit = this.dataSource.getNextSplit(context.getIndex());
@@ -121,7 +112,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
         if (dataSplit != null && !dataSplit.reachedEnd()) {
           return true;
         } else {
-          dataSplit = dataSource.getNextSplit(context.getIndex());
+          dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
           return dataSplit != null;  //if datasplit is not null => hasnext true
         }
       } catch (IOException e) {
@@ -143,28 +134,33 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
   }
 
 
-  class WordCountFileLogger extends BaseSink<WordCountPair> {
+  class WordCountFileLogger extends BaseSinkFunc<Iterator<Tuple<String, Integer>>> {
     private BufferedWriter writer;
     private String fileName;
 
-    WordCountFileLogger(String fileName) {
-      this.fileName = String.format("%s.%d", fileName, this.context.getIndex());
+    WordCountFileLogger(String fname) {
+      this.fileName = fname;
     }
 
     @Override
-    public void prepare() {
+    public void prepare(TSetContext ctx) {
+      super.prepare(ctx);
+      String fileWithIdx = String.format("%s.%d", fileName, getTSetContext().getIndex());
       try {
-        writer = new BufferedWriter(new FileWriter(fileName, false));
+        writer = new BufferedWriter(new FileWriter(fileWithIdx, false));
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
     @Override
-    public boolean add(WordCountPair value) {
+    public boolean add(Iterator<Tuple<String, Integer>> value) {
       try {
-        writer.write(value.toString());
-        writer.newLine();
+        while (value.hasNext()) {
+          Tuple<String, Integer> t = value.next();
+          writer.write(t.getKey() + " " + t.getValue());
+          writer.newLine();
+        }
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -240,7 +236,7 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
       }
     }
 
-/*    if (test1.equals(trusted)) {
+    if (test1.equals(trusted)) {
       LOG.info("RESULTS VALID!");
     } else {
       LOG.severe("UNSUCCESSFUL!");
@@ -250,6 +246,6 @@ public class TSetWordCount extends TSetBatchWorker implements Serializable {
           br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
         }
       }
-    }*/
+    }
   }
 }

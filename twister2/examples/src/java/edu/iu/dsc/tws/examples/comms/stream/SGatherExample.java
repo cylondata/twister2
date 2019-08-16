@@ -18,12 +18,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.stream.SGather;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.stream.SGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
@@ -46,10 +47,7 @@ public class SGatherExample extends BenchWorker {
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -59,11 +57,10 @@ public class SGatherExample extends BenchWorker {
     int target = noOfSourceTasks;
 
     // create the communication
-    gather = new SGather(communicator, taskPlan, sources, target, MessageTypes.INTEGER_ARRAY,
-        new FinalReduceReceiver());
+    gather = new SGather(workerEnv.getCommunicator(), logicalPlan, sources, target,
+        MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver());
 
-
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -72,7 +69,7 @@ public class SGatherExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
       gatherDone = true;
     }
 
@@ -113,7 +110,7 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !gather.hasPending();
+    return gatherDone && sourcesDone && gather.isComplete();
   }
 
   public class FinalReduceReceiver implements BulkReceiver {

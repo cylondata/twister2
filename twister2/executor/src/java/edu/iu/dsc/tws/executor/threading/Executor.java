@@ -11,16 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.executor.threading;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.IExecution;
-import edu.iu.dsc.tws.executor.api.IExecutor;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
-public class Executor {
+public class Executor implements IExecutor {
+
   private Config config;
 
   private int workerId;
@@ -36,7 +37,9 @@ public class Executor {
     this.workerId = wId;
 
     //initialize common thread pool
-    CommonThreadPool.init(config);
+    if (!CommonThreadPool.isActive()) {
+      CommonThreadPool.init(config);
+    }
 
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {
@@ -57,6 +60,7 @@ public class Executor {
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
+  @Override
   public boolean execute(ExecutionPlan executionPlan) {
     return executor.execute(executionPlan);
   }
@@ -65,14 +69,17 @@ public class Executor {
    * Communication Channel must be progressed after the task execution model
    * is initialized. It must be progressed only after execution is instantiated.
    * */
+  @Override
   public IExecution iExecute(ExecutionPlan executionPlan) {
     return executor.iExecute(executionPlan);
   }
 
+  @Override
   public boolean waitFor(ExecutionPlan executionPlan) {
     return executor.waitFor(executionPlan);
   }
 
+  @Override
   public void close() {
     executor.close();
   }

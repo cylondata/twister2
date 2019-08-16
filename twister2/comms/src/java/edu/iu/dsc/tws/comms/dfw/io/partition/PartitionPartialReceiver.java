@@ -17,8 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 
 /**
@@ -48,8 +48,8 @@ public class PartitionPartialReceiver extends TargetPartialReceiver {
 
   @Override
   protected boolean isFilledToSend(int target) {
-    boolean b = readyToSend.get(target) != null
-        && (allSyncsReceived || readyToSend.get(target).size() > groupingSize);
+    boolean b = messages.get(target) != null
+        && (allSyncsReceived || messages.get(target).size() > groupingSize);
     return b;
   }
 

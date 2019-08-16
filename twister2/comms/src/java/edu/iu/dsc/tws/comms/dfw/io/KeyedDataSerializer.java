@@ -14,9 +14,10 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataPacker;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.comms.packing.DataPacker;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 /**
@@ -55,7 +56,7 @@ public class KeyedDataSerializer extends BaseSerializer {
    * @param targetBuffer the data targetBuffer to which the built message needs to be copied
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
-  private boolean serializeKeyedData(Object payload, Object key,
+  protected boolean serializeKeyedData(Object payload, Object key,
                                      DataPacker dataPacker, DataPacker keyPacker,
                                      SerializeState state,
                                      DataBuffer targetBuffer) {

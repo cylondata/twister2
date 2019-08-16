@@ -23,30 +23,30 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskEnvironment;
-import edu.iu.dsc.tws.api.task.TaskExecutor;
-import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.checkpointing.Snapshot;
+import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
+import edu.iu.dsc.tws.api.comms.packing.types.primitive.IntegerPacker;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.checkpointing.worker.CheckpointingWorkerEnv;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.dfw.io.types.ObjectPacker;
-import edu.iu.dsc.tws.comms.dfw.io.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerParameters;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorkerUtils;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 /**
  * It is the main class for the K-Means clustering which consists of four main tasks namely
@@ -77,8 +77,8 @@ public class KMeansCheckpointingWorker implements IWorker {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    TaskEnvironment taskEnv = TaskEnvironment.init(config, workerId, workerController,
-        volatileVolume);
+    ComputeEnvironment taskEnv = ComputeEnvironment.init(config, workerId,
+        workerController, persistentVolume, volatileVolume);
 
     CheckpointingWorkerEnv checkpointingEnv =
         CheckpointingWorkerEnv.newBuilder(config, workerId, workerController)
@@ -112,7 +112,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     long startTime = System.currentTimeMillis();
 
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = KMeansWorker.buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
     //Get the execution plan for the first task graph
     ExecutionPlan datapointsExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -125,7 +125,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     DataObject<Object> centroidsDataObject;
     if (!snapshot.checkpointAvailable(CENT_OBJ)) {
       /* Second Graph to read the centroids **/
-      DataFlowTaskGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
+      ComputeGraph centroidsTaskGraph = KMeansWorker.buildCentroidsTG(centroidDirectory, csize,
           parallelismValue, dimension, config);
       //Get the execution plan for the second task graph
       ExecutionPlan centroidsExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
@@ -142,7 +142,7 @@ public class KMeansCheckpointingWorker implements IWorker {
 
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
+    ComputeGraph kmeansTaskGraph = KMeansWorker.buildKMeansTG(parallelismValue, config);
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
@@ -164,7 +164,7 @@ public class KMeansCheckpointingWorker implements IWorker {
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartitions(workerId);
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {

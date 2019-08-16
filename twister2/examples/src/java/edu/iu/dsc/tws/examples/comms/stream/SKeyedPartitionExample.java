@@ -16,13 +16,13 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedPartition;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
@@ -42,10 +42,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
   private ResultsVerifier<int[], Tuple<Integer, int[]>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -58,7 +55,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
     }
 
     // create the communication
-    partition = new SKeyedPartition(communicator, taskPlan, sources, targets,
+    partition = new SKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new PartitionReceiver(), new HashingSelector());
 
@@ -69,7 +66,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
             IntArrayComparator.getInstance()
         ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
     for (int t : tasksOfExecutor) {
@@ -86,7 +83,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && !partition.hasPending();
+    return partitionDone && sourcesDone && partition.isComplete();
   }
 
   @Override

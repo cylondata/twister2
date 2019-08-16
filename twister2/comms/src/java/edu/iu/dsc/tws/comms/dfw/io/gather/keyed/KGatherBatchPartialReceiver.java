@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.comms.dfw.io.gather.keyed;
 import java.util.List;
 import java.util.Queue;
 
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.KeyedReceiver;
 

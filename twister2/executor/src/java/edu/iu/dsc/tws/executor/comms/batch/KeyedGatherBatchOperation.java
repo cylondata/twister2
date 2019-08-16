@@ -17,27 +17,26 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedGather;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BKeyedGather;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(KeyedGatherBatchOperation.class.getName());
 
   protected BKeyedGather op;
 
-  public KeyedGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public KeyedGatherBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
@@ -60,10 +59,10 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BKeyedGather(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), new GatherRecvrImpl(),
-        destSelector, useDisk, keyComparator, groupByKey);
+    op = new BKeyedGather(newComm, logicalPlan, sources, dests,
+        edge.getKeyType(), edge.getDataType(), new GatherRecvrImpl(),
+        destSelector, useDisk, keyComparator, groupByKey,
+        edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override
@@ -75,7 +74,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   private class GatherRecvrImpl implements BulkReceiver {
@@ -117,6 +116,6 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

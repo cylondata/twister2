@@ -16,21 +16,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
 import edu.iu.dsc.tws.data.utils.WorkerConstants;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 
 public class SourceTaskDataLoader extends TaskWorker {
@@ -47,18 +47,18 @@ public class SourceTaskDataLoader extends TaskWorker {
     /*
      * First data is loaded from files
      * */
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 //    DataObjectSource sourceTask = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
 //        dataSource);
 //    DataObjectSink sinkTask = new DataObjectSink();
-//    taskGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
-//    ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink(
+//    computeGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
+//    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink(
 //        "datapointsink", sinkTask, parallelism);
 //    firstGraphComputeConnection.direct("datapointsource",
 //        Context.TWISTER2_DIRECT_EDGE, DataType.OBJECT);
-//    taskGraphBuilder.setMode(OperationMode.BATCH);
+//    computeGraphBuilder.setMode(OperationMode.BATCH);
 //
-//    DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
+//    ComputeGraph datapointsTaskGraph = computeGraphBuilder.build();
 //    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 //    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
 //    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
@@ -71,15 +71,15 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     DataSourceTask kMeansSourceTask = new DataSourceTask();
     SimpleDataAllReduceTask kMeansAllReduceTask = new SimpleDataAllReduceTask();
-    taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
-    ComputeConnection computeConnection = taskGraphBuilder.addSink(
+    computeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
+    ComputeConnection computeConnection = computeGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelism);
     computeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
         .withReductionFunction(new SimpleDataAggregator())
-        .withDataType(DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph simpleTaskGraph = taskGraphBuilder.build();
+        .withDataType(MessageTypes.OBJECT);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
+    ComputeGraph simpleTaskGraph = computeGraphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(simpleTaskGraph);
 //    taskExecutor.addInput(
 //        simpleTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
@@ -100,6 +100,24 @@ public class SourceTaskDataLoader extends TaskWorker {
     dataSource = config.getStringValue(MLDataObjectConstants.TRAINING_DATA_DIR, "");
   }
 
+  private static class SimpleDataAllReduceTask extends BaseSink {
+
+    private static final long serialVersionUID = 5705351508072337994L;
+
+    private Object object;
+
+//    @Override
+//    public DataPartition<Object> get() {
+//      return new EntityPartition<>(context.taskIndex(), object);
+//    }
+
+    @Override
+    public boolean execute(IMessage content) {
+      object = content.getContent();
+      LOG.info(String.format("Object Instance : %s", object.getClass().getName()));
+      return true;
+    }
+  }
 
   private class DataSourceTask extends BaseSource {
     private static final long serialVersionUID = -1836625523925581215L;
@@ -123,7 +141,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     private Object getTaskIndexDataPoints(int taskIndex) {
       EntityPartition<Object> datapointsEntityPartition
-          = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+          = (EntityPartition<Object>) dataPointsObject.getPartition(taskIndex);
       if (datapointsEntityPartition != null) {
         DataObject<?> dataObject
             = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
@@ -134,7 +152,7 @@ public class SourceTaskDataLoader extends TaskWorker {
 
     public Object getDataObjects(int taskIndex, DataObject<?> datapointsDataObject) {
       Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-          datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
+          datapointsDataObject.getPartition(taskIndex).getConsumer().next();
       List<Object> allObjects = new ArrayList<>();
 
       while (arrayListIterator.hasNext()) {
@@ -144,25 +162,6 @@ public class SourceTaskDataLoader extends TaskWorker {
       return allObjects.get(0);
     }
 
-  }
-
-  private static class SimpleDataAllReduceTask extends BaseSink {
-
-    private static final long serialVersionUID = 5705351508072337994L;
-
-    private Object object;
-
-//    @Override
-//    public DataPartition<Object> get() {
-//      return new EntityPartition<>(context.taskIndex(), object);
-//    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      object = (Object) content.getContent();
-      LOG.info(String.format("Object Instance : %s", object.getClass().getName()));
-      return true;
-    }
   }
 
   public class SimpleDataAggregator implements IFunction {

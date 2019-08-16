@@ -13,18 +13,18 @@ package edu.iu.dsc.tws.examples.task;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.JobParameters;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkResultsRecorder;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.window.BaseWindowSource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.window.BaseWindowSource;
 
 public abstract class BenchWindowTaskWorker extends TaskWorker {
 
@@ -34,9 +34,9 @@ public abstract class BenchWindowTaskWorker extends TaskWorker {
 
   protected static final String SINK = "sink";
 
-  protected DataFlowTaskGraph dataFlowTaskGraph;
+  protected ComputeGraph computeGraph;
 
-  protected TaskGraphBuilder taskGraphBuilder;
+  protected ComputeGraphBuilder computeGraphBuilder;
 
   protected ExecutionPlan executionPlan;
 
@@ -54,22 +54,22 @@ public abstract class BenchWindowTaskWorker extends TaskWorker {
   public void execute() {
 
     jobParameters = JobParameters.build(config);
-    taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     if (jobParameters.isStream()) {
-      taskGraphBuilder.setMode(OperationMode.STREAMING);
+      computeGraphBuilder.setMode(OperationMode.STREAMING);
     } else {
-      taskGraphBuilder.setMode(OperationMode.BATCH);
+      computeGraphBuilder.setMode(OperationMode.BATCH);
     }
 
 
     inputDataArray = DataGenerator.generateIntData(jobParameters.getSize());
 
     buildTaskGraph();
-    dataFlowTaskGraph = taskGraphBuilder.build();
-    executionPlan = taskExecutor.plan(dataFlowTaskGraph);
+    computeGraph = computeGraphBuilder.build();
+    executionPlan = taskExecutor.plan(computeGraph);
   }
 
-  public abstract TaskGraphBuilder buildTaskGraph();
+  public abstract ComputeGraphBuilder buildTaskGraph();
 
   protected static class SourceWindowTask extends BaseWindowSource {
 

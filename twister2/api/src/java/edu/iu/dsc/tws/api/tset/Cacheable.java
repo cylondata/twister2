@@ -13,9 +13,11 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
  * All Tsets that are cachable need to implement this interface
@@ -26,10 +28,44 @@ public interface Cacheable<T> extends Serializable {
 
   /**
    * retrieve data saved in the TSet
+   * <p>
+   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
+   * this would unnecessarily loads data to the memory from the partition consumer
    *
    * @return dataObject
    */
-  List<T> getData();
+  default List<T> getData() {
+    List<T> results = new ArrayList<>();
+
+    if (getDataObject() != null) {
+      for (DataPartition<T> partition : getDataObject().getPartitions()) {
+        while (partition.getConsumer().hasNext()) {
+          results.add(partition.getConsumer().next());
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * get the data from the given partition.
+   * <p>
+   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
+   * this would unnecessarily loads data to the memory from the partition consumer
+   *
+   * @param partitionId the partition ID
+   * @return the data related to the given partition
+   */
+  default List<T> getData(int partitionId) {
+    DataPartition<T> partition = getDataObject().getPartition(partitionId);
+    List<T> results = new ArrayList<>();
+    while (partition.getConsumer().hasNext()) {
+      results.add(partition.getConsumer().next());
+    }
+
+    return results;
+  }
 
   /**
    * retrieve data saved in the TSet
@@ -38,20 +74,12 @@ public interface Cacheable<T> extends Serializable {
    */
   DataObject<T> getDataObject();
 
-  /**
-   * get the data from the given partition
-   *
-   * @param partitionId the partition ID
-   * @return the data related to the given partition
-   */
-  T getPartitionData(int partitionId);
-
-  /**
-   * Add Data to the data object
-   *
-   * @param value value to be added
-   * @return true if the data was added successfully or false otherwise
-   */
-  boolean addData(T value);
+//  /**
+//   * Add Data to the data object
+//   *
+//   * @param value value to be added
+//   * @return true if the data was added successfully or false otherwise
+//   */
+//  boolean addData(T value);
 
 }

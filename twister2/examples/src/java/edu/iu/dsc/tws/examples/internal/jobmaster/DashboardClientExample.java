@@ -15,19 +15,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 public final class DashboardClientExample {
   private static final Logger LOG = Logger.getLogger(DashboardClientExample.class.getName());
 
-  private DashboardClientExample() { }
+  private DashboardClientExample() {
+  }
 
   public static void main(String[] args) {
 

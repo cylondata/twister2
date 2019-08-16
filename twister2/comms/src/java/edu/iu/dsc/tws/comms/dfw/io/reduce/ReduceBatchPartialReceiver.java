@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.reduce;
 
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 
 public class ReduceBatchPartialReceiver extends ReduceBatchReceiver {

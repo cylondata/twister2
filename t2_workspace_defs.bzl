@@ -7,6 +7,8 @@ _MAVEN_MIRRORS = [
     "http://bazel-mirror.storage.googleapis.com/repo1.maven.org/maven2/",
     "http://repo1.maven.org/maven2/",
     "http://maven.ibiblio.org/maven2/",
+    "http://repo.exist.com/maven2/",
+    "http://www.ibiblio.net/pub/packages/maven2/",
 ]
 
 deps = []
@@ -36,16 +38,36 @@ def _maven_import(artifact, sha256, licenses, **kwargs):
 def load_modules():
     #Protocol Buffers
     _maven_import(
-        artifact = "com.google.protobuf:protobuf-java:3.5.0",
+        artifact = "com.google.protobuf:protobuf-java:3.9.0",
         licenses = ["notice"],
-        sha256 = "49a3c7b3781d4b7b2d15063e125824260c9b46bdb62494b63b367b661fdb2b26",
+        sha256 = "6c96d85eac237fea84d9d5e7413c85b62f2df0b9f7b17b0168bd1e28b09ff0e8",
     )
 
-    native.http_archive(
+    http_archive(
         name = "com_google_protobuf",
-        sha256 = "cef7f1b5a7c5fba672bec2a319246e8feba471f04dcebfe362d55930ee7c1c30",
-        strip_prefix = "protobuf-3.5.0",
-        urls = ["https://github.com/google/protobuf/archive/v3.5.0.zip"],
+        strip_prefix = "protobuf-3.9.0",
+        urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.9.0.tar.gz"],
+    )
+
+    http_archive(
+        name = "com_google_protobuf_javalite",
+        strip_prefix = "protobuf-javalite",
+        urls = ["https://github.com/google/protobuf/archive/javalite.zip"],
+    )
+
+    http_archive(
+        name = "zlib",
+        build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
+        sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+        strip_prefix = "zlib-1.2.11",
+        urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
+    )
+
+    http_archive(
+        name = "rules_proto",
+        sha256 = "88b0a90433866b44bb4450d4c30bc5738b8c4f9c9ba14e9661deb123f56a833d",
+        strip_prefix = "rules_proto-b0cc14be5da05168b01db282fe93bdf17aa2b9f4",
+        urls = ["https://github.com/bazelbuild/rules_proto/archive/b0cc14be5da05168b01db282fe93bdf17aa2b9f4.tar.gz"],
     )
 
     #Guava
@@ -58,7 +80,7 @@ def load_modules():
     #Skylib
     skylib_version = "9430df29e4c648b95bf39a57e4336b44a0a0582a"
 
-    native.http_archive(
+    http_archive(
         name = "bazel_skylib",
         strip_prefix = "bazel-skylib-{}".format(skylib_version),
         urls = ["https://github.com/bazelbuild/bazel-skylib/archive/{}.zip".format(skylib_version)],

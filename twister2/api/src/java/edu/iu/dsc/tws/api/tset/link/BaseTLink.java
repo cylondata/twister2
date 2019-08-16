@@ -11,90 +11,122 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 
-public abstract class BaseTLink<T> implements TLink<T> {
-
-  /**
-   * The children of this set
-   */
-  protected List<TBase<?>> children;
+/**
+ * Base link impl for all the links
+ *
+ * @param <T1> output type from the comms
+ * @param <T0> base type
+ */
+public abstract class BaseTLink<T1, T0> implements BuildableTLink {
 
   /**
    * The TSet Env used for runtime operations
    */
-  protected TSetEnv tSetEnv;
-
+  private TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
    */
-  protected String name;
+  private String name;
 
   /**
-   * The parallelism of the set
+   * ID of the tlink
    */
-  protected int parallel = 4;
-  /**
-   * The configuration
-   */
-  protected Config config;
+  private String id;
 
-  public BaseTLink(Config cfg, TSetEnv tSetEnv) {
-    this.children = new ArrayList<>();
-    this.tSetEnv = tSetEnv;
-    this.config = cfg;
+  private int sourceParallelism;
+
+  private int targetParallelism;
+
+  public BaseTLink(TSetEnvironment env, String n) {
+    this(env, n, env.getDefaultParallelism());
+  }
+
+  public BaseTLink(TSetEnvironment env, String n, int sourceP) {
+    this(env, n, sourceP, sourceP);
+  }
+
+  public BaseTLink(TSetEnvironment env, String n, int sourceP, int targetP) {
+    this.tSetEnv = env;
+    this.id = n;
+    this.sourceParallelism = sourceP;
+    this.targetParallelism = targetP;
+
+    this.name = n;
   }
 
   @Override
-  public BaseTLink<T> setName(String n) {
-    this.name = n;
-    return this;
+  public String getId() {
+    return id;
   }
 
+  @Override
   public String getName() {
     return name;
   }
 
-  public int getParallelism() {
-    return parallel;
-  }
-
-  @Override
-  public void build() {
-// first build our selves
-    baseBuild();
-
-    // then build children
-    for (TBase<?> c : children) {
-      c.build();
-    }
+  protected void rename(String n) {
+    this.name = n;
   }
 
   protected Class getType() {
-    TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
+    TypeToken<T1> typeToken = new TypeToken<T1>(getClass()) {
     };
     return typeToken.getRawType();
   }
 
-  /**
-   * Override the parallelism
-   *
-   * @return if overide, return value, otherwise -1
-   */
-  public int overrideParallelism() {
-    return -1;
+  //todo: this always return Object type!!!
+  protected MessageType getMessageType() {
+    return TSetUtils.getDataType(getType());
   }
 
-  public List<TBase<?>> getChildren() {
-    return children;
+  protected void addChildToGraph(TBase child) {
+    tSetEnv.getGraph().addTSet(this, child);
   }
 
+  public TSetEnvironment getTSetEnv() {
+    return tSetEnv;
+  }
+
+  public int getSourceParallelism() {
+    return sourceParallelism;
+  }
+
+  public int getTargetParallelism() {
+    return targetParallelism;
+  }
+
+  @Override
+  public String toString() {
+    return getName() + "(" + getId() + "){"
+        + tSetEnv.getGraph().getPredecessors(this)
+        + "->" + tSetEnv.getGraph().getSuccessors(this)
+        + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    BaseTLink<?, ?> baseTLink = (BaseTLink<?, ?>) o;
+    return id.equals(baseTLink.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
+  }
 }

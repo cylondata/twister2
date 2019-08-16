@@ -25,24 +25,24 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 
 public final class ZKJobMasterFinderExample {
   private static final Logger LOG = Logger.getLogger(ZKJobMasterFinderExample.class.getName());
 
-  private ZKJobMasterFinderExample() { }
+  private ZKJobMasterFinderExample() {
+  }
 
   /**
    * This class is used together with ZKJobMasterRegistrarExample.java
    * That class registers the Job Master and this class discovers it
-   *
+   * <p>
    * This class tries to get the Job Master address from a ZooKeeper server
    * If the Job Master has not been registered yet,
    * it can wait for it to be registered
-   *
    */
   public static void main(String[] args) {
 
@@ -73,7 +73,6 @@ public final class ZKJobMasterFinderExample {
 
   /**
    * construct a test Config object
-   * @return
    */
   public static Config buildTestConfig(String zkAddress, String jobName) {
     return Config.newBuilder()

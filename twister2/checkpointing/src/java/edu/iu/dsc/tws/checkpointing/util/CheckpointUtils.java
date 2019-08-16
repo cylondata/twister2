@@ -13,11 +13,11 @@ package edu.iu.dsc.tws.checkpointing.util;
 
 import java.io.IOException;
 
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
-import edu.iu.dsc.tws.checkpointing.api.StateStore;
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.net.tcp.request.MessageHandler;
 
 public final class CheckpointUtils {
 

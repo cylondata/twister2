@@ -17,17 +17,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 public class SinkBatchInstance implements INodeInstance, ISync {
   /**
@@ -98,7 +100,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
 
   /**
    * Task schedule plan contains information about whole topology. This will be passed to
-   * {@link edu.iu.dsc.tws.task.api.TaskContext} to expose necessary information
+   * {@link TaskContext} to expose necessary information
    */
   private TaskSchedulePlan taskSchedule;
 
@@ -148,7 +150,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
 
   public void prepare(Config cfg) {
     context = new TaskContextImpl(batchTaskIndex, taskId, globalTaskId, taskName,
-        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule);
+        parallelism, workerId, nodeConfigs, inputEdges, taskSchedule, OperationMode.BATCH);
     batchTask.prepare(cfg, context);
 
     /// we will use this array for iteration
@@ -179,7 +181,8 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       boolean needsFurther = progressCommunication();
 
       // we don't have incoming and our inqueue in empty
-      if (state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty()) {
+      if ((state.isSet(InstanceState.EXECUTING) && batchInQueue.isEmpty())
+          || (batchInQueue.isEmpty() && state.isSet(InstanceState.SYNCED))) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }

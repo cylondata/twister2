@@ -26,16 +26,16 @@ import java.util.logging.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
-import edu.iu.dsc.tws.executor.api.ExecutionState;
-import edu.iu.dsc.tws.executor.api.IExecution;
-import edu.iu.dsc.tws.executor.api.IExecutor;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionState;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
 
 public class BatchSharingExecutor2 implements IExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor2.class.getName());
@@ -187,7 +187,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
           + "have more workers than tasks", workerId));
-      return null;
+      return new NullExecutor();
     }
 
     BatchWorker[] workers = scheduleExecution(nodes);

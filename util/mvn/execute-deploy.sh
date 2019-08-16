@@ -46,9 +46,60 @@ deploy_proto_library() {
     "${EXTRA_MAVEN_ARGS[@]:+${EXTRA_MAVEN_ARGS[@]}}"
 }
 
+# APIs
+
 deploy_library \
   twister2/api/src/java/libapi-java.jar \
   twister2/api/src/java/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/libcheckpointing-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/comms/libcomms-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/comms/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/config/libconfig-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/config/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/data/libdata-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/data/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/libdataset-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/libexceptions-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/net/libnetwork-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/net/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/resource/libresource-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/resource/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/libscheduler-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute/libtask-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/tset/libtset-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/tset/pom.xml
+
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/util/libapi-utils-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/util/pom.xml
+# End of APIs
 
 deploy_library \
   twister2/common/src/java/libcommon-java.jar \
@@ -103,4 +154,15 @@ deploy_proto_library \
   twister2/proto/pom.xml \
   twister2/proto/libproto-speed.jar
 
+deploy_library \
+  twister2/proto/utils/libproto-utils-java.jar \
+  twister2/proto/utils/pom.xml
+
+deploy_library \
+  twister2/compatibility/harp/libtwister2-harp.jar \
+  twister2/compatibility/harp/pom.xml
+
+deploy_library \
+  twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
+  twister2/tools/local-runner/src/java/pom.xml
 

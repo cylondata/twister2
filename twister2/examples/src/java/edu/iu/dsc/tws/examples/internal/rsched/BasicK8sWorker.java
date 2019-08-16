@@ -31,19 +31,19 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerResourceUtils;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.common.worker.JobListener;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 
 public class BasicK8sWorker implements IWorker, JobListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
@@ -200,9 +200,9 @@ public class BasicK8sWorker implements IWorker, JobListener {
   public void printWorkersPerNode(Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode) {
 
     StringBuffer toPrint = new StringBuffer();
-    for (String nodeIP: workersPerNode.keySet()) {
+    for (String nodeIP : workersPerNode.keySet()) {
       toPrint.append("\n" + nodeIP + ": ");
-      for (JobMasterAPI.WorkerInfo workerInfo: workersPerNode.get(nodeIP)) {
+      for (JobMasterAPI.WorkerInfo workerInfo : workersPerNode.get(nodeIP)) {
         toPrint.append(workerInfo.getWorkerID() + ", ");
       }
     }
@@ -237,7 +237,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
       LOG.info("Files in the directory: " + path.getName());
       int i = 0;
 
-      for (FileStatus fileStatus: fileSystem.listStatus(path)) {
+      for (FileStatus fileStatus : fileSystem.listStatus(path)) {
         LOG.info(i++ + ": " + fileStatus.getPath().toUri() + "\t" + fileStatus.getLen() + " bytes");
       }
       fileSystem.close();

@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
+load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
 
 #JOB STATE
 #native.proto_library(
@@ -64,7 +65,7 @@ load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
 #)
 
 #UNIFIED JAR
-native.proto_library(
+proto_library(
     name = "proto",
     srcs = [
         "checkpoint.proto",

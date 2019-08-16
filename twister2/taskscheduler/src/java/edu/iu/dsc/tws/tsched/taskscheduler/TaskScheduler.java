@@ -17,15 +17,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * This class invokes the appropriate task schedulers based on the 'streaming' or 'batch' task types
@@ -37,7 +37,7 @@ public class TaskScheduler implements ITaskScheduler {
 
   private Config config;
 
-  private DataFlowTaskGraph dataFlowTaskGraph;
+  private ComputeGraph computeGraph;
 
   private WorkerPlan workerPlan;
 
@@ -61,9 +61,9 @@ public class TaskScheduler implements ITaskScheduler {
    * either "batch" or "streaming" based on the task type.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan plan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan plan) {
 
-    this.dataFlowTaskGraph = graph;
+    this.computeGraph = graph;
     this.workerPlan = plan;
 
     TaskSchedulePlan taskSchedulePlan = null;
@@ -118,8 +118,8 @@ public class TaskScheduler implements ITaskScheduler {
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
       method = taskSchedulerClass.getMethod("schedule",
-          new Class<?>[]{DataFlowTaskGraph.class, WorkerPlan.class});
-      taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, dataFlowTaskGraph,
+          new Class<?>[]{ComputeGraph.class, WorkerPlan.class});
+      taskSchedulePlan = (TaskSchedulePlan) method.invoke(newInstance, computeGraph,
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
         | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
@@ -127,13 +127,13 @@ public class TaskScheduler implements ITaskScheduler {
     }
 
     if (taskSchedulePlan != null) {
-      Map<Integer, ContainerPlan> containersMap
+      Map<Integer, WorkerSchedulePlan> containersMap
           = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
         Integer integer = entry.getKey();
-        ContainerPlan containerPlan = entry.getValue();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances
-            = containerPlan.getTaskInstances();
+            = workerSchedulePlan.getTaskInstances();
         LOG.fine("Task Details for Container Id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
           LOG.fine("Task Id:" + ip.getTaskId()

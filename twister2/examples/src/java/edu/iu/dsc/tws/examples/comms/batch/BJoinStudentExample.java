@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -21,15 +20,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BJoin;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BJoin;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
@@ -49,10 +48,9 @@ public class BJoinStudentExample extends KeyedBenchWorker {
   private Lock lock = new ReentrantLock();
 
   @Override
-  protected void execute() {
+  protected void execute(WorkerEnvironment workerEnv) {
     //Setting up the task plan for the join operation
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
+
 
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
@@ -66,25 +64,23 @@ public class BJoinStudentExample extends KeyedBenchWorker {
     }
     int target = noOfSourceTasks;
 
-    if (!taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
       joinDone = true;
     }
 
     // create the join communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        MessageTypes.INTEGER,
         MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
         new SimpleKeyBasedSelector(), false,
-        new Comparator<Object>() {
-          @Override
-          public int compare(Object o1, Object o2) {
-            if (o1 instanceof String && o2 instanceof String) {
-              return ((String) o1).compareTo((String) o2);
-            }
-            return 0;
+        (o1, o2) -> {
+          if (o1 instanceof String && o2 instanceof String) {
+            return ((String) o1).compareTo((String) o2);
           }
-        });
+          return 0;
+        }, CommunicationContext.JoinType.INNER);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
 
     // now initialize the workers
@@ -127,7 +123,7 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && join.isComplete();
   }
 
   @Override
@@ -140,18 +136,17 @@ public class BJoinStudentExample extends KeyedBenchWorker {
    * key and value pairs of each result from the join operation
    */
   public class JoinReceiver implements BulkReceiver {
-    private int expected;
 
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
-      expected = expectedIds.size() * jobParameters.getIterations();
     }
 
     @Override
     public boolean receive(int target, Iterator<Object> it) {
       while (it.hasNext()) {
-        ImmutablePair item = (ImmutablePair) it.next();
-        LOG.info("Key " + item.getKey() + " : Value " + item.getValue());
+        JoinedTuple item = (JoinedTuple) it.next();
+        LOG.info("Key " + item.getKey() + " : left " + item.getLeftValue()
+            + " right: " + item.getRightValue());
       }
       joinDone = true;
 

@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BDirect;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BDirect;
 import edu.iu.dsc.tws.examples.Utils;
 
 public class InputDataStreamer extends CommsWorker {
@@ -35,9 +35,7 @@ public class InputDataStreamer extends CommsWorker {
 
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        taskStages, workerList);
+  protected void execute(WorkerEnvironment workerEnv) {
     List<Integer> sources = new ArrayList<>();
     List<Integer> targets = new ArrayList<>();
     Integer noOfSourceTasks = taskStages.get(0);
@@ -49,11 +47,11 @@ public class InputDataStreamer extends CommsWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    direct = new BDirect(communicator, taskPlan, sources, targets,
+    direct = new BDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new DirectReceiver(), MessageTypes.DOUBLE);
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         taskStages, 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -74,7 +72,7 @@ public class InputDataStreamer extends CommsWorker {
 
   @Override
   protected boolean isDone() {
-    return directDone && sourcesDone && !direct.hasPending();
+    return directDone && sourcesDone && direct.isComplete();
   }
 
   @Override
@@ -96,6 +94,11 @@ public class InputDataStreamer extends CommsWorker {
     taskStages.add(0, this.svmJobParameters.getParallelism());
     taskStages.add(1, this.svmJobParameters.getParallelism());
     return taskStages;
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    direct.finish(src);
   }
 
   public class DirectReceiver implements BulkReceiver {
@@ -121,10 +124,5 @@ public class InputDataStreamer extends CommsWorker {
       }
       return true;
     }
-  }
-
-  @Override
-  protected void finishCommunication(int src) {
-    direct.finish(src);
   }
 }

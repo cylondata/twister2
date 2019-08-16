@@ -14,17 +14,16 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -36,7 +35,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * Lets keep track of the messages, we need to keep track of the messages for each target
    * and source, Map<target, Queue<messages>>
    */
-  protected Int2ObjectOpenHashMap<Queue<Object>> messages = new Int2ObjectOpenHashMap<>();
+  protected Int2ObjectOpenHashMap<List<Object>> messages = new Int2ObjectOpenHashMap<>();
 
   /**
    * The worker id this receiver is in
@@ -56,7 +55,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * The source task connected to this partial receiver
    */
-  private int representSource;
+  protected int representSource;
 
   /**
    * Keep weather source is set
@@ -76,7 +75,7 @@ public abstract class TargetReceiver implements MessageReceiver {
   /**
    * The lock
    */
-  private Lock lock = new ReentrantLock();
+  protected Lock lock = new ReentrantLock();
 
   /**
    * Sources we are expecting messages from
@@ -105,7 +104,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getTaskPlan().getThisExecutor();
+    workerId = op.getLogicalPlan().getThisExecutor();
     operation = op;
     lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
@@ -125,49 +124,51 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   @Override
   public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    lock.lock();
-    try {
-      if (!representSourceSet) {
-        this.representSource = source;
-        representSourceSet = true;
-      }
+    if (lock.tryLock()) {
+      try {
+        if (!representSourceSet) {
+          this.representSource = source;
+          representSourceSet = true;
+        }
 
-      if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-        addSyncMessage(source, target);
+        if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
+          addSyncMessage(source, target);
+          return true;
+        } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+          addSyncMessageBarrier(source, target, (byte[]) object);
+          return true;
+        }
+
+        // if we have a sync from this source we cannot accept more data
+        // until we finish this sync
+        if (!canAcceptMessage(source, target)) {
+          return false;
+        }
+
+        if (object instanceof ChannelMessage) {
+          ((ChannelMessage) object).incrementRefCount();
+        }
+
+        List<Object> msgQueue = messages.get(target);
+        addMessage(target, msgQueue, object);
+
+        if (msgQueue.size() > lowWaterMark) {
+          merge(target, msgQueue);
+        }
+
+        if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
+          addSyncMessage(source, target);
+        }
+
         return true;
-      } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
-        addSyncMessageBarrier(source, target, (byte[]) object);
-        return true;
+      } finally {
+        lock.unlock();
       }
-
-      // if we have a sync from this source we cannot accept more data
-      // until we finish this sync
-      if (!canAcceptMessage(source, target)) {
-        return false;
-      }
-
-      if (object instanceof ChannelMessage) {
-        ((ChannelMessage) object).incrementRefCount();
-      }
-
-      Queue<Object> msgQueue = messages.get(target);
-      addMessage(msgQueue, object);
-
-      if (msgQueue.size() > lowWaterMark) {
-        merge(target, msgQueue);
-      }
-
-      if ((flags & MessageFlags.SYNC_MESSAGE) == MessageFlags.SYNC_MESSAGE) {
-        addSyncMessage(source, target);
-      }
-
-      return true;
-    } finally {
-      lock.unlock();
     }
+    return false;
   }
 
-  protected void addMessage(Queue<Object> msgQueue, Object value) {
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
     if (value instanceof AggregatedObjects) {
       msgQueue.addAll((Collection<?>) value);
     } else {
@@ -206,71 +207,9 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  protected abstract void merge(int dest, Queue<Object> dests);
+  protected abstract void merge(int dest, List<Object> dests);
 
-  @Override
-  public boolean progress() {
-    boolean needsFurtherProgress = false;
 
-    lock.lock();
-    try {
-      boolean allEmpty = true;
-      for (int i = 0; i < targets.length; i++) {
-        int key = targets[i];
-        if (!messages.containsKey(key)) {
-          continue;
-        }
-
-        Queue<Object> val = messages.get(key);
-
-        if (val.size() > 0) {
-          merge(key, val);
-        }
-
-        // check weather we are ready to send and we have values to send
-        if (!isFilledToSend(key)) {
-          continue;
-        }
-
-        // if we send this list successfully
-        if (!sendToTarget(representSource, key)) {
-          needsFurtherProgress = true;
-        }
-        allEmpty &= val.isEmpty();
-      }
-
-      if (!allEmpty || !sync()) {
-        needsFurtherProgress = true;
-      }
-    } finally {
-      lock.unlock();
-    }
-
-    return needsFurtherProgress;
-  }
-
-  /**
-   * Handle the sync
-   *
-   * @return true if everything is synced
-   */
-  protected abstract boolean sync();
-
-  /**
-   * Check weather all the other information is flushed
-   *
-   * @return true if there is nothing to process
-   */
-  protected boolean isAllEmpty() {
-    for (int i = 0; i < targets.length; i++) {
-      Queue<Object> queue = messages.get(targets[i]);
-      if (queue.size() > 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   /**
    * Clear all the buffers for the target, to ready for the next
@@ -278,7 +217,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param target target
    */
   protected void clearTarget(int target) {
-    Queue<Object> messagesPerTarget = messages.get(target);
+    List<Object> messagesPerTarget = messages.get(target);
     messagesPerTarget.clear();
   }
 

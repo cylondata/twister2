@@ -10,18 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
 package org.apache.storm.topology;
 
 import java.io.Serializable;
@@ -36,17 +24,17 @@ import org.apache.storm.topology.twister2.Twister2BoltGrouping;
 import org.apache.storm.topology.twister2.Twister2Spout;
 import org.apache.storm.topology.twister2.Twister2StormNode;
 
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class TopologyBuilder implements Serializable {
 
   private static final Logger LOG = Logger.getLogger(TopologyBuilder.class.getName());
 
-  private transient TaskGraphBuilder taskGraphBuilder;
+  private transient ComputeGraphBuilder computeGraphBuilder;
   private HashMap<String, Twister2StormNode> nodes = new HashMap<>();
 
   private Set<String> sinkNodes = new HashSet<>(); //these are the sinks in twister2
@@ -54,7 +42,7 @@ public class TopologyBuilder implements Serializable {
   private Set<String> computeNodes = new HashSet<>(); //these are the computes in twister2
 
   public TopologyBuilder() {
-    this.taskGraphBuilder = TaskGraphBuilder.newBuilder(Config.newBuilder().build());
+    this.computeGraphBuilder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
   }
 
   private String generateEdgeName(Twister2BoltGrouping t2BoltGrouping, String destination) {
@@ -84,7 +72,7 @@ public class TopologyBuilder implements Serializable {
           LOG.info("Adding direct grouping : " + grouping);
           computeConnection.direct(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case SHUFFLE:
           LOG.info("Adding shuffle grouping : " + grouping
@@ -92,13 +80,13 @@ public class TopologyBuilder implements Serializable {
               + this.generateEdgeName(grouping, nodeId));
           computeConnection.partition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         case FIELD:
           computeConnection.keyedPartition(grouping.getComponentId())
               .viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT)
-              .withKeyType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT)
+              .withKeyType(MessageTypes.OBJECT);
           nodes.get(grouping.getComponentId()).setKeyedOutEdges(
               grouping.getStreamId(),
               grouping.getGroupingKey()
@@ -108,7 +96,7 @@ public class TopologyBuilder implements Serializable {
           computeConnection.broadcast(
               grouping.getComponentId()
           ).viaEdge(this.generateEdgeName(grouping, nodeId))
-              .withDataType(DataType.OBJECT);
+              .withDataType(MessageTypes.OBJECT);
           break;
         default:
           throw new UnsupportedOperationException(
@@ -122,7 +110,7 @@ public class TopologyBuilder implements Serializable {
     this.sourceNodes.forEach(source -> {
       Twister2Spout twister2Spout = (Twister2Spout) nodes.get(source);
       LOG.info("Adding source : " + source);
-      this.taskGraphBuilder.addSource(
+      this.computeGraphBuilder.addSource(
           source,
           twister2Spout,
           twister2Spout.getParallelism()
@@ -131,7 +119,7 @@ public class TopologyBuilder implements Serializable {
 
     this.computeNodes.forEach(compute -> {
       Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(compute);
-      ComputeConnection computeConnection = this.taskGraphBuilder.addCompute(
+      ComputeConnection computeConnection = this.computeGraphBuilder.addCompute(
           compute,
           twister2Bolt,
           twister2Bolt.getParallelism()
@@ -141,7 +129,7 @@ public class TopologyBuilder implements Serializable {
 
     this.sinkNodes.forEach(sink -> {
       Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(sink);
-      ComputeConnection computeConnection = this.taskGraphBuilder.addSink(
+      ComputeConnection computeConnection = this.computeGraphBuilder.addSink(
           sink,
           twister2Bolt,
           twister2Bolt.getParallelism()
@@ -149,9 +137,9 @@ public class TopologyBuilder implements Serializable {
       this.defineGrouping(twister2Bolt, computeConnection);
     });
 
-    this.taskGraphBuilder.setMode(OperationMode.STREAMING);
+    this.computeGraphBuilder.setMode(OperationMode.STREAMING);
 
-    return new StormTopology(this.taskGraphBuilder.build());
+    return new StormTopology(this.computeGraphBuilder.build());
   }
 
   public BoltDeclarer setBolt(String id, IRichBolt bolt) {

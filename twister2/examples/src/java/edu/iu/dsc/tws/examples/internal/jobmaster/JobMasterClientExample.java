@@ -30,46 +30,45 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.exceptions.TimeoutException;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
 
-  private JobMasterClientExample() { }
+  private JobMasterClientExample() {
+  }
 
   /**
    * a test class to run JMWorkerAgent
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
-   *
+   * <p>
    * It reads config files from conf/kubernetes directory
    * It uses the first ComputeResource in that config file as the ComputeResource of this worker
    * Number of workers is the number of workers in the first ComputeResource
-   *
+   * <p>
    * When all workers joined, they get the full worker list
    * Then, each worker sends a barrier message
    * Then, each worker sends a completed message and closes
-   *
-   * @param args
    */
   public static void main(String[] args) {
 
     // we assume that the twister2Home is the current directory
     String configDir = "conf/kubernetes/";
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
+    Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     config = updateConfig(config);
     LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
 
@@ -144,7 +143,6 @@ public final class JobMasterClientExample {
 
   /**
    * construct a Config object
-   * @return
    */
   public static Config updateConfig(Config config) {
     return Config.newBuilder()
@@ -155,9 +153,6 @@ public final class JobMasterClientExample {
 
   /**
    * generate the additional requested ports for this worker
-   * @param config
-   * @param workerPort
-   * @return
    */
   public static Map<String, Integer> generateAdditionalPorts(Config config, int workerPort) {
 
@@ -169,7 +164,7 @@ public final class JobMasterClientExample {
 
     HashMap<String, Integer> ports = new HashMap<>();
     int i = 1;
-    for (String portName: portNames) {
+    for (String portName : portNames) {
       ports.put(portName, workerPort + i++);
     }
 

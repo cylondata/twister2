@@ -22,36 +22,44 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.DataPartition;
 import edu.iu.dsc.tws.examples.Utils;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class MDSWorker extends TaskWorker {
+public class MDSWorker implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(MDSWorker.class.getName());
 
   @Override
-  public void execute() {
-
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+        workerController, persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
     MDSWorkerParameters mdsWorkerParameters = MDSWorkerParameters.build(config);
 
     int parallel = mdsWorkerParameters.getParallelismValue();
@@ -77,7 +85,7 @@ public class MDSWorker extends TaskWorker {
         directory, datasize);
     MDSDataObjectSink mdsDataObjectSink = new MDSDataObjectSink(matrixColumLength);
 
-    TaskGraphBuilder mdsDataProcessingGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder mdsDataProcessingGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     mdsDataProcessingGraphBuilder.setTaskGraphName("MDSDataProcessing");
     mdsDataProcessingGraphBuilder.addSource("dataobjectsource", mdsDataObjectSource, parallel);
 
@@ -85,10 +93,10 @@ public class MDSWorker extends TaskWorker {
         "dataobjectsink", mdsDataObjectSink, parallel);
     dataObjectComputeConnection.direct("dataobjectsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     mdsDataProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
+    ComputeGraph dataObjectTaskGraph = mdsDataProcessingGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan plan = taskExecutor.plan(dataObjectTaskGraph);
 
@@ -103,17 +111,17 @@ public class MDSWorker extends TaskWorker {
     MDSSourceTask generatorTask = new MDSSourceTask();
     MDSReceiverTask receiverTask = new MDSReceiverTask();
 
-    TaskGraphBuilder mdsComputeProcessingGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder mdsComputeProcessingGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     mdsComputeProcessingGraphBuilder.setTaskGraphName("MDSCompute");
     mdsComputeProcessingGraphBuilder.addSource("generator", generatorTask, parallel);
     ComputeConnection computeConnection = mdsComputeProcessingGraphBuilder.addSink("receiver",
         receiverTask, parallel);
     computeConnection.direct("generator")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     mdsComputeProcessingGraphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();
+    ComputeGraph mdsTaskGraph = mdsComputeProcessingGraphBuilder.build();
 
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(mdsTaskGraph);
@@ -134,7 +142,7 @@ public class MDSWorker extends TaskWorker {
 
     @Override
     public void execute() {
-      DataPartition<?> dataPartition = dataPointsObject.getPartitions(context.taskIndex());
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (short[]) dataPartition.getConsumer().next();
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, "MDS Execution");
     }

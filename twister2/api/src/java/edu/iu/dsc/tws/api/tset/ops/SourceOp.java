@@ -11,57 +11,61 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
 
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.tset.CacheableImpl;
-import edu.iu.dsc.tws.api.tset.Constants;
-import edu.iu.dsc.tws.api.tset.Source;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 
-public class SourceOp<T> implements ISource, Receptor {
-  private static final Logger LOG = Logger.getLogger(SourceOp.class.getName());
-
+public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   private static final long serialVersionUID = -2400242961L;
 
   private TaskContext context;
+  private TSetContext tSetContext;
 
-  private Source<T> dataSet;
+  private List<String> outEdges;
+  private SourceFunc<T> source;
 
-  public SourceOp() {
-
-  }
-
-  public SourceOp(Source<T> src) {
-    this.dataSet = src;
+  public SourceOp(SourceFunc<T> src) {
+    this.source = src;
   }
 
   @Override
   public void execute() {
-    if (dataSet.hasNext()) {
-      T t = dataSet.next();
-      if (t != null) {
-        context.write(Constants.DEFAULT_EDGE, t);
-      }
+    if (source.hasNext()) {
+      writeToEdges(source.next());
     } else {
-      context.end(Constants.DEFAULT_EDGE);
+      writeEndToEdges();
     }
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    TSetContext tSetContext = new TSetContext(cfg, ctx.taskIndex(), ctx.globalTaskId(),
-        ctx.taskName(), ctx.getParallelism(), ctx.getWorkerId(), ctx.getConfigurations());
-    dataSet.prepare(tSetContext);
+    this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
+
+    this.tSetContext = new TSetContext(cfg, ctx);
+
+    this.source.prepare(tSetContext);
   }
 
   @Override
   public void add(String name, DataObject<?> data) {
-    dataSet.addInput(name, new CacheableImpl<>(data));
+    this.tSetContext.addInput(name, data);
+  }
+
+  @Override
+  public TaskContext getTaskContext() {
+    return this.context;
+  }
+
+  @Override
+  public List<String> getEdges() {
+    return outEdges;
   }
 }

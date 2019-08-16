@@ -37,25 +37,25 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.resource.FSPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
-import edu.iu.dsc.tws.common.resource.NodeInfoUtils;
-import edu.iu.dsc.tws.common.resource.WorkerInfoUtils;
 import edu.iu.dsc.tws.common.util.NetworkUtils;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.FSPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
+import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadContext;
 import edu.iu.dsc.tws.rsched.schedulers.nomad.NomadTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -94,7 +94,7 @@ public final class MPIWorker {
   private MPIWorker(String[] args) {
     Options cmdOptions = null;
     try {
-      MPI.Init(args);
+      MPI.InitThread(args, MPI.THREAD_MULTIPLE);
       int rank = MPI.COMM_WORLD.getRank();
 
       cmdOptions = setupOptions();
@@ -237,7 +237,7 @@ public final class MPIWorker {
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers);
-    LOG.log(Level.INFO, String.format("Connecting to job master %s:%d", masterHost, masterPort));
+    LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
 
     // now lets send the starting message
@@ -334,7 +334,7 @@ public final class MPIWorker {
             + "twister_home: %s container_class: %s config_dir: %s cluster_type: %s",
         twister2Home, container, configDir, clusterType));
 
-    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir + "/" + clusterType);
+    Config cfg = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
 
     Config workerConfig = Config.newBuilder().putAll(cfg).
         put(MPIContext.TWISTER2_HOME.getKey(), twister2Home).

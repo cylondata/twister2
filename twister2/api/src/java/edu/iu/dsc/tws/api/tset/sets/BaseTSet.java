@@ -12,50 +12,39 @@
 
 package edu.iu.dsc.tws.api.tset.sets;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSet;
-import edu.iu.dsc.tws.api.tset.TSetEnv;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 
-public abstract class BaseTSet<T> implements TSet<T> {
-  private static final Logger LOG = Logger.getLogger(BaseTSet.class.getName());
-  /**
-   * The children of this set
-   */
-  protected List<TBase<?>> children;
+public abstract class BaseTSet<T> implements BuildableTSet {
 
   /**
    * The TSet Env to use for runtime operations of the Tset
    */
-  protected TSetEnv tSetEnv;
+  private TSetEnvironment tSetEnv;
 
   /**
    * Name of the data set
    */
-  protected String name;
+  private String name;
+
+  /**
+   * ID of the tset
+   */
+  private String id;
 
   /**
    * The parallelism of the set
    */
-  protected int parallel = 1;
+  private int parallelism;
+
   /**
    * Defines if the TSet is Mutable or not
    */
   private boolean isMutable = false;
-  /**
-   * The configuration
-   */
-  protected Config config;
 
   /**
    * Possible Types of state in a TSet
@@ -81,36 +70,39 @@ public abstract class BaseTSet<T> implements TSet<T> {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(Config cfg, TSetEnv tSetEnv) {
-    this.children = new ArrayList<>();
-    this.tSetEnv = tSetEnv;
-    this.config = cfg;
+  public BaseTSet(TSetEnvironment tSetEnv, String name) {
+    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
   }
 
+  public BaseTSet(TSetEnvironment env, String n, int parallel) {
+    this.tSetEnv = env;
+    this.id = n;
+    this.parallelism = parallel;
+
+    this.name = id;
+  }
+
+  protected void rename(String n) {
+    this.name = n;
+  }
+
+  @Override
+  public String getId() {
+    return id;
+  }
+
+  @Override
   public String getName() {
     return name;
   }
 
+  @Override
   public int getParallelism() {
-    return parallel;
+    return parallelism;
   }
 
-  @Override
-  public BaseTSet<T> setName(String n) {
-    this.name = n;
-    return this;
-  }
-
-
-  @Override
-  public void build() {
-    // first build our selves
-    baseBuild();
-
-    // then build children
-    for (TBase<?> c : children) {
-      c.build();
-    }
+  public TSetEnvironment getTSetEnv() {
+    return tSetEnv;
   }
 
   public boolean isMutable() {
@@ -135,47 +127,35 @@ public abstract class BaseTSet<T> implements TSet<T> {
     return typeToken.getRawType();
   }
 
-  /**
-   * Override the parallelism
-   *
-   * @return if overide, return value, otherwise -1
-   */
-  protected int overrideParallelism() {
-    return -1;
+  protected void addChildToGraph(TBase child) {
+    tSetEnv.getGraph().addTSet(this, child);
   }
 
-  /**
-   * Override the parallelism if operations require differently
-   *
-   * @return new parallelism
-   */
-  protected <K> int calculateParallelism(BaseTLink<K> parent) {
-    int p;
-    if (parent.overrideParallelism() != -1) {
-      p = parent.overrideParallelism();
-      LOG.log(Level.WARNING, String.format("Overriding parallelism "
-          + "specified %d override value %d", parallel, p));
-    } else {
-      p = parallel;
-    }
-    return p;
-  }
-
-  protected String generateName(String prefix, BaseTLink parent) {
-    if (name != null) {
-      return name;
-    } else {
-      if (parent == null) {
-        return prefix + "-" + new Random().nextInt(100);
-      } else {
-        return prefix + "-" + parent.getName();
-      }
-    }
+  protected void addChildToGraph(TBase parent, TBase child) {
+    tSetEnv.getGraph().addTSet(parent, child);
   }
 
   @Override
-  public boolean addInput(String key, Cacheable<?> input) {
-    tSetEnv.addInput(getName(), key, input);
-    return true;
+  public String toString() {
+    return getName() + "(" + getId() + ")[" + getParallelism() + "]";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    BaseTSet<?> baseTSet = (BaseTSet<?>) o;
+    return Objects.equals(id, baseTSet.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

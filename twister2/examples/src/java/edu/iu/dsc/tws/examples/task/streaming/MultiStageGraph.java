@@ -16,44 +16,50 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.examples.internal.task.TaskUtils;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
-public class MultiStageGraph extends TaskWorker {
+public class MultiStageGraph implements IWorker {
   private static final Logger LOG = Logger.getLogger(MultiStageGraph.class.getName());
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID,
+        workerController, persistentVolume, volatileVolume);
     GeneratorTask g = new GeneratorTask();
     ReduceTask rt = new ReduceTask();
     PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("source", g, 4);
     ComputeConnection pc = builder.addCompute("compute", r, 4);
-    pc.partition("source").viaEdge("partition-edge").withDataType(DataType.OBJECT);
+    pc.partition("source").viaEdge("partition-edge").withDataType(MessageTypes.OBJECT);
     ComputeConnection rc = builder.addSink("sink", rt, 1);
     rc.reduce("compute")
         .viaEdge("compute-edge")
         .withReductionFunction((object1, object2) -> object1);
     builder.setMode(OperationMode.STREAMING);
 
-    DataFlowTaskGraph graph = builder.build();
-    TaskUtils.execute(config, workerId, graph, workerController);
+    ComputeGraph graph = builder.build();
+    cEnv.getTaskExecutor().execute(graph, cEnv.getTaskExecutor().plan(graph));
   }
 
   private static class GeneratorTask extends BaseSource {

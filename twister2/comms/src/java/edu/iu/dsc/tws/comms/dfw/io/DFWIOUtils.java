@@ -15,13 +15,18 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.UUID;
 
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.comms.dfw.OutMessage;
 
 public final class DFWIOUtils {
-  private static final int HEADER_SIZE = 16;
+
+  // source(int)+flags(int)+path(int)+num_of_msgs(int)+first_buffer_flag(short)
+  public static final int HEADER_SIZE = 17; // header size of first buffer
+
+  // source(int)+first_buffer_flag(short)
+  public static final int SHORT_HEADER_SIZE = 5; // header size of buffers other than the first one
 
   private DFWIOUtils() {
     throw new UnsupportedOperationException();
@@ -30,30 +35,6 @@ public final class DFWIOUtils {
   public static String getOperationName(int target, DataFlowOperation op, int refresh) {
     String uid = op.getUniqueId();
     return "partition-" + uid + "-" + target + "-" + UUID.randomUUID().toString() + "-" + refresh;
-  }
-
-  /**
-   * Builds the header of the message. The length value is inserted later so 0 is added as a place
-   * holder value. The header structure is |source|flags|destinationID|length|
-   *
-   * @param buffer the buffer to which the header is placed
-   * @param sendMessage the message that the header is build for
-   */
-  public static void buildHeader(DataBuffer buffer, OutMessage sendMessage) {
-    if (buffer.getCapacity() < HEADER_SIZE) {
-      throw new RuntimeException("The buffers should be able to hold the complete header");
-    }
-    ByteBuffer byteBuffer = buffer.getByteBuffer();
-    // now lets put the content of header in
-    byteBuffer.putInt(sendMessage.getSource());
-    // the path we are on, if not grouped it will be 0 and ignored
-    byteBuffer.putInt(sendMessage.getFlags());
-    // the destination id
-    byteBuffer.putInt(sendMessage.getPath());
-    // we set the number of messages
-    byteBuffer.putInt(0);
-    // lets set the size for 16 for now
-    buffer.setSize(HEADER_SIZE);
   }
 
   /**
@@ -77,6 +58,8 @@ public final class DFWIOUtils {
     byteBuffer.putInt(sendMessage.getPath());
     // we set the number of messages
     byteBuffer.putInt(noOfMessages);
+    // mark this buffer as "not the last buffer" of this message
+    byteBuffer.put((byte) 0);
     // lets set the size for 16 for now
     buffer.setSize(HEADER_SIZE);
   }
@@ -104,9 +87,9 @@ public final class DFWIOUtils {
   }
 
   public static boolean sendFinalSyncForward(boolean needsFurtherProgress, int target,
-                                        SyncState syncState, Map<Integer, byte[]> barriers,
-                                        DataFlowOperation operation,
-                                        Map<Integer, Boolean> isSyncSent) {
+                                             SyncState syncState, Map<Integer, byte[]> barriers,
+                                             DataFlowOperation operation,
+                                             Map<Integer, Boolean> isSyncSent) {
     byte[] message;
     int flags;
     if (syncState == SyncState.SYNC) {

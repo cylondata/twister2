@@ -34,27 +34,27 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.cdfw.BaseDriver;
-import edu.iu.dsc.tws.api.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.api.cdfw.DafaFlowJobConfig;
-import edu.iu.dsc.tws.api.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.api.cdfw.task.ConnectedSink;
-import edu.iu.dsc.tws.api.cdfw.task.ConnectedSource;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.cdfw.CDFWWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.cdfw.BaseDriver;
+import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
+import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
+import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
 public final class ParallelDataFlowsExample {
   private static final Logger LOG = Logger.getLogger(ParallelDataFlowsExample.class.getName());
@@ -162,16 +162,16 @@ public final class ParallelDataFlowsExample {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
     ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
         parallelismValue);
     partitionConnection.partition("source1")
         .viaEdge("partition")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
+    ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
         setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
@@ -185,17 +185,17 @@ public final class ParallelDataFlowsExample {
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
 
-    TaskGraphBuilder graphBuilderX = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelismValue);
     ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
         1);
     reduceConn.reduce("source1")
         .viaEdge("reduce")
         .withReductionFunction(new Aggregator())
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
 
     graphBuilderX.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph batchGraph = graphBuilderX.build();
+    ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
         setWorkers(2).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");

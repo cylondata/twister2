@@ -23,18 +23,20 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.routing.DirectRouter;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
@@ -69,6 +71,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
    * The delegate
    */
   private ChannelDataFlowOperation delegate;
+  private MessageSchema messageSchema;
 
 
   private Lock lock;
@@ -76,7 +79,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   /**
    * The task plan
    */
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
   /**
    * The router to configure the routing
@@ -132,14 +135,15 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   public OneToOne(TWSChannel channel,
                   List<Integer> src, List<Integer> target,
                   MessageReceiver finalRcvr, Config cfg, MessageType t,
-                  TaskPlan plan, int edge) {
+                  LogicalPlan plan, int edge, MessageSchema messageSchema) {
     this.sources = src;
     this.targets = target;
     this.finalReceiver = finalRcvr;
     this.delegate = new ChannelDataFlowOperation(channel);
+    this.messageSchema = messageSchema;
     this.lock = new ReentrantLock();
     this.edgeValue = edge;
-    this.taskPlan = plan;
+    this.logicalPlan = plan;
     this.router = new DirectRouter(plan, sources, targets);
     this.config = cfg;
     this.type = t;
@@ -184,13 +188,14 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     Map<Integer, MessageSerializer> serializerMap = new HashMap<>();
     Map<Integer, MessageDeSerializer> deSerializerMap = new HashMap<>();
 
-    thisSources = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sourceSet);
-    Set<Integer> thisTargets = TaskPlanUtils.getTasksOfThisWorker(taskPlan, new HashSet<>(targets));
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sourceSet);
+    Set<Integer> thisTargets = TaskPlanUtils.getTasksOfThisWorker(
+        logicalPlan, new HashSet<>(targets));
     for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
           DataFlowContext.sendPendingMax(config)));
-      serializerMap.put(s, new DataSerializer());
+      serializerMap.put(s, Serializers.get(false, this.messageSchema));
     }
 
     for (int tar : thisTargets) {
@@ -200,8 +205,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
 
-      MessageDeSerializer messageDeSerializer = new DataDeserializer();
-      deSerializerMap.put(tar, messageDeSerializer);
+      deSerializerMap.put(tar, Deserializers.get(false, this.messageSchema));
     }
 
     // calculate the routing parameters
@@ -210,7 +214,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     // initialize the final receiver
     this.finalReceiver.init(config, this, receiveExpectedTaskIds());
 
-    delegate.init(config, type, taskPlan, edgeValue, router.receivingExecutors(),
+    delegate.init(config, type, logicalPlan, edgeValue, router.receivingExecutors(),
         this, pendingSendMessagesPerSource,
         pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
@@ -332,8 +336,8 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
-    return taskPlan;
+  public LogicalPlan getLogicalPlan() {
+    return logicalPlan;
   }
 
   @Override
@@ -342,7 +346,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   }
 
   private void calculateRoutingParameters() {
-    Set<Integer> workerTasks = taskPlan.getTasksOfThisExecutor();
+    Set<Integer> workerTasks = logicalPlan.getTasksOfThisExecutor();
     for (int i = 0; i < sources.size(); i++) {
       // for each source we have a fixed target
       int src = sources.get(i);

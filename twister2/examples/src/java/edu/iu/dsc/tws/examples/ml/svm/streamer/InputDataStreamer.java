@@ -18,37 +18,39 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.dataset.DataObject;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.InputDataFormatException;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class InputDataStreamer extends BaseSource implements Receptor {
 
   private static final Logger LOG = Logger.getLogger(InputDataStreamer.class.getName());
-
-  private int features = 10;
-
-  private OperationMode operationMode;
-
   private final double[] labels = {-1, +1};
-
+  private int features = 10;
+  private OperationMode operationMode;
   private boolean isDummy = false;
 
   private BinaryBatchModel binaryBatchModel;
 
   private DataObject<?> dataPointsObject = null;
 
+  private DataObject<?> weightVectorObject = null;
+
   private Object datapoints = null;
 
+  private Object weightVector = null;
+
   private double[][] datapointArray = null;
+
+  private double[][] weightVectorArray = null;
 
   private boolean debug = false;
 
@@ -140,22 +142,40 @@ public class InputDataStreamer extends BaseSource implements Receptor {
     if (Constants.SimpleGraphConfig.INPUT_DATA.equals(name)) {
       this.dataPointsObject = data;
     }
+
+    if (Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR.equals(name)) {
+      this.weightVectorObject = data;
+    }
   }
 
   public Object getDataPointsByTaskIndex(int taskIndex) {
     EntityPartition<Object> datapointsEntityPartition
-        = (EntityPartition<Object>) dataPointsObject.getPartitions(taskIndex);
+        = (EntityPartition<Object>) dataPointsObject.getPartition(taskIndex);
+
     if (datapointsEntityPartition != null) {
       DataObject<?> dataObject
           = (DataObject<?>) datapointsEntityPartition.getConsumer().next();
       datapoints = getDataPointsByDataObject(taskIndex, dataObject);
     }
+
     return datapoints;
+  }
+
+  public Object getWeightVectorByTaskIndex(int taskIndex) {
+    EntityPartition<Object> weightVectorEntityPartition
+        = (EntityPartition<Object>) weightVectorObject.getPartition(taskIndex);
+
+    if (weightVectorEntityPartition != null) {
+      DataObject<?> weightVectorObjectLocal
+          = (DataObject<?>) weightVectorEntityPartition.getConsumer().next();
+      weightVector = getDataPointsByDataObject(taskIndex, weightVectorObjectLocal);
+    }
+    return weightVector;
   }
 
   public Object getDataPointsByDataObject(int taskIndex, DataObject<?> datapointsDataObject) {
     Iterator<ArrayList> arrayListIterator = (Iterator<ArrayList>)
-        datapointsDataObject.getPartitions(taskIndex).getConsumer().next();
+        datapointsDataObject.getPartition(taskIndex).getConsumer().next();
     List<Object> items = new ArrayList<>();
     while (arrayListIterator.hasNext()) {
       Object object = arrayListIterator.next();
@@ -166,12 +186,18 @@ public class InputDataStreamer extends BaseSource implements Receptor {
 
   public void getData() {
     this.datapoints = getDataPointsByTaskIndex(context.taskIndex());
+    this.weightVector = getWeightVectorByTaskIndex(context.taskIndex());
+
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
     this.datapointArray = DataUtils.getDataPointsFromDataObject(this.datapoints);
+    this.weightVectorArray = DataUtils.getDataPointsFromDataObject(this.weightVector);
+
     LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
         this.datapointArray.length));
+    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),
+        this.weightVectorArray.length));
     //LOG.info(String.format("Data Points : %s", Arrays.deepToString(this.datapointArray)));
   }
 }

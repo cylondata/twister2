@@ -8,6 +8,7 @@ def twister2_client_bin_files():
 
 def twister2_client_conf_files():
     return [
+        "//twister2/config/src/yaml:common-conf-yaml",
         "//twister2/config/src/yaml:conf-yaml",
         "//twister2/config/src/yaml:conf-local-yaml",
         "//twister2/config/src/yaml:conf-slurm-yaml",
@@ -21,6 +22,11 @@ def twister2_client_conf_files():
 def twister2_client_dashboard_files():
     return [
         "//twister2/config/src/yaml:conf-dashboard",
+    ]
+
+def twister2_client_common_files():
+    return [
+        "//twister2/config/src/yaml:conf-common-yaml",
     ]
 
 def twister2_client_local_files():
@@ -108,6 +114,19 @@ def twister2_client_lib_resource_scheduler_files():
 def twister2_client_lib_api_files():
     return [
         "//twister2/api/src/java:api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
+        "//twister2/proto/utils:proto-utils-java",
     ]
 
 def twister2_client_lib_task_files():

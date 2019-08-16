@@ -31,9 +31,9 @@ import org.apache.storm.topology.IRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.utils.Utils;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.ISource;
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class Twister2Spout implements ISource, Twister2StormNode {
 

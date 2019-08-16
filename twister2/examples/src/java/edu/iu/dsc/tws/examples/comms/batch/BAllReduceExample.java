@@ -12,18 +12,19 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BAllReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BAllReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -38,31 +39,24 @@ public class BAllReduceExample extends BenchWorker {
 
   private BAllReduce reduce;
 
-  private boolean reduceDone;
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
-    Set<Integer> sources = new HashSet<>();
+  protected void execute(WorkerEnvironment workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
+    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
+
     int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = new HashSet<>();
-    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
-      targets.add(i);
-    }
+    Set<Integer> targets = IntStream.range(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks)
+        .boxed().collect(Collectors.toSet());
+
     // create the communication
-    reduce = new BAllReduce(communicator, taskPlan, sources, targets,
+    reduce = new BAllReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -107,7 +101,7 @@ public class BAllReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return sourcesDone && reduce.isComplete();
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
@@ -116,7 +110,6 @@ public class BAllReduceExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        reduceDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -130,7 +123,6 @@ public class BAllReduceExample extends BenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, null);
-      reduceDone = true;
       return true;
     }
   }

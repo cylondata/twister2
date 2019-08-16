@@ -9,14 +9,40 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessageReleaseCallback;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.comms.dfw.io.SerializeState;
 
 /**
@@ -64,12 +90,12 @@ public class OutMessage {
   /**
    * The internal send ids
    */
-  private Set<Integer> internalSends;
+  private List<Integer> internalSends;
 
   /**
    * The external send ids
    */
-  private Set<Integer> externalSends;
+  private List<Integer> externalSends;
 
   /**
    * Message flags
@@ -114,7 +140,7 @@ public class OutMessage {
   private Object data;
 
   public OutMessage(int src, int edge, int path, int target, int flags,
-                    Set<Integer> intSends, Set<Integer> extSends,
+                    List<Integer> intSends, List<Integer> extSends,
                     MessageType dataType, MessageType keyType,
                     ChannelMessageReleaseCallback releaseCallback, Object data) {
     this.source = src;
@@ -175,11 +201,11 @@ public class OutMessage {
     return target;
   }
 
-  public Set<Integer> getInternalSends() {
+  public List<Integer> getInternalSends() {
     return internalSends;
   }
 
-  public Set<Integer> getExternalSends() {
+  public List<Integer> getExternalSends() {
     return externalSends;
   }
 

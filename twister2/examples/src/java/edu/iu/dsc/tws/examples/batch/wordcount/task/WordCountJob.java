@@ -20,30 +20,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.api.task.function.ReduceFn;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.examples.utils.RandomString;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.function.ReduceFn;
 
 /**
  * A simple wordcount program where fixed number of words are generated and the global counts
  * of words are calculated
  */
-public class WordCountJob extends TaskWorker {
+public class WordCountJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountJob.class.getName());
 
   private static final int NUMBER_MESSAGES = 100;
@@ -55,27 +59,30 @@ public class WordCountJob extends TaskWorker {
   private static final int NO_OF_SAMPLE_WORDS = 100;
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+        persistentVolume, volatileVolume);
     // source and aggregator
     WordSource source = new WordSource();
     WordAggregator counter = new WordAggregator();
 
     // build the task graph
-    TaskGraphBuilder builder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4)
         .keyedReduce("word-source")
         .viaEdge(EDGE)
-        .withReductionFunction(new ReduceFn(Op.SUM, DataType.INTEGER_ARRAY))
-        .withKeyType(DataType.OBJECT)
-        .withDataType(DataType.INTEGER_ARRAY);
+        .withReductionFunction(new ReduceFn(Op.SUM, MessageTypes.INTEGER_ARRAY))
+        .withKeyType(MessageTypes.OBJECT)
+        .withDataType(MessageTypes.INTEGER_ARRAY);
 
     builder.setMode(OperationMode.BATCH);
 
     // execute the graph
-    DataFlowTaskGraph graph = builder.build();
-    ExecutionPlan plan = taskExecutor.plan(graph);
-    taskExecutor.execute(graph, plan);
+    ComputeGraph graph = builder.build();
+    ExecutionPlan plan = cEnv.getTaskExecutor().plan(graph);
+    cEnv.getTaskExecutor().execute(graph, plan);
   }
 
   private static class WordSource extends BaseSource {

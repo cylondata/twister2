@@ -20,17 +20,17 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.tsched.builder.ContainerIdScorer;
 import edu.iu.dsc.tws.tsched.builder.TaskSchedulePlanBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.TaskSchedulerException;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.RequiredRam;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 import edu.iu.dsc.tws.tsched.utils.TaskScheduleUtils;
@@ -131,8 +131,8 @@ public class FirstFitStreamingTaskScheduler implements ITaskScheduler {
    * builder to allocate the task instances into the containers.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
-    this.taskVertexSet = dataFlowTaskGraph.getTaskVertexSet();
+  public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
+    this.taskVertexSet = computeGraph.getTaskVertexSet();
     TaskSchedulePlanBuilder taskSchedulePlanBuilder = newTaskSchedulingPlanBuilder(null);
     try {
       taskSchedulePlanBuilder = FirstFitFTaskSchedulingAlgorithm(taskSchedulePlanBuilder);

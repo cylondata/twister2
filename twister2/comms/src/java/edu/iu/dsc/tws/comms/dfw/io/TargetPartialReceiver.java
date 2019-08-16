@@ -11,39 +11,34 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
   /**
    * Keep state
    */
-  protected Map<Integer, ReceiverState> sourceStates = new HashMap<>();
+  protected Int2ObjectArrayMap<ReceiverState> sourceStates = new Int2ObjectArrayMap<>();
 
   /**
    * Keep track what are the targets we've sent syncs to
    */
-  protected Map<Integer, Set<Integer>> syncSent = new HashMap<>();
-
-  /**
-   * Keep the list of tuples for each target
-   */
-  protected Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
+  protected Int2ObjectArrayMap<Set<Integer>> syncSent = new Int2ObjectArrayMap<>();
 
   /**
    * The barriers for each source
@@ -61,26 +56,31 @@ public class TargetPartialReceiver extends TargetReceiver {
   private int[] thisSourceArray;
 
   /**
-   * Target array for iterations
-   */
-  private int[] targetArray;
-
-  /**
    * This source array for iteration
    */
   private int[] sourceArray;
 
+  /**
+   * Keep weather source accepts a message
+   */
+  private Int2BooleanArrayMap sourceAcceptMessages = new Int2BooleanArrayMap();
+
+  /**
+   * Keep weather target accepts a message
+   */
+  private Int2BooleanArrayMap targetAcceptMessages = new Int2BooleanArrayMap();
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
-    thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(), op.getSources());
+    thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(), op.getSources());
     int index = 0;
     thisSourceArray = new int[thisSources.size()];
     for (int s : thisSources) {
       this.thisSourceArray[index++] = s;
     }
 
-    Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getTaskPlan(),
+    Set<Integer> thisWorkerTargets = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(),
         op.getTargets());
     // we are going to send the sync to worker target at last, this will ensure that we are not
     // going to start sorting before we send the syncs to other nodes
@@ -97,14 +97,15 @@ public class TargetPartialReceiver extends TargetReceiver {
     }));
     thisDestinations.addAll(op.getTargets());
 
-    this.targetArray = new int[thisDestinations.size()];
+    this.targets = new int[thisDestinations.size()];
     index = 0;
     for (int t : thisDestinations) {
-      targetArray[index++] = t;
+      targets[index++] = t;
     }
 
     for (int target : thisDestinations) {
-      messages.put(target, new LinkedBlockingQueue<>());
+      messages.put(target, new AggregatedObjects<>());
+      targetAcceptMessages.put(target, true);
     }
 
     index = 0;
@@ -123,14 +124,7 @@ public class TargetPartialReceiver extends TargetReceiver {
    * @param dest the target
    * @param dests message queue to switch to ready
    */
-  protected void merge(int dest, Queue<Object> dests) {
-    if (!readyToSend.containsKey(dest)) {
-      readyToSend.put(dest, new AggregatedObjects<>(dests));
-    } else {
-      List<Object> ready = readyToSend.get(dest);
-      ready.addAll(dests);
-    }
-    dests.clear();
+  protected void merge(int dest, List<Object> dests) {
   }
 
   /**
@@ -142,10 +136,11 @@ public class TargetPartialReceiver extends TargetReceiver {
    */
   @Override
   protected boolean sendToTarget(int source, int target) {
-    List<Object> values = readyToSend.get(target);
+    List<Object> values = messages.get(target);
     if (values != null && values.size() > 0) {
       if (operation.sendPartial(source, values, 0, target)) {
-        readyToSend.remove(target);
+        messages.put(target, new AggregatedObjects<>());
+        targetAcceptMessages.put(target, true);
       } else {
         return false;
       }
@@ -153,26 +148,30 @@ public class TargetPartialReceiver extends TargetReceiver {
     return true;
   }
 
-  @Override
+  /**
+   * Check weather all the other information is flushed
+   *
+   * @return true if there is nothing to process
+   */
   protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
     for (int i = 0; i < targets.length; i++) {
-      List<Object> queue = readyToSend.get(targets[i]);
-      if (queue != null && queue.size() > 0) {
+      List<Object> msgQueue = messages.get(targets[i]);
+      if (msgQueue.size() > 0) {
         return false;
       }
     }
-    return b;
+    return true;
   }
 
   @Override
   protected boolean isFilledToSend(int target) {
-    return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
+    return messages.get(target) != null && messages.get(target).size() > 0;
   }
 
   @Override
   protected void addSyncMessage(int source, int target) {
     sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
+    sourceAcceptMessages.put(source, false);
   }
 
   @Override
@@ -180,12 +179,23 @@ public class TargetPartialReceiver extends TargetReceiver {
     sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
     syncState = SyncState.BARRIER_SYNC;
     barriers.put(source, barrier);
+    sourceAcceptMessages.put(source, false);
+  }
+
+  protected void addMessage(int target, List<Object> msgQueue, Object value) {
+    if (value instanceof AggregatedObjects) {
+      msgQueue.addAll((Collection<?>) value);
+    } else {
+      msgQueue.add(value);
+    }
+    if (msgQueue.size() >= highWaterMark) {
+      targetAcceptMessages.put(target, false);
+    }
   }
 
   @Override
   protected boolean canAcceptMessage(int source, int target) {
-    if (sourceStates.get(source) == ReceiverState.ALL_SYNCS_RECEIVED
-        || sourceStates.get(source) == ReceiverState.SYNCED) {
+    if (sourceAcceptMessages.containsKey(source) && !sourceAcceptMessages.get(source)) {
       return false;
     }
 
@@ -193,14 +203,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       sourceStates.put(source, ReceiverState.RECEIVING);
     }
 
-    Queue<Object> msgQueue = messages.get(target);
-    List<Object> readyQueue = readyToSend.get(target);
-    int size = msgQueue.size();
-    if (readyQueue != null) {
-      size += readyQueue.size();
-    }
-
-    return size < highWaterMark;
+    return targetAcceptMessages.get(target);
   }
 
   @Override
@@ -209,6 +212,47 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
+  public boolean progress() {
+    boolean needsFurtherProgress = false;
+
+    if (lock.tryLock()) {
+      try {
+        boolean allEmpty = true;
+        for (int i = 0; i < targets.length; i++) {
+          int key = targets[i];
+          List<Object> val = messages.get(key);
+
+          if (val != null && val.size() > 0) {
+            merge(key, val);
+          }
+
+          // check weather we are ready to send and we have values to send
+          if (!isFilledToSend(key)) {
+            continue;
+          }
+
+          // if we send this list successfully
+          if (!sendToTarget(representSource, key)) {
+            needsFurtherProgress = true;
+          }
+          allEmpty &= val.isEmpty();
+        }
+
+        if (!allEmpty || !isAllEmpty() || !sync()) {
+          needsFurtherProgress = true;
+        }
+      } finally {
+        lock.unlock();
+      }
+    }
+    return needsFurtherProgress;
+  }
+
+  /**
+   * Handle the sync
+   *
+   * @return true if everything is synced
+   */
   public boolean sync() {
     boolean allSyncsSent = true;
     boolean allSynced = true;
@@ -230,8 +274,8 @@ public class TargetPartialReceiver extends TargetReceiver {
     for (int i = 0; i < thisSourceArray.length; i++) {
       int source = thisSourceArray[i];
       Set<Integer> finishedDestPerSource = syncSent.get(source);
-      for (int j = 0; j < targetArray.length; j++) {
-        int dest = targetArray[j];
+      for (int j = 0; j < targets.length; j++) {
+        int dest = targets[j];
         if (!finishedDestPerSource.contains(dest)) {
 
           byte[] message;
@@ -278,5 +322,10 @@ public class TargetPartialReceiver extends TargetReceiver {
     syncState = SyncState.SYNC;
     barriers.clear();
     stateCleared = false;
+    sourceAcceptMessages.clear();
+    targetAcceptMessages.clear();
+    for (int target : thisDestinations) {
+      targetAcceptMessages.put(target, true);
+    }
   }
 }

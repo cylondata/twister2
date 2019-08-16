@@ -21,15 +21,15 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -47,14 +47,10 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   private BKeyedReduce keyedReduce;
 
-  private boolean reduceDone;
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -66,24 +62,18 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    keyedReduce = new BKeyedReduce(communicator, taskPlan, sources, targets,
+    keyedReduce = new BKeyedReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalBulkReceiver(), MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
     if (tasksOfExecutor.size() == 0) {
       sourcesDone = true;
-    }
-    reduceDone = true;
-    for (int target : targets) {
-      if (taskPlan.getChannelsOfExecutor(workerId).contains(target)) {
-        reduceDone = false;
-      }
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
@@ -135,7 +125,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !keyedReduce.hasPending();
+    return sourcesDone && keyedReduce.isComplete();
   }
 
   @Override
@@ -153,7 +143,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        reduceDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -167,7 +156,6 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
       verifyResults(resultsVerifier, object, Collections.singletonMap("target", target));
-      reduceDone = true;
       return true;
     }
   }

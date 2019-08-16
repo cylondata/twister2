@@ -18,28 +18,29 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.checkpointing.StateStore;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.OutputCollection;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
-import edu.iu.dsc.tws.checkpointing.api.StateStore;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.api.ISync;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
@@ -206,7 +207,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
-        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule));
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule,
+        OperationMode.STREAMING));
 
     /// we will use this array for iteration
     this.outOpArray = new IParallelOperation[outParOps.size()];

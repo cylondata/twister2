@@ -17,12 +17,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -47,7 +47,9 @@ public final class MesosMPIWorkerStarter {
   private static int resourceIndex = 0;
   private static int startingPort = 30000;
 
-  private MesosMPIWorkerStarter() { }
+  private MesosMPIWorkerStarter() {
+  }
+
   public static void main(String[] args) {
 
     try {
@@ -65,8 +67,8 @@ public final class MesosMPIWorkerStarter {
     jobName = args[0];
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     MesosWorkerLogger logger = new MesosWorkerLogger(config,
         "/persistent-volume/logs", "worker" + workerID);

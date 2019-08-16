@@ -30,7 +30,8 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -48,7 +49,8 @@ public final class MesosJobMasterStarter {
 
   private static final Logger LOG = Logger.getLogger(MesosJobMasterStarter.class.getName());
 
-  private MesosJobMasterStarter() { }
+  private MesosJobMasterStarter() {
+  }
 
   public static void main(String[] args) {
     // we can not initialize the logger fully yet,
@@ -57,12 +59,14 @@ public final class MesosJobMasterStarter {
     String homeDir = System.getenv("HOME");
     int workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     String jobName = System.getenv("JOB_NAME");
-
+    String jobId = System.getenv("JOB_ID");
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir);
-
+    String configDir = "twister2-job";
+    Config config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
+    Config.Builder builder = Config.newBuilder().putAll(config);
+    builder.put(Context.JOB_ID, jobId);
+    config = builder.build();
     JobTerminator terminator = new JobTerminator(config, System.getenv("FRAMEWORK_ID"));
 
     MesosWorkerLogger logger = new MesosWorkerLogger(config,
@@ -72,7 +76,7 @@ public final class MesosJobMasterStarter {
     edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController controller;
     controller = new edu.iu.dsc.tws.rsched.schedulers.mesos.MesosController(config);
     JobAPI.Job job = JobUtils.readJobFile(null, "twister2-job/"
-          + jobName + ".job");
+        + jobName + ".job");
 //    try {
 //      workerController = new MesosWorkerController(config, job,
 //          Inet4Address.getLocalHost().getHostAddress(), 2023, workerId);
@@ -117,11 +121,14 @@ public final class MesosJobMasterStarter {
         IScalerPerCluster clusterScaler = null;
         MesosScaler mesosScaler = new MesosScaler(config, job, controller);
         mesosScaler.setFrameWorkId(System.getenv("FRAMEWORK_ID"));
+        //JobMaster.jobID = jobId;
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
                 terminator, job, jobMasterNodeInfo, clusterScaler);
+        //jobMaster.jobId = jobId;
         LOG.info("JobMaster host address...:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();
+        //jobMaster.startJobMasterThreaded();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when getting local host address: ", e);
       }

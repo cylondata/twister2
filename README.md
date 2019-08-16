@@ -8,7 +8,7 @@ high performance computing infrastructure.
 
 We started the project with the vision described in the paper [Twister2 Design of a Big Data Toolkit](http://dsc.soic.indiana.edu/publications/twister2_design_big_data_toolkit.pdf).
 
-The documentation is found at [https://twister2.gitbook.io/twister2/](https://twister2.gitbook.io/twister2/)
+The documentation is found at [https://twister2.org/](https://twister2.org)
 
 ## Contact 
 

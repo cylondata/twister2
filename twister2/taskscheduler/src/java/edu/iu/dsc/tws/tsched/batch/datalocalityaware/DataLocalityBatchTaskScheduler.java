@@ -22,25 +22,26 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.DataTransferTimeCalculator;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 import edu.iu.dsc.tws.tsched.utils.TaskVertexParser;
@@ -75,7 +76,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   private int workerId;
 
   //Data Aware Allocation Map
-  private Map<Integer, List<InstanceId>> dataLocalityAwareAllocation;
+  private Map<Integer, List<TaskInstanceId>> dataLocalityAwareAllocation;
 
   //Task Attributes Object
   private TaskAttributes taskAttributes;
@@ -111,9 +112,9 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * to the data nodes.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan) {
 
-    LinkedHashMap<Integer, ContainerPlan> containerPlans = new LinkedHashMap<>();
+    LinkedHashMap<Integer, WorkerSchedulePlan> containerPlans = new LinkedHashMap<>();
     for (int i = 0; i < workerPlan.getNumberOfWorkers(); i++) {
       dataLocalityAwareAllocation.put(i, new ArrayList<>());
     }
@@ -124,7 +125,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
 
     for (Set<Vertex> vertexSet : taskVertexList) {
 
-      Map<Integer, List<InstanceId>> containerInstanceMap;
+      Map<Integer, List<TaskInstanceId>> containerInstanceMap;
 
       if (vertexSet.size() > 1) {
         containerInstanceMap = dataLocalityBatchSchedulingAlgorithm(graph, vertexSet, workerPlan);
@@ -136,13 +137,13 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
           this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
-      Map<Integer, Map<InstanceId, Double>> instancesRamMap = instanceMapCalculation.
+      Map<Integer, Map<TaskInstanceId, Double>> instancesRamMap = instanceMapCalculation.
           getInstancesRamMapInContainer(containerInstanceMap, taskVertexSet);
 
-      Map<Integer, Map<InstanceId, Double>> instancesDiskMap = instanceMapCalculation.
+      Map<Integer, Map<TaskInstanceId, Double>> instancesDiskMap = instanceMapCalculation.
           getInstancesDiskMapInContainer(containerInstanceMap, taskVertexSet);
 
-      Map<Integer, Map<InstanceId, Double>> instancesCPUMap = instanceMapCalculation.
+      Map<Integer, Map<TaskInstanceId, Double>> instancesCPUMap = instanceMapCalculation.
           getInstancesCPUMapInContainer(containerInstanceMap, taskVertexSet);
 
       for (int containerId : containerInstanceMap.keySet()) {
@@ -151,10 +152,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
         double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
         double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
-        List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
-        Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+        List<TaskInstanceId> taskTaskInstanceIds = containerInstanceMap.get(containerId);
+        Map<TaskInstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
-        for (InstanceId id : taskInstanceIds) {
+        for (TaskInstanceId id : taskTaskInstanceIds) {
           double instanceRAMValue = instancesRamMap.get(containerId).get(id);
           double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
           double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
@@ -181,26 +182,26 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
               containerCpuValue);
         }
 
-        ContainerPlan taskContainerPlan;
+        WorkerSchedulePlan taskWorkerSchedulePlan;
         if (containerPlans.containsKey(containerId)) {
-          taskContainerPlan = containerPlans.get(containerId);
-          taskContainerPlan.getTaskInstances().addAll(taskInstancePlanMap.values());
+          taskWorkerSchedulePlan = containerPlans.get(containerId);
+          taskWorkerSchedulePlan.getTaskInstances().addAll(taskInstancePlanMap.values());
         } else {
-          taskContainerPlan = new ContainerPlan(containerId, new HashSet<>(
+          taskWorkerSchedulePlan = new WorkerSchedulePlan(containerId, new HashSet<>(
               taskInstancePlanMap.values()), containerResource);
-          containerPlans.put(containerId, taskContainerPlan);
+          containerPlans.put(containerId, taskWorkerSchedulePlan);
         }
       }
     }
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0,
         new HashSet<>(containerPlans.values()));
-    Map<Integer, ContainerPlan> containersMap
+    Map<Integer, WorkerSchedulePlan> containersMap
         = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, ContainerPlan> entry : containersMap.entrySet()) {
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
       Integer integer = entry.getKey();
-      ContainerPlan containerPlan = entry.getValue();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances
-          = containerPlan.getTaskInstances();
+          = workerSchedulePlan.getTaskInstances();
       LOG.info("Task Details for Container Id:" + integer + "\tsize:"
           + containerPlanTaskInstances.size());
       for (TaskInstancePlan ip : containerPlanTaskInstances) {
@@ -216,8 +217,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Vertex vertex, WorkerPlan workerPlan) {
+  private Map<Integer, List<TaskInstanceId>> dataLocalityBatchSchedulingAlgorithm(
+      ComputeGraph graph, Vertex vertex, WorkerPlan workerPlan) {
 
     Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
@@ -240,8 +241,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
    *
    * @return Map
    */
-  private Map<Integer, List<InstanceId>> dataLocalityBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Set<Vertex> vertexSet, WorkerPlan workerPlan) {
+  private Map<Integer, List<TaskInstanceId>> dataLocalityBatchSchedulingAlgorithm(
+      ComputeGraph graph, Set<Vertex> vertexSet, WorkerPlan workerPlan) {
 
     Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
@@ -259,8 +260,8 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
   }
 
 
-  private Map<Integer, List<InstanceId>> attributeBasedAllocation(
-      Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  private Map<Integer, List<TaskInstanceId>> attributeBasedAllocation(
+      Map<String, Integer> parallelTaskMap, ComputeGraph graph, WorkerPlan workerPlan) {
 
     List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
     int containerIndex = Integer.parseInt(workerNodeList.get(0).getNodeName());
@@ -270,7 +271,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       int taskParallelism = e.getValue();
       for (int taskIndex = 0, maxTaskObject = 0; taskIndex < taskParallelism; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(
-            new InstanceId(task, gTaskId, taskIndex));
+            new TaskInstanceId(task, gTaskId, taskIndex));
         maxTaskObject++;
         if (maxTaskObject == instancesPerContainer) {
           ++containerIndex;
@@ -282,7 +283,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     return dataLocalityAwareAllocation;
   }
 
-  private Map<Integer, List<InstanceId>> nonAttributeBasedAllocation(
+  private Map<Integer, List<TaskInstanceId>> nonAttributeBasedAllocation(
       Map<String, Integer> parallelTaskMap, WorkerPlan workerPlan) {
 
     List<DataTransferTimeCalculator> workerNodeList = getWorkerNodeList(workerPlan);
@@ -293,7 +294,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       int taskParallelism = e.getValue();
       for (int taskIndex = 0, maxTaskObject = 0; taskIndex < taskParallelism; taskIndex++) {
         dataLocalityAwareAllocation.get(containerIndex).add(
-            new InstanceId(task, gTaskId, taskIndex));
+            new TaskInstanceId(task, gTaskId, taskIndex));
         maxTaskObject++;
         if (maxTaskObject == instancesPerContainer) {
           ++containerIndex;
@@ -327,15 +328,12 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
-      fileSystem = path.getFileSystem(config);
+      fileSystem = FileSystemUtils.get(path);
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
-
         final FileStatus pathFile = fileSystem.getFileStatus(path);
         inputDataList.add(String.valueOf(pathFile.getPath()));
-
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
           Context.TWISTER2_LOCAL_FILESYSTEM)) {
-
         for (FileStatus file : fileSystem.listFiles(path)) {
           String filename = String.valueOf(file.getPath());
           if (filename != null) {

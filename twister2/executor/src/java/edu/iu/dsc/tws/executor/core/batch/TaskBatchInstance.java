@@ -18,21 +18,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.executor.api.INodeInstance;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
-import edu.iu.dsc.tws.executor.api.ISync;
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.OutputCollection;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
+import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.executor.ISync;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
-import edu.iu.dsc.tws.executor.core.ExecutorContext;
 import edu.iu.dsc.tws.executor.core.TaskContextImpl;
-import edu.iu.dsc.tws.task.api.Closable;
-import edu.iu.dsc.tws.task.api.ICompute;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.INode;
-import edu.iu.dsc.tws.task.api.OutputCollection;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 
 /**
  * The class represents the instance of the executing task
@@ -197,7 +198,8 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
     taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
-        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule);
+        workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule,
+        OperationMode.BATCH);
     task.prepare(cfg, taskContext);
 
     /// we will use this array for iteration
@@ -250,7 +252,8 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // progress in communication
       boolean needsFurther = progressCommunication(intOpArray);
       // if we no longer needs to progress comm and input is empty
-      if (state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty()) {
+      if ((state.isSet(InstanceState.EXECUTING) && inQueue.isEmpty())
+          || (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED))) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }

@@ -14,10 +14,13 @@ package edu.iu.dsc.tws.executor.core;
 import java.util.List;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.executor.api.IParallelOperation;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;
@@ -39,20 +42,18 @@ import edu.iu.dsc.tws.executor.comms.streaming.KeyedPartitionStreamOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.KeyedReduceStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.PartitionStreamingOperation;
 import edu.iu.dsc.tws.executor.comms.streaming.ReduceStreamingOperation;
-import edu.iu.dsc.tws.task.graph.Edge;
-import edu.iu.dsc.tws.task.graph.OperationMode;
 
 public class ParallelOperationFactory {
   private Communicator channel;
 
   private Config config;
 
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
 
-  public ParallelOperationFactory(Config cfg, Communicator network, TaskPlan plan) {
+  public ParallelOperationFactory(Config cfg, Communicator network, LogicalPlan plan) {
     this.channel = network;
     this.config = cfg;
-    this.taskPlan = plan;
+    this.logicalPlan = plan;
   }
 
   public IParallelOperation build(List<Edge> edges, Set<Integer> sources,
@@ -65,7 +66,7 @@ public class ParallelOperationFactory {
       Edge rightEdge = edges.get(1);
       if (leftEdge.isKeyed() && rightEdge.isKeyed()) {
         if (OperationNames.JOIN.equals(leftEdge.getOperation())) {
-          return new JoinBatchOperation(config, channel, taskPlan, sources,
+          return new JoinBatchOperation(config, channel, logicalPlan, sources,
               dests, leftEdge, rightEdge);
         }
       }
@@ -83,34 +84,34 @@ public class ParallelOperationFactory {
     if (operationMode.equals(OperationMode.BATCH)) {
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
-          return new PartitionBatchOperation(config, channel, taskPlan, sources, dests, edge);
+          return new PartitionBatchOperation(config, channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
-          return new BroadcastBatchOperation(config, channel, taskPlan,
+          return new BroadcastBatchOperation(config, channel, logicalPlan,
               sources, dests, edge);
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
-          return new GatherBatchOperation(config, channel, taskPlan,
+          return new GatherBatchOperation(config, channel, logicalPlan,
               sources, dests, edge);
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
-          return new AllGatherBatchOperation(config, channel, taskPlan,
+          return new AllGatherBatchOperation(config, channel, logicalPlan,
               sources, dests, edge);
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           return new ReduceBatchOperation(config, channel,
-              taskPlan, sources, dests, edge);
+              logicalPlan, sources, dests, edge);
         } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
           return new AllReduceBatchOperation(config,
-              channel, taskPlan, sources, dests, edge);
+              channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
-          return new DirectBatchOperation(config, channel, taskPlan, sources, dests, edge);
+          return new DirectBatchOperation(config, channel, logicalPlan, sources, dests, edge);
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
-          return new KeyedReduceBatchOperation(config, channel, taskPlan, sources,
+          return new KeyedReduceBatchOperation(config, channel, logicalPlan, sources,
               dests, edge);
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
-          return new KeyedGatherBatchOperation(config, channel, taskPlan, sources,
+          return new KeyedGatherBatchOperation(config, channel, logicalPlan, sources,
               dests, edge);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          return new KeyedPartitionBatchOperation(config, channel, taskPlan, sources,
+          return new KeyedPartitionBatchOperation(config, channel, logicalPlan, sources,
               dests, edge);
         }
       }
@@ -118,36 +119,36 @@ public class ParallelOperationFactory {
       if (!edge.isKeyed()) {
         if (OperationNames.PARTITION.equals(edge.getOperation())) {
           return new PartitionStreamingOperation(config, channel,
-              taskPlan, sources, dests, edge);
+              logicalPlan, sources, dests, edge);
         } else if (OperationNames.BROADCAST.equals(edge.getOperation())) {
           return new BroadcastStreamingOperation(config, channel,
-              taskPlan, sources, dests, edge);
+              logicalPlan, sources, dests, edge);
         } else if (OperationNames.GATHER.equals(edge.getOperation())) {
           return new GatherStreamingOperation(config, channel,
-              taskPlan, sources, dests, edge);
+              logicalPlan, sources, dests, edge);
         } else if (OperationNames.REDUCE.equals(edge.getOperation())) {
           return new ReduceStreamingOperation(config,
-              channel, taskPlan, edge.getFunction(), sources,
+              channel, logicalPlan, edge.getFunction(), sources,
               dests, edge);
         } else if (OperationNames.ALLREDUCE.equals(edge.getOperation())) {
           return new AllReduceStreamingOperation(
-              config, channel, taskPlan, edge.getFunction(),
+              config, channel, logicalPlan, edge.getFunction(),
               sources, dests, edge);
         } else if (OperationNames.ALLGATHER.equals(edge.getOperation())) {
           return new AllGatherStreamingOperation(
-              config, channel, taskPlan, sources, dests, edge);
+              config, channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.DIRECT.equals(edge.getOperation())) {
-          return new DirectStreamingOperation(config, channel, taskPlan, sources, dests, edge);
+          return new DirectStreamingOperation(config, channel, logicalPlan, sources, dests, edge);
         }
       } else {
         if (OperationNames.KEYED_REDUCE.equals(edge.getOperation())) {
           return new KeyedReduceStreamingOperation(
-              config, channel, taskPlan, sources, dests, edge);
+              config, channel, logicalPlan, sources, dests, edge);
         } else if (OperationNames.KEYED_GATHER.equals(edge.getOperation())) {
-          return new KeyedGatherStreamingOperation(config, channel, taskPlan,
+          return new KeyedGatherStreamingOperation(config, channel, logicalPlan,
               sources, dests, edge);
         } else if (OperationNames.KEYED_PARTITION.equals(edge.getOperation())) {
-          return new KeyedPartitionStreamOperation(config, channel, taskPlan,
+          return new KeyedPartitionStreamOperation(config, channel, logicalPlan,
               sources, dests, edge);
         }
       }

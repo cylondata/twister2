@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 
 public class DynamicBufferChannel extends BaseNetworkChannel {
   private static final Logger LOG = Logger.getLogger(DynamicBufferChannel.class.getName());

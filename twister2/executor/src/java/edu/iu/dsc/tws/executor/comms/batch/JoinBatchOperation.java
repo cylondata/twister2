@@ -18,20 +18,20 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BJoin;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BJoin;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class JoinBatchOperation extends AbstractParallelOperation {
   private static final Logger LOG = Logger.getLogger(JoinBatchOperation.class.getName());
@@ -44,7 +44,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
   private Set<Integer> finishedSources = new HashSet<>();
 
-  public JoinBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public JoinBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                             Set<Integer> sources, Set<Integer> dests,
                             Edge leftEdge, Edge rightEdge) {
     super(config, network, tPlan, leftEdge.getTargetEdge());
@@ -61,18 +61,25 @@ public class JoinBatchOperation extends AbstractParallelOperation {
     boolean useDisk = false;
     Comparator keyComparator = null;
     try {
-      useDisk = (Boolean) leftEdge.getProperty("use-disk");
-      keyComparator = (Comparator) leftEdge.getProperty("key-comparator");
+      useDisk = (Boolean) leftEdge.getProperty(CommunicationContext.USE_DISK);
+      keyComparator = (Comparator) leftEdge.getProperty(
+          CommunicationContext.KEY_COMPARATOR);
     } catch (Exception ex) {
-      //ignore
+      throw new RuntimeException("Unable to get properties", ex);
     }
 
+    CommunicationContext.JoinType joinType = (CommunicationContext.JoinType) leftEdge.getProperty(
+        CommunicationContext.JOIN_TYPE
+    );
+
     Communicator newComm = channel.newWithConfig(leftEdge.getProperties());
-    op = new BJoin(newComm, taskPlan, sources, dests,
-        Utils.dataTypeToMessageType(leftEdge.getKeyType()),
-        Utils.dataTypeToMessageType(leftEdge.getDataType()),
-        Utils.dataTypeToMessageType(rightEdge.getDataType()),
-        new JoinRecvrImpl(), destSelector, useDisk, keyComparator);
+    op = new BJoin(newComm, logicalPlan, sources, dests,
+        leftEdge.getKeyType(),
+        leftEdge.getDataType(),
+        rightEdge.getDataType(),
+        new JoinRecvrImpl(), destSelector, useDisk,
+        keyComparator, leftEdge.getEdgeID().nextId(), rightEdge.getEdgeID().nextId(),
+        joinType, leftEdge.getMessageSchema(), rightEdge.getMessageSchema());
   }
 
   @Override
@@ -89,7 +96,7 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   private class JoinRecvrImpl implements BulkReceiver {
@@ -136,6 +143,6 @@ public class JoinBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

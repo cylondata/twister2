@@ -11,19 +11,39 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tsched.utils;
 
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
+import java.util.HashSet;
+import java.util.Set;
+
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 public class TaskSchedulerClassTest {
 
-  public static class TestSource extends BaseSource {
+  public static class TestSource extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264903510284748L;
+
+    private Set<String> inputSet = new HashSet<>();
 
     @Override
     public void execute() {
+    }
+
+    @Override
+    public void add(String name, DataObject<?> data) {
+    }
+
+    @Override
+    public Set<String> getReceivableNames() {
+      inputSet.add("points");
+      inputSet.add("centroids");
+      return inputSet;
     }
   }
 
@@ -45,12 +65,30 @@ public class TaskSchedulerClassTest {
     }
   }
 
-  public static class TestSink extends BaseSink {
+  public static class TestSink extends BaseSink implements Collector {
     private static final long serialVersionUID = -254264903510284748L;
+
+    private Set<String> inputSet = new HashSet<>();
 
     @Override
     public boolean execute(IMessage message) {
       return false;
+    }
+
+    @Override
+    public DataPartition<?> get() {
+      return null;
+    }
+
+    @Override
+    public DataPartition<?> get(String name) {
+      return null;
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      inputSet.add("centroids");
+      return inputSet;
     }
   }
 

@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
 
 public class StandaloneCommand extends MPICommand {
   private static final Logger LOG = Logger.getLogger(StandaloneCommand.class.getName());
+
   public StandaloneCommand(Config cfg, String workingDirectory) {
     super(cfg, workingDirectory);
   }
@@ -57,7 +58,27 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add("-Xms" + getMemory(job) + "m");
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
     mpiCommand.add(config.getStringValue("__job_master_ip__", "ip"));
-    mpiCommand.add(MPIContext.mpiMapBy(config));
+
+    //making use of PE of -map-by  of MPI
+    int cpusPerProc = 1;
+    if (job.getComputeResourceCount() > 0) {
+      double cpu = job.getComputeResource(0).getCpu();
+      cpusPerProc = (int) Math.ceil(cpu);
+    }
+    mpiCommand.add(MPIContext.mpiMapBy(config, cpusPerProc));
+
+    if (config.getBooleanValue(SchedulerContext.DEBUG, false)) {
+      mpiCommand.add("debug");
+    } else {
+      mpiCommand.add("no-debug");
+    }
+
+    //todo remove this once kryo is updated to 5+
+    if (getJavaVersion() >= 9) {
+      mpiCommand.add("suppress_illegal_access_warn");
+    } else {
+      mpiCommand.add("allow_illegal_access_warn");
+    }
     return mpiCommand;
   }
 
@@ -65,5 +86,24 @@ public class StandaloneCommand extends MPICommand {
     List<String> slurmCmd;
     slurmCmd = new ArrayList<>(Collections.singletonList(mpiScript));
     return slurmCmd;
+  }
+
+  /**
+   * Temp util method to determine the java version. This will be used to
+   * add java9+ flags, to resolve some reflection access warnings.
+   * todo remove once Kryo is updated to 5+
+   */
+  private static int getJavaVersion() {
+    String version = System.getProperty("java.version");
+    if (version.startsWith("1.")) {
+      version = version.substring(2, 3);
+    } else {
+      int dot = version.indexOf(".");
+      if (dot != -1) {
+        version = version.substring(0, dot);
+      }
+    }
+    LOG.info("Java version : " + version);
+    return Integer.parseInt(version);
   }
 }

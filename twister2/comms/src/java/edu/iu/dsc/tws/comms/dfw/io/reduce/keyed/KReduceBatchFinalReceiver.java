@@ -15,15 +15,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -58,11 +57,11 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  protected void merge(int dest, Queue<Object> dests) {
+  protected void merge(int dest, List<Object> dests) {
     Map<Object, Object> targetValues = reduced.get(dest);
 
-    while (dests.size() > 0) {
-      Object val = dests.poll();
+    for (int i = 0; i < dests.size(); i++) {
+      Object val = dests.get(i);
       Tuple t;
 
       if (val instanceof Tuple) {
@@ -79,12 +78,16 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
         targetValues.put(t.getKey(), t.getValue());
       }
     }
+    dests.clear();
   }
 
   @Override
-  protected boolean isAllEmpty() {
-    boolean b = super.isAllEmpty();
-    return b && reduced.isEmpty();
+  protected boolean isAllEmpty(int target) {
+    if (reduced.containsKey(target)) {
+      Map<Object, Object> queue = reduced.get(target);
+      return queue.isEmpty();
+    }
+    return true;
   }
 
   @Override
@@ -97,7 +100,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
 
     boolean send = bulkReceiver.receive(target, new ReduceIterator(values));
     if (send) {
-      reduced.remove(target);
+      reduced.put(target, new HashMap<>());
     }
     return send;
   }

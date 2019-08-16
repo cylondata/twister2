@@ -13,25 +13,33 @@ package edu.iu.dsc.tws.comms.tcp;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
+import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.common.net.NetworkInfo;
 import edu.iu.dsc.tws.common.net.tcp.TCPChannel;
+import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.TCPStatus;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.dfw.ChannelListener;
-import edu.iu.dsc.tws.comms.dfw.ChannelMessage;
-import edu.iu.dsc.tws.comms.dfw.DataBuffer;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 
 public class TWSTCPChannel implements TWSChannel {
   private static final Logger LOG = Logger.getLogger(TWSTCPChannel.class.getName());
@@ -102,6 +110,11 @@ public class TWSTCPChannel implements TWSChannel {
   private List<TCPReceiveRequests> registeredReceives;
 
   /**
+   * The grouped receives
+   */
+  private Int2ObjectArrayMap<List<TCPReceiveRequests>> groupedRegisteredReceives;
+
+  /**
    * Wait for completion sends
    */
   private IterativeLinkedList<TCPSendRequests> waitForCompletionSends;
@@ -116,12 +129,68 @@ public class TWSTCPChannel implements TWSChannel {
    */
   private List<Pair<Integer, Integer>> pendingCloseRequests = new ArrayList<>();
 
-  public TWSTCPChannel(Config config, int exec, TCPChannel net) {
-    this.pendingSends = new ArrayBlockingQueue<TCPSendRequests>(1024);
-    this.registeredReceives = Collections.synchronizedList(new ArrayList<>(1024));
+  /**
+   * Create the TCP channel
+   * @param config configuration
+   * @param wController controller
+   */
+  public TWSTCPChannel(Config config,
+                       IWorkerController wController) {
+    int index = wController.getWorkerInfo().getWorkerID();
+    int workerPort = wController.getWorkerInfo().getPort();
+    String localIp = wController.getWorkerInfo().getWorkerIP();
+
+    TCPChannel channel = createChannel(config, localIp, workerPort, index);
+    // now lets start listening before sending the ports to master,
+    channel.startListening();
+
+    // wait for everyone to start the job master
+    try {
+      wController.waitOnBarrier();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      throw new Twister2RuntimeException(timeoutException);
+    }
+
+    // now talk to a central server and get the information about the worker
+    // this is a synchronization step
+    List<JobMasterAPI.WorkerInfo> wInfo = wController.getJoinedWorkers();
+
+    // lets start the client connections now
+    List<NetworkInfo> nInfos = new ArrayList<>();
+    for (JobMasterAPI.WorkerInfo w : wInfo) {
+      NetworkInfo networkInfo = new NetworkInfo(w.getWorkerID());
+      networkInfo.addProperty(TCPContext.NETWORK_PORT, w.getPort());
+      networkInfo.addProperty(TCPContext.NETWORK_HOSTNAME, w.getWorkerIP());
+      nInfos.add(networkInfo);
+    }
+
+    // start the connections
+    channel.startConnections(nInfos);
+    // now lets wait for connections to be established
+    channel.waitForConnections();
+
+
+    this.pendingSends = new ArrayBlockingQueue<>(1024);
+    this.registeredReceives = new ArrayList<>(1024);
+    this.groupedRegisteredReceives = new Int2ObjectArrayMap<>();
     this.waitForCompletionSends = new IterativeLinkedList<>();
-    this.executor = exec;
-    this.comm = net;
+    this.executor = wController.getWorkerInfo().getWorkerID();
+    this.comm = channel;
+  }
+
+  /**
+   * Start the TCP servers here
+   *
+   * @param cfg the configuration
+   * @param workerId worker id
+   */
+  private static TCPChannel createChannel(Config cfg, String workerIP, int workerPort,
+                                          int workerId) {
+    NetworkInfo netInfo = new NetworkInfo(workerId);
+    netInfo.addProperty(TCPContext.NETWORK_HOSTNAME, workerIP);
+    netInfo.addProperty(TCPContext.NETWORK_PORT, workerPort);
+    return new TCPChannel(cfg, netInfo);
   }
 
   /**
@@ -142,15 +211,21 @@ public class TWSTCPChannel implements TWSChannel {
 
   /**
    * Register our interest to receive messages from particular rank using a stream
-   * @param rank
-   * @param stream
-   * @param callback
-   * @return
    */
-  public boolean receiveMessage(int rank, int stream,
+  public boolean receiveMessage(int group, int rank, int stream,
                                 ChannelListener callback, Queue<DataBuffer> receiveBuffers) {
-    return registeredReceives.add(new TCPReceiveRequests(rank, stream, callback,
-        receiveBuffers));
+    TCPReceiveRequests requests = new TCPReceiveRequests(rank, stream, callback,
+        receiveBuffers);
+    registeredReceives.add(requests);
+    List<TCPReceiveRequests> list;
+    if (groupedRegisteredReceives.containsKey(group)) {
+      list = groupedRegisteredReceives.get(group);
+    } else {
+      list = new ArrayList<>();
+      groupedRegisteredReceives.put(group, list);
+    }
+    list.add(requests);
+    return true;
   }
 
   @Override
@@ -201,6 +276,7 @@ public class TWSTCPChannel implements TWSChannel {
 
   /**
    * Post the receive request to MPI
+   *
    * @param rank MPI rank
    * @param stream the stream as a tag
    * @param byteBuffer the buffer
@@ -210,10 +286,48 @@ public class TWSTCPChannel implements TWSChannel {
     return comm.iRecv(byteBuffer.getByteBuffer(), byteBuffer.getCapacity(), rank, stream);
   }
 
-  /**
-   * Progress the communications that are pending
-   */
+  private void internalProgressReceives(List<TCPReceiveRequests> requests) {
+    for (int i = 0; i < requests.size(); i++) {
+      TCPReceiveRequests receiveRequests = requests.get(i);
+
+      // okay we have more buffers to be posted
+      if (receiveRequests.availableBuffers.size() > 0) {
+        postReceive(receiveRequests);
+      }
+
+      IterativeLinkedList.ILLIterator requestIterator = receiveRequests.pendingRequests.iterator();
+      while (requestIterator.hasNext()) {
+        Request r = (Request) requestIterator.next();
+        if (r == null || r.request == null) {
+          continue;
+        }
+        TCPStatus status = r.request.testStatus();
+        if (status == TCPStatus.COMPLETE) {
+          // lets call the callback about the receive complete
+          r.buffer.setSize(r.buffer.getByteBuffer().limit());
+
+          //We do not have any buffers to receive messages so we need to free a buffer
+          receiveRequests.callback.onReceiveComplete(
+              receiveRequests.rank, receiveRequests.edge, r.buffer);
+          requestIterator.remove();
+        }
+      }
+    }
+    // handle the pending close requests
+    handlePendingCloseRequests();
+  }
+
+  @Override
   public void progress() {
+    progressSends();
+
+    internalProgressReceives(registeredReceives);
+
+    comm.progress();
+  }
+
+  @Override
+  public void progressSends() {
     // we should rate limit here
     while (pendingSends.size() > 0) {
       // post the message
@@ -221,14 +335,6 @@ public class TWSTCPChannel implements TWSChannel {
       // post the send
       postMessage(sendRequests);
       waitForCompletionSends.add(sendRequests);
-    }
-
-    for (int i = 0; i < registeredReceives.size(); i++) {
-      TCPReceiveRequests receiveRequests = registeredReceives.get(i);
-      // okay we have more buffers to be posted
-      if (receiveRequests.availableBuffers.size() > 0) {
-        postReceive(receiveRequests);
-      }
     }
 
     IterativeLinkedList.ILLIterator sendRequestsIterator
@@ -254,39 +360,11 @@ public class TWSTCPChannel implements TWSChannel {
         sendRequestsIterator.remove();
       }
     }
+  }
 
-
-    for (int i = 0; i < registeredReceives.size(); i++) {
-      TCPReceiveRequests receiveRequests = registeredReceives.get(i);
-      IterativeLinkedList.ILLIterator requestIterator = receiveRequests.pendingRequests.iterator();
-      while (requestIterator.hasNext()) {
-        Request r = (Request) requestIterator.next();
-        if (r == null || r.request == null) {
-          continue;
-        }
-        TCPStatus status = r.request.testStatus();
-        if (status == TCPStatus.COMPLETE) {
-          // lets call the callback about the receive complete
-          r.buffer.setSize(r.buffer.getByteBuffer().limit());
-
-          if (receiveRequests.pendingRequests.size() == 0
-              && receiveRequests.availableBuffers.size() == 0) {
-            //We do not have any buffers to receive messages so we need to free a buffer
-            receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.edge, r.buffer, true);
-          } else {
-            receiveRequests.callback.onReceiveComplete(
-                receiveRequests.rank, receiveRequests.edge, r.buffer, false);
-          }
-          requestIterator.remove();
-        }
-      }
-    }
-
-    // handle the pending close requests
-    handlePendingCloseRequests();
-
-    comm.progress();
+  @Override
+  public void progressReceives(int group) {
+    internalProgressReceives(groupedRegisteredReceives.get(group));
   }
 
   /**

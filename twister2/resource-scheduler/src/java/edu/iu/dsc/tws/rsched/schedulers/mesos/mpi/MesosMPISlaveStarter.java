@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -35,7 +35,8 @@ public final class MesosMPISlaveStarter {
   private static int resourceIndex = 0;
   private static int startingPort = 30000;
 
-  private MesosMPISlaveStarter() { }
+  private MesosMPISlaveStarter() {
+  }
 
   public static void main(String[] args) throws Exception {
 
@@ -43,8 +44,8 @@ public final class MesosMPISlaveStarter {
     workerID = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = System.getenv("JOB_NAME");
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
     resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
     Map<String, Integer> additionalPorts =

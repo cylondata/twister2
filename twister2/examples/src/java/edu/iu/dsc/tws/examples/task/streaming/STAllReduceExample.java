@@ -14,26 +14,26 @@ package edu.iu.dsc.tws.examples.task.streaming;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.verifiers.ReduceVerifier;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.typed.AllReduceCompute;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.typed.AllReduceCompute;
 
 public class STAllReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STAllReduceExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -42,13 +42,13 @@ public class STAllReduceExample extends BenchTaskWorker {
     BaseSource g = new SourceTask(edge);
     ISink r = new AllReduceSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE)
         .viaEdge(edge)
-        .withOperation(Op.SUM, DataType.INTEGER_ARRAY);
+        .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class AllReduceSinkTask extends AllReduceCompute<int[]> implements ISink {

@@ -16,21 +16,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BDirect;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class DirectBatchOperation extends AbstractParallelOperation {
   private BDirect op;
 
-  public DirectBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public DirectBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                               Set<Integer> srcs, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
@@ -41,8 +40,9 @@ public class DirectBatchOperation extends AbstractParallelOperation {
     Collections.sort(targets);
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BDirect(newComm, taskPlan, sources, targets,
-        new PartitionReceiver(), Utils.dataTypeToMessageType(edge.getDataType()));
+    op = new BDirect(newComm, logicalPlan, sources, targets,
+        new PartitionReceiver(), edge.getDataType(), edge.getEdgeID().nextId(),
+        edge.getMessageSchema());
   }
 
   public void send(int source, IMessage message) {
@@ -72,7 +72,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 
   @Override
@@ -82,7 +82,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   @Override

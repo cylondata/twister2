@@ -13,12 +13,12 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
-import edu.iu.dsc.tws.task.api.TaskContext;
-import edu.iu.dsc.tws.task.api.checkpoint.SourceCheckpointableTask;
 
-public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
+public class TwsKafkaConsumer<T> extends BaseSource {
   private static final long serialVersionUID = -264264120110286748L;
   private static Logger log = LoggerFactory.getLogger(TwsKafkaConsumer.class);
 
@@ -50,8 +50,6 @@ public class TwsKafkaConsumer<T> extends SourceCheckpointableTask {
 
   @Override
   public void prepare(Config cfg, TaskContext context) {
-    connect(cfg, context);
-    setCheckpointInterval(4);
     this.myIndex = cfg.getIntegerValue("twister2.container.id", 0);
     this.worldSize = context.getParallelism();
     log.info("myID : {} , worldSize : {} ", myIndex, worldSize);

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 
 public final class KMeansWorkerParameters {

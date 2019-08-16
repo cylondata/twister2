@@ -14,14 +14,15 @@ package edu.iu.dsc.tws.examples.task.streaming;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
-import edu.iu.dsc.tws.data.api.DataType;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.ISink;
-import edu.iu.dsc.tws.task.api.typed.streaming.SKeyedReduceCompute;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.typed.streaming.SKeyedReduceCompute;
 
 /**
  * todo keyedreduce for streaming is not applicable. This will be removed,
@@ -32,23 +33,23 @@ public class STKeyedReduceExample extends BenchTaskWorker {
   private static final Logger LOG = Logger.getLogger(STKeyedReduceExample.class.getName());
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
     Op operation = Op.SUM;
-    DataType keyType = DataType.INTEGER;
-    DataType dataType = DataType.INTEGER_ARRAY;
+    MessageType keyType = MessageTypes.INTEGER;
+    MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedReduceSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE)
         .viaEdge(edge)
         .withOperation(operation, dataType)
         .withKeyType(keyType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

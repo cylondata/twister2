@@ -14,9 +14,9 @@ package edu.iu.dsc.tws.rsched.uploaders.localfs;
 import java.io.IOException;
 import java.net.URI;
 
-//import com.sun.jndi.toolkit.url.Uri;
+import edu.iu.dsc.tws.api.config.Config;
 
-import edu.iu.dsc.tws.common.config.Config;
+//import com.sun.jndi.toolkit.url.Uri;
 
 public final class LFSTest {
 

@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.threading.CommonThreadPool;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 /**
  * Sorted merger implementation
@@ -146,8 +146,31 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     this.concurrentIOs = new Semaphore(parallelIOAllowance);
 
     this.target = tar;
-    LOG.info("Disk merger configured. Folder : " + folder
+    LOG.fine("Disk merger configured. Folder : " + folder
         + ", Bytes in memory :" + maxBytesInMemory);
+  }
+
+  /**
+   * Add the data to the file
+   */
+  public synchronized void add(Tuple tuple) {
+    if (status == FSStatus.READING) {
+      throw new RuntimeException("Cannot add after switching to reading");
+    }
+
+    if (status == FSStatus.WRITING_MEMORY) {
+      this.recordsInMemory.add(tuple);
+      this.numOfBytesInMemory += ((byte[]) tuple.getValue()).length;
+
+      // we switch to disk
+      if (numOfBytesInMemory >= maxBytesToKeepInMemory) {
+        status = FSStatus.WRITING_DISK;
+        this.numOfBytesInMemory = 0;
+      }
+    } else {
+      this.recordsToDisk.add(tuple);
+      this.numOfBytesInMemory += ((byte[]) tuple.getValue()).length;
+    }
   }
 
   /**
@@ -174,7 +197,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   }
 
   public synchronized void switchToReading() {
-    LOG.info("Switching to read...");
     try {
       //wait if there are ongoing disk IOs
       fileWriteLock.acquire();
@@ -220,7 +242,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
   private void deserializeObjects() {
     int threads = CommonThreadPool.getThreadCount() + 1; //this thread is also counted
     List<Future<Boolean>> deserializeFutures = new ArrayList<>();
-    long st = System.currentTimeMillis();
     int chunkSize = this.recordsInMemory.size() / threads;
 
     if (this.recordsInMemory.size() % threads != 0) {
@@ -264,7 +285,6 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         throw new RuntimeException("Error in deserializing records in memory", e);
       }
     }
-    LOG.info("Memory deserialize time: " + (System.currentTimeMillis() - st));
   }
 
   /**
@@ -471,9 +491,9 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     private static final String RP_SAME_KEY_READER = "SAME_KEY_READER";
     private static final String RP_FILE_READERS = "FILE_READERS";
 
-    private PriorityQueue<ControlledFileReader> controlledFileReaders
+    private PriorityQueue<ControlledReader<Tuple>> controlledFileReaders
         = new PriorityQueue<>(1 + noOfFileWritten);
-    private ControlledFileReader sameKeyReader;
+    private ControlledReader<Tuple> sameKeyReader;
 
     private RestorePoint restorePoint;
 
@@ -485,8 +505,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
           keyComparator
       );
       if (!recordsInMemory.isEmpty()) {
-        ControlledFileReader inMemoryReader = ControlledFileReader.loadInMemory(
-            meta, recordsInMemory, keyComparator);
+        ControlledReader inMemoryReader = new ControlledMemoryReader(
+            recordsInMemory, keyComparator);
         if (inMemoryReader.hasNext()) {
           this.controlledFileReaders.add(inMemoryReader);
         }
@@ -517,7 +537,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
 
     @Override
     public Tuple next() {
-      ControlledFileReader fr = this.sameKeyReader;
+      ControlledReader<Tuple> fr = this.sameKeyReader;
       if (fr == null || !fr.hasNext()) {
         fr = this.controlledFileReaders.poll();
         fr.open();
@@ -545,8 +565,8 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         this.restorePoint.put(RP_SAME_KEY_READER, this.sameKeyReader);
       }
 
-      List<ControlledFileReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
-      fileReaderList.forEach(ControlledFileReader::createRestorePoint);
+      List<ControlledReader> fileReaderList = new ArrayList<>(this.controlledFileReaders);
+      fileReaderList.forEach(ControlledReader::createRestorePoint);
 
       this.restorePoint.put(RP_FILE_READERS, fileReaderList);
     }
@@ -557,14 +577,14 @@ public class FSKeyedSortedMerger2 implements Shuffle {
         throw new RuntimeException("Couldn't find a valid restore point to restore from.");
       }
       this.meta.reset();
-      this.sameKeyReader = (ControlledFileReader) this.restorePoint.get(RP_SAME_KEY_READER);
+      this.sameKeyReader = (ControlledReader) this.restorePoint.get(RP_SAME_KEY_READER);
       if (this.sameKeyReader != null) {
         this.sameKeyReader.restore();
       }
 
       this.controlledFileReaders.clear();
-      List<ControlledFileReader> fileReaderList =
-          (List<ControlledFileReader>) this.restorePoint.get(RP_FILE_READERS);
+      List<ControlledReader> fileReaderList =
+          (List<ControlledReader>) this.restorePoint.get(RP_FILE_READERS);
 
       fileReaderList.forEach(fr -> {
         fr.restore();
@@ -581,7 +601,7 @@ public class FSKeyedSortedMerger2 implements Shuffle {
     public void clearRestorePoint() {
       this.restorePoint = null;
       this.controlledFileReaders.iterator()
-          .forEachRemaining(ControlledFileReader::clearRestorePoint);
+          .forEachRemaining(ControlledReader::clearRestorePoint);
     }
   }
 

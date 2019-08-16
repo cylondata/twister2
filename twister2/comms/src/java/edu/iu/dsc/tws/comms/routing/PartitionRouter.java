@@ -19,13 +19,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class PartitionRouter {
   private static final Logger LOG = Logger.getLogger(PartitionRouter.class.getName());
   // the task plan
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
   // task -> (path -> tasks)
   private Map<Integer, Set<Integer>> externalSendTasks;
   // task -> (path -> tasks)
@@ -39,14 +39,14 @@ public class PartitionRouter {
   /**
    * Create a direct router
    */
-  public PartitionRouter(TaskPlan plan, Set<Integer> srscs, Set<Integer> dests) {
-    this.taskPlan = plan;
+  public PartitionRouter(LogicalPlan plan, Set<Integer> srscs, Set<Integer> dests) {
+    this.logicalPlan = plan;
 
     this.externalSendTasks = new HashMap<>();
     this.internalSendTasks = new HashMap<>();
     this.partialReceives = new HashMap<>();
 
-    Set<Integer> myTasks = taskPlan.getChannelsOfExecutor(taskPlan.getThisExecutor());
+    Set<Integer> myTasks = logicalPlan.getChannelsOfExecutor(logicalPlan.getThisExecutor());
     for (int src : srscs) {
       if (myTasks.contains(src)) {
         for (int dest : dests) {
@@ -85,10 +85,10 @@ public class PartitionRouter {
 
     receiveExecutors = PartitionRouter.getExecutorsHostingTasks(plan, srscs);
     // we are not interested in our own
-    receiveExecutors.remove(taskPlan.getThisExecutor());
+    receiveExecutors.remove(logicalPlan.getThisExecutor());
 
     List<Integer> thisSources = new ArrayList<>(
-        TaskPlanUtils.getTasksOfThisWorker(taskPlan, srscs));
+        TaskPlanUtils.getTasksOfThisWorker(logicalPlan, srscs));
     for (int dest : dests) {
       partialReceives.put(dest, thisSources);
     }
@@ -120,7 +120,7 @@ public class PartitionRouter {
     return -1;
   }
 
-  private static Set<Integer> getExecutorsHostingTasks(TaskPlan plan, Set<Integer> tasks) {
+  private static Set<Integer> getExecutorsHostingTasks(LogicalPlan plan, Set<Integer> tasks) {
     Set<Integer> executors = new HashSet<>();
 
     Set<Integer> allExecutors = plan.getAllExecutors();

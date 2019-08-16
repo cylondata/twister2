@@ -15,23 +15,22 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BAllGather;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BAllGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class AllGatherBatchOperation extends AbstractParallelOperation {
 
   protected BAllGather op;
 
-  public AllGatherBatchOperation(Config config, Communicator network, TaskPlan tPlan,
-                                     Set<Integer> sources, Set<Integer>  dest, Edge edge) {
+  public AllGatherBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
+                                 Set<Integer> sources, Set<Integer> dest, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
     if (sources.size() == 0) {
@@ -43,8 +42,9 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BAllGather(newComm, taskPlan, sources, dest,
-        new FinalGatherReceive(), Utils.dataTypeToMessageType(edge.getDataType()));
+    op = new BAllGather(newComm, logicalPlan, sources, dest,
+        new FinalGatherReceive(), edge.getDataType(), edge.getEdgeID().nextId(),
+        edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override
@@ -54,12 +54,12 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 
   @Override

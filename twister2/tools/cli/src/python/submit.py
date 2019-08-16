@@ -49,6 +49,7 @@ def create_parser(subparsers):
     cli_args.add_job_file(parser)
     cli_args.add_job_class(parser)
     cli_args.add_verbose(parser)
+    cli_args.add_debug(parser)
 
     parser.set_defaults(subcommand='submit')
     return parser
@@ -64,20 +65,33 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("twister2_home=" + twister2_home)
     # set the cluster name property
     java_system_props.append("cluster_type=" + cl_args["cluster"])
+    # set debug mode
+    java_system_props.append("debug=" + str(cl_args['debug']))
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
     # set the logger file
+    conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
     conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
-    if os.path.isfile(conf_dir + "/logger.properties"):
+    if os.path.isfile(conf_dir_common + "/logger.properties"):
+        java_system_props.append("java.util.logging.config.file=" + conf_dir_common + "/logger.properties")
+    elif os.path.isfile(conf_dir + "/logger.properties"):
         java_system_props.append("java.util.logging.config.file=" + conf_dir + "/logger.properties")
     return java_system_props
 
 def read_client_properties(cl_args):
+    conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
+    common_client_config = {}
+    if os.path.isfile(conf_dir_common + "/client.yaml"):
+        with open(conf_dir_common + "/client.yaml", 'r') as stream:
+            data_loaded = yaml.load(stream)
+            return data_loaded
+
     conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
 
     if os.path.isfile(conf_dir + "/client.yaml"):
         with open(conf_dir + "/client.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
+            common_client_config.update(data_loaded)
             return data_loaded
 
 ################################################################################

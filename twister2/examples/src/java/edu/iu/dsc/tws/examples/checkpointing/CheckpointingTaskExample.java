@@ -15,25 +15,24 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.TaskEnvironment;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.checkpointing.api.Snapshot;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.checkpointing.Snapshot;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.controller.IWorkerController;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.data.api.DataType;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.api.BaseCompute;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 
 public class CheckpointingTaskExample implements IWorker {
 
@@ -43,25 +42,26 @@ public class CheckpointingTaskExample implements IWorker {
   public void execute(Config config, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    TaskEnvironment taskEnvironment = TaskEnvironment.init(
-        config, workerID, workerController, volatileVolume);
+    ComputeEnvironment computeEnvironment = ComputeEnvironment.init(
+        config, workerID, workerController, persistentVolume, volatileVolume);
 
-    TaskGraphBuilder taskGraphBuilder = taskEnvironment.newTaskGraph(OperationMode.STREAMING);
+    ComputeGraphBuilder computeGraphBuilder =
+        computeEnvironment.newTaskGraph(OperationMode.STREAMING);
 
     int parallelism = config.getIntegerValue("parallelism", 1);
 
-    taskGraphBuilder.addSource("source", new SourceTask(), parallelism);
+    computeGraphBuilder.addSource("source", new SourceTask(), parallelism);
 
-    taskGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
-        .direct("source").viaEdge("so-c").withDataType(DataType.INTEGER);
+    computeGraphBuilder.addCompute("compute", new ComputeTask(), parallelism)
+        .direct("source").viaEdge("so-c").withDataType(MessageTypes.INTEGER);
 
-    taskGraphBuilder.addSink("sink", new SinkTask(), parallelism)
+    computeGraphBuilder.addSink("sink", new SinkTask(), parallelism)
         .direct("compute")
         .viaEdge("c-si")
-        .withDataType(DataType.INTEGER);
+        .withDataType(MessageTypes.INTEGER);
 
-    taskEnvironment.buildAndExecute(taskGraphBuilder);
-    taskEnvironment.close();
+    computeEnvironment.buildAndExecute(computeGraphBuilder);
+    computeEnvironment.close();
   }
 
   public static class ComputeTask extends BaseCompute<Integer> implements CheckpointableTask {

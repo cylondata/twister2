@@ -15,11 +15,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
+import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
-import edu.iu.dsc.tws.checkpointing.api.StateStore;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
-import edu.iu.dsc.tws.common.checkpointing.CheckpointingClient;
 
 public final class TaskCheckpointUtils {
 

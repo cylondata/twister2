@@ -14,12 +14,24 @@ package edu.iu.dsc.tws.dataset;
 import java.util.HashMap;
 import java.util.Map;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 public class DataObjectImpl<T> implements DataObject<T> {
   private Map<Integer, DataPartition<T>> partitions = new HashMap<>();
 
-  public DataObjectImpl(Config config) {
+  private transient Config config;
+
+  private String id;
+
+  public DataObjectImpl(Config conf) {
+    this.config = conf;
+  }
+
+  public DataObjectImpl(String name, Config conf) {
+    this.id = name;
+    this.config = conf;
   }
 
   @Override
@@ -33,12 +45,21 @@ public class DataObjectImpl<T> implements DataObject<T> {
   }
 
   @Override
-  public DataPartition<T> getPartitions(int partitionId) {
+  public DataPartition<T> getPartition(int partitionId) {
     return partitions.get(partitionId);
   }
 
   @Override
   public int getPartitionCount() {
     return partitions.size();
+  }
+
+  @Override
+  public String getID() {
+    if (id != null && !id.isEmpty()) {
+      return id;
+    } else {
+      throw new RuntimeException("Unnamed data object");
+    }
   }
 }

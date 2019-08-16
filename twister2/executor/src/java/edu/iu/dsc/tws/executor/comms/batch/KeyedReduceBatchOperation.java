@@ -17,30 +17,30 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.DestinationSelector;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.api.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.DestinationSelector;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
+
   private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
 
   private BKeyedReduce op;
 
-  public KeyedReduceBatchOperation(Config config, Communicator network, TaskPlan tPlan,
+  public KeyedReduceBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
                                    Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
 
@@ -52,10 +52,10 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new BKeyedReduce(newComm, taskPlan, sources, dests,
+    op = new BKeyedReduce(newComm, logicalPlan, sources, dests,
         new ReduceFunctionImpl(edge.getFunction()),
-        new BulkReceiverImpl(), Utils.dataTypeToMessageType(edge.getKeyType()),
-        Utils.dataTypeToMessageType(edge.getDataType()), destSelector);
+        new BulkReceiverImpl(), edge.getKeyType(), edge.getDataType(),
+        destSelector, edge.getMessageSchema());
   }
 
   @Override
@@ -67,7 +67,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean progress() {
-    return op.progress() || op.hasPending();
+    return op.progress() || !op.isComplete();
   }
 
   private class ReduceFunctionImpl implements ReduceFunction {
@@ -122,6 +122,6 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

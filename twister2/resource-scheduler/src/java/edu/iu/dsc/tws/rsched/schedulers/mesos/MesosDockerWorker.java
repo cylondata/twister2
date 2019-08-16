@@ -25,24 +25,23 @@ package edu.iu.dsc.tws.rsched.schedulers.mesos;
 
 import java.net.Inet4Address;
 import java.nio.file.Paths;
-//import java.util.ArrayList;
-//import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-
-import edu.iu.dsc.tws.common.controller.IWorkerController;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
-
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+
+//import java.util.ArrayList;
+//import java.util.List;
 
 
 public class MesosDockerWorker {
@@ -64,8 +63,8 @@ public class MesosDockerWorker {
     MesosDockerWorker worker = new MesosDockerWorker();
 
     String twister2Home = Paths.get("").toAbsolutePath().toString();
-    String configDir = "twister2-job/mesos/";
-    config = ConfigLoader.loadConfig(twister2Home, configDir);
+    String configDir = "twister2-job";
+    config = ConfigLoader.loadConfig(twister2Home, configDir, "mesos");
 
     resourceIndex = Integer.parseInt(System.getenv("COMPUTE_RESOURCE_INDEX"));
 
@@ -118,7 +117,7 @@ public class MesosDockerWorker {
     LOG.info("Worker Count..: " + workerCount);
 
     LOG.info(workerController.getWorkerInfo().toString());
-   //start job master client
+    //start job master client
     worker.startJobMasterAgent(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
         workerCount);
 

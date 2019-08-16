@@ -15,10 +15,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.fs.FSDataInputStream;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FSDataInputStream;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * A file input split provides information on a particular part of a file, possibly
@@ -319,7 +320,7 @@ public abstract class FileInputSplit<OT> extends LocatableInputSplit<OT> {
     public void run() {
       try {
         //final FileSystem fs = FileSystem.get(this.split.getPath().toUri());
-        final FileSystem fs = FileSystem.get(this.split.getPath().toUri(), config);
+        final FileSystem fs = FileSystemUtils.get(this.split.getPath().toUri(), config);
         this.fdis = fs.open(this.split.getPath());
         // check for canceling and close the stream in that case, because no one will obtain it
         if (this.aborted) {

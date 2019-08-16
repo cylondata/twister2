@@ -20,12 +20,13 @@ import java.util.logging.Logger;
 
 import com.google.common.collect.Iterators;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BJoin;
-import edu.iu.dsc.tws.comms.api.selectors.SimpleKeyBasedSelector;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BJoin;
+import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
@@ -34,8 +35,6 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
   private static final Logger LOG = Logger.getLogger(BKeyedPartitionExample.class.getName());
 
   private BJoin join;
-
-  private boolean joinDone = false;
 
   @Override
   protected boolean sendMessages(int task, Object key, Object data, int flag, int tag) {
@@ -47,10 +46,7 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
   }
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Set<Integer> targets = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
@@ -63,12 +59,13 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
     }
 
     // create the communication
-    join = new BJoin(communicator, taskPlan, sources, targets, MessageTypes.INTEGER,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), true,
-        Comparator.comparingInt(o -> (Integer) o));
+        Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     // now initialize the workers
 
@@ -93,7 +90,7 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return joinDone && sourcesDone && !join.hasPending();
+    return sourcesDone && join.isComplete();
   }
 
   @Override
@@ -114,8 +111,6 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
     public boolean receive(int target, Iterator<Object> it) {
       LOG.log(Level.INFO, String.format("%d Received message %d count %d",
           workerId, target, Iterators.size(it)));
-      joinDone = true;
-
       return true;
     }
   }

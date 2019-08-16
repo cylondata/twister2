@@ -18,16 +18,17 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.comms.api.stream.SKeyedGather;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
+import edu.iu.dsc.tws.comms.stream.SKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
@@ -42,10 +43,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
   private boolean gatherDone;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -57,11 +55,11 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
-    keyedGather = new SKeyedGather(communicator, taskPlan, sources, targets,
+    keyedGather = new SKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
         MessageTypes.OBJECT, MessageTypes.OBJECT,
         new GatherBulkReceiver(), new LoadBalanceSelector());
 
-    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : sourceTasks) {
       finishedSources.put(t, false);
@@ -70,7 +68,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
 
     LOG.log(Level.INFO, String.format("Worker[%d], Source Tasks %s , Sink Tasks %s",
@@ -93,7 +91,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !keyedGather.hasPending();
+    return gatherDone && sourcesDone && keyedGather.isComplete();
   }
 
   @Override

@@ -25,7 +25,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import edu.iu.dsc.tws.task.api.TaskContext;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 
 public class KafkaConsumerThread<T>  {
   private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerThread.class);

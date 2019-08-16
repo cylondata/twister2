@@ -13,19 +13,20 @@ package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.BulkReceiver;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.batch.BAllGather;
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.batch.BAllGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -42,30 +43,23 @@ public class BAllGatherExample extends BenchWorker {
 
   private BAllGather gather;
 
-  private boolean gatherDone;
-
   private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
-    Set<Integer> sources = new HashSet<>();
+  protected void execute(WorkerEnvironment workerEnv) {
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets = new HashSet<>();
-    for (int i = noOfSourceTasks; i < noOfTargetTasks + noOfSourceTasks; i++) {
-      targets.add(i);
-    }
-    // create the communication
-    gather = new BAllGather(communicator, taskPlan, sources, targets, new FinalSingularReceiver(),
-        MessageTypes.INTEGER_ARRAY);
+    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    int noOfTargetTasks = jobParameters.getTaskStages().get(1);
+    Set<Integer> targets =
+        IntStream.range(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks)
+            .boxed().collect(Collectors.toSet());
+
+    // create the communication
+    gather = new BAllGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        new FinalSingularReceiver(), MessageTypes.INTEGER_ARRAY);
+
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -120,7 +114,7 @@ public class BAllGatherExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return gatherDone && sourcesDone && !gather.hasPending();
+    return sourcesDone && gather.isComplete();
   }
 
   public class FinalSingularReceiver implements BulkReceiver {
@@ -130,7 +124,6 @@ public class BAllGatherExample extends BenchWorker {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       if (targets.isEmpty()) {
-        gatherDone = true;
         return;
       }
       this.lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
@@ -138,12 +131,12 @@ public class BAllGatherExample extends BenchWorker {
 
     @Override
     public boolean receive(int target, Iterator<Object> itr) {
+      LOG.info("Received values");
       Timing.mark(BenchmarkConstants.TIMING_ALL_RECV,
           workerId == 0 && target == lowestTarget);
       BenchmarkUtils.markTotalTime(resultsRecorder, workerId == 0
           && target == lowestTarget);
       resultsRecorder.writeToCSV();
-      gatherDone = true;
       verifyResults(resultsVerifier, itr, null);
       return true;
     }

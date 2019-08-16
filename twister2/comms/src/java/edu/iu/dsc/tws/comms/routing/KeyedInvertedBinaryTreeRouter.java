@@ -21,14 +21,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class KeyedInvertedBinaryTreeRouter {
   private static final Logger LOG = Logger.getLogger(KeyedInvertedBinaryTreeRouter.class.getName());
-  private TaskPlan taskPlan;
+  private LogicalPlan logicalPlan;
   // source -> Path -> task
   private Map<Integer, Map<Integer, List<Integer>>> receiveTasks;
   // the executors we are receiving from
@@ -55,12 +55,12 @@ public class KeyedInvertedBinaryTreeRouter {
    * @param roots
    * @param dests
    */
-  public KeyedInvertedBinaryTreeRouter(Config cfg, TaskPlan plan,
+  public KeyedInvertedBinaryTreeRouter(Config cfg, LogicalPlan plan,
                                   Set<Integer> roots, Set<Integer> dests) {
     int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
-    this.taskPlan = plan;
+    this.logicalPlan = plan;
     this.destinationIdentifiers = new HashMap<>();
     this.pathToTask = new HashMap<>();
     // construct the map of receiving ids
@@ -225,7 +225,7 @@ public class KeyedInvertedBinaryTreeRouter {
       return mainTask.get(path);
     } else {
       throw new RuntimeException(String.format("%d Requesting an path that doesn't exist: %d",
-          taskPlan.getThisExecutor(), path));
+          logicalPlan.getThisExecutor(), path));
     }
   }
 

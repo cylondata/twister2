@@ -13,7 +13,7 @@ package org.apache.storm.topology.twister2;
 
 import org.apache.storm.tuple.Fields;
 
-import edu.iu.dsc.tws.task.api.INode;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 
 public interface Twister2StormNode extends INode {
 

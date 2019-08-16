@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.data.api.splits;
 
 import java.io.IOException;
 
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.data.Path;
 
 public class CSVInputSplit extends DelimitedInputSplit<String> {
   /**

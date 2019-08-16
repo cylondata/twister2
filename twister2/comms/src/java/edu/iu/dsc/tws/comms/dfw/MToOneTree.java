@@ -26,20 +26,20 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.MessageFlags;
-import edu.iu.dsc.tws.comms.api.MessageHeader;
-import edu.iu.dsc.tws.comms.api.MessageReceiver;
-import edu.iu.dsc.tws.comms.api.MessageType;
-import edu.iu.dsc.tws.comms.api.TWSChannel;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.dfw.io.DataDeserializer;
-import edu.iu.dsc.tws.comms.dfw.io.DataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.KeyedDataSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageDeSerializer;
-import edu.iu.dsc.tws.comms.dfw.io.MessageSerializer;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
+import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
+import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
+import edu.iu.dsc.tws.api.comms.packing.MessageSerializer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.io.Deserializers;
+import edu.iu.dsc.tws.comms.dfw.io.Serializers;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 import edu.iu.dsc.tws.comms.utils.OperationUtils;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
@@ -87,7 +87,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
 
   private ChannelDataFlowOperation delegete;
-  private TaskPlan instancePlan;
+  private MessageSchema messageSchema;
+  private LogicalPlan instancePlan;
   private MessageType dataType;
   private MessageType keyType;
 
@@ -101,7 +102,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
                     MessageReceiver finalRcvr,
-                    MessageReceiver partialRcvr, int indx, int p) {
+                    MessageReceiver partialRcvr, int indx, int p,
+                    MessageSchema messageSchema) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -109,6 +111,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.partialReceiver = partialRcvr;
     this.pathToUse = p;
     this.delegete = new ChannelDataFlowOperation(channel);
+    this.messageSchema = messageSchema;
     this.targets = new HashSet<>();
     this.targets.add(destination);
   }
@@ -116,7 +119,8 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
                     MessageReceiver finalRcvr,
                     MessageReceiver partialRcvr, int indx, int p, boolean keyed,
-                    MessageType kType, MessageType dType) {
+                    MessageType kType, MessageType dType,
+                    MessageSchema messageSchema) {
     this.index = indx;
     this.sources = sources;
     this.destination = destination;
@@ -127,13 +131,15 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     this.isKeyed = keyed;
     this.keyType = kType;
     this.dataType = dType;
+    this.messageSchema = messageSchema;
     this.targets = new HashSet<>();
     this.targets.add(destination);
   }
 
   public MToOneTree(TWSChannel channel, Set<Integer> sources, int destination,
-                    MessageReceiver finalRcvr, MessageReceiver partialRcvr) {
-    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0);
+                    MessageReceiver finalRcvr, MessageReceiver partialRcvr,
+                    MessageSchema messageSchema) {
+    this(channel, sources, destination, finalRcvr, partialRcvr, 0, 0, messageSchema);
   }
 
 
@@ -252,14 +258,14 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, TaskPlan taskPlan, int edge) {
-    this.instancePlan = taskPlan;
+  public void init(Config cfg, MessageType t, LogicalPlan logicalPlan, int edge) {
+    this.instancePlan = logicalPlan;
     this.dataType = t;
     int workerId = instancePlan.getThisExecutor();
     this.edgeValue = edge;
 
     // we only have one path
-    this.router = new InvertedBinaryTreeRouter(cfg, taskPlan,
+    this.router = new InvertedBinaryTreeRouter(cfg, logicalPlan,
         destination, sources, index);
 
     // initialize the receive
@@ -288,11 +294,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       ArrayBlockingQueue<OutMessage> pendingSendMessages =
           new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      if (isKeyed) {
-        serializerMap.put(s, new KeyedDataSerializer());
-      } else {
-        serializerMap.put(s, new DataSerializer());
-      }
+      serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
     int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
@@ -306,20 +308,16 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(e, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(e, new ArrayBlockingQueue<>(capacity));
-      if (isKeyed) {
-        deSerializerMap.put(e, new KeyedDataDeSerializer());
-      } else {
-        deSerializerMap.put(e, new DataDeserializer());
-      }
+      deSerializerMap.put(e, Deserializers.get(isKeyed, this.messageSchema));
     }
 
-    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(taskPlan, sources);
+    Set<Integer> sourcesOfThisExec = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sources);
     for (int s : sourcesOfThisExec) {
       sendRoutingParameters(s, pathToUse);
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, t, keyType, keyType, taskPlan, edge,
+    delegete.init(cfg, t, t, keyType, keyType, logicalPlan, edge,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
@@ -402,7 +400,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   }
 
   @Override
-  public TaskPlan getTaskPlan() {
+  public LogicalPlan getLogicalPlan() {
     return instancePlan;
   }
 

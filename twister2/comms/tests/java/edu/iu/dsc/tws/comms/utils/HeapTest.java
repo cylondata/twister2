@@ -14,10 +14,9 @@ package edu.iu.dsc.tws.comms.utils;
 import java.util.Comparator;
 
 import org.junit.Assert;
-
 import org.junit.Test;
 
-import edu.iu.dsc.tws.comms.dfw.io.Tuple;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 
 public class HeapTest {
 

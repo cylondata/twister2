@@ -19,47 +19,56 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.api.task.Collector;
-import edu.iu.dsc.tws.api.task.ComputeConnection;
-import edu.iu.dsc.tws.api.task.Receptor;
-import edu.iu.dsc.tws.api.task.TaskGraphBuilder;
-import edu.iu.dsc.tws.api.task.TaskWorker;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.data.api.DataType;
-import edu.iu.dsc.tws.dataset.DataObject;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.DataPartition;
-import edu.iu.dsc.tws.dataset.impl.EntityPartition;
-import edu.iu.dsc.tws.executor.api.ExecutionPlan;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.rsched.core.SchedulerContext;
-import edu.iu.dsc.tws.task.api.BaseSink;
-import edu.iu.dsc.tws.task.api.BaseSource;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.OperationMode;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class IterativeJob extends TaskWorker {
+public class IterativeJob implements IWorker {
   private static final Logger LOG = Logger.getLogger(IterativeJob.class.getName());
 
   @Override
-  public void execute() {
+  public void execute(Config config, int workerId, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     LOG.log(Level.INFO, "Task worker starting: " + workerId);
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
+        persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     IterativeSourceTask g = new IterativeSourceTask();
     PartitionTask r = new PartitionTask();
 
-    TaskGraphBuilder graphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder graphBuilder = ComputeGraphBuilder.newBuilder(config);
     graphBuilder.addSource("source", g, 4);
     ComputeConnection computeConnection = graphBuilder.addSink("sink", r, 4);
     computeConnection.partition("source")
         .viaEdge("partition")
-        .withDataType(DataType.OBJECT);
+        .withDataType(MessageTypes.OBJECT);
     graphBuilder.setMode(OperationMode.BATCH);
 
-    DataFlowTaskGraph graph = graphBuilder.build();
+    ComputeGraph graph = graphBuilder.build();
     ExecutionPlan plan = taskExecutor.plan(graph);
     for (int i = 0; i < 10; i++) {
       LOG.info("Starting iteration: " + i);

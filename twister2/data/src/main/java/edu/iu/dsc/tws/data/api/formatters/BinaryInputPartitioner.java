@@ -17,15 +17,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.BlockLocation;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.api.assigner.LocatableInputSplitAssigner;
 import edu.iu.dsc.tws.data.api.splits.BinaryInputSplit;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
-import edu.iu.dsc.tws.data.fs.BlockLocation;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
 /**
  * Input formatter class that reads binary files
@@ -41,7 +42,7 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
    */
   protected transient int recordLength;
 
-  protected transient  int numSplits;
+  protected transient int numSplits;
 
   public BinaryInputPartitioner(Path filePath, int recordLen) {
     super(filePath);
@@ -93,7 +94,7 @@ public class BinaryInputPartitioner extends FileInputPartitioner<byte[]> {
     List<FileStatus> files = new ArrayList<FileStatus>();
     long totalLength = 0;
 
-    final FileSystem fs = path.getFileSystem();
+    final FileSystem fs = FileSystemUtils.get(path); //path.getFileSystem();
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {

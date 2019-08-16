@@ -23,26 +23,27 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.config.Context;
-import edu.iu.dsc.tws.data.fs.FileStatus;
-import edu.iu.dsc.tws.data.fs.FileSystem;
-import edu.iu.dsc.tws.data.fs.Path;
+import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.FileStatus;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.utils.DataNodeLocatorUtils;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
-import edu.iu.dsc.tws.task.api.schedule.ContainerPlan;
-import edu.iu.dsc.tws.task.api.schedule.Resource;
-import edu.iu.dsc.tws.task.api.schedule.TaskInstancePlan;
-import edu.iu.dsc.tws.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.task.graph.Vertex;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
-import edu.iu.dsc.tws.tsched.spi.scheduler.Worker;
-import edu.iu.dsc.tws.tsched.spi.scheduler.WorkerPlan;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.InstanceId;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.ScheduleException;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
-import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskSchedulePlan;
 import edu.iu.dsc.tws.tsched.utils.DataTransferTimeCalculator;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
@@ -103,24 +104,25 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
    * which are closer to the data nodes.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph graph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan) {
 
     //Represents task schedule plan Id
     int taskSchedulePlanId = 0;
-    Set<ContainerPlan> containerPlans = new HashSet<>();
+    Set<WorkerSchedulePlan> workerSchedulePlans = new HashSet<>();
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
 
-    Map<Integer, List<InstanceId>> containerInstanceMap = dataLocalityStreamingSchedulingAlgorithm(
-        graph, workerPlan.getNumberOfWorkers(), workerPlan);
+    Map<Integer, List<TaskInstanceId>> containerInstanceMap =
+        dataLocalityStreamingSchedulingAlgorithm(graph, workerPlan.getNumberOfWorkers(),
+            workerPlan);
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
 
-    Map<Integer, Map<InstanceId, Double>> instancesRamMap = instanceMapCalculation
+    Map<Integer, Map<TaskInstanceId, Double>> instancesRamMap = instanceMapCalculation
         .getInstancesRamMapInContainer(containerInstanceMap, taskVertexSet);
-    Map<Integer, Map<InstanceId, Double>> instancesDiskMap = instanceMapCalculation
+    Map<Integer, Map<TaskInstanceId, Double>> instancesDiskMap = instanceMapCalculation
         .getInstancesDiskMapInContainer(containerInstanceMap, taskVertexSet);
-    Map<Integer, Map<InstanceId, Double>> instancesCPUMap = instanceMapCalculation.
+    Map<Integer, Map<TaskInstanceId, Double>> instancesCPUMap = instanceMapCalculation.
         getInstancesCPUMapInContainer(containerInstanceMap, taskVertexSet);
 
     for (int containerId : containerInstanceMap.keySet()) {
@@ -129,10 +131,10 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
       double containerDiskValue = TaskSchedulerContext.containerDiskPadding(config);
       double containerCpuValue = TaskSchedulerContext.containerCpuPadding(config);
 
-      List<InstanceId> taskInstanceIds = containerInstanceMap.get(containerId);
-      Map<InstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
+      List<TaskInstanceId> taskTaskInstanceIds = containerInstanceMap.get(containerId);
+      Map<TaskInstanceId, TaskInstancePlan> taskInstancePlanMap = new HashMap<>();
 
-      for (InstanceId id : taskInstanceIds) {
+      for (TaskInstanceId id : taskTaskInstanceIds) {
         double instanceRAMValue = instancesRamMap.get(containerId).get(id);
         double instanceDiskValue = instancesDiskMap.get(containerId).get(id);
         double instanceCPUValue = instancesCPUMap.get(containerId).get(id);
@@ -159,19 +161,19 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
             containerCpuValue);
       }
 
-      ContainerPlan taskContainerPlan = new ContainerPlan(containerId,
+      WorkerSchedulePlan taskWorkerSchedulePlan = new WorkerSchedulePlan(containerId,
           new HashSet<>(taskInstancePlanMap.values()), containerResource);
-      containerPlans.add(taskContainerPlan);
+      workerSchedulePlans.add(taskWorkerSchedulePlan);
     }
-    return new TaskSchedulePlan(taskSchedulePlanId, containerPlans);
+    return new TaskSchedulePlan(taskSchedulePlanId, workerSchedulePlans);
   }
 
   /**
    * This method is primarily responsible for generating the container and task instance map which
    * is based on the task graph, its configuration, and the allocated worker plan.
    */
-  private Map<Integer, List<InstanceId>> dataLocalityStreamingSchedulingAlgorithm(
-      DataFlowTaskGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
+  private Map<Integer, List<TaskInstanceId>> dataLocalityStreamingSchedulingAlgorithm(
+      ComputeGraph graph, int numberOfContainers, WorkerPlan workerPlan) {
 
     TaskAttributes taskAttributes = new TaskAttributes();
     Set<Vertex> taskVertexSet = graph.getTaskVertexSet();
@@ -200,7 +202,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     }
 
     //Map to hold the allocation of task instances into the containers/workers
-    Map<Integer, List<InstanceId>> dataAwareAllocationMap = new HashMap<>();
+    Map<Integer, List<TaskInstanceId>> dataAwareAllocationMap = new HashMap<>();
 
     //To check the containers can hold all the parallel task instances.
     if (containerCapacity >= totalInstances) {
@@ -235,7 +237,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
           int totalTaskInstances = vertex.getParallelism();
           int maxContainerTaskObjectSize = 0;
 
-          List<DataTransferTimeCalculator> calList = dataTransferTimecalculatorList(localIndex,
+          List<DataTransferTimeCalculator> calList = dTTimecalculatorList(localIndex,
               workerPlan, dataAwareAllocationMap, containerIndex, instancesPerContainer);
 
           for (int i = 0; i < totalTaskInstances; i++) {
@@ -243,7 +245,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
 
             if (maxContainerTaskObjectSize < instancesPerContainer) {
               dataAwareAllocationMap.get(containerIndex).add(
-                  new InstanceId(vertex.getName(), globalTaskIndex, i));
+                  new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
             } else {
               throw new ScheduleException("Task Scheduling couldn't be possible for the present"
@@ -266,12 +268,15 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     }
   }
 
-  private List<DataTransferTimeCalculator> dataTransferTimecalculatorList(int index,
-                                                                          WorkerPlan workerPlan,
-                                                                          Map<Integer,
-                                                                              List<InstanceId>> map,
-                                                                          int containerIndex,
-                                                                          int maxTaskPerContainer) {
+  /**
+   * Data transfer time calculator list
+   */
+  private List<DataTransferTimeCalculator> dTTimecalculatorList(int index,
+                                                                WorkerPlan workerPlan,
+                                                                Map<Integer,
+                                                                    List<TaskInstanceId>> map,
+                                                                int containerIndex,
+                                                                int maxTaskPerContainer) {
     List<String> inputDataList = getInputFilesList();
     Map<String, List<DataTransferTimeCalculator>> workerDatanodeDistanceMap;
     List<DataTransferTimeCalculator> dataTransferTimeCalculatorList = null;
@@ -317,7 +322,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
-      fileSystem = path.getFileSystem(config);
+      fileSystem = FileSystemUtils.get(path);
 
       if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
         final FileStatus pathFile = fileSystem.getFileStatus(path);

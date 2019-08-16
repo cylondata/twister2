@@ -17,19 +17,18 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.Communicator;
-import edu.iu.dsc.tws.comms.api.DataFlowOperation;
-import edu.iu.dsc.tws.comms.api.ReduceFunction;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.stream.SReduce;
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskMessage;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.stream.SReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
-import edu.iu.dsc.tws.executor.util.Utils;
-import edu.iu.dsc.tws.task.api.IFunction;
-import edu.iu.dsc.tws.task.api.IMessage;
-import edu.iu.dsc.tws.task.api.TaskMessage;
-import edu.iu.dsc.tws.task.graph.Edge;
 
 /**
  * Connecting to the reduce operation
@@ -42,7 +41,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   protected IFunction function;
 
   public ReduceStreamingOperation(Config config, Communicator network,
-                                  TaskPlan tPlan, IFunction fnc,
+                                  LogicalPlan tPlan, IFunction fnc,
                                   Set<Integer> sources, Set<Integer> dests, Edge edge) {
     super(config, network, tPlan, edge.getName());
     this.function = fnc;
@@ -59,9 +58,9 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
     }
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
-    op = new SReduce(newComm, taskPlan, sources, dests.iterator().next(),
-        Utils.dataTypeToMessageType(edge.getDataType()),
-        new ReduceFunctionImpl(function), new FinalSingularReceiver());
+    op = new SReduce(newComm, logicalPlan, sources, dests.iterator().next(),
+        edge.getDataType(), new ReduceFunctionImpl(function),
+        new FinalSingularReceiver(), edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 
   @Override
@@ -122,6 +121,6 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
 
   @Override
   public boolean isComplete() {
-    return !op.hasPending();
+    return op.isComplete();
   }
 }

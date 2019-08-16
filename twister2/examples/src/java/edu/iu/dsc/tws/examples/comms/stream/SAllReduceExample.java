@@ -15,13 +15,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.comms.api.MessageTypes;
-import edu.iu.dsc.tws.comms.api.Op;
-import edu.iu.dsc.tws.comms.api.SingularReceiver;
-import edu.iu.dsc.tws.comms.api.TaskPlan;
-import edu.iu.dsc.tws.comms.api.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.comms.api.stream.SAllReduce;
+import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.SingularReceiver;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
+import edu.iu.dsc.tws.comms.stream.SAllReduce;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.GeneratorUtils;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
@@ -45,10 +46,7 @@ public class SAllReduceExample extends BenchWorker {
   private int receiverInWorker0 = -1; //any recv scheduled in worker 0
 
   @Override
-  protected void execute() {
-    TaskPlan taskPlan = Utils.createStageTaskPlan(config, workerId,
-        jobParameters.getTaskStages(), workerList);
-
+  protected void execute(WorkerEnvironment workerEnv) {
     Set<Integer> sources = new HashSet<>();
     Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
     for (int i = 0; i < noOfSourceTasks; i++) {
@@ -60,12 +58,11 @@ public class SAllReduceExample extends BenchWorker {
       targets.add(i);
     }
     // create the communication
-    reduce = new SAllReduce(communicator, taskPlan, sources, targets, MessageTypes.INTEGER_ARRAY,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
+    reduce = new SAllReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+        MessageTypes.INTEGER_ARRAY, new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver());
 
-
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 0);
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
@@ -73,7 +70,7 @@ public class SAllReduceExample extends BenchWorker {
 
     sourcesDone = tasksOfExecutor.size() == 0;
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, taskPlan,
+    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
         jobParameters.getTaskStages(), 1);
     for (int taskId : targetTasksOfExecutor) {
       if (targets.contains(taskId)) {
@@ -114,7 +111,7 @@ public class SAllReduceExample extends BenchWorker {
 
   @Override
   protected boolean isDone() {
-    return reduceDone && sourcesDone && !reduce.hasPending();
+    return reduceDone && sourcesDone && reduce.isComplete();
   }
 
   public class FinalSingularReceiver implements SingularReceiver {
