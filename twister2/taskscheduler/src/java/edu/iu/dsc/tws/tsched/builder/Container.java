@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.HashSet;
 
-import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.task.exceptions.TaskSchedulerException;
-import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 
 /**
  * This class is for the logical representation of container and it has getter and setter

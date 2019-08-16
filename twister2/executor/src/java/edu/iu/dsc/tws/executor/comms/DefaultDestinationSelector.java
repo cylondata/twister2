@@ -15,7 +15,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 
 public class DefaultDestinationSelector implements DestinationSelector {
 

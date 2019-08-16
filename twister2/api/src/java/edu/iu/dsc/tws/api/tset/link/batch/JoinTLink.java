@@ -18,9 +18,9 @@ import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 import edu.iu.dsc.tws.api.tset.TSetUtils;

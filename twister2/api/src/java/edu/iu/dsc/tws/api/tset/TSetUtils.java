@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.link.BaseTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.AllGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.AllReduceTLink;

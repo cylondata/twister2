@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.api.tset.link;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.TSetGraph;
 

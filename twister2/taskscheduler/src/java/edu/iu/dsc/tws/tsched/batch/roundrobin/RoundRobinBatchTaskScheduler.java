@@ -23,18 +23,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.Vertex;
-import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
-import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -105,7 +105,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
 
     Map<Integer, List<TaskInstanceId>> containerInstanceMap;
     Map<Integer, WorkerSchedulePlan> containerPlans = new LinkedHashMap<>();
@@ -115,16 +115,16 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
     }
 
     //To retrieve the batch task instances(it may be single task vertex or a batch of task vertices)
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
     TaskVertexParser taskGraphParser = new TaskVertexParser();
-    List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(dataFlowTaskGraph);
+    List<Set<Vertex>> taskVertexList = taskGraphParser.parseVertexSet(computeGraph);
 
     for (Set<Vertex> vertexSet : taskVertexList) {
       if (vertexSet.size() > 1) {
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertexSet);
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(computeGraph, vertexSet);
       } else {
         Vertex vertex = vertexSet.iterator().next();
-        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(dataFlowTaskGraph, vertex);
+        containerInstanceMap = roundRobinBatchSchedulingAlgorithm(computeGraph, vertex);
       }
 
       TaskInstanceMapCalculation instanceMapCalculation =
@@ -193,7 +193,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   }
 
   private Map<Integer, List<TaskInstanceId>> roundRobinBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Vertex vertex) throws ScheduleException {
+      ComputeGraph graph, Vertex vertex) throws ScheduleException {
 
     Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
@@ -212,7 +212,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
 
   private Map<Integer, List<TaskInstanceId>> roundRobinBatchSchedulingAlgorithm(
-      DataFlowTaskGraph graph, Set<Vertex> vertexSet) throws ScheduleException {
+      ComputeGraph graph, Set<Vertex> vertexSet) throws ScheduleException {
 
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(vertexSet);
@@ -234,7 +234,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   }
 
   private Map<Integer, List<TaskInstanceId>> attributeBasedAllocation(
-      Map<String, Integer> parallelTaskMap, DataFlowTaskGraph graph) {
+      Map<String, Integer> parallelTaskMap, ComputeGraph graph) {
 
     int containerIndex = 0;
     int instancesPerContainer = taskAttributes.getInstancesPerWorker(graph.getGraphConstraints());

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.window.manage;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public interface IManager<T> extends Serializable {
 

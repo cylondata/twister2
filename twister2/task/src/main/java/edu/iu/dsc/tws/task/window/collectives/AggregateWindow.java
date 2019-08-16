@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window.collectives;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
 import edu.iu.dsc.tws.task.window.function.AggregateWindowedFunction;

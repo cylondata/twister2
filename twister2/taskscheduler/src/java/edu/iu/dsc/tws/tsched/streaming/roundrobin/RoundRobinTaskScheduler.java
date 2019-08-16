@@ -22,18 +22,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.exceptions.ScheduleException;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.Vertex;
-import edu.iu.dsc.tws.api.task.schedule.ITaskScheduler;
-import edu.iu.dsc.tws.api.task.schedule.elements.Resource;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.Worker;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerPlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -91,17 +91,17 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * @return TaskSchedulePlan
    */
   @Override
-  public TaskSchedulePlan schedule(DataFlowTaskGraph dataFlowTaskGraph, WorkerPlan workerPlan) {
+  public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
 
     //Allocate the task instances into the containers/workers
     Set<WorkerSchedulePlan> workerSchedulePlans = new LinkedHashSet<>();
 
     //To get the vertex set from the taskgraph
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(dataFlowTaskGraph.getTaskVertexSet());
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
 
     //Allocate the task instances into the logical containers.
     Map<Integer, List<TaskInstanceId>> roundRobinContainerInstanceMap =
-        roundRobinSchedulingAlgorithm(dataFlowTaskGraph, workerPlan.getNumberOfWorkers());
+        roundRobinSchedulingAlgorithm(computeGraph, workerPlan.getNumberOfWorkers());
 
     TaskInstanceMapCalculation instanceMapCalculation = new TaskInstanceMapCalculation(
         this.instanceRAM, this.instanceCPU, this.instanceDisk);
@@ -171,7 +171,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * the task in a round robin fashion.
    */
   private Map<Integer, List<TaskInstanceId>> roundRobinSchedulingAlgorithm(
-      DataFlowTaskGraph graph, int numberOfContainers) throws ScheduleException {
+      ComputeGraph graph, int numberOfContainers) throws ScheduleException {
 
     Map<Integer, List<TaskInstanceId>> roundrobinAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {

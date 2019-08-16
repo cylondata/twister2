@@ -31,23 +31,23 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.ops.ComputeOp;
 import edu.iu.dsc.tws.api.tset.ops.SourceOp;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.TaskEnvironment;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
 
 public class TSetExecDemo implements IWorker, Serializable {
@@ -63,7 +63,7 @@ public class TSetExecDemo implements IWorker, Serializable {
     WorkerEnvironment env = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
 
-    TaskEnvironment tenv = TaskEnvironment.init(env);
+    ComputeEnvironment tenv = ComputeEnvironment.init(env);
 
     GraphBuilder graph = GraphBuilder.newBuilder();
     graph.operationMode(OperationMode.BATCH);
@@ -101,7 +101,7 @@ public class TSetExecDemo implements IWorker, Serializable {
 
     graph.connect("compute", "foreach", "e2", OperationNames.DIRECT);
 
-    DataFlowTaskGraph build = graph.build();
+    ComputeGraph build = graph.build();
     ExecutionPlan plan = tenv.getTaskExecutor().plan(build);
 
     tenv.getTaskExecutor().execute(build, plan);

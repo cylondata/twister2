@@ -23,9 +23,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstancePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskSchedulePlan;
-import edu.iu.dsc.tws.api.task.schedule.elements.WorkerSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
+import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public final class TaskPlanBuilder {

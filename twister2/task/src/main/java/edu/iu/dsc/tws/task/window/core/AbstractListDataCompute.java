@@ -37,7 +37,7 @@ package edu.iu.dsc.tws.task.window.core;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 
 public abstract class AbstractListDataCompute<T> extends BaseCompute<List<T>> {
 }

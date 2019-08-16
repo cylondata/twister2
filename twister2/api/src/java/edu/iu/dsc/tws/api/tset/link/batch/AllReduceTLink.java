@@ -24,8 +24,8 @@
 
 package edu.iu.dsc.tws.api.tset.link.batch;
 
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;

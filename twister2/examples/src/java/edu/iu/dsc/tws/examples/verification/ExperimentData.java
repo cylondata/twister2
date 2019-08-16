@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.verification;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 
 public class ExperimentData {
 

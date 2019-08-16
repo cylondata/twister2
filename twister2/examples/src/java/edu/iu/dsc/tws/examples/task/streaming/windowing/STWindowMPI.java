@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.math.MathUtils;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.window.BaseWindowSource;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 import edu.iu.dsc.tws.task.window.core.BaseWindowedSink;
@@ -37,7 +37,7 @@ public class STWindowMPI extends BenchTaskWorker {
   private static int worldSize = 0;
 
   @Override
-  public TaskGraphBuilder buildTaskGraph() {
+  public ComputeGraphBuilder buildTaskGraph() {
     List<Integer> taskStages = jobParameters.getTaskStages();
     int sourceParallelism = taskStages.get(0);
     int sinkParallelism = taskStages.get(1);
@@ -49,11 +49,11 @@ public class STWindowMPI extends BenchTaskWorker {
     BaseWindowedSink dw = new DirectWindowedReceivingTask()
         .withTumblingCountWindow(1);
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, dw, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, dw, sinkParallelism);
     computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 
   protected static class DirectWindowedReceivingTask extends BaseWindowedSink<int[]> {

@@ -52,8 +52,8 @@ public final class StormSubmitter {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(stormConfig);
     Gson gson = new Gson();
-    String tg = gson.toJson(topology.getT2DataFlowTaskGraph());
-    jobConfig.put("storm-topology", topology.getT2DataFlowTaskGraph());
+    String tg = gson.toJson(topology.getT2ComputeGraph());
+    jobConfig.put("storm-topology", topology.getT2ComputeGraph());
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName(name);

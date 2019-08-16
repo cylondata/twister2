@@ -16,11 +16,11 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.executor.IParallelOperation;
-import edu.iu.dsc.tws.api.task.graph.Edge;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
 import edu.iu.dsc.tws.executor.comms.batch.AllGatherBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.AllReduceBatchOperation;
 import edu.iu.dsc.tws.executor.comms.batch.BroadcastBatchOperation;

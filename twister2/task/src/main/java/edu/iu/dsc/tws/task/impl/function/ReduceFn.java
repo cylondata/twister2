@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.impl.function;
 import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 
 /**

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.test;
 
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.compute.IFunction;
 
 public class PredictionAggregator implements IFunction {
 

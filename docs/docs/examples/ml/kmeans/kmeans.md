@@ -76,10 +76,10 @@ First, add the source, compute, and sink tasks to the task graph builder for the
 Then, create the communication edges between the tasks for the first task graph.
  
 ```java
-    taskGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
-    ComputeConnection datapointComputeConnection = taskGraphBuilder.addCompute("datapointcompute",
+    computeGraphBuilder.addSource("datapointsource", dataObjectSource, parallelismValue);
+    ComputeConnection datapointComputeConnection = computeGraphBuilder.addCompute("datapointcompute",
         dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = taskGraphBuilder.addSink("datapointsink",
+    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink("datapointsink",
         dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the first task graph
@@ -87,14 +87,14 @@ Then, create the communication edges between the tasks for the first task graph.
         DataType.OBJECT);
     firstGraphComputeConnection.direct("datapointcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 ```
 
-Finally, invoke the taskGraphBuilder to build the first task graph, get the task schedule plan and execution plan for the first task graph, and call the execute() method to execute the datapoints task graph. Once the execution is finished, the output values are retrieved in the "datapointsObject".
+Finally, invoke the computeGraphBuilder to build the first task graph, get the task schedule plan and execution plan for the first task graph, and call the execute() method to execute the datapoints task graph. Once the execution is finished, the output values are retrieved in the "datapointsObject".
 
 ```java
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = taskGraphBuilder.build();
+    DataFlowTaskGraph datapointsTaskGraph = computeGraphBuilder.build();
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
@@ -192,10 +192,10 @@ Similar to the first task graph, it add the source, compute, and sink tasks to t
 
 ```java
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    taskGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);
-    ComputeConnection centroidComputeConnection = taskGraphBuilder.addCompute("centroidcompute",
+    computeGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource, parallelismValue);
+    ComputeConnection centroidComputeConnection = computeGraphBuilder.addCompute("centroidcompute",
         centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = taskGraphBuilder.addSink(
+    ComputeConnection secondGraphComputeConnection = computeGraphBuilder.addSink(
         "centroidsink", centroidObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -203,14 +203,14 @@ Similar to the first task graph, it add the source, compute, and sink tasks to t
         DataType.OBJECT);
     secondGraphComputeConnection.direct("centroidcompute", Context.TWISTER2_DIRECT_EDGE,
         DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
+    computeGraphBuilder.setMode(OperationMode.BATCH);
 ```
 
 Finally, invoke the build() method to build the second task graph, get the task schedule plan and execution plan for the second task graph, and call the execute() method to execute the centroids task graph. Once the execution is finished, the output values are retrieved in the "centroidsDataObject".
 
 ```java
     //Build the second taskgraph
-    DataFlowTaskGraph centroidsTaskGraph = taskGraphBuilder.build();
+    DataFlowTaskGraph centroidsTaskGraph = computeGraphBuilder.build();
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
     //Actual execution for the second taskgraph
@@ -247,15 +247,15 @@ sink, and communication edges to the third task graph.
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
 
     //Add source, and sink tasks to the task graph builder for the third task graph
-    taskGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
-    ComputeConnection kMeanscomputeConnection = taskGraphBuilder.addSink(
+    computeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
+    ComputeConnection kMeanscomputeConnection = computeGraphBuilder.addSink(
         "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource", "all-reduce",
         new CentroidAggregator(), DataType.OBJECT);
-    taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph kmeansTaskGraph = taskGraphBuilder.build();
+    computeGraphBuilder.setMode(OperationMode.BATCH);
+    DataFlowTaskGraph kmeansTaskGraph = computeGraphBuilder.build();
 ```
 
 #### Assigning datapoints and initial centroids

@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.graph.Vertex;
-import edu.iu.dsc.tws.api.task.schedule.elements.TaskInstanceId;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstanceId;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
 
 /**
