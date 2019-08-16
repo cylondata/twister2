@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.task.IFunction;
+import edu.iu.dsc.tws.api.compute.IFunction;
 
 /**
  * Reduce function

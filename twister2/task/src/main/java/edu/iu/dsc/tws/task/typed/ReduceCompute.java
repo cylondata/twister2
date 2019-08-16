@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.typed;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public abstract class ReduceCompute<T> extends AbstractSingleDataCompute<T> {
 

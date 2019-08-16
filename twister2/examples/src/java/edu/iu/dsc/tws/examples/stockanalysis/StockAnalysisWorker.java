@@ -14,19 +14,19 @@ package edu.iu.dsc.tws.examples.stockanalysis;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 
@@ -61,7 +61,7 @@ public class StockAnalysisWorker extends TaskWorker {
         datainputFile, vectorDirectory, numberOfDays, startDate, endDate, mode);
     DataPreprocessingSinkTask preprocessingSinkTask = new DataPreprocessingSinkTask(
         vectorDirectory, distanceMatrixDirectory, distanceType);
-    TaskGraphBuilder preprocessingTaskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder preprocessingTaskGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     preprocessingTaskGraphBuilder.setTaskGraphName("StockAnalysisDataPreProcessing");
     preprocessingTaskGraphBuilder.addSource("preprocessingsourcetask",
         preprocessingSourceTask, parallel);
@@ -72,7 +72,7 @@ public class StockAnalysisWorker extends TaskWorker {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     preprocessingTaskGraphBuilder.setMode(OperationMode.STREAMING);
-    DataFlowTaskGraph preprocesingTaskGraph = preprocessingTaskGraphBuilder.build();
+    ComputeGraph preprocesingTaskGraph = preprocessingTaskGraphBuilder.build();
 
     //Get the execution plan for the first task graph
     ExecutionPlan preprocessExecutionPlan = taskExecutor.plan(preprocesingTaskGraph);
@@ -86,7 +86,7 @@ public class StockAnalysisWorker extends TaskWorker {
     /** Task Graph to run the MDS **/
     StockAnalysisSourceTask sourceTask = new StockAnalysisSourceTask();
     StockAnalysisSinkTask sinkTask = new StockAnalysisSinkTask();
-    TaskGraphBuilder taskGraphBuilder = TaskGraphBuilder.newBuilder(config);
+    ComputeGraphBuilder taskGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     taskGraphBuilder.setTaskGraphName("StockAnalysisComputeProcessing");
     taskGraphBuilder.addSource("sourcetask", sourceTask, parallel);
 
@@ -96,7 +96,7 @@ public class StockAnalysisWorker extends TaskWorker {
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     taskGraphBuilder.setMode(OperationMode.BATCH);
-    DataFlowTaskGraph computeTaskGraph = taskGraphBuilder.build();
+    ComputeGraph computeTaskGraph = taskGraphBuilder.build();
 
     //Get the execution plan for the first task graph
 
@@ -128,7 +128,6 @@ public class StockAnalysisWorker extends TaskWorker {
 
     @Override
     public boolean execute(IMessage content) {
-      LOG.info("Received message:" + content.getContent().toString());
       return false;
     }
   }

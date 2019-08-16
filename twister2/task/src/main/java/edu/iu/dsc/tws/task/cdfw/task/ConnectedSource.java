@@ -11,13 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.cdfw.task;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;
 
 /**

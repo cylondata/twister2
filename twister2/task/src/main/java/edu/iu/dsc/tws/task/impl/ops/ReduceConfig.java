@@ -13,9 +13,9 @@ package edu.iu.dsc.tws.task.impl.ops;
 
 import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.OperationNames;
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.OperationNames;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.function.ReduceFn;
 

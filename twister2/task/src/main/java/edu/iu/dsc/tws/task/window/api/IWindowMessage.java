@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.task.window.api;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public interface IWindowMessage<T> {
 

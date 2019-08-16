@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.window.api;
 import java.util.List;
 import java.util.Objects;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public class WindowMessageImpl<T> implements IWindowMessage<T> {
 

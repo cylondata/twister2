@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl;
 
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 
 public class SourceConnection {
 
@@ -33,6 +33,6 @@ public class SourceConnection {
     this.nodeName = name;
   }
 
-  void build(DataFlowTaskGraph graph) {
+  void build(ComputeGraph graph) {
   }
 }

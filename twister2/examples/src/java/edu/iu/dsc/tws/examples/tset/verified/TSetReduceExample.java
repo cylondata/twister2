@@ -26,7 +26,7 @@ package edu.iu.dsc.tws.examples.tset.verified;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.OperationNames;
+import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;

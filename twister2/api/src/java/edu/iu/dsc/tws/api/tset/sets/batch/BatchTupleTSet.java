@@ -42,7 +42,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;

@@ -80,8 +80,8 @@ The following [task graph](../../../concepts/task-system/task-graph/task-graph.m
 to a reduction based example, which will be elaborated in the following sections.  
 
 ```java 
-taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
 computeConnection.reduce(SOURCE, edge, operation, DataType.INTEGER);
 ```
 
@@ -130,10 +130,10 @@ SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new ReduceSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
   
@@ -195,10 +195,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new AllReduceSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `AllReduceCompute<int[]>` and the `AllReduceCompute<T>` is further 
@@ -233,10 +233,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `GatherCompute<int[]>` and the `GatherCompute<T>` is further abstracted 
@@ -270,10 +270,10 @@ can see the SourceTask as the source task for all the batch examples.
     ISource g = new SourceTask(edge);
     ISink r = new AllGatherSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allgather(SOURCE, edge, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `AllGatherCompute<int[]>` and the `AllGatherCompute<T>` is further abstracted 
@@ -306,10 +306,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new BroadcastSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `BBroadCastCompute<int[]>`  and the `BBroadCastCompute<T>` is further 
@@ -343,10 +343,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new PartitionSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -383,10 +383,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedReduceSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelsim);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `BKeyedReduceCompute<Integer, int[]>` and the `BKeyedReduceCompute<K, T>` 
@@ -421,10 +421,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge, true);
     ISink r = new KeyedGatherSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -461,10 +461,10 @@ can see the SourceTask as the source task for all the batch examples.
     BaseSource g = new SourceTask(edge, true);
     ISink r = new BKeyedPartitionSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -521,11 +521,11 @@ class, you can see the SourceTask as the source task for all the streaming examp
     BaseSource g = new SourceTask(edge);
     ISink r = new ReduceSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -598,11 +598,11 @@ can see the SourceTask as the source task for all the streaming examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new AllReduceSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE, edge, Op.SUM, DataType.INTEGER);
 
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is  abstracted from `AllReduceCompute<int[]>` and the `AllReduceCompute<T>` is abstracted from 
@@ -637,10 +637,10 @@ can see the SourceTask as the source task for all the streaming examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new GatherSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.gather(SOURCE, edge, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -675,10 +675,10 @@ can see the SourceTask as the source task for all the streaming examples.
       BaseSource g = new SourceTask(edge);
       ISink r = new AllGatherSinkTask();
       
-      taskGraphBuilder.addSource(SOURCE, g, psource);
-      computeConnection = taskGraphBuilder.addSink(SINK, r, psink);
+      computeGraphBuilder.addSource(SOURCE, g, psource);
+      computeConnection = computeGraphBuilder.addSink(SINK, r, psink);
       computeConnection.allgather(SOURCE, edge, dataType);
-      return taskGraphBuilder;
+      return computeGraphBuilder;
     }
 ```
 
@@ -711,10 +711,10 @@ can see the SourceTask as the source task for all the streaming examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new BroadCastSinkTask();
 
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.broadcast(SOURCE, edge);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is  abstracted from `SBroadCastCompute<int[]>` and the `SBroadCastCompute<T>` is abstracted from 
@@ -748,10 +748,10 @@ can see the SourceTask as the source task for all the streaming examples.
     BaseSource g = new SourceTask(edge);
     ISink r = new PartitionSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE, edge, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is abstracted from `SPartitionCompute<int[]>` and the `SPartitionCompute<T>` is abstracted from 
@@ -786,10 +786,10 @@ can see the SourceTask as the source task for all the streaming examples.
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
     ISink r = new SKeyedPartitionSinkTask();
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE, edge, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 
@@ -827,10 +827,10 @@ can see the SourceStreamTask as the source task for all the streaming examples.
     BaseSource g = new KeyedSourceStreamTask(edge);
     ISink r = new KeyedReduceSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE, edge, operation, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 The sink task is  abstracted from `SKeyedReduceCompute<Object, int[]>` and the `SKeyedReduceCompute<K, T>` 
@@ -865,10 +865,10 @@ can see the SourceStreamTask as the source task for all the streaming examples.
     BaseSource g = new KeyedSourceStreamTask(edge);
     ISink r = new KeyedGatherSinkTask();
     
-    taskGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = taskGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
+    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
     computeConnection.keyedGather(SOURCE, edge, keyType, dataType);
-    return taskGraphBuilder;
+    return computeGraphBuilder;
   }
 ```
 

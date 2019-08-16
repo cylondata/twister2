@@ -11,7 +11,7 @@ common_deps_files = [
     "@org_slf4j_slf4j_api//jar",
     "@org_apache_kafka_kafka_clients//jar",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
-    "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
 ]
 
 t2_java_lib(

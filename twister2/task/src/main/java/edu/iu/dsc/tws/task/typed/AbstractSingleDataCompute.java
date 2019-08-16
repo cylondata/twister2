@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.typed;
 
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 
 public abstract class AbstractSingleDataCompute<T> extends BaseCompute<T> {
 }

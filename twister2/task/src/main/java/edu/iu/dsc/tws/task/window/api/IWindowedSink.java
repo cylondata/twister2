@@ -23,8 +23,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window.api;
 
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.nodes.INode;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 
 public interface IWindowedSink<T> extends INode {
 

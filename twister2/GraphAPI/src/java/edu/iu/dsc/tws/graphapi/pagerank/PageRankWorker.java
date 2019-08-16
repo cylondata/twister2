@@ -41,6 +41,7 @@ package edu.iu.dsc.tws.graphapi.pagerank;
 //import java.io.FileWriter;
 //import java.io.IOException;
 //import java.io.Writer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,26 +52,26 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 import edu.iu.dsc.tws.task.impl.function.ReduceFn;
 
@@ -98,7 +99,7 @@ public class PageRankWorker extends TaskWorker {
     graphsize = dsize;
 
     /* First Graph to partition and read the partitioned data points **/
-    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, config);
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -117,7 +118,7 @@ public class PageRankWorker extends TaskWorker {
 
     //the second task graph for assign initial pagerank values for vertex.
 
-    DataFlowTaskGraph graphInitialValueTaskGraph = buildGraphInitialValueTG(dataDirectory, dsize,
+    ComputeGraph graphInitialValueTaskGraph = buildGraphInitialValueTG(dataDirectory, dsize,
         parallelismValue, config);
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan1 = taskExecutor.plan(graphInitialValueTaskGraph);
@@ -139,7 +140,7 @@ public class PageRankWorker extends TaskWorker {
 
     long startime = System.currentTimeMillis();
     //third task graph for computations
-    DataFlowTaskGraph pageranktaskgraph = buildComputationTG(parallelismValue, config);
+    ComputeGraph pageranktaskgraph = buildComputationTG(parallelismValue, config);
 
 
     ExecutionPlan plan = taskExecutor.plan(pageranktaskgraph);
@@ -219,16 +220,16 @@ public class PageRankWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue,
-                                                    Config conf) {
+  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                               int parallelismValue,
+                                               Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     DataObjectCompute dataObjectCompute = new DataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue);
     DataObjectSink dataObjectSink = new DataObjectSink();
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsTaskGraphBuilder.addSource("Graphdatasource", dataObjectSource,
@@ -253,9 +254,9 @@ public class PageRankWorker extends TaskWorker {
     return datapointsTaskGraphBuilder.build();
   }
 
-  public  static DataFlowTaskGraph buildGraphInitialValueTG(String dataDirectory, int dsize,
-                                                            int parallelismValue,
-                                                            Config conf) {
+  public  static ComputeGraph buildGraphInitialValueTG(String dataDirectory, int dsize,
+                                                       int parallelismValue,
+                                                       Config conf) {
     DataObjectSource pageRankValueHolder = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     PageRankValueHolderCompute pageRankValueHolderCompute = new PageRankValueHolderCompute(
@@ -263,7 +264,7 @@ public class PageRankWorker extends TaskWorker {
     PageRankValueHolderSink pageRankValueHolderSink = new PageRankValueHolderSink();
 
 
-    TaskGraphBuilder pagerankInitialationTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder pagerankInitialationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     pagerankInitialationTaskGraphBuilder.addSource("pageRankValueHolder", pageRankValueHolder,
@@ -289,13 +290,13 @@ public class PageRankWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildComputationTG(int parallelismValue, Config conf) {
+  public static ComputeGraph buildComputationTG(int parallelismValue, Config conf) {
 
     PageRankSource pageRankSource = new PageRankSource();
     PageRankKeyedReduce pageRankKeyedReduce = new PageRankKeyedReduce();
     PagerankSink pagerankSink = new PagerankSink();
 
-    TaskGraphBuilder pagerankComputationTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder pagerankComputationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     pagerankComputationTaskGraphBuilder.addSource("pageranksource",
         pageRankSource, parallelismValue);

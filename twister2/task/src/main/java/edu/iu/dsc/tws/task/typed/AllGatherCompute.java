@@ -50,7 +50,7 @@ package edu.iu.dsc.tws.task.typed;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public abstract class AllGatherCompute<T> extends
     AbstractIterableDataCompute<Tuple<Integer, T>> {

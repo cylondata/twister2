@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 
 public class DeterministicTaskPartitioner implements TaskPartitioner {
 

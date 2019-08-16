@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.typed;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 
 public abstract class GatherCompute<T> extends AbstractIterableDataCompute<Tuple<Integer, T>> {
   public abstract boolean gather(Iterator<Tuple<Integer, T>> content);

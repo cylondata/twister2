@@ -14,7 +14,7 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
-    "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
     "//twister2/proto:proto-java",
     "@com_google_guava_guava//jar",
 ]

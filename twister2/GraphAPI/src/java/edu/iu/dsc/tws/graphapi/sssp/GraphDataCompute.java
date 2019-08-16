@@ -17,10 +17,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
 
 

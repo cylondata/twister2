@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.task.impl.ops;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.task.TaskPartitioner;
-import edu.iu.dsc.tws.api.task.graph.Edge;
+import edu.iu.dsc.tws.api.compute.TaskPartitioner;
+import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
