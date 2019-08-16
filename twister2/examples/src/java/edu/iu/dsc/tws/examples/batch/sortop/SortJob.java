@@ -41,8 +41,8 @@ import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
-import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
-import static edu.iu.dsc.tws.comms.dfw.DataFlowContext.SHUFFLE_MAX_FILE_SIZE;
+import static edu.iu.dsc.tws.api.comms.CommunicationContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
+import static edu.iu.dsc.tws.api.comms.CommunicationContext.SHUFFLE_MAX_FILE_SIZE;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_BENCHMARK_METADATA;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkMetadata.ARG_RUN_BENCHMARK;
 
