@@ -12,9 +12,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.SourceTask;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.SourceTask;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 
 //import edu.iu.dsc.tws.checkpointmanager.CheckpointListener;

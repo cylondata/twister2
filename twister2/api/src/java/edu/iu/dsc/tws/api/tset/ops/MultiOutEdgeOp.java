@@ -25,8 +25,8 @@ package edu.iu.dsc.tws.api.tset.ops;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 
 public interface MultiOutEdgeOp {
 

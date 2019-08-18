@@ -19,31 +19,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.task.IFunction;
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.task.graph.DataFlowTaskGraph;
-import edu.iu.dsc.tws.api.task.graph.OperationMode;
-import edu.iu.dsc.tws.api.task.modifiers.Collector;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.task.nodes.BaseSink;
-import edu.iu.dsc.tws.api.task.nodes.BaseSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertexStatus;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
-import edu.iu.dsc.tws.task.impl.TaskGraphBuilder;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
 
 
@@ -70,7 +69,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     /* First Graph to partition and read the partitioned adjacency list datas **/
 
     //Build the first taskgraph
-    DataFlowTaskGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
+    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, soruceVertex, config);
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
@@ -88,7 +87,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
 
     //Build the second taskgraph
-    DataFlowTaskGraph graphInitialValueTaskGraph = buildSsspInitialTG(dataDirectory, dsize,
+    ComputeGraph graphInitialValueTaskGraph = buildSsspInitialTG(dataDirectory, dsize,
         parallelismValue, soruceVertex, config);
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(graphInitialValueTaskGraph);
@@ -104,7 +103,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     /* Third Graph to do the actual calculation **/
-    DataFlowTaskGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
+    ComputeGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
 
 
     ExecutionPlan plan = taskExecutor.plan(sssptaskgraph);
@@ -138,16 +137,16 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                                    int parallelismValue, String soruceVertex,
-                                                    Config conf) {
+  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+                                               int parallelismValue, String soruceVertex,
+                                               Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     GraphDataCompute graphDataCompute = new GraphDataCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
     GraphDataSink graphDataSink = new GraphDataSink();
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsTaskGraphBuilder.addSource("Graphdatasource", dataObjectSource,
@@ -175,9 +174,9 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildSsspInitialTG(String dataDirectory, int dsize,
-                                                     int parallelismValue, String soruceVertex,
-                                                     Config conf) {
+  public static ComputeGraph buildSsspInitialTG(String dataDirectory, int dsize,
+                                                int parallelismValue, String soruceVertex,
+                                                Config conf) {
     //the second task graph for assign initial pagerank values for vertex.
     DataObjectSource ssspInitialDatasource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
@@ -186,7 +185,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     SsspInitialSink ssspInitialSink = new SsspInitialSink();
 
 
-    TaskGraphBuilder datapointsTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsTaskGraphBuilder.addSource("ssspInitialDatasource", ssspInitialDatasource,
@@ -213,12 +212,12 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   }
 
-  public static DataFlowTaskGraph buildComputationSsspTG(int parallelismValue, Config conf) {
+  public static ComputeGraph buildComputationSsspTG(int parallelismValue, Config conf) {
     SsspSource ssspSource = new SsspSource();
     SsspKeyedReduce ssspKeyedReduce = new SsspKeyedReduce();
     SsspSink ssspSink = new SsspSink();
 
-    TaskGraphBuilder ssspTaskGraphBuilder = TaskGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder ssspTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     ssspTaskGraphBuilder.addSource("pageranksource",
         ssspSource, parallelismValue);

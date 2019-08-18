@@ -89,8 +89,8 @@ deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/pom.xml
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/task/libtask-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/task/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute/libtask-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/tset/libtset-api-java.jar \

@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.window.function;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.window.api.IWindowMessage;
 
 public interface ProcessWindowedFunction<T> extends IWindowFunction<T> {

@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.task.IMessage;
+import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.window.api.Event;
 import edu.iu.dsc.tws.task.window.api.EventImpl;
 import edu.iu.dsc.tws.task.window.api.IEvictionPolicy;

@@ -58,16 +58,18 @@ public class RecordSource implements Runnable {
 
   @Override
   public void run() {
+    int count = 0;
     for (int i = 0; i < toSend; i++) {
       byte[] randomKey = new byte[this.keySize];
       this.random.nextBytes(randomKey);
-      // lets try to process if send doesn't succeed
       while (!operation.gather(taskId, randomKey, this.value, 0)) {
+        count++;
         for (int j = 0; j < 4; j++) {
           operation.progressChannel();
         }
       }
     }
+    LOG.info("Failed attempts: " + count);
     operation.finish(taskId);
   }
 }

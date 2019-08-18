@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.task.typed;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 
 public abstract class AbstractIterableDataCompute<T> extends BaseCompute<Iterator<T>> {
 }

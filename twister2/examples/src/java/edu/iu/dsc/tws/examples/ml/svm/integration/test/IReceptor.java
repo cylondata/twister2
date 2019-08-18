@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.examples.ml.svm.integration.test;
 
 
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.task.modifiers.Receptor;
 
 public interface IReceptor<T> extends Receptor {
   /**

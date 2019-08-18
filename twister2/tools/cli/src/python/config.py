@@ -269,7 +269,7 @@ def parse_cluster_role_env(cluster_role_env, config_path):
                 if tmp_confs is not None:
                     cli_confs = tmp_confs
                 else:
-                    print "Failed to read: %s due to it is empty" % (CLIENT_YAML)
+                    print("Failed to read: %s due to it is empty" % (CLIENT_YAML))
 
             # if role is required but not provided, raise exception
             if len(parts) == 1:
@@ -289,7 +289,7 @@ def parse_cluster_role_env(cluster_role_env, config_path):
 
     # if cluster or role or environ is empty, print
     if len(parts[0]) == 0 or len(parts[1]) == 0 or len(parts[2]) == 0:
-        print "Failed to parse"
+        print("Failed to parse")
         sys.exit(1)
 
     return (parts[0], parts[1], parts[2])
@@ -356,7 +356,7 @@ def print_build_info(zipped_pex=False):
         release_file = get_twister2_release_file()
     with open(release_file) as release_info:
         for line in release_info:
-            print line,
+            print(line),
 
 def get_version_number(zipped_pex=False):
     """Print version from release.yaml
