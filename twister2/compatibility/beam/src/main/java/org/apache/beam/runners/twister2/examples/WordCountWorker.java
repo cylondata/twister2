@@ -17,11 +17,10 @@
  */
 package org.apache.beam.runners.twister2.examples;
 
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import org.apache.beam.runners.twister2.Twister2LegacyRunner;
 import org.apache.beam.runners.twister2.Twister2PipelineOptions;
 import org.apache.beam.sdk.Pipeline;
@@ -34,7 +33,11 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
+/**
+ * doc.
+ */
 public class WordCountWorker implements Serializable, BatchTSetIWorker {
   private static final Logger LOG = LoggerFactory.getLogger(WordCountWorker.class);
 

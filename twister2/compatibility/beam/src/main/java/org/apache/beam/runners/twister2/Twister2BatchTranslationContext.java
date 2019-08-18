@@ -17,11 +17,14 @@
  */
 package org.apache.beam.runners.twister2;
 
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+
+/**
+ * doc.
+ */
 public class Twister2BatchTranslationContext extends Twister2TranslationContext {
 
   public Twister2BatchTranslationContext(Twister2PipelineOptions options) {

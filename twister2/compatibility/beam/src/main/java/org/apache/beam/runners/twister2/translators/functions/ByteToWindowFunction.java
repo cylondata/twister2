@@ -17,25 +17,23 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
 import org.apache.beam.runners.twister2.utils.TranslationUtils;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.util.WindowedValue.WindowedValueCoder;
 import org.apache.beam.sdk.values.KV;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 /**
  * doc.
- *
- * @param <K>
- * @param <V>
  */
 public class ByteToWindowFunction<K, V>
     implements MapFunc<KV<K, Iterable<WindowedValue<V>>>, Tuple<byte[], Iterator<byte[]>>> {
@@ -52,12 +50,13 @@ public class ByteToWindowFunction<K, V>
     K key = TranslationUtils.<K>fromByteArray(input.getKey(), keyCoder);
     Iterable<WindowedValue<V>> value =
         StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(input.getValue(), Spliterator.ORDERED), false)
+            Spliterators.spliteratorUnknownSize(input.getValue(), Spliterator.ORDERED), false)
             .map(bytes -> TranslationUtils.<V>fromByteArray(bytes, wvCoder))
             .collect(Collectors.toList());
     return KV.of(key, value);
   }
 
   @Override
-  public void prepare(TSetContext context) {}
+  public void prepare(TSetContext context) {
+  }
 }

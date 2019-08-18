@@ -17,9 +17,6 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.beam.runners.core.DoFnRunner;
 import org.apache.beam.runners.core.DoFnRunners;
 import org.apache.beam.runners.core.InMemoryStateInternals;
@@ -44,20 +42,26 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
-/** doc. */
-public class DoFnFunction<OutputT, InputT>
-    implements ComputeCollectorFunc<RawUnionValue, Iterator<WindowedValue<InputT>>> {
+import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
-  private final DoFn<InputT, OutputT> doFn;
+/**
+ * doc.
+ */
+public class DoFnFunction<OT, IT>
+    implements ComputeCollectorFunc<RawUnionValue, Iterator<WindowedValue<IT>>> {
+
+  private final DoFn<IT, OT> doFn;
   private final transient PipelineOptions pipelineOptions;
   private static final long serialVersionUID = -5701440128544343353L;
-  private final Coder<InputT> inputCoder;
+  private final Coder<IT> inputCoder;
   private final Map<TupleTag<?>, Coder<?>> outputCoders;
   private final WindowingStrategy<?, ?> windowingStrategy;
   private final Collection<PCollectionView<?>> sideInputs;
-  private final TupleTag<OutputT> mainOutput;
+  private final TupleTag<OT> mainOutput;
   private transient SideInputHandler sideInputReader;
-  private transient DoFnRunner<InputT, OutputT> doFnRunner;
+  private transient DoFnRunner<IT, OT> doFnRunner;
   private final DoFnOutputManager outputManager;
   private final List<TupleTag<?>> sideOutputs;
   private StepContext stepcontext;
@@ -66,13 +70,13 @@ public class DoFnFunction<OutputT, InputT>
 
   public DoFnFunction(
       PipelineOptions pipelineOptions,
-      DoFn<InputT, OutputT> doFn,
-      Coder<InputT> inputCoder,
+      DoFn<IT, OT> doFn,
+      Coder<IT> inputCoder,
       Map<TupleTag<?>, Coder<?>> outputCoders,
       List<TupleTag<?>> sideOutputs,
       WindowingStrategy<?, ?> windowingStrategy,
       Collection<PCollectionView<?>> sideInputs,
-      TupleTag<OutputT> mainOutput,
+      TupleTag<OT> mainOutput,
       DoFnSchemaInformation doFnSchemaInformation,
       Map<TupleTag<?>, Integer> outputMap) {
     this.doFn = doFn;
@@ -110,7 +114,7 @@ public class DoFnFunction<OutputT, InputT>
   }
 
   @Override
-  public void compute(Iterator<WindowedValue<InputT>> input, Collector<RawUnionValue> output) {
+  public void compute(Iterator<WindowedValue<IT>> input, Collector<RawUnionValue> output) {
     outputManager.clear();
 
     doFnRunner.startBundle();
@@ -133,7 +137,7 @@ public class DoFnFunction<OutputT, InputT>
     private transient Set<TupleTag<?>> outputTags;
     private final Map<TupleTag<?>, Integer> outputMap;
 
-    public DoFnOutputManager(Map<TupleTag<?>, Integer> outputMap) {
+    DoFnOutputManager(Map<TupleTag<?>, Integer> outputMap) {
       this.outputMap = outputMap;
     }
 

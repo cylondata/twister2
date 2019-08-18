@@ -17,9 +17,8 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
 import java.util.Iterator;
+
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
 import org.apache.beam.runners.twister2.translators.functions.AssignWindowsFunction;
@@ -29,10 +28,11 @@ import org.apache.beam.sdk.transforms.windowing.WindowFn;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
+import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+
 /**
  * doc.
- *
- * @param <T>
  */
 public class AssignWindowTranslatorBatch<T> implements BatchTransformTranslator<Window.Assign<T>> {
   @Override

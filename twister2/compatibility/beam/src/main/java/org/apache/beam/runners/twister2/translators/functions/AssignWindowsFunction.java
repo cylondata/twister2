@@ -17,11 +17,9 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import java.util.Collection;
 import java.util.Iterator;
+
 import org.apache.beam.runners.twister2.utils.Twister2AssignContext;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.WindowFn;
@@ -29,10 +27,12 @@ import org.apache.beam.sdk.util.WindowedValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+
 /**
  * doc.
- *
- * @param <T>
  */
 public class AssignWindowsFunction<T>
     implements ComputeCollectorFunc<WindowedValue<T>, Iterator<WindowedValue<T>>> {
@@ -65,5 +65,6 @@ public class AssignWindowsFunction<T>
   }
 
   @Override
-  public void prepare(TSetContext context) {}
+  public void prepare(TSetContext context) {
+  }
 }

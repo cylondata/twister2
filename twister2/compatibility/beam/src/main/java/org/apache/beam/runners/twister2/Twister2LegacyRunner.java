@@ -34,7 +34,9 @@ public class Twister2LegacyRunner extends PipelineRunner<PipelineResult> {
 
   private static final Logger LOG = LoggerFactory.getLogger(Twister2LegacyRunner.class);
 
-  /** Provided options. */
+  /**
+   * Provided options.
+   */
   private final Twister2PipelineOptions options;
 
   public Twister2LegacyRunner(Twister2PipelineOptions options) {

@@ -17,16 +17,19 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import java.util.Iterator;
+
 import org.apache.beam.sdk.transforms.join.RawUnionValue;
 import org.apache.beam.sdk.util.WindowedValue;
 
-/** doc. */
-public class OutputTagFilter<OutputT, InputT>
-    implements ComputeCollectorFunc<WindowedValue<OutputT>, Iterator<RawUnionValue>> {
+import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+/**
+ * doc.
+ */
+public class OutputTagFilter<OT, IT>
+    implements ComputeCollectorFunc<WindowedValue<OT>, Iterator<RawUnionValue>> {
 
   private final int tag;
 
@@ -35,16 +38,17 @@ public class OutputTagFilter<OutputT, InputT>
   }
 
   @Override
-  public void compute(Iterator<RawUnionValue> input, Collector<WindowedValue<OutputT>> output) {
+  public void compute(Iterator<RawUnionValue> input, Collector<WindowedValue<OT>> output) {
     RawUnionValue temp;
     while (input.hasNext()) {
       temp = input.next();
       if (temp.getUnionTag() == tag) {
-        output.collect((WindowedValue<OutputT>) temp.getValue());
+        output.collect((WindowedValue<OT>) temp.getValue());
       }
     }
   }
 
   @Override
-  public void prepare(TSetContext context) {}
+  public void prepare(TSetContext context) {
+  }
 }

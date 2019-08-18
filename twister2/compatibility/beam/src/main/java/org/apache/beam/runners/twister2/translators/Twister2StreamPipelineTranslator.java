@@ -22,7 +22,9 @@ import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+/**
+ * doc.
+ */
 public class Twister2StreamPipelineTranslator extends Twister2PipelineTranslator {
   private static final Logger LOG = LoggerFactory.getLogger(Twister2StreamPipelineTranslator.class);
   private final Twister2PipelineOptions options;

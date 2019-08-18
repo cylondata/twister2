@@ -17,13 +17,17 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
 import java.io.Serializable;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
+import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
+
+/**
+ * doc.
+ */
 public class Twister2BatchWorker extends TSetBatchWorker implements Serializable {
 
   @Override
-  public void execute(TwisterBatchContext tc) {}
+  public void execute(TwisterBatchContext tc) {
+  }
 }

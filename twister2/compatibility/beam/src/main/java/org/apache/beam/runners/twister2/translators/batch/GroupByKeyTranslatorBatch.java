@@ -17,11 +17,8 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 import java.util.Iterator;
+
 import org.apache.beam.runners.core.SystemReduceFn;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
@@ -38,11 +35,12 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
 /**
  * WindowingStrategy doc.
- *
- * @param <K>
- * @param <V>
  */
 public class GroupByKeyTranslatorBatch<K, V> implements BatchTransformTranslator<GroupByKey<K, V>> {
 
@@ -65,18 +63,18 @@ public class GroupByKeyTranslatorBatch<K, V> implements BatchTransformTranslator
     // todo keyedPartition function instead of KeyedGather
     ComputeTSet<KV<K, Iterable<WindowedValue<V>>>, Iterator<Tuple<byte[], Iterator<byte[]>>>>
         groupedbyKeyTset =
-            keyedTSet.keyedGather().map(new ByteToWindowFunction(inputKeyCoder, wvCoder));
+        keyedTSet.keyedGather().map(new ByteToWindowFunction(inputKeyCoder, wvCoder));
 
     // --- now group also by window.
     ComputeTSet<WindowedValue<KV<K, Iterable<V>>>, Iterable<KV<K, Iterator<WindowedValue<V>>>>>
         outputTset =
-            groupedbyKeyTset
-                .direct()
-                .<WindowedValue<KV<K, Iterable<V>>>>flatmap(
-                    new GroupByWindowFunction(
-                        windowingStrategy,
-                        SystemReduceFn.buffering(coder.getValueCoder()),
-                        context.getSerializableOptions()));
+        groupedbyKeyTset
+            .direct()
+            .<WindowedValue<KV<K, Iterable<V>>>>flatmap(
+                new GroupByWindowFunction(
+                    windowingStrategy,
+                    SystemReduceFn.buffering(coder.getValueCoder()),
+                    context.getSerializableOptions()));
     PCollection output = context.getOutput(transform);
     context.setOutputDataSet(output, outputTset);
   }

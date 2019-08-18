@@ -19,7 +19,9 @@ package org.apache.beam.runners.twister2;
 
 import edu.iu.dsc.tws.api.tset.worker.TwisterStreamingContext;
 
-/** doc. */
+/**
+ * doc.
+ */
 public class Twister2StreamingTranslationContext extends Twister2TranslationContext {
 
   private final TwisterStreamingContext twisterStreamingContext;

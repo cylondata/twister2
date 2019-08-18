@@ -25,12 +25,11 @@ import org.apache.beam.sdk.values.PCollection;
 
 /**
  * doc.
- *
- * @param <T>
  */
 public class ReadSourceTranslatorStream<T>
     implements StreamTransformTranslator<PTransform<PBegin, PCollection<T>>> {
   @Override
   public void translateNode(
-      PTransform<PBegin, PCollection<T>> transform, Twister2StreamTranslationContext context) {}
+      PTransform<PBegin, PCollection<T>> transform, Twister2StreamTranslationContext context) {
+  }
 }

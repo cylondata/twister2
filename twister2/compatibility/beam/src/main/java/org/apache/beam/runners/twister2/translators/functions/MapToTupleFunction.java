@@ -17,9 +17,6 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.util.CoderUtils;
@@ -28,11 +25,12 @@ import org.apache.beam.sdk.values.KV;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+
 /**
  * doc.
- *
- * @param <K>
- * @param <V>
  */
 public class MapToTupleFunction<K, V>
     implements MapFunc<Tuple<byte[], byte[]>, WindowedValue<KV<K, V>>> {
@@ -74,5 +72,6 @@ public class MapToTupleFunction<K, V>
   }
 
   @Override
-  public void prepare(TSetContext context) {}
+  public void prepare(TSetContext context) {
+  }
 }

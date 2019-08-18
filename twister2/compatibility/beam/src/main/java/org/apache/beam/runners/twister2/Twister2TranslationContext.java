@@ -17,14 +17,13 @@
  */
 package org.apache.beam.runners.twister2;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.TSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.beam.runners.core.construction.SerializablePipelineOptions;
 import org.apache.beam.runners.core.construction.TransformInputs;
 import org.apache.beam.runners.twister2.translators.functions.Twister2SinkFunction;
@@ -39,7 +38,11 @@ import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+/**
+ * doc.
+ */
 public class Twister2TranslationContext {
   private final Twister2PipelineOptions options;
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
@@ -118,8 +121,8 @@ public class Twister2TranslationContext {
     }
   }
 
-  public <ViewT, ElemT> void setSideInputDataSet(
-      PCollectionView<ViewT> value, TSet<WindowedValue<ElemT>> set) {
+  public <VT, ET> void setSideInputDataSet(
+      PCollectionView<VT> value, TSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
     }

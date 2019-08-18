@@ -24,7 +24,9 @@ import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+/**
+ * doc.
+ */
 public class Twister2PiplineExecutionEnvironment {
   private static final Logger LOG =
       LoggerFactory.getLogger(Twister2PiplineExecutionEnvironment.class);
@@ -38,8 +40,6 @@ public class Twister2PiplineExecutionEnvironment {
 
   /**
    * translate the pipline into Twister2 TSet graph.
-   *
-   * @param pipeline
    */
   public void translate(Pipeline pipeline) {
 
@@ -76,7 +76,9 @@ public class Twister2PiplineExecutionEnvironment {
     translator.translate(pipeline);
   }
 
-  /** Execute all the task graphs. */
+  /**
+   * Execute all the task graphs.
+   */
   public void execute() {
     twister2TranslationContext.execute();
   }

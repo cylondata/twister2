@@ -19,11 +19,18 @@ package org.apache.beam.runners.twister2.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.util.WindowedValue;
 
-/** doc. */
-public class TranslationUtils {
+/**
+ * doc.
+ */
+public final class TranslationUtils {
+
+  private TranslationUtils() {
+  }
+
   /**
    * Utility method for deserializing a byte array using the specified coder. (From spark code)
    *

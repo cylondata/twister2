@@ -20,7 +20,9 @@ package org.apache.beam.runners.twister2.translators;
 import org.apache.beam.runners.twister2.Twister2StreamTranslationContext;
 import org.apache.beam.sdk.transforms.PTransform;
 
-/** doc. */
+/**
+ * doc.
+ */
 public interface StreamTransformTranslator<TransformT extends PTransform> {
   void translateNode(TransformT transform, Twister2StreamTranslationContext context);
 }

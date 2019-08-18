@@ -23,8 +23,6 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 
 /**
  * Sink Function that collects results.
- *
- * @param <T>
  */
 public class Twister2SinkFunction<T> implements SinkFunc<T> {
   @Override
@@ -34,7 +32,8 @@ public class Twister2SinkFunction<T> implements SinkFunc<T> {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+  }
 
   @Override
   public DataPartition<?> get() {

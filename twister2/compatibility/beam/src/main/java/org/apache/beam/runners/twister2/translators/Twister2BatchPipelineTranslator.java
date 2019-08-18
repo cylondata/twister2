@@ -19,6 +19,7 @@ package org.apache.beam.runners.twister2.translators;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.Twister2PipelineOptions;
 import org.apache.beam.runners.twister2.translators.batch.AssignWindowTranslatorBatch;
@@ -38,7 +39,9 @@ import org.apache.beam.sdk.transforms.windowing.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+/**
+ * doc.
+ */
 public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator {
 
   private static final Logger LOG = LoggerFactory.getLogger(Twister2BatchPipelineTranslator.class);
@@ -49,7 +52,7 @@ public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator 
    * use to translate that transform.
    */
   private static final Map<Class<? extends PTransform>, BatchTransformTranslator>
-      transformTranslators = new HashMap<>();
+      TRANSFORM_TRANSLATORS = new HashMap<>();
 
   private final Twister2BatchTranslationContext translationContext;
 
@@ -83,17 +86,17 @@ public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator 
 
   private BatchTransformTranslator<?> getTransformTranslator(
       Class<? extends PTransform> transformClass) {
-    return transformTranslators.get(transformClass);
+    return TRANSFORM_TRANSLATORS.get(transformClass);
   }
 
   /**
    * Records that instances of the specified PTransform class should be translated by default by the
    * corresponding {@link BatchTransformTranslator}.
    */
-  private static <TransformT extends PTransform> void registerTransformTranslator(
-      Class<TransformT> transformClass,
-      BatchTransformTranslator<? extends TransformT> transformTranslator) {
-    if (transformTranslators.put(transformClass, transformTranslator) != null) {
+  private static <TT extends PTransform> void registerTransformTranslator(
+      Class<TT> transformClass,
+      BatchTransformTranslator<? extends TT> transformTranslator) {
+    if (TRANSFORM_TRANSLATORS.put(transformClass, transformTranslator) != null) {
       throw new IllegalArgumentException("defining multiple translators for " + transformClass);
     }
   }

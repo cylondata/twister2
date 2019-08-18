@@ -18,11 +18,14 @@
 package org.apache.beam.runners.twister2.utils;
 
 import java.io.Serializable;
+
 import org.apache.beam.runners.core.StateInternals;
 import org.apache.beam.runners.core.StepContext;
 import org.apache.beam.runners.core.TimerInternals;
 
-/** doc. */
+/**
+ * doc.
+ */
 public class NoOpStepContext implements StepContext, Serializable {
   @Override
   public StateInternals stateInternals() {

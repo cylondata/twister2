@@ -17,13 +17,11 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
-import edu.iu.dsc.tws.api.tset.Collector;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.beam.runners.core.InMemoryStateInternals;
 import org.apache.beam.runners.core.InMemoryTimerInternals;
 import org.apache.beam.runners.core.OutputWindowedValue;
@@ -46,11 +44,12 @@ import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
+
 /**
  * doc.
- *
- * @param <K>
- * @param <V>
  */
 public class GroupByWindowFunction<K, V, W extends BoundedWindow>
     implements FlatMapFunc<WindowedValue<KV<K, Iterable<V>>>, KV<K, Iterable<WindowedValue<V>>>> {
@@ -142,7 +141,8 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
   }
 
   @Override
-  public void prepare(TSetContext context) {}
+  public void prepare(TSetContext context) {
+  }
 
   private static class GABWOutputWindowedValue<K, V>
       implements OutputWindowedValue<KV<K, Iterable<V>>> {
@@ -158,9 +158,9 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
     }
 
     @Override
-    public <AdditionalOutputT> void outputWindowedValue(
-        TupleTag<AdditionalOutputT> tag,
-        AdditionalOutputT output,
+    public <AT> void outputWindowedValue(
+        TupleTag<AT> tag,
+        AT output,
         Instant timestamp,
         Collection<? extends BoundedWindow> windows,
         PaneInfo pane) {

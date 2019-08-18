@@ -17,21 +17,21 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
 import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+
 /**
  * doc.
- *
- * @param <T>
  */
 public class FlatternTranslatorBatch<T>
     implements BatchTransformTranslator<Flatten.PCollections<T>> {

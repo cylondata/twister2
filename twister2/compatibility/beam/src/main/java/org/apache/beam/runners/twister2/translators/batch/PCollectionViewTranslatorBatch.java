@@ -17,8 +17,8 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.sets.TSet;
 import java.io.IOException;
+
 import org.apache.beam.runners.core.construction.CreatePCollectionViewTranslation;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
@@ -28,30 +28,29 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PCollection;
 
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+
 /**
  * doc.
- *
- * @param <ElemT>
- * @param <ViewT>
  */
-public class PCollectionViewTranslatorBatch<ElemT, ViewT>
-    implements BatchTransformTranslator<View.CreatePCollectionView<ElemT, ViewT>> {
+public class PCollectionViewTranslatorBatch<ET, VT>
+    implements BatchTransformTranslator<View.CreatePCollectionView<ET, VT>> {
   @Override
   public void translateNode(
-      View.CreatePCollectionView<ElemT, ViewT> transform, Twister2BatchTranslationContext context) {
-    TSet<WindowedValue<ElemT>> inputDataSet = context.getInputDataSet(context.getInput(transform));
+      View.CreatePCollectionView<ET, VT> transform, Twister2BatchTranslationContext context) {
+    TSet<WindowedValue<ET>> inputDataSet = context.getInputDataSet(context.getInput(transform));
     @SuppressWarnings("unchecked")
     AppliedPTransform<
-            PCollection<ElemT>,
-            PCollection<ElemT>,
-            PTransform<PCollection<ElemT>, PCollection<ElemT>>>
+        PCollection<ET>,
+        PCollection<ET>,
+        PTransform<PCollection<ET>, PCollection<ET>>>
         application =
-            (AppliedPTransform<
-                    PCollection<ElemT>,
-                    PCollection<ElemT>,
-                    PTransform<PCollection<ElemT>, PCollection<ElemT>>>)
-                context.getCurrentTransform();
-    org.apache.beam.sdk.values.PCollectionView<ViewT> input;
+        (AppliedPTransform<
+            PCollection<ET>,
+            PCollection<ET>,
+            PTransform<PCollection<ET>, PCollection<ET>>>)
+            context.getCurrentTransform();
+    org.apache.beam.sdk.values.PCollectionView<VT> input;
     try {
       input = CreatePCollectionViewTranslation.getView(application);
     } catch (IOException e) {

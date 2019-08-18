@@ -18,11 +18,14 @@
 package org.apache.beam.runners.twister2;
 
 import java.util.Set;
+
 import org.apache.beam.model.pipeline.v1.RunnerApi;
 import org.apache.beam.runners.core.construction.graph.PipelineNode;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableMap;
 
-/** Twister2BatchPortablePipelineTranslator. */
+/**
+ * Twister2BatchPortablePipelineTranslator.
+ */
 public class Twister2BatchPortablePipelineTranslator implements Twister2PortablePipelineTranslator {
 
   private final ImmutableMap<String, PTransformTranslator> urnToTransformTranslator;
@@ -33,7 +36,9 @@ public class Twister2BatchPortablePipelineTranslator implements Twister2Portable
 
   interface PTransformTranslator {
 
-    /** Translates transformNode from Beam into the Spark context. */
+    /**
+     * Translates transformNode from Beam into the Spark context.
+     */
     void translate(
         PipelineNode.PTransformNode transformNode,
         RunnerApi.Pipeline pipeline,
@@ -52,5 +57,6 @@ public class Twister2BatchPortablePipelineTranslator implements Twister2Portable
   }
 
   @Override
-  public void translate(RunnerApi.Pipeline pipeline) {}
+  public void translate(RunnerApi.Pipeline pipeline) {
+  }
 }

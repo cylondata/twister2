@@ -25,22 +25,19 @@ import org.joda.time.Instant;
 
 /**
  * doc.
- *
- * @param <InputT>
- * @param <W>
  */
-public class Twister2AssignContext<InputT, W extends BoundedWindow>
-    extends WindowFn<InputT, W>.AssignContext {
+public class Twister2AssignContext<IT, W extends BoundedWindow>
+    extends WindowFn<IT, W>.AssignContext {
 
-  private final WindowedValue<InputT> value;
+  private final WindowedValue<IT> value;
 
-  public Twister2AssignContext(WindowFn<InputT, W> fn, WindowedValue<InputT> value) {
+  public Twister2AssignContext(WindowFn<IT, W> fn, WindowedValue<IT> value) {
     fn.super();
     this.value = value;
   }
 
   @Override
-  public InputT element() {
+  public IT element() {
     return value.getValue();
   }
 

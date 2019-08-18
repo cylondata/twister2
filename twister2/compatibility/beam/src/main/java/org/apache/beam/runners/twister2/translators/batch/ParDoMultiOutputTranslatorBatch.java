@@ -17,14 +17,13 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.beam.runners.core.construction.ParDoTranslation;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
@@ -45,24 +44,29 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Maps;
 
-/** doc. */
-public class ParDoMultiOutputTranslatorBatch<InputT, OutputT>
-    implements BatchTransformTranslator<ParDo.MultiOutput<InputT, OutputT>> {
+
+import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+/**
+ * doc.
+ */
+public class ParDoMultiOutputTranslatorBatch<IT, OT>
+    implements BatchTransformTranslator<ParDo.MultiOutput<IT, OT>> {
 
   @Override
   public void translateNode(
-      ParDo.MultiOutput<InputT, OutputT> transform, Twister2BatchTranslationContext context) {
-    DoFn<InputT, OutputT> doFn;
-    doFn = (DoFn<InputT, OutputT>) transform.getFn();
+      ParDo.MultiOutput<IT, OT> transform, Twister2BatchTranslationContext context) {
+    DoFn<IT, OT> doFn;
+    doFn = (DoFn<IT, OT>) transform.getFn();
     //    checkState(
     //        !DoFnSignatures.signatureForDoFn(doFn).processElement().isSplittable(),
     //        "Not expected to directly translate splittable DoFn, should have been overridden: %s",
     //        doFn);
-    BBaseTSet<WindowedValue<InputT>> inputTTSet =
+    BBaseTSet<WindowedValue<IT>> inputTTSet =
         context.getInputDataSet(context.getInput(transform));
 
     WindowingStrategy<?, ?> windowingStrategy = context.getInput(transform).getWindowingStrategy();
-    Coder<InputT> inputCoder = (Coder<InputT>) context.getInput(transform).getCoder();
+    Coder<IT> inputCoder = (Coder<IT>) context.getInput(transform).getCoder();
 
     Map<TupleTag<?>, PValue> outputs = context.getOutputs();
     Map<TupleTag<?>, Coder<?>> outputCoders = context.getOutputCoders();
@@ -72,7 +76,7 @@ public class ParDoMultiOutputTranslatorBatch<InputT, OutputT>
         signature.stateDeclarations().size() > 0 || signature.timerDeclarations().size() > 0;
     DoFnSchemaInformation doFnSchemaInformation;
     doFnSchemaInformation = ParDoTranslation.getSchemaInformation(context.getCurrentTransform());
-    TupleTag<OutputT> mainOutput = transform.getMainOutputTag();
+    TupleTag<OT> mainOutput = transform.getMainOutputTag();
     List<TupleTag<?>> additionalOutputTags = new ArrayList<>(outputs.size() - 1);
     Collection<PCollectionView<?>> sideInputs = transform.getSideInputs();
     TupleTag<?> mainOutputTag;
@@ -91,11 +95,11 @@ public class ParDoMultiOutputTranslatorBatch<InputT, OutputT>
       }
     }
 
-    ComputeTSet<RawUnionValue, Iterator<WindowedValue<InputT>>> outputTSet =
+    ComputeTSet<RawUnionValue, Iterator<WindowedValue<IT>>> outputTSet =
         inputTTSet
             .direct()
             .<RawUnionValue>compute(
-                new DoFnFunction<OutputT, InputT>(
+                new DoFnFunction<OT, IT>(
                     context.getOptions(),
                     doFn,
                     inputCoder,
@@ -108,7 +112,7 @@ public class ParDoMultiOutputTranslatorBatch<InputT, OutputT>
                     outputMap));
 
     for (Map.Entry<TupleTag<?>, PValue> output : outputs.entrySet()) {
-      ComputeTSet<WindowedValue<OutputT>, Iterator<RawUnionValue>> tempTSet =
+      ComputeTSet<WindowedValue<OT>, Iterator<RawUnionValue>> tempTSet =
           outputTSet.direct().compute(new OutputTagFilter(outputMap.get(output.getKey())));
       context.setOutputDataSet((PCollection) output.getValue(), tempTSet);
     }

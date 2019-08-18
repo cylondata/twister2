@@ -17,15 +17,11 @@
  */
 package org.apache.beam.runners.twister2.translation.wrappers;
 
-import static org.apache.beam.vendor.grpc.v1p21p0.io.opencensus.internal.Utils.checkState;
-
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
 import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.sdk.io.BoundedSource;
 import org.apache.beam.sdk.io.Source;
@@ -34,7 +30,15 @@ import org.apache.beam.sdk.util.WindowedValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @param <T> */
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
+
+import static org.apache.beam.vendor.grpc.v1p21p0.io.opencensus.internal.Utils.checkState;
+
+/**
+ * doc.
+ */
 public class Twister2BoundedSource<T> extends BaseSourceFunc<WindowedValue<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(Twister2BoundedSource.class);
 
@@ -42,7 +46,7 @@ public class Twister2BoundedSource<T> extends BaseSourceFunc<WindowedValue<T>> {
   private int numPartitions;
   private long splitSize = 100;
   private transient Config twister2Config;
-  List<? extends Source<T>> partitionedSources;
+  private List<? extends Source<T>> partitionedSources;
   private Source<T> localPartition;
   private final transient PipelineOptions options;
   private transient Iterator<WindowedValue<T>> readerIterator;

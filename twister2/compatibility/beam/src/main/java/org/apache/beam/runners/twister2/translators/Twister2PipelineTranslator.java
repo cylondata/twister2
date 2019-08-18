@@ -21,7 +21,9 @@ import org.apache.beam.sdk.Pipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+/**
+ * doc.
+ */
 public abstract class Twister2PipelineTranslator extends Pipeline.PipelineVisitor.Defaults {
 
   private static final Logger LOG = LoggerFactory.getLogger(Twister2PipelineTranslator.class);

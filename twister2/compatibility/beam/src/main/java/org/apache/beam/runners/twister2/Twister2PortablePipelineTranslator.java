@@ -18,9 +18,12 @@
 package org.apache.beam.runners.twister2;
 
 import java.util.Set;
+
 import org.apache.beam.model.pipeline.v1.RunnerApi;
 
-/** doc. */
+/**
+ * doc.
+ */
 public interface Twister2PortablePipelineTranslator {
 
   Set<String> knownUrns();

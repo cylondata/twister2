@@ -17,9 +17,6 @@
  */
 package org.apache.beam.runners.twister2.translators.batch;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.translation.wrappers.Twister2BoundedSource;
 import org.apache.beam.runners.twister2.translators.BatchTransformTranslator;
@@ -31,7 +28,13 @@ import org.apache.beam.sdk.values.PCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+
+/**
+ * doc.
+ */
 public class ReadSourceTranslatorBatch<T> implements BatchTransformTranslator<Read.Bounded<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(Twister2BatchPipelineTranslator.class);
 

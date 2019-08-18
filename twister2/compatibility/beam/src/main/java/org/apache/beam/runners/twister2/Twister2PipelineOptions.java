@@ -17,15 +17,21 @@
  */
 package org.apache.beam.runners.twister2;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.StreamingOptions;
 
-/** doc. */
+import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+
+
+/**
+ * doc.
+ */
 public interface Twister2PipelineOptions extends PipelineOptions, StreamingOptions {
   @Description("set unique application name for Twister2 runner")
   void setApplicationName(String name);

@@ -16,5 +16,9 @@
  * limitations under the License.
  */
 package org.apache.beam.runners.twister2;
-/** doc. */
-public class Twister2StreamTranslationContext {}
+
+/**
+ * doc.
+ */
+public class Twister2StreamTranslationContext {
+}
