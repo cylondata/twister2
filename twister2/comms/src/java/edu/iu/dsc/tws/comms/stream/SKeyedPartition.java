@@ -96,4 +96,21 @@ public class SKeyedPartition extends BaseOperation {
     }
     return send;
   }
+
+  /**
+   * Send a message to be partitioned based on the key
+   *
+   * @param src source
+   * @param data tuple
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
+  public boolean partition(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
+  }
 }

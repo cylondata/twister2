@@ -815,7 +815,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     // lets progress the controlled operation
     progressCount++;
-    swapLock.lock();
     boolean completed = false;
     boolean needFurtherMerging = true;
     if (doneProgress) {

@@ -118,4 +118,21 @@ public class SKeyedGather extends BaseOperation {
     int dest = destinationSelector.next(src, key, message);
     return op.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
   }
+
+  /**
+   * Send a message to be reduced
+   *
+   * @param src source
+   * @param data data tuple
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
+  public boolean gather(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
+  }
 }

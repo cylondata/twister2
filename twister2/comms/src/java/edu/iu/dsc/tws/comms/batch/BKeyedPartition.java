@@ -64,7 +64,15 @@ public class BKeyedPartition extends BaseOperation {
   public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source, key, message);
 
-    return op.send(source, Tuple.of(key, message, op.getKeyType(),
-        op.getDataType()), flags, destinations);
+    return op.send(source, Tuple.of(key, message), flags, destinations);
+  }
+
+  public boolean partition(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
   }
 }

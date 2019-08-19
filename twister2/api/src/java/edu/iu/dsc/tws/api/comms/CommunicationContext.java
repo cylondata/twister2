@@ -34,8 +34,8 @@ public class CommunicationContext extends Context {
   public static final String DIRECT = "direct";
   public static final String JOIN = "join";
 
-  private static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
-  private static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
+  public static final String INTER_NODE_DEGREE = "twister2.network.routing.inter.node.degree";
+  public static final String INTRA_NODE_DEGREE = "twister2.network.routing.intra.node.degree";
   public static final ByteOrder DEFAULT_BYTEORDER = ByteOrder.BIG_ENDIAN;
   public static final String PERSISTENT_DIRECTORIES = "twister2.network.ops.persistent.dirs";
   public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
@@ -45,16 +45,16 @@ public class CommunicationContext extends Context {
   public static final String PARTITION_ALGO_SIMPLE = "simple";
   public static final String PARTITION_ALGO_RING = "ring";
 
-  private static final String BUFFER_SIZE = "twister2.network.buffer.size";
+  public static final String BUFFER_SIZE = "twister2.network.buffer.size";
 
-  private static final String SEND_BUFFERS_COUNT = "twister2.network.sendBuffer.count";
-  private static final String RECEIVE_BUFFERS_COUNT = "twister2.network.receiveBuffer.count";
-  private static final String SEND_PENDING_MAX = "twister2.network.send.pending.max";
-  private static final String CHANNEL_PENDING_SIZE
+  public static final String SEND_BUFFERS_COUNT = "twister2.network.sendBuffer.count";
+  public static final String RECEIVE_BUFFERS_COUNT = "twister2.network.receiveBuffer.count";
+  public static final String SEND_PENDING_MAX = "twister2.network.send.pending.max";
+  public static final String CHANNEL_PENDING_SIZE
       = "twister2.network.channel.pending.size";
-  private static final String PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
+  public static final String PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
       "twister2.network.partition.message.group.low_water_mark";
-  private static final String PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
+  public static final String PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
       "twister2.network.partition.message.group.high_water_mark";
 
   public static final String PARTITION_BATCH_GROUPING_SIZE
@@ -93,16 +93,6 @@ public class CommunicationContext extends Context {
    * Type of the join algorithm to apply with join operation
    */
   public static final String JOIN_TYPE = "join-type";
-
-  /**
-   * Name of the operation in the current configuration
-   */
-  public static final String OPERATION_NAME = "opname";
-
-  /**
-   * If it is streaming environment, this property will be set
-   */
-  public static final String STREAMING = "streaming";
 
   public enum JoinType {
     INNER, FULL_OUTER, LEFT, RIGHT;
@@ -193,56 +183,5 @@ public class CommunicationContext extends Context {
 
   public static int getRingWorkersPerGroup(Config cfg) {
     return getIntPropertyValue(cfg, RING_GROUPING_WORKER_PER_GROUPS, 128);
-  }
-
-  private static String getStringPropertyValue(Config cfg, String name, String def) {
-    String first = cfg.getStringValue(name, def);
-    String second = cfg.getStringValue(
-        getModeSpecificPropertyName(cfg, name), first);
-    return cfg.getStringValue(
-        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
-  }
-
-  private static long getLongPropertyValue(Config cfg, String name, long def) {
-    long first = cfg.getLongValue(name, def);
-    long second = cfg.getLongValue(
-        getModeSpecificPropertyName(cfg, name), first);
-    return cfg.getLongValue(
-        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
-  }
-
-  private static double getDoublePropertyValue(Config cfg, String name, double def) {
-    double first = cfg.getDoubleValue(name, def);
-    double second = cfg.getDoubleValue(
-        getModeSpecificPropertyName(cfg, name), first);
-    return cfg.getDoubleValue(
-        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
-  }
-
-  private static int getIntPropertyValue(Config cfg, String name, int def) {
-    int first = cfg.getIntegerValue(name, def);
-    int second = cfg.getIntegerValue(
-        getModeSpecificPropertyName(cfg, name), first);
-    return cfg.getIntegerValue(
-        getOpSpecificPropertyName(cfg, RING_GROUPING_WORKER_PER_GROUPS), second);
-  }
-
-  private static String getModeSpecificPropertyName(Config cfg, String name) {
-    boolean stream = cfg.getBooleanValue(STREAMING, false);
-    if (stream) {
-      return name + "." + "stream";
-    } else {
-      return name + "." + "batch";
-    }
-  }
-
-  private static String getOpSpecificPropertyName(Config cfg, String name) {
-    boolean stream = cfg.getBooleanValue(STREAMING, false);
-    String op = cfg.getStringValue(OPERATION_NAME, "");
-    if (stream) {
-      return name + "." + "stream" + "." + op;
-    } else {
-      return name + "." + "batch" + "." + op;
-    }
   }
 }

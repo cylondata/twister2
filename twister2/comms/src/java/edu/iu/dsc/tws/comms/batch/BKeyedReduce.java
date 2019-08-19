@@ -77,4 +77,13 @@ public class BKeyedReduce extends BaseOperation {
     int dest = destinationSelector.next(src, key, data);
     return op.send(src, new Tuple<>(key, data, keyType, dataType), flags, dest);
   }
+
+  public boolean reduce(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
+  }
 }

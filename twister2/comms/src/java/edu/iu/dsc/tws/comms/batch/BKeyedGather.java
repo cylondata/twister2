@@ -133,8 +133,16 @@ public class BKeyedGather extends BaseOperation {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return op.send(source, Tuple.of(key, data, keyType,
-        dataType), flags, dest);
+    return op.send(source, Tuple.of(key, data), flags, dest);
+  }
+
+  public boolean gather(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
   }
 
   @Override
