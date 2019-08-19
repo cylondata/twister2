@@ -73,7 +73,8 @@ def twister2_class(class_name, lib_jars, extra_jars=None, args=None, java_define
 
     # invoke the command with subprocess and print error message, if any
     proc = subprocess.Popen(all_args, env=twister2_env, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, bufsize=1)
+                            stderr=subprocess.PIPE, bufsize=1,
+                            universal_newlines=True,)
     # stdout message has the information Java program sends back
     # stderr message has extra information, such as debugging message
     return ProcessResult(proc)

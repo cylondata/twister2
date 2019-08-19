@@ -69,7 +69,7 @@ class Result(object):
         if msg:
             if msg[-1] == '\n':
                 msg = msg[:-1]
-            print >> f, msg
+            print(msg, file=f)
 
     def _log_context(self):
         # render context only after process exits
