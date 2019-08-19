@@ -6,7 +6,7 @@ common_deps_files = [
        "//twister2/proto:proto-java",
        "//twister2/api/src/java:api-java",
        "//twister2/resource-scheduler/src/java:resource-scheduler-java",
-       "//twister2/api/src/java/edu/iu/dsc/tws/api/task:task-api-java",
+       "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
        "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
        "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
