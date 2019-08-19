@@ -1,5 +1,5 @@
 build --genrule_strategy=standalone
-build --host_force_python=PY2
+build --host_force_python=PY3
 build --ignore_unsupported_sandboxing
 build --spawn_strategy=standalone
 
@@ -17,7 +17,8 @@ build:centos --incompatible_depset_union=false
 
 # For Mac
 # To use it: bazel build --config=darwin
-build:darwin --python2_path /usr/bin/python2.7
+# build:darwin --python2_path /usr/bin/python2.7
+build:ubuntu --host_force_python=PY3
 build:darwin --experimental_action_listener=tools/java:compile_java
 build:darwin --strict_java_deps=off
 build:darwin --genrule_strategy=standalone
@@ -29,7 +30,7 @@ build:darwin --incompatible_depset_union=false
 build:ubuntu --ignore_unsupported_sandboxing
 build:ubuntu --genrule_strategy=standalone
 build:ubuntu --spawn_strategy=standalone
-build:ubuntu --host_force_python=PY2
+build:ubuntu --host_force_python=PY3
 build:ubuntu --linkopt -lm
 build:ubuntu --linkopt -lpthread
 build:ubuntu --linkopt -lrt
