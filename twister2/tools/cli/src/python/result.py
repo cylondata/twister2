@@ -69,7 +69,7 @@ class Result(object):
         if msg:
             if msg[-1] == '\n':
                 msg = msg[:-1]
-            print(str(msg, "utf-8"), end="", file=f)
+            print(msg, file=f)
 
     def _log_context(self):
         # render context only after process exits
@@ -171,7 +171,7 @@ class ProcessResult(Result):
                 self.renderProcessStdErr(stderr_line)
         self.proc.wait()
         self.status = status_type(self.proc.returncode)
-        stdout = b"".join(self.proc.stdout.readlines())
+        stdout = "".join(self.proc.stdout.readlines())
         self.renderProcessStdOut(stdout)
         self._log_context()
 
