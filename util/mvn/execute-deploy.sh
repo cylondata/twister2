@@ -146,6 +146,10 @@ deploy_library \
   twister2/compatibility/storm/pom.xml
 
 deploy_library \
+  twister2/compatibility/beam/libtwister2-beam.jar \
+  twister2/compatibility/beam/pom.xml
+
+deploy_library \
   twister2/checkpointing/src/java/libcheckpointing-java.jar \
   twister2/checkpointing/src/java/pom.xml
 

@@ -36,6 +36,7 @@ load("//tools/rules:twister2_core.bzl", "twister2_core_lib_data_lmdb_files")
 load("//tools/rules:twister2_core.bzl", "twister2_harp_integration_files")
 load("//tools/rules:twister2_core.bzl", "twister2_dashboard_files")
 load("//tools/rules:twister2_core.bzl", "twister2_storm_files")
+load("//tools/rules:twister2_core.bzl", "twister2_beam_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_checkpointing_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
@@ -337,6 +338,7 @@ pack_tw2(
         ":twister2-ompi-lib",
         ":twister2-restarter",
         ":twister2-storm",
+        ":twister2-beam",
         ":twister2-test",
         ":twister2-test-tests",
         ":twister2-test-tests-apps-tera-sort",
@@ -535,6 +537,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-storm",
     srcs = twister2_storm_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-beam",
+    srcs = twister2_beam_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
