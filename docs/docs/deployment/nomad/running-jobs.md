@@ -1,5 +1,5 @@
 ---
-id: nomad
+id: nomad_old
 title: Nomad
 sidebar_label: Nomad
 ---
