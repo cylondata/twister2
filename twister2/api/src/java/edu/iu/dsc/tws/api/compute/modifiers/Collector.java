@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.compute.modifiers;
 
+import java.util.Collections;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -47,13 +48,7 @@ public interface Collector {
    * be equal to n and, R should have the same distribution as C among the workers.
    */
 
-  /*default Set<String> getCollectibleNames() {
-    return Collections.emptySet();
-  }*/
-
   default Set<String> getCollectibleNames() {
-    return null;
+    return Collections.emptySet();
   }
-
-  //Set<String> getCollectibleNames();
 }

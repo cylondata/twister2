@@ -20,3 +20,16 @@ java_import(
     jars = ["jnr/jffi-native-1.2.16.jar"],
     visibility = ["//visibility:public"],
 )
+
+
+java_import(
+    name = "vendored_guava_26_0_jre",
+    jars = ["beamguava26/beam-vendor-guava-26_0-jre-0.1.jar"],
+    visibility = ["//visibility:public"],
+)
+
+java_import(
+    name = "vendored_grpc_1_21_0",
+    jars = ["beamgrpc12/beam-vendor-grpc-1_21_0-0.1.jar"],
+    visibility = ["//visibility:public"],
+)
