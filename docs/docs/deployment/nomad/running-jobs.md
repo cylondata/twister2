@@ -30,7 +30,7 @@ In order to submit a job, the following command can be used
 For example here is a command to run HelloWorld example.
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
+./bin/twister2 submit nomad jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8
 ```
 
 ## Log files
