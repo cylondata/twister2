@@ -9,9 +9,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.tset.env;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobID;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.task.JobContextImpl;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -20,6 +32,7 @@ import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.api.tset.sources.HadoopSource;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
 
@@ -38,6 +51,22 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
+  }
+
+  public <K, V, F extends InputFormat<K, V>> SourceTSet<Tuple<K, V>> createHadoopSource(
+      Configuration configuration, Class<F> inputFormat) {
+    JobConf jconf = new JobConf(configuration);
+    InputFormat<K, V> format;
+    try {
+      FileSystem.getLocal(configuration);
+      format = inputFormat.newInstance();
+      JobContext jobContext = new JobContextImpl(configuration, new JobID("hadoop", 1));
+      List<InputSplit> splits = format.getSplits(jobContext);
+      return new SourceTSet<>(this, new HadoopSource<>(), splits.size());
+    } catch (InstantiationException | IllegalAccessException
+        | InterruptedException | IOException e) {
+      throw new RuntimeException("Failed to initialize hadoop input", e);
+    }
   }
 
   /**
