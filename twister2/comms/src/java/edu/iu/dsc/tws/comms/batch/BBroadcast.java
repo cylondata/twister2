@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 public class BBroadcast extends BaseOperation {
   /**
@@ -58,6 +59,13 @@ public class BBroadcast extends BaseOperation {
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType) {
     this(comm, plan, sources, target, rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BBroadcast(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                    BulkReceiver rcvr, MessageType dataType) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources().iterator().next(),
+        logicalPlanBuilder.getTargets(), rcvr, dataType,
+        comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public BBroadcast(Communicator comm, LogicalPlan plan,

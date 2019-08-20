@@ -82,6 +82,14 @@ public class JobParameters {
     return taskStages;
   }
 
+  public int getSources() {
+    return this.taskStages.get(0);
+  }
+
+  public int getTargets() {
+    return this.taskStages.get(1);
+  }
+
   public void setFileName(String fileName) {
     this.fileName = fileName;
   }

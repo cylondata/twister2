@@ -20,6 +20,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",  ## todo get rid of this, Had to add this because of Network class
         "@org_apache_commons_commons_lang3//jar",
         "//twister2/proto:proto-java",
+        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
