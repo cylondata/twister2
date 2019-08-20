@@ -37,6 +37,7 @@ java_binary(
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -51,6 +52,7 @@ java_binary(
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_lang3//jar",
+        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -74,6 +76,7 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
+        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -97,5 +100,6 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
+        "//twister2/proto/utils:proto-utils-java",
     ],
 )
