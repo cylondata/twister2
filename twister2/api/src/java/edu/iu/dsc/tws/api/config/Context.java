@@ -36,18 +36,14 @@ public class Context {
       "twister2.directory.dist", "${TWISTER2_HOME}/dist", null, "TWISTER_DIST");
   public static final ConfigEntry JAVA_HOME = new ConfigEntry(
       "twister2.directory.java.home", "${JAVA_HOME}", null, "JAVA_HOME");
-  public static final ConfigEntry CLIENT_YAML = new ConfigEntry(
-      "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
   public static final ConfigEntry TASK_YAML = new ConfigEntry(
       "twister2.config.file.packing.yaml", "${TWISTER2_CONF}/task.yaml");
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource.yaml");
   public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
       "twister2.config.file.network.yaml", "${TWISTER2_CONF}/network.yaml");
-  public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
-      "twister2.config.file.uploader.yaml", "${TWISTER2_CONF}/uploader.yaml");
-  public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(
-      "twister2.config.file.system.yaml", "${TWISTER2_CONF}/system.yaml");
+  public static final ConfigEntry CORE_YAML = new ConfigEntry(
+      "twister2.config.file.core.yaml", "${TWISTER2_CONF}/core.yaml");
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml", "${TWISTER2_CONF}/override.yaml");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
@@ -133,12 +129,10 @@ public class Context {
     defaults.put(TWISTER2_CONF.getKey(), TWISTER2_CONF.getDefaultValue());
     defaults.put(TWISTER2_LIB.getKey(), TWISTER2_LIB.getDefaultValue());
     defaults.put(TWISTER2_DIST.getKey(), TWISTER2_DIST.getDefaultValue());
-    defaults.put(CLIENT_YAML.getKey(), CLIENT_YAML.getDefaultValue());
     defaults.put(TASK_YAML.getKey(), TASK_YAML.getDefaultValue());
     defaults.put(RESOURCE_SCHEDULER_YAML.getKey(), RESOURCE_SCHEDULER_YAML.getDefaultValue());
     defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
-    defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
-    defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
+    defaults.put(CORE_YAML.getKey(), CORE_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
     defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
     defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
@@ -155,20 +149,12 @@ public class Context {
     return cfg.getStringValue(NETWORK_YAML);
   }
 
-  public static String uploaderConfigurationFile(Config cfg) {
-    return cfg.getStringValue(UPLOADER_YAML);
-  }
-
   public static String resourceSchedulerConfigurationFile(Config cfg) {
     return cfg.getStringValue(RESOURCE_SCHEDULER_YAML);
   }
 
-  public static String clientConfigurationFile(Config cfg) {
-    return cfg.getStringValue(CLIENT_YAML);
-  }
-
   public static String systemConfigurationFile(Config cfg) {
-    return cfg.getStringValue(SYSTEM_YAML);
+    return cfg.getStringValue(CORE_YAML);
   }
 
   public static String jobName(Config cfg) {

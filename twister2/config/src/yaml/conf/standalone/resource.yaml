@@ -42,3 +42,13 @@ twister2.resource.sharedfs: true
 
 # Directory for file system volume mount
 twister2.resource.fs.mount: "${TWISTER2_HOME}/persistent/fs/"
+
+# the uploader directory
+twister2.uploader.directory: "${HOME}/.twister2/repository"
+
+# the uplaoder class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
+# this is the method that workers use to download the core and job packages
+# it could be  HTTP, HDFS, ..
+twister2.uploader.download.method: "HTTP"
