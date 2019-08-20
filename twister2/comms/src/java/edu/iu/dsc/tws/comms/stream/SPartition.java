@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.stream;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -48,7 +49,7 @@ public class SPartition extends BaseOperation {
                     SingularReceiver rcvr,
                     DestinationSelector destSelector, int edgeId,
                     MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.PARTITION);
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr),

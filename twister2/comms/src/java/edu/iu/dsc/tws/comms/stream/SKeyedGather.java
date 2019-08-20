@@ -64,19 +64,19 @@ public class SKeyedGather extends BaseOperation {
                       MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector,
                       int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.KEYED_GATHER);
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
           keyType, keyType, edgeId, messageSchema);
-    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-        CommunicationContext.partitionStreamAlgorithm(comm.getConfig()))) {
+    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1),
@@ -117,5 +117,22 @@ public class SKeyedGather extends BaseOperation {
   public boolean gather(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
     return op.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
+  }
+
+  /**
+   * Send a message to be reduced
+   *
+   * @param src source
+   * @param data data tuple
+   * @param flags message flag
+   * @return true if the message is accepted
+   */
+  public boolean gather(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
   }
 }

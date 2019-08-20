@@ -1,29 +1,34 @@
 twister2.network.channel.class: "edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"
 
 # the buffer size to be used
-network.buffer.size: 1024000
+twister2.network.buffer.size: 1024000
 
 # number of send buffers to be used
-network.sendBuffer.count: 4
+twister2.network.sendBuffer.count: 4
 
 # number of receive buffers to be used
-network.receiveBuffer.count: 4
+twister2.network.receiveBuffer.count: 4
 
 # channel pending messages
-network.channel.pending.size: 2048
+twister2.network.channel.pending.size: 2048
 
 # the send pending messages
-network.send.pending.max: 4
+twister2.network.send.pending.max: 4
 
-# group up to 8000 ~ 16000 messages
-network.partition.message.group.low_water_mark: 8000
+# group up to 8 ~ 16 messages
+twister2.network.partition.message.group.low_water_mark: 8000
 
 # this is the max number of messages to group
-network.partition.message.group.high_water_mark: 16000
+twister2.network.partition.message.group.high_water_mark: 16000
 
 # in batch partition operations, this value will be used to create mini batches
 # within partial receivers
-network.partition.batch.grouping.size: 10000
+twister2.network.partition.batch.grouping.size: 10000
+
+# For disk based operations, this directory list will be used to persist incoming messages.
+# This can be used to balance the load between multiple devices, by specifying directory locations
+# from different devices.
+twister2.network.ops.persistent.dirs: ["${TWISTER2_HOME}/persistent/"]
 
 # the maximum amount of bytes kept in memory for operations that goes to disk
 twister2.network.shuffle.memory.bytes.max: 102400000
@@ -34,20 +39,17 @@ twister2.network.shuffle.memory.records.max: 102400000
 # size of the shuffle file (10MB default)
 twister2.network.shuffle.file.bytes.max: 10000000
 
-# the keyed reduce algorithm
-twister2.stream.keyed.reduce.op: "partition"
-
-# the algorithm for gathering data
-twister2.stream.keyed.gather.op: "partition"
+# no of parallel IO operations permitted
+twister2.network.shuffle.parallel.io: 2
 
 # the partitioning algorithm
-twister2.stream.partition.algorithm: "simple"
-
-# the keyed reduce algorithm
-twister2.batch.keyed.reduce.op: "partition"
-
-# the algorithm for gathering data
-twister2.batch.keyed.gather.op: "partition"
+twister2.network.partition.algorithm.stream: "simple"
 
 # the partitioning algorithm
-twister2.batch.partition.algorithm: "simple"
+twister2.network.partition.algorithm.batch: "simple"
+
+# the partitioning algorithm
+twister2.network.partition.algorithm.batch.keyed_gather: "simple"
+
+# ring group worker
+ttwister2.network.partition.ring.group.workers: 2

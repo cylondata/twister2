@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.batch;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
@@ -43,7 +44,7 @@ public class BReduce extends BaseOperation {
                  Set<Integer> sources, int target, ReduceFunction fnc,
                  SingularReceiver rcvr, MessageType dataType,
                  int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.REDUCE);
     MToOneTree reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceBatchFinalReceiver(fnc, rcvr),
         new ReduceBatchPartialReceiver(target, fnc), messageSchema);

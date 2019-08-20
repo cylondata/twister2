@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -193,8 +194,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     this.messageSerializer = serializer;
     this.messageDeSerializer = deSerializer;
 
-    int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
-    int sendBufferSize = DataFlowContext.bufferSize(config);
+    int noOfSendBuffers = CommunicationContext.sendBuffersCount(config);
+    int sendBufferSize = CommunicationContext.bufferSize(config);
 
     this.sendBuffers = new ArrayBlockingQueue<>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
@@ -254,8 +255,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    */
   private void setupCommunication() {
     // we will receive from these
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(config);
-    int receiveBufferSize = DataFlowContext.bufferSize(config);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(config);
+    int receiveBufferSize = CommunicationContext.bufferSize(config);
     for (Integer recv : receivingExecutors) {
       Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
       for (int i = 0; i < maxReceiveBuffers; i++) {
@@ -268,8 +269,8 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     }
 
     // configure the send sendBuffers
-    int sendBufferSize = DataFlowContext.bufferSize(config);
-    int sendBufferCount = DataFlowContext.sendBuffersCount(config);
+    int sendBufferSize = CommunicationContext.bufferSize(config);
+    int sendBufferCount = CommunicationContext.sendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
       DataBuffer buffer = new DataBuffer(channel.createBuffer(sendBufferSize));
       sendBuffers.offer(buffer);

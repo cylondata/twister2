@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -194,16 +195,16 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     for (int s : thisSources) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
-          DataFlowContext.sendPendingMax(config)));
+          CommunicationContext.sendPendingMax(config)));
       serializerMap.put(s, Serializers.get(false, this.messageSchema));
     }
 
     for (int tar : thisTargets) {
       pendingReceiveDeSerializations.put(sources.get(targets.indexOf(tar)),
-          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
+          new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(config)));
 
       pendingReceiveMessagesPerSource.put(sources.get(targets.indexOf(tar)),
-          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(config)));
+          new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(config)));
 
       deSerializerMap.put(tar, Deserializers.get(false, this.messageSchema));
     }
