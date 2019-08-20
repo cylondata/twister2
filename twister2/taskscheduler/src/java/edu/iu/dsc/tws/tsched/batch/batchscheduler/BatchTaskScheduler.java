@@ -24,8 +24,6 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-import org.apache.commons.collections.map.LinkedMap;
-
 import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
@@ -335,8 +333,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
   }
 
-  private static Map<String, Integer> dependentGraphParallelismMap = new LinkedMap();
-
+  private static Map<String, Integer> dependentGraphParallelismMap = new HashMap<>();
   private void storeDependentGraphParallelism(String taskName, int parallel) {
     dependentGraphParallelismMap.put(taskName, parallel);
   }
