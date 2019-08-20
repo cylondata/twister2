@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -204,7 +205,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     boolean done = true;
     for (int i = receiveIndex; i < receiveTasks.size(); i++) {
       if (!finalReceiver.onMessage(
-          header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+          header.getSourceId(), CommunicationContext.DEFAULT_DESTINATION,
           receiveTasks.get(i), header.getFlags(), object)) {
         done = false;
         allSent = false;
@@ -231,7 +232,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     this.type = t;
     this.edge = ed;
     this.executor = tPlan.getThisExecutor();
-    this.currentReceiveMessage = new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
+    this.currentReceiveMessage = new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
 
     // we will only have one distinct route
     router = new BinaryTreeRouter(cfg, tPlan, source, destinations);
@@ -255,12 +256,12 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<OutMessage> pendingSendMessages =
-          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
+          new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       serializerMap.put(s, Serializers.get(keyType != null, this.messageSchema));
     }
 
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
@@ -392,13 +393,13 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
     int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-        DataFlowContext.DEFAULT_DESTINATION);
+        CommunicationContext.DEFAULT_DESTINATION);
 
     RoutingParameters routingParameters;
     if (routingParametersCache.containsKey(src)) {
       routingParameters = routingParametersCache.get(src);
     } else {
-      routingParameters = sendRoutingParameters(src, DataFlowContext.DEFAULT_DESTINATION);
+      routingParameters = sendRoutingParameters(src, CommunicationContext.DEFAULT_DESTINATION);
     }
 
     ArrayBlockingQueue<OutMessage> pendingSendMessages = pendingSendMessagesPerSource.get(src);
@@ -411,10 +412,10 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     }
     OutMessage sendMessage = new OutMessage(src,
         currentMessage.getHeader().getEdge(),
-        di, DataFlowContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
+        di, CommunicationContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
         routingParameters.getExternalRoutes(), type, null, delegate,
-        DataFlowContext.EMPTY_OBJECT);
+        CommunicationContext.EMPTY_OBJECT);
     sendMessage.getChannelMessages().offer(currentMessage);
 
     // we need to update here

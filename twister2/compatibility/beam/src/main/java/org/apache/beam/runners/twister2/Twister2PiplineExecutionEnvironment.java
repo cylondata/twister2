@@ -17,19 +17,20 @@
  */
 package org.apache.beam.runners.twister2;
 
+import java.util.logging.Logger;
+
 import org.apache.beam.runners.twister2.translators.Twister2BatchPipelineTranslator;
 import org.apache.beam.runners.twister2.translators.Twister2PipelineTranslator;
 import org.apache.beam.runners.twister2.translators.Twister2StreamPipelineTranslator;
 import org.apache.beam.sdk.Pipeline;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * doc.
  */
 public class Twister2PiplineExecutionEnvironment {
-  private static final Logger LOG =
-      LoggerFactory.getLogger(Twister2PiplineExecutionEnvironment.class);
+  private static final Logger LOG = Logger.getLogger(
+      Twister2PiplineExecutionEnvironment.class.getName());
+
 
   private final Twister2PipelineOptions options;
   private Twister2TranslationContext twister2TranslationContext;

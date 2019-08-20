@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.batch;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
@@ -30,7 +31,7 @@ public class BAllReduce extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets, ReduceFunction fnc,
                     SingularReceiver rcvr, MessageType dataType,
                     int reduceEdgeId, int broadEdgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.ALLREDUCE);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }

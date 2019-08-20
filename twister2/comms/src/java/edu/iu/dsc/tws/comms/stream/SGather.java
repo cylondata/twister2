@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -50,7 +51,7 @@ public class SGather extends BaseOperation {
   public SGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target, MessageType dataType,
                  BulkReceiver rcvr, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.GATHER);
     this.dataType = dataType;
     MToOneTree gather = new MToOneTree(comm.getChannel(), sources, target,
         new GatherStreamingFinalReceiver(rcvr),
