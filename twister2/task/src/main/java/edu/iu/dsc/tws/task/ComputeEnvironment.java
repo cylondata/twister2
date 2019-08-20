@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -138,5 +139,9 @@ public final class ComputeEnvironment {
     }
     // close the task executor
     taskExecutor.close();
+  }
+
+  public Map<String, ExecutionPlan> build(ComputeGraph ...computeGraphs) {
+    return this.getTaskExecutor().plan(computeGraphs);
   }
 }
