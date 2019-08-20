@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tsched.batch.batchscheduler;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
+
+import org.apache.commons.collections.map.LinkedMap;
 
 import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
@@ -77,9 +80,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   //Batch Task Allocation Map
   private List<Integer> workerIdList = new ArrayList<>();
+
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
-  private Set<String> receivableNameSet = null;
+
+  private static Set<String> receivableNameSet = new HashSet<>();
+  private static Set<String> collectibleNameSet = new HashSet<>();
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -162,7 +168,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
         INode iNode = vertex.getTask();
         if (iNode instanceof Collector) {
           int collectorParallelism = vertex.getParallelism();
-          Set<String> collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           if (receivableNameSet.containsAll(collectibleNameSet)) {
             if (parallelism != collectorParallelism) {
               throw new RuntimeException("Specify the same parallelism value for "
@@ -302,11 +308,37 @@ public class BatchTaskScheduler implements ITaskScheduler {
       }
     } else {
       for (Vertex vertex : taskVertexSet) {
+        INode iNode = vertex.getTask();
+        if (iNode instanceof Collector) {
+          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+          storeDependentGraphParallelism(vertex.getName(), vertex.getParallelism());
+        } else if (iNode instanceof Receptor) {
+          receivableNameSet = ((Receptor) iNode).getReceivableNames();
+          validateDependentGraphParallelism(vertex.getParallelism());
+        }
         independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
         globalTaskIndex++;
       }
     }
     return batchTaskAllocation;
+  }
+
+  private void validateDependentGraphParallelism(int parallel) {
+    if (receivableNameSet.containsAll(collectibleNameSet)) {
+      for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
+        int collectorParallelism = entry.getValue();
+        if (parallel != collectorParallelism) {
+          throw new RuntimeException("Specify the same parallelism value for "
+              + "the dependent task in the task graphs");
+        }
+      }
+    }
+  }
+
+  private static Map<String, Integer> dependentGraphParallelismMap =  new LinkedMap();
+
+  private void storeDependentGraphParallelism(String taskName, int parallel) {
+    dependentGraphParallelismMap.put(taskName, parallel);
   }
 
   /**

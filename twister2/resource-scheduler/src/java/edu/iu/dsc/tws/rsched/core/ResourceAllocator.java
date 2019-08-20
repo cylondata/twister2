@@ -215,6 +215,12 @@ public class ResourceAllocator {
       throw new RuntimeException("Failed to add the conf dir to the archive: " + confDir);
     }
 
+    String commonConfDir = SchedulerContext.commonConfDir(config);
+    added = packer.addDirectoryToArchive(commonConfDir);
+    if (!added) {
+      throw new RuntimeException("Failed to add the conf dir to the archive: " + commonConfDir);
+    }
+
     // close the archive file
     packer.close();
     LOG.log(Level.INFO, "Archive file created: " + packer.getArchiveFileName());
