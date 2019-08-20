@@ -11,17 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.env;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.task.JobContextImpl;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
@@ -54,19 +45,12 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   public <K, V, F extends InputFormat<K, V>> SourceTSet<Tuple<K, V>> createHadoopSource(
-      Configuration configuration, Class<F> inputFormat) {
-    JobConf jconf = new JobConf(configuration);
-    InputFormat<K, V> format;
-    try {
-      FileSystem.getLocal(configuration);
-      format = inputFormat.newInstance();
-      JobContext jobContext = new JobContextImpl(configuration, new JobID("hadoop", 1));
-      List<InputSplit> splits = format.getSplits(jobContext);
-      return new SourceTSet<>(this, new HadoopSource<>(), splits.size());
-    } catch (InstantiationException | IllegalAccessException
-        | InterruptedException | IOException e) {
-      throw new RuntimeException("Failed to initialize hadoop input", e);
-    }
+      Configuration configuration, Class<F> inputFormat, int parallel) {
+    SourceTSet<Tuple<K, V>> sourceT = new SourceTSet<>(this,
+        new HadoopSource<>(inputFormat, configuration), parallel);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
   }
 
   /**

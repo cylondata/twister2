@@ -61,7 +61,7 @@ public class HelloTSet implements BatchTSetIWorker, Serializable {
         count++;
         return new int[]{1, 1, 1};
       }
-    }, para).setName("aaa");
+    }, para).setName("source");
 
     PartitionTLink<int[]> partitioned = source.partition(new LoadBalancePartitioner<>());
 
