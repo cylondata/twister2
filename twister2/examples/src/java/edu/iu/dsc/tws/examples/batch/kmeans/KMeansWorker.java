@@ -12,6 +12,8 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,6 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
@@ -69,6 +70,7 @@ public class KMeansWorker implements IWorker {
 
     ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
     KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
@@ -91,34 +93,49 @@ public class KMeansWorker implements IWorker {
     /* First Graph to partition and read the partitioned data points **/
     ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
         parallelismValue, dimension, config);
-    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
-    //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-    //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-
 
     /* Second Graph to read the centroids **/
     ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
         parallelismValue, dimension, config);
+
+    /* Third Graph to do the actual calculation **/
+    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
+
+    //Get the execution plan for the dependent task graphs
+    /*Map<String, ExecutionPlan> taskSchedulePlanMap =
+        cEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);*/
+
+    //Get the execution plan for the first task graph
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+
+    //Using the map we can get the execution plan for the individual task graphs
+    /*ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
+        datapointsTaskGraph.getGraphName());*/
+
+    //Actual execution for the first taskgraph
+    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
+
+    //Retrieve the output of the first task graph
+    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
+        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
+
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+
+    /*ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
+        centroidsTaskGraph.getGraphName());*/
+
     //Actual execution for the second taskgraph
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
+
     //Retrieve the output of the first task graph
     DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
         centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
 
     long endTimeData = System.currentTimeMillis();
 
-
-    /* Third Graph to do the actual calculation **/
-    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
-
     //Perform the iterations from 0 to 'n' number of iterations
+    /*ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());*/
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
       //add the datapoints and centroids as input to the kmeanssource task.
@@ -132,17 +149,22 @@ public class KMeansWorker implements IWorker {
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
     taskExecutor.waitFor(kmeansTaskGraph, plan);
+    cEnv.close();
 
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
-    double[][] centroid = (double[][]) centroidPartition.getConsumer().next();
-    long endTime = System.currentTimeMillis();
     if (workerId == 0) {
-      LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
-          + "Total Time : " + (endTime - startTime)
-          + "Compute Time : " + (endTime - endTimeData));
+      DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
+      double[][] centroid = null;
+      if (centroidPartition.getConsumer().hasNext()) {
+        centroid = (double[][]) centroidPartition.getConsumer().next();
+      }
+      long endTime = System.currentTimeMillis();
+
+      LOG.info("Total Time : " + (endTime - startTime)
+          + "\tData Load time : " + (endTimeData - startTime)
+          + "\tCompute Time : " + (endTime - endTimeData));
+      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+          + Arrays.deepToString(centroid));
     }
-    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
   }
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
@@ -152,7 +174,7 @@ public class KMeansWorker implements IWorker {
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
+    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink("points");
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -186,7 +208,7 @@ public class KMeansWorker implements IWorker {
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
-    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
+    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink("centroids");
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
@@ -271,6 +293,14 @@ public class KMeansWorker implements IWorker {
         this.centroidsObject = data;
       }
     }
+
+    @Override
+    public Set<String> getReceivableNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("points");
+      inputKeys.add("centroids");
+      return inputKeys;
+    }
   }
 
   public static class KMeansAllReduceTask extends BaseSink implements Collector {
@@ -278,8 +308,6 @@ public class KMeansWorker implements IWorker {
 
     private double[][] centroids;
     private double[][] newCentroids;
-
-    private DataObject<Object> datapoints = null;
 
     @Override
     public boolean execute(IMessage message) {
@@ -302,9 +330,16 @@ public class KMeansWorker implements IWorker {
     }
 
     @Override
+    public Set<String> getCollectibleNames() {
+      Set<String> inputKeys = new HashSet<>();
+      //return Collections.singleton("centroids");
+      inputKeys.add("centroids");
+      return inputKeys;
+    }
+
+    @Override
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
-      this.datapoints = new DataObjectImpl<>(config);
     }
   }
 

@@ -24,6 +24,7 @@
 package edu.iu.dsc.tws.task.impl;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -51,6 +52,7 @@ import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
@@ -124,15 +126,45 @@ public class TaskExecutor {
     TaskScheduler taskScheduler = new TaskScheduler();
     taskScheduler.initialize(config);
 
-    WorkerPlan workerPlan = createWorkerPlan();
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
 
+    WorkerPlan workerPlan = createWorkerPlan();
     TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
     return executionPlanBuilder.build(config, graph, taskSchedulePlan);
   }
+
+
+  public Map<String, ExecutionPlan> plan(ComputeGraph... graph) {
+
+    WorkerPlan workerPlan = createWorkerPlan();
+
+    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
+    batchTaskScheduler.initialize(config);
+
+    Map<String, TaskSchedulePlan> schedulePlanMap = batchTaskScheduler.schedule(workerPlan, graph);
+    Map<String, ExecutionPlan> executionPlanMap = new LinkedHashMap<>();
+
+    for (ComputeGraph aGraph : graph) {
+      TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(aGraph.getGraphName());
+      ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+          workerID, workerInfoList, communicator, this.checkpointingClient);
+      ExecutionPlan executionPlan = executionPlanBuilder.build(config, aGraph, taskSchedulePlan);
+      executionPlanMap.put(aGraph.getGraphName(), executionPlan);
+    }
+    return executionPlanMap;
+  }
+
+  public ExecutionPlan executionPlan(ComputeGraph graph, TaskSchedulePlan taskSchedulePlan) {
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        workerID, workerInfoList, communicator, this.checkpointingClient);
+    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+  }
+
 
   /**
    * Execute a plan and a graph. This call blocks until the execution finishes. In case of

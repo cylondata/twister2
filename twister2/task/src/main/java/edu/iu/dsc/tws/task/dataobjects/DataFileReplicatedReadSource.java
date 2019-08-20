@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -113,7 +113,7 @@ public class DataFileReplicatedReadSource extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalFixedInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), config, dataSize));
+    this.source = runtime.createInput(cfg, context, new LocalCompleteTextInputPartitioner(
+          new Path(getDataDirectory()), context.getParallelism(), config));
   }
 }
