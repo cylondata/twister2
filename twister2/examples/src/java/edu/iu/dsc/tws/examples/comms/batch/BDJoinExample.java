@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
 public class BDJoinExample extends JoinedKeyedBenchWorker {
 
-  private static final Logger LOG = Logger.getLogger(BKeyedPartitionExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BDJoinExample.class.getName());
 
   private BJoin join;
 

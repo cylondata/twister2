@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BJoin;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
 public class BJoinExample extends JoinedKeyedBenchWorker {
@@ -58,15 +58,20 @@ public class BJoinExample extends JoinedKeyedBenchWorker {
       targets.add(noOfSourceTasks + i);
     }
 
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), false,
         Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",

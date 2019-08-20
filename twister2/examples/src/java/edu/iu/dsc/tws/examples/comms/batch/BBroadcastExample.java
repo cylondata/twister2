@@ -17,8 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -47,10 +45,6 @@ public class BBroadcastExample extends BenchWorker {
       LOG.warning("Setting no of senders to 1");
       jobParameters.getTaskStages().set(0, 1);
     }
-
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets =
-        IntStream.range(1, noOfTargetTasks + 1).boxed().collect(Collectors.toSet());
 
     int source = 0;
 
