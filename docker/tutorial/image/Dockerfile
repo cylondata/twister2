@@ -63,7 +63,8 @@ RUN rm openmpi-3.0.0.tar.gz
 EXPOSE 2022 2023 30000 30001 30002 30003 30004 30005 30006 30007 30008 30009 30010
 
 
-COPY twister2-0.2.2 /twister2-0.2.2/
+COPY rootfs/config /root/.ssh/
+COPY twister2-0.3.0 /twister2-0.3.0/
 
 RUN apt-get update && apt-get install -y python python-dev python-pip python-virtualenv rsync
 CMD ["/init.sh","-bash"]
