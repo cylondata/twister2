@@ -335,10 +335,10 @@ public class Context {
   }
 
   private static String mode(Config cfg) {
-    String mode = "batch";
+    String mode = "twister2.batch";
     boolean stream = cfg.getBooleanValue(STREAMING, false);
     if (stream) {
-      mode = "stream";
+      mode = "twister2.stream";
     }
     return mode;
   }
