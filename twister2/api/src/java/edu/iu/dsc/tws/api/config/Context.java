@@ -83,7 +83,6 @@ public class Context {
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
-
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
   public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"
