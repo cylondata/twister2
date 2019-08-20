@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -248,8 +249,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     this.receiveGroupsSources = receiveGrpsSources;
     this.receiveGroupsWorkers = receiveGroupsWorkers;
 
-    int noOfSendBuffers = DataFlowContext.sendBuffersCount(config);
-    int sendBufferSize = DataFlowContext.bufferSize(config);
+    int noOfSendBuffers = CommunicationContext.sendBuffersCount(config);
+    int sendBufferSize = CommunicationContext.bufferSize(config);
 
     this.sendBuffers = new ArrayBlockingQueue<>(noOfSendBuffers);
     for (int i = 0; i < noOfSendBuffers; i++) {
@@ -304,8 +305,8 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     }
 
     // configure the send sendBuffers
-    int sendBufferSize = DataFlowContext.bufferSize(config);
-    int sendBufferCount = DataFlowContext.sendBuffersCount(config);
+    int sendBufferSize = CommunicationContext.bufferSize(config);
+    int sendBufferCount = CommunicationContext.sendBuffersCount(config);
     for (int i = 0; i < sendBufferCount; i++) {
       DataBuffer buffer = new DataBuffer(channel.createBuffer(sendBufferSize));
       sendBuffers.offer(buffer);
@@ -326,7 +327,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       }
     }
     // we put max group size equal buffers
-    int receiveBufferSize = DataFlowContext.bufferSize(config);
+    int receiveBufferSize = CommunicationContext.bufferSize(config);
     this.freeReceiveBuffers = new ArrayBlockingQueue<>(max);
     for (int i = 0; i < max; i++) {
       ByteBuffer byteBuffer = channel.createBuffer(receiveBufferSize);

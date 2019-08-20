@@ -19,13 +19,12 @@ package org.apache.beam.runners.twister2.translators.functions;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.twister2.utils.Twister2AssignContext;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.WindowFn;
 import org.apache.beam.sdk.util.WindowedValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -36,7 +35,7 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
  */
 public class AssignWindowsFunction<T>
     implements ComputeCollectorFunc<WindowedValue<T>, Iterator<WindowedValue<T>>> {
-  private static final Logger LOG = LoggerFactory.getLogger(AssignWindowsFunction.class);
+  private static final Logger LOG = Logger.getLogger(AssignWindowsFunction.class.getName());
 
   private final WindowFn<T, BoundedWindow> windowFn;
 
@@ -60,7 +59,7 @@ public class AssignWindowsFunction<T>
         }
       }
     } catch (Exception e) {
-      LOG.error(e.getMessage());
+      LOG.info(e.getMessage());
     }
   }
 

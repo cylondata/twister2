@@ -54,7 +54,7 @@ public class BPartition extends BaseOperation {
                     BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle,
                     int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.PARTITION);
     this.destinationSelector = destSelector;
     List<String> shuffleDirs = comm.getPersistentDirectories();
 
@@ -66,14 +66,14 @@ public class BPartition extends BaseOperation {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
 
-    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType, messageSchema);
       p.init(comm.getConfig(), dataType, plan, edgeId);
       this.op = p;
-    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),
           dataType, dataType, null, null, edgeId, messageSchema);

@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.stream;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
@@ -40,7 +41,7 @@ public class SAllReduce extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     ReduceFunction fnc, SingularReceiver rcvr, int reduceEdgeId,
                     int bcastEdgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.ALLREDUCE);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }

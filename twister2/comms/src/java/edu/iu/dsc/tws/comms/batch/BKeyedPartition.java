@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -33,7 +34,7 @@ public class BKeyedPartition extends BaseOperation {
                          MessageType keyType, MessageType dataType,
                          BulkReceiver rcvr, DestinationSelector destSelector,
                          int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.KEYED_PARTITION);
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, destinations,
         new PartitionBatchFinalReceiver(rcvr),
@@ -63,7 +64,15 @@ public class BKeyedPartition extends BaseOperation {
   public boolean partition(int source, Object key, Object message, int flags) {
     int destinations = destinationSelector.next(source, key, message);
 
-    return op.send(source, Tuple.of(key, message, op.getKeyType(),
-        op.getDataType()), flags, destinations);
+    return op.send(source, Tuple.of(key, message), flags, destinations);
+  }
+
+  public boolean partition(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
   }
 }

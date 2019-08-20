@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -39,7 +40,7 @@ public class BAllGather extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets,
                     BulkReceiver rcvr, MessageType dataType, int gatherEdgeId,
                     int broadEdgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.ALLGATHER);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }

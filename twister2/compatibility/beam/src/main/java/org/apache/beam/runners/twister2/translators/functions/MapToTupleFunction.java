@@ -17,13 +17,13 @@
  */
 package org.apache.beam.runners.twister2.translators.functions;
 
+import java.util.logging.Logger;
+
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.CoderException;
 import org.apache.beam.sdk.util.CoderUtils;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.KV;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -37,7 +37,7 @@ public class MapToTupleFunction<K, V>
 
   private final Coder<K> keyCoder;
   private final WindowedValue.WindowedValueCoder<V> wvCoder;
-  private static final Logger LOG = LoggerFactory.getLogger(MapToTupleFunction.class);
+  private static final Logger LOG = Logger.getLogger(MapToTupleFunction.class.getName());
 
   public MapToTupleFunction(Coder<K> inputKeyCoder, WindowedValue.WindowedValueCoder<V> wvCoder) {
     this.keyCoder = inputKeyCoder;
@@ -66,7 +66,7 @@ public class MapToTupleFunction<K, V>
               CoderUtils.encodeToByteArray(keyCoder, temp.getValue().getKey()),
               CoderUtils.encodeToByteArray(wvCoder, temp.getValue().getValue()));
     } catch (CoderException e) {
-      LOG.error(e.getMessage());
+      LOG.info(e.getMessage());
     }
     return element;
   }

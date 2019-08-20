@@ -24,13 +24,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedMerger;
@@ -141,10 +141,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
   }
 
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
-    long maxFileSize = DataFlowContext.getShuffleFileSize(cfg);
-    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
+    long maxBytesInMemory = CommunicationContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxFileSize = CommunicationContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = CommunicationContext.getParallelIOAllowance(cfg);
 
     expIds = expectedIds;
     thisWorker = op.getLogicalPlan().getThisExecutor();
