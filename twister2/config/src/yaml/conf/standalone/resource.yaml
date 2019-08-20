@@ -14,7 +14,7 @@ twister2.resource.scheduler.mpi.shell.script: "mpi.sh"
 twister2.resource.scheduler.mpi.home: ""
 
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.2.2.tar.gz"
+twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 # the launcher class
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
@@ -50,4 +50,4 @@ twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSyste
 # it could be  HTTP, HDFS, ..
 twister2.uploader.download.method: "HTTP"
 
-twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'
+
