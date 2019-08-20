@@ -73,7 +73,7 @@ twister2.uploader.download.method: "LOCAL"
 ########################################################################################
 
 # nfs server address
-nfs.server.address: "149.165.150.81"
+nfs.server.address: "localhost"
 
 # nfs server path
 nfs.server.path: "/nfs/shared/twister2"
