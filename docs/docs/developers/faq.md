@@ -12,7 +12,7 @@ After cloning Twister2 source to your workstation, run crips/setup-intellij.sh i
 
 Specify your library in WORKSPACE file using maven\_jar rule.
 
-`maven_jar( name = "my_new_dependency", artifact = "com.my.dep:my-lib:0.2.2" )`
+`maven_jar( name = "my_new_dependency", artifact = "com.my.dep:my-lib:0.3.0" )`
 
 Specify your newly added dependency in relevant BUILD file as follows, to associate it with java library that you are working on.
 

@@ -17,13 +17,13 @@
  */
 package org.apache.beam.runners.twister2;
 
+import java.util.logging.Logger;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.PipelineRunner;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A {@link PipelineRunner} that executes the operations in the pipeline by first translating them
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Twister2LegacyRunner extends PipelineRunner<PipelineResult> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Twister2LegacyRunner.class);
+  private static final Logger LOG = Logger.getLogger(Twister2LegacyRunner.class.getName());
 
   /**
    * Provided options.
