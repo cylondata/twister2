@@ -19,10 +19,12 @@ twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.roundro
 
 # Task scheduling mode for the batch jobs "roundrobin" or "datalocalityaware" or "userdefined"
 # By default it is roundrobin mode.
-twister2.taskscheduler.batch: "roundrobin"
+#twister2.taskscheduler.batch: "roundrobin"
+twister2.taskscheduler.batch: "batchscheduler"
 
 # Task Scheduler class for the round robin batch task scheduler
-twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
 
 # Task Scheduler for the Data Locality Aware Batch Task Scheduler
 #twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"

@@ -76,9 +76,9 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   private boolean dependentGraphs = false;
 
-  //Batch Task Allocation Map
   private List<Integer> workerIdList = new ArrayList<>();
 
+  //Batch Task Allocation Map
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
 
@@ -267,10 +267,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
         Integer integer = entry.getKey();
         WorkerSchedulePlan workerSchedulePlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-        LOG.fine("Task Details for Container Id:" + computeGraph.getGraphName()
+        LOG.info("Task Details for Container Id:" + computeGraph.getGraphName()
             + "\tcontainer id:" + integer);
         for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.fine("Task Id:" + ip.getTaskId()
+          LOG.info("Task Id:" + ip.getTaskId()
               + "\tTask Index" + ip.getTaskIndex()
               + "\tTask Name:" + ip.getTaskName());
         }

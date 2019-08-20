@@ -56,6 +56,7 @@ public class MultiStageGraph extends TaskWorker {
     builder.setMode(OperationMode.BATCH);
 
     ComputeGraph graph = builder.build();
+    graph.setGraphName("MultiTaskGraph");
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
   }
@@ -67,11 +68,11 @@ public class MultiStageGraph extends TaskWorker {
 
     @Override
     public void execute() {
-      if (count == 999) {
+      if (count == 9) {
         if (context.writeEnd("partition-edge", "Hello")) {
           count++;
         }
-      } else if (count < 999) {
+      } else if (count < 9) {
         if (context.write("partition-edge", "Hello")) {
           count++;
         }
