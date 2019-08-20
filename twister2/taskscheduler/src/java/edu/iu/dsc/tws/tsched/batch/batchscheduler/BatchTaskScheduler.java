@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tsched.batch.batchscheduler;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -83,8 +84,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
 
-  private static Set<String> receivableNameSet = null;
-  private static Set<String> collectibleNameSet = null;
+  private static Set<String> receivableNameSet = new HashSet<>();
+  private static Set<String> collectibleNameSet = new HashSet<>();
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -308,14 +309,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
     } else {
       for (Vertex vertex : taskVertexSet) {
         INode iNode = vertex.getTask();
-        if (iNode instanceof Receptor) {
-          if (receptorTaskValidation(graph)) {
-            validateParallelism(parallelism);
-          }
-        } else if (iNode instanceof Collector) {
-          if (collectorTaskValidation(graph)) {
-            storeParallelismValues(graph.getGraphName(), vertex.getParallelism());
-          }
+        if (iNode instanceof Collector) {
+          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+          storeDependentGraphParallelism(vertex.getName(), vertex.getParallelism());
+        } else if (iNode instanceof Receptor) {
+          receivableNameSet = ((Receptor) iNode).getReceivableNames();
+          validateDependentGraphParallelism(vertex.getParallelism());
         }
         independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
         globalTaskIndex++;
@@ -324,33 +323,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return batchTaskAllocation;
   }
 
-  private boolean collectorTaskValidation(ComputeGraph computeGraph) {
-    Set<Vertex> taskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
-    for (Vertex vertex : taskVertexSet) {
-      INode iNode = vertex.getTask();
-      if (iNode instanceof Collector) {
-        int collectorParallelism = vertex.getParallelism();
-        if (!((Collector) iNode).getCollectibleNames().isEmpty()) {
-          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
-          if (receivableNameSet.containsAll(collectibleNameSet)) {
-            if (parallelism != collectorParallelism) {
-              throw new RuntimeException("Specify the same parallelism value for "
-                  + "the dependent task in the task graphs");
-            }
-          }
-        }
-      }
-    }
-    return true;
-  }
-
-
-  private void validateParallelism(int parallel) {
+  private void validateDependentGraphParallelism(int parallel) {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
-      int collectorParallelism;
-      for (Map.Entry<String, Integer> entry : cgraphParallelism.entrySet()) {
-        collectorParallelism = entry.getValue();
-        LOG.info("Collector Parallelism Values:" + collectorParallelism);
+      for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
+        int collectorParallelism = entry.getValue();
         if (parallel != collectorParallelism) {
           throw new RuntimeException("Specify the same parallelism value for "
               + "the dependent task in the task graphs");
@@ -359,11 +335,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
   }
 
-  private Map<String, Integer> cgraphParallelism = new LinkedMap();
+  private static Map<String, Integer> dependentGraphParallelismMap =  new LinkedMap();
 
-  private void storeParallelismValues(String graphName, int parallel) {
-    cgraphParallelism.put(graphName, parallel);
-    LOG.info("cgraph parallelism values:" + cgraphParallelism);
+  private void storeDependentGraphParallelism(String taskName, int parallel) {
+    dependentGraphParallelismMap.put(taskName, parallel);
   }
 
   /**

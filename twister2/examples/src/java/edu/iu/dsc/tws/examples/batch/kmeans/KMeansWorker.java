@@ -12,9 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
-//import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,12 +101,14 @@ public class KMeansWorker implements IWorker {
     /* Third Graph to do the actual calculation **/
     ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
-    //Get the execution plan before executing the dependent task graphs
+    //Get the execution plan for the dependent task graphs
     /*Map<String, ExecutionPlan> taskSchedulePlanMap =
         cEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);*/
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
+
+    //Using the map we can get the execution plan for the individual task graphs
     /*ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
         datapointsTaskGraph.getGraphName());*/
 
@@ -121,6 +121,7 @@ public class KMeansWorker implements IWorker {
 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
+
     /*ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
         centroidsTaskGraph.getGraphName());*/
 
@@ -173,7 +174,7 @@ public class KMeansWorker implements IWorker {
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
-    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink();
+    KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink("points");
     ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -207,7 +208,7 @@ public class KMeansWorker implements IWorker {
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
-    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink();
+    KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink("centroids");
     ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
@@ -308,8 +309,6 @@ public class KMeansWorker implements IWorker {
     private double[][] centroids;
     private double[][] newCentroids;
 
-    private DataObject<Object> datapoints = null;
-
     @Override
     public boolean execute(IMessage message) {
 //      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
@@ -332,8 +331,10 @@ public class KMeansWorker implements IWorker {
 
     @Override
     public Set<String> getCollectibleNames() {
+      Set<String> inputKeys = new HashSet<>();
       //return Collections.singleton("centroids");
-      return Collections.emptySet();
+      inputKeys.add("centroids");
+      return inputKeys;
     }
 
     @Override
