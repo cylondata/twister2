@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.TreeBroadcast;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Broadcast Operation
@@ -51,6 +52,13 @@ public class SBroadCast extends BaseOperation {
                     int source, Set<Integer> targets, MessageType dataType,
                     SingularReceiver rcvr) {
     this(comm, plan, source, targets, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SBroadCast(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                    SingularReceiver rcvr) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources().iterator().next(),
+        logicalPlanBuilder.getTargets(), dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public SBroadCast(Communicator comm, LogicalPlan plan,
