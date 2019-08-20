@@ -38,6 +38,18 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 
+/**
+ * This class can be used to build an instance of {@link LogicalPlan}
+ * {@link LogicalPlanBuilder} can distribute the tasks in 3 modes.
+ *
+ * <ol>
+ *   <li>Fair distribution : Tasks will be evenly distributed among all workers</li>
+ *   <li>Fair distribution on Group : Tasks will be evenly distributed
+ *   among a specified set of workers</li>
+ *   <li>Custom Distribution : User can provide a custom {@link Distribution} logic to
+ *   distribute the tasks among the workers</li>
+ * </ol>
+ */
 public final class LogicalPlanBuilder {
 
   private static AtomicInteger counter = new AtomicInteger(0);
@@ -83,18 +95,34 @@ public final class LogicalPlanBuilder {
     return targets;
   }
 
+  /**
+   * Returns the set of sources scheduled on this worker.
+   * This method should be called only after doing the distribution
+   */
   public Set<Integer> getSourcesOnThisWorker() {
     return this.getXOnWorker(sourceToWorker, workerEnvironment.getWorkerId());
   }
 
+  /**
+   * Returns the set of targets scheduled on this worker.
+   * This method should be called only after doing the distribution.
+   */
   public Set<Integer> getTargetsOnThisWorker() {
     return this.getXOnWorker(targetToWorker, workerEnvironment.getWorkerId());
   }
 
+  /**
+   * Returns the set of sources scheduled on specified worker.
+   * This method should be called only after doing the distribution.
+   */
   public Set<Integer> getSourcesOnWorker(int workerId) {
     return this.getXOnWorker(sourceToWorker, workerId);
   }
 
+  /**
+   * Returns the set of targets scheduled on specified worker.
+   * This method should be called only after doing the distribution.
+   */
   public Set<Integer> getTargetsOnWorker(int workerId) {
     return this.getXOnWorker(targetToWorker, workerId);
   }
@@ -172,34 +200,52 @@ public final class LogicalPlanBuilder {
     return this;
   }
 
+  /**
+   * This method will fairly distribute all sources and targets among the specified set of workers
+   */
   public LogicalPlanBuilder withFairDistribution(Set<Integer> groupOfWorkers) {
     this.withFairTargetDistribution(groupOfWorkers);
     this.withFairSourceDistribution(groupOfWorkers);
     return this;
   }
 
+  /**
+   * This method will fairly distribute all sources and targets among the available workers
+   */
   public LogicalPlanBuilder withFairDistribution() {
     this.withFairTargetDistribution();
     this.withFairSourceDistribution();
     return this;
   }
 
+  /**
+   * This method will distribute sources fairly among the available set of workers
+   */
   public LogicalPlanBuilder withFairSourceDistribution() {
     this.withFairSourceDistribution(allWorkers);
     return this;
   }
 
+  /**
+   * This method will distribute targets fairly among the available set of workers
+   */
   public LogicalPlanBuilder withFairTargetDistribution() {
     this.withFairTargetDistribution(allWorkers);
     return this;
   }
 
+  /**
+   * This method will distribute targets fairly among the specified group of workers
+   */
   public LogicalPlanBuilder withFairSourceDistribution(Set<Integer> groupOfWorkers) {
     this.withFairXDistribution(sources, sourceToWorker, groupOfWorkers);
     this.sourcesDistributed = true;
     return this;
   }
 
+  /**
+   * This method will distribute sources fairly among the specified group of workers
+   */
   public LogicalPlanBuilder withFairTargetDistribution(Set<Integer> groupOfWorkers) {
     this.withFairXDistribution(targets, targetToWorker, groupOfWorkers);
     this.targetsDistributed = true;
@@ -243,6 +289,14 @@ public final class LogicalPlanBuilder {
   }
 
   public interface Distribution {
+    /**
+     * This method should return the workerId to schedule the task
+     *
+     * @param task task to be scheduled
+     * @param workers set of all available workers as a reference
+     * @param allTasksOfKind all other tasks of type "task"
+     * @return worker id to schedule the task
+     */
     int stickTaskTo(int task, Set<Integer> workers, Set<Integer> allTasksOfKind);
   }
 }
