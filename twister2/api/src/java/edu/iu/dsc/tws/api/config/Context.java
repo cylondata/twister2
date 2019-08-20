@@ -30,6 +30,7 @@ public class Context {
       "twister2.directory.bin", "${TWISTER2_HOME}/bin");
   public static final ConfigEntry TWISTER2_CONF = new ConfigEntry(
       "twister2.directory.conf", "${TWISTER2_HOME}/conf", null, "TWISTER2_CONF");
+  public static final String TWISTER2_COMMON_CONF_DIR = "twister2.directory.conf.common";
   public static final ConfigEntry TWISTER2_LIB = new ConfigEntry(
       "twister2.directory.lib", "${TWISTER2_HOME}/lib", null, "TWISTER2_LIB");
   public static final ConfigEntry TWISTER2_DIST = new ConfigEntry(
@@ -187,6 +188,10 @@ public class Context {
 
   public static String conf(Config cfg) {
     return cfg.getStringValue(TWISTER2_CONF);
+  }
+
+  public static String commonConfDir(Config cfg) {
+    return cfg.getStringValue(TWISTER2_COMMON_CONF_DIR);
   }
 
   public static String distDirectory(Config cfg) {

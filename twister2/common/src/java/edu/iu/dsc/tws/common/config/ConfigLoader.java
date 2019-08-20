@@ -83,6 +83,8 @@ public final class ConfigLoader {
     //load from common
     Config common = loadConfig(twister2Home, configPathRoot
         + File.separator + "common");
+    common = Config.newBuilder().putAll(common).put(Context.TWISTER2_COMMON_CONF_DIR, configPathRoot
+        + File.separator + "common").build();
 
     //platform specific config
     Config platformSpecific = loadConfig(twister2Home, configPathRoot
