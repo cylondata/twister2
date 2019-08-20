@@ -327,13 +327,15 @@ public class BatchTaskScheduler implements ITaskScheduler {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
-        if (receptorParallel != collectorParallelism) throw new RuntimeException("Specify the same parallelism value for "
+        if (receptorParallel != collectorParallelism) {
+          throw new RuntimeException("Specify the same parallelism value for "
               + "the dependent task in the task graphs");
+        }
       }
     }
   }
 
-  private static Map<String, Integer> dependentGraphParallelismMap =  new LinkedMap();
+  private static Map<String, Integer> dependentGraphParallelismMap = new LinkedMap();
 
   private void storeDependentGraphParallelism(String taskName, int parallel) {
     dependentGraphParallelismMap.put(taskName, parallel);
