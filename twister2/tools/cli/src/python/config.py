@@ -44,7 +44,7 @@ OVERRIDE_YAML = "override.yaml"
 SANDBOX_CONF_DIR = "./twister2-conf"
 
 # config file for twister2 cli
-CLIENT_YAML = "client.yaml"
+CLIENT_YAML = "resource.yaml"
 
 # cli configs for role and env
 IS_ROLE_REQUIRED = "twister2.config.is.role.required"

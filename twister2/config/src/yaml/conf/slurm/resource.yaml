@@ -27,3 +27,13 @@ twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILaunche
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
 twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
+
+# the uploader directory
+twister2.uploader.directory: "${HOME}/.twister2/repository"
+
+# the uplaoder class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
+# this is the method that workers use to download the core and job packages
+# it could be  HTTP, HDFS, ..
+twister2.uploader.download.method: "HTTP"

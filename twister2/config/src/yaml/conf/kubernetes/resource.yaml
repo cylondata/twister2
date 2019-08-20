@@ -55,3 +55,180 @@ twister2.zookeeper.server.addresses: "ip:port"
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
+
+#########################################################################
+# When a job is submitted, the job package needs to be transferred to worker pods
+# Two upload methods are provided:
+#   a) Job Package Transfer Using kubectl file copy (default)
+#   b) Job Package Transfer Through a Web Server
+#
+# Following two configuration parameters control the uploading with the first method
+# when the submitting client uploads the job package directly to pods using kubectl copy
+#########################################################################
+
+# if the value of this parameter is true,
+# the job package is transferred from submitting client to pods directly
+# if it is false, the job package will be transferred to pods through the upload web server
+# default value is true
+twister2.kubernetes.client.to.pods.uploading: true
+
+# When the job package is transferred from submitting client to pods directly,
+# upload attempts can either start after watching pods or immediately when StatefulSets are created
+# watching pods before starting file upload attempts is more accurate
+# it may be slightly slower to transfer the job package by watching pods though
+# default value is true
+twister2.kubernetes.uploader.watch.pods.starting: true
+
+#########################################################################
+# Following configuration parameters sets up the upload web server,
+# when the job package is transferred through a webserver
+# Workers download the job package from this web server
+#########################################################################
+
+# the directory where the job package file will be uploaded,
+# make sure the user has the necessary permissions to upload the file there.
+
+# full directory path to upload the job package with scp
+twister2.uploader.directory: "/absolute/path/to/uploder/directory/"
+
+# twister2.uploader.directory.repository: "/absolute/path/to/uploder/directory/"
+
+# web server link of the job package download directory
+# this is the same directory as the uploader directory
+twister2.download.directory: "http://webserver.address:port/download/dir/path"
+
+# This is the scp command options that will be used by the uploader, this can be used to
+# specify custom options such as the location of ssh keys.
+twister2.uploader.scp.command.options: "--chmod=+rwx"
+
+# The scp connection string sets the remote user name and host used by the uploader.
+twister2.uploader.scp.command.connection: "user@uploadserver.address"
+
+# The ssh command options that will be used when connecting to the uploading host to execute
+# command such as delete files, make directories.
+twister2.uploader.ssh.command.options: ""
+
+# The ssh connection string sets the remote user name and host used by the uploader.
+twister2.uploader.ssh.command.connection: "user@uploadserver.address"
+
+# the uploader class
+twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
+# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+
+# this is the method that workers use to download the core and job packages
+# it could be  HTTP, HDFS, ..
+twister2.uploader.download.method: "HTTP"
+
+
+################################################################################
+# Job configuration parameters for submission of twister2 jobs
+################################################################################
+
+# twister2 job name
+twister2.job.name: "t2-job"
+
+# A Twister2 job can have multiple sets of compute resources
+# Four fields are mandatory: cpu, ram, disk and instances
+# instances shows the number of compute resources to be started with this specification
+# workersPerPod shows the number of workers on each pod in Kubernetes.
+#    May be omitted in other clusters. default value is 1.
+worker.compute.resources:
+  - cpu: 0.2  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+    ram: 1024 # ram for each worker as Mega bytes
+    disk: 1.0 # volatile disk for each worker as Giga bytes
+    instances: 8 # number of compute resource instances with this specification
+    scalable: true # only one ComputeResource can be scalable in a job
+    workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+    # number of workers using this compute resource: instances * workersPerPod
+
+#- cpu: 0.5  # number of cores for each worker, may be fractional such as 0.5 or 2.4
+#  ram: 1024 # ram for each worker as Mega bytes
+#  disk: 1.0 # volatile disk for each worker as Giga bytes
+#  instances: 2 # number of compute resource instances with this specification
+#  scalable: false # only one ComputeResource can be scalable in a job
+#  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
+
+# driver class to run
+twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
+
+# worker class to run
+twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.sort.SortJob"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.comms.batch.BReduceExample"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.BasicNetworkTest"
+# twister2.job.worker.class: "edu.iu.dsc.tws.examples.batch.comms.batch.BReduceExample"
+
+# by default each worker has one port
+# additional ports can be requested for all workers in a job
+# please provide the requested port names as a list
+twister2.worker.additional.ports: ["port1", "port2", "port3"]
+
+########################################################################
+# Kubernetes related settings
+########################################################################
+# namespace to use in kubernetes
+# default value is "default"
+# kubernetes.namespace: "default"
+
+########################################################################
+# Node locations related settings
+########################################################################
+# If this parameter is set as true,
+# Twister2 will use the below lists for node locations:
+#   kubernetes.datacenters.list
+#   kubernetes.racks.list
+# Otherwise, it will try to get these information by querying Kubernetes Master
+# It will use below two labels when querying node locations
+# For this to work, submitting client has to have admin privileges
+kubernetes.node.locations.from.config: false
+
+# rack label key for Kubernetes nodes in a cluster
+# each rack should have a unique label
+# all nodes in a rack should share this label
+# Twister2 workers can be scheduled by using these label values
+# Better data locality can be achieved
+# Example: rack=rack1, rack=rack2, rack=rack3, etc
+# no default value is specified
+rack.labey.key: rack
+
+# data center label key
+# each data center should have a unique label
+# all nodes in a data center should share this label
+# Twister2 workers can be scheduled by using these label values
+# Better data locality can be achieved
+# Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
+# no default value is specified
+datacenter.labey.key: datacenter
+
+# Data center list with rack names
+datacenters.list:
+  - echo: ['blue-rack', 'green-rack']
+
+# Rack list with node IPs in them
+racks.list:
+  - blue-rack: ['node01.ip', 'node02.ip', 'node03.ip']
+  - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
+
+########################################################################
+# persistent volume related settings
+########################################################################
+
+# persistent volume size per worker in GB as double
+# default value is 0.0Gi
+# set this value to zero, if you have not persistent disk support
+# when this value is zero, twister2 will not try to set up persistent storage for this job
+persistent.volume.per.worker: 0.0
+
+# the admin should provide a PersistentVolume object with the following storage class.
+# Default storage class name is "twister2".
+kubernetes.persistent.storage.class: "twister2-nfs-storage"
+
+# persistent storage access mode.
+# It shows the access mode for workers to access the shared persistent storage.
+# if it is "ReadWriteMany", many workers can read and write
+# other alternatives: "ReadWriteOnce", "ReadOnlyMany"
+# https://kubernetes.io/docs/concepts/storage/persistent-volumes
+kubernetes.storage.access.mode: "ReadWriteMany"

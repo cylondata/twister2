@@ -30,4 +30,70 @@ twister2.zookeeper.server.addresses: "149.165.150.81:2181"
 # if the workers want to wait for all others to join a job, max wait time in ms
 twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
+##############################################################################
+# Uploader configuration
+#############################################################################
+
+# the directory where the file will be uploaded, make sure the user has the necessary permissions
+# to upload the file here.
+twister2.uploader.directory: "/root/.twister2/repository/"
+
+twister2.uploader.directory.repository: "/root/.twister2/repository/"
+
+# This is the scp command options that will be used by the uploader, this can be used to
+# specify custom options such as the location of ssh keys.
+twister2.uploader.scp.command.options: ""
+
+# The scp connection string sets the remote user name and host used by the uploader.
+twister2.uploader.scp.command.connection: "root@149.165.150.81"
+
+# The ssh command options that will be used when connecting to the uploading host to execute
+# command such as delete files, make directories.
+twister2.uploader.ssh.command.options: ""
+
+# The ssh connection string sets the remote user name and host used by the uploader.
+twister2.uploader.ssh.command.connection: "root@149.165.150.81"
+
+
+################################################################################
+# Client configuration parameters for submission of twister2 jobs
+################################################################################
+
+# aurora python script to submit a job to Aurora Scheduler
+# its default value is defined as the following in the code
+# can be reset from this config file if desired
+# twister2.resource.scheduler.aurora.script: "${TWISTER2_CONF}/twister2.aurora"
+
+# cluster name aurora scheduler runs in
+twister2.resource.scheduler.aurora.cluster: "example"
+
+# role in cluster
+twister2.resource.scheduler.aurora.role: "www-data"
+
+# environment name
+twister2.resource.scheduler.aurora.env: "devel"
+
+# aurora job name
+twister2.job.name: "basic-aurora"
+# twister2.resource.scheduler.aurora.jobname: "basic-aurora"
+
+# number of cores for each worker
+# it is a floating point number
+# each worker can have fractional cores such as 0.5 cores or multiple cores as 2
+# default value is 1.0 core
+twister2.worker.cpu: 1.0
+
+# amount of memory for each worker in the job in mega bytes as integer
+# default value is 200 MB
+twister2.worker.ram: 200
+
+# amount of hard disk space on each worker in mega bytes
+# this only used when running twister2 in Aurora
+# default value is 1024 MB.
+twister2.worker.disk: 1024
+
+# number of worker instances
+twister2.worker.instances: 6
+
+
 
