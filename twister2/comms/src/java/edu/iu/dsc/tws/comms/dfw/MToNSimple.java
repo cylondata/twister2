@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -270,11 +271,11 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
-          DataFlowContext.sendPendingMax(cfg)));
+          CommunicationContext.sendPendingMax(cfg)));
       serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
@@ -435,7 +436,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   }
 
   public boolean receiveMessage(MessageHeader header, Object object) {
-    return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+    return finalReceiver.onMessage(header.getSourceId(), CommunicationContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
   }
 

@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
@@ -42,7 +43,6 @@ import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.common.util.IterativeLinkedList;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import mpi.Intracomm;
@@ -161,7 +161,7 @@ public class TWSMPIChannel implements TWSChannel {
     } else {
       this.comm = (Intracomm) commObject;
     }
-    int pendingSize = DataFlowContext.networkChannelPendingSize(config);
+    int pendingSize = CommunicationContext.networkChannelPendingSize(config);
     this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
     this.registeredReceives = new ArrayList<>(1024);
     this.groupedRegisteredReceives = new Int2ObjectArrayMap<>();

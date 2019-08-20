@@ -41,13 +41,13 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.DFWIOUtils;
 import edu.iu.dsc.tws.comms.shuffle.FSKeyedSortedMerger2;
@@ -142,9 +142,9 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     // The init method is called twice TODO: would be better to do a complete new data flow
     // operation
 
-    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    long maxBytesToFile = DataFlowContext.getShuffleFileSize(cfg);
-    int parallelIOAllowance = DataFlowContext.getParallelIOAllowance(cfg);
+    long maxBytesInMemory = CommunicationContext.getShuffleMaxBytesInMemory(cfg);
+    long maxBytesToFile = CommunicationContext.getShuffleFileSize(cfg);
+    int parallelIOAllowance = CommunicationContext.getParallelIOAllowance(cfg);
 
     if (operationLeft != null) {
       this.operationRight = op;

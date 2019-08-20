@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -38,7 +39,7 @@ public class BBroadcast extends BaseOperation {
                     int sources, Set<Integer> target,
                     BulkReceiver rcvr, MessageType dataType, int edgeID,
                     MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.BROADCAST);
     TreeBroadcast bcast = new TreeBroadcast(comm.getChannel(), sources, target,
         new DirectBatchFinalReceiver(rcvr), messageSchema);
     bcast.init(comm.getConfig(), dataType, plan, edgeID);

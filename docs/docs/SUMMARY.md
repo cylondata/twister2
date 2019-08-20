@@ -11,7 +11,7 @@
 * [Deployment](deployment/README.md)
   * [Running a Job](deployment/job-submit.md)
   * [Standalone](deployment/standalone/running-jobs.md)
-  * [Nomad](deployment/nomad/running-jobs.md)
+  * [Nomad](deployment/nomad/nomad.md)
   * [Kubernetes](deployment/kubernetes/README.md)
     * [Running Jobs](deployment/kubernetes/running-jobs.md)
     * [Twister2 Kubernetes Install](deployment/kubernetes/twister2-kubernetes-install.md)

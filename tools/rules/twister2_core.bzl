@@ -108,3 +108,8 @@ def twister2_storm_files():
     return [
         "//twister2/compatibility/storm:twister2-storm",
     ]
+
+def twister2_beam_files():
+    return [
+        "//twister2/compatibility/beam:twister2-beam",
+    ]

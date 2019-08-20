@@ -94,7 +94,7 @@ public class BKeyedGather extends BaseOperation {
                       boolean useDisk,
                       Comparator<Object> comparator,
                       boolean groupByKey, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.KEYED_GATHER);
     if (useDisk && comparator == null) {
       throw new RuntimeException("Key comparator should be specified in disk based mode");
     }
@@ -112,15 +112,15 @@ public class BKeyedGather extends BaseOperation {
           rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
-    if (CommunicationContext.TWISTER2_PARTITION_ALGO_SIMPLE.equals(
-        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
           keyType, keyType, edgeId, messageSchema);
       this.simple = true;
-    } else if (CommunicationContext.TWISTER2_PARTITION_ALGO_RING.equals(
-        CommunicationContext.partitionBatchAlgorithm(comm.getConfig()))) {
+    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+        CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
           dataType, receiveDataType, keyType, keyType, edgeId, messageSchema);
@@ -133,8 +133,16 @@ public class BKeyedGather extends BaseOperation {
 
   public boolean gather(int source, Object key, Object data, int flags) {
     int dest = destinationSelector.next(source, key, data);
-    return op.send(source, Tuple.of(key, data, keyType,
-        dataType), flags, dest);
+    return op.send(source, Tuple.of(key, data), flags, dest);
+  }
+
+  public boolean gather(int src, Tuple data, int flags) {
+    int dest = destinationSelector.next(src, data.getKey(), data.getValue());
+    boolean send = op.send(src, data, flags, dest);
+    if (send) {
+      destinationSelector.commit(src, dest);
+    }
+    return send;
   }
 
   @Override

@@ -72,6 +72,19 @@ which java
  Build timestamp: 1563549591
  Build timestamp as int: 1563549591
  ```
+ 
+ 6. Install python3
+ 
+ ```
+ brew install python3
+ ```
+ 
+ Make sure python3 is installed
+ 
+ ```java
+python3 --version
+```
+ 
 
 Okay now you are ready to compile Twister2.
 
