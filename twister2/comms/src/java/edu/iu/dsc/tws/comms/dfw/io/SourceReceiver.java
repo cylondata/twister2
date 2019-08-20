@@ -20,12 +20,12 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 public abstract class SourceReceiver implements MessageReceiver {
   private static final Logger LOG = Logger.getLogger(SourceReceiver.class.getName());
@@ -89,7 +89,7 @@ public abstract class SourceReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getLogicalPlan().getThisExecutor();
-    sendPendingMax = DataFlowContext.sendPendingMax(cfg);
+    sendPendingMax = CommunicationContext.sendPendingMax(cfg);
     this.operation = op;
 
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {

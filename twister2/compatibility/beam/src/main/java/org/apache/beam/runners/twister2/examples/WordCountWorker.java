@@ -20,6 +20,7 @@ package org.apache.beam.runners.twister2.examples;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.twister2.Twister2LegacyRunner;
 import org.apache.beam.runners.twister2.Twister2PipelineOptions;
@@ -30,8 +31,6 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
@@ -39,7 +38,7 @@ import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
  * doc.
  */
 public class WordCountWorker implements Serializable, BatchTSetIWorker {
-  private static final Logger LOG = LoggerFactory.getLogger(WordCountWorker.class);
+  private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
@@ -63,7 +62,7 @@ public class WordCountWorker implements Serializable, BatchTSetIWorker {
     try {
       result.apply(TextIO.write().to(new URI(resultPath).getPath() + "/part"));
     } catch (URISyntaxException e) {
-      LOG.error(e.getMessage());
+      LOG.info(e.getMessage());
     }
     p.run();
     System.out.println("Result " + result.toString());

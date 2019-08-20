@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
@@ -67,7 +68,7 @@ public class BGather extends BaseOperation {
                  Set<Integer> sources, int target,
                  MessageType dataType,
                  BulkReceiver rcvr, boolean shuffle, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.GATHER);
     MessageReceiver finalRcvr;
     if (!shuffle) {
       finalRcvr = new GatherBatchFinalReceiver(rcvr);

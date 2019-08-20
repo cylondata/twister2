@@ -24,6 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -208,7 +209,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     this.targets = targets;
     this.receiveDataType = rcvType;
     this.receiveKeyType = rcvKType;
-    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    this.groupingSize = CommunicationContext.getNetworkPartitionBatchGroupingSize(cfg);
 
     // this worker
     this.thisWorker = tPlan.getThisExecutor();
@@ -277,11 +278,11 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     for (int s : sources) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
-          DataFlowContext.sendPendingMax(cfg)));
+          CommunicationContext.sendPendingMax(cfg)));
       serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receiveWorkers.size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
@@ -495,7 +496,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean receiveMessage(MessageHeader header, Object object) {
-    return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+    return finalReceiver.onMessage(header.getSourceId(), CommunicationContext.DEFAULT_DESTINATION,
         header.getDestinationIdentifier(), header.getFlags(), object);
   }
 

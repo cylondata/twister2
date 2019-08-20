@@ -19,12 +19,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -106,9 +106,9 @@ public abstract class TargetReceiver implements MessageReceiver {
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getLogicalPlan().getThisExecutor();
     operation = op;
-    lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
-    highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
-    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+    lowWaterMark = CommunicationContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    highWaterMark = CommunicationContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
+    this.groupingSize = CommunicationContext.getNetworkPartitionBatchGroupingSize(cfg);
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
       LOG.fine("Changing the grouping size to: " + groupingSize);

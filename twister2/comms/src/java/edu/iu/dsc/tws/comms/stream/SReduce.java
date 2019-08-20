@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.stream;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.ReduceFunction;
@@ -46,7 +47,7 @@ public class SReduce extends BaseOperation {
                  Set<Integer> sources, int target,
                  MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr,
                  int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.REDUCE);
     MToOneTree reduce = new MToOneTree(comm.getChannel(), sources, target,
         new ReduceStreamingFinalReceiver(fnc, rcvr),
         new ReduceStreamingPartialReceiver(target, fnc), messageSchema);

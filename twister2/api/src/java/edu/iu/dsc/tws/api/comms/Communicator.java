@@ -35,7 +35,7 @@ public class Communicator {
   /**
    * Configuration
    */
-  private final Config config;
+  private Config config;
 
   /**
    * Generating edges
@@ -115,6 +115,14 @@ public class Communicator {
    */
   public void close() {
     channel.close();
+  }
+
+  /**
+   * Update the configs with new configurations
+   * @param newConfigs the new configurations
+   */
+  public void updateConfig(Map<String, Object> newConfigs) {
+    this.config = Config.newBuilder().putAll(config).putAll(newConfigs).build();
   }
 
   /**
