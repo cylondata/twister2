@@ -74,7 +74,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   private int index;
 
-  private int parallelism = 0;
+  private int receptorParallelism = 0;
 
   private boolean dependentGraphs = false;
 
@@ -146,7 +146,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private boolean receptorTaskValidation(ComputeGraph computeGraph) {
     Set<Vertex> childTaskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
     for (Vertex vertex : childTaskVertexSet) {
-      parallelism = vertex.getParallelism();
+      receptorParallelism = vertex.getParallelism();
       INode iNode = vertex.getTask();
       if (iNode instanceof Receptor) {
         if (((Receptor) iNode).getReceivableNames() != null) {
@@ -170,7 +170,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
           int collectorParallelism = vertex.getParallelism();
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           if (receivableNameSet.containsAll(collectibleNameSet)) {
-            if (parallelism != collectorParallelism) {
+            if (receptorParallelism != collectorParallelism) {
               throw new RuntimeException("Specify the same parallelism value for "
                   + "the dependent task in the task graphs");
             }
@@ -323,14 +323,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return batchTaskAllocation;
   }
 
-  private void validateDependentGraphParallelism(int parallel) {
+  private void validateDependentGraphParallelism(int receptorParallel) {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
-        if (parallel != collectorParallelism) {
-          throw new RuntimeException("Specify the same parallelism value for "
+        if (receptorParallel != collectorParallelism) throw new RuntimeException("Specify the same parallelism value for "
               + "the dependent task in the task graphs");
-        }
       }
     }
   }
