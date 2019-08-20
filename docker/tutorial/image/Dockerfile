@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 # FROM uptodate
 
 RUN apt-get update && apt-get install -y openssh-server net-tools telnet
@@ -16,11 +16,6 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-
-# Create ssh key via ssh-keygen copy that files to .ssh folder
-RUN mkdir /root/.ssh
-ADD id_rsa /root/.ssh/id_rsa
-ADD id_rsa.pub /root/.ssh/authorized_keys
 
 # Install OpenJDK-8
 RUN apt-get update && \
@@ -64,15 +59,12 @@ RUN export OMPI_BUILD OMPI_300 PATH LD_LIBRARY_PATH
 RUN cd /openmpi-3.0.0 && ls -la && ./configure --prefix=$OMPI_BUILD --enable-mpi-java --enable-mpirun-prefix-by-default --enable-orterun-prefix-by-default && make;make install
 RUN rm openmpi-3.0.0.tar.gz
 
-COPY rootfs /
-COPY rootfs/sshd_config /etc/ssh/
-RUN chmod 777 /etc/ssh/sshd_config
 
 EXPOSE 2022 2023 30000 30001 30002 30003 30004 30005 30006 30007 30008 30009 30010
 
 
 COPY rootfs/config /root/.ssh/
-COPY twister2-0.2.2 /twister2-0.2.2/
+COPY twister2-0.3.0 /twister2-0.3.0/
 
 RUN apt-get update && apt-get install -y python python-dev python-pip python-virtualenv rsync
 CMD ["/init.sh","-bash"]

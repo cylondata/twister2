@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.stream;
 
 import java.util.List;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -37,7 +38,7 @@ public class SDirect extends BaseOperation {
   public SDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
                  SingularReceiver rcvr, int edgeId, MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, true, CommunicationContext.DIRECT);
     op = new OneToOne(comm.getChannel(), sources, targets,
         new DirectStreamingFinalReceiver(rcvr), comm.getConfig(),
         dataType, plan, edgeId, messageSchema);

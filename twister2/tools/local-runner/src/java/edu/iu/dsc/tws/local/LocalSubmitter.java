@@ -39,7 +39,7 @@ public final class LocalSubmitter {
     File cDir = new File(configDir, "standalone");
 
     String[] filesList = new String[]{
-        "system.yaml",
+        "core.yaml",
         "network.yaml",
         "data.yaml",
         "resource.yaml",

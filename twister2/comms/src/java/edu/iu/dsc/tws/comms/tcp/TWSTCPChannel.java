@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.channel.ChannelListener;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
@@ -170,8 +171,8 @@ public class TWSTCPChannel implements TWSChannel {
     // now lets wait for connections to be established
     channel.waitForConnections();
 
-
-    this.pendingSends = new ArrayBlockingQueue<>(1024);
+    int pendingSize = CommunicationContext.networkChannelPendingSize(config);
+    this.pendingSends = new ArrayBlockingQueue<>(pendingSize);
     this.registeredReceives = new ArrayList<>(1024);
     this.groupedRegisteredReceives = new Int2ObjectArrayMap<>();
     this.waitForCompletionSends = new IterativeLinkedList<>();

@@ -21,12 +21,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.shuffle.FSMerger;
 import edu.iu.dsc.tws.comms.shuffle.Shuffle;
@@ -84,11 +84,11 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    long maxBytesInMemory = DataFlowContext.getShuffleMaxBytesInMemory(cfg);
-    long maxRecordsInMemory = DataFlowContext.getShuffleMaxRecordsInMemory(cfg);
+    long maxBytesInMemory = CommunicationContext.getShuffleMaxBytesInMemory(cfg);
+    long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(cfg);
 
     gather = op;
-    sendPendingMax = DataFlowContext.sendPendingMax(cfg);
+    sendPendingMax = CommunicationContext.sendPendingMax(cfg);
     for (Map.Entry<Integer, List<Integer>> e : expectedIds.entrySet()) {
       Map<Integer, Queue<Object>> messagesPerTask = new HashMap<>();
       Map<Integer, Boolean> finishedPerTask = new HashMap<>();
