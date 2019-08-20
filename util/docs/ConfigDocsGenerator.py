@@ -6,24 +6,24 @@ configs = {
     # "aurora_client": {
     #     "title": "Aurora Client Configuration",
     #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/aurora/client.yaml",
-    #     "doc": "docs/configurations/aurora/client.md"
+    #     "yml": "twister2/config/src/yaml/conf/aurora/resource.yaml",
+    #     "doc": "docs/configurations/aurora/resource.md"
     # },
 
     # K8s
     # "kubernetes_client": {
     #     "title": "Kubernetes Client Configuration",
     #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/kubernetes/client.yaml",
-    #     "doc": "docs/configurations/kubernetes/client.md"
+    #     "yml": "twister2/config/src/yaml/conf/kubernetes/resource.yaml",
+    #     "doc": "docs/configurations/kubernetes/resource.md"
     # },
 
     # mesos
     # "mesos_client": {
     #     "title": "Mesos Client Configuration",
     #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/mesos/client.yaml",
-    #     "doc": "docs/configurations/mesos/client.md"
+    #     "yml": "twister2/config/src/yaml/conf/mesos/resource.yaml",
+    #     "doc": "docs/configurations/mesos/resource.md"
     # },
 }
 

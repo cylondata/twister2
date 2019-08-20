@@ -69,7 +69,6 @@ public final class BasicKubernetesJob {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(configurations);
 
-    // load the job parameters from client.yaml file
     // It gets: job-name, worker-class and ComputeResource list from that file
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, jobConfig);
 
