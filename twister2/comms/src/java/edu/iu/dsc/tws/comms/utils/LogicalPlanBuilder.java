@@ -1,0 +1,248 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.comms.utils;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
+
+public final class LogicalPlanBuilder {
+
+  private static AtomicInteger counter = new AtomicInteger(0);
+
+  private Set<Integer> sources = new HashSet<>();
+  private Set<Integer> targets = new HashSet<>();
+
+  private Map<Integer, Integer> sourceToWorker = new HashMap<>();
+  private Map<Integer, Integer> targetToWorker = new HashMap<>();
+  private boolean sourcesDistributed;
+  private boolean targetsDistributed;
+
+  private WorkerEnvironment workerEnvironment;
+  private Set<Integer> allWorkers;
+
+  private LogicalPlanBuilder(int sourcesCount,
+                             int targetsCount,
+                             WorkerEnvironment workerEnvironment) {
+    for (int i = 0; i < sourcesCount; i++) {
+      this.sources.add(counter.getAndIncrement());
+    }
+
+    for (int i = 0; i < targetsCount; i++) {
+      this.targets.add(counter.getAndIncrement());
+    }
+
+    this.workerEnvironment = workerEnvironment;
+    this.allWorkers = this.workerEnvironment.getWorkerList().stream()
+        .map(JobMasterAPI.WorkerInfo::getWorkerID).collect(Collectors.toSet());
+  }
+
+  public static LogicalPlanBuilder plan(int sources,
+                                        int targets,
+                                        WorkerEnvironment workerEnvironment) {
+    return new LogicalPlanBuilder(sources, targets, workerEnvironment);
+  }
+
+  public Set<Integer> getSources() {
+    return sources;
+  }
+
+  public Set<Integer> getTargets() {
+    return targets;
+  }
+
+  public Set<Integer> getSourcesOnThisWorker() {
+    return this.getXOnWorker(sourceToWorker, workerEnvironment.getWorkerId());
+  }
+
+  public Set<Integer> getTargetsOnThisWorker() {
+    return this.getXOnWorker(targetToWorker, workerEnvironment.getWorkerId());
+  }
+
+  public Set<Integer> getSourcesOnWorker(int workerId) {
+    return this.getXOnWorker(sourceToWorker, workerId);
+  }
+
+  public Set<Integer> getTargetsOnWorker(int workerId) {
+    return this.getXOnWorker(targetToWorker, workerId);
+  }
+
+  private Set<Integer> getXOnWorker(Map<Integer, Integer> xToWorker, int worker) {
+    if (!this.sourcesDistributed || !this.targetsDistributed) {
+      throw new RuntimeException("Attempt to read plan before doing the distribution");
+    }
+    Set<Integer> xOnWorker = new HashSet<>();
+    xToWorker.forEach((x, workerId) -> {
+      if (workerId == worker) {
+        xOnWorker.add(x);
+      }
+    });
+    return xOnWorker;
+  }
+
+  /**
+   * Builds the {@link LogicalPlan}
+   */
+  public LogicalPlan build() {
+    if (!sourcesDistributed) {
+      this.withFairSourceDistribution();
+    }
+
+    if (!targetsDistributed) {
+      this.withFairTargetDistribution();
+    }
+
+    Map<Integer, Set<Integer>> workerToTasks = this.allWorkers.stream()
+        .collect(Collectors.toMap(workerId -> workerId, workerId -> new HashSet<>()));
+
+    sourceToWorker.forEach((source, worker) -> {
+      workerToTasks.get(worker).add(source);
+    });
+    targetToWorker.forEach((target, worker) -> {
+      workerToTasks.get(worker).add(target);
+    });
+
+    Map<Integer, Set<Integer>> groupsToWorkers = new HashMap<>();
+    Map<String, Set<Integer>> nodeToTasks = new HashMap<>();
+
+    Map<String, List<JobMasterAPI.WorkerInfo>> containersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(workerEnvironment.getWorkerList());
+
+    int i = 0;
+    for (Map.Entry<String, List<JobMasterAPI.WorkerInfo>> entry : containersPerNode.entrySet()) {
+      Set<Integer> executorsOfGroup = new HashSet<>();
+      for (JobMasterAPI.WorkerInfo workerInfo : entry.getValue()) {
+        executorsOfGroup.add(workerInfo.getWorkerID());
+        Set<Integer> tasksInNode = nodeToTasks.computeIfAbsent(
+            workerInfo.getNodeInfo().getNodeIP(),
+            k -> new HashSet<>());
+        tasksInNode.addAll(workerToTasks.get(workerInfo.getWorkerID()));
+      }
+      groupsToWorkers.put(i, executorsOfGroup);
+      i++;
+    }
+
+    return new LogicalPlan(
+        workerToTasks, groupsToWorkers,
+        nodeToTasks, workerEnvironment.getWorkerId()
+    );
+  }
+
+  public LogicalPlanBuilder withCustomSourceDistribution(Distribution distribution) {
+    this.withCustomXDistribution(distribution, sources, sourceToWorker);
+    this.sourcesDistributed = true;
+    return this;
+  }
+
+  public LogicalPlanBuilder withCustomTargetDistribution(Distribution distribution) {
+    this.withCustomXDistribution(distribution, targets, targetToWorker);
+    this.targetsDistributed = true;
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairDistribution(Set<Integer> groupOfWorkers) {
+    this.withFairTargetDistribution(groupOfWorkers);
+    this.withFairSourceDistribution(groupOfWorkers);
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairDistribution() {
+    this.withFairTargetDistribution();
+    this.withFairSourceDistribution();
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairSourceDistribution() {
+    this.withFairSourceDistribution(allWorkers);
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairTargetDistribution() {
+    this.withFairTargetDistribution(allWorkers);
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairSourceDistribution(Set<Integer> groupOfWorkers) {
+    this.withFairXDistribution(sources, sourceToWorker, groupOfWorkers);
+    this.sourcesDistributed = true;
+    return this;
+  }
+
+  public LogicalPlanBuilder withFairTargetDistribution(Set<Integer> groupOfWorkers) {
+    this.withFairXDistribution(targets, targetToWorker, groupOfWorkers);
+    this.targetsDistributed = true;
+    return this;
+  }
+
+  private void validateWorkerGroup(Set<Integer> groupOfWorkers) {
+    if (!this.allWorkers.containsAll(groupOfWorkers)) {
+      throw new RuntimeException("Group of workers specified contains invalid worker ids.");
+    }
+  }
+
+  private LogicalPlanBuilder withFairXDistribution(Set<Integer> allOfKind,
+                                                   Map<Integer, Integer> xToWorkerMap,
+                                                   Set<Integer> workers) {
+    this.validateWorkerGroup(workers);
+
+    int excess = allOfKind.size() % workers.size() > 0 ? 1 : 0;
+    final int tasksPerWorker = (allOfKind.size() / workers.size()) + excess;
+
+    final Queue<Integer> tasksQueue = new LinkedList<>(allOfKind);
+
+    workers.forEach(workerId -> {
+      for (int i = 0; i < tasksPerWorker; i++) {
+        if (!tasksQueue.isEmpty()) {
+          xToWorkerMap.put(tasksQueue.poll(), workerId);
+        }
+      }
+    });
+    return this;
+  }
+
+  private LogicalPlanBuilder withCustomXDistribution(Distribution distribution,
+                                                     Set<Integer> allOfKind,
+                                                     Map<Integer, Integer> xToWorkerMap) {
+    allOfKind.forEach(source -> {
+      int worker = distribution.stickTaskTo(source, allWorkers, allOfKind);
+      xToWorkerMap.put(source, worker);
+    });
+    return this;
+  }
+
+  public interface Distribution {
+    int stickTaskTo(int task, Set<Integer> workers, Set<Integer> allTasksOfKind);
+  }
+}
