@@ -30,24 +30,21 @@ public class Context {
       "twister2.directory.bin", "${TWISTER2_HOME}/bin");
   public static final ConfigEntry TWISTER2_CONF = new ConfigEntry(
       "twister2.directory.conf", "${TWISTER2_HOME}/conf", null, "TWISTER2_CONF");
+  public static final String TWISTER2_COMMON_CONF_DIR = "twister2.directory.conf.common";
   public static final ConfigEntry TWISTER2_LIB = new ConfigEntry(
       "twister2.directory.lib", "${TWISTER2_HOME}/lib", null, "TWISTER2_LIB");
   public static final ConfigEntry TWISTER2_DIST = new ConfigEntry(
       "twister2.directory.dist", "${TWISTER2_HOME}/dist", null, "TWISTER_DIST");
   public static final ConfigEntry JAVA_HOME = new ConfigEntry(
       "twister2.directory.java.home", "${JAVA_HOME}", null, "JAVA_HOME");
-  public static final ConfigEntry CLIENT_YAML = new ConfigEntry(
-      "twister2.config.file.client.yaml", "${TWISTER2_CONF}/client.yaml");
   public static final ConfigEntry TASK_YAML = new ConfigEntry(
       "twister2.config.file.packing.yaml", "${TWISTER2_CONF}/task.yaml");
   public static final ConfigEntry RESOURCE_SCHEDULER_YAML = new ConfigEntry(
       "twister2.config.file.scheduler.yaml", "${TWISTER2_CONF}/resource.yaml");
   public static final ConfigEntry NETWORK_YAML = new ConfigEntry(
       "twister2.config.file.network.yaml", "${TWISTER2_CONF}/network.yaml");
-  public static final ConfigEntry UPLOADER_YAML = new ConfigEntry(
-      "twister2.config.file.uploader.yaml", "${TWISTER2_CONF}/uploader.yaml");
-  public static final ConfigEntry SYSTEM_YAML = new ConfigEntry(
-      "twister2.config.file.system.yaml", "${TWISTER2_CONF}/system.yaml");
+  public static final ConfigEntry CORE_YAML = new ConfigEntry(
+      "twister2.config.file.core.yaml", "${TWISTER2_CONF}/core.yaml");
   public static final ConfigEntry OVERRIDE_YAML = new ConfigEntry(
       "twister2.config.file.override.yaml", "${TWISTER2_CONF}/override.yaml");
   public static final ConfigEntry CLUSTER_HOME = new ConfigEntry(
@@ -86,14 +83,9 @@ public class Context {
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
   public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
-
-  public static final String TWISTER2_VERSION = "0.2.2";
-
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
   public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"
-
-  public static final String TWISTER2_PARTITION_EDGE = "partition";
 
   public static final String TWISTER2_LOCAL_FILESYSTEM = "local";
 
@@ -103,13 +95,21 @@ public class Context {
 
   public static final String TWISTER2_LATENCY = "latency";
 
-  public static final String TWISTER2_TASKS_PER_WORKER = "twister2.tasks.per.worker";
-
   public static final String TWISTER2_MAX_TASK_INSTANCES_PER_WORKER
       = "twister2.max.task.instances.per.worker";
 
   public static final String TWISTER2_TASK_INSTANCE_ODD_PARALLELISM
       = "twister2.task.instance.odd.parallelism";
+
+  /**
+   * Name of the operation in the current configuration
+   */
+  public static final String OPERATION_NAME = "opname";
+
+  /**
+   * If it is streaming environment, this property will be set
+   */
+  public static final String STREAMING = "streaming";
 
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
@@ -129,12 +129,10 @@ public class Context {
     defaults.put(TWISTER2_CONF.getKey(), TWISTER2_CONF.getDefaultValue());
     defaults.put(TWISTER2_LIB.getKey(), TWISTER2_LIB.getDefaultValue());
     defaults.put(TWISTER2_DIST.getKey(), TWISTER2_DIST.getDefaultValue());
-    defaults.put(CLIENT_YAML.getKey(), CLIENT_YAML.getDefaultValue());
     defaults.put(TASK_YAML.getKey(), TASK_YAML.getDefaultValue());
     defaults.put(RESOURCE_SCHEDULER_YAML.getKey(), RESOURCE_SCHEDULER_YAML.getDefaultValue());
     defaults.put(NETWORK_YAML.getKey(), NETWORK_YAML.getDefaultValue());
-    defaults.put(SYSTEM_YAML.getKey(), SYSTEM_YAML.getDefaultValue());
-    defaults.put(UPLOADER_YAML.getKey(), UPLOADER_YAML.getDefaultValue());
+    defaults.put(CORE_YAML.getKey(), CORE_YAML.getDefaultValue());
     defaults.put(AURORA_SCRIPT.getKey(), AURORA_SCRIPT.getDefaultValue());
     defaults.put(CHECKPOINT_YAML.getKey(), CHECKPOINT_YAML.getDefaultValue());
     defaults.put(DATA_YAML.getKey(), DATA_YAML.getDefaultValue());
@@ -151,20 +149,12 @@ public class Context {
     return cfg.getStringValue(NETWORK_YAML);
   }
 
-  public static String uploaderConfigurationFile(Config cfg) {
-    return cfg.getStringValue(UPLOADER_YAML);
-  }
-
   public static String resourceSchedulerConfigurationFile(Config cfg) {
     return cfg.getStringValue(RESOURCE_SCHEDULER_YAML);
   }
 
-  public static String clientConfigurationFile(Config cfg) {
-    return cfg.getStringValue(CLIENT_YAML);
-  }
-
   public static String systemConfigurationFile(Config cfg) {
-    return cfg.getStringValue(SYSTEM_YAML);
+    return cfg.getStringValue(CORE_YAML);
   }
 
   public static String jobName(Config cfg) {
@@ -199,6 +189,10 @@ public class Context {
     return cfg.getStringValue(TWISTER2_CONF);
   }
 
+  public static String commonConfDir(Config cfg) {
+    return cfg.getStringValue(TWISTER2_COMMON_CONF_DIR);
+  }
+
   public static String distDirectory(Config cfg) {
     return cfg.getStringValue(TWISTER2_DIST);
   }
@@ -226,4 +220,146 @@ public class Context {
   public static Map<String, Object> getDefaults() {
     return defaults;
   }
+
+
+  public static String getStringPropertyValue(Config cfg, String name, String def) {
+    String first = cfg.getStringValue(name, def);
+
+    Object modSpecific = getModeProperty(cfg, name, first);
+    first = modSpecific.toString();
+
+    String second = cfg.getStringValue(
+        getModeSpecificPropertyName(cfg, name), first);
+
+    Object modeOpSpecific = getModeOpProperty(cfg, name, second);
+    second = modeOpSpecific.toString();
+
+    return cfg.getStringValue(
+        getOpSpecificPropertyName(cfg, name), second);
+  }
+
+  public static long getLongPropertyValue(Config cfg, String name, long def) {
+    long first = cfg.getLongValue(name, def);
+
+    Object modSpecific = getModeProperty(cfg, name, first);
+    first = TypeUtils.getLong(modSpecific);
+
+    long second = cfg.getLongValue(
+        getModeSpecificPropertyName(cfg, name), first);
+
+    Object modeOpSpecific = getModeOpProperty(cfg, name, second);
+    second = TypeUtils.getLong(modeOpSpecific);
+
+    return cfg.getLongValue(
+        getOpSpecificPropertyName(cfg, name), second);
+  }
+
+  public static double getDoublePropertyValue(Config cfg, String name, double def) {
+    double first = cfg.getDoubleValue(name, def);
+
+    Object modSpecific = getModeProperty(cfg, name, first);
+    first = TypeUtils.getDouble(modSpecific);
+
+    double second = cfg.getDoubleValue(
+        getModeSpecificPropertyName(cfg, name), first);
+
+    Object modeOpSpecific = getModeOpProperty(cfg, name, second);
+    second = TypeUtils.getDouble(modeOpSpecific);
+
+    return cfg.getDoubleValue(
+        getOpSpecificPropertyName(cfg, name), second);
+  }
+
+  public static int getIntPropertyValue(Config cfg, String name, int def) {
+
+    // we get the first value
+    int first = cfg.getIntegerValue(name, def);
+
+    Object modSpecific = getModeProperty(cfg, name, first);
+    first = TypeUtils.getInteger(modSpecific);
+
+    int second = cfg.getIntegerValue(
+        getModeSpecificPropertyName(cfg, name), first);
+
+    Object modeOpSpecific = getModeOpProperty(cfg, name, second);
+    second = TypeUtils.getInteger(modeOpSpecific);
+
+
+    return cfg.getIntegerValue(
+        getOpSpecificPropertyName(cfg, name), second);
+  }
+
+  private static Object getModeOpProperty(Config cfg, String name, Object def) {
+    String mode = mode(cfg);
+
+    Object o = cfg.get(mode);
+    if (o != null) {
+      if (o instanceof Map) {
+        // now check if the op is present
+        String op = cfg.getStringValue(OPERATION_NAME, "");
+        Object opMap = ((Map) o).get(op);
+        if (opMap != null) {
+          if (opMap instanceof Map) {
+            Object val = ((Map) opMap).get(name);
+            if (val != null) {
+              return val;
+            }
+          } else {
+            throw new RuntimeException("Operation specific configurations should be a map");
+          }
+        }
+        return def;
+      } else {
+        throw new RuntimeException("stream should be a map property");
+      }
+    }
+    return def;
+  }
+
+  private static Object getModeProperty(Config cfg, String name, Object def) {
+    String mode = mode(cfg);
+
+    Object o = cfg.get(mode);
+    if (o != null) {
+      if (o instanceof Map) {
+        Object first = ((Map) o).get(name);
+        if (first != null) {
+          return first;
+        }
+        return def;
+      } else {
+        throw new RuntimeException("stream should be a map property");
+      }
+    }
+    return def;
+  }
+
+  private static String mode(Config cfg) {
+    String mode = "batch";
+    boolean stream = cfg.getBooleanValue(STREAMING, false);
+    if (stream) {
+      mode = "stream";
+    }
+    return mode;
+  }
+
+  private static String getModeSpecificPropertyName(Config cfg, String name) {
+    boolean stream = cfg.getBooleanValue(STREAMING, false);
+    if (stream) {
+      return name + "." + "stream";
+    } else {
+      return name + "." + "batch";
+    }
+  }
+
+  private static String getOpSpecificPropertyName(Config cfg, String name) {
+    boolean stream = cfg.getBooleanValue(STREAMING, false);
+    String op = cfg.getStringValue(OPERATION_NAME, "");
+    if (stream) {
+      return name + "." + "stream" + "." + op;
+    } else {
+      return name + "." + "batch" + "." + op;
+    }
+  }
+
 }

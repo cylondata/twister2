@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -433,10 +434,10 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     this.config = cfg;
     this.channel = channel;
     this.inMemoryMessageThreshold =
-        DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
-    lowWaterMark = DataFlowContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
-    highWaterMark = DataFlowContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
-    this.groupingSize = DataFlowContext.getNetworkPartitionBatchGroupingSize(cfg);
+        CommunicationContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    lowWaterMark = CommunicationContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
+    highWaterMark = CommunicationContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);
+    this.groupingSize = CommunicationContext.getNetworkPartitionBatchGroupingSize(cfg);
     this.messageSchema = messageSchema;
     if (highWaterMark - lowWaterMark <= groupingSize) {
       groupingSize = highWaterMark - lowWaterMark - 1;
@@ -525,11 +526,11 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     for (int s : sourcesOfThisWorker) {
       // later look at how not to allocate pairs for this each time
       pendingSendMessagesPerSource.put(s, new ArrayBlockingQueue<>(
-          DataFlowContext.sendPendingMax(cfg)));
+          CommunicationContext.sendPendingMax(cfg)));
       serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receiveWorkers.size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;
@@ -600,7 +601,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       }
     });
 
-    int group = DataFlowContext.getRingWorkersPerGroup(config);
+    int group = CommunicationContext.getRingWorkersPerGroup(config);
     int numGroups = (int) Math.min(Math.ceil(sendingWorkers.size() / (group * 1.0)),
         Math.ceil(receiveWorkers.size() / (group * 1.0)));
 
@@ -814,7 +815,6 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     // lets progress the controlled operation
     progressCount++;
-    swapLock.lock();
     boolean completed = false;
     boolean needFurtherMerging = true;
     if (doneProgress) {
@@ -1108,7 +1108,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     int flags = header.getFlags();
     if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
       boolean recv = finalReceiver.onMessage(header.getSourceId(),
-          DataFlowContext.DEFAULT_DESTINATION,
+          CommunicationContext.DEFAULT_DESTINATION,
           header.getDestinationIdentifier(), header.getFlags(), object);
       if (recv) {
         addSync(header.getSourceId(), header.getDestinationIdentifier());
@@ -1117,7 +1117,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
       return recv;
     } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
       boolean recv = finalReceiver.onMessage(header.getSourceId(),
-          DataFlowContext.DEFAULT_DESTINATION,
+          CommunicationContext.DEFAULT_DESTINATION,
           header.getDestinationIdentifier(), header.getFlags(), object);
       if (recv) {
         competedReceives++;
@@ -1128,7 +1128,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     if (object instanceof AggregatedObjects) {
       if (((AggregatedObjects) object).size() > 0) {
         boolean recv = finalReceiver.onMessage(header.getSourceId(),
-            DataFlowContext.DEFAULT_DESTINATION,
+            CommunicationContext.DEFAULT_DESTINATION,
             header.getDestinationIdentifier(), header.getFlags(), object);
         if (recv) {
           competedReceives++;

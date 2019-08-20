@@ -21,9 +21,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.comms.dfw.DataFlowContext;
 import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 public class KeyedInvertedBinaryTreeRouter {
@@ -57,8 +57,8 @@ public class KeyedInvertedBinaryTreeRouter {
    */
   public KeyedInvertedBinaryTreeRouter(Config cfg, LogicalPlan plan,
                                   Set<Integer> roots, Set<Integer> dests) {
-    int interNodeDegree = DataFlowContext.interNodeDegree(cfg, 2);
-    int intraNodeDegree = DataFlowContext.intraNodeDegree(cfg, 2);
+    int interNodeDegree = CommunicationContext.interNodeDegree(cfg, 2);
+    int intraNodeDegree = CommunicationContext.intraNodeDegree(cfg, 2);
     mainTaskLast = false;
     this.logicalPlan = plan;
     this.destinationIdentifiers = new HashMap<>();

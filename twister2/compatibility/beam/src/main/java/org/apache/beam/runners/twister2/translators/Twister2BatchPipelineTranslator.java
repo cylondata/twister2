@@ -19,6 +19,7 @@ package org.apache.beam.runners.twister2.translators;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.Twister2PipelineOptions;
@@ -36,15 +37,14 @@ import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.Window;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * doc.
  */
 public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Twister2BatchPipelineTranslator.class);
+  private static final Logger LOG = Logger.getLogger(
+      Twister2BatchPipelineTranslator.class.getName());
   private final Twister2PipelineOptions options;
 
   /**
@@ -74,7 +74,7 @@ public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator 
 
   @Override
   public void visitPrimitiveTransform(TransformHierarchy.Node node) {
-    LOG.debug("visiting transform {}", node.getTransform());
+    LOG.fine(String.format("visiting transform %s", node.getTransform()));
     PTransform transform = node.getTransform();
     BatchTransformTranslator translator = getTransformTranslator(transform.getClass());
     if (null == translator) {

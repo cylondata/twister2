@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.ChannelReceiver;
@@ -84,7 +85,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
   private int index;
 
-  private int pathToUse = DataFlowContext.DEFAULT_DESTINATION;
+  private int pathToUse = CommunicationContext.DEFAULT_DESTINATION;
 
   private ChannelDataFlowOperation delegete;
   private MessageSchema messageSchema;
@@ -152,13 +153,14 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     // check weather this message is for a sub task
     if (!router.isLastReceiver()
         && partialReceiver != null) {
-      return partialReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+      return partialReceiver.onMessage(header.getSourceId(),
+          CommunicationContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
+              CommunicationContext.DEFAULT_DESTINATION), header.getFlags(), object);
     } else {
-      return finalReceiver.onMessage(header.getSourceId(), DataFlowContext.DEFAULT_DESTINATION,
+      return finalReceiver.onMessage(header.getSourceId(), CommunicationContext.DEFAULT_DESTINATION,
           router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-              DataFlowContext.DEFAULT_DESTINATION), header.getFlags(), object);
+              CommunicationContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
 
@@ -210,7 +212,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
 
       // we are going to add source if we are the main workerId
       if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
-          DataFlowContext.DEFAULT_DESTINATION) == source) {
+          CommunicationContext.DEFAULT_DESTINATION) == source) {
         routingParameters.addInteranlRoute(source);
       }
 
@@ -292,12 +294,12 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
     for (int s : srcs) {
       // later look at how not to allocate pairs for this each time
       ArrayBlockingQueue<OutMessage> pendingSendMessages =
-          new ArrayBlockingQueue<>(DataFlowContext.sendPendingMax(cfg));
+          new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
       serializerMap.put(s, Serializers.get(isKeyed, this.messageSchema));
     }
 
-    int maxReceiveBuffers = DataFlowContext.receiveBufferCount(cfg);
+    int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
     int receiveExecutorsSize = receivingExecutors().size();
     if (receiveExecutorsSize == 0) {
       receiveExecutorsSize = 1;

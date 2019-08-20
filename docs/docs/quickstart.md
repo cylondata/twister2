@@ -9,7 +9,7 @@ Lets look at how to setup Twister2 and run few examples. Lets start with the sim
 ### Building Twister2
 
 First we need to build Twister2. [Compiling Twister2](compiling/compiling.md) explains how to build it. After building the code and
-following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/compiling/linux#twister2-distribution) you should have a extracted folder named `twister2-0.2.2`, this would be your twister2 home folder.
+following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/compiling/linux#twister2-distribution) you should have a extracted folder named `twister2-0.3.0`, this would be your twister2 home folder.
 
 ### Starting parallel workers
 
@@ -95,7 +95,7 @@ public class HelloWorld implements IWorker {
 ```
 
 Now lets run this class using command line. Lets go inside the twister2 distribution and execute the following command from twister2 root directory. Go into the
-`twister2-0.2.2` directory before executing the commands below.
+`twister2-0.3.0` directory before executing the commands below.
 
 ```bash
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.basic.HelloWorld 8

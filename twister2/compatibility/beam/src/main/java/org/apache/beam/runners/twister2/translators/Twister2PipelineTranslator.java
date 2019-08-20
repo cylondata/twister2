@@ -17,16 +17,16 @@
  */
 package org.apache.beam.runners.twister2.translators;
 
+import java.util.logging.Logger;
+
 import org.apache.beam.sdk.Pipeline;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * doc.
  */
 public abstract class Twister2PipelineTranslator extends Pipeline.PipelineVisitor.Defaults {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Twister2PipelineTranslator.class);
+  private static final Logger LOG = Logger.getLogger(Twister2PipelineTranslator.class.getName());
 
   /**
    * Translates the pipeline by passing this class as a visitor.

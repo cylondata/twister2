@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.core.InMemoryStateInternals;
 import org.apache.beam.runners.core.InMemoryTimerInternals;
@@ -41,8 +42,6 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.joda.time.Instant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -53,7 +52,7 @@ import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
  */
 public class GroupByWindowFunction<K, V, W extends BoundedWindow>
     implements FlatMapFunc<WindowedValue<KV<K, Iterable<V>>>, KV<K, Iterable<WindowedValue<V>>>> {
-  private static final Logger LOG = LoggerFactory.getLogger(GroupByWindowFunction.class);
+  private static final Logger LOG = Logger.getLogger(GroupByWindowFunction.class.getName());
   private final WindowingStrategy<?, W> windowingStrategy;
   private final SystemReduceFn<K, V, Iterable<V>, Iterable<V>, W> reduceFn;
   private final SerializablePipelineOptions options;
@@ -113,7 +112,7 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
         collector.collect(outputs.next());
       }
     } catch (Exception e) {
-      LOG.error(e.getMessage());
+      LOG.info(e.getMessage());
     }
   }
 

@@ -13,7 +13,9 @@
 package edu.iu.dsc.tws.comms.batch;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
@@ -74,6 +76,11 @@ public class BJoin {
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
                CommunicationContext.JoinType joinType,
                MessageSchema leftSchema, MessageSchema rightSchema) {
+    Map<String, Object> newConfigs = new HashMap<>();
+    newConfigs.put(CommunicationContext.STREAMING, false);
+    newConfigs.put(CommunicationContext.OPERATION_NAME, CommunicationContext.JOIN);
+    comm.updateConfig(newConfigs);
+
     this.destinationSelector = destSelector;
     this.channel = comm.getChannel();
     List<String> shuffleDirs = comm.getPersistentDirectories();

@@ -21,14 +21,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
 import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.sdk.io.BoundedSource;
 import org.apache.beam.sdk.io.Source;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.util.WindowedValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -40,7 +39,7 @@ import static org.apache.beam.vendor.grpc.v1p21p0.io.opencensus.internal.Utils.c
  * doc.
  */
 public class Twister2BoundedSource<T> extends BaseSourceFunc<WindowedValue<T>> {
-  private static final Logger LOG = LoggerFactory.getLogger(Twister2BoundedSource.class);
+  private static final Logger LOG = Logger.getLogger(Twister2BoundedSource.class.getName());
 
   private final BoundedSource<T> source;
   private int numPartitions;
@@ -66,11 +65,11 @@ public class Twister2BoundedSource<T> extends BaseSourceFunc<WindowedValue<T>> {
     try {
       splitSize = source.getEstimatedSizeBytes(options) / numPartitions;
     } catch (Exception e) {
-      LOG.warn(
-          "Failed to get estimated bundle size for source {}, using default bundle "
-              + "size of {} bytes.",
-          source,
-          DEFAULT_BUNDLE_SIZE);
+      LOG.warning(String.format(
+          "Failed to get estimated bundle size for source %s, using default bundle "
+              + "size of %d bytes.",
+          source.toString(),
+          DEFAULT_BUNDLE_SIZE));
     }
     twister2Config = context.getConfig();
     int index = context.getIndex();
@@ -79,7 +78,7 @@ public class Twister2BoundedSource<T> extends BaseSourceFunc<WindowedValue<T>> {
     try {
       partitionedSources = source.split(splitSize, options);
       if (partitionedSources.size() > numPartitions) {
-        LOG.warn("Number of partitions is larger then the parallism");
+        LOG.warning("Number of partitions is larger then the parallism");
       }
       // todo make sure the partitions are balanced.
       localPartition = partitionedSources.get(index);

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -27,7 +28,7 @@ public class BDirect extends BaseOperation {
                  List<Integer> sources, List<Integer> targets,
                  BulkReceiver rcvr, MessageType dataType, int edgeId,
                  MessageSchema messageSchema) {
-    super(comm.getChannel());
+    super(comm, false, CommunicationContext.DIRECT);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
     }

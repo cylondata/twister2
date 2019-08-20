@@ -40,8 +40,6 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   private String inputKey;
 
-  private  Set<String> inputKeys;
-
   public KMeansDataObjectDirectSink(String inputkey) {
     this.inputKey = inputkey;
   }

@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 
@@ -62,7 +63,8 @@ public class RecordSource implements Runnable {
     for (int i = 0; i < toSend; i++) {
       byte[] randomKey = new byte[this.keySize];
       this.random.nextBytes(randomKey);
-      while (!operation.gather(taskId, randomKey, this.value, 0)) {
+      Tuple t = new Tuple(randomKey, this.value);
+      while (!operation.gather(taskId, t, 0)) {
         count++;
         for (int j = 0; j < 4; j++) {
           operation.progressChannel();
