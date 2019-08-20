@@ -130,8 +130,8 @@ public class TaskExecutor {
     batchTaskScheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkerPlan();
-    //TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);

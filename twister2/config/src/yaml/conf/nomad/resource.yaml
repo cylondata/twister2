@@ -1,9 +1,9 @@
 # working directory
 twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
 
-twister2.job.package.url: "http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz"
+twister2.job.package.url: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
 
-twister2.core.package.url: "http://149.165.150.81:8082/twister2/mesos/twister2-core-0.3.0.tar.gz"
+twister2.core.package.url: "http://localhost:8082/twister2/mesos/twister2-core-0.2.2.tar.gz"
 
 
 # the launcher class
@@ -73,7 +73,7 @@ twister2.uploader.download.method: "LOCAL"
 ########################################################################################
 
 # nfs server address
-nfs.server.address: "149.165.150.81"
+nfs.server.address: "localhost"
 
 # nfs server path
 nfs.server.path: "/nfs/shared/twister2"
