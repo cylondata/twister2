@@ -61,6 +61,7 @@ public interface Receptor {
    * {@link Receptor} R of task graph TG2 is interested in receiving "var1", R's parallelism should
    * be equal to n and, R should have the same distribution as C among the workers.
    */
+
   default Set<String> getReceivableNames() {
     return Collections.emptySet();
   }
