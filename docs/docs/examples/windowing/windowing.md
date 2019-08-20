@@ -103,11 +103,11 @@ BaseWindowedSink dwDuration = new DirectCustomWindowReceiver()
 #### Inbuilt Policy
 
 ```bash
-./twister2-0.2.2/bin/twister2 submit standalone jar twister2-0.2.2/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "direct" -stages 4,4 -verify -stream -window
+./twister2-0.3.0/bin/twister2 submit standalone jar twister2-0.3.0/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "direct" -stages 4,4 -verify -stream -window
 ```
 
 #### Custom Policy
 
 ```bash
-./twister2-0.2.2/bin/twister2 submit standalone jar twister2-0.2.2/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "cdirect" -stages 4,4 -verify -stream -window
+./twister2-0.3.0/bin/twister2 submit standalone jar twister2-0.3.0/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "cdirect" -stages 4,4 -verify -stream -window
 ```
