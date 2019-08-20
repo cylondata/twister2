@@ -1,7 +1,7 @@
 # working directory for the topologies
 twister2.scheduler.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
 
-#directory of core package 
+#directory of core package
 twister2.directory.core-package: "/root/.twister2/repository/twister2-core/"
 
 # location of java - pick it up from shell environment
@@ -13,9 +13,9 @@ twister2.directory.sandbox.java.home: "${JAVA_HOME}"
 # mesos framework name
 twister2.mesos.framework.name: "Twister2 framework"
 
-twister2.mesos.master.uri: "zk://149.165.150.81:2181/mesos"
+twister2.mesos.master.uri: "zk://localhost:2181/mesos"
 
-twister2.mesos.master.host: "149.165.150.81"
+twister2.mesos.master.host: "localhost"
 # The maximum time in milliseconds waiting for MesosFramework got registered with Mesos Master
 twister2.mesos.framework.staging.timeout.ms: 2000
 
@@ -36,7 +36,7 @@ twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
 
 # the job package uri for mesos agent to fetch.
 # For fetching http server must be running on mesos master
-# twister2.system.job.uri: "http://149.165.150.81:8082/twister2/mesos/twister2-job.tar.gz"
+# twister2.system.job.uri: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
 
 # launcher class for mesos submission
 twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
@@ -57,7 +57,7 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "149.165.150.81:2181"
+twister2.zookeeper.server.addresses: "localhost:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
