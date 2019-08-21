@@ -86,6 +86,7 @@ def parse_config(config_dic):
 def write_rows(rows, config):
     md = "### " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
+    rows_written = 0
     for row in rows:
         if row.isTitle:
             md += "#### " + row.description + "\n"
@@ -104,13 +105,15 @@ def write_rows(rows, config):
                 md += "</td>"
             md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
             md += "</table>\n\n"
+            rows_written = rows_written + 1
     md_file.write(md)
+    if rows_written == 0:
+        md_file.write("No specific configurations\n")
 
 
 previous_type = ""
 
 for config in configs:
-    print(config)
     if not previous_type == config["type"]:
         previous_type = config["type"]
         md_file.write("## " + config["type"].capitalize() + " configurations\n")
