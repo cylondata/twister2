@@ -116,9 +116,9 @@ public class BatchTaskScheduler implements ITaskScheduler {
     if (computeGraphs.length > 1) {
       if (validateDependentGraphs(computeGraphs)) {
         dependentGraphs = true;
-        for (ComputeGraph aDataFlowTaskGraph : computeGraphs) {
-          TaskSchedulePlan taskSchedulePlan = schedule(aDataFlowTaskGraph, workerPlan);
-          taskSchedulePlanMap.put(aDataFlowTaskGraph.getGraphName(), taskSchedulePlan);
+        for (ComputeGraph computeGraph : computeGraphs) {
+          TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
+          taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
         }
       }
     } else {
@@ -259,21 +259,17 @@ public class BatchTaskScheduler implements ITaskScheduler {
         workerIdList.add(containerId);
       }
     }
-    ++index;
+    index++;
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, workerSchedulePlans);
-    if (workerId == 0) {
-      Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
-      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
-        Integer integer = entry.getKey();
-        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
-        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-        LOG.info("Task Details for Container Id:" + computeGraph.getGraphName()
-            + "\tcontainer id:" + integer);
-        for (TaskInstancePlan ip : containerPlanTaskInstances) {
-          LOG.info("Task Id:" + ip.getTaskId()
-              + "\tTask Index" + ip.getTaskIndex()
-              + "\tTask Name:" + ip.getTaskName());
-        }
+    Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
+    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+      Integer integer = entry.getKey();
+      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+      LOG.fine("Graph Name:" + computeGraph.getGraphName() + "\tcontainer id:" + integer);
+      for (TaskInstancePlan ip : containerPlanTaskInstances) {
+        LOG.fine("Task Id:" + ip.getTaskId() + "\tIndex" + ip.getTaskIndex()
+            + "\tName:" + ip.getTaskName());
       }
     }
     return taskSchedulePlan;
@@ -334,6 +330,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
   }
 
   private static Map<String, Integer> dependentGraphParallelismMap = new HashMap<>();
+
   private void storeDependentGraphParallelism(String taskName, int parallel) {
     dependentGraphParallelismMap.put(taskName, parallel);
   }
