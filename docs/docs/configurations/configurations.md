@@ -4,31 +4,31 @@ title: Twister2 Configurations
 sidebar_label: Configurations
 ---
 ## Common configurations
-### Common Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.checkpointing.enable</td><td>false</td><td>Enable or disable checkpointing</td><tbody><tr><td>twister2.checkpointing.store</td><td>edu.iu.dsc.tws.checkpointing.stores.LocalFileStateStore</td><td>The implementation of the store to be used</td><tbody><tr><td>twister2.checkpointing.store.fs.dir</td><td>"${TWISTER2_HOME}/persistent/"</td><td>Root directory of local file system based store</td><tbody><tr><td>twister2.checkpointing.store.hdfs.dir</td><td>"/twister2/persistent/"</td><td>Root directory of hdfs based store</td><tbody><tr><td>twister2.checkpointing.source.frequency</td><td>1000</td><td>Source triggering frequency</td></tbody></table>
 
-### Common Data Configurations
+### Data Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.data.hadoop.home</td><td>"${HADOOP_HOME}"</td><td></td><tbody><tr><td>twister2.data.hdfs.url</td><td>"hdfs://namenode:9000"</td><td></td><tbody><tr><td>twister2.data.hdfs.class</td><td>"org.apache.hadoop.hdfs.DistributedFileSystem"</td><td></td><tbody><tr><td>twister2.data.hdfs.implementation.key</td><td>"fs.hdfs.impl"</td><td></td><tbody><tr><td>twister2.data.hdfs.config.directory</td><td>"${HADOOP_HOME}/etc/hadoop/core-site.xml"</td><td></td><tbody><tr><td>twister2.data.hdfs.data.directory</td><td>"/user/username/"</td><td></td><tbody><tr><td>twister2.data.hdfs.namenode</td><td>"namenode.domain.name"</td><td></td><tbody><tr><td>twister2.data.hdfs.namenode.port</td><td>"9000"</td><td></td></tbody></table>
 
-### Common Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.buffer.size</td><td>1024000</td><td>the buffer size to be used</td><tbody><tr><td>twister2.network.sendBuffer.count</td><td>4</td><td>number of send buffers to be used</td><tbody><tr><td>twister2.network.receiveBuffer.count</td><td>4</td><td>number of receive buffers to be used</td><tbody><tr><td>twister2.network.channel.pending.size</td><td>2048</td><td>channel pending messages</td><tbody><tr><td>twister2.network.send.pending.max</td><td>4</td><td>the send pending messages</td><tbody><tr><td>twister2.network.partition.message.group.low_water_mark</td><td>8000</td><td>group up to 8 ~ 16 messages</td><tbody><tr><td>twister2.network.partition.message.group.high_water_mark</td><td>16000</td><td>this is the max number of messages to group</td><tbody><tr><td>twister2.network.partition.batch.grouping.size</td><td>10000</td><td>in batch partition operations, this value will be used to create mini batches<br/>within partial receivers</td><tbody><tr><td>twister2.network.ops.persistent.dirs</td><td>["${TWISTER2_HOME}/persistent/"]</td><td>For disk based operations, this directory list will be used to persist incoming messages.<br/>This can be used to balance the load between multiple devices, by specifying directory locations<br/>from different devices.</td><tbody><tr><td>twister2.network.shuffle.memory.bytes.max</td><td>102400000</td><td>the maximum amount of bytes kept in memory for operations that goes to disk</td><tbody><tr><td>twister2.network.shuffle.memory.records.max</td><td>102400000</td><td>the maximum number of records kept in memory for operations that goes to dist</td><tbody><tr><td>twister2.network.shuffle.file.bytes.max</td><td>10000000</td><td>size of the shuffle file (10MB default)</td><tbody><tr><td>twister2.network.shuffle.parallel.io</td><td>2</td><td>no of parallel IO operations permitted</td><tbody><tr><td>twister2.network.partition.algorithm.stream</td><td>"simple"</td><td>the partitioning algorithm</td><tbody><tr><td>twister2.network.partition.algorithm.batch</td><td>"simple"</td><td>the partitioning algorithm</td><tbody><tr><td>twister2.network.partition.algorithm.batch.keyed_gather</td><td>"simple"</td><td>the partitioning algorithm</td><tbody><tr><td>ttwister2.network.partition.ring.group.workers</td><td>2</td><td>ring group worker</td></tbody></table>
 
-### Common Resource Configurations
+### Resource Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.client.debug</td><td>'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'</td><td>use this property to debug the client submitting the job</td></tbody></table>
 
-### Common Core Configurations
+### Core Configurations
 
 
 
@@ -44,7 +44,7 @@ sidebar_label: Configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://localhost:8080"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></tbody></table>
 
-### Common Task Configurations
+### Task Configurations
 
 
 
@@ -52,29 +52,29 @@ sidebar_label: Configurations
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.taskscheduler.streaming</td><td>"roundrobin"</td><td>Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"<br/>By default it is roundrobin mode.</td><tbody><tr><td>twister2.taskscheduler.streaming.class</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"</td><td>Task Scheduler class for the round robin streaming task scheduler</td><tbody><tr><td>twister2.taskscheduler.streaming.class</td><td>"edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"</td><td>Task Scheduler for the Data Locality Aware Streaming Task Scheduler</td><tbody><tr><td>twister2.taskscheduler.streaming.class</td><td>"edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"</td><td>Task Scheduler for the FirstFit Streaming Task Scheduler</td><tbody><tr><td>twister2.taskscheduler.streaming.class</td><td>"edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"</td><td>Task Scheduler for the userDefined Streaming Task Scheduler</td><tbody><tr><td>twister2.taskscheduler.batch</td><td>"roundrobin"</td><td>Task scheduling mode for the batch jobs "roundrobin" or "datalocalityaware" or "userdefined"<br/>By default it is roundrobin mode.</td><tbody><tr><td>twister2.taskscheduler.batch.class</td><td>"edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"</td><td>Task Scheduler class for the round robin batch task scheduler</td><tbody><tr><td>twister2.taskscheduler.batch.class</td><td>"edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"</td><td>Task Scheduler for the Data Locality Aware Batch Task Scheduler</td><tbody><tr><td>twister2.taskscheduler.batch.class</td><td>"edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"</td><td>Task Scheduler for the userDefined Batch Task Scheduler</td><tbody><tr><td>twister2.taskscheduler.task.instances</td><td>2</td><td>Number of task instances to be allocated to each worker/container</td><tbody><tr><td>twister2.taskscheduler.task.instance.ram</td><td>512.0</td><td>Ram value to be allocated to each task instance</td><tbody><tr><td>twister2.taskscheduler.task.instance.disk</td><td>500.0</td><td>Disk value to be allocated to each task instance</td><tbody><tr><td>twister2.taskscheduler.instance.cpu</td><td>2.0</td><td>CPU value to be allocated to each task instancetwister2.task.parallelism</td><tbody><tr><td>twister2.taskscheduler.container.instance.ram</td><td>4096.0</td><td>Default Container Instance Values<br/>Ram value to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.container.instance.disk</td><td>8000.0</td><td>Disk value to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.container.instance.cpu</td><td>16.0</td><td></td><tbody><tr><td>twister2.taskscheduler.ram.padding.container</td><td>2.0</td><td>Default Container Padding Values<br/>Default padding value of the ram to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.disk.padding.container</td><td>12.0</td><td>Default padding value of the disk to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.cpu.padding.container</td><td>1.0</td><td>CPU padding value to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.container.padding.percentage</td><td>2</td><td>Percentage value to be allocated to each container</td><tbody><tr><td>twister2.taskscheduler.container.instance.bandwidth</td><td>100 #Mbps</td><td>Static Default Network parameters<br/>Bandwidth value to be allocated to each container instance for datalocality scheduling</td><tbody><tr><td>twister2.taskscheduler.container.instance.latency</td><td>0.002 #Milliseconds</td><td>Latency value to be allocated to each container instance for datalocality scheduling</td><tbody><tr><td>twister2.taskscheduler.datanode.instance.bandwidth</td><td>200 #Mbps</td><td>Bandwidth to be allocated to each datanode instance for datalocality scheduling</td><tbody><tr><td>twister2.taskscheduler.datanode.instance.latency</td><td>0.01 #Milliseconds</td><td>Latency value to be allocated to each datanode instance for datalocality scheduling</td><tbody><tr><td>twister2.taskscheduler.task.parallelism</td><td>2</td><td>Prallelism value to each task instance</td><tbody><tr><td>twister2.taskscheduler.task.type</td><td>"streaming"</td><td>Task type to each submitted job by default it is "streaming" job.</td><tbody><tr><td>twister2.exector.worker.threads</td><td>1</td><td>number of threads per worker</td><tbody><tr><td>twister2.executor.batch.name</td><td>"edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2"</td><td>name of the batch executor</td><tbody><tr><td>twister2.exector.instance.queue.low.watermark</td><td>10000</td><td>number of tuples executed at a single pass</td></tbody></table>
 
 ## Standalone configurations
-### Standalone Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Standalone Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Standalone Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.channel.class</td><td>"edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"</td><td></td></tbody></table>
 
-### Standalone Resource Configurations
+### Resource Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.resource.scheduler.mpi.working.directory</td><td>"${HOME}/.twister2/jobs"</td><td>working directory</td><tbody><tr><td>twsiter2.resource.scheduler.mpi.mode</td><td>"standalone"</td><td>mode of the mpi scheduler</td><tbody><tr><td>twister2.resource.scheduler.mpi.job.id</td><td>""</td><td>the job id file</td><tbody><tr><td>twister2.resource.scheduler.mpi.shell.script</td><td>"mpi.sh"</td><td>slurm script to run</td><tbody><tr><td>twister2.resource.scheduler.mpi.home</td><td>""</td><td>the mpirun command location</td><tbody><tr><td>twister2.system.package.uri</td><td>"${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"</td><td>the package uri</td><tbody><tr><td>twister2.class.launcher</td><td>"edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"</td><td>the launcher class</td><tbody><tr><td>twister2.resource.scheduler.mpi.mpirun.file</td><td>"twister2-core/ompi/bin/mpirun"</td><td>mpi run file, this assumes a mpirun that is shipped with the product<br/>change this to just mpirun if you are using a system wide installation of OpenMPI<br/>or complete path of OpenMPI in case you have something custom</td><tbody><tr><td>twister2.resource.scheduler.mpi.mapby</td><td>"node"</td><td>mpi scheduling policy. Two possible options are node and slot.<br/>read more at https://www.open-mpi.org/faq/?category=running#mpirun-scheduling</td><tbody><tr><td>twister2.resource.scheduler.mpi.mapby.use-pe</td><td>false</td><td>use mpi map-by modifier PE. If this option is enabled, cpu count of compute resource<br/>specified in job definition will be taken into consideration</td><tbody><tr><td>twister2.resource.sharedfs</td><td>true</td><td>Indicates whether bootstrap process needs to be run and distribute job file and core<br/>between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set<br/>to true, else it will run the bootstrap process</td><tbody><tr><td>twister2.resource.fs.mount</td><td>"${TWISTER2_HOME}/persistent/fs/"</td><td>Directory for file system volume mount</td><tbody><tr><td>twister2.uploader.directory</td><td>"${HOME}/.twister2/repository"</td><td>the uploader directory</td><tbody><tr><td>twister2.class.uploader</td><td>"edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"</td><td>the uplaoder class</td><tbody><tr><td>twister2.uploader.download.method</td><td>"HTTP"</td><td>this is the method that workers use to download the core and job packages<br/>it could be  HTTP, HDFS, ..</td></tbody></table>
 
-### Standalone Core Configurations
+### Core Configurations
 
 
 
@@ -90,35 +90,35 @@ No specific configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://localhost:8080"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></tbody></table>
 
-### Standalone Task Configurations
+### Task Configurations
 
 
 
 No specific configurations
 ## Slurm configurations
-### Slurm Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Slurm Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Slurm Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.channel.class</td><td>"edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"</td><td></td></tbody></table>
 
-### Slurm Resource Configurations
+### Resource Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.resource.scheduler.mpi.working.directory</td><td>"${HOME}/.twister2/jobs"</td><td>working directory</td><tbody><tr><td>twsiter2.resource.scheduler.mpi.mode</td><td>"slurm"</td><td>mode of the mpi scheduler</td><tbody><tr><td>twister2.resource.scheduler.mpi.job.id</td><td>""</td><td>the job id file</td><tbody><tr><td>twister2.resource.scheduler.mpi.shell.script</td><td>"mpi.sh"</td><td>slurm script to run</td><tbody><tr><td>twister2.resource.scheduler.slurm.partition</td><td>"juliet"</td><td>slurm partition</td><tbody><tr><td>twister2.resource.scheduler.mpi.home</td><td>""</td><td>the mpirun command location</td><tbody><tr><td>twister2.system.package.uri</td><td>"${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"</td><td>the package uri</td><tbody><tr><td>twister2.class.launcher</td><td>"edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"</td><td>the launcher class</td><tbody><tr><td>twister2.resource.scheduler.mpi.mpirun.file</td><td>"twister2-core/ompi/bin/mpirun"</td><td>mpi run file, this assumes a mpirun that is shipped with the product<br/>change this to just mpirun if you are using a system wide installation of OpenMPI<br/>or complete path of OpenMPI in case you have something custom</td><tbody><tr><td>twister2.uploader.directory</td><td>"${HOME}/.twister2/repository"</td><td>the uploader directory</td><tbody><tr><td>twister2.class.uploader</td><td>"edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"</td><td>the uplaoder class</td></tbody></table>
 
-### Slurm Core Configurations
+### Core Configurations
 
 
 
@@ -128,29 +128,29 @@ No specific configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://localhost:8080"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></tbody></table>
 
-### Slurm Task Configurations
+### Task Configurations
 
 
 
 No specific configurations
 ## Aurora configurations
-### Aurora Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Aurora Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Aurora Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.channel.class</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><td></td></tbody></table>
 
-### Aurora Resource Configurations
+### Resource Configurations
 
 
 
@@ -165,28 +165,28 @@ No specific configurations
 #### Client configuration parameters for submission of twister2 jobs
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.resource.scheduler.aurora.script</td><td>"${TWISTER2_CONF}/twister2.aurora"</td><td>aurora python script to submit a job to Aurora Scheduler<br/>its default value is defined as the following in the code<br/>can be reset from this config file if desired</td><tbody><tr><td>twister2.resource.scheduler.aurora.cluster</td><td>"example"</td><td>cluster name aurora scheduler runs in</td><tbody><tr><td>twister2.resource.scheduler.aurora.role</td><td>"www-data"</td><td>role in cluster</td><tbody><tr><td>twister2.resource.scheduler.aurora.env</td><td>"devel"</td><td>environment name</td><tbody><tr><td>twister2.job.name</td><td>"basic-aurora"</td><table><thead><tr><td>Options</td></tr></thead><tbody><tr><td>"basic-aurora"</td></tr></tbody></table><td>aurora job name</td><tbody><tr><td>twister2.worker.cpu</td><td>1.0</td><td>number of cores for each worker<br/>it is a floating point number<br/>each worker can have fractional cores such as 0.5 cores or multiple cores as 2<br/>default value is 1.0 core</td><tbody><tr><td>twister2.worker.ram</td><td>200</td><td>amount of memory for each worker in the job in mega bytes as integer<br/>default value is 200 MB</td><tbody><tr><td>twister2.worker.disk</td><td>1024</td><td>amount of hard disk space on each worker in mega bytes<br/>this only used when running twister2 in Aurora<br/>default value is 1024 MB.</td><tbody><tr><td>twister2.worker.instances</td><td>6</td><td>number of worker instances</td></tbody></table>
 
-### Aurora Core Configurations
+### Core Configurations
 
 
 
 No specific configurations
-### Aurora Task Configurations
+### Task Configurations
 
 
 
 No specific configurations
 ## Kubernetes configurations
-### Kubernetes Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Kubernetes Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Kubernetes Network Configurations
+### Network Configurations
 
 
 
@@ -199,7 +199,7 @@ No specific configurations
 #### NodePort service parameters
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>kubernetes.node.port.service.requested</td><td>true</td><td>if the job requests NodePort service, it must be true<br/>NodePort service makes the workers accessible from external entities (outside of the cluster)<br/>by default, its value is false</td><tbody><tr><td>kubernetes.service.node.port</td><td>30003</td><td>if NodePort value is 0, it is automatically assigned a value<br/>the user can request a specific port value in the NodePort range by setting the value below<br/>by default Kubernetes uses the range 30000-32767 for NodePorts<br/>Kubernetes admins can change this range</td></tbody></table>
 
-### Kubernetes Resource Configurations
+### Resource Configurations
 
 
 
@@ -227,7 +227,7 @@ No specific configurations
 #### persistent volume related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>persistent.volume.per.worker</td><td>0.0</td><td>persistent volume size per worker in GB as double<br/>default value is 0.0Gi<br/>set this value to zero, if you have not persistent disk support<br/>when this value is zero, twister2 will not try to set up persistent storage for this job</td><tbody><tr><td>kubernetes.persistent.storage.class</td><td>"twister2-nfs-storage"</td><td>the admin should provide a PersistentVolume object with the following storage class.<br/>Default storage class name is "twister2".</td><tbody><tr><td>kubernetes.storage.access.mode</td><td>"ReadWriteMany"</td><td>persistent storage access mode.<br/>It shows the access mode for workers to access the shared persistent storage.<br/>if it is "ReadWriteMany", many workers can read and write<br/>https://kubernetes.io/docs/concepts/storage/persistent-volumes</td></tbody></table>
 
-### Kubernetes Core Configurations
+### Core Configurations
 
 
 
@@ -243,29 +243,29 @@ No specific configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://twister2-dashboard.default.svc.cluster.local"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard<br/>if dashboard is running as a statefulset in the cluster</td></tbody></table>
 
-### Kubernetes Task Configurations
+### Task Configurations
 
 
 
 No specific configurations
 ## Mesos configurations
-### Mesos Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Mesos Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Mesos Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.channel.class</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><td></td></tbody></table>
 
-### Mesos Resource Configurations
+### Resource Configurations
 
 
 
@@ -277,7 +277,7 @@ No specific configurations
 #### Client configuration parameters for submission of twister2 jobs
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.resource.scheduler.mesos.cluster</td><td>"example"</td><td>cluster name mesos scheduler runs in</td><tbody><tr><td>twister2.resource.scheduler.mesos.role</td><td>"www-data"</td><td>role in cluster</td><tbody><tr><td>twister2.resource.scheduler.mesos.env</td><td>"devel"</td><td>environment name</td><tbody><tr><td>twister2.job.name</td><td>"basic-mesos"</td><td>mesos job name</td><tbody><tr><td>  #  workersPerPod</td><td>2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.</td><td>A Twister2 job can have multiple sets of compute resources<br/>instances shows the number of compute resources to be started with this specification<br/>workersPerPod shows the number of workers on each pod in Kubernetes.<br/>   May be omitted in other clusters. default value is 1.</td><tbody><tr><td>    instances</td><td>4 # number of compute resource instances with this specification</td><table><thead><tr><td>Options</td></tr></thead><tbody><tr><td>2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.</td></tr></tbody></table><td></td><tbody><tr><td>twister2.worker.additional.ports</td><td>["port1", "port2", "port3"]</td><td>by default each worker has one port<br/>additional ports can be requested for all workers in a job<br/>please provide the requested port names as a list</td><tbody><tr><td>twister2.job.driver.class</td><td>"edu.iu.dsc.tws.examples.internal.rsched.DriverExample"</td><td>driver class to run</td><tbody><tr><td>nfs.server.address</td><td>"149.165.150.81"</td><td>nfs server address</td><tbody><tr><td>nfs.server.path</td><td>"/nfs/shared-mesos/twister2"</td><td>nfs server path</td><tbody><tr><td>twister2.worker_port</td><td>"31000"</td><td>worker port</td><tbody><tr><td>twister2.desired_nodes</td><td>"all"</td><td>desired nodes</td><tbody><tr><td>twister2.use_docker_container</td><td>"true"</td><td></td><tbody><tr><td>rack.labey.key</td><td>rack</td><td>rack label key for Mesos nodes in a cluster<br/>each rack should have a unique label<br/>all nodes in a rack should share this label<br/>Twister2 workers can be scheduled by using these label values<br/>Better data locality can be achieved<br/>no default value is specified</td><tbody><tr><td>datacenter.labey.key</td><td>datacenter</td><td>data center label key<br/>each data center should have a unique label<br/>all nodes in a data center should share this label<br/>Twister2 workers can be scheduled by using these label values<br/>Better data locality can be achieved<br/>no default value is specified</td><tbody><tr><td>  - echo</td><td>['blue-rack', 'green-rack']</td><td>Data center list with rack names</td><tbody><tr><td>  - blue-rack</td><td>['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]</td><td>Rack list with node IPs in them</td></tbody></table>
 
-### Mesos Core Configurations
+### Core Configurations
 
 
 
@@ -293,29 +293,29 @@ No specific configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://localhost:8080"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></tbody></table>
 
-### Mesos Task Configurations
+### Task Configurations
 
 
 
 No specific configurations
 ## Nomad configurations
-### Nomad Checkpoint Configurations
+### Checkpoint Configurations
 
 
 
 No specific configurations
-### Nomad Data Configurations
+### Data Configurations
 
 
 
 No specific configurations
-### Nomad Network Configurations
+### Network Configurations
 
 
 
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.network.channel.class</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><td></td></tbody></table>
 
-### Nomad Resource Configurations
+### Resource Configurations
 
 
 
@@ -324,7 +324,7 @@ No specific configurations
 #### client related configurations for job submit
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>nfs.server.address</td><td>"localhost"</td><td>nfs server address</td><tbody><tr><td>nfs.server.path</td><td>"/nfs/shared/twister2"</td><td>nfs server path</td><tbody><tr><td>rack.labey.key</td><td>rack</td><td>rack label key for Mesos nodes in a cluster<br/>each rack should have a unique label<br/>all nodes in a rack should share this label<br/>Twister2 workers can be scheduled by using these label values<br/>Better data locality can be achieved<br/>no default value is specified</td><tbody><tr><td>datacenter.labey.key</td><td>datacenter</td><td>data center label key<br/>each data center should have a unique label<br/>all nodes in a data center should share this label<br/>Twister2 workers can be scheduled by using these label values<br/>Better data locality can be achieved<br/>no default value is specified</td><tbody><tr><td>  - echo</td><td>['blue-rack', 'green-rack']</td><td>Data center list with rack names</td><tbody><tr><td>  - green-rack</td><td>['node11.ip', 'node12.ip', 'node13.ip']</td><td>Rack list with node IPs in them</td><tbody><tr><td>  #  workersPerPod</td><td>2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.</td><td>A Twister2 job can have multiple sets of compute resources<br/>instances shows the number of compute resources to be started with this specification<br/>workersPerPod shows the number of workers on each pod in Kubernetes.<br/>   May be omitted in other clusters. default value is 1.</td><tbody><tr><td>    instances</td><td>4 # number of compute resource instances with this specification</td><table><thead><tr><td>Options</td></tr></thead><tbody><tr><td>2 # number of workers on each pod in Kubernetes. May be omitted in other clusters.</td></tr></tbody></table><td></td><tbody><tr><td>twister2.worker.additional.ports</td><td>["port1", "port2", "port3"]</td><td>by default each worker has one port<br/>additional ports can be requested for all workers in a job<br/>please provide the requested port names as a list</td><tbody><tr><td>twister2.worker_port</td><td>"31000"</td><td>worker port</td></tbody></table>
 
-### Nomad Core Configurations
+### Core Configurations
 
 
 
@@ -340,7 +340,7 @@ No specific configurations
 #### Dashboard related settings
 <table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead><tbody><tr><td>twister2.dashboard.host</td><td>"http://localhost:8080"</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></tbody></table>
 
-### Nomad Task Configurations
+### Task Configurations
 
 
 

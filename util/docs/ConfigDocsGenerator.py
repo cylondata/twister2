@@ -20,7 +20,7 @@ for mode in modes:
         key = mode + "_" + file
         config = {}
         config["type"] = mode
-        config["title"] = mode.capitalize() + " " + file.capitalize() + " Configurations"
+        config["title"] = file.capitalize() + " Configurations"
         config["description"] = "" if not descriptions.has_key(key) else descriptions[key]
         config["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
         configs.append(config)
