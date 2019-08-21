@@ -94,10 +94,8 @@ def write_rows(rows, config):
             md += "#### " + row.description + "\n"
             need_header = True
         else:
-            md += "<table>"
-
             if need_header:
-                md += "<thead><tr><td>Name</td><td>Default</td><td>Description</td</tr></thead>"
+                md += "<table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead>"
                 need_header = False
 
             md += "<tbody><tr>"
@@ -110,11 +108,13 @@ def write_rows(rows, config):
                     first_option = False
                 md += "</tbody></table>"
             md += "<td>" + row.description.strip() + "</td>"
-            md += "</tbody></table>\n\n"
+            #md += "</tbody></table>\n\n"
             rows_written = rows_written + 1
     md_file.write(md)
     if rows_written == 0:
         md_file.write("No specific configurations\n")
+    else:
+        md_file.write("</tbody></table>\n\n")
 
 
 previous_type = ""
