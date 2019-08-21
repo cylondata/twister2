@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.AllReduce;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch ALLReduce Operation
@@ -63,6 +64,13 @@ public class BAllReduce extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets, ReduceFunction fnc,
                     SingularReceiver rcvr, MessageType dataType) {
     this(comm, plan, sources, targets, fnc, rcvr, dataType, comm.nextEdge(),
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BAllReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, ReduceFunction fnc,
+                    SingularReceiver rcvr, MessageType dataType) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), fnc, rcvr, dataType, comm.nextEdge(),
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

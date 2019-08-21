@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Reduce Operation
@@ -59,6 +60,14 @@ public class SReduce extends BaseOperation {
                  Set<Integer> sources, int target,
                  MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
     this(comm, plan, sources, target, dataType, fnc, rcvr, comm.nextEdge(),
+        MessageSchema.noSchema());
+  }
+
+  public SReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                 MessageType dataType, ReduceFunction fnc, SingularReceiver rcvr) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(), dataType, fnc, rcvr, comm.nextEdge(),
         MessageSchema.noSchema());
   }
 

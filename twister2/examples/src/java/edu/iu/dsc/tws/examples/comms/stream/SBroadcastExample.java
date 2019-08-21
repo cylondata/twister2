@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -20,7 +19,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.stream.SBroadCast;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
@@ -47,19 +46,17 @@ public class SBroadcastExample extends BenchWorker {
       jobParameters.getTaskStages().set(0, 1);
     }
 
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 1; i < noOfTargetTasks + 1; i++) {
-      targets.add(i);
-    }
-    int source = 0;
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    bcast = new SBroadCast(workerEnv.getCommunicator(), logicalPlan, source, targets,
+    bcast = new SBroadCast(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER_ARRAY, new BCastReceiver());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -67,10 +64,9 @@ public class SBroadcastExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 1);
+    Set<Integer> targetTasksOfExecutor = logicalPlanBuilder.getTargetsOnThisWorker();
     for (int taskId : targetTasksOfExecutor) {
-      if (targets.contains(taskId)) {
+      if (logicalPlanBuilder.getTargets().contains(taskId)) {
         bCastDone = false;
 
         if (workerId == 0) {
@@ -84,7 +80,8 @@ public class SBroadcastExample extends BenchWorker {
 
     // the map thread where data is produced
     if (workerId == 0) {
-      Thread mapThread = new Thread(new MapWorker(source));
+      Thread mapThread = new Thread(new MapWorker(
+          logicalPlanBuilder.getSources().iterator().next()));
       mapThread.start();
     }
   }

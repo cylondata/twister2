@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.batch;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
@@ -22,6 +23,7 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 public class BDirect extends BaseOperation {
   public BDirect(Communicator comm, LogicalPlan plan,
@@ -60,6 +62,14 @@ public class BDirect extends BaseOperation {
                  List<Integer> sources, List<Integer> targets,
                  BulkReceiver rcvr, MessageType dataType) {
     this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BDirect(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                 BulkReceiver rcvr, MessageType dataType) {
+    this(comm, logicalPlanBuilder.build(),
+        new ArrayList<>(logicalPlanBuilder.getSources()),
+        new ArrayList<>(logicalPlanBuilder.getTargets()),
+        rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public BDirect(Communicator comm, LogicalPlan plan,

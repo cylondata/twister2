@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -27,7 +25,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BAllGather;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -47,20 +45,17 @@ public class BAllGatherExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
-
-    int noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets =
-        IntStream.range(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks)
-            .boxed().collect(Collectors.toSet());
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    gather = new BAllGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    gather = new BAllGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         new FinalSingularReceiver(), MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -70,7 +65,7 @@ public class BAllGatherExample extends BenchWorker {
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
       List<Tuple<Integer, int[]>> expectedOut = new ArrayList<>();
-      for (Integer source : sources) {
+      for (Integer source : logicalPlanBuilder.getSources()) {
         for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
           expectedOut.add(new Tuple<>(source, ints));
         }
@@ -84,7 +79,8 @@ public class BAllGatherExample extends BenchWorker {
     ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %s this %s",
-        workerId, sources, targets, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(), logicalPlanBuilder.getTargets(),
+        tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BDirect;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -59,8 +59,14 @@ public class BDirectExample extends BenchWorker {
     List<Integer> targets =
         IntStream.range(0, noOfTargetTasks).boxed().collect(Collectors.toList());
 
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    direct = new BDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    direct = new BDirect(workerEnv.getCommunicator(), logicalPlanBuilder,
         new DirectReceiver(), MessageTypes.INTEGER_ARRAY);
 
 
@@ -74,8 +80,8 @@ public class BDirectExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
+
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
