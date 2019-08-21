@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Gather Operation
@@ -65,6 +66,14 @@ public class SGather extends BaseOperation {
                  Set<Integer> sources, int target, MessageType dataType,
                  BulkReceiver rcvr) {
     this(comm, plan, sources, target, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                 BulkReceiver rcvr) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(),
+        dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   /**

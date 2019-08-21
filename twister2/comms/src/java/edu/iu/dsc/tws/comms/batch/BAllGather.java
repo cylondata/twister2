@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.AllGather;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch ALLGather Operation
@@ -61,6 +62,13 @@ public class BAllGather extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets,
                     BulkReceiver rcvr, MessageType dataType) {
     this(comm, plan, sources, targets, rcvr, dataType, comm.nextEdge(),
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BAllGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                    BulkReceiver rcvr, MessageType dataType) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), rcvr, dataType, comm.nextEdge(),
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

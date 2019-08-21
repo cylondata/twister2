@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Partition Operation
@@ -64,6 +65,15 @@ public class SPartition extends BaseOperation {
                     SingularReceiver rcvr,
                     DestinationSelector destSelector) {
     this(comm, plan, sources, targets, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SPartition(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                    SingularReceiver rcvr,
+                    DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), dataType, rcvr, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

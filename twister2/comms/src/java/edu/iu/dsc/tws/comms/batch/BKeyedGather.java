@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 public class BKeyedGather extends BaseOperation {
   private DestinationSelector destinationSelector;
@@ -48,6 +49,14 @@ public class BKeyedGather extends BaseOperation {
                       MessageType kType, MessageType dType,
                       BulkReceiver rcvr, DestinationSelector destSelector) {
     this(comm, plan, sources, destinations, kType, dType, rcvr,
+        destSelector, false, null, true, MessageSchema.noSchema());
+  }
+
+  public BKeyedGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                      MessageType kType, MessageType dType,
+                      BulkReceiver rcvr, DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), kType, dType, rcvr,
         destSelector, false, null, true, MessageSchema.noSchema());
   }
 
@@ -79,6 +88,17 @@ public class BKeyedGather extends BaseOperation {
                       Comparator<Object> comparator,
                       boolean groupByKey) {
     this(comm, plan, sources, destinations, kType, dType, rcvr, destSelector,
+        useDisk, comparator, groupByKey, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BKeyedGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                      MessageType kType, MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector,
+                      boolean useDisk,
+                      Comparator<Object> comparator,
+                      boolean groupByKey) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), kType, dType, rcvr, destSelector,
         useDisk, comparator, groupByKey, comm.nextEdge(), MessageSchema.noSchema());
   }
 

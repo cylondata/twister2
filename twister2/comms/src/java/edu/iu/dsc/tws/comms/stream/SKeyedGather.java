@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Keyed Partition Operation
@@ -92,6 +93,16 @@ public class SKeyedGather extends BaseOperation {
                       MessageType dType, BulkReceiver rcvr,
                       DestinationSelector destSelector) {
     this(comm, plan, sources, targets, kType, dType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+
+  }
+
+  public SKeyedGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType kType,
+                      MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), kType, dType, rcvr, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
 
   }

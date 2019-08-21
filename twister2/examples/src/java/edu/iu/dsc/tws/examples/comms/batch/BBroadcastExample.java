@@ -17,15 +17,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BBroadcast;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -48,18 +46,19 @@ public class BBroadcastExample extends BenchWorker {
       jobParameters.getTaskStages().set(0, 1);
     }
 
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    Set<Integer> targets =
-        IntStream.range(1, noOfTargetTasks + 1).boxed().collect(Collectors.toSet());
-
     int source = 0;
 
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    bcast = new BBroadcast(workerEnv.getCommunicator(), logicalPlan, source, targets,
+    bcast = new BBroadcast(workerEnv.getCommunicator(), logicalPlanBuilder,
         new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -76,9 +75,6 @@ public class BBroadcastExample extends BenchWorker {
     }, new IteratorComparator<>(
         IntArrayComparator.getInstance()
     ));
-
-    Set<Integer> sinksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 1);
 
     // the map thread where data is produced
     if (workerId == 0) {

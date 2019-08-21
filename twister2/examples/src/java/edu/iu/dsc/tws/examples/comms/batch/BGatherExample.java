@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -27,7 +25,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BGather;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -47,18 +45,23 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    Set<Integer> sources = IntStream.range(0, noOfSourceTasks).boxed().collect(Collectors.toSet());
+    if (jobParameters.getTargets() != 1) {
+      LOG.warning("Setting no of targets to 1. Found " + jobParameters.getTargets());
+      jobParameters.getTaskStages().set(1, 1);
+    }
 
-    int target = noOfSourceTasks;
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    );
 
     // create the communication
-    gather = new BGather(workerEnv.getCommunicator(), logicalPlan, sources, target,
+    gather = new BGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(), false);
 
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -69,7 +72,7 @@ public class BGatherExample extends BenchWorker {
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> {
           List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
-          for (Integer source : sources) {
+          for (Integer source : logicalPlanBuilder.getSources()) {
             for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
               expectedData.add(new Tuple<>(source, ints));
             }
@@ -84,7 +87,8 @@ public class BGatherExample extends BenchWorker {
         ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, target, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(), tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

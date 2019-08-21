@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
@@ -24,7 +23,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.stream.SKeyedGather;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
@@ -44,23 +43,17 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
-    keyedGather = new SKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    keyedGather = new SKeyedGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.OBJECT, MessageTypes.OBJECT,
         new GatherBulkReceiver(), new LoadBalanceSelector());
 
-    Set<Integer> sourceTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> sourceTasks = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : sourceTasks) {
       finishedSources.put(t, false);
     }
@@ -68,8 +61,7 @@ public class SKeyedGatherExample extends KeyedBenchWorker {
       sourcesDone = true;
     }
 
-    Set<Integer> sinkTasks = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 1);
+    Set<Integer> sinkTasks = logicalPlanBuilder.getTargetsOnThisWorker();
 
     LOG.log(Level.INFO, String.format("Worker[%d], Source Tasks %s , Sink Tasks %s",
         workerId, sourceTasks, sinkTasks));
