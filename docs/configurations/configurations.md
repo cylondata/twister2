@@ -147,7 +147,10 @@
 
 
 
-### Task Scheduler Related Configurations<br/>Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"<br/>By default it is roundrobin mode.
+### Task Scheduler Related Configurations
+**twister2.taskscheduler.streaming**
+<table><tr><td>default</td><td>"roundrobin"</td><tr><td>description</td><td>Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"<br/>By default it is roundrobin mode.</td></table>
+
 **twister2.taskscheduler.streaming.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"</td><tr><td>description</td><td>Task Scheduler class for the round robin streaming task scheduler</td></table>
 

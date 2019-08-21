@@ -1,6 +1,7 @@
 ###################################################################
 # Task Scheduler Related Configurations
 ###################################################################
+
 # Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"
 # By default it is roundrobin mode.
 twister2.taskscheduler.streaming: "roundrobin"
