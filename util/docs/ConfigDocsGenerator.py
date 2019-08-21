@@ -10,8 +10,9 @@ descriptions = {
     "standalone_data": ""  # example
 }
 
-doc_path = "docs/configurations/configurations.md"
+doc_path = "docs/docs/configurations/configurations.md"
 md_file = open(doc_path, "w")
+md_file.write("---\nid: configurations\ntitle: Configurations\nsidebar_label: Configurations\n---\n")
 md_file.write("# Twister2 Configurations\n")
 
 for mode in modes:
