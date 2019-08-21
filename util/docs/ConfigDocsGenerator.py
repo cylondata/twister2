@@ -12,14 +12,15 @@ descriptions = {
 
 doc_path = "docs/docs/configurations/configurations.md"
 md_file = open(doc_path, "w")
-md_file.write("---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
+md_file.write(
+    "---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
 
 for mode in modes:
     for file in common_files:
         key = mode + "_" + file
         config = {}
         config["type"] = mode
-        config["title"] = mode.capitalize() + " " + file.capitalize() + " Configurations"
+        config["title"] = file.capitalize() + " Configurations"
         config["description"] = "" if not descriptions.has_key(key) else descriptions[key]
         config["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
         configs.append(config)
@@ -87,28 +88,41 @@ def write_rows(rows, config):
     md = "### " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
     rows_written = 0
+    need_header = True
+    tclose_needed = False
     for row in rows:
         if row.isTitle:
+            # first close the table
+            if tclose_needed:
+                md += "</tbody></table>\n\n"
+                tclose_needed = False
+
             md += "#### " + row.description + "\n"
+            need_header = True
         else:
-            md += "**" + row.property + "**\n"
-            md += "<table>"
-            md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
+            if need_header:
+                md += "<table><thead><tr><td>Name</td><td>Default</td><td>Description</td></tr></thead>"
+                need_header = False
+                tclose_needed = True
+
+            md += "<tbody><tr>"
+            md += "<td>" + row.property + "</td>"
+            md += "<td>" + row.default_value.strip('\"') + "</td>"
             if len(row.value_options) != 0:
-                md += "<tr><td>options</td><td>"
-                first_option = True
+                md += "<table><thead><tr><td>Options</td></tr></thead><tbody>"
                 for option in row.value_options:
-                    if not first_option:
-                        md += "<br/>"
-                    md += option
+                    md += "<tr><td>" + option.strip('\"') + "</td></tr>"
                     first_option = False
-                md += "</td>"
-            md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
-            md += "</table>\n\n"
+                md += "</tbody></table>"
+            md += "<td>" + row.description.strip() + "</td>"
+            # md += "</tbody></table>\n\n"
             rows_written = rows_written + 1
     md_file.write(md)
     if rows_written == 0:
         md_file.write("No specific configurations\n")
+
+    if tclose_needed:
+        md_file.write("</tbody></table>\n\n")
 
 
 previous_type = ""
