@@ -18,6 +18,7 @@ for mode in modes:
     for file in common_files:
         key = mode + "_" + file
         config = {}
+        config["type"] = mode
         config["title"] = mode.capitalize() + " " + file.capitalize() + " Configurations"
         config["description"] = "" if not descriptions.has_key(key) else descriptions[key]
         config["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
@@ -83,11 +84,11 @@ def parse_config(config_dic):
 
 
 def write_rows(rows, config):
-    md = "## " + config["title"] + "\n\n"
+    md = "### " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
     for row in rows:
         if row.isTitle:
-            md += "### " + row.description + "\n"
+            md += "#### " + row.description + "\n"
         else:
             md += "**" + row.property + "**\n"
             md += "<table>"
@@ -106,8 +107,13 @@ def write_rows(rows, config):
     md_file.write(md)
 
 
+previous_type = ""
+
 for config in configs:
     print(config)
+    if not previous_type == config["type"]:
+        previous_type = config["type"]
+        md_file.write("## " + config["type"].capitalize() + " configurations\n")
     rows = parse_config(config)
     write_rows(rows, config)
 

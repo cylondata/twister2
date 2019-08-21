@@ -1,5 +1,6 @@
 # Twister2 Configurations
-## Common Checkpoint Configurations
+## Common configurations
+### Common Checkpoint Configurations
 
 
 
@@ -18,7 +19,7 @@
 **twister2.checkpointing.source.frequency**
 <table><tr><td>default</td><td>1000</td><tr><td>description</td><td>Source triggering frequency</td></table>
 
-## Common Data Configurations
+### Common Data Configurations
 
 
 
@@ -46,7 +47,7 @@
 **twister2.data.hdfs.namenode.port**
 <table><tr><td>default</td><td>"9000"</td><tr><td>description</td><td></td></table>
 
-## Common Network Configurations
+### Common Network Configurations
 
 
 
@@ -101,18 +102,18 @@
 **ttwister2.network.partition.ring.group.workers**
 <table><tr><td>default</td><td>2</td><tr><td>description</td><td>ring group worker</td></table>
 
-## Common Resource Configurations
+### Common Resource Configurations
 
 
 
 **twister2.client.debug**
 <table><tr><td>default</td><td>'-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'</td><tr><td>description</td><td>use this property to debug the client submitting the job</td></table>
 
-## Common Core Configurations
+### Common Core Configurations
 
 
 
-### Twister2 Job Master related settings
+#### Twister2 Job Master related settings
 **twister2.job.master.used**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td></td></table>
 
@@ -125,42 +126,42 @@
 **twister2.worker.to.job.master.response.wait.duration**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td></td></table>
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Common thread pool config parameters
+#### Common thread pool config parameters
 **twister2.common.thread.pool.threads**
 <table><tr><td>default</td><td>2</td><tr><td>description</td><td>Maximum number of threads to spawn on demand</td></table>
 
 **twister2.common.thread.pool.keepalive**
 <table><tr><td>default</td><td>10</td><tr><td>description</td><td>maximum time that excess idle threads will wait for new tasks before terminating</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://localhost:8080"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></table>
 
-## Common Task Configurations
+### Common Task Configurations
 
 
 
-### Task Scheduler Related Configurations
+#### Task Scheduler Related Configurations
 **twister2.taskscheduler.streaming**
 <table><tr><td>default</td><td>"roundrobin"</td><tr><td>description</td><td>Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"<br/>By default it is roundrobin mode.</td></table>
 
 **twister2.taskscheduler.streaming.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"</td><tr><td>description</td><td>Task Scheduler class for the round robin streaming task scheduler</td></table>
 
-**#twister2.taskscheduler.streaming.class**
+**twister2.taskscheduler.streaming.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"</td><tr><td>description</td><td>Task Scheduler for the Data Locality Aware Streaming Task Scheduler</td></table>
 
-**#twister2.taskscheduler.streaming.class**
+**twister2.taskscheduler.streaming.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"</td><tr><td>description</td><td>Task Scheduler for the FirstFit Streaming Task Scheduler</td></table>
 
-**#twister2.taskscheduler.streaming.class**
+**twister2.taskscheduler.streaming.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"</td><tr><td>description</td><td>Task Scheduler for the userDefined Streaming Task Scheduler</td></table>
 
 **twister2.taskscheduler.batch**
@@ -169,10 +170,10 @@
 **twister2.taskscheduler.batch.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"</td><tr><td>description</td><td>Task Scheduler class for the round robin batch task scheduler</td></table>
 
-**#twister2.taskscheduler.batch.class**
+**twister2.taskscheduler.batch.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"</td><tr><td>description</td><td>Task Scheduler for the Data Locality Aware Batch Task Scheduler</td></table>
 
-**#twister2.taskscheduler.batch.class**
+**twister2.taskscheduler.batch.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"</td><tr><td>description</td><td>Task Scheduler for the userDefined Batch Task Scheduler</td></table>
 
 **twister2.taskscheduler.task.instances**
@@ -188,7 +189,7 @@
 <table><tr><td>default</td><td>2.0</td><tr><td>description</td><td>CPU value to be allocated to each task instancetwister2.task.parallelism</td></table>
 
 **twister2.taskscheduler.container.instance.ram**
-<table><tr><td>default</td><td>4096.0</td><tr><td>description</td><td>Ram value to be allocated to each container</td></table>
+<table><tr><td>default</td><td>4096.0</td><tr><td>description</td><td>Default Container Instance Values<br/>Ram value to be allocated to each container</td></table>
 
 **twister2.taskscheduler.container.instance.disk**
 <table><tr><td>default</td><td>8000.0</td><tr><td>description</td><td>Disk value to be allocated to each container</td></table>
@@ -235,22 +236,23 @@
 **twister2.exector.instance.queue.low.watermark**
 <table><tr><td>default</td><td>10000</td><tr><td>description</td><td>number of tuples executed at a single pass</td></table>
 
-## Standalone Checkpoint Configurations
+## Standalone configurations
+### Standalone Checkpoint Configurations
 
 
 
-## Standalone Data Configurations
+### Standalone Data Configurations
 
 
 
-## Standalone Network Configurations
+### Standalone Network Configurations
 
 
 
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"</td><tr><td>description</td><td></td></table>
 
-## Standalone Resource Configurations
+### Standalone Resource Configurations
 
 
 
@@ -299,11 +301,11 @@
 **twister2.uploader.download.method**
 <table><tr><td>default</td><td>"HTTP"</td><tr><td>description</td><td>this is the method that workers use to download the core and job packages<br/>it could be  HTTP, HDFS, ..</td></table>
 
-## Standalone Core Configurations
+### Standalone Core Configurations
 
 
 
-### Twister2 Job Master related settings
+#### Twister2 Job Master related settings
 **twister2.job.master.used**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td></td></table>
 
@@ -316,44 +318,45 @@
 **twister2.worker.to.job.master.response.wait.duration**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td></td></table>
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Common thread pool config parameters
+#### Common thread pool config parameters
 **twister2.common.thread.pool.threads**
 <table><tr><td>default</td><td>2</td><tr><td>description</td><td>Maximum number of threads to spawn on demand</td></table>
 
 **twister2.common.thread.pool.keepalive**
 <table><tr><td>default</td><td>10</td><tr><td>description</td><td>maximum time that excess idle threads will wait for new tasks before terminating</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://localhost:8080"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></table>
 
-## Standalone Task Configurations
+### Standalone Task Configurations
 
 
 
-## Slurm Checkpoint Configurations
+## Slurm configurations
+### Slurm Checkpoint Configurations
 
 
 
-## Slurm Data Configurations
+### Slurm Data Configurations
 
 
 
-## Slurm Network Configurations
+### Slurm Network Configurations
 
 
 
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.mpi.TWSMPIChannel"</td><tr><td>description</td><td></td></table>
 
-## Slurm Resource Configurations
+### Slurm Resource Configurations
 
 
 
@@ -390,41 +393,42 @@
 **twister2.class.uploader**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"</td><tr><td>description</td><td>the uplaoder class</td></table>
 
-## Slurm Core Configurations
+### Slurm Core Configurations
 
 
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://localhost:8080"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></table>
 
-## Slurm Task Configurations
+### Slurm Task Configurations
 
 
 
-## Aurora Checkpoint Configurations
+## Aurora configurations
+### Aurora Checkpoint Configurations
 
 
 
-## Aurora Data Configurations
+### Aurora Data Configurations
 
 
 
-## Aurora Network Configurations
+### Aurora Network Configurations
 
 
 
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><tr><td>description</td><td></td></table>
 
-## Aurora Resource Configurations
+### Aurora Resource Configurations
 
 
 
@@ -443,7 +447,7 @@
 **twister2.class.aurora.worker**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter"</td><tr><td>description</td><td>the Aurora worker class</td></table>
 
-### ZooKeeper related config parameters
+#### ZooKeeper related config parameters
 **twister2.zookeeper.server.addresses**
 <table><tr><td>default</td><td>"149.165.150.81:2181"</td><tr><td>options</td><td>"127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"</td><tr><td>description</td><td></td></table>
 
@@ -453,7 +457,7 @@
 **twister2.zookeeper.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>if the workers want to wait for all others to join a job, max wait time in ms</td></table>
 
-### Uploader configuration
+#### Uploader configuration
 **twister2.uploader.directory**
 <table><tr><td>default</td><td>"/root/.twister2/repository/"</td><tr><td>description</td><td>the directory where the file will be uploaded, make sure the user has the necessary permissions<br/>to upload the file here.</td></table>
 
@@ -472,7 +476,7 @@
 **twister2.uploader.ssh.command.connection**
 <table><tr><td>default</td><td>"root@149.165.150.81"</td><tr><td>description</td><td>The ssh connection string sets the remote user name and host used by the uploader.</td></table>
 
-### Client configuration parameters for submission of twister2 jobs
+#### Client configuration parameters for submission of twister2 jobs
 **twister2.resource.scheduler.aurora.script**
 <table><tr><td>default</td><td>"${TWISTER2_CONF}/twister2.aurora"</td><tr><td>description</td><td>aurora python script to submit a job to Aurora Scheduler<br/>its default value is defined as the following in the code<br/>can be reset from this config file if desired</td></table>
 
@@ -500,48 +504,49 @@
 **twister2.worker.instances**
 <table><tr><td>default</td><td>6</td><tr><td>description</td><td>number of worker instances</td></table>
 
-## Aurora Core Configurations
+### Aurora Core Configurations
 
 
 
-## Aurora Task Configurations
+### Aurora Task Configurations
 
 
 
-## Kubernetes Checkpoint Configurations
+## Kubernetes configurations
+### Kubernetes Checkpoint Configurations
 
 
 
-## Kubernetes Data Configurations
+### Kubernetes Data Configurations
 
 
 
-## Kubernetes Network Configurations
+### Kubernetes Network Configurations
 
 
 
-### OpenMPI settings
+#### OpenMPI settings
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><tr><td>description</td><td>If the channel is set as TWSMPIChannel,<br/>the job is started as OpenMPI job<br/>Otherwise, it is a regular twister2 job. OpenMPI is not started in this case.</td></table>
 
 **kubernetes.secret.name**
 <table><tr><td>default</td><td>"twister2-openmpi-ssh-key"</td><tr><td>description</td><td>A Secret object must be present in Kubernetes master<br/>Its name must be specified here</td></table>
 
-### Worker port settings
+#### Worker port settings
 **kubernetes.worker.base.port**
 <table><tr><td>default</td><td>9000</td><tr><td>description</td><td>the base port number workers will use internally to communicate with each other<br/>when there are multiple workers in a pod, first worker will get this port number,<br/>second worker will get the next port, and so on.<br/>default value is 9000,</td></table>
 
 **kubernetes.worker.transport.protocol**
 <table><tr><td>default</td><td>"TCP"</td><tr><td>description</td><td>transport protocol for the worker. TCP or UDP<br/>by default, it is TCP<br/>set if it is UDP</td></table>
 
-### NodePort service parameters
+#### NodePort service parameters
 **kubernetes.node.port.service.requested**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td>if the job requests NodePort service, it must be true<br/>NodePort service makes the workers accessibale from external entities (outside of the cluster)<br/>by default, its value is false</td></table>
 
 **by default Kubernetes uses the range**
 <table><tr><td>default</td><td>30000-32767 for NodePorts</td><tr><td>options</td><td>30003</td><tr><td>description</td><td>if NodePort value is 0, it is automatically assigned a value<br/>the user can request a specific port value in the NodePort range by setting the value below<br/>Kubernetes admins can change this range</td></table>
 
-## Kubernetes Resource Configurations
+### Kubernetes Resource Configurations
 
 
 
@@ -557,7 +562,7 @@
 **kubernetes.image.pull.policy**
 <table><tr><td>default</td><td>"Always"</td><tr><td>description</td><td>image pull policy, by default is IfNotPresent<br/>it could also be Always</td></table>
 
-### Kubernetes Mapping and Binding parameters<br/>Statically bind workers to CPUs<br/>Workers do not move from the CPU they are started during computation<br/>twister2.cpu_per_container has to be an integer<br/>by default, its value is false
+#### Kubernetes Mapping and Binding parameters<br/>Statically bind workers to CPUs<br/>Workers do not move from the CPU they are started during computation<br/>twister2.cpu_per_container has to be an integer<br/>by default, its value is false
 **kubernetes.worker.to.node.mapping**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td>kubernetes can map workers to nodes as specified by the user<br/>default value is false</td></table>
 
@@ -573,21 +578,21 @@
 **Valid values**
 <table><tr><td>default</td><td>all-same-node, all-separate-nodes, none</td><tr><td>options</td><td>"all-same-node"</td><tr><td>description</td><td>uniform worker mapping<br/>default value is none</td></table>
 
-### ZooKeeper related config parameters
+#### ZooKeeper related config parameters
 **twister2.zookeeper.server.addresses**
 <table><tr><td>default</td><td>"ip:port"</td><tr><td>options</td><td>"127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"</td><tr><td>description</td><td></td></table>
 
 **#twister2.zookeeper.root.node.path**
 <table><tr><td>default</td><td>"/twister2"</td><tr><td>description</td><td>the root node path of this job on ZooKeeper<br/>the default is "/twister2"</td></table>
 
-### When a job is submitted, the job package needs to be transferred to worker pods<br/>Two upload methods are provided:<br/>  a) Job Package Transfer Using kubectl file copy (default)<br/>  b) Job Package Transfer Through a Web Server<br/>Following two configuration parameters control the uploading with the first method<br/>when the submitting client uploads the job package directly to pods using kubectl copy
+#### When a job is submitted, the job package needs to be transferred to worker pods<br/>Two upload methods are provided:<br/>  a) Job Package Transfer Using kubectl file copy (default)<br/>  b) Job Package Transfer Through a Web Server<br/>Following two configuration parameters control the uploading with the first method<br/>when the submitting client uploads the job package directly to pods using kubectl copy
 **twister2.kubernetes.client.to.pods.uploading**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td>if the value of this parameter is true,<br/>the job package is transferred from submitting client to pods directly<br/>if it is false, the job package will be transferred to pods through the upload web server<br/>default value is true</td></table>
 
 **twister2.kubernetes.uploader.watch.pods.starting**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td>When the job package is transferred from submitting client to pods directly,<br/>upload attempts can either start after watching pods or immediately when StatefulSets are created<br/>watching pods before starting file upload attempts is more accurate<br/>it may be slightly slower to transfer the job package by watching pods though<br/>default value is true</td></table>
 
-### Following configuration parameters sets up the upload web server,<br/>when the job package is transferred through a webserver<br/>Workers download the job package from this web server
+#### Following configuration parameters sets up the upload web server,<br/>when the job package is transferred through a webserver<br/>Workers download the job package from this web server
 **twister2.uploader.directory**
 <table><tr><td>default</td><td>"/absolute/path/to/uploder/directory/"</td><tr><td>description</td><td>the directory where the job package file will be uploaded,<br/>make sure the user has the necessary permissions to upload the file there.<br/>full directory path to upload the job package with scp</td></table>
 
@@ -615,7 +620,7 @@
 **twister2.uploader.download.method**
 <table><tr><td>default</td><td>"HTTP"</td><tr><td>description</td><td>this is the method that workers use to download the core and job packages<br/>it could be  HTTP, HDFS, ..</td></table>
 
-### Job configuration parameters for submission of twister2 jobs
+#### Job configuration parameters for submission of twister2 jobs
 **twister2.job.name**
 <table><tr><td>default</td><td>"t2-job"</td><tr><td>description</td><td>twister2 job name</td></table>
 
@@ -634,8 +639,8 @@
 **twister2.worker.additional.ports**
 <table><tr><td>default</td><td>["port1", "port2", "port3"]</td><tr><td>description</td><td>by default each worker has one port<br/>additional ports can be requested for all workers in a job<br/>please provide the requested port names as a list</td></table>
 
-### Kubernetes related settings<br/>namespace to use in kubernetes<br/>default value is "default"
-### Node locations related settings<br/>If this parameter is set as true,<br/>Twister2 will use the below lists for node locations:<br/>  kubernetes.datacenters.list<br/>  kubernetes.racks.list<br/>Otherwise, it will try to get these information by querying Kubernetes Master<br/>It will use below two labels when querying node locations<br/>For this to work, submitting client has to have admin privileges
+#### Kubernetes related settings<br/>namespace to use in kubernetes<br/>default value is "default"
+#### Node locations related settings<br/>If this parameter is set as true,<br/>Twister2 will use the below lists for node locations:<br/>  kubernetes.datacenters.list<br/>  kubernetes.racks.list<br/>Otherwise, it will try to get these information by querying Kubernetes Master<br/>It will use below two labels when querying node locations<br/>For this to work, submitting client has to have admin privileges
 **rack.labey.key**
 <table><tr><td>default</td><td>rack</td><tr><td>description</td><td>rack label key for Kubernetes nodes in a cluster<br/>each rack should have a unique label<br/>all nodes in a rack should share this label<br/>Twister2 workers can be scheduled by using these label values<br/>Better data locality can be achieved<br/>no default value is specified</td></table>
 
@@ -648,7 +653,7 @@
 **  - green-rack**
 <table><tr><td>default</td><td>['node11.ip', 'node12.ip', 'node13.ip']</td><tr><td>description</td><td>Rack list with node IPs in them</td></table>
 
-### persistent volume related settings
+#### persistent volume related settings
 **persistent.volume.per.worker**
 <table><tr><td>default</td><td>0.0</td><tr><td>description</td><td>persistent volume size per worker in GB as double<br/>default value is 0.0Gi<br/>set this value to zero, if you have not persistent disk support<br/>when this value is zero, twister2 will not try to set up persistent storage for this job</td></table>
 
@@ -658,11 +663,11 @@
 **kubernetes.storage.access.mode**
 <table><tr><td>default</td><td>"ReadWriteMany"</td><tr><td>description</td><td>persistent storage access mode.<br/>It shows the access mode for workers to access the shared persistent storage.<br/>if it is "ReadWriteMany", many workers can read and write<br/>https://kubernetes.io/docs/concepts/storage/persistent-volumes</td></table>
 
-## Kubernetes Core Configurations
+### Kubernetes Core Configurations
 
 
 
-### Logging related settings<br/>for Twister2 workers
+#### Logging related settings<br/>for Twister2 workers
 **twister2.logging.level**
 <table><tr><td>default</td><td>"INFO"</td><tr><td>description</td><td>default value is INFO</td></table>
 
@@ -678,7 +683,7 @@
 **twister2.logging.maximum.files**
 <table><tr><td>default</td><td>5</td><tr><td>description</td><td>The maximum number of log files for each worker</td></table>
 
-### Twister2 Job Master related settings
+#### Twister2 Job Master related settings
 **twister2.job.master.runs.in.client**
 <table><tr><td>default</td><td>false</td><tr><td>description</td><td>if true, the job master runs in the submitting client<br/>if false, job master runs as a separate process in the cluster <br/>by default, it is true<br/>when the job master runs in the submitting client,<br/>this client has to be submitting the job from a machine in the cluster<br/>getLocalHost must return a reachable IP address to the job master</td></table>
 
@@ -706,37 +711,38 @@
 **twister2.job.master.ram**
 <table><tr><td>default</td><td>1024</td><tr><td>description</td><td>twister2 job master RAM request in MB<br/>default value is 1024 MB</td></table>
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://twister2-dashboard.default.svc.cluster.local"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard<br/>if dashboard is running as a statefulset in the cluster</td></table>
 
-## Kubernetes Task Configurations
+### Kubernetes Task Configurations
 
 
 
-## Mesos Checkpoint Configurations
+## Mesos configurations
+### Mesos Checkpoint Configurations
 
 
 
-## Mesos Data Configurations
+### Mesos Data Configurations
 
 
 
-## Mesos Network Configurations
+### Mesos Network Configurations
 
 
 
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><tr><td>description</td><td></td></table>
 
-## Mesos Resource Configurations
+### Mesos Resource Configurations
 
 
 
@@ -788,7 +794,7 @@
 **twister2.class.mesos.worker**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"</td><tr><td>description</td><td>the Mesos worker class</td></table>
 
-### ZooKeeper related config parameters
+#### ZooKeeper related config parameters
 **twister2.zookeeper.server.addresses**
 <table><tr><td>default</td><td>"localhost:2181"</td><tr><td>options</td><td>"127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"</td><tr><td>description</td><td></td></table>
 
@@ -822,7 +828,7 @@
 **twister2.HTTP.fetch.uri**
 <table><tr><td>default</td><td>"http://149.165.150.81:8082"</td><tr><td>description</td><td>HTTP fetch uri</td></table>
 
-### Client configuration parameters for submission of twister2 jobs
+#### Client configuration parameters for submission of twister2 jobs
 **twister2.resource.scheduler.mesos.cluster**
 <table><tr><td>default</td><td>"example"</td><tr><td>description</td><td>cluster name mesos scheduler runs in</td></table>
 
@@ -874,11 +880,11 @@
 **  - blue-rack**
 <table><tr><td>default</td><td>['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]</td><tr><td>description</td><td>Rack list with node IPs in them</td></table>
 
-## Mesos Core Configurations
+### Mesos Core Configurations
 
 
 
-### Logging related settings for Twister2 workers
+#### Logging related settings for Twister2 workers
 **twister2.logging.level**
 <table><tr><td>default</td><td>"INFO"</td><tr><td>description</td><td>default value is INFO</td></table>
 
@@ -894,7 +900,7 @@
 **twister2.logging.maximum.files**
 <table><tr><td>default</td><td>5</td><tr><td>description</td><td>The maximum number of log files for each worker</td></table>
 
-### Twister2 Job Master related settings
+#### Twister2 Job Master related settings
 **twister2.job.master.runs.in.client**
 <table><tr><td>default</td><td>false</td><tr><td>description</td><td>if true, the job master runs in the submitting client<br/>if false, job master runs as a separate process in the cluster<br/>by default, it is true<br/>when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster</td></table>
 
@@ -925,37 +931,38 @@
 **twister2.job.master.ip**
 <table><tr><td>default</td><td>"149.165.150.81"</td><tr><td>description</td><td></td></table>
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>100000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://localhost:8080"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></table>
 
-## Mesos Task Configurations
+### Mesos Task Configurations
 
 
 
-## Nomad Checkpoint Configurations
+## Nomad configurations
+### Nomad Checkpoint Configurations
 
 
 
-## Nomad Data Configurations
+### Nomad Data Configurations
 
 
 
-## Nomad Network Configurations
+### Nomad Network Configurations
 
 
 
 **twister2.network.channel.class**
 <table><tr><td>default</td><td>"edu.iu.dsc.tws.comms.tcp.TWSTCPChannel"</td><tr><td>description</td><td></td></table>
 
-## Nomad Resource Configurations
+### Nomad Resource Configurations
 
 
 
@@ -1019,7 +1026,7 @@
 **twister2.uploader.download.method**
 <table><tr><td>default</td><td>"LOCAL"</td><tr><td>description</td><td>this is the method that workers use to download the core and job packages<br/>it could be  LOCAL,  HTTP, HDFS, ..</td></table>
 
-### client related configurations for job submit
+#### client related configurations for job submit
 **nfs.server.address**
 <table><tr><td>default</td><td>"localhost"</td><tr><td>description</td><td>nfs server address</td></table>
 
@@ -1050,11 +1057,11 @@
 **twister2.worker_port**
 <table><tr><td>default</td><td>"31000"</td><tr><td>description</td><td>worker port</td></table>
 
-## Nomad Core Configurations
+### Nomad Core Configurations
 
 
 
-### Logging related settings<br/>for Twister2 workers
+#### Logging related settings<br/>for Twister2 workers
 **twister2.logging.level**
 <table><tr><td>default</td><td>"INFO"</td><tr><td>description</td><td>logging level, FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE</td></table>
 
@@ -1073,7 +1080,7 @@
 **twister2.logging.sandbox.logging**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td></td></table>
 
-### Twister2 Job Master related settings
+#### Twister2 Job Master related settings
 **twister2.job.master.runs.in.client**
 <table><tr><td>default</td><td>true</td><tr><td>description</td><td>if true, the job master runs in the submitting client<br/>if false, job master runs as a separate process in the cluster<br/>by default, it is true<br/>when the job master runs in the submitting client, this client has to be submitting the job from a machine in the cluster</td></table>
 
@@ -1104,18 +1111,18 @@
 **twister2.job.master.ip**
 <table><tr><td>default</td><td>"localhost"</td><tr><td>description</td><td>the job master ip to be used, this is used only in client based masters</td></table>
 
-### WorkerController related config parameters
+#### WorkerController related config parameters
 **twister2.worker.controller.max.wait.time.for.all.workers.to.join**
 <table><tr><td>default</td><td>1000000</td><tr><td>description</td><td>amount of timeout for all workers to join the job<br/>in milli seconds</td></table>
 
 **twister2.worker.controller.max.wait.time.on.barrier**
 <table><tr><td>default</td><td>1000000</td><tr><td>description</td><td>amount of timeout on barriers for all workers to arrive<br/>in milli seconds</td></table>
 
-### Dashboard related settings
+#### Dashboard related settings
 **twister2.dashboard.host**
 <table><tr><td>default</td><td>"http://localhost:8080"</td><tr><td>description</td><td>Dashboard server host address and port<br/>if this parameter is not specified, then job master will not try to connect to Dashboard</td></table>
 
-## Nomad Task Configurations
+### Nomad Task Configurations
 
 
 
