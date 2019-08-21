@@ -54,35 +54,35 @@ bazel test --config=ubuntu //twister2/comms/tests/java:BinaryTreeTest
 
 ### Compiling OpenMPI
 
-When you compile Twister2 it will automatically download and compile OpenMPI 3.1.2 with it. If you don't like this version of OpenMPI and wants to use your own version, you can compile OpenMPI using following instructions.
+When you compile Twister2 it will automatically download and compile OpenMPI 4.0.1 with it. If you don't like this version of OpenMPI and wants to use your own version, you can compile OpenMPI using following instructions.
 
-* We recommend using `OpenMPI 3.1.2`
-* Download OpenMPI 3.0.0 from [https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz](https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.2.tar.gz)
-* Extract the archive to a folder named `openmpi-3.1.2`
+* We recommend using `OpenMPI 4.0.1`
+* Download OpenMPI 4.0.1 from [https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz](https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz)
+* Extract the archive to a folder named `openmpi-4.0.1`
 * Also create a directory named `build` in some location. We will use this to install OpenMPI
 * Set the following environment variables
 
   ```text
   BUILD=<path-to-build-directory>
-  OMPI_312=<path-to-openmpi-3.1.2-directory>
+  OMPI_401=<path-to-openmpi-4.0.1-directory>
   PATH=$BUILD/bin:$PATH
   LD_LIBRARY_PATH=$BUILD/lib:$LD_LIBRARY_PATH
-  export BUILD OMPI_312 PATH LD_LIBRARY_PATH
+  export BUILD OMPI_401 PATH LD_LIBRARY_PATH
   ```
 
-* The instructions to build OpenMPI depend on the platform. Therefore, we highly recommend looking into the `$OMPI_1101/INSTALL` file. Platform specific build files are available in `$OMPI_1101/contrib/platform` directory.
+* The instructions to build OpenMPI depend on the platform. Therefore, we highly recommend looking into the `$OMPI_401/INSTALL` file. Platform specific build files are available in `$OMPI_401/contrib/platform` directory.
 * In general, please specify `--prefix=$BUILD` and `--enable-mpi-java` as arguments to `configure` script. If Infiniband is available \(highly recommended\) specify `--with-verbs=<path-to-verbs-installation>`. Usually, the path to verbs installation is `/usr`. In summary, the following commands will build OpenMPI for a Linux system.
 
   ```text
-  cd $OMPI_312
+  cd $OMPI_401
   ./configure --prefix=$BUILD --enable-mpi-java
   make -j 8;make install
   ```
 
-* If everything goes well `mpirun --version` will show `mpirun (Open MPI) 3.1.2`. Execute the following command to instal `$OMPI_312/ompi/mpi/java/java/mpi.jar` as a Maven artifact.
+* If everything goes well `mpirun --version` will show `mpirun (Open MPI) 4.0.1`. Execute the following command to instal `$OMPI_401/ompi/mpi/java/java/mpi.jar` as a Maven artifact.
 
  ```text
-  mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_312/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=3.1.2
+  mvn install:install-file -DcreateChecksum=true -Dpackaging=jar -Dfile=$OMPI_401/ompi/mpi/java/java/mpi.jar -DgroupId=ompi -DartifactId=ompijavabinding -Dversion=4.0.1
  ```
 ### Generating Maven Artifacts
 
