@@ -12,8 +12,7 @@ descriptions = {
 
 doc_path = "docs/docs/configurations/configurations.md"
 md_file = open(doc_path, "w")
-md_file.write("---\nid: configurations\ntitle: Configurations\nsidebar_label: Configurations\n---\n")
-md_file.write("# Twister2 Configurations\n")
+md_file.write("---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
 
 for mode in modes:
     for file in common_files:

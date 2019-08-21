@@ -1,9 +1,8 @@
 ---
 id: configurations
-title: Configurations
+title: Twister2 Configurations
 sidebar_label: Configurations
 ---
-# Twister2 Configurations
 ## Common configurations
 ### Common Checkpoint Configurations
 
