@@ -1,48 +1,28 @@
 import re, os
 
-configs = {
-
-    # AURORA
-    # "aurora_client": {
-    #     "title": "Aurora Client Configuration",
-    #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/aurora/resource.yaml",
-    #     "doc": "docs/configurations/aurora/resource.md"
-    # },
-
-    # K8s
-    # "kubernetes_client": {
-    #     "title": "Kubernetes Client Configuration",
-    #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/kubernetes/resource.yaml",
-    #     "doc": "docs/configurations/kubernetes/resource.md"
-    # },
-
-    # mesos
-    # "mesos_client": {
-    #     "title": "Mesos Client Configuration",
-    #     "description": "",
-    #     "yml": "twister2/config/src/yaml/conf/mesos/resource.yaml",
-    #     "doc": "docs/configurations/mesos/resource.md"
-    # },
-}
+configs = []
 
 # Common config files definitions will be generated here. Please add other configs to above dictionary
-modes = ["standalone", "slurm", "aurora", "kubernetes", "mesos", "nomad"]
-common_files = ["data", "network", "resource", "system", "task", "uploader"]
+modes = ["common", "standalone", "slurm", "aurora", "kubernetes", "mesos", "nomad"]
+common_files = ["checkpoint", "data", "network", "resource", "core", "task"]
 
 descriptions = {
     "standalone_data": ""  # example
 }
 
+doc_path = "docs/configurations/configurations.md"
+md_file = open(doc_path, "w")
+md_file.write("# Twister2 Configurations\n")
+
 for mode in modes:
     for file in common_files:
         key = mode + "_" + file
-        configs[key] = {}
-        configs[key]["title"] = mode.capitalize() + " " + file.capitalize() + " Configuration"
-        configs[key]["description"] = "" if not descriptions.has_key(key) else descriptions[key]
-        configs[key]["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
-        configs[key]["doc"] = "docs/configurations/" + mode + "/" + file + ".md"
+        config = {}
+        config["title"] = mode.capitalize() + " " + file.capitalize() + " Configurations"
+        config["description"] = "" if not descriptions.has_key(key) else descriptions[key]
+        config["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
+        configs.append(config)
+        # configs[key]["doc"] = "docs/configurations/" + mode + "/" + file + ".md"
 
 
 # End of common configuration generation
@@ -65,7 +45,11 @@ twister2_root = os.path.join(dirname, '../../')
 
 def parse_config(config_dic):
     rows = []
-    yml_file = os.path.join(twister2_root, config_dic["yml"]);
+    yml_file = os.path.join(twister2_root, config_dic["yml"])
+
+    if not os.path.exists(yml_file):
+        return []
+
     with open(yml_file) as f:
         content = f.readlines()
         current_row = TableRow()
@@ -99,7 +83,7 @@ def parse_config(config_dic):
 
 
 def write_rows(rows, config):
-    md = "# " + config["title"] + "\n\n"
+    md = "## " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
     for row in rows:
         if row.isTitle:
@@ -119,15 +103,12 @@ def write_rows(rows, config):
                 md += "</td>"
             md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
             md += "</table>\n\n"
-    doc_file = os.path.join(twister2_root, config["doc"])
-    doc_parent = os.path.dirname(doc_file)
-    if not os.path.exists(doc_parent):
-        os.makedirs(os.path.dirname(doc_file))
-    md_file = open(doc_file, "w")
     md_file.write(md)
-    md_file.close()
 
 
 for config in configs:
-    rows = parse_config(configs[config])
-    write_rows(rows, configs[config])
+    print(config)
+    rows = parse_config(config)
+    write_rows(rows, config)
+
+md_file.close()
