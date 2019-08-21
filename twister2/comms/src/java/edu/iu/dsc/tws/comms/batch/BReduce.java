@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.ReduceBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch Reduce Operation
@@ -56,6 +57,14 @@ public class BReduce extends BaseOperation {
                  Set<Integer> sources, int target, ReduceFunction fnc,
                  SingularReceiver rcvr, MessageType dataType) {
     this(comm, plan, sources, target, fnc, rcvr, dataType,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, ReduceFunction fnc,
+                 SingularReceiver rcvr, MessageType dataType) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(), fnc, rcvr, dataType,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -51,32 +51,27 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    );
 
     // create the communication
-    partition = new BKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    partition = new BKeyedPartition(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
         new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
-      int target = Integer.valueOf(args.get("target").toString());
+      int lowestTarget = logicalPlanBuilder.getTargets()
+          .stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.parseInt(args.get("target").toString());
       Set<Integer> keysRoutedToThis = new HashSet<>();
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
-        if (i % targets.size() == target - lowestTarget) {
+        if (i % logicalPlanBuilder.getTargets().size() == target - lowestTarget) {
           keysRoutedToThis.add(i);
         }
       }
@@ -84,7 +79,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
       List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
 
       for (Integer key : keysRoutedToThis) {
-        for (int i = 0; i < sources.size(); i++) {
+        for (int i = 0; i < logicalPlanBuilder.getSources().size(); i++) {
           expectedData.add(new Tuple<>(key, ints));
         }
       }
@@ -98,7 +93,7 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
     ));
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(), 1, tasksOfExecutor));
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new KeyedBenchWorker.MapWorker(t));

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,12 +26,12 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BJoin;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.JoinedKeyedBenchWorker;
 
 public class BDJoinExample extends JoinedKeyedBenchWorker {
 
-  private static final Logger LOG = Logger.getLogger(BKeyedPartitionExample.class.getName());
+  private static final Logger LOG = Logger.getLogger(BDJoinExample.class.getName());
 
   private BJoin join;
 
@@ -47,30 +46,24 @@ public class BDJoinExample extends JoinedKeyedBenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER,
         MessageTypes.INTEGER_ARRAY, MessageTypes.INTEGER_ARRAY,
         new JoinReceiver(), new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o), CommunicationContext.JoinType.INNER);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(), 1, tasksOfExecutor));
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new MapWorker(t));

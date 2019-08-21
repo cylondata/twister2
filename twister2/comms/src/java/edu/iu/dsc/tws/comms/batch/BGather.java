@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.MToOneTree;
 import edu.iu.dsc.tws.comms.dfw.io.gather.DGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.gather.GatherBatchPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch Gather Operation
@@ -55,6 +56,15 @@ public class BGather extends BaseOperation {
     this(comm, plan, sources, target, dataType, rcvr, shuffle,
         comm.nextEdge(), MessageSchema.noSchema());
   }
+
+  public BGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                 MessageType dataType,
+                 BulkReceiver rcvr, boolean shuffle) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(), dataType, rcvr, shuffle,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
 
   public BGather(Communicator comm, LogicalPlan plan,
                  Set<Integer> sources, int target,

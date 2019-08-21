@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Keyed Partition Operation
@@ -92,6 +93,15 @@ public class SKeyedReduce extends BaseOperation {
                       MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
                       DestinationSelector destSelector) {
     this(comm, plan, sources, targets, kType, dType, fnc, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SKeyedReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType kType,
+                      MessageType dType, ReduceFunction fnc, SingularReceiver rcvr,
+                      DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), kType, dType, fnc, rcvr, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 
