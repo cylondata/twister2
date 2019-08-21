@@ -122,8 +122,8 @@ public class KMeansWorker implements IWorker {
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
 
-    /*ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
-        centroidsTaskGraph.getGraphName());*/
+    //ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
+    //    centroidsTaskGraph.getGraphName());
 
     //Actual execution for the second taskgraph
     taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
@@ -135,7 +135,7 @@ public class KMeansWorker implements IWorker {
     long endTimeData = System.currentTimeMillis();
 
     //Perform the iterations from 0 to 'n' number of iterations
-    /*ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());*/
+    //ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
       //add the datapoints and centroids as input to the kmeanssource task.

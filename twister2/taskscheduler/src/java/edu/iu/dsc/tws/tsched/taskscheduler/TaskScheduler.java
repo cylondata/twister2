@@ -39,6 +39,8 @@ public class TaskScheduler implements ITaskScheduler {
 
   private ComputeGraph computeGraph;
 
+  private ComputeGraph[] computeGraphs;
+
   private WorkerPlan workerPlan;
 
   private String schedulingType;
@@ -77,6 +79,19 @@ public class TaskScheduler implements ITaskScheduler {
   }
 
   /**
+   * This is the base method for the task scheduler to invoke the appropriate task schedulers
+   * either "batch" or "streaming" based on the task type.
+   */
+  public Map<String, TaskSchedulePlan> schedule(WorkerPlan plan, ComputeGraph... graphs) {
+
+    this.computeGraphs = graphs;
+    this.workerPlan = plan;
+
+    Map<String, TaskSchedulePlan> schedulePlanMap = scheduleBatchGraphs();
+    return schedulePlanMap;
+  }
+
+  /**
    * This method invokes the appropriate streaming task schedulers based on the scheduling mode
    * specified in the task configuration by the user or else from the default configuration value.
    */
@@ -87,7 +102,9 @@ public class TaskScheduler implements ITaskScheduler {
     } else {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
-    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
+    if (workerId == 0) {
+      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
+    }
     return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
 
@@ -98,20 +115,35 @@ public class TaskScheduler implements ITaskScheduler {
    * @return Task Schedule Plan
    */
   private TaskSchedulePlan scheduleBatchTask() {
-
     if (config.getStringValue("SchedulingMode") != null) {
       this.schedulingType = config.getStringValue("SchedulingMode");
     } else {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
-    LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+    if (workerId == 0) {
+      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+    }
     return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
+
+  private Map<String, TaskSchedulePlan> scheduleBatchGraphs() {
+    if (config.getStringValue("SchedulingMode") != null) {
+      this.schedulingType = config.getStringValue("SchedulingMode");
+    } else {
+      this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
+    }
+    if (workerId == 0) {
+      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+    }
+    return generateTaskSchedulePlans(TaskSchedulerContext.batchTaskSchedulingClass(config));
+  }
+
 
   private TaskSchedulePlan generateTaskSchedulePlan(String className) {
     Class<?> taskSchedulerClass;
     Method method;
     TaskSchedulePlan taskSchedulePlan;
+
     try {
       taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
@@ -143,5 +175,25 @@ public class TaskScheduler implements ITaskScheduler {
       }
     }
     return taskSchedulePlan;
+  }
+
+  private Map<String, TaskSchedulePlan> generateTaskSchedulePlans(String className) {
+    Class<?> taskSchedulerClass;
+    Method method;
+    Map<String, TaskSchedulePlan> taskSchedulePlanMap;
+    try {
+      taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
+      Object newInstance = taskSchedulerClass.newInstance();
+      method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
+      method.invoke(newInstance, config);
+      method = taskSchedulerClass.getMethod("schedule",
+          new Class<?>[]{WorkerPlan.class, ComputeGraph[].class});
+      taskSchedulePlanMap = (Map<String, TaskSchedulePlan>) method.invoke(
+          newInstance, new Object[]{workerPlan, computeGraphs});
+    } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
+        | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
+      throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
+    }
+    return taskSchedulePlanMap;
   }
 }

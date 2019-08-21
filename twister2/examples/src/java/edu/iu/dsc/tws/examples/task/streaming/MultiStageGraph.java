@@ -59,6 +59,7 @@ public class MultiStageGraph implements IWorker {
     builder.setMode(OperationMode.STREAMING);
 
     ComputeGraph graph = builder.build();
+    graph.setGraphName("MultiTaskGraph");
     cEnv.getTaskExecutor().execute(graph, cEnv.getTaskExecutor().plan(graph));
   }
 
