@@ -12,7 +12,8 @@ descriptions = {
 
 doc_path = "docs/docs/configurations/configurations.md"
 md_file = open(doc_path, "w")
-md_file.write("---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
+md_file.write(
+    "---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
 
 for mode in modes:
     for file in common_files:
@@ -87,24 +88,29 @@ def write_rows(rows, config):
     md = "### " + config["title"] + "\n\n"
     md += config["description"] + "\n\n"
     rows_written = 0
+    need_header = True
     for row in rows:
         if row.isTitle:
             md += "#### " + row.description + "\n"
+            need_header = True
         else:
-            md += "**" + row.property + "**\n"
             md += "<table>"
-            md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
+
+            if need_header:
+                md += "<thead><tr><td>Name</td><td>Default</td><td>Description</td</tr></thead>"
+                need_header = False
+
+            md += "<tbody><tr>"
+            md += "<td>" + row.property + "</td>"
+            md += "<td>" + row.default_value + "</td>"
             if len(row.value_options) != 0:
-                md += "<tr><td>options</td><td>"
-                first_option = True
+                md += "<table><thead><tr><td>Options</td></tr></thead><tbody>"
                 for option in row.value_options:
-                    if not first_option:
-                        md += "<br/>"
-                    md += option
+                    md += "<tr><td>" + option + "</td></tr>"
                     first_option = False
-                md += "</td>"
-            md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
-            md += "</table>\n\n"
+                md += "</tbody></table>"
+            md += "<td>" + row.description.strip() + "</td>"
+            md += "</tbody></table>\n\n"
             rows_written = rows_written + 1
     md_file.write(md)
     if rows_written == 0:
