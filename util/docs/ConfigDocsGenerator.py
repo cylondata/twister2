@@ -107,11 +107,11 @@ def write_rows(rows, config):
 
             md += "<tbody><tr>"
             md += "<td>" + row.property + "</td>"
-            md += "<td>" + row.default_value + "</td>"
+            md += "<td>" + row.default_value.strip('\"') + "</td>"
             if len(row.value_options) != 0:
                 md += "<table><thead><tr><td>Options</td></tr></thead><tbody>"
                 for option in row.value_options:
-                    md += "<tr><td>" + option + "</td></tr>"
+                    md += "<tr><td>" + option.strip('\"') + "</td></tr>"
                     first_option = False
                 md += "</tbody></table>"
             md += "<td>" + row.description.strip() + "</td>"
