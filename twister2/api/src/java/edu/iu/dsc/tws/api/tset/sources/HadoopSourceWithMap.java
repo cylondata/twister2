@@ -30,19 +30,21 @@ import org.apache.hadoop.mapreduce.task.JobContextImpl;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 
 /**
- * A Hadoop source for reading the values. If this source is used, we need to make
- * sure the values returned by it can be used throughout the computations. The default
- * Hadoop input formatters clear the values immediately after they are returned.
+ * A Hadoop source for reading the values. The source is attached to a map function.
+ * Immediately after the record reader reads values, it passes them to map. This allows
+ * twister2 to use Hadoop built in record readers without issue.
  *
  * @param <K> Key
  * @param <V> Value
  * @param <F> InputFormat
+ * @param <I> Output
  */
-public class HadoopSource<K, V, F extends InputFormat<K, V>>
-    implements SourceFunc<Tuple<K, V>> {
+public class HadoopSourceWithMap<K, V, F extends InputFormat<K, V>, I>
+    implements SourceFunc<I> {
   /**
    * InputFormat class
    */
@@ -66,7 +68,7 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
   /**
    * The current record reader
    */
-  protected RecordReader<K, V> currentReader;
+  private RecordReader<K, V> currentReader;
 
   /**
    * The initialized InputFormat
@@ -83,9 +85,16 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
    */
   private TSetContext context;
 
-  public HadoopSource(Configuration conf, Class<F> inputClazz) {
+  /**
+   * Map function
+   */
+  private MapFunc<I, Tuple<K, V>> mapFunc;
+
+  public HadoopSourceWithMap(Configuration conf, Class<F> inputClazz,
+                             MapFunc<I, Tuple<K, V>> mapFunc) {
     this.inputClazz = inputClazz;
     this.wrappedConfiguration = new HadoopConfSerializeWrapper(conf);
+    this.mapFunc = mapFunc;
   }
 
   @Override
@@ -147,9 +156,11 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
   }
 
   @Override
-  public Tuple<K, V> next() {
+  public I next() {
     try {
-      return new Tuple<>(currentReader.getCurrentKey(), currentReader.getCurrentValue());
+      Tuple<K, V> kvTuple = new Tuple<>(currentReader.getCurrentKey(),
+          currentReader.getCurrentValue());
+      return mapFunc.map(kvTuple);
     } catch (IOException | InterruptedException e) {
       throw new RuntimeException("Failed to read the key - value", e);
     }

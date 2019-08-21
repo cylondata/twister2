@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.tset;
 
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -31,12 +33,14 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.data.utils.HdfsDataContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
-public class HadoopTSet implements IWorker {
+public class HadoopTSet implements IWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(HadoopTSet.class.getName());
   @Override
   public void execute(Config config, int workerID, IWorkerController workerController,
@@ -48,21 +52,25 @@ public class HadoopTSet implements IWorker {
     Configuration configuration = new Configuration();
 
     configuration.addResource(
-        new Path("/home/skamburu/deploy/Hadoop/hadoop-2.6.0/etc/hadoop/hdfs-site.xml"));
-    configuration.addResource(
-        new Path("/home/skamburu/deploy/Hadoop/hadoop-2.6.0/etc/hadoop/core-site.xml"));
-    configuration.addResource(
-        new Path("/home/skamburu/deploy/Hadoop/hadoop-2.6.0/etc/hadoop/yarn-site.xml"));
-    configuration.addResource(
-        new Path("/home/skamburu/deploy/Hadoop/hadoop-2.6.0/etc/hadoop/mapred-site.xml"));
-    configuration.set(TextInputFormat.INPUT_DIR, "/input");
-    SourceTSet<Tuple<LongWritable, Text>> source =
-        tSetEnv.createHadoopSource(configuration, TextInputFormat.class, 4);
+        new Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+    configuration.set(TextInputFormat.INPUT_DIR, "/input4");
+    SourceTSet<String> source =
+        tSetEnv.createHadoopSource(configuration, TextInputFormat.class, 4,
+            new MapFunc<String, Tuple<LongWritable, Text>>() {
+              @Override
+              public String map(Tuple<LongWritable, Text> input) {
+                return input.getKey().toString() + " : " + input.getValue().toString();
+              }
+            });
 
-    source.direct().forEach(new ApplyFunc<Tuple<LongWritable, Text>>() {
+    source.direct().sink(new SinkFunc<Iterator<String>>() {
       @Override
-      public void apply(Tuple<LongWritable, Text> data) {
-        LOG.info(data.getKey() + " : " + data.getValue());
+      public boolean add(Iterator<String> value) {
+        while (value.hasNext()) {
+          String next = value.next();
+          LOG.info("Received value: " + next);
+        }
+        return true;
       }
     });
   }
