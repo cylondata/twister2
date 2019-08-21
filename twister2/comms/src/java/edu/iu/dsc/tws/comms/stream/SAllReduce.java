@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.AllReduce;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming ALLReduce Operation
@@ -62,6 +63,13 @@ public class SAllReduce extends BaseOperation {
                     Set<Integer> sources, Set<Integer> targets, MessageType dataType,
                     ReduceFunction fnc, SingularReceiver rcvr) {
     this(comm, plan, sources, targets, dataType, fnc, rcvr, comm.nextEdge(),
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SAllReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                    ReduceFunction fnc, SingularReceiver rcvr) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), dataType, fnc, rcvr, comm.nextEdge(),
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

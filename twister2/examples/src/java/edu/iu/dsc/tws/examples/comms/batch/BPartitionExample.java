@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.examples.comms.batch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +25,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BPartition;
 import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -44,34 +43,32 @@ public class BPartitionExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    partition = new BPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    partition = new BPartition(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver(),
         new LoadBalanceSelector(), false);
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
-      int target = Integer.valueOf(args.get("target").toString());
+      int lowestTarget = logicalPlanBuilder.getTargets()
+          .stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.parseInt(args.get("target").toString());
 
-      int toThisFromOneSource = jobParameters.getTotalIterations() / targets.size();
-      if (jobParameters.getTotalIterations() % targets.size() > (target - lowestTarget)) {
+      int toThisFromOneSource = jobParameters.getTotalIterations()
+          / logicalPlanBuilder.getTargets().size();
+      if (jobParameters.getTotalIterations()
+          % logicalPlanBuilder.getTargets().size() > (target - lowestTarget)) {
         toThisFromOneSource++;
       }
 
       List<int[]> expectedData = new ArrayList<>();
 
-      for (int i = 0; i < toThisFromOneSource * sources.size(); i++) {
+      for (int i = 0; i < toThisFromOneSource * logicalPlanBuilder.getSources().size(); i++) {
         expectedData.add(ints);
       }
 
@@ -80,8 +77,7 @@ public class BPartitionExample extends BenchWorker {
         IntArrayComparator.getInstance()
     ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

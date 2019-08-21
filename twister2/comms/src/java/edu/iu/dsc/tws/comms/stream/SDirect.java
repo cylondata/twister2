@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.stream;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
@@ -22,6 +23,7 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 public class SDirect extends BaseOperation {
 
@@ -48,6 +50,14 @@ public class SDirect extends BaseOperation {
                  List<Integer> sources, List<Integer> targets, MessageType dataType,
                  SingularReceiver rcvr) {
     this(comm, plan, sources, targets, dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SDirect(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                 SingularReceiver rcvr) {
+    this(comm, logicalPlanBuilder.build(),
+        new ArrayList<>(logicalPlanBuilder.getSources()),
+        new ArrayList<>(logicalPlanBuilder.getTargets()),
+        dataType, rcvr, comm.nextEdge(), MessageSchema.noSchema());
   }
 
   public SDirect(Communicator comm, LogicalPlan plan,

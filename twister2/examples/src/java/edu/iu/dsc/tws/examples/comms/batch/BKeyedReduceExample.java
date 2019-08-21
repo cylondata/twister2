@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -51,24 +51,18 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
-    keyedReduce = new BKeyedReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    keyedReduce = new BKeyedReduce(workerEnv.getCommunicator(), logicalPlanBuilder,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalBulkReceiver(), MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new SimpleKeyBasedSelector());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -77,15 +71,16 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-      int lowestTarget = targets.stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
-      int target = Integer.valueOf(args.get("target").toString());
+      int lowestTarget = logicalPlanBuilder.getTargets()
+          .stream().min(Comparator.comparingInt(o -> (Integer) o)).get();
+      int target = Integer.parseInt(args.get("target").toString());
       Set<Integer> keysRoutedToThis = new HashSet<>();
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
-        if (i % targets.size() == target - lowestTarget) {
+        if (i % logicalPlanBuilder.getTargets().size() == target - lowestTarget) {
           keysRoutedToThis.add(i);
         }
       }
-      int[] reduced = GeneratorUtils.multiplyIntArray(ints, sources.size());
+      int[] reduced = GeneratorUtils.multiplyIntArray(ints, logicalPlanBuilder.getSources().size());
 
       List<Tuple<Integer, int[]>> expectedData = new ArrayList<>();
 
@@ -103,7 +98,7 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(), 1, tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

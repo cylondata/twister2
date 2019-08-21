@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Batch Join operation
@@ -123,6 +124,16 @@ public class BJoin {
                DestinationSelector destSelector, boolean shuffle,
                Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
     this(comm, plan, sources, targets, keyType, leftDataType, rightDataType,
+        rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
+        joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
+  }
+
+  public BJoin(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType keyType,
+               MessageType leftDataType, MessageType rightDataType, BulkReceiver rcvr,
+               DestinationSelector destSelector, boolean shuffle,
+               Comparator<Object> comparator, CommunicationContext.JoinType joinType) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), keyType, leftDataType, rightDataType,
         rcvr, destSelector, shuffle, comparator, comm.nextEdge(), comm.nextEdge(),
         joinType, MessageSchema.noSchema(), MessageSchema.noSchema());
   }

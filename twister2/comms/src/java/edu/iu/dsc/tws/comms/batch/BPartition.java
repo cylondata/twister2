@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Partition Operation
@@ -95,6 +96,15 @@ public class BPartition extends BaseOperation {
                     BulkReceiver rcvr,
                     DestinationSelector destSelector, boolean shuffle) {
     this(comm, plan, sources, targets, dataType, rcvr, destSelector, shuffle,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BPartition(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, MessageType dataType,
+                    BulkReceiver rcvr,
+                    DestinationSelector destSelector, boolean shuffle) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(), logicalPlanBuilder.getTargets(),
+        dataType, rcvr, destSelector, shuffle,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

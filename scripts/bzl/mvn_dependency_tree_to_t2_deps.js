@@ -105,13 +105,13 @@ let mvnDepTree = `[INFO] +- org.springframework.boot:spring-boot-starter:jar:2.1
 [INFO] +- org.apache.logging.log4j:log4j-core:jar:2.11.1:compile
 [INFO] \\- org.apache.logging.log4j:log4j-slf4j-impl:jar:2.11.1:compile`;
 
-let regex = new RegExp("[a-z\\.0-9]+:[a-z\\.0-9\\-]+:jar:[a-z\\.0-9A-Z]+", "g");
+let regex = new RegExp("[a-z\\.0-9\\-]+:[a-z\\.0-9\\-]+:jar:[a-z\\.0-9A-Z]+", "g");
 
 let groups = regex.exec(mvnDepTree);
 while (groups) {
     //console.log(groups[0]);
-    //downloadAndProcess(groups[0].replace(":jar",""))
+    downloadAndProcess(groups[0].replace(":jar",""))
     let parts = groups[0].replace(":jar", "").split(":");
-    console.log('"@' + (parts[0] + "_" + parts[1]).replace(/[:\.-]/g, "_") + '//jar');
+    //console.log('"@' + (parts[0] + "_" + parts[1]).replace(/[:\.-]/g, "_") + '//jar');
     groups = regex.exec(mvnDepTree);
 }

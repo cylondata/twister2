@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Streaming Keyed Partition Operation
@@ -66,6 +67,15 @@ public class SKeyedPartition extends BaseOperation {
                          MessageType keyType, MessageType dataType, SingularReceiver rcvr,
                          DestinationSelector destSelector) {
     this(comm, plan, sources, targets, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public SKeyedPartition(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                         MessageType keyType, MessageType dataType, SingularReceiver rcvr,
+                         DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(),
+        logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), keyType, dataType, rcvr, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.comms.batch;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,7 +23,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BReduce;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -42,20 +41,19 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    int target = noOfSourceTasks;
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    reduce = new BReduce(workerEnv.getCommunicator(), logicalPlan, sources, target,
+    reduce = new BReduce(workerEnv.getCommunicator(), logicalPlanBuilder,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -65,11 +63,12 @@ public class BReduceExample extends BenchWorker {
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> GeneratorUtils.multiplyIntArray(
-            ints, jobParameters.getTotalIterations() * sources.size()),
+            ints, jobParameters.getTotalIterations() * logicalPlanBuilder.getSources().size()),
         IntArrayComparator.getInstance());
 
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, target, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets().iterator().next(), tasksOfExecutor));
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
