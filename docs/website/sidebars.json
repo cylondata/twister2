@@ -3,10 +3,10 @@
     "Getting Started": ["introduction", "download", "quickstart"],
     "Compiling": ["compiling/compile_overview", "compiling/linux", "compiling/macos", "compiling/generate-maven"],
     "App Development": ["concepts/api_overview", "guides/developing_twister2", "concepts/worker_api", "concepts/tset_api", "concepts/task_api", "concepts/op_api", "concepts/windowing/windowing_api", "compatibility/storm"],
-    "Deployment": ["deployment/job-submit", "deployment/standalone/standalone", "deployment/docker/docker", "deployment/kubernetes/kubernetes", "deployment/mesos/mesos", "deployment/nomad/nomad", "deployment/slurm/slurm", "deployment/dashboard", "deployment/logging"],
+    "Deployment": ["deployment/job-submit", "deployment/standalone/standalone", "deployment/docker/docker", "deployment/kubernetes/kubernetes", "deployment/mesos/mesos", "deployment/nomad/nomad", "deployment/slurm/slurm", "deployment/dashboard", "deployment/logging", "configurations/configurations"],
     "Concepts": ["concepts/concepts", "concepts/distributed_runtime", "concepts/par_ops", "concepts/task-system/concept_task", "concepts/data-access/data_access"],
     "Examples": ["examples/examples", "examples/ml/ml"],
-    "Developer Resources": ["developers/debugging", "developers/devenv", "developers/faq", "developers/tests", "community/contributing", "community/mailing","configurations/configurations"],
+    "Developer Resources": ["developers/debugging", "developers/devenv", "developers/faq", "developers/tests", "community/contributing", "community/mailing"],
     "Versions": ["release/versions"],
     "Resources": ["publications"]
   }
