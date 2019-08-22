@@ -26,11 +26,13 @@ package edu.iu.dsc.tws.examples.batch.wordcount.comms;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.comms.Op;
+import edu.iu.dsc.tws.api.comms.ReduceFunction;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -39,7 +41,6 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
-import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.examples.Utils;
 
@@ -83,7 +84,18 @@ public class WordCountWorker implements IWorker {
     // create the communication
     wordAggregator = new WordAggregator();
     keyGather = new BKeyedReduce(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
+        new ReduceFunction() {
+          @Override
+          public void init(Config cfg, DataFlowOperation op, Map<Integer,
+              List<Integer>> expectedIds) {
+
+          }
+
+          @Override
+          public Object reduce(Object t1, Object t2) {
+            return (Integer) t1 + (Integer) t2;
+          }
+        },
         wordAggregator, MessageTypes.OBJECT, MessageTypes.INTEGER, new HashingSelector());
     // assign the task ids to the workers, and run them using threads
     scheduleTasks();
