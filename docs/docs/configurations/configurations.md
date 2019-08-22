@@ -1,5 +1,5 @@
 ---
-id: configurations
+id: cfgs
 title: Twister2 Configurations
 sidebar_label: Configurations
 ---
