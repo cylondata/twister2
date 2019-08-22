@@ -103,7 +103,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.streamingTaskSchedulingMode(config);
     }
     if (workerId == 0) {
-      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
+      LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "streaming task" + ")");
     }
     return generateTaskSchedulePlan(TaskSchedulerContext.streamingTaskSchedulingClass(config));
   }
@@ -121,7 +121,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
     if (workerId == 0) {
-      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+      LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
     }
     return generateTaskSchedulePlan(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
@@ -133,7 +133,7 @@ public class TaskScheduler implements ITaskScheduler {
       this.schedulingType = TaskSchedulerContext.batchTaskSchedulingMode(config);
     }
     if (workerId == 0) {
-      LOG.info("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
+      LOG.fine("Task Scheduling Type:" + schedulingType + "(" + "batch task" + ")");
     }
     return generateTaskSchedulePlans(TaskSchedulerContext.batchTaskSchedulingClass(config));
   }
