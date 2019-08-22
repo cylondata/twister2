@@ -48,7 +48,7 @@ Twister2 doesn't use a driver program as in Spark giving instance creation of ta
 similar to Apache Storm or Apache Heron. 
 
 Flink is mostly a streaming engine and it uses those capabilities to support batch applications. For example
-Flink cannot support nested iteration. Twister2 supports iterations natively and unlike in Spark where iterations happen
+Flink cannot support nested iterations. Twister2 supports iterations natively and unlike in Spark where iterations happen
 in the driver (high overhead) Twister2 iterations happens in the workers.
  
 

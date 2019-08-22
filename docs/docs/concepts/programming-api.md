@@ -11,7 +11,7 @@ highlighted in the figure below.
 
 ![Twister2 Concepts](assets/api_levels.png)
 
-## TSet API (Twister Set)
+## Data API (Based on TSets - Twister Set)
 
 This is the highest level of API supported by Twister2 at this time. If you are familiar with 
 Apache RDD API or Apache Flink API or Apache Beam API you will feel right at home with this API. It models a

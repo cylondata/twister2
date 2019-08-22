@@ -6,6 +6,8 @@ sidebar_label: Configurations
 
 A detailed description of all the configuration parameters supported by Twister2 can be found in [Twister2 Configurations](/configs).
 
+## Configuration Folder
+
 Twister2 is configured using set of YAML files. These configurations are related to different 
 components of Twister2. All the configurations can be found inside the ```conf``` folder of Twister2
 distribution. Below shows the sample structure of the configuration folder
@@ -33,6 +35,8 @@ Then it looks at deployment specific folder for configurations. One can specify 
 ```common``` folder as well as deployment specific folder. The configurations read from the deployment 
 specific folder takes precedent over ```common``` configurations. If the same parameter is specifed in two files under the same 
 folder the order is not specified.
+
+## Configuration Files
 
 In ```common``` and deployment specific folders we can find the following files.  
 
