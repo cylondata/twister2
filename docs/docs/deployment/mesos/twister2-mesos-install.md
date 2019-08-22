@@ -1,4 +1,4 @@
-**Twister2 Mesos Installation**
+# Twister2 Mesos Installation
 
 In order to use Mesos, you have to install it on the machines that you
 want to use. One of the nodes will be the Mesos master and the others
