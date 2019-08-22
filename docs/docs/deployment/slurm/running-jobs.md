@@ -4,8 +4,6 @@ title: Slurm
 sidebar_label: Slurm
 ---
 
-# Slurm
-
 The Slurm mode of deployment is suitable for HPC clusters where Slurm is installed.
 
 ## Requirements

@@ -4,8 +4,6 @@ title: Docker
 sidebar_label: Docker
 ---
 
-# Standalone Docker Image
-
 Standalone docker image contains twister2 source code and prebuilt twister2. Examples can be easily run using this image.
 
 We assume that docker is already installed on your machine.
