@@ -10,7 +10,7 @@ In order to run twister2 jobs you should have a running Mesos cluster.
 
 **Running HelloWorld Example**
 
-Please first familiarize yourself with [HelloWorld job](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/quickstart.md).
+Please first familiarize yourself with [HelloWorld job](../../quickstart.md)
 You can submit jobs to Mesos cluster by using twister2 executable:
 
 ```bash
@@ -36,8 +36,7 @@ is on maser ip:5050) or persistent logs. The workers in HelloWorld job
 prints a log message and sleeps 1 minutes before exiting.
 
 You can view the log files in persistent storage if persistent storage is
-enabled. Details can be found here on [installation
-document](https://github.com/DSC-SPIDAL/twister2/blob/master/docs/deployment/mesos/twister2-mesos-install.md).
+enabled. Further details of the Mesos installation could be found below. 
 
 **Terminating a Running Job**
 
