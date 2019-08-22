@@ -8,7 +8,7 @@ twister2.directory.core-package: "/root/.twister2/repository/twister2-core/"
 twister2.directory.sandbox.java.home: "${JAVA_HOME}"
 
 # The URI of Mesos Master
-#twister2.mesos.master.uri: "149.165.150.81:5050"     #######don't forget to uncomment when pushing####################
+# twister2.mesos.master.uri: "149.165.150.81:5050"
 
 # mesos framework name
 twister2.mesos.framework.name: "Twister2 framework"
