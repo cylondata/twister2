@@ -52,8 +52,6 @@ import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler;
-import edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 /**
@@ -120,18 +118,11 @@ public class TaskExecutor {
    */
   public ExecutionPlan plan(ComputeGraph graph) {
 
-    RoundRobinTaskScheduler roundRobinTaskScheduler = new RoundRobinTaskScheduler();
-    roundRobinTaskScheduler.initialize(config);
-
     TaskScheduler taskScheduler = new TaskScheduler();
     taskScheduler.initialize(config);
 
-    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
-    batchTaskScheduler.initialize(config);
-
     WorkerPlan workerPlan = createWorkerPlan();
-    TaskSchedulePlan taskSchedulePlan = roundRobinTaskScheduler.schedule(graph, workerPlan);
-    //TaskSchedulePlan taskSchedulePlan = batchTaskScheduler.schedule(graph, workerPlan);
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
 
     ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
         workerID, workerInfoList, communicator, this.checkpointingClient);
@@ -143,12 +134,11 @@ public class TaskExecutor {
 
     WorkerPlan workerPlan = createWorkerPlan();
 
-    BatchTaskScheduler batchTaskScheduler = new BatchTaskScheduler();
-    batchTaskScheduler.initialize(config);
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
+    Map<String, TaskSchedulePlan> schedulePlanMap = taskScheduler.schedule(workerPlan, graph);
 
-    Map<String, TaskSchedulePlan> schedulePlanMap = batchTaskScheduler.schedule(workerPlan, graph);
     Map<String, ExecutionPlan> executionPlanMap = new LinkedHashMap<>();
-
     for (ComputeGraph aGraph : graph) {
       TaskSchedulePlan taskSchedulePlan = schedulePlanMap.get(aGraph.getGraphName());
       ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(

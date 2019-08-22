@@ -145,7 +145,11 @@ scheduleStreamingTask()
 
 scheduleBatchTask()
 
+scheduleBatchGraphs()
+
 generateTaskSchedulePlan(String classname)
+
+Map<String, TaskSchedulePlan> generateTaskSchedulePlans(String className)
 ```
 
 The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePlan with the scheduling 
@@ -164,9 +168,13 @@ container id, task instance plan, required and scheduled resource of the contain
 plan holds the jobid or the taskgraph id and the container plan. The task schedule plan list is mainly 
 responsible for holding the taskschedule of the batch tasks.
 
-\`\`bash message Resource { double availableCPU = 1; double availableMemory = 2; double availableDisk = 3; }
-
 ```text
+message Resource { 
+   double availableCPU = 1; 
+   double availableMemory = 2; 
+   double availableDisk = 3; 
+}
+
 message TaskInstancePlan {
    int32 taskid = 1;
    string taskname = 2;
@@ -192,8 +200,6 @@ message TaskSchedulePlanList {
 }
 ```
 
-\`\`
-
 ### YAML file
 
 The task scheduler has task.yaml in the config directory. The task scheduler mode represents either 
@@ -206,7 +212,6 @@ the streaming or batch task.The task scheduler dynamically loads the respective 
 task schedulers based on the configuration values specified in the task.yaml.
 
 \`\`yaml
-
 ```text
 #Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
 twister2.streaming.taskscheduler: "roundrobin"
@@ -214,7 +219,7 @@ twister2.streaming.taskscheduler: "roundrobin"
 #Streaming Task Scheduler Class
 twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
 twister2.batch.taskscheduler: "roundrobin"
 
 #Batch Task Scheduler Class
@@ -225,12 +230,6 @@ twister2.task.instances: 2
 twister2.task.instance.ram: 512.0
 twister2.task.instance.disk: 500.0
 twister2.task.instance.cpu: 2.0
-
-#Default Container Padding Values
-twister2.ram.padding.container: 2.0
-twister2.disk.padding.container: 12.0
-twister2.cpu.padding.container: 1.0
-twister2.container.padding.percentage: 2
 
 #Default Container Instance Values
 twister2.container.instance.ram: 2048.0
@@ -243,7 +242,6 @@ twister2.task.parallelism: 2
 #Default Task Type "streaming" or "batch"
 twister2.task.type: "streaming"
 ```
-
 \`\`
 
 ### User-Defined Task Scheduler
@@ -281,13 +279,17 @@ twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundro
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
-#twister2.batch.taskscheduler: "roundrobin"
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
 twister2.batch.taskscheduler: "datalocalityaware"
+
+#twister2.batch.taskscheduler: "roundrobin"
+#twister2.taskscheduler.batch: "batchscheduler"
 
 #Batch Task Scheduler Class
 twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
+
 #twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
 ```
 
 \`\`

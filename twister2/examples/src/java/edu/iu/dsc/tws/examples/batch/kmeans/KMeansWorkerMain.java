@@ -24,6 +24,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.examples.Utils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -48,6 +49,7 @@ public class KMeansWorkerMain {
     options.addOption(DataObjectConstants.DIMENSIONS, true, "dim");
     options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
     options.addOption(DataObjectConstants.ARGS_ITERATIONS, true, "iter");
+    options.addOption(DataObjectConstants.JOB_TYPE, true, "type");
 
     options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY,
         true, "Data points Input directory", true));
@@ -72,6 +74,7 @@ public class KMeansWorkerMain {
     int iterations = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.ARGS_ITERATIONS));
 
+    String jobType = cmd.getOptionValue(DataObjectConstants.JOB_TYPE);
     String dataDirectory = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
     String centroidDirectory = cmd.getOptionValue(DataObjectConstants.CINPUT_DIRECTORY);
     String outputDirectory = cmd.getOptionValue(DataObjectConstants.OUTPUT_DIRECTORY);
@@ -95,10 +98,15 @@ public class KMeansWorkerMain {
     jobConfig.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
     jobConfig.put(DataObjectConstants.SHARED_FILE_SYSTEM, shared);
     jobConfig.put(DataObjectConstants.ARGS_ITERATIONS, Integer.toString(iterations));
+    jobConfig.put(DataObjectConstants.JOB_TYPE, jobType);
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
-    jobBuilder.setWorkerClass(KMeansWorker.class.getName());
+    if (Context.TWISTER2_GRAPH_JOB.equals(jobType)) {
+      jobBuilder.setWorkerClass(KMeansWorker.class.getName());
+    } else if (Context.TWISTER2_TSET_JOB.equals(jobType)) {
+      jobBuilder.setWorkerClass(KMeansTsetJob.class.getName());
+    }
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
