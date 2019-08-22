@@ -42,8 +42,9 @@ const siteConfig = {
     // For no header links in the top nav bar -> headerLinks: [],
     headerLinks: [
         {doc: 'introduction', label: 'Docs'},
+        {page: 'configs', label: 'Configurations'},
         {page: 'docs/download', label: 'Download'},
-        {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub"},
+        {href: "https://github.com/DSC-SPIDAL/twister2", label: "GitHub", external: true},
         {blog: true, label: 'Blog'},
     ],
 

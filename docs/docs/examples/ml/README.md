@@ -1,3 +1,9 @@
+---
+id: ml
+title: Machine Learning 
+sidebar_label: ML
+---
+
 # Machine Learning
 
 Machine learning algorithm usage is intensively done nowadays. Our goal is to provide infrastructure
@@ -9,3 +15,4 @@ We have designed two main machine learning examples.
 
 1. [KMeans](kmeans/kmeans.md)
 2. [Support Vector Machines (Task)](svm/svm.md)
+3. [MDS](../mds/mds.md)

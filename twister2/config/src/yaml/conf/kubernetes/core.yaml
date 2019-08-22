@@ -1,6 +1,5 @@
 ###################################################################
-# Logging related settings
-# for Twister2 workers
+# Logging related settings for Twister2 workers
 ###################################################################
 
 # logging level: FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE

@@ -10,16 +10,26 @@ descriptions = {
     "standalone_data": ""  # example
 }
 
-doc_path = "docs/docs/configurations/configurations.md"
+doc_path = "docs/website/pages/en/configs.js"
 md_file = open(doc_path, "w")
-md_file.write("---\nid: configurations\ntitle: Twister2 Configurations\nsidebar_label: Configurations\n---\n")
+md_file.write("""
+const React = require("react");
+const CompLibrary = require("../../core/CompLibrary.js");
+const {MarkdownBlock, GridBlock, Container} = CompLibrary;
+
+class Configs extends React.Component {
+
+    render() {
+        return (
+            <div className="configs-wrapper"><h1>Twister2 Configurations</h1>\n
+""")
 
 for mode in modes:
     for file in common_files:
         key = mode + "_" + file
         config = {}
         config["type"] = mode
-        config["title"] = mode.capitalize() + " " + file.capitalize() + " Configurations"
+        config["title"] = file.capitalize() + " Configurations"
         config["description"] = "" if not descriptions.has_key(key) else descriptions[key]
         config["yml"] = "twister2/config/src/yaml/conf/" + mode + "/" + file + ".yaml"
         configs.append(config)
@@ -84,31 +94,48 @@ def parse_config(config_dic):
 
 
 def write_rows(rows, config):
-    md = "### " + config["title"] + "\n\n"
+    md = "<h3>" + config["title"] + "</h3>\n\n"
     md += config["description"] + "\n\n"
     rows_written = 0
+    need_header = True
+    tclose_needed = False
     for row in rows:
         if row.isTitle:
-            md += "#### " + row.description + "\n"
+            # first close the table
+            if tclose_needed:
+                md += "</tbody></table>\n\n"
+                tclose_needed = False
+
+            md += "<h3>" + row.description + "</h3>\n"
+            need_header = True
         else:
-            md += "**" + row.property + "**\n"
-            md += "<table>"
-            md += "<tr><td>default</td>" + "<td>" + row.default_value + "</td>"
+            if need_header:
+                md += "<table><thead><tr><td width="'"25%"'">Name</td><td width="'"25%"'">Default</td><td width="'"50%"'">Description</td></tr></thead><tbody>"
+                need_header = False
+                tclose_needed = True
+
+            md += "<tr>"
+            md += "<td>" + row.property + "</td>"
+            md += "<td>" + row.default_value.strip('\"').replace("{", "{'{").replace("}",
+                                                                                     "}'}") + "</td>"
+
+            md += "<td>" + row.description.strip()
             if len(row.value_options) != 0:
-                md += "<tr><td>options</td><td>"
-                first_option = True
+                md += "<hr/><b>Options</b><ul>"
                 for option in row.value_options:
-                    if not first_option:
-                        md += "<br/>"
-                    md += option
-                    first_option = False
-                md += "</td>"
-            md += "<tr><td>description</td>" + "<td>" + row.description.strip() + "</td>"
-            md += "</table>\n\n"
+                    md += "<li>" + option.strip('\"').replace("{", "{'{").replace("}",
+                                                                                  "}'}") + "</li>"
+                md += "</ul>"
+            md += "</td>"
+            md += "</tr>"
+            # md += "</tbody></table>\n\n"
             rows_written = rows_written + 1
     md_file.write(md)
     if rows_written == 0:
         md_file.write("No specific configurations\n")
+
+    if tclose_needed:
+        md_file.write("</tbody></table>\n\n")
 
 
 previous_type = ""
@@ -116,8 +143,16 @@ previous_type = ""
 for config in configs:
     if not previous_type == config["type"]:
         previous_type = config["type"]
-        md_file.write("## " + config["type"].capitalize() + " configurations\n")
+        md_file.write("<h2>" + config["type"].capitalize() + " configurations</h2>\n")
     rows = parse_config(config)
     write_rows(rows, config)
 
+md_file.write("""
+           \n </div>
+        )
+    }
+}
+
+module.exports = Configs;
+""")
 md_file.close()
