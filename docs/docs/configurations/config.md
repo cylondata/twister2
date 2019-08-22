@@ -4,7 +4,7 @@ title: Twister2 Configurations
 sidebar_label: Configurations
 ---
 
-A detailed description of all the configuration parameters supported by Twister2 can be found in [Twister2 Configurations](configurations.md).
+A detailed description of all the configuration parameters supported by Twister2 can be found in [Twister2 Configurations](/configs).
 
 Twister2 is configured using set of YAML files. These configurations are related to different 
 components of Twister2. All the configurations can be found inside the ```conf``` folder of Twister2
@@ -47,5 +47,5 @@ In ```common``` and deployment specific folders we can find the following files.
 
 A detailed description of the configurations can be found in the following guide.
 
-[Twister2 Configurations](configurations.md).
+[Twister2 Configurations](/configs).
 
