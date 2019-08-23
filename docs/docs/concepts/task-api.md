@@ -17,12 +17,12 @@ The API defines methods to create the tasks as well as links between them. A lin
 translates to a distributed operations such as a ```reduce``` or a ```gather```. The types of links supported 
 by the system is predefined and one can extend the system by adding additional links as well.
 
-Once the compute graph is defined, it needs be scheduled and executed. The framework provides a set of predifined schedulers
-and executors. One can add their own schedulers and executors as well.
+Once the compute graph is defined, it needs be scheduled and executed. The framework provides a set of predefined 
+schedulersand executors. One can add their own schedulers and executors as well.
 
 ### Streaming & Batch
 
-The computation graph as an option to set weather it is going to do a streaming or batch computation. 
+The computation graph as an option to set whether it is going to do a streaming or batch computation. 
 Once this is set the executors and schedulers can act accordingly.  
 
 ### Example Program
@@ -76,7 +76,7 @@ information about the task graph and environment.
 
 #### Source task
 
-A source task marks the begining of a computation. The execute method of the source tasks are called 
+A source task marks the beginning of a computation. The execute method of the source tasks are called 
 by the executor until the task notifies the framework that it doesn't have anymore input via the ```TaskContext```
 
 #### Compute Task
@@ -85,7 +85,7 @@ A compute task does computation based on messages and outputs values via its out
 
 #### Sink Task
 
-Sink task is a leaf node of the graph and cannot have outputs. Otherthan that it is same as a compute task.
+Sink task is a leaf node of the graph and cannot have outputs. Other than that it is same as a compute task.
 
 ### Compute Connections
 

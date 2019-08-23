@@ -56,6 +56,7 @@ public class MultiStageGraph extends TaskWorker {
     builder.setMode(OperationMode.BATCH);
 
     ComputeGraph graph = builder.build();
+    graph.setGraphName("MultiTaskGraph");
     ExecutionPlan plan = taskExecutor.plan(graph);
     taskExecutor.execute(graph, plan);
   }

@@ -111,6 +111,9 @@ public class Context {
    */
   public static final String STREAMING = "streaming";
 
+  public static final String TWISTER2_GRAPH_JOB = "graph";
+  public static final String TWISTER2_TSET_JOB = "tset";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);

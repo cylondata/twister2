@@ -4,7 +4,7 @@ title: Nomad
 sidebar_label: Nomad
 ---
 
-# Installing Twister2 on Nomad
+## Installing Twister2 on Nomad
 
 Nomad is a flexible container management tool that enables easy deployment of containerized or legacy applications.  As in other resource schedulers, Nomad abstracts away machines and locations, enabling users to declare what to run while Nomad handles where and how to run them. 
 
