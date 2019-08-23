@@ -120,5 +120,4 @@ task graphs to the same workers. For example, if the map task, 0th task has the 
 will schedule the reduce task 0th task to the worker 1. Batch Task Scheduler considers both the locality 
 of the data and scheduling the tasks in a round robin fashion. 
 
-[Batch Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/batch/batch/BatchTaskScheduler.java)
-
+[Batch Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/batch/batchscheduler/BatchTaskScheduler.java)
