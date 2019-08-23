@@ -67,5 +67,6 @@ We support the following components in Twister2
     3. NFS for persistent storage
 7. Web UI for monitoring Twister2 Jobs
 8. Apache Storm Compatibility API
-9. Connected DataFlow (Experimental)
+9. Apache BEAM API
+10. Connected DataFlow (Experimental)
     1. Supports creation of multiple dataflow graphs executing in a single job
