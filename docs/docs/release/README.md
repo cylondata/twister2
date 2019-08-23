@@ -10,7 +10,7 @@ The current release of Twister2 is [0.2.2](twister2_release_0_2_2.md). (Jun 14, 
 
 | Version | Release Date | Binary Download | Source Release | Release Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| 0.2.2 | 2019 Aug 23 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_2.md) |
+| 0.3.0 | 2019 Aug 25 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_2.md) |
 | 0.2.2 | 2019 June 14 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_2.md) |
 | 0.2.1 | 2019 May 10 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_1.md) |
 | 0.2.0 | 2019 Mar 28 | N/A | [Download](https://github.com/DSC-SPIDAL/twister2/releases) | [Release note](release/twister2_release_0_2_0.md) |
