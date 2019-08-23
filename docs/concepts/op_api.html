@@ -76,8 +76,14 @@ This operator can have many sources and only one target.</p>
 <p>Input to the operator can be any data type. All the sources input data and these values are reduced
 to a single value at the target. How to reduce multiple values to a single value is defined by
 a user defined function.</p>
-<pre><code class="hljs css language-java"><span class="hljs-comment">// setup the batch operation</span>
-BReduce reduce = <span class="hljs-keyword">new</span> BReduce(communicator, logicalPlan, sources, target,
+<pre><code class="hljs css language-java">LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+  <span class="hljs-number">3</span>, <span class="hljs-comment">// 3 sources</span>
+  <span class="hljs-number">3</span>, <span class="hljs-comment">// 3 targets</span>
+  workerEnv
+).withFairDistribution();
+
+<span class="hljs-comment">// setup the batch operation</span>
+BReduce reduce = <span class="hljs-keyword">new</span> BReduce(communicator, logicalPlanBuilder,
     reduceFunction, reduceReceiver, datatype);
 <span class="hljs-comment">// send the data</span>
 reduce.reduce(task, data, flag);
