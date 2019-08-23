@@ -159,7 +159,7 @@ header.postHeader:empty + article h1 {
 
 .button.hero:hover {
     background: #fff;
-    color: $ primaryColor;
+    color: $primaryColor;
 }
 
 
