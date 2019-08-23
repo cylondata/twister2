@@ -209,7 +209,8 @@ represents the percentage of values to be added to each container. The default c
 value represents the default size of memory, disk, and cpu of the container. The task parallelism 
 represents the default parallelism value assigned to each task instance. The task type represents 
 the streaming or batch task. The task scheduler dynamically loads the respective streaming and batch 
-task schedulers based on the configuration values specified in the task.yaml.
+task schedulers based on the configuration values specified in the task.yaml. The sample values of
+yaml file is given below:
 
 \`\`yaml
 
@@ -237,41 +238,6 @@ twister2.taskscheduler.task.instance.disk: 500.0
 
 # CPU value to be allocated to each task instancetwister2.task.parallelism
 twister2.taskscheduler.instance.cpu: 2.0
-
-# Default Container Instance Values
-# Ram value to be allocated to each container
-twister2.taskscheduler.container.instance.ram: 4096.0
-
-# Disk value to be allocated to each container
-twister2.taskscheduler.container.instance.disk: 8000.0
-
-twister2.taskscheduler.container.instance.cpu: 16.0
-
-# Default Container Padding Values
-# Default padding value of the ram to be allocated to each container
-twister2.taskscheduler.ram.padding.container: 2.0
-
-# Default padding value of the disk to be allocated to each container
-twister2.taskscheduler.disk.padding.container: 12.0
-
-# CPU padding value to be allocated to each container
-twister2.taskscheduler.cpu.padding.container: 1.0
-
-# Percentage value to be allocated to each container
-twister2.taskscheduler.container.padding.percentage: 2
-
-# Static Default Network parameters
-# Bandwidth value to be allocated to each container instance for datalocality scheduling
-twister2.taskscheduler.container.instance.bandwidth: 100 #Mbps
-
-# Latency value to be allocated to each container instance for datalocality scheduling
-twister2.taskscheduler.container.instance.latency: 0.002 #Milliseconds
-
-# Bandwidth to be allocated to each datanode instance for datalocality scheduling
-twister2.taskscheduler.datanode.instance.bandwidth: 200 #Mbps
-
-# Latency value to be allocated to each datanode instance for datalocality scheduling
-twister2.taskscheduler.datanode.instance.latency: 0.01 #Milliseconds
 
 # Prallelism value to each task instance
 twister2.taskscheduler.task.parallelism: 2
