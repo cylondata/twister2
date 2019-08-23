@@ -36,8 +36,14 @@ to a single value at the target. How to reduce multiple values to a single value
 a user defined function.
 
 ```java
+LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+  3, // 3 sources
+  3, // 3 targets
+  workerEnv
+).withFairDistribution();
+
 // setup the batch operation
-BReduce reduce = new BReduce(communicator, logicalPlan, sources, target,
+BReduce reduce = new BReduce(communicator, logicalPlanBuilder,
     reduceFunction, reduceReceiver, datatype);
 // send the data
 reduce.reduce(task, data, flag);
