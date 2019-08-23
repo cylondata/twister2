@@ -151,20 +151,18 @@ public class KMeansWorker implements IWorker {
     taskExecutor.waitFor(kmeansTaskGraph, plan);
     cEnv.close();
 
-    if (workerId == 0) {
-      DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
-      double[][] centroid = null;
-      if (centroidPartition.getConsumer().hasNext()) {
-        centroid = (double[][]) centroidPartition.getConsumer().next();
-      }
-      long endTime = System.currentTimeMillis();
-
-      LOG.info("Total Time : " + (endTime - startTime)
-          + "\tData Load time : " + (endTimeData - startTime)
-          + "\tCompute Time : " + (endTime - endTimeData));
-      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-          + Arrays.deepToString(centroid));
+    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
+    double[][] centroid = null;
+    if (centroidPartition.getConsumer().hasNext()) {
+      centroid = (double[][]) centroidPartition.getConsumer().next();
     }
+    long endTime = System.currentTimeMillis();
+
+    LOG.fine("Total Time : " + (endTime - startTime)
+        + "\tData Load time : " + (endTimeData - startTime)
+        + "\tCompute Time : " + (endTime - endTimeData));
+    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
+        + Arrays.deepToString(centroid));
   }
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
