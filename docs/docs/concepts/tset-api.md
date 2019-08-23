@@ -1,10 +1,10 @@
 ---
 id: tset_api
-title: TSet API
-sidebar_label: TSet API
+title: Data API
+sidebar_label: Data API
 ---
 
-The TSet API is similar to Spark RDD, Flink DataSet or Heron Streamlet APIs. It provides a typed 
+The Data API based on TSet is similar to Spark API, Flink API or Heron Streamlet APIs. It provides a typed 
 functional style API for programming a distributed application. The user program is written as a 
 set of data transformation steps. 
 
@@ -44,17 +44,17 @@ dataflow graph will be created and executed based on the TSet execution chain.
 
 TSets have two main abstractions
   1. TSet
- 2. TLink 
+  2. TLink 
 
 ## TSet 
 This is the data abstraction which executes an operation on certain chunk of data. 
 
-##TLink 
+## TLink 
 This is the communication abstraction which links two multiple TSets together. Interesting aspect
  is that we can perform any communication operation supported by the Twister2:Net communication 
  fabric using a TLink. 
 
-##TSet Execution Chain 
+## TSet Execution Chain 
 Users can create a chain of execution using TSets and TLinks. A TSet would expose a set of 
 methods which exposes the downstream TLinks and similarly, a TLink would expose a set of methods 
 which exposes the TSets which it can connect into. 
@@ -70,10 +70,10 @@ IterableMapTSet<> mapedPartition = partitioned.map(...);
 Entry point to the execution chain is by creating a Source using the *TwisterBatchContext* or 
 *TwisterStreamingContext*. 
 
-##Cacheable TSets 
+## Cacheable TSets 
 Users can cache data of TSets using the *TSet.cache()* method. This would execute the chain upto 
 that TSet and load the results to memory.    
 
-##Limitations 
+## Limitations 
 Currently TSets do not support branching in the Execution Chain. This will be fixed in the future
  releases. 

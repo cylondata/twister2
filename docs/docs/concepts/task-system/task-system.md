@@ -27,8 +27,8 @@ task graphs in the task layer which could be created either statically or dynami
 the task graph represents a task whereas an edge represents the communication link between the vertices.
 Each node in the task graph holds the information about the input and its output. A task could be 
 long-running (streaming graph) or short-running (dataflow graph without loops) depending on the type 
-of application. A task graph 'TG' generally consists of set of Task Vertices'TV' and Task Edges \(TE\) which is 
-mathematically denoted as Task Graph
+of application. A task graph 'TG' generally consists of set of Task Vertices'TV' and Task Edges \(TE\) 
+which is mathematically denoted as Task Graph
 
 ```text
 (TG) -> (TV, TE)
@@ -145,7 +145,11 @@ scheduleStreamingTask()
 
 scheduleBatchTask()
 
+scheduleBatchGraphs()
+
 generateTaskSchedulePlan(String classname)
+
+Map<String, TaskSchedulePlan> generateTaskSchedulePlans(String className)
 ```
 
 The scheduleStreamingTask and scheduleBatchTask call the generateTaskSchedulePlan with the scheduling 
@@ -164,9 +168,13 @@ container id, task instance plan, required and scheduled resource of the contain
 plan holds the jobid or the taskgraph id and the container plan. The task schedule plan list is mainly 
 responsible for holding the taskschedule of the batch tasks.
 
-\`\`bash message Resource { double availableCPU = 1; double availableMemory = 2; double availableDisk = 3; }
-
 ```text
+message Resource { 
+   double availableCPU = 1; 
+   double availableMemory = 2; 
+   double availableDisk = 3; 
+}
+
 message TaskInstancePlan {
    int32 taskid = 1;
    string taskname = 2;
@@ -192,21 +200,18 @@ message TaskSchedulePlanList {
 }
 ```
 
-\`\`
-
 ### YAML file
 
 The task scheduler has task.yaml in the config directory. The task scheduler mode represents either 
-'roundrobin' or 'firstfit' or 'datalocalityaware'. The default task instances represents the default 
-memory, disk, and cpu values assigned to the task instances. The default container padding values 
+'roundrobin' or 'firstfit' or 'datalocalityaware'. The default task instance represents the default 
+memory, disk, and cpu values assigned to the task instances. The default container padding value 
 represents the percentage of values to be added to each container. The default container instance 
-values represents the default size of memory, disk, and cpu of the container. The task parallelism 
+value represents the default size of memory, disk, and cpu of the container. The task parallelism 
 represents the default parallelism value assigned to each task instance. The task type represents 
-the streaming or batch task.The task scheduler dynamically loads the respective streaming and batch 
+the streaming or batch task. The task scheduler dynamically loads the respective streaming and batch 
 task schedulers based on the configuration values specified in the task.yaml.
 
 \`\`yaml
-
 ```text
 #Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
 twister2.streaming.taskscheduler: "roundrobin"
@@ -214,7 +219,7 @@ twister2.streaming.taskscheduler: "roundrobin"
 #Streaming Task Scheduler Class
 twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
 twister2.batch.taskscheduler: "roundrobin"
 
 #Batch Task Scheduler Class
@@ -243,7 +248,6 @@ twister2.task.parallelism: 2
 #Default Task Type "streaming" or "batch"
 twister2.task.type: "streaming"
 ```
-
 \`\`
 
 ### User-Defined Task Scheduler
@@ -281,13 +285,17 @@ twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundro
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
 #twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware"
-#twister2.batch.taskscheduler: "roundrobin"
+#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
 twister2.batch.taskscheduler: "datalocalityaware"
+
+#twister2.batch.taskscheduler: "roundrobin"
+#twister2.taskscheduler.batch: "batchscheduler"
 
 #Batch Task Scheduler Class
 twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
+
 #twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
 ```
 
 \`\`
@@ -312,7 +320,8 @@ operations.
 * The task executor will receive the tasks as serialized objects and it will deserialize the objects 
   before processing them. 
 * A thread pool will be maintained by the task executors to manage the core in an optimal manner. 
-  * The size of the thread pool will be determined by the number of cores that are available to the executor. 
+  * The size of the thread pool will be determined by the number of cores that are available to the 
+  executor. 
 
 ### Types of Task Executors
 

@@ -47,6 +47,12 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
+    if (jobParameters.getTargets() != 1) {
+      LOG.warning("Setting targets to 1. Found, "
+          + jobParameters.getTargets());
+      jobParameters.getTaskStages().set(1, 1);
+    }
+
     LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
         jobParameters.getSources(),
         jobParameters.getTargets(),

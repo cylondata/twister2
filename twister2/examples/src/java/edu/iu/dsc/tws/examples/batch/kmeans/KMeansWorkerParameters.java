@@ -80,6 +80,12 @@ public final class KMeansWorkerParameters {
    */
   private String filesystem;
 
+  public String getJobType() {
+    return jobType;
+  }
+
+  private String jobType;
+
   private KMeansWorkerParameters(int workers) {
     this.workers = workers;
   }
@@ -105,6 +111,7 @@ public final class KMeansWorkerParameters {
     int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.NUMBER_OF_FILES));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
 
+    String jobtype = cfg.getStringValue(DataObjectConstants.JOB_TYPE);
     KMeansWorkerParameters jobParameters = new KMeansWorkerParameters(workers);
 
     jobParameters.workers = workers;
@@ -119,6 +126,7 @@ public final class KMeansWorkerParameters {
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
     jobParameters.filesystem = fileSystem;
+    jobParameters.jobType = jobtype;
 
     return jobParameters;
   }

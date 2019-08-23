@@ -1,6 +1,7 @@
 ###################################################################
 # Task Scheduler Related Configurations
 ###################################################################
+
 # Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"
 # By default it is roundrobin mode.
 twister2.taskscheduler.streaming: "roundrobin"
@@ -24,6 +25,8 @@ twister2.taskscheduler.batch: "batchscheduler"
 
 # Task Scheduler class for the round robin batch task scheduler
 #twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+
+# Task Scheduler class for the batch task scheduler
 twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
 
 # Task Scheduler for the Data Locality Aware Batch Task Scheduler
@@ -44,7 +47,7 @@ twister2.taskscheduler.task.instance.disk: 500.0
 # CPU value to be allocated to each task instancetwister2.task.parallelism
 twister2.taskscheduler.instance.cpu: 2.0
 
-#Default Container Instance Values
+# Default Container Instance Values
 # Ram value to be allocated to each container
 twister2.taskscheduler.container.instance.ram: 4096.0
 
