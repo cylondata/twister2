@@ -22,12 +22,24 @@ We have started working on our next major release that will connect the core com
 into a full data analytics environment. In particular it will focus on providing APIs around the core
 capabilities of Twister2 and integration of applications in a single dataflow. 
 
-## Next release (July 2019)
+## Twister2-0.4.0 Release - Oct 04, 2019
 
 1. Connected DataFlow
-2. Fault tolerance (completed)
-3. Supporting more API's including Beam  
-5. More example applications
+2. A fully compliant BEAM integration 
+3. Fault tolerance - individual worker restart and automatic restart
+4. Initial Python version
+5. Set of integration tests to run nightly in Delta cluster
+6. More unit tests
+7. Java API Documentation
+
+## Twister2-0.4.1 Release - Nov 01, 2019
+
+1. BEAM  portable runner based implementation
+2. The second version of Python API
+
+## Twister2-0.5.0 Release - Dec 01, 2019
+
+1. The third version of Python API
 
 ## Beyond next release
 
