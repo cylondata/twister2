@@ -4,9 +4,6 @@ title: Windowing
 sidebar_label: Windowing
 ---
 
-Twister2 0.2.1 release includes an experimental windowing functionality. We are still working on 
-bringing this to a complete API with the state of the art windowing support. 
-
 In the current release, we have worked on implementing a windowing mechanism similar to Apache
 Storm streaming engine. As same as Storm, we also have the windowing operation at the lower part of
 the task graph. That is called Sink in Twister2 which is equivalent to Bolt in Storm. 
