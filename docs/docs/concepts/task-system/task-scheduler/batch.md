@@ -113,12 +113,12 @@ graph, first it will check whether it has any receptor and collector tasks in th
 and collector task doesn't match the parallelism it throws the runtime exception to the user to provide
 the same parallelism for the dependent tasks in the graph. If the batch task scheduler receives multiple
 task graph, first it will store the collectible name set and receivable name set in the appropriate 
-set values. If the collectible name set matches with the receivable name set it validate the parallelism
-of the dependent tasks in the task graph, if it doesn't match it will guide the user to specify the same
-parallelism. If it matches, it proceeds with the scheduling of the task graphs to the same workers. 
-For example, if the map task, 0th task has the data in worker 0, it will schedule the reduce task 
-0th task to the worker 1. Batch Task Scheduler considers both the locality of the data and scheduling 
-the tasks in a round robin fashion. 
+set values. If the collectible name set (input key) matches with the receivable name set (input key) 
+it validate the parallelism of the dependent tasks in the task graph, if it doesn't match it will 
+guide the user to specify the same parallelism. If it matches, it proceeds with the scheduling of the 
+task graphs to the same workers. For example, if the map task, 0th task has the data in worker 0, it 
+will schedule the reduce task 0th task to the worker 1. Batch Task Scheduler considers both the locality 
+of the data and scheduling the tasks in a round robin fashion. 
 
 [Batch Task Scheduler Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/taskscheduler/src/java/edu/iu/dsc/tws/tsched/batch/batch/BatchTaskScheduler.java)
 

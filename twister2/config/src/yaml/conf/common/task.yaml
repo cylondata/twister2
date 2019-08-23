@@ -42,8 +42,8 @@ twister2.taskscheduler.task.instance.ram: 512.0
 # Disk value to be allocated to each task instance
 twister2.taskscheduler.task.instance.disk: 500.0
 
-# CPU value to be allocated to each task instancetwister2.task.parallelism
-twister2.taskscheduler.instance.cpu: 2.0
+# CPU value to be allocated to each task instance
+twister2.taskscheduler.task.instance.cpu: 2.0
 
 # Default Container Instance Values
 # Ram value to be allocated to each container
@@ -52,6 +52,7 @@ twister2.taskscheduler.container.instance.ram: 4096.0
 # Disk value to be allocated to each container
 twister2.taskscheduler.container.instance.disk: 8000.0
 
+# CPU value to be allocated to each container
 twister2.taskscheduler.container.instance.cpu: 16.0
 
 # Default Container Padding Values

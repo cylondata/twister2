@@ -236,7 +236,7 @@ twister2.taskscheduler.task.instance.ram: 512.0
 # Disk value to be allocated to each task instance
 twister2.taskscheduler.task.instance.disk: 500.0
 
-# CPU value to be allocated to each task instancetwister2.task.parallelism
+# CPU value to be allocated to each task instance
 twister2.taskscheduler.instance.cpu: 2.0
 
 # Prallelism value to each task instance
