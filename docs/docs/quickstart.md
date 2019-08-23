@@ -122,7 +122,7 @@ examples/src/java/edu/iu/dsc/tws/examples/comms
 You can run them with a simple command such as
 
 ```text
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -op "reduce" -stages 8,1 -workers 4
 ```
 
 Now, lets focus on a simple communication example where we try to do a word count.
@@ -132,7 +132,7 @@ Now, lets focus on a simple communication example where we try to do a word coun
 Lets look at a word count example. This is a standard example in every other big data system. The code related to example can be found in
 
 ```bash
-examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount
+examples/src/java/edu/iu/dsc/tws/examples/batch/wordcount/task
 ```
 
 We are using a Keyed Reduce communication operation to calculate the global counts of words, which are emitted from parallel workers.
@@ -142,19 +142,19 @@ The example has three main classes.
 WordCountWorker that implements the IWorker interface and runs the code.
 
 ```java
-edu.iu.dsc.tws.examples.batch.wordcount.WordCountWorker
+edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountWorker
 ```
 
 BatchWordSource, where we use a thread to generate words and put them into the communication.
 
 ```java
-edu.iu.dsc.tws.examples.batch.wordcount.BatchWordSouce
+edu.iu.dsc.tws.examples.batch.wordcount.task.BatchWordSouce
 ```
 
 WordAggregator, where it receives the counts of the words.
 
 ```java
-edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator
+edu.iu.dsc.tws.examples.batch.wordcount.task.WordAggregator
 ```
 
 The WordCountWorker sets up communications and task ids. Then it sets up the communication operation.
@@ -207,14 +207,19 @@ return true;
 Here is the command to run this example
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.WordCountJob
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob
 ```
 
 It will output the words and their counts on the console and below is an small sample.
 
 ```bash
-[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word MWf count 83
-[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word mFu count 105
-[INFO] edu.iu.dsc.tws.examples.batch.wordcount.WordAggregator: 12 Word JyDA count 105
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word aw count 1  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word z count 5  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word DWm count 3  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word wU count 1  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word Ge count 1  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.examples.batch.wordcount.task.WordCountJob: 100003 Word yW count 2  
+[2019-08-22 16:41:22 -0400] [INFO] [worker-3] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 3  
+[2019-08-22 16:41:22 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 4 workers have completed. JobMaster is stopping.  
 ```
 

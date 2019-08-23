@@ -393,24 +393,17 @@ K-Means clustering process.
 ### Sample Output 
 
 ```bash
-[2019-03-25 15:27:01 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker: 
-Final Centroids After	100	iterations	[[0.2535406313735363, 0.25640515489554255], 
-[0.7236140928643464, 0.7530306848028933], [0.7481226889281528, 0.24480221871888594], 
-[0.2203460821168371, 0.754988220991043]]  
+9-08-22 16:03:16 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: All 2 workers joined the job.  
+[2019-08-22 16:03:16 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.WorkerMonitor: Sending WorkersJoined messages ...  
 
-[2019-03-25 15:27:01 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker: 
-Final Centroids After	100	iterations	[[0.2535406313735363, 0.25640515489554255], 
-[0.7236140928643464, 0.7530306848028933], [0.7481226889281528, 0.24480221871888594], 
-[0.2203460821168371, 0.754988220991043]]  
+[2019-08-22 16:03:21 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker: Final Centroids After	100	iterations	
+[[0.2586896371541501, 0.26352894494071144], [0.7226999170143885, 0.7523701053237408], [0.7481226890456432, 0.2448022186721992], [0.21755114043859655, 0.7589559817543858]]  
 
-[2019-03-25 15:27:01 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: 
-Worker finished executing - 1  
+[2019-08-22 16:03:21 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 0  
 
-[2019-03-25 15:27:01 -0400] [INFO] [worker-0] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: 
-Worker finished executing - 0  
+[2019-08-22 16:03:21 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker: Final Centroids After	100	iterations	
+[[0.2586896371541501, 0.26352894494071144], [0.7226999170143885, 0.7523701053237408], [0.7481226890456432, 0.2448022186721992], [0.21755114043859655, 0.7589559817543858]]  
 
-[2019-03-25 15:27:01 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 2 workers have completed. 
-JobMaster is stopping.  
-
-
+[2019-08-22 16:03:21 -0400] [INFO] [worker-1] [main] edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker: Worker finished executing - 1  
+[2019-08-22 16:03:21 -0400] [INFO] [-] [JM] edu.iu.dsc.tws.master.server.JobMaster: All 2 workers have completed. JobMaster is stopping.  
 ```

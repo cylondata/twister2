@@ -43,7 +43,7 @@ to this file in order to run the job on them.
 
 ## Installing OpenMPI
 
-When you compile Twister2, it builds OpenMPI 3.1.2 version with it. This version is
+When you compile Twister2, it builds OpenMPI 4.0.1 version with it. This version is
 used by Twister2 for its standalone deployment by default.
 
 You can use your own OpenMPI installation when running the jobs. In order to do that, you
