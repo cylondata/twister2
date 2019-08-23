@@ -342,7 +342,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   public void startGroup(int receiveGroup, int sendGroup,
                          Map<Integer, Integer> expectedReceives) {
     receiveProgressTracker.switchGroup(receiveGroup);
-    List<Integer> receiveExecs = receiveIdGroups.get(receiveGroup);
+    List<Integer> receiveExecs = receiveGroupsWorkers.get(receiveGroup);
     this.expectedReceivePerWorker = expectedReceives;
     currentReceives.clear();
     for (int i = 0; i < receiveExecs.size(); i++) {
