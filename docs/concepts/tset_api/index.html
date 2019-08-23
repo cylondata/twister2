@@ -59,14 +59,19 @@
         </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Data API</h1></header><article><div><span><p>The Data API based on TSet is similar to Spark API, Flink API or Heron Streamlet APIs. It provides a typed
 functional style API for programming a distributed application. The user program is written as a
 set of data transformation steps.</p>
-<pre><code class="hljs css language-java">  <span class="hljs-meta">@Override</span>
-  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(TwisterBatchContext tc)</span> </span>{
-    <span class="hljs-comment">// set the parallelism of source to task stage 0</span>
-    List&lt;Integer&gt; taskStages = jobParameters.getTaskStages();
-    <span class="hljs-keyword">int</span> sourceParallelism = taskStages.get(<span class="hljs-number">0</span>);
-    <span class="hljs-keyword">int</span> sinkParallelism = taskStages.get(<span class="hljs-number">1</span>);
-    SourceTSet&lt;<span class="hljs-keyword">int</span>[]&gt; source = tc.createSource(<span class="hljs-keyword">new</span> TestBaseSource(),
-        sourceParallelism).setName(<span class="hljs-string">"Source"</span>);
+<h2><a class="anchor" aria-hidden="true" id="example-tset-program"></a><a href="#example-tset-program" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Example TSet Program</h2>
+<p>Here is an example TSet program. As usual we program an <code>IWorker</code> class. First we create the
+<code>BatchTSetEnvironment</code> environment. And the we can create a source, transformations and finally
+a sink.</p>
+<pre><code class="hljs css language-java"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ExampleTSet</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IWorker</span>, <span class="hljs-title">Serializable</span> </span>{
+  <span class="hljs-meta">@Override</span>
+  <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(config, workerID, workerController,
+        persistentVolume, volatileVolume);
+    BatchTSetEnvironment tSetEnv = TSetEnvironment.initBatch(workerEnv);
+    
+    SourceTSet&lt;<span class="hljs-keyword">int</span>[]&gt; source = tc.createSource(<span class="hljs-keyword">new</span> TestBaseSource(), <span class="hljs-number">4</span>).setName(<span class="hljs-string">"Source"</span>);
     ReduceTLink&lt;<span class="hljs-keyword">int</span>[]&gt; reduce = source.reduce((t1, t2) -&gt; {
       <span class="hljs-keyword">int</span>[] val = <span class="hljs-keyword">new</span> <span class="hljs-keyword">int</span>[t1.length];
       <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; t1.length; i++) {
@@ -77,17 +82,18 @@ set of data transformation steps.</p>
 
     reduce.sink(value -&gt; {
       experimentData.setOutput(value);
-      LOG.info(<span class="hljs-string">"Result : "</span> + Arrays.toString(value));
+      System.out.print(<span class="hljs-string">"Result : "</span> + Arrays.toString(value));
       <span class="hljs-keyword">try</span> {
         verify(OperationNames.REDUCE);
       } <span class="hljs-keyword">catch</span> (VerificationException e) {
-        LOG.info(<span class="hljs-string">"Exception Message : "</span> + e.getMessage());
+        System.out.print(<span class="hljs-string">"Exception Message : "</span> + e.getMessage());
       }
       <span class="hljs-keyword">return</span> <span class="hljs-keyword">true</span>;
     });
   }
+}
 </code></pre>
-<p>TSets will be executed lazily. Once an action such as <em>TSet.cache()</em> is called, the underlying
+<p>TSets are executed lazily. Once an action such as <em>TSet.cache()</em> is called, the underlying
 dataflow graph will be created and executed based on the TSet execution chain.</p>
 <p>TSets have two main abstractions</p>
 <ol>
@@ -114,7 +120,44 @@ IterableMapTSet&lt;&gt; mapedPartition = partitioned.map(...);
 <h2><a class="anchor" aria-hidden="true" id="cacheable-tsets"></a><a href="#cacheable-tsets" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Cacheable TSets</h2>
 <p>Users can cache data of TSets using the <em>TSet.cache()</em> method. This would execute the chain upto
 that TSet and load the results to memory.</p>
-<h2><a class="anchor" aria-hidden="true" id="limitations"></a><a href="#limitations" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Limitations</h2>
-<p>Currently TSets do not support branching in the Execution Chain. This will be fixed in the future
-releases.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/concepts/worker_api"><span class="arrow-prev">← </span><span>Worker API</span></a><a class="docs-next button" href="/docs/concepts/task_api"><span>Compute API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#tset">TSet</a></li><li><a href="#tlink">TLink</a></li><li><a href="#tset-execution-chain">TSet Execution Chain</a></li><li><a href="#cacheable-tsets">Cacheable TSets</a></li><li><a href="#limitations">Limitations</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
+<h2><a class="anchor" aria-hidden="true" id="tset-environments"></a><a href="#tset-environments" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>TSet Environments</h2>
+<p>User needs to create a <code>BatchTSetEnvironment</code> or <code>StreamingTSetEnvironment</code> to create a batch
+application or a streaming application.</p>
+<p>Once the environment is created a user can create a <code>SourceTSet</code> to start the data processing application.</p>
+<h2><a class="anchor" aria-hidden="true" id="batch-operations"></a><a href="#batch-operations" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Batch Operations</h2>
+<p>Twister2 supports these batch operations.</p>
+<table>
+<thead>
+<tr><th style="text-align:left">Operation</th><th style="text-align:left">Description</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:left">Direct</td><td style="text-align:left">A one to one mapping from a TSet to another</td></tr>
+<tr><td style="text-align:left">Reduce</td><td style="text-align:left">Reduces a TSet into a single value</td></tr>
+<tr><td style="text-align:left">AllReduce</td><td style="text-align:left">Reduces a TSet into a single value and replicate this value</td></tr>
+<tr><td style="text-align:left">Gather</td><td style="text-align:left">Gather a distributed set of values</td></tr>
+<tr><td style="text-align:left">AllGther</td><td style="text-align:left">Gather a distributed set of values and replicate it</td></tr>
+<tr><td style="text-align:left">Partition</td><td style="text-align:left">Re-distributes the values</td></tr>
+<tr><td style="text-align:left">Broadcast</td><td style="text-align:left">Replicate a single value to multiple</td></tr>
+<tr><td style="text-align:left">Keyed-Reduce</td><td style="text-align:left">Reduce based on a key</td></tr>
+<tr><td style="text-align:left">Keyed-Gather</td><td style="text-align:left">Gather based on a key</td></tr>
+<tr><td style="text-align:left">Keyed-Partition</td><td style="text-align:left">Partition based on a key</td></tr>
+<tr><td style="text-align:left">Join</td><td style="text-align:left">Inner join with a key</td></tr>
+<tr><td style="text-align:left">Union</td><td style="text-align:left">Union of two TSets</td></tr>
+</tbody>
+</table>
+<h2><a class="anchor" aria-hidden="true" id="stream-operators"></a><a href="#stream-operators" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Stream Operators</h2>
+<table>
+<thead>
+<tr><th style="text-align:left">Operation</th><th style="text-align:left">Description</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align:left">Direct</td><td style="text-align:left">A one to one mapping from a TSet to another</td></tr>
+<tr><td style="text-align:left">Reduce</td><td style="text-align:left">Reduces a TSet into a single value</td></tr>
+<tr><td style="text-align:left">AllReduce</td><td style="text-align:left">Reduces a TSet into a single value and replicate this value</td></tr>
+<tr><td style="text-align:left">Gather</td><td style="text-align:left">Gather a distributed set of values</td></tr>
+<tr><td style="text-align:left">AllGther</td><td style="text-align:left">Gather a distributed set of values and replicate it</td></tr>
+<tr><td style="text-align:left">Partition</td><td style="text-align:left">Re-distributes the values</td></tr>
+<tr><td style="text-align:left">Broadcast</td><td style="text-align:left">Replicate a single value to multiple</td></tr>
+</tbody>
+</table>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/concepts/worker_api"><span class="arrow-prev">← </span><span>Worker API</span></a><a class="docs-next button" href="/docs/concepts/task_api"><span>Compute API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#example-tset-program">Example TSet Program</a></li><li><a href="#tset">TSet</a></li><li><a href="#tlink">TLink</a></li><li><a href="#tset-execution-chain">TSet Execution Chain</a></li><li><a href="#cacheable-tsets">Cacheable TSets</a></li><li><a href="#tset-environments">TSet Environments</a></li><li><a href="#batch-operations">Batch Operations</a></li><li><a href="#stream-operators">Stream Operators</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
