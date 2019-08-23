@@ -171,7 +171,7 @@ Running a allreduction operation on an array of size 8 array with 4 workers iter
 and sink parallelism of 8, added with result verification. 
 
 ```bash
-./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "reduce" -stages 8,8 -verify
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.comms.ExampleMain -itr 1 -workers 4 -size 8 -op "allreduce" -stages 8,8 -verify
 ```
 
 [Communication based Batch AllReduce Source Code](https://github.com/DSC-SPIDAL/twister2/blob/master/twister2/examples/src/java/edu/iu/dsc/tws/examples/comms/batch/BAllReduceExample.java)
