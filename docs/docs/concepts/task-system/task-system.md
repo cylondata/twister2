@@ -119,7 +119,7 @@ that consists of two main methods namely initialize and schedule methods to init
 configuration and schedule the taskgraph based on the workers information available in the resource plan.
 
 ```text
-edu.iu.dsc.tws.tsched.spi.taskschedule.ITaskScheduler
+edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler
 ```
 
 has the following methods namely
@@ -209,45 +209,74 @@ represents the percentage of values to be added to each container. The default c
 value represents the default size of memory, disk, and cpu of the container. The task parallelism 
 represents the default parallelism value assigned to each task instance. The task type represents 
 the streaming or batch task. The task scheduler dynamically loads the respective streaming and batch 
-task schedulers based on the configuration values specified in the task.yaml.
+task schedulers based on the configuration values specified in the task.yaml. The sample values of
+yaml file is given below:
 
 \`\`yaml
+
 ```text
-#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
-twister2.streaming.taskscheduler: "roundrobin"
+# Task scheduling mode for the streaming jobs "roundrobin" or "firstfit" or "datalocalityaware" or "userdefined"
+twister2.taskscheduler.streaming: "roundrobin"
 
-#Streaming Task Scheduler Class
-twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+# Task Scheduler class for the round robin streaming task scheduler
+twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
-twister2.batch.taskscheduler: "roundrobin"
+# Task scheduling mode for the batch jobs "roundrobin" or "datalocalityaware" or "userdefined" or "batchscheduler"
+twister2.taskscheduler.batch: "batchscheduler"
 
-#Batch Task Scheduler Class
-twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
+# Task Scheduler class for the batch task scheduler
+twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
 
-#Default Task Instance Values
-twister2.task.instances: 2
-twister2.task.instance.ram: 512.0
-twister2.task.instance.disk: 500.0
-twister2.task.instance.cpu: 2.0
+# Number of task instances to be allocated to each worker/container
+twister2.taskscheduler.task.instances: 2
 
-#Default Container Padding Values
-twister2.ram.padding.container: 2.0
-twister2.disk.padding.container: 12.0
-twister2.cpu.padding.container: 1.0
-twister2.container.padding.percentage: 2
+# Ram value to be allocated to each task instance
+twister2.taskscheduler.task.instance.ram: 512.0
 
-#Default Container Instance Values
-twister2.container.instance.ram: 2048.0
-twister2.container.instance.disk: 2000.0
-twister2.container.instance.cpu: 4.0
+# Disk value to be allocated to each task instance
+twister2.taskscheduler.task.instance.disk: 500.0
 
-#Default Task Parallelism Value
-twister2.task.parallelism: 2
+# CPU value to be allocated to each task instance
+twister2.taskscheduler.instance.cpu: 2.0
 
-#Default Task Type "streaming" or "batch"
-twister2.task.type: "streaming"
+# Prallelism value to each task instance
+twister2.taskscheduler.task.parallelism: 2
+
+# Task type to each submitted job by default it is "streaming" job.
+twister2.taskscheduler.task.type: "streaming"
+
+# number of threads per worker
+twister2.exector.worker.threads: 1
+
+# name of the batch executor
+twister2.executor.batch.name: "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2"
+
+# number of tuples executed at a single pass
+twister2.exector.instance.queue.low.watermark: 10000
+
 ```
+\`\`
+
+
+
+## Batch Task Scheduler 
+
+Batch Task Scheduler is able to handle and schedule both single task graph as well as multiple 
+dependent task graphs. The main constraint considered in the batch task scheduler is specify the same 
+parallelism value for the dependent tasks in the task graphs. It schedule the tasks in a round
+robin fashion but, while scheduling the dependent tasks it considers the data locality 
+of the input data from the parent tasks and schedule the tasks in a round robin fashion to the workers. 
+
+\`\`yaml
+
+```text
+#Batch Task Scheduler
+twister2.taskscheduler.batch: "batchscheduler"
+
+#Task Scheduler class for the batch task scheduler
+twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
+```
+
 \`\`
 
 ### User-Defined Task Scheduler
@@ -262,8 +291,11 @@ as "user-defined" with the corresponding "user-defined" task scheduler class nam
 #User-defined Streaming Task Scheduler
 twister2.streaming.taskscheduler: "user-defined"
 
-#User-defined Streaming Task Scheduler Class
-twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
+# Task Scheduler for the userDefined Streaming Task Scheduler
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
+
+# Task Scheduler for the userDefined Batch Task Scheduler
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.userdefined.UserDefinedTaskScheduler"
 ```
 
 \`\`
@@ -276,30 +308,20 @@ the respective scheduler mode and their corresponding class names.
 \`\`yaml
 
 ```text
-#Streaming Task Scheduler Mode "roundrobin" or  "firstfit" or "datalocalityaware"
-twister2.streaming.taskscheduler: "roundrobin"
+# Task Scheduler for the Data Locality Aware Streaming Task Scheduler
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
 
-#Streaming Task Scheduler Class
-twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskScheduler"
+# Task Scheduler for the FirstFit Streaming Task Scheduler
+#twister2.taskscheduler.streaming.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
 
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler"
-#twister2.streaming.taskscheduler.class: "edu.iu.dsc.tws.tsched.streaming.firstfit.FirstFitStreamingTaskScheduler"
+# Task Scheduler class for the round robin batch task scheduler
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
 
-#Batch Task Scheduler Mode "roundrobin" or  "datalocalityaware" or "batchscheduler"
-twister2.batch.taskscheduler: "datalocalityaware"
-
-#twister2.batch.taskscheduler: "roundrobin"
-#twister2.taskscheduler.batch: "batchscheduler"
-
-#Batch Task Scheduler Class
-twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
-
-#twister2.batch.taskscheduler.class: "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskScheduler"
-#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskScheduler"
+# Task Scheduler for the Data Locality Aware Batch Task Scheduler
+#twister2.taskscheduler.batch.class: "edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler"
 ```
 
 \`\`
-
 
 ## Execution
 
@@ -334,7 +356,7 @@ operations.
 
 ### Task Executor Call
 
-```text
+```java
 public Executor(Config cfg, int wId, ExecutionPlan executionPlan, TWSChannel channel, 
 OperationMode operationMode)
 ```
@@ -344,3 +366,16 @@ OperationMode operationMode)
 * Execution graph is a transformation of the user-defined task graph created by the framework to be 
   executed on the cluster.
 * Execution graph will be scheduled to the available resource by the task scheduler.
+
+
+### Execution Graph Builder 
+
+* The Task Executor call the ExecutionGraphBuilder and get the ExecutionPlan for the scheduled taks
+in the workers.
+
+```java
+ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        workerID, workerInfoList, communicator, this.checkpointingClient);
+    return executionPlanBuilder.build(config, graph, taskSchedulePlan);
+```
+    

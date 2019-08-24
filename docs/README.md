@@ -1,4 +1,4 @@
-# We have moved the documentation to [https://dsc-spidal.github.io/twister2](https://dsc-spidal.github.io/twister2)
+# We have moved the documentation to [https://twister2.org](https://twister2.org)
 
 This documentation is written using mark down files. These markdown files are converted into HTML and deployed on to github pages.
 
