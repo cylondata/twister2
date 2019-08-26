@@ -103,6 +103,6 @@ public class DataObjectSource<T> extends BaseSource {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
     this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), config));
+        new Path(getDataDirectory()), context.getParallelism(), cfg));
   }
 }
