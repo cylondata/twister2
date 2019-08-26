@@ -19,17 +19,23 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.data.DataConstants;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
+//import org.apache.hadoop.hdfs.DistributedFileSystem;
+
 public final class FileSystemUtils {
+
+  private static final Logger LOG = Logger.getLogger(FileSystemUtils.class.getName());
 
   private FileSystemUtils() {
   }
@@ -111,9 +117,9 @@ public final class FileSystemUtils {
         //TODO: handle when the system is not supported
       } else {
         String fsClass = SUPPORTEDFS.get(curUri.getScheme());
-        if ("hdfs".equals(curUri.getScheme())) {
+        if (Context.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
           try {
-            fs = instantiateFileSystem(fsClass, config);
+            fs = (FileSystem) instantiateFileSystem(fsClass, config);
           } catch (NoSuchMethodException e) {
             throw new RuntimeException("No such method to invoke", e);
           } catch (InvocationTargetException e) {
@@ -260,26 +266,34 @@ public final class FileSystemUtils {
     }
   }
 
-  private static FileSystem instantiateFileSystem(String className, Config config)
+  private static Object instantiateFileSystem(String className, Config config)
       throws IOException, NoSuchMethodException, InvocationTargetException {
-
     Class<?> fileSystemClass;
+    Object newInstance;
     try {
-      Configuration conf = new Configuration(false);
+      Configuration conf = new Configuration(true);
       conf.addResource(
           new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsConfigDirectory(config)));
+      conf.addResource(
+          new org.apache.hadoop.fs.Path(HdfsDataContext.getHdfsDataDirectory(config)));
       conf.set("fs.defaultFS", HdfsDataContext.getHdfsUrlDefault(config));
       fileSystemClass = ClassLoader.getSystemClassLoader().loadClass(className);
-      Constructor<?> classConstructor = fileSystemClass.getConstructor(
-          Configuration.class, org.apache.hadoop.fs.FileSystem.class);
-      Object newInstance = classConstructor.newInstance(new Object[]{conf,
+      Constructor<?> classConstructor = fileSystemClass.getConstructor(Configuration.class,
+          org.apache.hadoop.fs.FileSystem.class);
+      newInstance = classConstructor.newInstance(new Object[]{conf,
           org.apache.hadoop.fs.FileSystem.get(conf)});
-      return (FileSystem) newInstance;
+    } catch (InstantiationException ie) {
+      ie.printStackTrace();
+      throw new RuntimeException("instantiation exception occured:" + ie.getMessage());
     } catch (ClassNotFoundException e) {
+      e.printStackTrace();
       throw new IOException("Could not load file system class '" + className + '\'', e);
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new IOException("Could not instantiate file system class: " + e.getMessage(), e);
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+      throw new IOException("Illegal access exception: " + e.getMessage(), e);
     }
+    //return (FileSystem) newInstance;
+    return newInstance;
   }
 
   /**
@@ -290,5 +304,4 @@ public final class FileSystemUtils {
   private static boolean isSupportedScheme(String scheme) {
     return SUPPORTEDFS.containsKey(scheme);
   }
-
 }

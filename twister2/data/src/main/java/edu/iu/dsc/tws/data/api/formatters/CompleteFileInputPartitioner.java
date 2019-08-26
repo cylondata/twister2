@@ -109,7 +109,7 @@ public abstract class CompleteFileInputPartitioner<OT>
 
     long totalLength = 0;
 
-    final FileSystem fs = FileSystemUtils.get(path);
+    final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {
