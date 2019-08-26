@@ -15,6 +15,13 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
+/**
+ * This is now deprecated. The functionality is inbuilt to tset ops
+ * @deprecated deprecated
+ * @param <O>
+ * @param <I>
+ */
+@Deprecated
 public class ComputeCollectorUnionOp<O, I> extends ComputeCollectorOp<O, Iterator<I>> {
 
   private final int unionSize;
