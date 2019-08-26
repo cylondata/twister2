@@ -119,7 +119,7 @@ public final class FileSystemUtils {
         String fsClass = SUPPORTEDFS.get(curUri.getScheme());
         if (Context.TWISTER2_HDFS_FILESYSTEM.equals(curUri.getScheme())) {
           try {
-            fs = (FileSystem) instantiateFileSystem(fsClass, config);
+            fs = instantiateFileSystem(fsClass, config);
           } catch (NoSuchMethodException e) {
             throw new RuntimeException("No such method to invoke", e);
           } catch (InvocationTargetException e) {
@@ -266,7 +266,7 @@ public final class FileSystemUtils {
     }
   }
 
-  private static Object instantiateFileSystem(String className, Config config)
+  private static FileSystem instantiateFileSystem(String className, Config config)
       throws IOException, NoSuchMethodException, InvocationTargetException {
     Class<?> fileSystemClass;
     Object newInstance;
@@ -289,11 +289,9 @@ public final class FileSystemUtils {
       e.printStackTrace();
       throw new IOException("Could not load file system class '" + className + '\'', e);
     } catch (IllegalAccessException e) {
-      e.printStackTrace();
       throw new IOException("Illegal access exception: " + e.getMessage(), e);
     }
-    //return (FileSystem) newInstance;
-    return newInstance;
+    return (FileSystem) newInstance;
   }
 
   /**
