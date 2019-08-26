@@ -23,9 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
@@ -39,36 +37,37 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 /**
  * takes care of preparing the compute instances and creating the out edges list
  */
-public abstract class BaseComputeOp<I> extends BaseCompute<I> implements MultiOutEdgeOp, Receptor {
-
-  private List<String> outEdges;
-
+public abstract class BaseComputeOp<I> extends BaseCompute<I> implements Receptor {
   private TSetContext tSetContext;
 
   // this map will hold input temporarily until tset context is available
   private Map<String, DataObject<?>> tempInputMap = new HashMap<>();
 
+  private MultiEdgeOpAdapter multiEdgeOpAdapter;
+
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-    this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
-
     this.tSetContext = new TSetContext(cfg, ctx);
     this.tSetContext.addInputMap(tempInputMap);
 
     this.getFunction().prepare(tSetContext);
+
+    this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
   }
 
   public abstract TFunction getFunction();
 
-  @Override
-  public TaskContext getTaskContext() {
-    return context;
+  public <T> void writeToEdges(T output) {
+    multiEdgeOpAdapter.writeToEdges(output);
   }
 
-  @Override
-  public List<String> getEdges() {
-    return outEdges;
+  public void writeEndToEdges() {
+    multiEdgeOpAdapter.writeEndToEdges();
+  }
+
+  public <K, V> void keyedWriteToEdges(K key, V val) {
+    multiEdgeOpAdapter.keyedWriteToEdges(key, val);
   }
 
   @Override

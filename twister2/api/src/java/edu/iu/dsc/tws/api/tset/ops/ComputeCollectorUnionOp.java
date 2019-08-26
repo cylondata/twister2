@@ -11,17 +11,26 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
-public class ComputeCollectorUnionOp<O, I> extends ComputeCollectorOp<O, I> {
-
+/**
+ * This is now deprecated. The functionality is inbuilt to tset ops
+ * @deprecated deprecated
+ * @param <O>
+ * @param <I>
+ */
+@Deprecated
+public class ComputeCollectorUnionOp<O, I> extends ComputeCollectorOp<O, Iterator<I>> {
 
   private final int unionSize;
   private int completedCount;
 
-  public ComputeCollectorUnionOp(ComputeCollectorFunc<O, I> computeFunction, int unionSize) {
+  public ComputeCollectorUnionOp(ComputeCollectorFunc<O, Iterator<I>> computeFunction,
+                                 int unionSize) {
     super(computeFunction);
-    completedCount = 0;
+    this.completedCount = 0;
     this.unionSize = unionSize;
   }
 

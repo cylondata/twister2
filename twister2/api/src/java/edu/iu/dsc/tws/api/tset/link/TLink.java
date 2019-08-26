@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
  * @param <T1> Type output from the communication layer for the corresponding edge
  * @param <T0> Base type of the edge
  */
-public interface TLink<T1, T0> extends BuildableTLink {
+public interface TLink<T1, T0> {
 
   /**
    * Name of the TSet and return the same tlink

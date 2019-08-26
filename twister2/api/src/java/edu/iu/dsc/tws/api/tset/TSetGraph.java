@@ -35,14 +35,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -160,18 +159,18 @@ public class TSetGraph {
    * @return data flow graph to execute
    */
   public ComputeGraph build() {
-    List<BuildableTLink> links = new ArrayList<>();
-    List<BuildableTSet> sets = new ArrayList<>();
+    Set<BuildableTLink> links = new LinkedHashSet<>();
+    Set<BuildableTSet> sets = new LinkedHashSet<>();
 
-    List<TBase> buildOrder = new ArrayList<>();
+    Set<TBase> buildOrder = new LinkedHashSet<>();
 
     for (BuildableTSet src : sources) {
-      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors, false));
+      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
     }
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
 
-    return buildGraph(links, sets);
+    return buildGraph(links, sets, false);
   }
 
   /**
@@ -181,30 +180,35 @@ public class TSetGraph {
    * @return data flow graph to execute the subgraph of TSets
    */
   public ComputeGraph build(BuildableTSet leafTSet) {
-    List<BuildableTLink> links = new ArrayList<>();
-    List<BuildableTSet> sets = new ArrayList<>();
+    Set<BuildableTLink> links = new LinkedHashSet<>();
+    Set<BuildableTSet> sets = new LinkedHashSet<>();
 
-    List<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors, true);
+    Set<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
 
     LOG.info(() -> "Build order: " + buildOrder.toString());
 
-    return buildGraph(links, sets);
+    return buildGraph(links, sets, true);
   }
 
-  private ComputeGraph buildGraph(List<BuildableTLink> links, Collection<BuildableTSet> sets) {
+  private ComputeGraph buildGraph(Collection<BuildableTLink> links, Collection<BuildableTSet> sets,
+                                  boolean reverse) {
 
-    LOG.info(() -> "Node build order: " + sets);
-    for (BuildableTSet baseTSet : sets) {
-      baseTSet.build(this);
+    LOG.info(() -> "Node build order: " + sets + " reversed: " + reverse);
+    Iterator<BuildableTSet> setsItr = reverse ? new LinkedList<>(sets).descendingIterator()
+        : sets.iterator();
+    while (setsItr.hasNext()) {
+      setsItr.next().build(this);
     }
 
-    LOG.info(() -> "Edge build order: " + links);
+    LOG.info(() -> "Edge build order: " + links + " reversed: " + reverse);
     // links need to be built in order. check issue #519
 /*    for (int i = 0; i < links.size(); i++) {
       links.get(links.size() - i - 1).build(this, sets);
     }*/
-    for (BuildableTLink link : links) {
-      link.build(this, sets);
+    Iterator<BuildableTLink> linksItr = reverse ? new LinkedList<>(links).descendingIterator()
+        : links.iterator();
+    while (linksItr.hasNext()) {
+      linksItr.next().build(this, sets);
     }
 
     ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
@@ -218,9 +222,9 @@ public class TSetGraph {
     return dataflowGraph;
   }
 
-  private List<TBase> bfs(BuildableTSet s, List<BuildableTLink> links, List<BuildableTSet> sets,
-                          AdjNodesExtractor adjNodesExtractor, boolean reverse) {
-    List<TBase> buildOrder = new ArrayList<>();
+  private Set<TBase> bfs(BuildableTSet s, Collection<BuildableTLink> links,
+                         Collection<BuildableTSet> sets, AdjNodesExtractor adjNodesExtractor) {
+    Set<TBase> buildOrder = new LinkedHashSet<>();
 
     Map<TBase, Boolean> visited = new HashMap<>();
 
@@ -244,12 +248,6 @@ public class TSetGraph {
           queue.add(parent);
         }
       }
-    }
-
-    if (reverse) {
-      Collections.reverse(buildOrder);
-      Collections.reverse(sets);
-      Collections.reverse(links);
     }
 
     return buildOrder;
