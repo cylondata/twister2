@@ -175,8 +175,8 @@ The above data flow graph can be represented by the following TSet Graph
 ``` 
 
 ## TSet API Overview 
-![TSet API Overview](assets/tset-overview.png)
- 
+
+![TSet API Overview](../assets/tset-overview.png)
 
 ## Batch Operations
 
