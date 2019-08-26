@@ -1,10 +1,10 @@
 ---
 id: terasort
-title: Tera Sort
-sidebar_label: Tera Sort
+title: TeraSort
+sidebar_label: TeraSort
 ---
 
-Tera Sort is a common benchmark to measure and compare high performance big data frameworks such 
+TeraSort is a common benchmark to measure and compare high performance big data frameworks such 
 as Twister2. The idea is to measure the time to sort one terabyte of randomly distributed data.
 
 This terasort is implemented according to the requirements listed in the 
@@ -39,7 +39,7 @@ operation is configured with a comparator to sort by key.
 ./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.batch.terasort.TeraSort -size .5 -valueSize 90 -keySize 10 -instances 8 -instanceCPUs 1 -instanceMemory 1024 -sources 8 -sinks 8 -memoryBytesLimit 4000000000 -fileSizeBytes 100000000 -inputFile /path/to/file-%d
 ```
 
-### Tera Sort parameters
+### TeraSort parameters
 
 #### Data Configuration - File Based mode
 

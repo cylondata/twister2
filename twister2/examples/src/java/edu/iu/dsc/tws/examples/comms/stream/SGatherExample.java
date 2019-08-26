@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +23,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.stream.SGather;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
 import edu.iu.dsc.tws.examples.utils.bench.Timing;
@@ -48,20 +47,23 @@ public class SGatherExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
+    if (jobParameters.getTargets() != 1) {
+      LOG.warning("Setting targets to 1. Found, "
+          + jobParameters.getTargets());
+      jobParameters.getTaskStages().set(1, 1);
     }
 
-    int target = noOfSourceTasks;
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    );
 
     // create the communication
-    gather = new SGather(workerEnv.getCommunicator(), logicalPlan, sources, target,
+    gather = new SGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver());
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }
@@ -69,13 +71,14 @@ public class SGatherExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(
+        logicalPlanBuilder.getTargets().iterator().next())) {
       gatherDone = true;
     }
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray, (dataArray, args) -> {
       List<Tuple<Integer, int[]>> listOfArrays = new ArrayList<>();
-      for (int i = 0; i < noOfSourceTasks; i++) {
+      for (int i = 0; i < logicalPlanBuilder.getSources().size(); i++) {
         listOfArrays.add(new Tuple<>(i, dataArray));
       }
       return listOfArrays.iterator();

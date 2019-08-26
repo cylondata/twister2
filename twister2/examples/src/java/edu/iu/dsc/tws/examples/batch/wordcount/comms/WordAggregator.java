@@ -16,9 +16,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 
 public class WordAggregator implements BulkReceiver {
@@ -35,10 +34,10 @@ public class WordAggregator implements BulkReceiver {
   public boolean receive(int target, Iterator<Object> it) {
     while (it.hasNext()) {
       Object next = it.next();
-      if (next instanceof ImmutablePair) {
-        ImmutablePair kc = (ImmutablePair) next;
+      if (next instanceof Tuple) {
+        Tuple kc = (Tuple) next;
         LOG.log(Level.INFO, String.format("%d Word %s count %s",
-            target, kc.getKey(), ((int[]) kc.getValue())[0]));
+            target, kc.getKey(), kc.getValue()));
       }
     }
     isDone = true;

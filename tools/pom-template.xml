@@ -19,7 +19,7 @@
         <version>7</version>
     </parent>
 
-    <groupId>edu.iu.dsc.tws</groupId>
+    <groupId>org.twister2</groupId>
     <artifactId>{artifact_id}</artifactId>
     <name>{artifact_name}</name>
     <version>{pom_version}</version>

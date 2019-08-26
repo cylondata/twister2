@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -62,14 +62,20 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
     for (int i = 0; i < noOfTargetTasks; i++) {
       targets.add(noOfSourceTasks + i);
     }
+
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    keyedGather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY, new FinalReduceReceiver(),
         new SimpleKeyBasedSelector(), true,
         Comparator.comparingInt(o -> (Integer) o), true);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
 
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);

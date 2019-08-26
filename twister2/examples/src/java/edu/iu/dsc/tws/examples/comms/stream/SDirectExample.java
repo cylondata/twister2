@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -21,7 +19,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.stream.SDirect;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -44,25 +42,19 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    List<Integer> sources = new ArrayList<>();
-    List<Integer> targets = new ArrayList<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    direct = new SDirect(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    direct = new SDirect(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER_ARRAY, new PartitionReceiver());
 
-    Set<Integer> targetTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 1);
+    Set<Integer> targetTasksOfExecutor = logicalPlanBuilder.getTargetsOnThisWorker();
     for (int taskId : targetTasksOfExecutor) {
-      if (targets.contains(taskId)) {
+      if (logicalPlanBuilder.getTargets().contains(taskId)) {
         directDone = false;
 
         if (workerId == 0) {
@@ -71,8 +63,7 @@ public class SDirectExample extends BenchWorker {
       }
     }
 
-    Set<Integer> sourceTasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> sourceTasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> ints, IntArrayComparator.getInstance());

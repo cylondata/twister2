@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.batch;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +28,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BJoin;
 import edu.iu.dsc.tws.comms.selectors.SimpleKeyBasedSelector;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.DataGenerator;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 
@@ -43,33 +42,18 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   private BJoin join;
 
-  private boolean joinDone = false;
-
   private Lock lock = new ReentrantLock();
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    //Setting up the task plan for the join operation
-
-
-    Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
-    int target = noOfSourceTasks;
-
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
-      joinDone = true;
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the join communication
-    join = new BJoin(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    join = new BJoin(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER,
         MessageTypes.OBJECT, MessageTypes.OBJECT, new JoinReceiver(),
         new SimpleKeyBasedSelector(), false,
@@ -80,12 +64,11 @@ public class BJoinStudentExample extends KeyedBenchWorker {
           return 0;
         }, CommunicationContext.JoinType.INNER);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
 
     // now initialize the workers
     LOG.log(Level.INFO, String.format("%d Sources %s target %d this %s",
-        workerId, sources, 1, tasksOfExecutor));
+        workerId, logicalPlanBuilder.getSources(), 1, tasksOfExecutor));
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced
       Thread mapThread = new Thread(new MapWorker(t));
@@ -148,8 +131,6 @@ public class BJoinStudentExample extends KeyedBenchWorker {
         LOG.info("Key " + item.getKey() + " : left " + item.getLeftValue()
             + " right: " + item.getRightValue());
       }
-      joinDone = true;
-
       return true;
     }
   }

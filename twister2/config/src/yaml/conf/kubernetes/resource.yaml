@@ -7,7 +7,6 @@ twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 
-
 # image pull policy, by default is IfNotPresent
 # it could also be Always
 # kubernetes.image.pull.policy: "Always"
@@ -15,6 +14,7 @@ twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesLauncher
 ###################################################################################
 # Kubernetes Mapping and Binding parameters
 ###################################################################################
+
 # Statically bind workers to CPUs
 # Workers do not move from the CPU they are started during computation
 # twister2.cpu_per_container has to be an integer
@@ -31,7 +31,7 @@ kubernetes.worker.mapping.key: "kubernetes.io/hostname"
 # operator to use when mapping workers to nodes based on key value
 # possible values: In, NotIn, Exists, DoesNotExist, Gt, Lt
 # Exists/DoesNotExist checks only the existence of the specified key in the node.
-# Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
+# Ref https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
 kubernetes.worker.mapping.operator: "In"
 
 # values for the mapping key
@@ -54,7 +54,7 @@ twister2.zookeeper.server.addresses: "ip:port"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
-#twister2.zookeeper.root.node.path: "/twister2"
+# twister2.zookeeper.root.node.path: "/twister2"
 
 #########################################################################
 # When a job is submitted, the job package needs to be transferred to worker pods

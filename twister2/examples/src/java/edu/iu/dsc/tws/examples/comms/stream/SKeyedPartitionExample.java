@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +22,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.comms.stream.SKeyedPartition;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.KeyedBenchWorker;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
@@ -43,19 +42,14 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
-    Set<Integer> sources = new HashSet<>();
-    Set<Integer> targets = new HashSet<>();
-    Integer noOfSourceTasks = jobParameters.getTaskStages().get(0);
-    for (int i = 0; i < noOfSourceTasks; i++) {
-      sources.add(i);
-    }
-    Integer noOfTargetTasks = jobParameters.getTaskStages().get(1);
-    for (int i = 0; i < noOfTargetTasks; i++) {
-      targets.add(noOfSourceTasks + i);
-    }
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
 
     // create the communication
-    partition = new SKeyedPartition(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    partition = new SKeyedPartition(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
         new PartitionReceiver(), new HashingSelector());
 
@@ -66,8 +60,7 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
             IntArrayComparator.getInstance()
         ));
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
     for (int t : tasksOfExecutor) {
       // the map thread where data is produced

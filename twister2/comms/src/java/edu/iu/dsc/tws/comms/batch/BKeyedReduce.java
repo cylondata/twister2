@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
  * Example class for Batch keyed reduce. The reduce destination for each data point will be
@@ -62,6 +63,14 @@ public class BKeyedReduce extends BaseOperation {
                       BulkReceiver rcvr, MessageType kType, MessageType dType,
                       DestinationSelector destSelector) {
     this(comm, plan, sources, destinations, fnc, rcvr, kType, dType, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BKeyedReduce(Communicator comm, LogicalPlanBuilder logicalPlanBuilder, ReduceFunction fnc,
+                      BulkReceiver rcvr, MessageType kType, MessageType dType,
+                      DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), fnc, rcvr, kType, dType, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

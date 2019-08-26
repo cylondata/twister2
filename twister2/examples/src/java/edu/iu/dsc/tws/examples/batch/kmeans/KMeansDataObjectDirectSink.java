@@ -12,8 +12,10 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -36,6 +38,14 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   private double[][] dataPointsLocal;
 
+  private String inputKey;
+
+  public KMeansDataObjectDirectSink(String inputkey) {
+    this.inputKey = inputkey;
+  }
+
+  public KMeansDataObjectDirectSink() {
+  }
   /**
    * This method add the received message from the DataObject Source into the data objects.
    */
@@ -60,5 +70,10 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
   @Override
   public DataPartition<double[][]> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+  @Override
+  public Set<String> getCollectibleNames() {
+    return Collections.singleton(inputKey);
   }
 }

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 public class BKeyedPartition extends BaseOperation {
   private DestinationSelector destinationSelector;
@@ -49,6 +50,14 @@ public class BKeyedPartition extends BaseOperation {
                          MessageType keyType, MessageType dataType,
                          BulkReceiver rcvr, DestinationSelector destSelector) {
     this(comm, plan, sources, destinations, keyType, dataType, rcvr, destSelector,
+        comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BKeyedPartition(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                         MessageType keyType, MessageType dataType,
+                         BulkReceiver rcvr, DestinationSelector destSelector) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), keyType, dataType, rcvr, destSelector,
         comm.nextEdge(), MessageSchema.noSchema());
   }
 

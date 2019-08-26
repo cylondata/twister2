@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BAllReduce;
 import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
@@ -50,14 +50,20 @@ public class BAllReduceExample extends BenchWorker {
     Set<Integer> targets = IntStream.range(noOfSourceTasks, noOfTargetTasks + noOfSourceTasks)
         .boxed().collect(Collectors.toSet());
 
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        jobParameters.getSources(),
+        jobParameters.getTargets(),
+        workerEnv
+    ).withFairDistribution();
+
     // create the communication
-    reduce = new BAllReduce(workerEnv.getCommunicator(), logicalPlan, sources, targets,
+    reduce = new BAllReduce(workerEnv.getCommunicator(), logicalPlanBuilder,
         new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER_ARRAY),
         new FinalSingularReceiver(),
         MessageTypes.INTEGER_ARRAY);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan,
-        jobParameters.getTaskStages(), 0);
+    Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
+
     for (int t : tasksOfExecutor) {
       finishedSources.put(t, false);
     }

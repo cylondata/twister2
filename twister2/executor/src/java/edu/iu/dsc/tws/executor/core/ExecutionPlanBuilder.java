@@ -120,6 +120,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
     ParallelOperationFactory opFactory = new ParallelOperationFactory(cfg, network, logicalPlan);
 
     Map<Integer, WorkerSchedulePlan> containersMap = taskSchedule.getContainersMap();
+
     WorkerSchedulePlan conPlan = containersMap.get(workerId);
     if (conPlan == null) {
       LOG.log(Level.INFO, "Cannot find worker in the task plan: " + workerId);

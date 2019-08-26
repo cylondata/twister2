@@ -4,9 +4,6 @@ title: Windowing
 sidebar_label: Windowing
 ---
 
-Twister2 0.2.1 release includes an experimental windowing functionality. We are still working on 
-bringing this to a complete API with the state of the art windowing support. 
-
 In the current release, we have worked on implementing a windowing mechanism similar to Apache
 Storm streaming engine. As same as Storm, we also have the windowing operation at the lower part of
 the task graph. That is called Sink in Twister2 which is equivalent to Bolt in Storm. 
@@ -103,11 +100,11 @@ BaseWindowedSink dwDuration = new DirectCustomWindowReceiver()
 #### Inbuilt Policy
 
 ```bash
-./twister2-0.3.0/bin/twister2 submit standalone jar twister2-0.3.0/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "direct" -stages 4,4 -verify -stream -window
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "direct" -stages 4,4 -verify -stream -window
 ```
 
 #### Custom Policy
 
 ```bash
-./twister2-0.3.0/bin/twister2 submit standalone jar twister2-0.3.0/examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "cdirect" -stages 4,4 -verify -stream -window
+./bin/twister2 submit standalone jar examples/libexamples-java.jar edu.iu.dsc.tws.examples.task.ExampleTaskMain -itr 500 -workers 4 -size 8 -op "cdirect" -stages 4,4 -verify -stream -window
 ```
