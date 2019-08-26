@@ -31,8 +31,6 @@ import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.data.fs.local.LocalFileSystem;
 import edu.iu.dsc.tws.data.hdfs.HadoopFileSystem;
 
-//import org.apache.hadoop.hdfs.DistributedFileSystem;
-
 public final class FileSystemUtils {
 
   private static final Logger LOG = Logger.getLogger(FileSystemUtils.class.getName());
@@ -282,11 +280,9 @@ public final class FileSystemUtils {
           org.apache.hadoop.fs.FileSystem.class);
       newInstance = classConstructor.newInstance(new Object[]{conf,
           org.apache.hadoop.fs.FileSystem.get(conf)});
-    } catch (InstantiationException ie) {
-      ie.printStackTrace();
-      throw new RuntimeException("instantiation exception occured:" + ie.getMessage());
+    } catch (InstantiationException e) {
+      throw new IOException("instantiation exception occured:" + e.getMessage());
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
       throw new IOException("Could not load file system class '" + className + '\'', e);
     } catch (IllegalAccessException e) {
       throw new IOException("Illegal access exception: " + e.getMessage(), e);

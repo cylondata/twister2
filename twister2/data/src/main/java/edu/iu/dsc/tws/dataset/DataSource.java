@@ -43,7 +43,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
     try {
       this.splits = this.input.createInputSplits(numSplits);
     } catch (Exception e) {
-      throw new Twister2RuntimeException("Failed to create the input splits because, it %s", e);
+      throw new Twister2RuntimeException("Failed to create the input splits because, it", e);
     }
   }
 
@@ -54,7 +54,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
       try {
         split.open(config);
       } catch (IOException e) {
-        throw new Twister2RuntimeException("Failed to open the input split because, it %s", e);
+        throw new Twister2RuntimeException("Failed to open the input split because, it", e);
       }
       return split;
     } else {
