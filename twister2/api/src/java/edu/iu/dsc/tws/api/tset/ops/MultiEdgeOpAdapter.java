@@ -25,7 +25,9 @@ public class MultiEdgeOpAdapter {
 
   public MultiEdgeOpAdapter(TaskContext taskContext) {
     this.taskContext = taskContext;
-    this.inEdgeCount = taskContext.getInEdges() != null ? taskContext.getInEdges().size() : 0;
+    // inedges would be null for source tasks. But the end needs to be written.
+    // Hence the count is set to 1
+    this.inEdgeCount = taskContext.getInEdges() != null ? taskContext.getInEdges().size() : 1;
     this.outEdges = new ArrayList<>(taskContext.getOutEdges().keySet());
 
     if (outEdges.size() == 1) {
@@ -45,6 +47,10 @@ public class MultiEdgeOpAdapter {
     outEdgeWriter.keyedWriteToEdges(key, value);
   }
 
+  /*
+  When writing end to edges, we have to wait till taskInstance.execute is called from all the input
+  edges of the task. This is monitored using the inEdgeCount.
+   */
   public void writeEndToEdges() {
     if (taskContext.getOperationMode() == OperationMode.STREAMING) {
       return;

@@ -16,6 +16,7 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapIterCompute;
@@ -28,7 +29,6 @@ import edu.iu.dsc.tws.api.tset.link.batch.GatherTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
-import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorUnionOp;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
@@ -105,8 +105,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
           + "perform a union operation");
     }
 
-    DirectTLink<T> directThis = direct();
-    ComputeTSet<T, Iterator<T>> unionTSet = directThis.compute("union",
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
         new MapIterCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -123,25 +122,25 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
   @Override
   public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
-    BBaseTSet<T> other;
-    DirectTLink<T> directCurrent = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(this, directCurrent);
 
-    ComputeTSet<T, Iterator<T>> unionTSet = new ComputeTSet<>(getTSetEnv(), "union",
-        new ComputeCollectorUnionOp<>(new MapIterCompute<>(input -> input), tSets.size() + 1),
-        getParallelism());
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
+        new MapIterCompute<>((MapFunc<T, T>) input -> input));
+    // now the following relationship is created
+    // this -- directThis -- unionTSet
 
-    addChildToGraph(directCurrent, unionTSet);
     for (TSet<T> tSet : tSets) {
-      other = (BBaseTSet) tSet;
-      if (this.getParallelism() != other.getParallelism()) {
+      if (this.getParallelism() != ((BBaseTSet) tSet).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
       DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph(other, directOther);
+      addChildToGraph((BBaseTSet) tSet, directOther);
       addChildToGraph(directOther, unionTSet);
+      // now the following relationship is created
+      // this __ directThis __ unionTSet
+      // other __ directOther _/
     }
+
     return unionTSet;
   }
 
