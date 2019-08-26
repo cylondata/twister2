@@ -102,14 +102,14 @@ public class KMeansWorker implements IWorker {
     ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
 
     //Get the execution plan for the dependent task graphs
-    /*Map<String, ExecutionPlan> taskSchedulePlanMap =
+      /*Map<String, ExecutionPlan> taskSchedulePlanMap =
         cEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);*/
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
 
     //Using the map we can get the execution plan for the individual task graphs
-    /*ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
+      /*ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
         datapointsTaskGraph.getGraphName());*/
 
     //Actual execution for the first taskgraph
@@ -148,6 +148,7 @@ public class KMeansWorker implements IWorker {
       //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
     }
+
     taskExecutor.waitFor(kmeansTaskGraph, plan);
     cEnv.close();
 
@@ -158,7 +159,7 @@ public class KMeansWorker implements IWorker {
     }
     long endTime = System.currentTimeMillis();
 
-    LOG.fine("Total Time : " + (endTime - startTime)
+    LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
     LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"

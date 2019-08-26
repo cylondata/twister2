@@ -44,6 +44,23 @@ public abstract class StreamingTsetExample implements StreamingTSetIWorker, Seri
     }, parallel);
   }
 
+  SSourceTSet<Integer> dummySourceOther(StreamingTSetEnvironment env, int count,
+                                        int parallel) {
+    return env.createSource(new SourceFunc<Integer>() {
+      private int c = 25;
+
+      @Override
+      public boolean hasNext() {
+        return c < count + 25;
+      }
+
+      @Override
+      public Integer next() {
+        return c++;
+      }
+    }, parallel);
+  }
+
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()

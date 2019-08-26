@@ -253,7 +253,7 @@ public class TaskContextImpl implements TaskContext {
    *
    * @return a map with edge, and task connected to this edge
    */
-  public Map<String, Set<String>> getInputs() {
+  public Map<String, Set<String>> getInEdges() {
     return inputs;
   }
 

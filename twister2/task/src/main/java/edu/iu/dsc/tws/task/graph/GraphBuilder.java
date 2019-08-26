@@ -150,4 +150,8 @@ public final class GraphBuilder {
     graph.setOperationMode(mode);
     return graph;
   }
+
+  public boolean vertexExists(String name) {
+    return graph.vertex(name) != null;
+  }
 }

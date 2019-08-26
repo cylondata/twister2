@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets.streaming;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -50,4 +51,10 @@ public interface StreamingTSet<T> extends TSet<T> {
 
   @Override
   StreamingTLink<T, T> replicate(int replications);
+
+  @Override
+  StreamingTSet<T> union(TSet<T> unionTSet);
+
+  @Override
+  StreamingTSet<T> union(Collection<TSet<T>> tSets);
 }
