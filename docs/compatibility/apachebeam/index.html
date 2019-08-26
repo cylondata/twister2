@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Apache Beam Runner · Twister2</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.&lt;/p&gt;
+"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Apache Beam Runner · Twister2"/><meta property="og:type" content="website"/><meta property="og:url" content="https://twister2.org/"/><meta property="og:description" content="&lt;p&gt;Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.&lt;/p&gt;
+"/><meta property="og:image" content="https://twister2.org/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://twister2.org/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-dark.min.css"/><link rel="alternate" type="application/atom+xml" href="https://twister2.org/blog/atom.xml" title="Twister2 Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://twister2.org/blog/feed.xml" title="Twister2 Blog RSS Feed"/><link rel="stylesheet" href="/css/code-blocks-buttons.css"/><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat|Oswald|Roboto&amp;display=swap"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script><script type="text/javascript" src="/js/code-blocks-buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><img class="logo" src="/img/logo_large.png" alt="Twister2"/><h2 class="headerTitleWithLogo">Twister2</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/docs/introduction" target="_self">Docs</a></li><li class=""><a href="/configs" target="_self">Configurations</a></li><li class=""><a href="/docs/download" target="_self">Download</a></li><li class=""><a href="https://github.com/DSC-SPIDAL/twister2" target="_blank">GitHub</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 class="postHeaderTitle">Apache Beam Runner</h1></header><article><div><span><p>Apache Beam is an open source, unified model for defining both batch and streaming data-parallel processing pipelines.
+Beam provides several open sources SDK's which can he used to build a pipline. This pipline is then
+executed using one of the many distributed processing back-ends supported by Apache beam. Currently
+Frameworks such as Apache Spark and Apache Flink are supported, these are called runners.</p>
+<p>Twister2 has a Apache Beam runner that is currently being shipped with the Twister2 release, which we plan to
+include directly into Apache Beam, This runner allows users to run Apache beam piplines with Twister2</p>
+<p>Below is an example code that runs a Beam pipline using Twister2 Runner</p>
+<pre><code class="hljs css language-java">    Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
+    options.setTSetEnvironment(env);
+    options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
+    String resultPath = <span class="hljs-string">"/home/pulasthi/work/twister2/beamtest/testdir"</span>;
+    Pipeline p = Pipeline.create(options);
+    PCollection&lt;String&gt; result =
+        p.apply(GenerateSequence.from(<span class="hljs-number">0</span>).to(<span class="hljs-number">10</span>))
+            .apply(
+                ParDo.of(
+                    <span class="hljs-keyword">new</span> DoFn&lt;Long, String&gt;() {
+                      <span class="hljs-meta">@ProcessElement</span>
+                      <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">processElement</span><span class="hljs-params">(ProcessContext c)</span> <span class="hljs-keyword">throws</span> Exception </span>{
+                        c.output(c.element().toString());
+                      }
+                    }));
+
+    <span class="hljs-keyword">try</span> {
+      result.apply(TextIO.write().to(<span class="hljs-keyword">new</span> URI(resultPath).getPath() + <span class="hljs-string">"/part"</span>));
+    } <span class="hljs-keyword">catch</span> (URISyntaxException e) {
+      LOG.info(e.getMessage());
+    }
+    p.run();
+</code></pre>
+<p>Apache beam provides a rich set of SDK's with many adapters which allow you to integrate with
+various systems, you can learn more about Apache Beam by referring the Apache Beam <a href="https://beam.apache.org/documentation/">documentation</a>.</p>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/" class="nav-home"><img src="/img/logo_large.png" alt="Twister2" width="66" height="58"/></a><div><h5>Docs</h5><a href="/docs/en/quickstart.html">Getting Started (Quickstart)</a><a href="/docs/en/concepts/api_overview">Guides (Programming Guides)</a></div><div><h5>Community</h5><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://dsc-twister.slack.com/">Project Chat</a></div><div><h5>More</h5><a href="/blog">Blog</a><a href="https://github.com/DSC-SPIDAL/twister2">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><section class="copyright">Copyright © 2019 Indiana University</section></footer></div></body></html>
