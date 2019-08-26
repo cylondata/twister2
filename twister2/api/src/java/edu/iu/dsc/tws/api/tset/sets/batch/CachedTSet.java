@@ -24,6 +24,9 @@
 
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -42,6 +45,7 @@ import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
 import edu.iu.dsc.tws.api.tset.ops.SinkOp;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sources.CacheSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 
@@ -173,5 +177,15 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   public CachedTSet<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
+    throw new UnsupportedOperationException("Union on CachedTSet is not supported");
+  }
+
+  @Override
+  public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
+    throw new UnsupportedOperationException("Union on CachedTSet is not supported");
   }
 }

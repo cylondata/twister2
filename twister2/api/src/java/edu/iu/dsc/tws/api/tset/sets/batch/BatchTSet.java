@@ -23,6 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -63,6 +64,13 @@ public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
 
   @Override
   BatchTLink<Iterator<T>, T> replicate(int replications);
+
+  @Override
+  BatchTSet<T> union(TSet<T> unionTSet);
+
+
+  @Override
+  BatchTSet<T> union(Collection<TSet<T>> tSets);
 
   @Override
   BatchTSet<T> cache();

@@ -107,7 +107,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public TSet<T> union(TSet<T> other) {
+  public StreamingTSet<T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
@@ -126,7 +126,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public TSet<T> union(Collection<TSet<T>> tSets) {
+  public StreamingTSet<T> union(Collection<TSet<T>> tSets) {
     SBaseTSet<T> other;
     SDirectTLink<T> directCurrent = new SDirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(this, directCurrent);
@@ -146,7 +146,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
       addChildToGraph(other, directOther);
       addChildToGraph(directOther, unionTSet);
     }
-    return null;
+    return unionTSet;
   }
 
   @Override

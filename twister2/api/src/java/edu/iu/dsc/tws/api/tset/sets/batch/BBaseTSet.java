@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.tset.sets.batch;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
@@ -97,32 +98,37 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public BBaseTSet<T> union(TSet<T> other) {
+  public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
 
     if (this.getParallelism() != ((BBaseTSet) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
-    DirectTLink<T> directCurrent = new DirectTLink<>(getTSetEnv(), getParallelism());
+
+    DirectTLink<T> directThis = direct();
+    ComputeTSet<T, Iterator<T>> unionTSet = directThis.compute("union",
+        new MapIterCompute<>((MapFunc<T, T>) input -> input));
+    // now the following relationship is created
+    // this -- directThis -- unionTSet
+
     DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(this, directCurrent);
     addChildToGraph((BBaseTSet) other, directOther);
-    ComputeTSet<T, T> unionTSet = new ComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorUnionOp<T, T>(new MapIterCompute(input -> input), 2),
-        getParallelism());
-    addChildToGraph(directCurrent, unionTSet);
     addChildToGraph(directOther, unionTSet);
+    // now the following relationship is created
+    // this __ directThis __ unionTSet
+    // other __ directOther _/
+
     return unionTSet;
   }
 
   @Override
-  public BBaseTSet<T> union(Collection<TSet<T>> tSets) {
+  public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
     BBaseTSet<T> other;
     DirectTLink<T> directCurrent = new DirectTLink<>(getTSetEnv(), getParallelism());
     addChildToGraph(this, directCurrent);
 
-    ComputeTSet<T, T> unionTSet = new ComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorUnionOp<T, T>(new MapIterCompute(input -> input), tSets.size() + 1),
+    ComputeTSet<T, Iterator<T>> unionTSet = new ComputeTSet<>(getTSetEnv(), "union",
+        new ComputeCollectorUnionOp<>(new MapIterCompute<>(input -> input), tSets.size() + 1),
         getParallelism());
 
     addChildToGraph(directCurrent, unionTSet);
