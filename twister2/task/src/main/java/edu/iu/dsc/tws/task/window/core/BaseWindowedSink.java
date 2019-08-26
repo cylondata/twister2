@@ -339,7 +339,7 @@ public abstract class BaseWindowedSink<T> extends AbstractSingleWindowDataSink<T
    */
   private Set<GlobalStreamId> wrapGlobalStreamId(TaskContext context) {
     Set<GlobalStreamId> streams = new HashSet<>();
-    for (String s : context.getInputs().keySet()) {
+    for (String s : context.getInEdges().keySet()) {
       GlobalStreamId globalStreamId = new GlobalStreamId(s);
       streams.add(globalStreamId);
     }
