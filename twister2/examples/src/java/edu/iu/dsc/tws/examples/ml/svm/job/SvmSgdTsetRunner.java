@@ -17,12 +17,6 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
-import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.examples.ml.svm.constant.Constants;
 import edu.iu.dsc.tws.examples.ml.svm.constant.TimingConstants;
 import edu.iu.dsc.tws.examples.ml.svm.exceptions.MatrixMultiplicationException;
@@ -37,6 +31,12 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.ResultsSaver;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
+import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 
 public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {

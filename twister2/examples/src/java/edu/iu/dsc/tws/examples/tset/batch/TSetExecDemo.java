@@ -42,13 +42,13 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.tset.ops.ComputeOp;
-import edu.iu.dsc.tws.tset.ops.SourceOp;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
+import edu.iu.dsc.tws.tset.ops.ComputeOp;
+import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class TSetExecDemo implements IWorker, Serializable {
   static final int COUNT = 5;

@@ -17,11 +17,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
-import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 public class SUnionExample extends StreamingTsetExample {
   private static final Logger LOG = Logger.getLogger(SUnionExample.class.getName());

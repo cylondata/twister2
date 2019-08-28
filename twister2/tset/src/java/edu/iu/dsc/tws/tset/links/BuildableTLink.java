@@ -10,14 +10,15 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.link;
+
+package edu.iu.dsc.tws.tset.links;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetGraph;
+import edu.iu.dsc.tws.tset.TSetGraph;
 
 public interface BuildableTLink extends TBase {
 

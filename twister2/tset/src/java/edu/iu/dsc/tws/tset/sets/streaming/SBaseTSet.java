@@ -10,6 +10,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -21,19 +22,21 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets.streaming;
+package edu.iu.dsc.tws.tset.sets.streaming;
 
 
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
-import edu.iu.dsc.tws.api.tset.TSetUtils;
-import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
+import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SAllGatherTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SAllReduceTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
@@ -41,10 +44,7 @@ import edu.iu.dsc.tws.tset.links.streaming.SGatherTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SPartitionTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
-import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 

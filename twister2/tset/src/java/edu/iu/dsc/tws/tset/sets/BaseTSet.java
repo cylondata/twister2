@@ -10,14 +10,14 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.tset.sets;
 
 import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.env.TSetEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 public abstract class BaseTSet<T> implements BuildableTSet {
 

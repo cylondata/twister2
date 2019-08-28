@@ -99,6 +99,11 @@ def twister2_core_checkpointing_files():
         "//twister2/checkpointing/src/java:checkpointing-java",
     ]
 
+def twister2_core_tset_files():
+    return [
+        "//twister2/tset/src/java:tset-java",
+    ]
+
 def twister2_core_restarter_files():
     return [
         "//twister2/checkpointing/src/java/edu/iu/dsc/tws/restarter:restarter-java",

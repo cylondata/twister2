@@ -9,14 +9,27 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets;
 
-public interface CacheableTSet<T> {
+package edu.iu.dsc.tws.tset.worker;
 
-  /**
-   * Executes TSet and saves any generated data as a in-memory data object
-   *
-   * @return the resulting TSet
-   */
-  TSet<T> cache();
+import java.io.Serializable;
+
+import edu.iu.dsc.tws.task.impl.TaskWorker;
+
+/**
+ * This is now deprecated. Use {@link edu.iu.dsc.tws.tset.env.BatchTSetEnvironment} instead!
+ *
+ * @deprecated deprecated abstract class
+ */
+@Deprecated
+public abstract class TSetBatchWorker extends TaskWorker implements Serializable {
+
+  @Override
+  public void execute() {
+    TwisterBatchContext tbc = new TwisterBatchContext(this.config, this.taskExecutor);
+    execute(tbc);
+  }
+
+  public abstract void execute(TwisterBatchContext tc);
 }
+

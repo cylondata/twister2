@@ -36,15 +36,15 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
-import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.examples.utils.RandomString;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public class TSetSimpleWordCount implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetSimpleWordCount.class.getName());

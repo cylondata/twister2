@@ -9,15 +9,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.api.tset.sets.batch;
 
-import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 
-public interface TupleTSet<K, V> extends TBase {
+public interface CacheableTSet<T> {
 
-  TupleTSet<K, V> setName(String name);
-
-  TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
+  /**
+   * Executes TSet and saves any generated data as a in-memory data object
+   *
+   * @return the resulting TSet
+   */
+  TSet<T> cache();
 }

@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.tset.sources.CacheSource;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.tset.sources.CacheSource;
 import static java.util.stream.Collectors.toList;
 
 // todo: take this to the tset impl tests package

@@ -27,9 +27,9 @@ import org.apache.beam.sdk.io.Read;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PCollection;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 /**
  * doc.

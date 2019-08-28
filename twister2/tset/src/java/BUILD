@@ -13,7 +13,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:tset-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
         "//twister2/data/src/main/java:data-java",
         "//twister2/task/src/main/java:task-java",
         "@org_apache_hadoop_hadoop_mapreduce_client_core//jar",
