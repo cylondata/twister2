@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -39,9 +40,10 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansWorker;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
@@ -60,7 +62,7 @@ public final class ConnectedDataflowExample {
   private ConnectedDataflowExample() {
   }
 
-  public static class ConnectedDataflowExampleDriver extends BaseDriver {
+  public static class CDExampleDriver extends BaseDriver {
 
     @Override
     public void execute(CDFWEnv cdfwEnv) {
@@ -77,185 +79,8 @@ public final class ConnectedDataflowExample {
 
       //cdfwEnv.executeDataFlowGraph(job1);
       //cdfwEnv.executeDataFlowGraph(job2);
-
-      cdfwEnv.executeDataFlowGraph(job1, job2);
       //cdfwEnv.executeDataFlowGraph(job3);
-    }
-  }
-
-  private static class FirstSourceTask extends BaseSource {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String edgeName;
-
-    private FirstSourceTask() {
-    }
-
-    protected FirstSourceTask(String edgename) {
-      this.edgeName = edgename;
-    }
-
-    @Override
-    public void execute() {
-      LOG.info("edge name is:" + edgeName);
-      context.writeEnd(edgeName, "firstsource");
-    }
-  }
-
-  private static class FirstSinkTask extends BaseSink implements Collector {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String inputKey;
-    private String edgeName;
-
-    protected FirstSinkTask(String edgename, String inputkey) {
-      this.edgeName = edgename;
-      this.inputKey = inputkey;
-    }
-
-    @Override
-    public DataPartition<?> get() {
-      return null;
-    }
-
-    @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
-    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      context.writeEnd(edgeName, "firstout");
-      return true;
-    }
-  }
-
-  private static class SecondSourceTask extends BaseSource {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String edgeName;
-
-    private SecondSourceTask() {
-    }
-
-    protected SecondSourceTask(String edgename) {
-      this.edgeName = edgename;
-    }
-
-    @Override
-    public void execute() {
-      context.writeEnd(edgeName, "secondsource");
-    }
-  }
-
-  private static class SecondSinkTask extends BaseSink implements Collector {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String inputKey;
-    private String edgeName;
-
-    private SecondSinkTask() {
-    }
-
-    protected SecondSinkTask(String edgename, String inputkey) {
-      this.edgeName = edgename;
-      this.inputKey = inputkey;
-    }
-
-    @Override
-    public DataPartition<?> get() {
-      return null;
-    }
-
-    @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
-    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      context.writeEnd(edgeName, "secondout");
-      return true;
-    }
-  }
-
-  private static class ThirdSourceTask extends BaseSource implements Receptor {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String edgeName;
-
-    private ThirdSourceTask() {
-    }
-
-    protected ThirdSourceTask(String edgename) {
-      this.edgeName = edgename;
-    }
-
-    @Override
-    public void execute() {
-      context.writeEnd(edgeName, "thirdsource");
-    }
-
-    @Override
-    public void add(String name, DataObject<?> data) {
-    }
-
-    @Override
-    public Set<String> getReceivableNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("points");
-      inputKeys.add("centroids");
-      return inputKeys;
-    }
-  }
-
-  private static class ThirdSinkTask extends BaseSink implements Collector {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private String inputKey;
-    private String edgeName;
-
-    private ThirdSinkTask() {
-    }
-
-    protected ThirdSinkTask(String edgename, String inputkey) {
-      this.edgeName = edgename;
-      this.inputKey = inputkey;
-    }
-
-    @Override
-    public DataPartition<?> get() {
-      return null;
-    }
-
-    @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
-    }
-
-    @Override
-    public boolean execute(IMessage content) {
-      context.writeEnd(edgeName, "Hello");
-      return true;
-    }
-  }
-
-
-  /**
-   * This class aggregates the cluster centroid values and sum the new centroid values.
-   */
-  public static class Aggregator implements IFunction {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    /**
-     * The actual message callback
-     *
-     * @param object1 the actual message
-     * @param object2 the actual message
-     */
-    @Override
-    public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
-      return object1.toString() + object2.toString();
+      cdfwEnv.executeDataFlowGraph(job1, job2, job3);
     }
   }
 
@@ -270,6 +95,7 @@ public final class ConnectedDataflowExample {
     Options options = new Options();
     options.addOption(CDFConstants.ARGS_PARALLELISM_VALUE, true, "2");
     options.addOption(CDFConstants.ARGS_WORKERS, true, "2");
+    options.addOption(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS, true, "2");
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -278,9 +104,12 @@ public final class ConnectedDataflowExample {
     int instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
     int parallelismValue =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
+    int dimension =
+        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS));
 
     configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
     configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    configurations.put(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS, Integer.toString(dimension));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -291,9 +120,9 @@ public final class ConnectedDataflowExample {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(ParallelDataFlowsExample.class.getName())
+        .setJobName(CDExampleDriver.class.getName())
         .setWorkerClass(CDFWWorker.class)
-        .setDriverClass(ConnectedDataflowExampleDriver.class.getName())
+        .setDriverClass(CDExampleDriver.class.getName())
         .addComputeResource(1, 512, instances)
         .setConfig(jobConfig)
         .build();
@@ -304,27 +133,6 @@ public final class ConnectedDataflowExample {
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 DafaFlowJobConfig jobConfig) {
-
-    /*FirstSourceTask firstSourceTask = new FirstSourceTask(Context.TWISTER2_DIRECT_EDGE + "1");
-    FirstSinkTask firstSinkTask = new FirstSinkTask(Context.TWISTER2_DIRECT_EDGE + "1", "points");
-
-    ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(config);
-    firstGraphBuilder.addSource("pointsource", firstSourceTask, parallelismValue);
-    ComputeConnection firstComputeConnection = firstGraphBuilder.addSink("pointsink",
-        firstSinkTask, parallelismValue);
-
-    firstComputeConnection.partition("pointsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-
-    firstGraphBuilder.setMode(OperationMode.BATCH);
-    ComputeGraph firstGraph = firstGraphBuilder.build();
-
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", firstGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
-    return job;
-*/
-
     String dataDirectory = "/tmp/dinput0";
     int dsize = 1000;
     int dimension = 2;
@@ -357,35 +165,15 @@ public final class ConnectedDataflowExample {
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", firstGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
+        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  DafaFlowJobConfig jobConfig) {
-
-    /*SecondSourceTask secondSourceTask = new SecondSourceTask(Context.TWISTER2_DIRECT_EDGE + "2");
-    SecondSinkTask secondSinkTask = new SecondSinkTask(Context.TWISTER2_DIRECT_EDGE + "2",
-        "centroids");
-
-    ComputeGraphBuilder secondGraphBuilder = ComputeGraphBuilder.newBuilder(config);
-    secondGraphBuilder.addSource("centroidsource", secondSourceTask, parallelismValue);
-    ComputeConnection secondComputeConnection = secondGraphBuilder.addSink("centroidsink",
-        secondSinkTask, parallelismValue);
-
-    secondComputeConnection.partition("centroidsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE + "2")
-        .withDataType(MessageTypes.OBJECT);
-
-    secondGraphBuilder.setMode(OperationMode.BATCH);
-    ComputeGraph secondGraph = secondGraphBuilder.build();
-
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", secondGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("second_out");
-    return job;*/
-
     String centroidDirectory = "/tmp/cinput0";
-    int csize = 1000;
+    int csize = 4;
     int dimension = 2;
 
     DataFileReplicatedReadSource dataFileReplicatedReadSource
@@ -416,37 +204,16 @@ public final class ConnectedDataflowExample {
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", secondGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("second_out");
+        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
 
 
   private static DataFlowGraph generateThirdJob(Config config, int parallelismValue,
                                                 DafaFlowJobConfig jobConfig) {
-   /* ThirdSourceTask thirdSourceTask = new ThirdSourceTask(Context.TWISTER2_DIRECT_EDGE + "3");
-    ThirdSinkTask thirdSinkTask = new ThirdSinkTask(Context.TWISTER2_DIRECT_EDGE + "3",
-        "centroids");
-
-    ComputeGraphBuilder thirdGraphBuilder = ComputeGraphBuilder.newBuilder(config);
-    thirdGraphBuilder.addSource("kmeanssource", thirdSourceTask, parallelismValue);
-    ComputeConnection thirdComputeConnection = thirdGraphBuilder.addSink("kmeanssink",
-        thirdSinkTask, parallelismValue);
-
-    thirdComputeConnection.direct("kmeanssource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE + "3")
-        .withDataType(MessageTypes.OBJECT);
-
-    thirdGraphBuilder.setMode(OperationMode.BATCH);
-    ComputeGraph thirdGraph = thirdGraphBuilder.build();
-
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("third_graph", thirdGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out")
-        .addInput("second_graph", "second_out");
-    return job;*/
-
-    KMeansWorker.KMeansSourceTask kMeansSourceTask = new KMeansWorker.KMeansSourceTask();
-    KMeansWorker.KMeansAllReduceTask kMeansAllReduceTask = new KMeansWorker.KMeansAllReduceTask();
+    KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
+    KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
     //Add source, and sink tasks to the task graph builder for the third task graph
@@ -457,16 +224,147 @@ public final class ConnectedDataflowExample {
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
-        .withReductionFunction(new KMeansWorker.CentroidAggregator())
+        .withReductionFunction(new CentroidAggregator())
         .withDataType(MessageTypes.OBJECT);
     kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
     kmeansComputeGraphBuilder.setTaskGraphName("kmeansTG");
-    ComputeGraph thirdGraph =  kmeansComputeGraphBuilder.build();
+    ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("third_graph", thirdGraph)
         .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out")
-        .addInput("second_graph", "second_out");
+        .addInput("first_graph", "first_out", "datapointsink")
+        .addInput("second_graph", "second_out", "centroidsink");
     return job;
   }
+
+  public static class KMeansSourceTask extends BaseSource implements Receptor {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private double[][] centroid = null;
+    private double[][] datapoints = null;
+
+    private KMeansCalculator kMeansCalculator = null;
+    private DataObject<?> dataPointsObject = null;
+    private DataObject<?> centroidsObject = null;
+
+    public KMeansSourceTask() {
+    }
+
+    @Override
+    public void execute() {
+      int dim = Integer.parseInt(config.getStringValue("dim"));
+
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
+      datapoints = (double[][]) dataPartition.getConsumer().next();
+
+      DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
+      centroid = (double[][]) centroidPartition.getConsumer().next();
+
+      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
+      double[][] kMeansCenters = kMeansCalculator.calculate();
+      context.writeEnd("all-reduce", kMeansCenters);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void add(String name, DataObject<?> data) {
+      LOG.log(Level.INFO, "Received input: " + name);
+      if ("points".equals(name)) {
+        this.dataPointsObject = data;
+      }
+      if ("centroids".equals(name)) {
+        this.centroidsObject = data;
+      }
+    }
+
+    @Override
+    public Set<String> getReceivableNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("points");
+      inputKeys.add("centroids");
+      return inputKeys;
+    }
+  }
+
+  public static class KMeansAllReduceTask extends BaseSink implements Collector {
+    private static final long serialVersionUID = -5190777711234234L;
+
+    private double[][] centroids;
+    private double[][] newCentroids;
+
+    public KMeansAllReduceTask() {
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
+      centroids = (double[][]) message.getContent();
+      newCentroids = new double[centroids.length][centroids[0].length - 1];
+      for (int i = 0; i < centroids.length; i++) {
+        for (int j = 0; j < centroids[0].length - 1; j++) {
+          double newVal = centroids[i][j] / centroids[i][centroids[0].length - 1];
+          newCentroids[i][j] = newVal;
+        }
+      }
+      return true;
+    }
+
+    @Override
+    public DataPartition<double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), newCentroids);
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("centroids");
+      return inputKeys;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+  }
+
+  /**
+   * This class aggregates the cluster centroid values and sum the new centroid values.
+   */
+  public static class CentroidAggregator implements IFunction {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    public CentroidAggregator() {
+    }
+
+    /**
+     * The actual message callback
+     *
+     * @param object1 the actual message
+     * @param object2 the actual message
+     */
+    @Override
+    public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
+
+      double[][] kMeansCenters = (double[][]) object1;
+      double[][] kMeansCenters1 = (double[][]) object2;
+
+      double[][] newCentroids = new double[kMeansCenters.length]
+          [kMeansCenters[0].length];
+
+      if (kMeansCenters.length != kMeansCenters1.length) {
+        throw new RuntimeException("Center sizes not equal " + kMeansCenters.length
+            + " != " + kMeansCenters1.length);
+      }
+
+      for (int j = 0; j < kMeansCenters.length; j++) {
+        for (int k = 0; k < kMeansCenters[0].length; k++) {
+          double newVal = kMeansCenters[j][k] + kMeansCenters1[j][k];
+          newCentroids[j][k] = newVal;
+        }
+      }
+      return newCentroids;
+    }
+  }
 }
+

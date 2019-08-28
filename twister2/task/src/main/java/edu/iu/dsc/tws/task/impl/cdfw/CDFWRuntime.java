@@ -58,6 +58,7 @@ public class CDFWRuntime implements JobListener {
    * The outputs from previous graphs
    * [graph, [output name, data set]]
    */
+  //private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
   private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
 
   /**
@@ -117,8 +118,9 @@ public class CDFWRuntime implements JobListener {
     CDFWJobAPI.ExecuteCompletedMessage completedMessage;
     try {
       executeMessage = msg.unpack(CDFWJobAPI.ExecuteMessage.class);
-//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
+      //LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+      LOG.log(Level.INFO, workerId + " Executing the subgraph : "
+          + executeMessage.getSubgraphName());
 
       // get the subgraph from the map
       CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
@@ -129,14 +131,18 @@ public class CDFWRuntime implements JobListener {
         return true;
       }
       // use the taskexecutor to create the execution plan
+      LOG.log(Level.INFO, "task graph name:" + taskGraph.getGraphName());
       executionPlan = taskExecutor.plan(taskGraph);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+
+      LOG.info("subgraph input list for the graph:" + subGraph.getInputsList());
 
       if (subGraph.getInputsList().size() != 0) {
         for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
           String inputName = input.getName();
           String inputGraph = input.getParentGraph();
+          String taskname = input.getTaskname();
 
           if (!outPuts.containsKey(inputGraph)) {
             throw new RuntimeException("We cannot find the input graph: " + inputGraph);
@@ -147,8 +153,8 @@ public class CDFWRuntime implements JobListener {
           if (!outsPerGraph.containsKey(inputName)) {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
-
-          DataObject<Object> outPutObject = outsPerGraph.get(inputName);
+          DataObject<Object> outPutObject = outsPerGraph.get(taskname);
+          LOG.info("output object values:" + outPutObject);
           taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
         }
       }
@@ -156,8 +162,8 @@ public class CDFWRuntime implements JobListener {
       List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
       for (CDFWJobAPI.Input in : inputs) {
-        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getTaskname());
+        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getTaskname(), dataSet);
       }
 
       // reuse the task executor execute
@@ -169,14 +175,24 @@ public class CDFWRuntime implements JobListener {
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
 
-      List<String> outPutNames = subGraph.getOutputsList();
+
+      List<CDFWJobAPI.Output> outputs = subGraph.getOutputsList();
+      Map<String, DataObject<Object>> outs = new HashMap<>();
+      for (CDFWJobAPI.Output out : outputs) {
+        DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan,
+            out.getName());
+        outs.put(out.getName(), outPut);
+      }
+      outPuts.put(subGraph.getName(), outs);
+
+      /*List<String> outPutNames = subGraph.getOutputsList();
       Map<String, DataObject<Object>> outs = new HashMap<>();
       for (String out : outPutNames) {
         // get the outputs
         DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
         outs.put(out, outPut);
       }
-      outPuts.put(subGraph.getName(), outs);
+      outPuts.put(subGraph.getName(), outs);*/
 
       if (!workerMessenger.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);

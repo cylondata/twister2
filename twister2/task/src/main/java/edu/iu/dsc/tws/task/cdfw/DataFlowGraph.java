@@ -44,7 +44,10 @@ public final class DataFlowGraph {
   private List<CDFWJobAPI.Input> inputs = new ArrayList<>();
 
   // output names to this dataflow
-  private List<String> outputs = new ArrayList<>();
+  //private List<String> outputs = new ArrayList<>();
+
+  // input names to this
+  private List<CDFWJobAPI.Output> outputs = new ArrayList<>();
 
   private KryoSerializer kryoSerializer;
 
@@ -122,15 +125,15 @@ public final class DataFlowGraph {
     return this;
   }
 
-  public DataFlowGraph addInput(String g, String input) {
+ /* public DataFlowGraph addInput(String g, String input) {
     inputs.add(CDFWJobAPI.Input.newBuilder().setParentGraph(g).setName(input).build());
     return this;
-  }
+  }*/
 
-  public DataFlowGraph addOutput(String name) {
+  /*public DataFlowGraph addOutput(String name) {
     outputs.add(name);
     return this;
-  }
+  }*/
 
   public List<CDFWJobAPI.Input> getInputs() {
     return inputs;
@@ -140,7 +143,19 @@ public final class DataFlowGraph {
     return graphName;
   }
 
-  public List<String> getOutputs() {
+  public DataFlowGraph addInput(String g, String input, String taskname) {
+    inputs.add(CDFWJobAPI.Input.newBuilder()
+        .setParentGraph(g).setName(input).setTaskname(taskname).build());
+    return this;
+  }
+
+  public DataFlowGraph addOutput(String g, String output, String taskname) {
+    inputs.add(CDFWJobAPI.Input.newBuilder()
+        .setParentGraph(g).setName(output).setTaskname(taskname).build());
+    return this;
+  }
+
+  public List<CDFWJobAPI.Output> getOutputs() {
     return outputs;
   }
 

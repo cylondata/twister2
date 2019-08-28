@@ -90,6 +90,7 @@ public final class CDFWExecutor {
   /**
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
+   *
    * @param graph the dataflow graph
    * @deprecated we are not using this method as of now
    */
@@ -156,6 +157,12 @@ public final class CDFWExecutor {
   private void submitJob(CDFWJobAPI.SubGraph job) {
     LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
     CDFWJobAPI.ExecuteMessage.Builder builder = CDFWJobAPI.ExecuteMessage.newBuilder();
+    /*if (!job.getInputsList().isEmpty()) {
+      for (int i = 0; i < job.getInputsList().size(); i++) {
+        CDFWJobAPI.Input input = job.getInputs(i);
+        LOG.info("%%%%%%%% Job inputs:" + input + "\t" + input.getTaskname());
+      }
+    }*/
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
     driverMessenger.broadcastToAllWorkers(builder.build());
