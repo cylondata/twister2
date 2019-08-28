@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;

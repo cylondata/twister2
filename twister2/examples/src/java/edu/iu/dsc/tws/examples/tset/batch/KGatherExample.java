@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KGatherExample extends BatchTsetExample {

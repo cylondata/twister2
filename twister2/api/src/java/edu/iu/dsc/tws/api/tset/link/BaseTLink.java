@@ -17,7 +17,7 @@ import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 
 /**

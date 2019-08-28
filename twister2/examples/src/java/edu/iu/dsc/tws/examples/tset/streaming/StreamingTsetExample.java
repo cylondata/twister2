@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.streaming.SSourceTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.StreamingTSetIWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 

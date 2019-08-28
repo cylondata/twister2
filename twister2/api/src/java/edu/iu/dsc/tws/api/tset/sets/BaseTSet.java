@@ -17,7 +17,7 @@ import java.util.Objects;
 import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.TSetEnvironment;
 
 public abstract class BaseTSet<T> implements BuildableTSet {
 

@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 

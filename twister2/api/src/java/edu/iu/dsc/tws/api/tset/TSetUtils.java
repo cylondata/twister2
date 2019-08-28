@@ -13,82 +13,15 @@ package edu.iu.dsc.tws.api.tset;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.link.BaseTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.AllReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.DirectTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.GatherTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.PartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.ReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.batch.ReplicateTLink;
 
 public final class TSetUtils {
   private static long genCount = 0;
-
-  private static int keyedTSetCount = 0;
 
   private TSetUtils() {
   }
 
   public static String generateName(String prefix) {
     return prefix + (++genCount);
-  }
-
-
-  public static <T> boolean isKeyedInput(BaseTLink parent) {
-    return parent instanceof KeyedGatherTLink || parent instanceof KeyedReduceTLink
-        || parent instanceof KeyedPartitionTLink;
-  }
-
-  /**
-   * Check if the link is Iterable
-   */
-  public static <T> boolean isIterableInput(BaseTLink parent, OperationMode mode) {
-    if (mode == OperationMode.STREAMING) {
-      if (parent instanceof DirectTLink) {
-        return true;
-      } else if (parent instanceof ReduceTLink) {
-        return false;
-      } else if (parent instanceof KeyedReduceTLink) {
-        return false;
-      } else if (parent instanceof GatherTLink || parent instanceof KeyedGatherTLink) {
-        return true;
-      } else if (parent instanceof AllReduceTLink) {
-        return false;
-      } else if (parent instanceof AllGatherTLink) {
-        return true;
-      } else if (parent instanceof PartitionTLink || parent instanceof KeyedPartitionTLink) {
-        return true;
-      } else if (parent instanceof ReplicateTLink) {
-        return false;
-      } else {
-        throw new RuntimeException("Failed to build un-supported operation: " + parent);
-      }
-    } else {
-      if (parent instanceof DirectTLink) {
-        return true;
-      } else if (parent instanceof ReduceTLink) {
-        return false;
-      } else if (parent instanceof KeyedReduceTLink) {
-        return true;
-      } else if (parent instanceof GatherTLink || parent instanceof KeyedGatherTLink) {
-        return true;
-      } else if (parent instanceof AllReduceTLink) {
-        return false;
-      } else if (parent instanceof AllGatherTLink) {
-        return true;
-      } else if (parent instanceof PartitionTLink || parent instanceof KeyedPartitionTLink) {
-        return true;
-      } else if (parent instanceof ReplicateTLink) {
-        return true;
-      } else {
-        throw new RuntimeException("Failed to build un-supported operation: " + parent);
-      }
-    }
   }
 
   public static MessageType getDataType(Class type) {

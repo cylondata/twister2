@@ -14,9 +14,8 @@ package edu.iu.dsc.tws.api.tset.env;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.api.tset.sets.streaming.SSourceTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 public class StreamingTSetEnvironment extends TSetEnvironment {
 

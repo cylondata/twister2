@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 

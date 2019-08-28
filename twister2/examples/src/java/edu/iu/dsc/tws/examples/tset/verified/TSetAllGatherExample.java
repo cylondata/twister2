@@ -33,8 +33,8 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.AllGatherTLink;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 

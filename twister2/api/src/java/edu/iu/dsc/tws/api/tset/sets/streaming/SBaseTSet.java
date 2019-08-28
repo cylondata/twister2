@@ -30,23 +30,25 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.MapCompute;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.api.tset.link.streaming.SAllGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SAllReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SDirectTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SGatherTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SPartitionTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SReduceTLink;
-import edu.iu.dsc.tws.api.tset.link.streaming.SReplicateTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SAllGatherTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SAllReduceTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SDirectTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SGatherTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SPartitionTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
+import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
-  SBaseTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
+  public SBaseTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 

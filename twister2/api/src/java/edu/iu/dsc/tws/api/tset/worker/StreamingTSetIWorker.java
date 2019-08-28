@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
+import edu.iu.dsc.tws.api.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
 
 public interface StreamingTSetIWorker extends IWorker {

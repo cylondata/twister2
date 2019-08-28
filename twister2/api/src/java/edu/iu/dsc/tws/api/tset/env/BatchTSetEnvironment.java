@@ -19,13 +19,12 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.api.tset.sources.HadoopSource;
-import edu.iu.dsc.tws.api.tset.sources.HadoopSourceWithMap;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.sources.HadoopSource;
+import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
 

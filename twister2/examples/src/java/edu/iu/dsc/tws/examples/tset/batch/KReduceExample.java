@@ -34,8 +34,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KReduceExample extends BatchTsetExample {

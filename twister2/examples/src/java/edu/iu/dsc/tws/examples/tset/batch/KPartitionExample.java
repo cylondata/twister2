@@ -34,9 +34,9 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedPartitionTLink;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
+import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
 public class KPartitionExample extends BatchTsetExample {
