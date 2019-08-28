@@ -16,6 +16,9 @@ class Twister2Context:
     def worker_id(self):
         return self.entrypoint.getWorkerId()
 
+    def lambda_source(self, lam, parallelism):
+        return self.entrypoint.createLambdaSource(cp.dumps(lam), parallelism)
+
     def execute(self, lam, data):
         self.entrypoint.executePyFunction(cp.dumps(lam), data)
 

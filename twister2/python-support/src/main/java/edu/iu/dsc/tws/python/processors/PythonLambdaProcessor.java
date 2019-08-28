@@ -8,11 +8,11 @@ import java.util.Base64;
 
 public class PythonLambdaProcessor {
 
-    private Jep jep;
+    private static Jep jep;
 
     public PythonLambdaProcessor(byte[] lambda) {
         try {
-            this.jep = new Jep();
+            this.jep = JepInstance.get();
             this.jep.eval("import cloudpickle as cp");
             this.jep.eval("import base64");
 

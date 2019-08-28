@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.python;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 import edu.iu.dsc.tws.python.tset.PLambdaTSetSource;
 
@@ -33,9 +34,9 @@ public class Twister2Context {
         return this.tSetEnvironment.getConfig();
     }
 
-    public BaseTSet createLambdaSource(byte[] lambda, int parallelism) {
+    public SourceTSet createLambdaSource(byte[] lambda, int parallelism) {
         PLambdaTSetSource pLambdaTSetSource = new PLambdaTSetSource(lambda);
-        return tSetEnvironment.createSource(pLambdaTSetSource, parallelism);
+        return (SourceTSet) tSetEnvironment.createSource(pLambdaTSetSource, parallelism);
     }
 
     public void executePyFunction(byte[] lambda, Object input) {
