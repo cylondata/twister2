@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -162,8 +161,8 @@ public class KMeansWorker implements IWorker {
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
-    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+        + centroid.length);
   }
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,

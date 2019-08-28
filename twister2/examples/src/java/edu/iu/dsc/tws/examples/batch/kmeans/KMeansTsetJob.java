@@ -10,18 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
@@ -32,13 +20,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.AllReduceTLink;
 import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
@@ -76,32 +64,37 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache();
+        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache(false);
     CachedTSet<double[][]> centers =
-        tc.createSource(new CenterSource(), parallelismValue).cache();
+        tc.createSource(new CenterSource(), parallelismValue).cache(false);
 
     long endTimeData = System.currentTimeMillis();
+    ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
+        points.direct().map(new KMeansMap());
+
+    ComputeTSet<double[][], double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
+        (t1, t2) -> {
+          double[][] newCentroids = new double[t1.length]
+              [t1[0].length];
+          for (int j = 0; j < t1.length; j++) {
+            for (int k = 0; k < t1[0].length; k++) {
+              double newVal = t1[j][k] + t2[j][k];
+              newCentroids[j][k] = newVal;
+            }
+          }
+          return newCentroids;
+        }).map(new AverageCenters());
 
     for (int i = 0; i < iterations; i++) {
-      ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
-          points.direct().map(new KMeansMap());
-
       kmeansTSet.addInput("centers", centers);
+      centers = reduced.cache(true);
+    }
+    //reduced.finishIter();
 
-      AllReduceTLink<double[][]> reduced = kmeansTSet.allReduce((ReduceFunc<double[][]>)
-          (t1, t2) -> {
-            double[][] newCentroids = new double[t1.length]
-                [t1[0].length];
-            for (int j = 0; j < t1.length; j++) {
-              for (int k = 0; k < t1[0].length; k++) {
-                double newVal = t1[j][k] + t2[j][k];
-                newCentroids[j][k] = newVal;
-              }
-            }
-            return newCentroids;
-          });
-
-      centers = reduced.map(new AverageCenters()).cache();
+    DataPartition<?> centroidPartition = centers.getDataObject().getPartition(workerId);
+    double[][] centroid = null;
+    if (centroidPartition.getConsumer().hasNext()) {
+      centroid = (double[][]) centroidPartition.getConsumer().next();
     }
 
     long endTime = System.currentTimeMillis();
@@ -109,6 +102,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
+      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+          + centroid.length);
     }
   }
 

@@ -168,7 +168,7 @@ public class TSetGraph {
       buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
     }
 
-    LOG.info(() -> "Build order: " + buildOrder.toString());
+    LOG.fine(() -> "Build order: " + buildOrder.toString());
 
     return buildGraph(links, sets, false);
   }
@@ -185,7 +185,7 @@ public class TSetGraph {
 
     Set<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
 
-    LOG.info(() -> "Build order: " + buildOrder.toString());
+    LOG.fine(() -> "Build order: " + buildOrder.toString());
 
     return buildGraph(links, sets, true);
   }
@@ -193,14 +193,14 @@ public class TSetGraph {
   private ComputeGraph buildGraph(Collection<BuildableTLink> links, Collection<BuildableTSet> sets,
                                   boolean reverse) {
 
-    LOG.info(() -> "Node build order: " + sets + " reversed: " + reverse);
+    LOG.fine(() -> "Node build order: " + sets + " reversed: " + reverse);
     Iterator<BuildableTSet> setsItr = reverse ? new LinkedList<>(sets).descendingIterator()
         : sets.iterator();
     while (setsItr.hasNext()) {
       setsItr.next().build(this);
     }
 
-    LOG.info(() -> "Edge build order: " + links + " reversed: " + reverse);
+    LOG.fine(() -> "Edge build order: " + links + " reversed: " + reverse);
     // links need to be built in order. check issue #519
 /*    for (int i = 0; i < links.size(); i++) {
       links.get(links.size() - i - 1).build(this, sets);
@@ -216,7 +216,7 @@ public class TSetGraph {
 
     // clean the upstream of the cached tsets
     if (cleanUpstream(sets)) {
-      LOG.info("Some TSets have been cleaned up!");
+      LOG.fine("Some TSets have been cleaned up!");
     }
 
     return dataflowGraph;

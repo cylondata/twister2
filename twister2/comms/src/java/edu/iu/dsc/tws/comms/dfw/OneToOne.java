@@ -320,6 +320,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   public void reset() {
     if (finalReceiver != null) {
       finalReceiver.clean();
+      finishedSources.clear();
     }
   }
 
