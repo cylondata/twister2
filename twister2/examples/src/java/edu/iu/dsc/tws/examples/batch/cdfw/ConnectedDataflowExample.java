@@ -71,9 +71,9 @@ public final class ConnectedDataflowExample {
 
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
-      DataFlowGraph job3 = generateThirdJob(config, 4, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, 2, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
+      DataFlowGraph job3 = generateThirdJob(config, 2, jobConfig);
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
 
@@ -165,7 +165,7 @@ public final class ConnectedDataflowExample {
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", firstGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
@@ -204,7 +204,7 @@ public final class ConnectedDataflowExample {
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", secondGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
@@ -231,7 +231,7 @@ public final class ConnectedDataflowExample {
     ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("third_graph", thirdGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addInput("first_graph", "first_out", "datapointsink")
         .addInput("second_graph", "second_out", "centroidsink");
     return job;

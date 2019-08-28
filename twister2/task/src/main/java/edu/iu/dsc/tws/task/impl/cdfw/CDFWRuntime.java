@@ -131,7 +131,6 @@ public class CDFWRuntime implements JobListener {
         return true;
       }
       // use the taskexecutor to create the execution plan
-      LOG.log(Level.INFO, "task graph name:" + taskGraph.getGraphName());
       executionPlan = taskExecutor.plan(taskGraph);
       //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
       //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());

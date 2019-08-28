@@ -150,7 +150,7 @@ public final class DataFlowGraph {
   }
 
   public DataFlowGraph addOutput(String g, String output, String taskname) {
-    inputs.add(CDFWJobAPI.Input.newBuilder()
+    outputs.add(CDFWJobAPI.Output.newBuilder()
         .setParentGraph(g).setName(output).setTaskname(taskname).build());
     return this;
   }
