@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.data.api.InputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
@@ -42,8 +43,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
     try {
       this.splits = this.input.createInputSplits(numSplits);
     } catch (Exception e) {
-      throw new RuntimeException(
-          String.format("Failed to create the input splits because, the %s", e.getMessage()));
+      throw new Twister2RuntimeException("Failed to create the input splits because, it", e);
     }
   }
 
@@ -54,8 +54,7 @@ public class DataSource<T, O extends InputSplit<T>> extends DataObjectImpl<T> {
       try {
         split.open(config);
       } catch (IOException e) {
-        throw new RuntimeException(
-            String.format("Failed to open the input split because, the %s", e.getMessage()));
+        throw new Twister2RuntimeException("Failed to open the input split because, it", e);
       }
       return split;
     } else {

@@ -35,7 +35,7 @@ public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return (StreamingTSetEnvironment) super.getTSetEnv();
   }
 
-  protected <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, new ComputeOp<>(computeFunction),
@@ -49,7 +49,7 @@ public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return set;
   }
 
-  protected <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> SComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     SComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new SComputeTSet<>(getTSetEnv(), n, new ComputeCollectorOp<>(computeFunction),

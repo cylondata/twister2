@@ -34,7 +34,7 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return (BatchTSetEnvironment) super.getTSetEnv();
   }
 
-  protected <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
+  public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(getTSetEnv(), n, new ComputeOp<>(computeFunction),
@@ -48,7 +48,7 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return set;
   }
 
-  protected <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+  public  <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(getTSetEnv(), n, new ComputeCollectorOp<>(computeFunction),

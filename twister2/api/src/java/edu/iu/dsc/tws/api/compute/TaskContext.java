@@ -103,11 +103,12 @@ public interface TaskContext {
   Map<String, String> getOutEdges();
 
   /**
-   * Get the edge names and the tasks connected using those edges
+   * Get the in edges of the task. Generally, each edge would have a single source. But, the join
+   * edges have multiple sources. These will be reflected by the Set.
    *
-   * @return a map with edge, Set<input task>
+   * @return a map with edge name -> Set of source task names for that edge
    */
-  Map<String, Set<String>> getInputs();
+  Map<String, Set<String>> getInEdges();
 
   /**
    * Write a message with a key

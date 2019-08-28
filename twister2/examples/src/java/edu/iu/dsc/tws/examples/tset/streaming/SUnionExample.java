@@ -9,30 +9,31 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.tset.batch;
+
+package edu.iu.dsc.tws.examples.tset.streaming;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.sets.streaming.SComputeTSet;
+import edu.iu.dsc.tws.api.tset.sets.streaming.SSourceTSet;
+import edu.iu.dsc.tws.examples.tset.batch.BatchTsetExample;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 
-public class UnionExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(UnionExample.class.getName());
+public class SUnionExample extends StreamingTsetExample {
+  private static final Logger LOG = Logger.getLogger(SUnionExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
-  public void execute(BatchTSetEnvironment env) {
+  public void buildGraph(StreamingTSetEnvironment env) {
 //    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
-    SourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
-    SourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
+    SSourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
+    SSourceTSet<Integer> src2 = dummySourceOther(env, COUNT, PARALLELISM).setName("src2");
 //    src.direct().forEach(s -> LOG.info("map sssss: " + s));
-    ComputeTSet<Integer, Iterator<Integer>> unionTSet = src1.union(src2);
+    SComputeTSet<Integer, Integer> unionTSet = src1.union(src2);
     LOG.info("test source union");
     unionTSet.direct().forEach(s -> LOG.info("map: " + s));
   }
@@ -42,6 +43,7 @@ public class UnionExample extends BatchTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM * 2, jobConfig, UnionExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM * 2, jobConfig,
+        SUnionExample.class.getName());
   }
 }

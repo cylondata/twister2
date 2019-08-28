@@ -114,7 +114,7 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
     long totalLength = 0;
 
     //final FileSystem fs = path.getFileSystem();
-    final FileSystem fs = FileSystemUtils.get(path);
+    final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     if (pathFile.isDir()) {

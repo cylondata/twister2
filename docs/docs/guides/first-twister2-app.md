@@ -39,17 +39,17 @@ Now lets add the Twister2 dependencies to the pom. Please add the correct versio
 ```xml
     <dependencies>
         <dependency>
-            <groupId>edu.iu.dsc.tws</groupId>
+            <groupId>org.twister2</groupId>
             <artifactId>api-java</artifactId>
             <version>0.3.0</version>
         </dependency>
         <dependency>
-            <groupId>edu.iu.dsc.tws</groupId>
+            <groupId>org.twister2</groupId>
             <artifactId>resource-scheduler-java</artifactId>
             <version>0.3.0</version>
         </dependency>
         <dependency>
-            <groupId>edu.iu.dsc.tws</groupId>
+            <groupId>org.twister2</groupId>
             <artifactId>task-java</artifactId>
             <version>0.3.0</version>
         </dependency>
@@ -189,7 +189,7 @@ to your pom.xml
 
 ```xml
 <dependency>
-    <groupId>edu.iu.dsc.tws</groupId>
+    <groupId>org.twister2</groupId>
     <artifactId>local-runner-java</artifactId>
     <version>0.3.0</version>
 </dependency>

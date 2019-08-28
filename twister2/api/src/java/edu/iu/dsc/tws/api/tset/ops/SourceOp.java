@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.ops;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
@@ -22,13 +19,13 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 
-public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
+public class SourceOp<T> implements ISource, Receptor {
   private static final long serialVersionUID = -2400242961L;
 
   private TaskContext context;
   private TSetContext tSetContext;
+  private MultiEdgeOpAdapter multiEdgeOpAdapter;
 
-  private List<String> outEdges;
   private SourceFunc<T> source;
 
   public SourceOp(SourceFunc<T> src) {
@@ -38,17 +35,16 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   @Override
   public void execute() {
     if (source.hasNext()) {
-      writeToEdges(source.next());
+      multiEdgeOpAdapter.writeToEdges(source.next());
     } else {
-      writeEndToEdges();
+      multiEdgeOpAdapter.writeEndToEdges();
     }
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     this.context = ctx;
-    this.outEdges = new ArrayList<>(ctx.getOutEdges().keySet());
-
+    this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
     this.tSetContext = new TSetContext(cfg, ctx);
 
     this.source.prepare(tSetContext);
@@ -57,15 +53,5 @@ public class SourceOp<T> implements MultiOutEdgeOp, ISource, Receptor {
   @Override
   public void add(String name, DataObject<?> data) {
     this.tSetContext.addInput(name, data);
-  }
-
-  @Override
-  public TaskContext getTaskContext() {
-    return this.context;
-  }
-
-  @Override
-  public List<String> getEdges() {
-    return outEdges;
   }
 }

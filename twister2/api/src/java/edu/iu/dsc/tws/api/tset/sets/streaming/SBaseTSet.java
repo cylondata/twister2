@@ -28,9 +28,10 @@ import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.TSetUtils;
 import edu.iu.dsc.tws.api.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.fn.MapCompute;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.api.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.SAllGatherTLink;
@@ -40,10 +41,8 @@ import edu.iu.dsc.tws.api.tset.link.streaming.SGatherTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.SPartitionTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.SReduceTLink;
 import edu.iu.dsc.tws.api.tset.link.streaming.SReplicateTLink;
-import edu.iu.dsc.tws.api.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
 
 public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
@@ -107,46 +106,45 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public TSet<T> union(TSet<T> other) {
+  public SComputeTSet<T, T> union(TSet<T> other) {
 
     if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
-    SDirectTLink<T> directCurrent = new SDirectTLink<>(getTSetEnv(), getParallelism());
+
+    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+        new MapCompute<>((MapFunc<T, T>) input -> input));
+    // now the following relationship is created
+    // this -- directThis -- unionTSet
+
     SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(this, directCurrent);
-    addChildToGraph((BBaseTSet) other, directCurrent);
-    SComputeTSet<T, T> unionTSet = new SComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorOp<T, T>(new MapIterCompute(input -> input)),
-        getParallelism());
-    addChildToGraph(directCurrent, unionTSet);
-    addChildToGraph(directOther, unionTSet);
-    return unionTSet;
+    addChildToGraph((SBaseTSet) other, directOther);
+    addChildToGraph(directOther, union);
+    // now the following relationship is created
+    // this __ directThis __ unionTSet
+    // other __ directOther _/
+
+    return union;
   }
 
   @Override
-  public TSet<T> union(Collection<TSet<T>> tSets) {
-    SBaseTSet<T> other;
-    SDirectTLink<T> directCurrent = new SDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(this, directCurrent);
+  public SComputeTSet<T, T> union(Collection<TSet<T>> tSets) {
+    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+        new MapCompute<>((MapFunc<T, T>) input -> input));
+    // now the following relationship is created
+    // this -- directThis -- unionTSet
 
-    SComputeTSet<T, T> unionTSet = new SComputeTSet<T, T>(getTSetEnv(), "union",
-        new ComputeCollectorOp<T, T>(new MapIterCompute(input -> input)),
-        getParallelism());
-
-    addChildToGraph(directCurrent, unionTSet);
-    for (TSet<T> tSet : tSets) {
-      other = (SBaseTSet) tSet;
-      if (this.getParallelism() != other.getParallelism()) {
+    for (TSet<T> other : tSets) {
+      if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
       SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph(other, directOther);
-      addChildToGraph(directOther, unionTSet);
+      addChildToGraph((SBaseTSet) other, directOther);
+      addChildToGraph(directOther, union);
     }
-    return null;
+    return union;
   }
 
   @Override
