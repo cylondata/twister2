@@ -189,7 +189,7 @@ to your pom.xml
 
 ```xml
 <dependency>
-    <groupId>edu.iu.dsc.tws</groupId>
+    <groupId>org.twister2</groupId>
     <artifactId>local-runner-java</artifactId>
     <version>0.3.0</version>
 </dependency>
