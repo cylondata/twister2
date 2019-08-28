@@ -194,7 +194,6 @@ public class KMeansWorker implements IWorker {
     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
 
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
-
     //Build the first taskgraph
     return datapointsComputeGraphBuilder.build();
   }
@@ -228,7 +227,6 @@ public class KMeansWorker implements IWorker {
     centroidsComputeGraphBuilder.setMode(OperationMode.BATCH);
     centroidsComputeGraphBuilder.setTaskGraphName("centTG");
 
-
     //Build the second taskgraph
     return centroidsComputeGraphBuilder.build();
   }
@@ -250,9 +248,7 @@ public class KMeansWorker implements IWorker {
         .withReductionFunction(new CentroidAggregator())
         .withDataType(MessageTypes.OBJECT);
     kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
-
     kmeansComputeGraphBuilder.setTaskGraphName("kmeansTG");
-
     return kmeansComputeGraphBuilder.build();
   }
 
@@ -265,6 +261,9 @@ public class KMeansWorker implements IWorker {
     private KMeansCalculator kMeansCalculator = null;
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
+
+    public KMeansSourceTask() {
+    }
 
     @Override
     public void execute() {
@@ -308,6 +307,8 @@ public class KMeansWorker implements IWorker {
     private double[][] centroids;
     private double[][] newCentroids;
 
+    public KMeansAllReduceTask() {
+    }
     @Override
     public boolean execute(IMessage message) {
 //      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
@@ -348,6 +349,8 @@ public class KMeansWorker implements IWorker {
   public static class CentroidAggregator implements IFunction {
     private static final long serialVersionUID = -254264120110286748L;
 
+    public CentroidAggregator() {
+    }
     /**
      * The actual message callback
      *

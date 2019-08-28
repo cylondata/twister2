@@ -48,6 +48,9 @@ public class DataObjectSource<T> extends BaseSource {
   private String edgeName;
   private String dataDirectory;
 
+  public DataObjectSource() {
+  }
+
   public DataObjectSource(String edgename, String dataDirectory) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
