@@ -66,7 +66,8 @@ public class ResourceAllocator {
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
+    String jobJar = System.getProperty(SchedulerContext.USER_JOB_FILE);
+    String jobType = System.getProperty(SchedulerContext.USER_JOB_TYPE);
 
     Boolean debug = Boolean.valueOf(System.getProperty(SchedulerContext.DEBUG));
 
@@ -85,8 +86,12 @@ public class ResourceAllocator {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_FILE);
+    }
+
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_TYPE)) {
+      jobType = (String) environmentProperties.get(SchedulerContext.USER_JOB_TYPE);
     }
 
     if (configDir == null) {
@@ -119,7 +124,8 @@ public class ResourceAllocator {
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
+        put(SchedulerContext.USER_JOB_FILE, jobJar).
+        put(SchedulerContext.USER_JOB_TYPE, jobType).
         put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
         put(SchedulerContext.DEBUG, debug).
         putAll(environmentProperties).
@@ -228,7 +234,7 @@ public class ResourceAllocator {
     // add the job description filename, userJobJar and conf directory to the config
     updatedConfig = Config.newBuilder()
         .putAll(config)
-        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
+        .put(SchedulerContext.USER_JOB_FILE, jobJarFileName)
         .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, tempDirPathString)
         .build();
 

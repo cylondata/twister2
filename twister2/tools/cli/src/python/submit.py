@@ -69,6 +69,8 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("debug=" + str(cl_args['debug']))
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
+    # set the job type
+    java_system_props.append("job_type=" + cl_args['job-type'])
     # set the logger file
     conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
     conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
@@ -139,6 +141,17 @@ def submit_fatjar(cl_args, unknown_args):
 
     return res
 
+def submit_java_zip(cl_args, unknown_args):
+    pass
+
+def submit_python(cl_args, unknown_args):
+    # we need to set the jar file here
+
+    submit_fatjar(cl_args, unknown_args)
+
+def submit_python_zip(cl_args, unknown_args):
+    pass
+
 ################################################################################
 # pylint: disable=unused-argument
 def run(command, parser, cl_args, unknown_args):
@@ -175,5 +188,11 @@ def run(command, parser, cl_args, unknown_args):
     # check the extension of the file name to see if it is tar/jar file.
     if job_type == "jar":
         return submit_fatjar(cl_args, unknown_args)
+    elif job_type == "java_zip":
+        return submit_java_zip(cl_args, unknown_args)
+    elif job_type == "python":
+        return submit_python(cl_args, unknown_args)
+    elif job_type == "python_zip":
+        return submit_python_zip(cl_args, unknown_args)
     else:
         return False
