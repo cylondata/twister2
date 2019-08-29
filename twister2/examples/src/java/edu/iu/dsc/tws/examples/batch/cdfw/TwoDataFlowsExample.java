@@ -156,7 +156,8 @@ public final class TwoDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
-        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_graph",
+        "first_out", "sink1");
     cdfwEnv.executeDataFlowGraph(job);
   }
 
@@ -178,7 +179,8 @@ public final class TwoDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
-        setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph", "first_out");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph",
+        "first_out", "source1");
     cdfwEnv.executeDataFlowGraph(job);
   }
 }
