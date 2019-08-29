@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -81,11 +82,12 @@ public class KMeansWorker implements IWorker {
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory();
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory();
 
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+
+//    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+//        centroidDirectory);
 
     long startTime = System.currentTimeMillis();
 
@@ -161,8 +163,11 @@ public class KMeansWorker implements IWorker {
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + centroid.length);
+    if (workerId == 0) {
+      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+          + Arrays.toString(centroid[0]));
+
+    }
   }
 
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
