@@ -72,7 +72,7 @@ public final class DashboardClientExample {
     testScalingUp(dashClient, job);
     sendJobKilledMessage(dashClient);
 
-    // test state change
+    // Test state change
 //    dashClient.jobStateChange(JobState.STARTED);
 //    dashClient.workerStateChange(0, JobMasterAPI.WorkerState.RUNNING);
   }

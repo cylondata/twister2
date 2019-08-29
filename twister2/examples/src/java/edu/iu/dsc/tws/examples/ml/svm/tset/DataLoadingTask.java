@@ -86,7 +86,7 @@ public class DataLoadingTask extends BaseSourceFunc<double[][]> {
           Path(this.svmJobParameters.getTrainingDataDir()), this.parallelism, config, dataSize),
           this.parallelism);
     }
-    if ("test".equalsIgnoreCase(this.dataType)) {
+    if ("Test".equalsIgnoreCase(this.dataType)) {
       this.dataSize = this.svmJobParameters.getTestingSamples();
       this.localPoints = new double[this.dataSize / parallelism][this.dimension];
       this.source = new DataSource(config, new LocalFixedInputPartitioner(new

@@ -36,7 +36,7 @@ import org.apache.commons.cli.ParseException;
  * Verifies that the python source styles conform to the python styles in pylint.
  * Usage: java com.twitter.bazel.checkstyle.PythonCheckstyle -f &lt;extra_action_file&gt; -p &lt;pylint_file&gt;
  * <p>
- * To test:
+ * To Test:
  * $ bazel build --config=darwin --experimental_action_listener=tools/python:compile_python heron/cli/src/python/...
  */
 public final class PythonCheckstyle {

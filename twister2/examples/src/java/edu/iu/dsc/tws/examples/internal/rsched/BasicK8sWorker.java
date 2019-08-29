@@ -261,7 +261,7 @@ public class BasicK8sWorker
   }
 
   /**
-   * a test method to make the worker wait some time
+   * a Test method to make the worker wait some time
    */
   public void sleepSomeTime(long sleepSeconds) {
     try {
@@ -301,7 +301,7 @@ public class BasicK8sWorker
   }
 
   /**
-   * a method to test hdfs access from workers
+   * a method to Test hdfs access from workers
    */
   public void listHdfsDir() {
 

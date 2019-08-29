@@ -47,37 +47,37 @@ public class CacheExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    // test direct().cache() which has IterLink semantics
+    // Test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();
     runOps(cache);
 
-    // test reduce().cache() which has SingleLink semantics
+    // Test reduce().cache() which has SingleLink semantics
     CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
     runOps(cache1);
 
-    // test gather.cache() which has TupleValueIterLink
+    // Test gather.cache() which has TupleValueIterLink
     CachedTSet<Integer> cache2 = src.gather().cache();
     runOps(cache2);
   }
 
   private void runOps(CachedTSet<Integer> cache) {
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     cache.direct()
         .forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     cache.direct()
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     cache.direct()
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     cache.direct()
         .compute((ComputeFunc<String, Iterator<Integer>>) input -> {
           int sum = 0;
@@ -89,7 +89,7 @@ public class CacheExample extends BatchTsetExample {
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     cache.direct()
         .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {
@@ -102,7 +102,7 @@ public class CacheExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 
-    LOG.info("test sink");
+    LOG.info("Test sink");
     cache.direct()
         .sink((SinkFunc<Iterator<Integer>>) value -> {
           while (value.hasNext()) {

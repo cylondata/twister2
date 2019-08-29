@@ -34,32 +34,32 @@ public class PartitionMtoNExample extends BatchTsetExample {
     int n = 4;
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    // test M < N
+    // Test M < N
     runPartition(src, n);
 
-    // test M < N
+    // Test M < N
     n = 1;
     runPartition(src, n);
   }
 
   private void runPartition(SourceTSet<Integer> src, int n) {
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     src.partition(new LoadBalancePartitioner<>(), n)
         .forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     src.partition(new LoadBalancePartitioner<>(), n)
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     src.partition(new LoadBalancePartitioner<>(), n)
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     src.partition(new LoadBalancePartitioner<>(), n)
         .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
           int sum = 0;
@@ -71,7 +71,7 @@ public class PartitionMtoNExample extends BatchTsetExample {
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     src.partition(new LoadBalancePartitioner<>(), n)
         .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {

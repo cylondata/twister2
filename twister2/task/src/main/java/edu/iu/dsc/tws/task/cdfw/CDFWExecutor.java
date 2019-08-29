@@ -74,6 +74,8 @@ public final class CDFWExecutor {
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
    */
+  // Added to Test and schedule multiple graphs at a time.
+  //todo: implement this in different way, because this is not running the graphs in parallel
   public void executeCDFW(DataFlowGraph... graph) {
 
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {

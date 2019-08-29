@@ -218,7 +218,7 @@ public final class AuroraWorkerStarter {
   }
 
   /**
-   * a test method to print a job
+   * a Test method to print a job
    */
   public static void logJobInfo(JobAPI.Job job) {
     StringBuffer sb = new StringBuffer("Job Details:");

@@ -37,7 +37,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * Verifies that the java classes styles conform to the styles in the config.
  * Usage: java com.twitter.bazel.checkstyle.JavaCheckstyle -f &lt;extra_action_file&gt; -c &lt;checkstyle_config&gt;
  * <p>
- * To test:
+ * To Test:
  * $ bazel build --config=darwin twister2/spi/src/java:twister2-spi --experimental_action_listener=tools/java:compile_java
  */
 public final class JavaCheckstyle {

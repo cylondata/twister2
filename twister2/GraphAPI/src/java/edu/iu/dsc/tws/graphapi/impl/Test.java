@@ -11,15 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.impl;
 
-import edu.iu.dsc.tws.api.task.IMessage;
-import edu.iu.dsc.tws.graphapi.api.DataCompute;
 
-public class test extends DataCompute {
-  public test(String edgename, int dsize, int parallel) {
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.graphapi.api.ConstructDataStr;
+
+public class Test extends ConstructDataStr {
+  public Test(String edgename, int dsize, int parallel) {
     super(edgename, dsize, parallel);
   }
 
-  public test(String edgename, int size) {
+  public Test(String edgename, int size) {
     super(edgename, size);
   }
 

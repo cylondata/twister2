@@ -48,7 +48,7 @@ public class StreamingTaskExampleKafka implements IWorker {
     TwsKafkaConsumer<String> g = new TwsKafkaConsumer<String>(
         topics,
         servers,
-        "test",
+        "Test",
         "partition-edge");
     RecevingTask r = new RecevingTask();
 

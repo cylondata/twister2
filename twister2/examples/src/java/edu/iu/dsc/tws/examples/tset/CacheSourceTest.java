@@ -92,7 +92,7 @@ public class CacheSourceTest {
     if (!trusted.equals(result)) {
       LOG.info(trusted.toString());
       LOG.info(result.toString());
-      throw new RuntimeException("test failure!");
+      throw new RuntimeException("Test failure!");
     } else {
       LOG.info("success!");
     }

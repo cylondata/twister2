@@ -30,10 +30,10 @@ public final class TestLocalFileSystem {
 
   public static void main(String[] args) {
     Config.Builder builder = new Config.Builder();
-    builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2/data/src/test"
+    builder.put("input.file.path", "/home/pulasthi/git/twister2/twister2/data/src/Test"
         + "/resources/TextInputFormatTestFile.text");
     Config txtFileConf = builder.build();
-    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/test/resources"
+    Path path = new Path("/home/pulasthi/git/twister2/twister2/data/src/Test/resources"
         + "/TextInputFormatTestFile.text");
     InputPartitioner txtInput = new SharedTextInputPartitioner(path);
     txtInput.configure(txtFileConf);

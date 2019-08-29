@@ -50,20 +50,20 @@ public class DirectExample extends BatchTsetExample {
 
     DirectTLink<Integer> direct = src.direct().setName("direct");
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     direct.forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     direct.map(i -> i.toString() + "$$").setName("map")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     direct.flatmap((i, c) -> c.collect(i.toString() + "##")).setName("flatmap")
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     direct.compute((ComputeFunc<String, Iterator<Integer>>) input -> {
       int sum = 0;
       while (input.hasNext()) {
@@ -74,7 +74,7 @@ public class DirectExample extends BatchTsetExample {
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     direct.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
         (input, output) -> {
           int sum = 0;
@@ -86,7 +86,7 @@ public class DirectExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 
-    LOG.info("test sink");
+    LOG.info("Test sink");
     direct.sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
         LOG.info("val =" + value.next());

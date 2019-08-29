@@ -49,15 +49,15 @@ public class KReduceExample extends BatchTsetExample {
     KeyedReduceTLink<Integer, Integer> kreduce = src.mapToTuple(i -> new Tuple<>(i % 4, i))
         .keyedReduce(Integer::sum);
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     kreduce.forEach(t -> LOG.info("sum by key=" + t.getKey() + ", " + t.getValue()));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     kreduce.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     kreduce.compute(
         (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
           StringBuilder s = new StringBuilder();
@@ -69,7 +69,7 @@ public class KReduceExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("compute: concat " + s));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     kreduce.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
         (input, output) -> {
           while (input.hasNext()) {

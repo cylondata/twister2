@@ -53,7 +53,7 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
     int size = 1024000;
 
     for (int numObjects = 1; numObjects < 5000; numObjects++) {
-      System.out.println("Starting test : " + numObjects);
+      System.out.println("Starting Test : " + numObjects);
       List<Object> data = new AggregatedObjects<>();
       for (int i = 0; i < numObjects; i++) {
         Object o = createKeyedData(100, MessageTypes.INTEGER_ARRAY, 1, MessageTypes.INTEGER);

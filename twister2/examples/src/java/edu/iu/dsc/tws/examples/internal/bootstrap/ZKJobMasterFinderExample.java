@@ -52,7 +52,7 @@ public final class ZKJobMasterFinderExample {
     }
 
     String zkAddress = args[0];
-    String jobName = "test-job";
+    String jobName = "Test-job";
     Config cnfg = buildTestConfig(zkAddress, jobName);
 
     ZKJobMasterFinder finder = new ZKJobMasterFinder(cnfg);
@@ -72,7 +72,7 @@ public final class ZKJobMasterFinderExample {
   }
 
   /**
-   * construct a test Config object
+   * construct a Test Config object
    */
   public static Config buildTestConfig(String zkAddress, String jobName) {
     return Config.newBuilder()

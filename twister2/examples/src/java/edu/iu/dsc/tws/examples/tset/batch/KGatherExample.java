@@ -51,12 +51,12 @@ public class KGatherExample extends BatchTsetExample {
     KeyedGatherTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
         .keyedGather();
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     klink.forEach((ApplyFunc<Tuple<Integer, Iterator<Integer>>>)
         data -> LOG.info("key " + data.getKey() + " " + data.getValue().toString())
     );
 
-    LOG.info("test map");
+    LOG.info("Test map");
     klink.map((MapFunc<String, Tuple<Integer, Iterator<Integer>>>)
         input -> {
           int s = 0;
@@ -68,7 +68,7 @@ public class KGatherExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     klink.compute((ComputeFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
         input -> {
           StringBuilder s = new StringBuilder();
@@ -81,7 +81,7 @@ public class KGatherExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("compute: concat " + s));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Iterator<Integer>>>>)
         (input, output) -> {
           while (input.hasNext()) {

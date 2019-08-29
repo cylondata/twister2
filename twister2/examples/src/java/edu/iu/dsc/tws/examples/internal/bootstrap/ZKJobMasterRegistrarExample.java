@@ -59,7 +59,7 @@ public final class ZKJobMasterRegistrarExample {
     }
 
     String zkAddress = args[0];
-    String jobName = "test-job";
+    String jobName = "Test-job";
     Config cnfg = buildConfig(zkAddress, jobName);
 
     String jobMasterIP = "x.y.z.t";

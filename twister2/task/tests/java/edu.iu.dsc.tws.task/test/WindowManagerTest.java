@@ -557,7 +557,7 @@ public class WindowManagerTest {
   }
 
 
-  // NOTE:  including addition element passes the test case
+  // NOTE:  including addition element passes the Test case
   @Test
   public void testExpireThreshold() throws Exception {
     int threshold = WindowManager.EXPIRE_EVENTS_THRESHOLD;
@@ -666,7 +666,7 @@ public class WindowManagerTest {
 
   }
 
-  // NOTE:  including addition element passes the test case
+  // NOTE:  including addition element passes the Test case
   @Test
   public void testExpireThresholdWithWatermarkCountEvictionPolicy() throws Exception {
     int windowLength = WindowManager.EXPIRE_EVENTS_THRESHOLD;
@@ -674,7 +674,7 @@ public class WindowManagerTest {
     testEvictBeforeWatermarkForWatermarkEvictionPolicy(watermarkCountEvictionPolicy, windowLength);
   }
 
-  //TODO : test case fails an element shifts to the right in the output with respect to the expected
+  //TODO : Test case fails an element shifts to the right in the output with respect to the expected
   // output
   private void testExpireThresholdWithWatermarkTimeEvictionPolicy() throws Exception {
     int windowLength = WindowManager.EXPIRE_EVENTS_THRESHOLD;

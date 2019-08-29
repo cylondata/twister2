@@ -58,7 +58,7 @@ public final class JobMasterClientExample {
   }
 
   /**
-   * a test class to run JMWorkerAgent
+   * a Test class to run JMWorkerAgent
    * First, a JobMaster instance should be started on a machine
    * This client should connect to that server
    * <p>

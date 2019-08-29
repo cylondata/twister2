@@ -37,20 +37,20 @@ public class BroadcastExample extends BatchTsetExample {
 
     ReplicateTLink<Integer> replicate = src.replicate(PARALLELISM);
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     replicate.forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     replicate.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     replicate.flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     replicate.compute((ComputeFunc<String, Iterator<Integer>>)
         input -> {
           int sum = 0;
@@ -62,7 +62,7 @@ public class BroadcastExample extends BatchTsetExample {
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     replicate.compute((ComputeCollectorFunc<String, Iterator<Integer>>)
         (input, output) -> {
           int sum = 0;
@@ -74,7 +74,7 @@ public class BroadcastExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("computec: " + s));
 
-    LOG.info("test sink");
+    LOG.info("Test sink");
     replicate.sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
         LOG.info("val =" + value.next());

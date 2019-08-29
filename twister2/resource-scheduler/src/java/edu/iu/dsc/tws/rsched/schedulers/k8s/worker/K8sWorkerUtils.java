@@ -245,7 +245,7 @@ public final class K8sWorkerUtils {
 
 
   /**
-   * a test method to make the worker wait indefinitely
+   * a Test method to make the worker wait indefinitely
    */
   public static void waitIndefinitely() {
 

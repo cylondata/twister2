@@ -120,7 +120,7 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
     if (pathFile.isDir()) {
       totalLength += sumFilesInDir(path, files, true);
     } else {
-      //TODO L3: implement test for unsplittable
+      //TODO L3: implement Test for unsplittable
       //testForUnsplittable(pathFile);
       files.add(pathFile);
       totalLength += pathFile.getLen();
@@ -226,7 +226,7 @@ public abstract class FileInputPartitioner<OT> implements InputPartitioner<OT, F
         if (acceptFile(file)) {
           files.add(file);
           length += file.getLen();
-          //TODO: implement test for unsplittable
+          //TODO: implement Test for unsplittable
           //testForUnsplittable(file);
         } else {
           if (logExcludedFiles) {

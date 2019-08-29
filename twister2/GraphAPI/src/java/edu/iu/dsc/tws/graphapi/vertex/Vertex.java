@@ -63,13 +63,6 @@ public interface Vertex<I, V, E> {
    */
   void setValue(V value);
 
-  /**
-   * After this is called, the compute() code will no longer be called for
-   * this vertex unless a message is sent to it.  Then the compute() code
-   * will be called once again until this function is called.  The
-   * application finishes only when all vertices vote to halt.
-   */
-  void voteToHalt();
 
   /**
    * Get the number of outgoing edges on this vertex.
@@ -147,17 +140,5 @@ public interface Vertex<I, V, E> {
   void removeEdges(I targetVertexId);
 
 
-
-  /**
-   * Re-activate vertex if halted.
-   */
-  void wakeUp();
-
-  /**
-   * Is this vertex done?
-   *
-   * @return True if halted, false otherwise.
-   */
-  boolean isHalted();
 }
 

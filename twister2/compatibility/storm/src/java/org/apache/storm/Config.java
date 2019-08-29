@@ -55,7 +55,7 @@ public class Config extends HashMap<String, Object> {
 
   /**
    * True if Storm should timeout messages or not. Defaults to true. This is meant to be used
-   * in unit tests to prevent tuples from being accidentally timed out during the test.
+   * in unit tests to prevent tuples from being accidentally timed out during the Test.
    * Same functionality in Heron.
    */
   public static final String TOPOLOGY_ENABLE_MESSAGE_TIMEOUTS = "topology.enable.message.timeouts";

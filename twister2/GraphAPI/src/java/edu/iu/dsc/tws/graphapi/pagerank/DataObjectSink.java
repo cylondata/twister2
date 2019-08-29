@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.graphapi.pagerank;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -41,14 +40,10 @@ public class DataObjectSink extends BaseSink implements Collector {
    */
   @Override
   public boolean execute(IMessage message) {
-    List<HashMap<String, ArrayList<String>>> values = new ArrayList<>();
     while (((Iterator) message.getContent()).hasNext()) {
-      values.add((HashMap<String, ArrayList<String>>) ((Iterator) message.getContent()).next());
+      dataPointsLocal = (HashMap<String, ArrayList<String>>)
+          ((Iterator) message.getContent()).next();
 
-    }
-
-    for (HashMap<String, ArrayList<String>> value : values) {
-      dataPointsLocal = value;
     }
 
     return true;

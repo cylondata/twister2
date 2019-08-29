@@ -201,7 +201,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .getOutput(weightVectorTaskGraph, weightVectorExecutionPlan,
             Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK);
     double[] w = inputDoubleWeightvectorObject.getPartitions()[0].getConsumer().next();
-    // TODO : initial load of weight vector is faulty test it
+    // TODO : initial load of weight vector is faulty Test it
     // Doesn't affect training
     LOG.info(String.format("Weight Vector Loaded : %s", Arrays.toString(w)));
   }

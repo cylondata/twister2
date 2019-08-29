@@ -46,17 +46,17 @@ public class GatherExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     src.gather()
         .forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     src.gather()
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     src.gather()
         .compute((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
             input -> {
@@ -69,7 +69,7 @@ public class GatherExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("compute: " + s));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     src.gather()
         .compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
             (input, output) -> {

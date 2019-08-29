@@ -13,14 +13,14 @@ package edu.iu.dsc.tws.graphapi.api;
 
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.task.TaskContext;
-import edu.iu.dsc.tws.api.task.nodes.BaseCompute;
 
-public abstract  class DataCompute extends BaseCompute {
+public abstract  class ConstructDataStr extends BaseCompute {
 
 
-  private static final Logger LOG = Logger.getLogger(DataCompute.class.getName());
+  private static final Logger LOG = Logger.getLogger(ConstructDataStr.class.getName());
 
   /**
    * Edge name to write the partitoned datapoints
@@ -39,13 +39,13 @@ public abstract  class DataCompute extends BaseCompute {
 
 
 
-  public DataCompute(String edgename, int dsize, int parallel) {
+  public ConstructDataStr(String edgename, int dsize, int parallel) {
     this.edgeName = edgename;
     this.parallel = parallel;
     this.datasize = dsize;
   }
 
-  public DataCompute(String edgename, int size) {
+  public ConstructDataStr(String edgename, int size) {
     this.edgeName = edgename;
     this.datasize = size;
   }

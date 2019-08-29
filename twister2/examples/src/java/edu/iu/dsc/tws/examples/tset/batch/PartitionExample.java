@@ -45,23 +45,23 @@ public class PartitionExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     src.partition(new LoadBalancePartitioner<>())
         .forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     src.partition(new LoadBalancePartitioner<>())
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     src.partition(new LoadBalancePartitioner<>())
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     src.partition(new LoadBalancePartitioner<>())
         .compute((ComputeFunc<Integer, Iterator<Integer>>) input -> {
           int sum = 0;
@@ -73,7 +73,7 @@ public class PartitionExample extends BatchTsetExample {
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     src.partition(new LoadBalancePartitioner<>())
         .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {

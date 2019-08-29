@@ -70,7 +70,7 @@ public final class BasicAuroraJob {
   }
 
   /**
-   * test method for Twister2Job write to a file
+   * Test method for Twister2Job write to a file
    */
   public static void jobWriteTest(Twister2Job twister2Job) {
     String file = "testJobFile";
@@ -78,7 +78,7 @@ public final class BasicAuroraJob {
   }
 
   /**
-   * test method to read Twister2Job file
+   * Test method to read Twister2Job file
    */
   public static void jobReadTest() {
     String fl = "/tmp/basic-aurora/basic-aurora3354891958097304472/twister2-core/basic-aurora.job";

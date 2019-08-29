@@ -98,7 +98,7 @@ public final class SVMRunner {
     options.addOption(WorkerConstants.INSTANCES, true, "Instances");
     options.addOption(WorkerConstants.PARALLELISM, true, "Overall Parallelism");
     options.addOption(WorkerConstants.THREADS_PER_WORKER, true, "Threads Per Worker");
-    options.addOption(Constants.SimpleGraphConfig.SVM_RUN_TYPE, true, "test,task,etc");
+    options.addOption(Constants.SimpleGraphConfig.SVM_RUN_TYPE, true, "Test,task,etc");
 
 
     //Directory based Parameters [optional parameters when running the dummy data mode

@@ -937,7 +937,7 @@ public class LMDBMemoryManager extends AbstractMemoryManager {
     if (writeMap) {
       envFlagSet.add(MDB_WRITEMAP);
       envFlagSet.add(EnvFlags.MDB_NOTLS);
-      //TODO: need to test with other flags if no sync is used will need env.sync(true) to sync
+      //TODO: need to Test with other flags if no sync is used will need env.sync(true) to sync
 //            envFlagSet.add(EnvFlags.MDB_NOSYNC);
 //            envFlagSet.add(EnvFlags.MDB_NOMETASYNC);
 //            envFlagSet.add(MDB_MAPASYNC);

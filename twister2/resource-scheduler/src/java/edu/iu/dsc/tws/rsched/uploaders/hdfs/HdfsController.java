@@ -24,7 +24,7 @@ public class HdfsController {
   }
 
   public boolean exists(String filePath) {
-    String command = String.format("hadoop --config %s fs -test -e %s", configDir, filePath);
+    String command = String.format("hadoop --config %s fs -Test -e %s", configDir, filePath);
     return 0 == ProcessUtils.runProcess(command, null, false);
   }
 

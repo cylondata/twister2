@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.common.net.tcp.TCPContext;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 
 /**
- * In this test we will use two channels to communicate
+ * In this Test we will use two channels to communicate
  */
 public class TwoChannelTest {
   private static final int NO_OF_CHANNELS = 2;

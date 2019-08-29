@@ -21,7 +21,7 @@ filegroup(
             "node_modules/**/*",
             "src/*",
         ],
-        exclude = ["node_modules/**/test/**"],
+        exclude = ["node_modules/**/Test/**"],
     ),
 )
 
@@ -38,10 +38,10 @@ nodejs_binary(
 #    srcs = glob(
 #        include = ["node_modules/**/*"],
 #        exclude = [
-#            # Files under test & docs may contain file names that
+#            # Files under Test & docs may contain file names that
 #            # are not legal Bazel labels (e.g.,
-#            # node_modules/ecstatic/test/public/中文/檔案.html)
-#            "node_modules/test/**",
+#            # node_modules/ecstatic/Test/public/中文/檔案.html)
+#            "node_modules/Test/**",
 #            "node_modules/docs/**",
 #            # Files with spaces are not allowed in Bazel runfiles
 #            # See https://github.com/bazelbuild/bazel/issues/4327

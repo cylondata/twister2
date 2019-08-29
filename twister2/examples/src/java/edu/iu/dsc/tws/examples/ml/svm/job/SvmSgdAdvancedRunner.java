@@ -220,7 +220,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
 
   /**
    * This method loads the testing data
-   * The loaded test data is used to evaluate the trained data
+   * The loaded Test data is used to evaluate the trained data
    * Testing data is loaded in parallel depending on the parallelism parameter given
    * There are partitions created equal to the parallelism
    * Later this will be used to do the testing in parallel in the testing task graph
@@ -428,7 +428,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
    * and uses the final weight vector obtained from the training task graph
    * Testing is also done in a parallel way. At the testing data loading stage we load the data
    * in parallel with reference to the given parallelism and testing is also in in parallel
-   * Then we get test results for all these testing data partitions
+   * Then we get Test results for all these testing data partitions
    *
    * @return Returns the Accuracy value obtained
    */
@@ -454,7 +454,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     ComputeGraph predictionGraph = testingBuilder.build();
     predictionGraph.setGraphName("testing-graph");
     ExecutionPlan predictionPlan = taskExecutor.plan(predictionGraph);
-    // adding test data set
+    // adding Test data set
     taskExecutor
         .addInput(predictionGraph, predictionPlan,
             Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK,

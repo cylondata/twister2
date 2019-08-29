@@ -46,29 +46,29 @@ public class AllreduceExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     src.allReduce(Integer::sum)
         .forEach(i -> LOG.info("foreach: " + i));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     src.allReduce(Integer::sum)
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("Test flat map");
     src.allReduce(Integer::sum)
         .flatmap((i, c) -> c.collect(i.toString() + "$$"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     src.allReduce(Integer::sum)
         .compute(i -> i * 2)
         .direct()
         .forEach(i -> LOG.info("comp: " + i));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     src.allReduce(Integer::sum)
         .compute((ComputeCollectorFunc<String, Integer>)
             (input, output) -> output.collect("sum=" + input))

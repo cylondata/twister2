@@ -123,7 +123,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
 
   private CachedTSet<double[][]> loadTestingData(BatchTSetEnvironment env) {
     return env.createSource(
-        new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "test"),
+        new DataLoadingTask(this.binaryBatchModel, this.svmJobParameters, "Test"),
         this.dataStreamerParallelism).setName("testingDataSource").cache();
   }
 

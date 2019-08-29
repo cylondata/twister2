@@ -302,7 +302,7 @@ public final class PodWatchUtils {
   }
 
   /**
-   * a test method to see whether kubernetes java client can connect to kubernetes master
+   * a Test method to see whether kubernetes java client can connect to kubernetes master
    * and get the pod list
    */
   public static void testGetPodList(String namespace) {
@@ -330,7 +330,7 @@ public final class PodWatchUtils {
   }
 
   /**
-   * test watch pods method in the worker pod
+   * Test watch pods method in the worker pod
    */
   public static void testWatchPods(String namespace, String jobName, int timeout) {
 

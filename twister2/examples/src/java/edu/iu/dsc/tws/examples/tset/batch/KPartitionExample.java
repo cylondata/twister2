@@ -50,15 +50,15 @@ public class KPartitionExample extends BatchTsetExample {
     KeyedPartitionTLink<Integer, Integer> klink = src.mapToTuple(i -> new Tuple<>(i % 4, i))
         .keyedPartition(new LoadBalancePartitioner<>());
 
-    LOG.info("test foreach");
+    LOG.info("Test foreach");
     klink.forEach(t -> LOG.info(t.getKey() + "_" + t.getValue()));
 
-    LOG.info("test map");
+    LOG.info("Test map");
     klink.map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test compute");
+    LOG.info("Test compute");
     klink.compute(
         (ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>) input -> {
           StringBuilder s = new StringBuilder();
@@ -70,7 +70,7 @@ public class KPartitionExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("compute: concat " + s));
 
-    LOG.info("test computec");
+    LOG.info("Test computec");
     klink.compute((ComputeCollectorFunc<String, Iterator<Tuple<Integer, Integer>>>)
         (input, output) -> {
           while (input.hasNext()) {

@@ -66,7 +66,7 @@ public class CheckpointSpout extends BaseRichSpout {
     open(ctx, cllctr, loadCheckpointInterval(conf), loadCheckpointState(conf, ctx));
   }
 
-  // package access for unit test
+  // package access for unit Test
   void open(TopologyContext ctx, SpoutOutputCollector collctr,
             int checkPInterval, KeyValueState<String, CheckPointState> checkPState) {
     this.context = ctx;

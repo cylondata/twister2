@@ -71,7 +71,7 @@ public final class ZKWorkerControllerExample {
 
     String zkAddress = args[0];
     String action = args[1];
-    String jobName = "test-job";
+    String jobName = "Test-job";
 
     Config cnfg = buildTestConfig(zkAddress, jobName);
 
@@ -85,7 +85,7 @@ public final class ZKWorkerControllerExample {
   }
 
   /**
-   * construct a test Config object
+   * construct a Test Config object
    */
   public static Config buildTestConfig(String zkAddresses, String jobName) {
 

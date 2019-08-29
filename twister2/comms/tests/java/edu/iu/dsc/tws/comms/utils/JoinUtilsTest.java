@@ -131,7 +131,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the results of in memory and disk based inner joins.
+   * This Test compares the results of in memory and disk based inner joins.
    * Purpose is to verify the accuracy of disk based inner join
    */
   @Test
@@ -215,7 +215,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the results of in memory and disk based full outer joins.
+   * This Test compares the results of in memory and disk based full outer joins.
    * Purpose is to verify the accuracy of disk based full outer join
    */
   @Test
@@ -299,7 +299,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the results of in memory and disk based left outer joins.
+   * This Test compares the results of in memory and disk based left outer joins.
    * Purpose is to verify the accuracy of disk based left outer join
    */
   @Test
@@ -383,7 +383,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the results of in memory and disk based right outer joins.
+   * This Test compares the results of in memory and disk based right outer joins.
    * Purpose is to verify the accuracy of disk based right outer join
    */
   @Test
@@ -467,7 +467,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the in memory inner join against a known set of results.
+   * This Test compares the in memory inner join against a known set of results.
    * Purpose is to verify the accuracy of in memory inner join
    */
   @Test
@@ -493,7 +493,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the in memory full outer join against a known set of results.
+   * This Test compares the in memory full outer join against a known set of results.
    * Purpose is to verify the accuracy of in memory full outer join
    */
   @Test
@@ -519,7 +519,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the in memory left outer join against a known set of results.
+   * This Test compares the in memory left outer join against a known set of results.
    * Purpose is to verify the accuracy of in memory left outer join
    */
   @Test
@@ -545,7 +545,7 @@ public class JoinUtilsTest {
   }
 
   /**
-   * This test compares the in memory right outer join against a known set of results.
+   * This Test compares the in memory right outer join against a known set of results.
    * Purpose is to verify the accuracy of in memory left outer join
    */
   @Test
