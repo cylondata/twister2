@@ -157,12 +157,6 @@ public final class CDFWExecutor {
   private void submitJob(CDFWJobAPI.SubGraph job) {
     LOG.log(Level.INFO, "Sending graph to workers for execution: " + job.getName());
     CDFWJobAPI.ExecuteMessage.Builder builder = CDFWJobAPI.ExecuteMessage.newBuilder();
-    /*if (!job.getInputsList().isEmpty()) {
-      for (int i = 0; i < job.getInputsList().size(); i++) {
-        CDFWJobAPI.Input input = job.getInputs(i);
-        LOG.info("%%%%%%%% Job inputs:" + input + "\t" + input.getTaskname());
-      }
-    }*/
     builder.setSubgraphName(job.getName());
     builder.setGraph(job);
     driverMessenger.broadcastToAllWorkers(builder.build());

@@ -166,7 +166,9 @@ public final class ConnectedDataflowExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", firstGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("first_graph", "first_out", "datapointsink");
+        .addOutput("first_out");
+        //.addOutput("first_graph", "first_out", "datapointsink");
+
     return job;
   }
 
@@ -205,7 +207,8 @@ public final class ConnectedDataflowExample {
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", secondGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("second_graph", "second_out", "centroidsink");
+        .addOutput("second_out");
+        //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
 

@@ -174,8 +174,7 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph).
-        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_graph",
-        "first_out", "sink1");
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addOutput("first_out");
 
     return job;
   }
