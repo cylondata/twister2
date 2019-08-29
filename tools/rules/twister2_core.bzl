@@ -112,4 +112,18 @@ def twister2_storm_files():
 def twister2_beam_files():
     return [
         "//twister2/compatibility/beam:twister2-beam",
+        "@org_apache_beam_beam_runners_core_java//jar",
+        "@org_apache_beam_beam_sdks_java_core//jar",
+        "@org_apache_beam_beam_model_pipeline//jar",
+        "@org_apache_beam_beam_runners_java_fn_execution//jar",
+        "@com_fasterxml_jackson_core_jackson_annotations//jar",
+        "@joda_time_joda_time//jar",
+        "@org_apache_beam_beam_runners_core_construction_java//jar",
+        "@com_google_guava_guava//jar",
+        "//third_party:vendored_grpc_1_21_0",
+        "//third_party:vendored_guava_26_0_jre",
+        "@org_apache_beam_beam_vendor_guava_20_0//jar",
+        "@javax_xml_bind_jaxb_api//jar",
+        "@org_apache_beam_beam_vendor_sdks_java_extensions_protobuf//jar",
+        "@org_apache_beam_beam_vendor_grpc_1_13_1//jar",
     ]
