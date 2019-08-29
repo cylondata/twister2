@@ -594,7 +594,7 @@ public final class JMWorkerAgent {
   public void setBackToLAstCheckpoint() {
 
 
-    System.exit(3);
+    // System.exit(3);
 
   }
 
