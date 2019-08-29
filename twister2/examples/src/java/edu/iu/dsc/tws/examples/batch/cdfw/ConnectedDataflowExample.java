@@ -71,9 +71,13 @@ public final class ConnectedDataflowExample {
 
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 2, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
-      DataFlowGraph job3 = generateThirdJob(config, 2, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, 2, cdfwEnv, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, cdfwEnv, jobConfig);
+      DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
+
+     /* generateFirstJob(config, 2, cdfwEnv, jobConfig);
+      generateSecondJob(config, 2, cdfwEnv, jobConfig);
+      generateThirdJob(config, 2, cdfwEnv, jobConfig);*/
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
 
@@ -132,7 +136,7 @@ public final class ConnectedDataflowExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                DafaFlowJobConfig jobConfig) {
+                                       CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
     String dataDirectory = "/tmp/dinput0";
     int dsize = 1000;
     int dimension = 2;
@@ -164,16 +168,17 @@ public final class ConnectedDataflowExample {
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", firstGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("first_out");
+        .addOutput("points");
         //.addOutput("first_graph", "first_out", "datapointsink");
 
+    //cdfwEnv.executeDataFlowGraph(job);
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 DafaFlowJobConfig jobConfig) {
+                                                 CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
     String centroidDirectory = "/tmp/cinput0";
     int csize = 4;
     int dimension = 2;
@@ -205,16 +210,17 @@ public final class ConnectedDataflowExample {
 
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", secondGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("second_out");
+        .addOutput("centroids");
         //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
+    //cdfwEnv.executeDataFlowGraph(job);
   }
 
 
   private static DataFlowGraph generateThirdJob(Config config, int parallelismValue,
-                                                DafaFlowJobConfig jobConfig) {
+                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
@@ -235,9 +241,10 @@ public final class ConnectedDataflowExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("third_graph", thirdGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out", "datapointsink")
-        .addInput("second_graph", "second_out", "centroidsink");
+        .addInput("datapointsink", "points", "datapointsink")
+        .addInput("centroidsink", "centroids", "centroidsink");
     return job;
+    //cdfwEnv.executeDataFlowGraph(job);
   }
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {

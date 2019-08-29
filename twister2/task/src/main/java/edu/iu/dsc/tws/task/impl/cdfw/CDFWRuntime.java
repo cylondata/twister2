@@ -58,7 +58,6 @@ public class CDFWRuntime implements JobListener {
    * The outputs from previous graphs
    * [graph, [output name, data set]]
    */
-  //private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
   private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
 
   /**
@@ -118,9 +117,8 @@ public class CDFWRuntime implements JobListener {
     CDFWJobAPI.ExecuteCompletedMessage completedMessage;
     try {
       executeMessage = msg.unpack(CDFWJobAPI.ExecuteMessage.class);
-      //LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-      LOG.log(Level.INFO, workerId + " Executing the subgraph : "
-          + executeMessage.getSubgraphName());
+//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
       // get the subgraph from the map
       CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
@@ -132,17 +130,18 @@ public class CDFWRuntime implements JobListener {
       }
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
-      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
-
-      LOG.info("subgraph input list for the graph:" + subGraph.getInputsList());
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       if (subGraph.getInputsList().size() != 0) {
+        LOG.info("subgraph input list for the graph:" + subGraph.getName()
+            + "\t" + subGraph.getInputsList());
         for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
           String inputName = input.getName();
           String inputGraph = input.getParentGraph();
           String taskName = input.getTaskname();
 
+          LOG.info("input graph name:" + inputGraph);
           if (!outPuts.containsKey(inputGraph)) {
             throw new RuntimeException("We cannot find the input graph: " + inputGraph);
           }
@@ -153,53 +152,49 @@ public class CDFWRuntime implements JobListener {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
 
-          DataObject<Object> outPutObject = outsPerGraph.get(taskName);
-          LOG.info("outPutObject:" + outPutObject);
-
+          DataObject<Object> outPutObject = outsPerGraph.get(inputName);
           //taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
-          taskExecutor.addInput(
-              taskGraph, executionPlan, taskName, inputName, outPutObject);
+          taskExecutor.addInput(taskGraph, executionPlan, taskName, inputName, outPutObject);
         }
+        LOG.info("Task Graph Details:" + taskGraph.getGraphName()
+            + "\t" + taskGraph.getGraphName() + "\t" + taskExecutor);
       }
 
       List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
       for (CDFWJobAPI.Input in : inputs) {
-        //DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+        LOG.info("I am coming inside the first for loop:" + subGraph.getName() + "\t" + dataSet);
         //taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
-        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getTaskname());
         taskExecutor.addInput(taskGraph, executionPlan, in.getTaskname(), in.getName(), dataSet);
       }
 
       // reuse the task executor execute
       taskExecutor.execute(taskGraph, executionPlan);
 
-      LOG.log(Level.INFO, workerId + " Completed subgraph : " + subGraph.getName());
-
-//      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+      LOG.log(Level.INFO, workerId + " Sending " + subGraph.getName()
+          + "subgraph completed message to driver");
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
 
-
-     /* List<CDFWJobAPI.Output> outputs = subGraph.getOutputsList();
       Map<String, DataObject<Object>> outs = new HashMap<>();
-      for (CDFWJobAPI.Output out : outputs) {
-        DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan,
-            out.getName());
-        outs.put(out.getName(), outPut);
+      if (subGraph.getOutputsList().size() != 0) {
+        List<String> outPutNames = subGraph.getOutputsList();
+        for (String out : outPutNames) {
+          // get the outputs
+          //DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
+          if (subGraph.getName().equals("datapointsink")) {
+            DataObject<Object> outPut = taskExecutor.getOutput(
+                taskGraph, executionPlan, "datapointsink");
+            outs.put("points", outPut);
+          } else if (subGraph.getName().equals("centroidsink")) {
+            DataObject<Object> outPut = taskExecutor.getOutput(
+                taskGraph, executionPlan, "centroidsink");
+            outs.put("centroids", outPut);
+          }
+          outPuts.put(subGraph.getName(), outs);
+        }
       }
-      outPuts.put(subGraph.getName(), outs);*/
-
-      List<String> outPutNames = subGraph.getOutputsList();
-      Map<String, DataObject<Object>> outs = new HashMap<>();
-      for (String taskname : outPutNames) {
-        // get the outputs
-        //DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
-        DataObject<Object> outPut = taskExecutor.getOutput(taskGraph, executionPlan, taskname);
-        outs.put(taskname, outPut);
-      }
-      outPuts.put(subGraph.getName(), outs);
-
       if (!workerMessenger.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
       }

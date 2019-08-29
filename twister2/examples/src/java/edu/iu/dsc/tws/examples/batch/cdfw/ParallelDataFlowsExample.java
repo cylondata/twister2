@@ -72,7 +72,7 @@ public final class ParallelDataFlowsExample {
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
       DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 2, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
 
@@ -198,7 +198,7 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph).
-        setWorkers(2).addDataFlowJobConfig(jobConfig).addInput("first_graph",
+        setWorkers(4).addDataFlowJobConfig(jobConfig).addInput("first_graph",
         "first_out", "source1");
 
     return job;
