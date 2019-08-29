@@ -49,8 +49,8 @@ public class PythonWorker implements BatchTSetIWorker {
 
     public void execute(BatchTSetEnvironment env) {
         int port = 12345 + env.getWorkerID();
-        Twister2Context twister2Context = new Twister2Context(env);
-        GatewayServer py4jServer = new GatewayServer(twister2Context, port);
+        Twister2Environment twister2Environment = new Twister2Environment(env);
+        GatewayServer py4jServer = new GatewayServer(twister2Environment, port);
         py4jServer.addListener(new DefaultGatewayServerListener() {
             @Override
             public void connectionStopped(Py4JServerConnection gatewayConnection) {

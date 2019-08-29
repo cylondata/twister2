@@ -13,16 +13,16 @@ package edu.iu.dsc.tws.python;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.python.processors.PythonClassProcessor;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
-import edu.iu.dsc.tws.python.tset.PLambdaTSetSource;
+import edu.iu.dsc.tws.python.tset.PyTSetSource;
 
-public class Twister2Context {
+public class Twister2Environment {
 
     private TSetEnvironment tSetEnvironment;
 
-    Twister2Context(TSetEnvironment tSetEnvironment) {
+    Twister2Environment(TSetEnvironment tSetEnvironment) {
         this.tSetEnvironment = tSetEnvironment;
     }
 
@@ -34,13 +34,25 @@ public class Twister2Context {
         return this.tSetEnvironment.getConfig();
     }
 
-    public SourceTSet createLambdaSource(byte[] lambda, int parallelism) {
-        PLambdaTSetSource pLambdaTSetSource = new PLambdaTSetSource(lambda);
-        return (SourceTSet) tSetEnvironment.createSource(pLambdaTSetSource, parallelism);
+    public SourceTSet createSource(byte[] lambda, int parallelism) {
+        PyTSetSource pyTSetSource = new PyTSetSource(lambda);
+        while (pyTSetSource.hasNext()) {
+            System.out.println(pyTSetSource.next());
+        }
+        return (SourceTSet) tSetEnvironment.createSource(pyTSetSource, parallelism);
     }
 
     public void executePyFunction(byte[] lambda, Object input) {
-        Object o = new PythonLambdaProcessor(lambda).process(input);
-        System.out.println("Printing output in java side : " + o);
+        PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(lambda);
+        System.out.println("Printing output in java side : "
+                + pythonLambdaProcessor.invoke(input));
+    }
+
+    public void executePyObject(byte[] lambda, Object... input) {
+        PythonClassProcessor pythonLambdaProcessor = new PythonClassProcessor(lambda);
+        for (int i = 0; i < 10; i++) {
+            System.out.println("Printing output in java side : "
+                    + pythonLambdaProcessor.invoke("proc", input));
+        }
     }
 }

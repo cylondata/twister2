@@ -10,6 +10,8 @@ public class JepInstance {
     public static Jep get() throws JepException {
         if (jep == null) {
             jep = new Jep();
+            jep.eval("import cloudpickle as cp");
+            jep.eval("import base64");
         }
         return jep;
     }
