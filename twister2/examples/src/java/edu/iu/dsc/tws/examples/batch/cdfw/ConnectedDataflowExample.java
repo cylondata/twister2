@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -66,18 +66,12 @@ public final class ConnectedDataflowExample {
 
     @Override
     public void execute(CDFWEnv cdfwEnv) {
-
       Config config = cdfwEnv.getConfig();
-
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
       DataFlowGraph job1 = generateFirstJob(config, 2, cdfwEnv, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, 2, cdfwEnv, jobConfig);
       DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
-
-     /* generateFirstJob(config, 2, cdfwEnv, jobConfig);
-      generateSecondJob(config, 2, cdfwEnv, jobConfig);
-      generateThirdJob(config, 2, cdfwEnv, jobConfig);*/
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
 
@@ -99,7 +93,7 @@ public final class ConnectedDataflowExample {
     Options options = new Options();
     options.addOption(CDFConstants.ARGS_PARALLELISM_VALUE, true, "2");
     options.addOption(CDFConstants.ARGS_WORKERS, true, "2");
-    options.addOption(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS, true, "2");
+    options.addOption(CDFConstants.ARGS_DIMENSIONS, true, "2");
 
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
@@ -109,11 +103,11 @@ public final class ConnectedDataflowExample {
     int parallelismValue =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
     int dimension =
-        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS));
+        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_DIMENSIONS));
 
     configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
     configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
-    configurations.put(CDFConstants.ARGS_NUMBER_OF_DIMENSIONS, Integer.toString(dimension));
+    configurations.put(CDFConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -136,8 +130,9 @@ public final class ConnectedDataflowExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                       CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
-    String dataDirectory = "/tmp/dinput0";
+                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
+
+    String dataDirectory = "/tmp/dinput";
     int dsize = 1000;
     int dimension = 2;
 
@@ -171,15 +166,13 @@ public final class ConnectedDataflowExample {
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("points");
-        //.addOutput("first_graph", "first_out", "datapointsink");
-
-    //cdfwEnv.executeDataFlowGraph(job);
+    //.addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
-    String centroidDirectory = "/tmp/cinput0";
+    String centroidDirectory = "/tmp/cinput";
     int csize = 4;
     int dimension = 2;
 
@@ -213,9 +206,8 @@ public final class ConnectedDataflowExample {
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("centroids");
-        //.addOutput("second_graph", "second_out", "centroidsink");
+    //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
-    //cdfwEnv.executeDataFlowGraph(job);
   }
 
 
@@ -239,12 +231,11 @@ public final class ConnectedDataflowExample {
     kmeansComputeGraphBuilder.setTaskGraphName("kmeansTG");
     ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("third_graph", thirdGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addInput("datapointsink", "points", "datapointsink")
         .addInput("centroidsink", "centroids", "centroidsink");
     return job;
-    //cdfwEnv.executeDataFlowGraph(job);
   }
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -278,7 +269,7 @@ public final class ConnectedDataflowExample {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      LOG.log(Level.INFO, "Received input: " + name);
+      //LOG.log(Level.INFO, "Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
@@ -307,8 +298,8 @@ public final class ConnectedDataflowExample {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-          + ":" + context.globalTaskId());
+      //LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
+      //    + ":" + context.globalTaskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
@@ -373,6 +364,7 @@ public final class ConnectedDataflowExample {
           newCentroids[j][k] = newVal;
         }
       }
+      LOG.info("New Centroid Value:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }

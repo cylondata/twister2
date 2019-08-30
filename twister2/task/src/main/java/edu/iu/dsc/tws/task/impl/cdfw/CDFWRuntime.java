@@ -130,18 +130,17 @@ public class CDFWRuntime implements JobListener {
       }
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
+//    //  LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       if (subGraph.getInputsList().size() != 0) {
-        LOG.info("subgraph input list for the graph:" + subGraph.getName()
-            + "\t" + subGraph.getInputsList());
+        /*LOG.info("subgraph input list for the graph:" + subGraph.getName()
+            + "\t" + subGraph.getInputsList());*/
         for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
           String inputName = input.getName();
           String inputGraph = input.getParentGraph();
-          String taskName = input.getTaskname();
 
-          LOG.info("input graph name:" + inputGraph);
+          LOG.info("input graph name:" + inputGraph + "\t" + inputName);
           if (!outPuts.containsKey(inputGraph)) {
             throw new RuntimeException("We cannot find the input graph: " + inputGraph);
           }
@@ -153,27 +152,24 @@ public class CDFWRuntime implements JobListener {
           }
 
           DataObject<Object> outPutObject = outsPerGraph.get(inputName);
-          //taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
-          taskExecutor.addInput(taskGraph, executionPlan, taskName, inputName, outPutObject);
+          taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
+          //taskExecutor.addInput(taskGraph, executionPlan, taskName, inputName, outPutObject);
         }
-        LOG.info("Task Graph Details:" + taskGraph.getGraphName()
-            + "\t" + taskGraph.getGraphName() + "\t" + taskExecutor);
       }
 
       List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
       // now lets get those inputs
       for (CDFWJobAPI.Input in : inputs) {
         DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-        LOG.info("I am coming inside the first for loop:" + subGraph.getName() + "\t" + dataSet);
-        //taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
-        taskExecutor.addInput(taskGraph, executionPlan, in.getTaskname(), in.getName(), dataSet);
+        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+        //taskExecutor.addInput(taskGraph, executionPlan, in.getTaskname(), in.getName(), dataSet);
       }
 
       // reuse the task executor execute
       taskExecutor.execute(taskGraph, executionPlan);
 
       LOG.log(Level.INFO, workerId + " Sending " + subGraph.getName()
-          + "subgraph completed message to driver");
+          + "\tsubgraph completed message to driver");
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
 
@@ -181,16 +177,17 @@ public class CDFWRuntime implements JobListener {
       if (subGraph.getOutputsList().size() != 0) {
         List<String> outPutNames = subGraph.getOutputsList();
         for (String out : outPutNames) {
-          // get the outputs
-          //DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
+        // get the outputs
+        //DataObject<Object> sinkOutput = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
+        //LOG.info("get sink output:" + sinkOutput);
           if (subGraph.getName().equals("datapointsink")) {
             DataObject<Object> outPut = taskExecutor.getOutput(
                 taskGraph, executionPlan, "datapointsink");
-            outs.put("points", outPut);
+            outs.put(out, outPut);
           } else if (subGraph.getName().equals("centroidsink")) {
             DataObject<Object> outPut = taskExecutor.getOutput(
                 taskGraph, executionPlan, "centroidsink");
-            outs.put("centroids", outPut);
+            outs.put(out, outPut);
           }
           outPuts.put(subGraph.getName(), outs);
         }
