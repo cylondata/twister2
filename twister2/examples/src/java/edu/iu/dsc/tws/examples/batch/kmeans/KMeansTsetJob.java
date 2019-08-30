@@ -56,11 +56,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory();
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory();
 
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
+//    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+//        centroidDirectory);
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
@@ -164,8 +164,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       Config cfg = context.getConfig();
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
-          + context.getWorkerId();
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
@@ -219,8 +218,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       super.prepare(context);
 
       Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
-          + context.getWorkerId();
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
 
