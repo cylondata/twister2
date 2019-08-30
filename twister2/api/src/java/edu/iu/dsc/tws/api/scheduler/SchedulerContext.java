@@ -137,6 +137,10 @@ public class SchedulerContext extends Context {
     return cfg.getStringValue(USER_JOB_FILE);
   }
 
+  public static String userJobType(Config cfg) {
+    return cfg.getStringValue(USER_JOB_TYPE);
+  }
+
   public static String nfsServerAddress(Config cfg) {
     return cfg.getStringValue(NFS_SERVER_ADDRESS);
   }

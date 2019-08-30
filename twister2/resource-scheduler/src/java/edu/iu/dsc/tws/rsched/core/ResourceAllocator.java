@@ -196,7 +196,23 @@ public class ResourceAllocator {
     // get file name without directory
     String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-//    format.setType(JobAPI.JobFormatType.SHUFFLE);
+
+    // set the job type
+    boolean ziped = false;
+    String jobType = SchedulerContext.userJobType(config);
+    if ("jar".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.JAR);
+    } else if ("java_zip".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.JAVA_ZIP);
+      ziped = true;
+    } else if ("python".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.PYTHON);
+    } else if ("python_zip".equals(jobType)) {
+      ziped = true;
+      format.setType(JobAPI.JobFormatType.PYTHON_ZIP);
+    }
+
+    // set the job file
     format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
@@ -209,7 +225,11 @@ public class ResourceAllocator {
     }
 
     // add job jar file to the archive
-    added = packer.addFileToArchive(jobJarFile);
+    if (!ziped) {
+      added = packer.addFileToArchive(jobJarFile);
+    } else {
+      added = packer.addZipToArchive(jobJarFile);
+    }
     if (!added) {
       throw new RuntimeException("Failed to add the job jar file to the archive: " + jobJarFile);
     }
