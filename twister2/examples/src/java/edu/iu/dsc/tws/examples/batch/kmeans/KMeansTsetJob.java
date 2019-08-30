@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,8 +103,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-      LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-          + centroid.length);
+      if (workerId == 0) {
+        LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
+            + Arrays.toString(centroid[0]));
+
+      }
     }
   }
 
