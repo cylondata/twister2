@@ -24,12 +24,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -127,18 +128,21 @@ public final class TarGzipPacker {
       // construct input stream
       InputStream fin = Files.newInputStream(Paths.get(zipFile));
       BufferedInputStream in = new BufferedInputStream(fin);
-      GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);
-      ZipArchiveInputStream tarInputStream = new ZipArchiveInputStream(gzIn);
+      ZipInputStream gzIn = new ZipInputStream(in);
 
       // copy the existing entries from source gzip file
-      ArchiveEntry nextEntry;
-      while ((nextEntry = tarInputStream.getNextEntry()) != null) {
-        tarOutputStream.putArchiveEntry(nextEntry);
-        IOUtils.copy(tarInputStream, tarOutputStream);
+      ZipEntry nextEntry;
+      while ((nextEntry = gzIn.getNextEntry()) != null) {
+        TarArchiveEntry entry = new TarArchiveEntry(nextEntry.getName());
+        entry.setSize(nextEntry.getSize());
+        entry.setModTime(nextEntry.getTime());
+
+        tarOutputStream.putArchiveEntry(entry);
+        IOUtils.copy(gzIn, tarOutputStream);
         tarOutputStream.closeArchiveEntry();
       }
 
-      tarInputStream.close();
+      gzIn.close();
       return true;
     } catch (IOException ioe) {
       LOG.log(Level.SEVERE, "Archive File can not be added: " + zipFile, ioe);

@@ -91,8 +91,22 @@ public final class JobUtils {
       classPathBuilder.append(
           Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
     } else {
-      // we look at lib folder of the job
-      LOG.info("wd: " + wd);
+      // now get the files
+      File jobLib = Paths.get(wd, job.getJobName(), "lib").toFile();
+      File[] listOfFiles = jobLib.listFiles();
+      if (listOfFiles != null) {
+        for (int i = 0; i < listOfFiles.length; i++) {
+          if (listOfFiles[i].isFile()) {
+            if (classPathBuilder.length() != 0) {
+              classPathBuilder.append(":").append(
+                  Paths.get(jobLib.getPath(), listOfFiles[i].getName()).toString());
+            } else {
+              classPathBuilder.append(Paths.get(
+                  jobLib.getPath(), listOfFiles[i].getName()).toString());
+            }
+          }
+        }
+      }
     }
     return classPathBuilder.toString();
   }
@@ -118,10 +132,6 @@ public final class JobUtils {
     }
     return classPath;
   }
-
-  /**
-   * configs from job object will override the ones in config from files if any
-   */
 
   /**
    * [Deprecated Function]
