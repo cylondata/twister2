@@ -131,7 +131,7 @@ public final class ConnectedDataflowExample {
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
-
+    //TODO: Replace with user-defined values
     String dataDirectory = "/tmp/dinput";
     int dsize = 1000;
     int dimension = 2;
@@ -165,13 +165,14 @@ public final class ConnectedDataflowExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("points");
+        .addOutput("points", "datapointsink");
     //.addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
+    //TODO: Replace with user-defined values
     String centroidDirectory = "/tmp/cinput";
     int csize = 4;
     int dimension = 2;
@@ -205,7 +206,7 @@ public final class ConnectedDataflowExample {
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("centroids");
+        .addOutput("centroids", "centroidsink");
     //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
@@ -234,7 +235,8 @@ public final class ConnectedDataflowExample {
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addInput("datapointsink", "points", "datapointsink")
-        .addInput("centroidsink", "centroids", "centroidsink");
+        .addInput("centroidsink", "centroids", "centroidsink")
+        .setGraphType("iterative");
     return job;
   }
 

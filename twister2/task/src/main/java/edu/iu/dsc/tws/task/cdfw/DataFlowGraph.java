@@ -44,10 +44,10 @@ public final class DataFlowGraph {
   private List<CDFWJobAPI.Input> inputs = new ArrayList<>();
 
   // output names to this dataflow
-  private List<String> outputs = new ArrayList<>();
+  //private List<String> outputs = new ArrayList<>();
 
   // input names to this
-  //private List<CDFWJobAPI.Output> outputs = new ArrayList<>();
+  private List<CDFWJobAPI.Output> outputs = new ArrayList<>();
 
   private KryoSerializer kryoSerializer;
 
@@ -80,6 +80,17 @@ public final class DataFlowGraph {
     this.cpu = c;
     return this;
   }
+
+  public String getGraphType() {
+    return graphType;
+  }
+
+  public DataFlowGraph setGraphType(String graphtype) {
+    this.graphType = graphtype;
+    return this;
+  }
+
+  private String graphType;
 
   public DataFlowGraph setRamMegaBytes(int ram) {
     this.ramMegaBytes = ram;
@@ -130,14 +141,14 @@ public final class DataFlowGraph {
     return this;
   }*/
 
-  public DataFlowGraph addOutput(String name) {
+  /*public DataFlowGraph addOutput(String name) {
     outputs.add(name);
     return this;
   }
 
   public List<String> getOutputs() {
     return outputs;
-  }
+  }*/
 
   public List<CDFWJobAPI.Input> getInputs() {
     return inputs;
@@ -153,15 +164,14 @@ public final class DataFlowGraph {
     return this;
   }
 
-  /*public DataFlowGraph addOutput(String g, String output, String taskname) {
-    outputs.add(CDFWJobAPI.Output.newBuilder()
-        .setParentGraph(g).setName(output).setTaskname(taskname).build());
+  public DataFlowGraph addOutput(String output, String taskname) {
+    outputs.add(CDFWJobAPI.Output.newBuilder().setName(output).setTaskname(taskname).build());
     return this;
   }
 
   public List<CDFWJobAPI.Output> getOutputs() {
     return outputs;
-  }*/
+  }
 
   public CDFWJobAPI.SubGraph build() {
     JobAPI.Config.Builder configBuilder = JobAPI.Config.newBuilder();
