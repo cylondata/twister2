@@ -113,3 +113,8 @@ def twister2_beam_files():
     return [
         "//twister2/compatibility/beam:twister2-beam",
     ]
+
+def twister2_python_support_files():
+    return [
+        "//twister2/python-support:python-support",
+    ]

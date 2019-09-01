@@ -20,39 +20,39 @@ import edu.iu.dsc.tws.python.tset.PyTSetSource;
 
 public class Twister2Environment {
 
-    private TSetEnvironment tSetEnvironment;
+  private TSetEnvironment tSetEnvironment;
 
-    Twister2Environment(TSetEnvironment tSetEnvironment) {
-        this.tSetEnvironment = tSetEnvironment;
-    }
+  Twister2Environment(TSetEnvironment tSetEnvironment) {
+    this.tSetEnvironment = tSetEnvironment;
+  }
 
-    public int getWorkerId() {
-        return this.tSetEnvironment.getWorkerID();
-    }
+  public int getWorkerId() {
+    return this.tSetEnvironment.getWorkerID();
+  }
 
-    public Config getConfig() {
-        return this.tSetEnvironment.getConfig();
-    }
+  public Config getConfig() {
+    return this.tSetEnvironment.getConfig();
+  }
 
-    public SourceTSet createSource(byte[] lambda, int parallelism) {
-        PyTSetSource pyTSetSource = new PyTSetSource(lambda);
-        while (pyTSetSource.hasNext()) {
-            System.out.println(pyTSetSource.next());
-        }
-        return (SourceTSet) tSetEnvironment.createSource(pyTSetSource, parallelism);
+  public SourceTSet createSource(byte[] lambda, int parallelism) {
+    PyTSetSource pyTSetSource = new PyTSetSource(lambda);
+    while (pyTSetSource.hasNext()) {
+      System.out.println(pyTSetSource.next());
     }
+    return (SourceTSet) tSetEnvironment.createSource(pyTSetSource, parallelism);
+  }
 
-    public void executePyFunction(byte[] lambda, Object input) {
-        PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(lambda);
-        System.out.println("Printing output in java side : "
-                + pythonLambdaProcessor.invoke(input));
-    }
+  public void executePyFunction(byte[] lambda, Object input) {
+    PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(lambda);
+    System.out.println("Printing output in java side : "
+        + pythonLambdaProcessor.invoke(input));
+  }
 
-    public void executePyObject(byte[] lambda, Object... input) {
-        PythonClassProcessor pythonLambdaProcessor = new PythonClassProcessor(lambda);
-        for (int i = 0; i < 10; i++) {
-            System.out.println("Printing output in java side : "
-                    + pythonLambdaProcessor.invoke("proc", input));
-        }
+  public void executePyObject(byte[] lambda, Object... input) {
+    PythonClassProcessor pythonLambdaProcessor = new PythonClassProcessor(lambda);
+    for (int i = 0; i < 10; i++) {
+      System.out.println("Printing output in java side : "
+          + pythonLambdaProcessor.invoke("proc", input));
     }
+  }
 }

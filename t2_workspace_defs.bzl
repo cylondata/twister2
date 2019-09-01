@@ -302,3 +302,8 @@ def load_modules():
     _maven_import(artifact = "org.apache.beam:beam-vendor-sdks-java-extensions-protobuf:2.14.0",licenses = ["notice"],sha256 = "7d7f2e082fa22d3fb8cff2ff5923a10a548ca04a6aaa9e9315db26ee2e6632b2",)
     _maven_import(artifact = "joda-time:joda-time:2.10.1",licenses = ["notice"],sha256 = "d269671656767e05a58dd634cbafc36ed70d417220b058d11c0d88dfd281616d",)
     _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0",licenses = ["notice"],sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb",)
+
+    # For Python Support
+    _maven_import(artifact = "net.sf.py4j:py4j:0.10.8.1",licenses = ["notice"],sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835",)
+    _maven_import(artifact = "black.ninia:jep:3.8.2",licenses = ["notice"],sha256 = "dbd5cf18e130eca889bfec01edd6ed7fedaf2bbc1ba4ef405166625917c82003",)
+
