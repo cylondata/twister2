@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -110,6 +112,40 @@ public final class TarGzipPacker {
       return true;
     } catch (IOException ioe) {
       LOG.log(Level.SEVERE, "Archive File can not be added: " + tarGzipFile, ioe);
+      return false;
+    }
+  }
+
+  /**
+   * given tar.gz file will be copied to this tar.gz file.
+   * all files will be transferred to new tar.gz file one by one.
+   * original directory structure will be kept intact
+   *
+   * @param zipFile the archive file to be copied to the new archive
+   */
+  public boolean addZipToArchive(String zipFile) {
+    try {
+      // construct input stream
+      InputStream fin = Files.newInputStream(Paths.get(zipFile));
+      BufferedInputStream in = new BufferedInputStream(fin);
+      ZipInputStream gzIn = new ZipInputStream(in);
+
+      // copy the existing entries from source gzip file
+      ZipEntry nextEntry;
+      while ((nextEntry = gzIn.getNextEntry()) != null) {
+        TarArchiveEntry entry = new TarArchiveEntry(nextEntry.getName());
+        entry.setSize(nextEntry.getSize());
+        entry.setModTime(nextEntry.getTime());
+
+        tarOutputStream.putArchiveEntry(entry);
+        IOUtils.copy(gzIn, tarOutputStream);
+        tarOutputStream.closeArchiveEntry();
+      }
+
+      gzIn.close();
+      return true;
+    } catch (IOException ioe) {
+      LOG.log(Level.SEVERE, "Archive File can not be added: " + zipFile, ioe);
       return false;
     }
   }

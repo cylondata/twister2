@@ -69,6 +69,8 @@ def setup_java_system_properties(cl_args):
     java_system_props.append("debug=" + str(cl_args['debug']))
     # set the job file
     java_system_props.append("job_file=" + cl_args['job-file-name'])
+    # set the job type
+    java_system_props.append("job_type=" + cl_args['job-type'])
     # set the logger file
     conf_dir_common = config.get_twister2_cluster_conf_dir("common", config.get_twister2_conf_dir())
     conf_dir = config.get_twister2_cluster_conf_dir(cl_args["cluster"], config.get_twister2_conf_dir())
@@ -139,6 +141,44 @@ def submit_fatjar(cl_args, unknown_args):
 
     return res
 
+def submit_java_zip(cl_args, unknown_args):
+    # set up the system properties
+    java_system_props = setup_java_system_properties(cl_args)
+
+    props = read_client_properties(cl_args)
+
+    # execute main of the job to create the job definition
+    job_file = cl_args['job-file-name']
+
+    main_class = cl_args['job-class-name']
+
+    res = execute.twister2_tar(
+        class_name=main_class,
+        topology_tar=job_file,
+        arguments=tuple(unknown_args),
+        tmpdir_root="/tmp",
+        java_defines=java_system_props,
+        client_props=props)
+
+    result.render(res)
+
+    if not res.is_successful():
+        err_context = ("Failed to create job definition " \
+                       "Please check logs for more information")
+        res.add_context(err_context)
+        return res
+
+    return res
+
+
+def submit_python(cl_args, unknown_args):
+    # we need to set the jar file here
+
+    submit_fatjar(cl_args, unknown_args)
+
+def submit_python_zip(cl_args, unknown_args):
+    pass
+
 ################################################################################
 # pylint: disable=unused-argument
 def run(command, parser, cl_args, unknown_args):
@@ -166,14 +206,16 @@ def run(command, parser, cl_args, unknown_args):
         err_context = "Topology file '%s' does not exist" % job_file
         return SimpleResult(Status.InvocationError, err_context)
 
-    # check if it is a valid file type
-    if not job_type or job_type not in ['jar']:
-        err_context = "Unknown file type '%s'. Please use jar" \
-                      % job_type
-        return SimpleResult(Status.InvocationError, err_context)
-
     # check the extension of the file name to see if it is tar/jar file.
     if job_type == "jar":
         return submit_fatjar(cl_args, unknown_args)
+    elif job_type == "java_zip":
+        return submit_java_zip(cl_args, unknown_args)
+    elif job_type == "python":
+        return submit_python(cl_args, unknown_args)
+    elif job_type == "python_zip":
+        return submit_python_zip(cl_args, unknown_args)
     else:
-        return False
+        err_context = "Unknown file type '%s'. Please use jar" \
+                      % job_type
+        return SimpleResult(Status.InvocationError, err_context)
