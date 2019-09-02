@@ -12,8 +12,10 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,6 +27,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
@@ -117,8 +122,8 @@ public class CDFWRuntime implements JobListener {
     CDFWJobAPI.ExecuteCompletedMessage completedMessage;
     try {
       executeMessage = msg.unpack(CDFWJobAPI.ExecuteMessage.class);
-//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
+      //LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
+      //LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
 
       // get the subgraph from the map
       CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
@@ -134,7 +139,7 @@ public class CDFWRuntime implements JobListener {
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
       //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-//    //  LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
+      //LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       if (subGraph.getInputsList().size() != 0) {
         for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
@@ -167,13 +172,21 @@ public class CDFWRuntime implements JobListener {
       }
 
       // reuse the task executor execute
-      if (taskGraph.getGraphName().equals("kmeansTG")) {
-        for (int i = 0; i < 10; i++) {
+      if (subGraph.getGraphType().equalsIgnoreCase("iterative")) {
+        Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
+        String collectorTask = null;
+        for (Vertex vertex : taskVertexSet) {
+          INode iNode = vertex.getTask();
+          if (iNode instanceof Collector) {
+            collectorTask = vertex.getName();
+          }
+        }
+        for (int i = 0; i < subGraph.getIterations(); i++) {
           //actual execution of the third task graph
           taskExecutor.itrExecute(taskGraph, executionPlan);
           //retrieve the new centroid value for the next iterations
           DataObject<Object> outPutObject
-              = taskExecutor.getOutput(taskGraph, executionPlan, "kmeanssink");
+              = taskExecutor.getOutput(taskGraph, executionPlan, collectorTask);
           LOG.info("%%% Output Object:" + outPutObject);
         }
         taskExecutor.waitFor(taskGraph, executionPlan);

@@ -25,6 +25,7 @@ message SubGraph {
     string graph_type = 12;
     repeated jobmaster.WorkerInfo worker_info = 13;
     CDFWSchedulePlan cdfw_scheduleplan = 14;
+    int32 iterations = 15;
 }
 
 message CDFWSchedulePlan {

@@ -81,17 +81,6 @@ public final class DataFlowGraph {
     return this;
   }
 
-  public String getGraphType() {
-    return graphType;
-  }
-
-  public DataFlowGraph setGraphType(String graphtype) {
-    this.graphType = graphtype;
-    return this;
-  }
-
-  private String graphType;
-
   public DataFlowGraph setRamMegaBytes(int ram) {
     this.ramMegaBytes = ram;
     return this;
@@ -136,26 +125,34 @@ public final class DataFlowGraph {
     return this;
   }
 
- /* public DataFlowGraph addInput(String g, String input) {
-    inputs.add(CDFWJobAPI.Input.newBuilder().setParentGraph(g).setName(input).build());
-    return this;
-  }*/
-
-  /*public DataFlowGraph addOutput(String name) {
-    outputs.add(name);
-    return this;
-  }
-
-  public List<String> getOutputs() {
-    return outputs;
-  }*/
-
   public List<CDFWJobAPI.Input> getInputs() {
     return inputs;
   }
 
   public String getGraphName() {
     return graphName;
+  }
+
+  private String graphType;
+
+  public DataFlowGraph setGraphType(String graphtype) {
+    this.graphType = graphtype;
+    return this;
+  }
+
+  public String getGraphType() {
+    return graphType;
+  }
+
+  public int getIterations() {
+    return iterations;
+  }
+
+  private int iterations;
+
+  public DataFlowGraph setIterations(int iter) {
+    this.iterations = iter;
+    return this;
   }
 
   public DataFlowGraph addInput(String g, String input, String taskname) {
@@ -195,6 +192,8 @@ public final class DataFlowGraph {
         .setCdfwScheduleplan(cdfwSchedulePlans)
         .addAllOutputs(outputs)
         .addAllInputs(inputs)
+        .setGraphType(graphType)
+        .setIterations(iterations)
         .build();
   }
 }

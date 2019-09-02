@@ -165,7 +165,8 @@ public final class ConnectedDataflowExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("points", "datapointsink");
+        .addOutput("points", "datapointsink")
+        .setGraphType("non-iterative");
     //.addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
@@ -206,7 +207,8 @@ public final class ConnectedDataflowExample {
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
-        .addOutput("centroids", "centroidsink");
+        .addOutput("centroids", "centroidsink")
+        .setGraphType("non-iterative");
     //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
@@ -236,7 +238,8 @@ public final class ConnectedDataflowExample {
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addInput("datapointsink", "points", "datapointsink")
         .addInput("centroidsink", "centroids", "centroidsink")
-        .setGraphType("iterative");
+        .setGraphType("iterative")
+        .setIterations(10);
     return job;
   }
 
