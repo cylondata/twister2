@@ -589,70 +589,70 @@ pack_tw2(
 
 pack_tw2(
     name = "twister2-test",
-    srcs = ["//util/Test"],
-    package_dir = "util/Test",
+    srcs = ["//util/test"],
+    package_dir = "util/test",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-values",
-    srcs = ["//util/Test:test_values"],
-    package_dir = "util/Test/values",
+    srcs = ["//util/test:test_values"],
+    package_dir = "util/test/values",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-util",
-    srcs = ["//util/Test:test_util"],
-    package_dir = "util/Test/util",
+    srcs = ["//util/test:test_util"],
+    package_dir = "util/test/util",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tree",
-    srcs = ["//util/Test:test_tree"],
-    package_dir = "util/Test/tree",
+    srcs = ["//util/test:test_tree"],
+    package_dir = "util/test/tree",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests",
-    srcs = ["//util/Test:test_tests"],
-    package_dir = "util/Test/tests",
+    srcs = ["//util/test:test_tests"],
+    package_dir = "util/test/tests",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests-apps-tera-sort",
-    srcs = ["//util/Test:test_tests_apps_terasort"],
-    package_dir = "util/Test/tests/apps/terasort",
+    srcs = ["//util/test:test_tests_apps_terasort"],
+    package_dir = "util/test/tests/apps/terasort",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests-comms",
-    srcs = ["//util/Test:test_tests_comms"],
-    package_dir = "util/Test/tests/comms",
+    srcs = ["//util/test:test_tests_comms"],
+    package_dir = "util/test/tests/comms",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests-integration",
-    srcs = ["//util/Test:test_tests_integration"],
-    package_dir = "util/Test/tests/integration",
+    srcs = ["//util/test:test_tests_integration"],
+    package_dir = "util/test/tests/integration",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests-integration-comms",
-    srcs = ["//util/Test:test_tests_integration_comms"],
-    package_dir = "util/Test/tests/integration/comms",
+    srcs = ["//util/test:test_tests_integration_comms"],
+    package_dir = "util/test/tests/integration/comms",
     version = T2_VERSION,
 )
 
 pack_tw2(
     name = "twister2-test-tests-integration-task",
-    srcs = ["//util/Test:test_tests_integration_task"],
-    package_dir = "util/Test/tests/integration/task",
+    srcs = ["//util/test:test_tests_integration_task"],
+    package_dir = "util/test/tests/integration/task",
     version = T2_VERSION,
 )
