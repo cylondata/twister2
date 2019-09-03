@@ -1,13 +1,13 @@
 from twister2.Twister2Environment import Twister2Environment
+from twister2.tset.fn.SourceFunc import SourceFunc
 
 ctx = Twister2Environment()
 
-print("Hello from python worker %d" % ctx.worker_id)
 
-
-class IntegerSource:
+class IntegerSource(SourceFunc):
 
     def __init__(self):
+        super(IntegerSource, self).__init__()
         self.x = 0
 
     def has_next(self):
@@ -22,7 +22,4 @@ int_source = IntegerSource()
 
 source = ctx.create_source(int_source, 4)
 
-source.direct()
-
-
-
+source.partition(ctx.functions.partition.load_balanced)
