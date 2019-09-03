@@ -13,11 +13,6 @@ class SourceTSet:
         return self.__java_ref.direct()
 
     def partition(self, partition_func: PartitionFunc) -> PartitionLink:
-        p_func_j_ref = None
-        
-        if partition_func.pre_defined:
-            p_func_j_ref = partition_func.java_ref()
-        else:
-            p_func_j_ref = PartitionFunctions.build(partition_func)
-
-        return PartitionLink(self.__java_ref.partition(p_func_j_ref))
+        p_func_java_ref = PartitionFunctions.to_java_ref(partition_func)
+        partition_link_java_ref = self.__java_ref.partition(p_func_java_ref)
+        return PartitionLink(partition_link_java_ref)

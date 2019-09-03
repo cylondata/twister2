@@ -27,12 +27,6 @@ class Twister2Environment:
     def functions(self):
         return self.__predef_functions
 
-    def execute_function(self, lam, data=None):
-        self.__entrypoint.executePyFunction(cp.dumps(lam), data)
-
-    def execute_obj(self, lam, data=None):
-        self.__entrypoint.executePyObject(cp.dumps(lam), data)
-
     def create_source(self, source_function, parallelism=0) -> SourceTSet:
         if not isinstance(source_function, SourceFunc):
             raise Exception('source_function should be an instance of {}'.format(SourceFunc))

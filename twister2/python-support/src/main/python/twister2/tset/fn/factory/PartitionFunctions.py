@@ -17,6 +17,13 @@ class PartitionFunctions:
         # send python dump to java -> create a java object in JVM -> get the ref back
         return self.java_ref.build(cp.dumps(partition_func))
 
+    @staticmethod
+    def to_java_ref(partition_func: PartitionFunc):
+        if partition_func.pre_defined:
+            return partition_func.java_ref()
+        else:
+            return PartitionFunctions.build(partition_func)
+
 
 class JavaWrapper(PartitionFunc):
 

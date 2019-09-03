@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.python;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.python.processors.PythonClassProcessor;
-import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
 import edu.iu.dsc.tws.python.tset.fn.TSetFunctions;
 
@@ -42,19 +40,5 @@ public class Twister2Environment {
 
   public TSetFunctions functions() {
     return TSetFunctions.getInstance();
-  }
-
-  public void executePyFunction(byte[] lambda, Object input) {
-    PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(lambda);
-    System.out.println("Printing output in java side : "
-            + pythonLambdaProcessor.invoke(input));
-  }
-
-  public void executePyObject(byte[] lambda, Object... input) {
-    PythonClassProcessor pythonLambdaProcessor = new PythonClassProcessor(lambda);
-    for (int i = 0; i < 10; i++) {
-      System.out.println("Printing output in java side : "
-              + pythonLambdaProcessor.invoke("proc", input));
-    }
   }
 }
