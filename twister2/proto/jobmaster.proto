@@ -1,7 +1,7 @@
 syntax = "proto3";
 package tws.proto.jobmaster;
 
-import "job.proto";
+import "twister2/proto/job.proto";
 
 option java_package = "edu.iu.dsc.tws.proto.jobmaster";
 option java_outer_classname = "JobMasterAPI";
