@@ -69,16 +69,16 @@ public final class CDFWExecutor {
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       try {
-
         DataFlowGraph dataFlowGraph = buildCDFWSchedulePlan(graph, workerIDs);
         CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-
+        LOG.info("Driver State (1):" + driverState);
         // now submit the job
         submitJob(job);
         driverState = DriverState.JOB_SUBMITTED;
-        // lets wait for another event
+        LOG.info("Driver State (2):" + driverState);
         waitForEvent(DriveEventType.FINISHED_JOB);
         driverState = DriverState.JOB_FINISHED;
+        LOG.info("Driver State (3):" + driverState);
       } catch (Exception e) {
         throw new RuntimeException("Driver is not initialized", e);
       }
@@ -98,6 +98,7 @@ public final class CDFWExecutor {
   //todo: implement this in different way, because this is not running the graphs in parallel
   @Deprecated
   public void executeCDFW(DataFlowGraph... graph) {
+
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
@@ -113,11 +114,9 @@ public final class CDFWExecutor {
         try {
           DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
           Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
-
           //build the schedule plan for the dataflow graph
           dataFlowGraph = buildCDFWSchedulePlan(dataFlowGraph, workerIDs);
           CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-
           //now submit the job
           submitJob(job);
           driverState = DriverState.JOB_SUBMITTED;

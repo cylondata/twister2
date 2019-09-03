@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -78,7 +77,13 @@ public final class ConnectedDataflowExample {
       //cdfwEnv.executeDataFlowGraph(job1);
       //cdfwEnv.executeDataFlowGraph(job2);
       //cdfwEnv.executeDataFlowGraph(job3);
-      cdfwEnv.executeDataFlowGraph(job1, job2, job3);
+
+      cdfwEnv.executeDataFlowGraph(job1, job2);
+      //cdfwEnv.executeDataFlowGraph(job2);
+
+      for (int i = 0; i < 2; i++) {
+        cdfwEnv.executeDataFlowGraph(job3);
+      }
     }
   }
 
@@ -239,7 +244,7 @@ public final class ConnectedDataflowExample {
         .addInput("datapointsink", "points", "datapointsink")
         .addInput("centroidsink", "centroids", "centroidsink")
         .setGraphType("iterative")
-        .setIterations(10);
+        .setIterations(100);
     return job;
   }
 
@@ -274,7 +279,7 @@ public final class ConnectedDataflowExample {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      //LOG.log(Level.INFO, "Received input: " + name);
+      //LOG.info("Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
@@ -369,7 +374,7 @@ public final class ConnectedDataflowExample {
           newCentroids[j][k] = newVal;
         }
       }
-      LOG.info("New Centroid Value:" + Arrays.deepToString(newCentroids));
+      //LOG.info("New Centroid Value:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }

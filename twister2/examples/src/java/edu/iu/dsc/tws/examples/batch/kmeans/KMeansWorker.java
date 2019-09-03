@@ -162,7 +162,7 @@ public class KMeansWorker implements IWorker {
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
-    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
         + Arrays.deepToString(centroid));
   }
 

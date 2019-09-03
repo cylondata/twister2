@@ -64,6 +64,12 @@ message ExecuteMessage {
 
 message ExecuteCompletedMessage {
     string subgraph_name = 1;
+    int32 iterations = 2;
+}
+
+message ExecuteIterationCompletedMessage {
+    string subgraph_name = 1;
+    int32 iterations = 2;
 }
 
 message CDFWJobCompletedMessage {

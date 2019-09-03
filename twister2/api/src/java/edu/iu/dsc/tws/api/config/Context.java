@@ -114,6 +114,8 @@ public class Context {
   public static final String TWISTER2_GRAPH_JOB = "graph";
   public static final String TWISTER2_TSET_JOB = "tset";
 
+  public static final String GRAPH_TYPE = "iterative";
+
   static {
     substitutions.put("TWISTER2_HOME", TWISTER2_HOME);
     substitutions.put("HOME", HOME);
