@@ -66,38 +66,41 @@ following the instructions in <a href="https://twister2.gitbook.io/twister2/comp
 <pre><code class="hljs css language-java"><span class="hljs-keyword">package</span> edu.iu.dsc.tws.examples.basic;
 
 <span class="hljs-keyword">import</span> java.util.HashMap;
+<span class="hljs-keyword">import</span> java.util.List;
 <span class="hljs-keyword">import</span> java.util.logging.Level;
 <span class="hljs-keyword">import</span> java.util.logging.Logger;
 
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.JobConfig;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.Twister2Submitter;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.job.Twister2Job;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.config.Config;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.discovery.IWorkerController;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.resource.AllocatedResources;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IPersistentVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IVolatileVolume;
-<span class="hljs-keyword">import</span> edu.iu.dsc.tws.common.worker.IWorker;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.Twister2Job;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.config.Config;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.exceptions.TimeoutException;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IPersistentVolume;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IVolatileVolume;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorker;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.api.resource.IWorkerController;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 <span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+<span class="hljs-keyword">import</span> edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 <span class="hljs-comment">/**
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */</span>
 <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">HelloWorld</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">IWorker</span> </span>{
+
   <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   <span class="hljs-meta">@Override</span>
   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">execute</span><span class="hljs-params">(Config config, <span class="hljs-keyword">int</span> workerID,
-                      AllocatedResources allocatedResources, IWorkerController workerController,
+                      IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume)</span> </span>{
     <span class="hljs-comment">// lets retrieve the configuration set in the job config</span>
     String helloKeyValue = config.getStringValue(<span class="hljs-string">"hello-key"</span>);
 
     <span class="hljs-comment">// lets do a log to indicate we are running</span>
     LOG.log(Level.INFO, String.format(<span class="hljs-string">"Hello World from Worker %d; there are %d total workers "</span>
-            + <span class="hljs-string">"and I got a configuration value %s"</span>, workerID,
+            + <span class="hljs-string">"and I got a message: %s"</span>, workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
     List&lt;WorkerNetworkInfo&gt; workerList = workerController.waitForAllWorkersToJoin(<span class="hljs-number">50000</span>);
@@ -111,6 +114,7 @@ following the instructions in <a href="https://twister2.gitbook.io/twister2/comp
     } <span class="hljs-keyword">catch</span> (InterruptedException e) {
       LOG.severe(<span class="hljs-string">"Thread sleep interrupted."</span>);
     }
+
   }
 
   <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> </span>{
@@ -128,8 +132,8 @@ following the instructions in <a href="https://twister2.gitbook.io/twister2/comp
     jobConfig.put(<span class="hljs-string">"hello-key"</span>, <span class="hljs-string">"Twister2-Hello"</span>);
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName(<span class="hljs-string">"hello-world-job"</span>)
-        .setWorkerClass(HelloWorld.class.getName())
+        .setJobName(<span class="hljs-string">"hello-world-job"</span>)
+        .setWorkerClass(HelloWorld.class)
         .addComputeResource(<span class="hljs-number">2</span>, <span class="hljs-number">1024</span>, numberOfWorkers)
         .setConfig(jobConfig)
         .build();
