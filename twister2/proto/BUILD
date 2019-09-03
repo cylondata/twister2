@@ -1,16 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
-#load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_java//java:defs.bzl", "java_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-
-#UNIFIED JAR
-cc_proto_library(
-    name = "proto-cpp",
-    deps = [":proto"]
-)
 
 proto_library(
     name = "proto",
@@ -56,6 +49,7 @@ proto_library(
   srcs = ["job.proto"]
 )
 
+# Java library
 t2_proto_java_lib(
     name = "proto-java",
     artifact_name = "Twister2 Proto",
@@ -73,12 +67,7 @@ filegroup(
 # C++ library
 ###########################
 
-#cc_proto_library(
-#    name = "proto-cxx-proto",
-#    deps = [":proto"],
-#)
-
-#cc_library(
-#    name = "proto-cxx",
-#    deps = [":proto-cxx-proto"],
-#)
+cc_proto_library(
+    name = "proto-cpp",
+    deps = [":proto"]
+)
