@@ -90,3 +90,17 @@ filegroup(
     name = "srcs",
     srcs = glob(["**"]),
 )
+
+###########################
+# C++ library
+###########################
+
+#cc_proto_library(
+#    name = "proto-cxx-proto",
+#    deps = [":proto"],
+#)
+
+#cc_library(
+#    name = "proto-cxx",
+#    deps = [":proto-cxx-proto"],
+#)

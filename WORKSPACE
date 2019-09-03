@@ -145,3 +145,31 @@ npm_install(
 )
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
+
+######################################################
+# C++ dependencies
+######################################################
+
+http_archive(
+    name = "com_github_jbeder_yaml_cpp",
+    urls = ["https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.6.2.tar.gz"],
+    strip_prefix = "yaml-cpp-yaml-cpp-0.6.2",
+    build_file = "@//:third_party/yamlcpp/yamlcpp.BUILD",
+    sha256 = "e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05",
+)
+
+http_archive(
+    name = "com_github_google_glog",
+    urls = ["https://github.com/google/glog/archive/v0.4.0.tar.gz"],
+    strip_prefix = "glog-0.4.0",
+    sha256 = "f28359aeba12f30d73d9e4711ef356dc842886968112162bc73002645139c39c",
+)
+
+http_archive(
+    name = "com_github_gflags_gflags",
+    strip_prefix = "gflags-2.2.2",
+    urls = [
+        "https://mirror.bazel.build/github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+        "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+    ],
+)
