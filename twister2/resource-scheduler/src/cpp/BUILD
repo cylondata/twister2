@@ -5,9 +5,11 @@ cc_library(
     srcs = [
         "standalone/mpi_worker.cpp",
         "core/twister2_submitter.cpp",
+        "standalone/example_worker.cpp",
 
         "core/twister2_submitter.h",
         "standalone/mpi_worker.h",
+        "standalone/example_worker.h",
     ],
     copts = [
         "-Itwister2",
