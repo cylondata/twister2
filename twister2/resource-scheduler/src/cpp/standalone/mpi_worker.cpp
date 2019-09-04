@@ -1,83 +1,109 @@
 #include "mpi_worker.h"
+#include "glog/logging.h"
+#include "resource/worker.h"
 
 #include <getopt.h>
 #include <stdio.h>
+#include <memory>
+#include <string>
+#include <iostream>
+#include <dlfcn.h>
 
-void read_command_line(int argc, const char* argv[]) {
+std::string container_class;
+std::string config_dir;
+std::string twister2_home;
+std::string cluster_type;
+std::string job_name;
+std::string job_master_ip;
+
+int read_command_line(int argc, char* argv[]) {
   int c;
-  int digit_optind = 0;
+  static struct option long_options[] = {
+      {"container_class", required_argument, 0, 'c'},
+      {"config_dir",      required_argument, 0, 'd'},
+      {"twister2_home",   required_argument, 0, 't'},
+      {"cluster_type",    required_argument, 0, 'n'},
+      {"job_name",        required_argument, 0, 'j'},
+      {"job_master_ip",   required_argument, 0, 'i'},
+      {"job_master_port", required_argument, 0, 'p'},
+      {0,                 0,                 0, 0}
+  };
+
+  if (argc < 8) {
+    LOG(INFO) << "Wrong arguments: " << argc;
+    return -1;
+  }
 
   while (1) {
-    int this_option_optind = optind ? optind : 1;
     int option_index = 0;
-    static struct option long_options[] = {
-        {"container_class",     required_argument, 0,  0 },
-        {"config_dir",  required_argument,       0,  0 },
-        {"twister2_home",  required_argument, 0,  0 },
-        {"cluster_type", required_argument,       0,  0 },
-        {"job_name",  required_argument, 0, 0},
-        {"job_master_ip",    required_argument, 0,  0 },
-        {"job_master_port",         0,                 0,  0 }
-    };
-
-    c = getopt_long(argc, argv, "abc:d:012",
-                    long_options, &option_index);
-    if (c == -1)
+    c = getopt_long(argc, argv, "c:d:t:n:j:i:p", long_options, &option_index);
+    if (c == -1) {
       break;
+    }
 
     switch (c) {
-      case 0:
-        printf("option %s", long_options[option_index].name);
-        if (optarg)
-          printf(" with arg %s", optarg);
-        printf("\n");
-        break;
-
-      case '0':
-      case '1':
-      case '2':
-        if (digit_optind != 0 && digit_optind != this_option_optind)
-          printf("digits occur in two different argv-elements.\n");
-        digit_optind = this_option_optind;
-        printf("option %c\n", c);
-        break;
-
-      case 'a':
-        printf("option a\n");
-        break;
-
-      case 'b':
-        printf("option b\n");
-        break;
-
       case 'c':
         printf("option c with value '%s'\n", optarg);
         break;
-
       case 'd':
         printf("option d with value '%s'\n", optarg);
         break;
-
-      case '?':
+      case 't':
+        printf("option t with value '%s'\n", optarg);
         break;
-
+      case 'n':
+        printf("option t with value '%s'\n", optarg);
+        break;
+      case 'j':
+        printf("option t with value '%s'\n", optarg);
+        break;
+        case 'i':
+        printf("option t with value '%s'\n", optarg);
+        break;
+      case 'p':
+        printf("option t with value '%s'\n", optarg);
+        break;
       default:
-        printf("?? getopt returned character code 0%o ??\n", c);
+        printf("Un-expected character %d\n", c);
     }
   }
-
-  if (optind < argc) {
-    LOG(INFO) << "non-option ARGV-elements: ";
-    while (optind < argc) {
-      LOG(INFO) << " " << argv[optind++];
-    }
-  }
+  return 0;
 }
 
-int main(int argc, const char* argv[]) {
+twister2::api::resource::IWorker* create_worker(char* worker_dll) {
+  void *worker_lib = dlopen(worker_dll, RTLD_LAZY);
+  if (!worker_lib) {
+    LOG(ERROR) << "Cannot load library: " << dlerror() << '\n';
+    return NULL;
+  }
+  // reset errors
+  dlerror();
+  // load the symbols
+  twister2_iworker_create_t *create_worker = (twister2_iworker_create_t *)
+      dlsym(worker_lib, "twister2_iworker_create");
+  const char *dlsym_error = dlerror();
+
+  if (dlsym_error) {
+    LOG(ERROR) << "Cannot load symbol create: " << dlsym_error << '\n';
+    return NULL;
+  }
+
+  twister2::api::resource::IWorker* worker = create_worker();
+  if (worker == NULL) {
+    LOG(ERROR) << "Failed to create the worker class: " << worker_dll;
+  }
+  return worker;
+}
+
+int main(int argc, char* argv[]) {
   // first lets read the arguments
   read_command_line(argc, argv);
 
+  // lets create the worker
+  twister2::api::resource::IWorker* worker = create_worker(NULL);
+
+  // now lets create the config
+  worker->execute(NULL, 0);
   return 0;
 }
 
