@@ -1,15 +1,16 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
+##include "config.h"
+
 namespace twister2 {
-namespace worker {
+namespace resource {
 
-class Worker {
- public:
-  virtual void LoadConfig();
-
-
+class IWorker {
+  public:
+    virtual void execute(Config& config, int worker_id);
 };
+
 }
 }
 

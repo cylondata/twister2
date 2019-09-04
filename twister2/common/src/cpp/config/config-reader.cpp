@@ -14,9 +14,9 @@ void ConfigReader::LoadConfig() {
   config_ = YAML::LoadFile(_file);
   if (config_.Type() == YAML::NodeType::Null) {
     config_[""] = "";
-    LOG(INFO) << "Config file " << _file << " changed. reloading..";
+  } else {
+    LOG(INFO) << "Reading config file " << _file;
   }
 }
-
 }  // namespace config
 }

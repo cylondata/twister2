@@ -306,7 +306,7 @@ public final class MPIWorker {
         .desc("Job master ip")
         .longOpt("job_master_port")
         .hasArgs()
-        .argName("job master port")
+        .argName("job master ip")
         .required()
         .build();
 

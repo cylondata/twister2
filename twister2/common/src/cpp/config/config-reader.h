@@ -6,6 +6,9 @@
 namespace twister2 {
 namespace config {
 
+/**
+ * Reads the YAML file
+ */
 class ConfigReader {
  public:
   ConfigReader(const std::string& _file);
