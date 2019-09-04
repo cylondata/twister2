@@ -24,7 +24,6 @@ cc_library(
         "@com_github_google_glog//:glog",
         "//twister2/api/src/cpp:api_cxx"
     ],
-    linkopts = ["dl"],
     linkstatic = 1,
 )
 

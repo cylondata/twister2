@@ -20,7 +20,6 @@ namespace twister2 {
  * The function to create the IWorker instance
  */
 typedef twister2::api::resource::IWorker* twister2_iworker_create_t();
-//twister2::api::resource::IWorker *twister2_iworker_create();
 
 #endif
 

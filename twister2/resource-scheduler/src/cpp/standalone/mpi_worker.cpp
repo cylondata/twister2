@@ -40,7 +40,6 @@ int read_command_line(int argc, char* argv[]) {
     if (c == -1) {
       break;
     }
-
     switch (c) {
       case 'c':
         printf("option c with value '%s'\n", optarg);
@@ -70,8 +69,8 @@ int read_command_line(int argc, char* argv[]) {
   return 0;
 }
 
-twister2::api::resource::IWorker* create_worker(char* worker_dll) {
-  void *worker_lib = dlopen(worker_dll, RTLD_LAZY);
+twister2::api::resource::IWorker* create_worker(std::string worker_dll) {
+  void *worker_lib = dlopen(worker_dll.c_str(), RTLD_LAZY);
   if (!worker_lib) {
     LOG(ERROR) << "Cannot load library: " << dlerror() << '\n';
     return NULL;
@@ -84,12 +83,10 @@ twister2::api::resource::IWorker* create_worker(char* worker_dll) {
   twister2_iworker_create_t *create_worker = (twister2_iworker_create_t *)
       dlsym(worker_lib, "twister2_iworker_create");
   const char *dlsym_error = dlerror();
-
   if (dlsym_error) {
-    LOG(ERROR) << "Cannot load symbol create: " << dlsym_error << '\n';
+    LOG(ERROR) << "Cannot load symbol: " << dlsym_error << '\n';
     return NULL;
   }
-
   twister2::api::resource::IWorker* worker = create_worker();
   if (worker == NULL) {
     LOG(ERROR) << "Failed to create the worker class: " << worker_dll;
