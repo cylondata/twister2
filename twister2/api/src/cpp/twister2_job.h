@@ -14,8 +14,8 @@ namespace twister2 {
         _job_name = _name;
       }
 
-      void set_dll_name(std::string _name) {
-        _dll_name = _name;
+      void set_method_name(std::string _name) {
+        _method_name = _name;
       }
 
       void set_cfg(twister2::api::config::Config* _cfg) {
@@ -26,12 +26,12 @@ namespace twister2 {
         return _job_name;
       }
 
-      std::string get_dll_name() {
-        return _dll_name;
-      }
-
       twister2::api::config::Config* get_config() {
         return _config;
+      }
+
+      std::string get_method_name() {
+        return _method_name;
       }
 
       /**
@@ -40,9 +40,19 @@ namespace twister2 {
        */
       tws::proto::job::Job* serialize();
 
+      /**
+       * Serialize the protocol buffer to a byte array
+       *
+       * @param job the protobuf object
+       * @param buf
+       * @param length
+       * @return
+       */
+      static int serialize_to_array(tws::proto::job::Job* job, void ** buf, int * length);
+
     private:
       std::string _job_name;
-      std::string _dll_name;
+      std::string _method_name;
       twister2::api::config::Config *_config;
     };
   }
