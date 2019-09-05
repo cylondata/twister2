@@ -5,24 +5,23 @@ from twister2.tset.fn.PartitionFunc import PartitionFunc
 
 class PartitionFunctions:
 
-    def __init__(self, java_ref):
+    def __init__(self, java_ref, env):
         self.__java_ref = java_ref
+        self.__env = env
 
     @property
     def load_balanced(self):
         return JavaWrapper(self.__java_ref.loadBalanced())
 
-    @staticmethod
     def build(self, partition_func: PartitionFunc):
         # send python dump to java -> create a java object in JVM -> get the ref back
-        return self.java_ref.build(cp.dumps(partition_func))
+        return self.__java_ref.build(cp.dumps(partition_func))
 
-    @staticmethod
-    def to_java_ref(partition_func: PartitionFunc):
+    def to_java_ref(self, partition_func: PartitionFunc):
         if partition_func.pre_defined:
             return partition_func.java_ref()
         else:
-            return PartitionFunctions.build(partition_func)
+            return self.build(partition_func)
 
 
 class JavaWrapper(PartitionFunc):

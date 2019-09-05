@@ -11,27 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-public final class TSetFunctions {
+public abstract class TFunc<T> {
 
-  private static final TSetFunctions INSTANCE = new TSetFunctions();
-
-  private TSetFunctions() {
-
-  }
-
-  public static TSetFunctions getInstance() {
-    return INSTANCE;
-  }
-
-  public PartitionFunctions partition() {
-    return PartitionFunctions.getInstance();
-  }
-
-  public MapFunctions map() {
-    return MapFunctions.getInstance();
-  }
-
-  public ComputeFunctions compute(){
-    return ComputeFunctions.getInstance();
-  }
+  public abstract T build(byte[] pyBinary);
 }

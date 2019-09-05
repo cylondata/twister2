@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.python.processors.PythonClassProcessor;
 
 import java.util.Set;
 
-public final class PartitionFunctions {
+public final class PartitionFunctions extends TFunc<PartitionFunc> {
 
   private static final PartitionFunctions INSTANCE = new PartitionFunctions();
 
@@ -25,7 +25,7 @@ public final class PartitionFunctions {
 
   }
 
-  public static PartitionFunctions getInstance() {
+  static PartitionFunctions getInstance() {
     return INSTANCE;
   }
 
@@ -38,6 +38,7 @@ public final class PartitionFunctions {
    *
    * @param pyBinary serialized python class
    */
+  @Override
   public PartitionFunc build(byte[] pyBinary) {
     PythonClassProcessor partitionPython = new PythonClassProcessor(pyBinary);
 

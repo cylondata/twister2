@@ -1,7 +1,7 @@
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
-ctx = Twister2Environment()
+env = Twister2Environment()
 
 
 class IntegerSource(SourceFunc):
@@ -20,6 +20,9 @@ class IntegerSource(SourceFunc):
 
 int_source = IntegerSource()
 
-source = ctx.create_source(int_source, 4)
+source = env.create_source(int_source, 4)
+partitioned = source.partition(env.functions.partition.load_balanced)
+mapped = partitioned.map(lambda x: x * 2)
 
-source.partition(ctx.functions.partition.load_balanced)
+print(mapped)
+

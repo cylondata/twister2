@@ -14,10 +14,11 @@ class Twister2Environment:
         print("Connecting to java port %s" % sys.argv[1])
         gateway = JavaGateway(gateway_parameters=GatewayParameters(port=int(sys.argv[1])))
         self.__entrypoint = gateway.entry_point
-        self.__predef_functions = TSetFunctions(self.__entrypoint.functions())
+        self.__predef_functions = TSetFunctions(self.__entrypoint.functions(), self)
 
-    def sout(self):
-        self.__entrypoint.sout()
+    @property
+    def config(self):
+        return self.__entrypoint.getConfig()
 
     @property
     def worker_id(self):
@@ -32,5 +33,5 @@ class Twister2Environment:
             raise Exception('source_function should be an instance of {}'.format(SourceFunc))
 
         java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function), parallelism)
-        src_tset = SourceTSet(java_src_ref)
+        src_tset = SourceTSet(java_src_ref, self)
         return src_tset

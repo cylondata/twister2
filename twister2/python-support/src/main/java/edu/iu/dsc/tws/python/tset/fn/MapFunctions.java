@@ -11,27 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-public final class TSetFunctions {
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-  private static final TSetFunctions INSTANCE = new TSetFunctions();
+public class MapFunctions extends TFunc<MapFunc> {
 
-  private TSetFunctions() {
+  private static final MapFunctions INSTANCE = new MapFunctions();
+
+  private MapFunctions() {
 
   }
 
-  public static TSetFunctions getInstance() {
+  static MapFunctions getInstance() {
     return INSTANCE;
   }
 
-  public PartitionFunctions partition() {
-    return PartitionFunctions.getInstance();
-  }
-
-  public MapFunctions map() {
-    return MapFunctions.getInstance();
-  }
-
-  public ComputeFunctions compute(){
-    return ComputeFunctions.getInstance();
+  @Override
+  public MapFunc build(byte[] pyBinary) {
+    final PythonLambdaProcessor lambda = new PythonLambdaProcessor(pyBinary);
+    return (MapFunc) lambda::invoke;
   }
 }
