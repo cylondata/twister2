@@ -23,6 +23,3 @@ int_source = IntegerSource()
 source = env.create_source(int_source, 4)
 partitioned = source.partition(env.functions.partition.load_balanced)
 mapped = partitioned.map(lambda x: x * 2)
-
-print(mapped)
-

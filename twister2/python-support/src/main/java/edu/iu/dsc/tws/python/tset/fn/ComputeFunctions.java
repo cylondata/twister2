@@ -18,7 +18,7 @@ public class ComputeFunctions extends TFunc<ComputeFunc> {
 
   private static final ComputeFunctions INSTANCE = new ComputeFunctions();
 
-  public static ComputeFunctions getInstance() {
+  static ComputeFunctions getInstance() {
     return INSTANCE;
   }
 

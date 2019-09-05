@@ -1,14 +1,10 @@
 import twister2.Twister2Environment as TEnv
-from twister2.tset.sets.batch.ComputeTSet import ComputeTSet
+from twister2.tset.link.BIteratorTLink import BIteratorTLink
 
 
-class PartitionTLink:
+class PartitionTLink(BIteratorTLink):
 
     def __init__(self, java_ref, env: TEnv):
+        super().__init__(java_ref, env)
         self.__java_ref = java_ref
         self.__env = env
-
-    def map(self, lam) -> ComputeTSet:
-        map_func_java_ref = self.__env.functions.map.build(lam)
-        compute_t_set_java_ref = self.__java_ref.map(map_func_java_ref)
-        return ComputeTSet(compute_t_set_java_ref, self.__env)
