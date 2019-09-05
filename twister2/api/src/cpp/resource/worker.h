@@ -9,9 +9,9 @@ namespace twister2 {
 
       class IWorker {
       public:
-        virtual void execute(twister2::api::config::Config *config, int worker_id);
+        virtual void execute(twister2::api::config::Config *config, int worker_id) {
+        };
       };
-
     }
   }
 }

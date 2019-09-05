@@ -5,6 +5,7 @@ cc_library(
     srcs = [
         "config/config.cpp",
         "twister2_job.cpp",
+        "resource/worker.cpp",
 
         "resource/worker.h",
         "config/config.h",
@@ -24,6 +25,7 @@ cc_library(
     deps = [
         "@com_github_jbeder_yaml_cpp//:yaml-cxx",
         "@com_github_google_glog//:glog",
+        "//twister2/proto:proto-cpp"
     ],
     linkstatic = 1,
 )

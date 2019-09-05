@@ -2,6 +2,7 @@
 #define TWISTER2_TWISTER2JOB_H
 
 #include "config/config.h"
+#include "proto/job.pb.h"
 
 #include <string>
 
@@ -17,7 +18,7 @@ namespace twister2 {
         _dll_name = _name;
       }
 
-      void set_cfg(twister2::api::config::Config *_cfg) {
+      void set_cfg(twister2::api::config::Config* _cfg) {
         _config = _cfg;
       }
 
@@ -29,9 +30,15 @@ namespace twister2 {
         return _dll_name;
       }
 
-      twister2::api::config::Config *get_config() {
+      twister2::api::config::Config* get_config() {
         return _config;
       }
+
+      /**
+       * Serialize the job to a protocol buffer
+       * @return a protobuf Job
+       */
+      tws::proto::job::Job* serialize();
 
     private:
       std::string _job_name;

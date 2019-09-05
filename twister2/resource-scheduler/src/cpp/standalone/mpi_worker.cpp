@@ -75,7 +75,7 @@ twister2::api::resource::IWorker* create_worker(std::string worker_dll) {
     LOG(ERROR) << "Cannot load library: " << dlerror() << '\n';
     return NULL;
   } else {
-    std::cout << "open dl: " << worker_dll;
+    LOG(INFO) << "Opening user program shared libray: " << worker_dll << std::endl;
   }
   // reset errors
   dlerror();
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
   read_command_line(argc, argv);
 
   // lets create the worker
-  twister2::api::resource::IWorker* worker = create_worker("libstandalone_cxx.a");
+  twister2::api::resource::IWorker* worker = create_worker("libexample_cxx.so");
 
   // now lets create the config
   worker->execute(NULL, 0);
