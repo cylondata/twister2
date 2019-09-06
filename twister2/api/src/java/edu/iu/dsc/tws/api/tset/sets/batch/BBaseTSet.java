@@ -34,6 +34,8 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
+  private DirectTLink<T> iterdirect = null;
+
   BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
@@ -156,13 +158,32 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
+  public CachedTSet<T> cache(boolean isIterative) {
+    if (isIterative && iterdirect != null) {
+      return iterdirect.cache(isIterative);
+    } else if (isIterative) {
+      iterdirect = direct();
+      return iterdirect.cache(isIterative);
+    } else {
+      return direct().cache(isIterative);
+    }
+  }
+
+  @Override
   public CachedTSet<T> cache() {
-    return direct().cache();
+    return cache(false);
   }
 
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
     getTSetEnv().addInput(getId(), key, input);
     return true;
+  }
+
+  public void finishIter() {
+    if (iterdirect == null) {
+      throw new IllegalStateException("cache with iter needs to be called first");
+    }
+    iterdirect.finishIter();
   }
 }

@@ -18,5 +18,7 @@ public interface CacheableTSet<T> {
    *
    * @return the resulting TSet
    */
+  TSet<T> cache(boolean isIterative);
+
   TSet<T> cache();
 }
