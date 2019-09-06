@@ -51,7 +51,8 @@ public abstract class TSetEnvironment {
   private WorkerEnvironment workerEnv;
   private TSetGraph tsetGraph;
   private TaskExecutor taskExecutor;
-
+  private ComputeGraph itergraph;
+  private ExecutionPlan iterexecutionPlan;
   private int defaultParallelism = 1;
 
   private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
@@ -109,6 +110,7 @@ public abstract class TSetEnvironment {
 
   /**
    * Running worker ID
+   *
    * @return workerID
    */
   public int getWorkerID() {
@@ -120,7 +122,7 @@ public abstract class TSetEnvironment {
    */
   public void run() {
     ComputeGraph graph = tsetGraph.build();
-    executeDataFlowGraph(graph, null);
+    executeDataFlowGraph(graph, null, false);
   }
 
   protected TSetGraph getTSetGraph() {
@@ -130,24 +132,37 @@ public abstract class TSetEnvironment {
   /**
    * execute data flow graph
    *
+   * @param <T> type of the output data object
    * @param dataflowGraph data flow graph
    * @param outputTset output tset. If null, then no output would be returned
-   * @param <T> type of the output data object
    * @return output as a data object if outputTset is not null. Else null
    */
   protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
-                                                   BuildableTSet outputTset) {
-    ExecutionPlan executionPlan = taskExecutor.plan(dataflowGraph);
+                                                   BuildableTSet outputTset, boolean isIterative) {
+    ExecutionPlan executionPlan = null;
+    if (isIterative && iterexecutionPlan != null) {
+      executionPlan = iterexecutionPlan;
+    } else {
+      executionPlan = taskExecutor.plan(dataflowGraph);
+      if (isIterative) {
+        iterexecutionPlan = executionPlan;
+        itergraph = dataflowGraph;
+      }
+    }
 
     LOG.fine(executionPlan::toString);
     LOG.fine(() -> "edges: " + dataflowGraph.getDirectedEdgesSet());
     LOG.fine(() -> "vertices: " + dataflowGraph.getTaskVertexSet());
 
     pushInputsToFunctions(dataflowGraph, executionPlan);
-    taskExecutor.execute(dataflowGraph, executionPlan);
+    if (isIterative) {
+      taskExecutor.itrExecute(dataflowGraph, executionPlan);
+    } else {
+      taskExecutor.execute(dataflowGraph, executionPlan);
 
-    // once a graph is built and executed, reset the underlying builder!
-    tsetGraph.resetDfwGraphBuilder();
+      // once a graph is built and executed, reset the underlying builder!
+      tsetGraph.resetDfwGraphBuilder();
+    }
 
     // output tset alone does not guarantees that there will be an output available.
     // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
@@ -158,6 +173,13 @@ public abstract class TSetEnvironment {
 
     // if there is no output, an empty data object needs to be returned!
     return new EmptyDataObject<>();
+  }
+
+  public void finishIter() {
+    taskExecutor.waitFor(itergraph, iterexecutionPlan);
+    tsetGraph.resetDfwGraphBuilder();
+    itergraph = null;
+    iterexecutionPlan = null;
   }
 
   /**

@@ -9,16 +9,9 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.python.tset.fn;
 
-public interface CacheableTSet<T> {
+public abstract class TFunc<T> {
 
-  /**
-   * Executes TSet and saves any generated data as a in-memory data object
-   *
-   * @return the resulting TSet
-   */
-  TSet<T> cache(boolean isIterative);
-
-  TSet<T> cache();
+  public abstract T build(byte[] pyBinary);
 }

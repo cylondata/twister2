@@ -9,16 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets;
+package edu.iu.dsc.tws.python.tset.fn;
 
-public interface CacheableTSet<T> {
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-  /**
-   * Executes TSet and saves any generated data as a in-memory data object
-   *
-   * @return the resulting TSet
-   */
-  TSet<T> cache(boolean isIterative);
+public class ComputeFunctions extends TFunc<ComputeFunc> {
 
-  TSet<T> cache();
+  private static final ComputeFunctions INSTANCE = new ComputeFunctions();
+
+  static ComputeFunctions getInstance() {
+    return INSTANCE;
+  }
+
+  @Override
+  public ComputeFunc build(byte[] pyBinary) {
+    final PythonLambdaProcessor lambdaProcessor = new PythonLambdaProcessor(pyBinary);
+    return (ComputeFunc) lambdaProcessor::invoke;
+  }
 }

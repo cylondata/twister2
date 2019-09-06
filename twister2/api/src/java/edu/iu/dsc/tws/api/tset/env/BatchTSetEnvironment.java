@@ -29,6 +29,9 @@ import edu.iu.dsc.tws.api.tset.sources.HadoopSourceWithMap;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
 
+  private BaseTSet cachedLeaf;
+  private ComputeGraph cachedGraph;
+
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
   }
@@ -72,7 +75,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public void run(BaseTSet leafTset) {
     ComputeGraph dataflowGraph = getTSetGraph().build(leafTset);
-    executeDataFlowGraph(dataflowGraph, null);
+    executeDataFlowGraph(dataflowGraph, null, false);
   }
 
   /**
@@ -82,8 +85,19 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param <T> type of the output data object
    * @return output result as a data object
    */
+  public <T> DataObject<T> runAndGet(BaseTSet leafTset, boolean isIterative) {
+    ComputeGraph dataflowGraph;
+    if (isIterative && cachedLeaf != null && cachedLeaf == leafTset) {
+      dataflowGraph = cachedGraph;
+    } else {
+      dataflowGraph = getTSetGraph().build(leafTset);
+      cachedGraph = dataflowGraph;
+      cachedLeaf = leafTset;
+    }
+    return executeDataFlowGraph(dataflowGraph, leafTset, isIterative);
+  }
+
   public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-    ComputeGraph dataflowGraph = getTSetGraph().build(leafTset);
-    return executeDataFlowGraph(dataflowGraph, leafTset);
+    return runAndGet(leafTset, false);
   }
 }

@@ -74,11 +74,13 @@ public class PythonWorker implements BatchTSetIWorker {
     LocalSubmitter localSubmitter = LocalSubmitter.prepare(""
         + "/home/chathura/Code/twister2/twister2/config/src/yaml/conf/");
 
+    System.out.println(System.getProperty("java.version"));
+
     JobConfig jobConfig = new JobConfig();
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("python-job")
         .setWorkerClass(PythonWorker.class)
-        .addComputeResource(1, 512, 4)
+        .addComputeResource(1, 512, 1)
         .setConfig(jobConfig)
         .build();
 
