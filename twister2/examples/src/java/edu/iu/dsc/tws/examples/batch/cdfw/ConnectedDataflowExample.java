@@ -9,19 +9,26 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.examples.batch.kmeans;
+package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -32,149 +39,112 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IVolatileVolume;
-import edu.iu.dsc.tws.api.resource.IWorker;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.task.ComputeEnvironment;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.cdfw.BaseDriver;
+import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
+import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.dataobjects.DataFileReplicatedReadSource;
 import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskExecutor;
+import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
-/**
- * It is the main class for the K-Means clustering which consists of four main tasks namely
- * generation of datapoints and centroids, partition and read the partitioned data points,
- * read the centroids, and finally perform the distance calculation.
- */
-public class KMeansWorker implements IWorker {
-  private static final Logger LOG = Logger.getLogger(KMeansWorker.class.getName());
+public final class ConnectedDataflowExample {
+  private static final Logger LOG = Logger.getLogger(ConnectedDataflowExample.class.getName());
 
-  /**
-   * First, the execute method invokes the generateDataPoints method to generate the datapoints file
-   * and centroid file based on the respective filesystem submitted by the user. Next, it invoke
-   * the DataObjectSource and DataObjectSink to partition and read the partitioned data points
-   * respectively through data points task graph. Then, it calls the DataFileReader to read the
-   * centroid values from the filesystem through centroid task graph. Next, the datapoints are
-   * stored in DataSet \(0th object\) and centroids are stored in DataSet 1st object\). Finally, it
-   * constructs the kmeans task graph to perform the clustering process which computes the distance
-   * between the centroids and data points.
-   */
-  @SuppressWarnings("unchecked")
-  @Override
-  public void execute(Config config, int workerId, IWorkerController workerController,
-                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
-    LOG.log(Level.FINE, "Task worker starting: " + workerId);
-
-    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerId, workerController,
-        persistentVolume, volatileVolume);
-    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
-
-    KMeansWorkerParameters kMeansJobParameters = KMeansWorkerParameters.build(config);
-    KMeansWorkerUtils workerUtils = new KMeansWorkerUtils(config);
-
-    int parallelismValue = kMeansJobParameters.getParallelismValue();
-    int dimension = kMeansJobParameters.getDimension();
-    int numFiles = kMeansJobParameters.getNumFiles();
-    int dsize = kMeansJobParameters.getDsize();
-    int csize = kMeansJobParameters.getCsize();
-    int iterations = kMeansJobParameters.getIterations();
-
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
-
-    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-        centroidDirectory);
-
-    long startTime = System.currentTimeMillis();
-
-    /* First Graph to partition and read the partitioned data points **/
-    ComputeGraph datapointsTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-        parallelismValue, dimension, config);
-
-    /* Second Graph to read the centroids **/
-    ComputeGraph centroidsTaskGraph = buildCentroidsTG(centroidDirectory, csize,
-        parallelismValue, dimension, config);
-
-    /* Third Graph to do the actual calculation **/
-    ComputeGraph kmeansTaskGraph = buildKMeansTG(parallelismValue, config);
-
-    //Get the execution plan for the dependent task graphs
-      /*Map<String, ExecutionPlan> taskSchedulePlanMap =
-        cEnv.build(datapointsTaskGraph, centroidsTaskGraph, kmeansTaskGraph);*/
-
-    //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(datapointsTaskGraph);
-
-    //Using the map we can get the execution plan for the individual task graphs
-      /*ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(
-        datapointsTaskGraph.getGraphName());*/
-
-    //Actual execution for the first taskgraph
-    taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
-
-    //Retrieve the output of the first task graph
-    DataObject<Object> dataPointsObject = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "datapointsink");
-
-    //Get the execution plan for the second task graph
-    ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(centroidsTaskGraph);
-
-    //ExecutionPlan secondGraphExecutionPlan = taskSchedulePlanMap.get(
-    //    centroidsTaskGraph.getGraphName());
-
-    //Actual execution for the second taskgraph
-    taskExecutor.execute(centroidsTaskGraph, secondGraphExecutionPlan);
-
-    //Retrieve the output of the first task graph
-    DataObject<Object> centroidsDataObject = taskExecutor.getOutput(
-        centroidsTaskGraph, secondGraphExecutionPlan, "centroidsink");
-
-    long endTimeData = System.currentTimeMillis();
-
-    //Perform the iterations from 0 to 'n' number of iterations
-    //ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
-    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-    for (int i = 0; i < iterations; i++) {
-      //add the datapoints and centroids as input to the kmeanssource task.
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "points", dataPointsObject);
-      taskExecutor.addInput(
-          kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
-      //actual execution of the third task graph
-      taskExecutor.itrExecute(kmeansTaskGraph, plan);
-      //retrieve the new centroid value for the next iterations
-      centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
-    }
-
-    taskExecutor.waitFor(kmeansTaskGraph, plan);
-    cEnv.close();
-
-    DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
-    double[][] centroid = null;
-    if (centroidPartition.getConsumer().hasNext()) {
-      centroid = (double[][]) centroidPartition.getConsumer().next();
-    }
-    long endTime = System.currentTimeMillis();
-
-    LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
-        + "\tData Load time : " + (endTimeData - startTime)
-        + "\tCompute Time : " + (endTime - endTimeData));
-    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-        + Arrays.deepToString(centroid));
+  private ConnectedDataflowExample() {
   }
 
-  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
-                                               int parallelismValue, int dimension,
-                                               Config conf) {
+  public static class CDExampleDriver extends BaseDriver {
+
+    @Override
+    public void execute(CDFWEnv cdfwEnv) {
+      Config config = cdfwEnv.getConfig();
+      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
+
+      DataFlowGraph job1 = generateFirstJob(config, 2, cdfwEnv, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, cdfwEnv, jobConfig);
+      //DataFlowGraph job3 = generateThirdJob(config, 4, cdfwEnv, jobConfig);
+
+      //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
+
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
+
+      DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
+      for (int i = 0; i < 2; i++) {
+        cdfwEnv.executeDataFlowGraph(job3);
+      }
+    }
+  }
+
+  public static void main(String[] args) throws ParseException {
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
+
+    Options options = new Options();
+    options.addOption(CDFConstants.ARGS_PARALLELISM_VALUE, true, "2");
+    options.addOption(CDFConstants.ARGS_WORKERS, true, "2");
+    options.addOption(CDFConstants.ARGS_DIMENSIONS, true, "2");
+
+    @SuppressWarnings("deprecation")
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine commandLine = commandLineParser.parse(options, args);
+
+    int instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
+    int parallelismValue =
+        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
+    int dimension =
+        Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_DIMENSIONS));
+
+    configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
+    configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    configurations.put(CDFConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
+
+    config = Config.newBuilder().putAll(config)
+        .put(SchedulerContext.DRIVER_CLASS, null).build();
+
+    Twister2Job twister2Job;
+    twister2Job = Twister2Job.newBuilder()
+        .setJobName(CDExampleDriver.class.getName())
+        .setWorkerClass(CDFWWorker.class)
+        .setDriverClass(CDExampleDriver.class.getName())
+        .addComputeResource(1, 512, instances)
+        .setConfig(jobConfig)
+        .build();
+    // now submit the job
+    Twister2Submitter.submitJob(twister2Job, config);
+  }
+
+
+  private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
+                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
+    //TODO: Replace with user-defined values
+    String dataDirectory = "/tmp/dinput";
+    int dsize = 1000;
+    int dimension = 2;
+
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
     KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink("points");
-    ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder datapointsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     datapointsComputeGraphBuilder.addSource("datapointsource", dataObjectSource,
@@ -194,20 +164,29 @@ public class KMeansWorker implements IWorker {
     datapointsComputeGraphBuilder.setMode(OperationMode.BATCH);
 
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
-    //Build the first taskgraph
-    return datapointsComputeGraphBuilder.build();
+    ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
+
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .addOutput("points", "datapointsink")
+        .setGraphType("non-iterative");
+    //.addOutput("first_graph", "first_out", "datapointsink");
+    return job;
   }
 
+  private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
+                                                 CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
+    //TODO: Replace with user-defined values
+    String centroidDirectory = "/tmp/cinput";
+    int csize = 4;
+    int dimension = 2;
 
-  public static ComputeGraph buildCentroidsTG(String centroidDirectory, int csize,
-                                              int parallelismValue, int dimension,
-                                              Config conf) {
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
     KMeansDataObjectCompute centroidObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, csize, dimension);
     KMeansDataObjectDirectSink centroidObjectSink = new KMeansDataObjectDirectSink("centroids");
-    ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder centroidsComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
     centroidsComputeGraphBuilder.addSource("centroidsource", dataFileReplicatedReadSource,
@@ -228,19 +207,26 @@ public class KMeansWorker implements IWorker {
     centroidsComputeGraphBuilder.setTaskGraphName("centTG");
 
     //Build the second taskgraph
-    return centroidsComputeGraphBuilder.build();
+    ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .addOutput("centroids", "centroidsink")
+        .setGraphType("non-iterative");
+    //.addOutput("second_graph", "second_out", "centroidsink");
+    return job;
   }
 
 
-  public static ComputeGraph buildKMeansTG(int parallelismValue, Config conf) {
+  private static DataFlowGraph generateThirdJob(Config config, int parallelismValue,
+                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
-    ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
 
     //Add source, and sink tasks to the task graph builder for the third task graph
     kmeansComputeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
     ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, parallelismValue);
+        "kmeanssink", kMeansAllReduceTask, 2);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")
@@ -249,7 +235,15 @@ public class KMeansWorker implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     kmeansComputeGraphBuilder.setMode(OperationMode.BATCH);
     kmeansComputeGraphBuilder.setTaskGraphName("kmeansTG");
-    return kmeansComputeGraphBuilder.build();
+    ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
+
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .addInput("datapointsink", "points", "datapointsink")
+        .addInput("centroidsink", "centroids", "centroidsink")
+        .setGraphType("iterative")
+        .setIterations(100);
+    return job;
   }
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {
@@ -278,12 +272,13 @@ public class KMeansWorker implements IWorker {
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
+      LOG.info("New centers:" + Arrays.deepToString(kMeansCenters));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-//      LOG.log(Level.INFO, "Received input: " + name);
+      //LOG.info("Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
@@ -309,10 +304,11 @@ public class KMeansWorker implements IWorker {
 
     public KMeansAllReduceTask() {
     }
+
     @Override
     public boolean execute(IMessage message) {
-//      LOG.log(Level.FINE, "Received centroids: " + context.getWorkerId()
-//          + ":" + context.globalTaskId());
+      LOG.info("Received centroids: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
@@ -332,7 +328,6 @@ public class KMeansWorker implements IWorker {
     @Override
     public Set<String> getCollectibleNames() {
       Set<String> inputKeys = new HashSet<>();
-      //return Collections.singleton("centroids");
       inputKeys.add("centroids");
       return inputKeys;
     }
@@ -351,6 +346,7 @@ public class KMeansWorker implements IWorker {
 
     public CentroidAggregator() {
     }
+
     /**
      * The actual message callback
      *
@@ -377,6 +373,7 @@ public class KMeansWorker implements IWorker {
           newCentroids[j][k] = newVal;
         }
       }
+      //LOG.info("New Centroid Value:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }

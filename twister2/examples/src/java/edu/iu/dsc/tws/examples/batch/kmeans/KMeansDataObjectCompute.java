@@ -55,6 +55,9 @@ public class KMeansDataObjectCompute extends BaseCompute {
    */
   private double[][] dataPointsLocal;
 
+  public KMeansDataObjectCompute() {
+  }
+
   public KMeansDataObjectCompute(String edgename, int dsize, int parallel, int dim) {
     this.edgeName = edgename;
     this.parallel = parallel;
@@ -125,3 +128,4 @@ public class KMeansDataObjectCompute extends BaseCompute {
     super.prepare(cfg, context);
   }
 }
+

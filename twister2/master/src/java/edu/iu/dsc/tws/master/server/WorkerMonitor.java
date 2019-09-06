@@ -190,25 +190,25 @@ public class WorkerMonitor implements MessageHandler {
 
     // if it is coming from failure
     // update the worker status and return
-    int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
-    if (registeredWorkerID >= 0) {
-      // update the worker status in the worker list
-      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
-      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
-
-      // send the response message
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
-
-      // send worker registration message to dashboard
-      if (dashClient != null) {
-        dashClient.registerWorker(workerInfo);
-      }
-      //  TO DO inform checkpoint master
-      // what should be the message
-      recoverFromFailure(workerInfo.getWorkerID(), workerInfo);
-
-      return;
-    }
+//   int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
+//    if (registeredWorkerID >= 0) {
+//      // update the worker status in the worker list
+//      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
+//      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
+//
+//      // send the response message
+//      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+//
+//      // send worker registration message to dashboard
+//      if (dashClient != null) {
+//        dashClient.registerWorker(workerInfo);
+//      }
+//      //  TO DO inform checkpoint master
+//      // what should be the message
+//      recoverFromFailure(workerInfo.getWorkerID(), workerInfo);
+//
+//      return;
+//    }
 
     // if job master assigns workerIDs, get new id and update it in WorkerInfo
     // also set in RRServer
@@ -317,7 +317,7 @@ public class WorkerMonitor implements MessageHandler {
       return;
     }
 
-    // TODO: we need to let all workers and the driver know that a worker joined after failure
+
     // if this is not a new registration and all workers joined, inform this worker only
     if (!newRegistration && allWorkersRegistered()) {
 
@@ -329,8 +329,8 @@ public class WorkerMonitor implements MessageHandler {
   //notify the worker when there was a worker coming from a failure.
 
   private void recoverFromFailure(int workerID, JobMasterAPI.WorkerInfo workerInfo) {
-    //rrServer.removeWorkerChannel(workerID);
-    //rrServer.setWorkerChannel(workerID);
+    rrServer.removeWorkerChannel(workerID);
+    rrServer.setWorkerChannel(workerID);
     JobMasterAPI.Recover recoverMessage = JobMasterAPI.Recover.newBuilder()
         .setWorkerID(workerID)
         .build();

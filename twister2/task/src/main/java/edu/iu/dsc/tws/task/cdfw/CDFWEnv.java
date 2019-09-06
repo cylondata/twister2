@@ -50,6 +50,10 @@ public class CDFWEnv {
     this.cdfwExecutor.execute(dataFlowGraph);
   }
 
+  public void executeDataFlowGraph(DataFlowGraph...dataFlowGraph) {
+    this.cdfwExecutor.executeCDFW(dataFlowGraph);
+  }
+
   public void increaseWorkers(int workers) {
     this.resourceScaler.scaleUpWorkers(workers);
   }

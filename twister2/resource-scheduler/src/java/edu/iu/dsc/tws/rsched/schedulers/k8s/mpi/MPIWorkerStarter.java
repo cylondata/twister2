@@ -165,7 +165,7 @@ public final class MPIWorkerStarter {
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
     // start JMWorkerAgent
-    jobMasterAgent.startThreaded();
+    jobMasterAgent.startThreaded(false);
 
     // we will be running the Worker, send running message
     jobMasterAgent.sendWorkerRunningMessage();
