@@ -25,7 +25,7 @@ partitioned = source.partition(env.functions.partition.load_balanced)
 
 
 def map(x):
-    return x+1
+    return x + 1
 
 
 mapped = partitioned.map(map)

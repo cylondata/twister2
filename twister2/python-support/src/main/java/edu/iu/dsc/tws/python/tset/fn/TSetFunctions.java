@@ -31,11 +31,11 @@ public final class TSetFunctions {
     return MapFunctions.getInstance();
   }
 
-  public ComputeFunctions compute(){
+  public ComputeFunctions compute() {
     return ComputeFunctions.getInstance();
   }
 
-  public SinkFunctions sink(){
+  public SinkFunctions sink() {
     return SinkFunctions.getInstance();
   }
 }

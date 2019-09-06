@@ -11,12 +11,12 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-import java.io.Serializable;
-
-public class MapFunctions extends TFunc<MapFunc> {
+public final class MapFunctions extends TFunc<MapFunc> {
 
   private static final MapFunctions INSTANCE = new MapFunctions();
 
