@@ -57,11 +57,11 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory();
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory();
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
 
-//    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-//        centroidDirectory);
+    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
@@ -90,7 +90,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       kmeansTSet.addInput("centers", centers);
       centers = reduced.cache(true);
     }
-    //reduced.finishIter();
+
+    reduced.finishIter();
 
     DataPartition<?> centroidPartition = centers.getDataObject().getPartition(workerId);
     double[][] centroid = null;
@@ -133,7 +134,7 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
   }
 
 
-  private class AverageCenters implements MapFunc<double[][], double[][]> {
+  private class   AverageCenters implements MapFunc<double[][], double[][]> {
     @Override
     public double[][] map(double[][] centers) {
       //The centers that are received at this map is a the sum of all points assigned to each
@@ -168,7 +169,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       Config cfg = context.getConfig();
       this.dataSize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.DINPUT_DIRECTORY)
+          + context.getWorkerId();
       int datasize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
       //The +1 in the array size is because of a data balancing bug
       localPoints = new double[dataSize / para][dimension];
@@ -222,7 +224,8 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
       super.prepare(context);
 
       Config cfg = context.getConfig();
-      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY);
+      String datainputDirectory = cfg.getStringValue(DataObjectConstants.CINPUT_DIRECTORY)
+          + context.getWorkerId();
       this.dimension = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DIMENSIONS));
       int csize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.CSIZE));
 
