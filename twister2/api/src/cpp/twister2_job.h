@@ -48,7 +48,7 @@ namespace twister2 {
        * @param length
        * @return
        */
-      static int serialize_to_array(tws::proto::job::Job* job, void ** buf, int * length);
+      static int serialize_to_array(tws::proto::job::Job* job, void ** buf, size_t * length);
 
     private:
       std::string _job_name;
