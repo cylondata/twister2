@@ -38,8 +38,8 @@ import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
 
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 /**
  * doc.
  */

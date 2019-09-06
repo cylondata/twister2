@@ -36,9 +36,9 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 /**
  * WindowingStrategy doc.
  */

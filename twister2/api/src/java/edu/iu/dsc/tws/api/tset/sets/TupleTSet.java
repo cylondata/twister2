@@ -11,10 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.sets;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 
-public interface TupleTSet<K, V> extends BuildableTSet {
+public interface TupleTSet<K, V> extends TBase {
 
   TupleTSet<K, V> setName(String name);
 
