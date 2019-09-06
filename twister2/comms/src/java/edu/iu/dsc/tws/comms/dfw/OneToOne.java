@@ -321,6 +321,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     if (finalReceiver != null) {
       finalReceiver.clean();
       finishedSources.clear();
+      pendingFinishSources.clear();
     }
   }
 
