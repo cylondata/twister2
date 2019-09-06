@@ -16,7 +16,11 @@ public class CDFConstants {
   public static final String ARGS_WORKERS = "workers";
   public static final String ARGS_PARALLELISM_VALUE = "parallelism";
   public static final String ARGS_DIMENSIONS = "dim";
-  public static final String ARGS_DUMMY = "dummy"; // todo: remove this
+  public static final String ARGS_ITERATIONS = "iter";
+  public static final String ARGS_DSIZE = "dsize";
+  public static final String ARGS_CSIZE = "csize";
+  public static final String ARGS_DINPUT = "dinput";
+  public static final String ARGS_CINPUT = "cinput";
   public static final String ARGS_NUMBER_OF_ROWS = "rows";
   public static final String ARGS_NUMBER_OF_DIMENSIONS = "dim";
   public static final String ARGS_OUTPUT_FILE = "output";

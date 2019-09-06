@@ -26,7 +26,6 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -163,7 +162,6 @@ public class CDFWRuntime implements JobListener {
         taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
       }
 
-      // reuse the task executor execute
       /*if (subGraph.getGraphType().equalsIgnoreCase(Context.GRAPH_TYPE)) {
         Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
         String collectorTask = null;
@@ -188,6 +186,7 @@ public class CDFWRuntime implements JobListener {
         LOG.info("I am executing non-iterative graph");
       }*/
 
+      // reuse the task executor execute
       taskExecutor.execute(taskGraph, executionPlan);
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();

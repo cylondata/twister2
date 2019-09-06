@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,11 +38,13 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
+import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -62,6 +65,14 @@ public final class ConnectedDataflowExample {
   private ConnectedDataflowExample() {
   }
 
+  private static String dataDirectory;
+  private static String centroidDirectory;
+  private static int parallelism;
+  private static int iterations;
+  private static int dimension;
+  private static int dsize;
+  private static int csize;
+
   public static class CDExampleDriver extends BaseDriver {
 
     @Override
@@ -69,18 +80,29 @@ public final class ConnectedDataflowExample {
       Config config = cdfwEnv.getConfig();
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 2, cdfwEnv, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 2, cdfwEnv, jobConfig);
-      //DataFlowGraph job3 = generateThirdJob(config, 4, cdfwEnv, jobConfig);
+      //Generate the datapoints and centroids
+      generateData(config);
 
-      //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, jobConfig);
+      DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
 
-      DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < iterations; i++) {
         cdfwEnv.executeDataFlowGraph(job3);
+      }
+    }
+
+    public void generateData(Config config) {
+      try {
+        KMeansDataGenerator.generateData(
+            "txt", new Path(dataDirectory), 1, dsize, 100, dimension, config);
+        KMeansDataGenerator.generateData(
+            "txt", new Path(centroidDirectory), 1, csize, 100, dimension, config);
+      } catch (IOException ioe) {
+        throw new RuntimeException("Failed to create input data:", ioe);
       }
     }
   }
@@ -98,19 +120,39 @@ public final class ConnectedDataflowExample {
     options.addOption(CDFConstants.ARGS_WORKERS, true, "2");
     options.addOption(CDFConstants.ARGS_DIMENSIONS, true, "2");
 
+    options.addOption(CDFConstants.ARGS_DSIZE, true, "2");
+    options.addOption(CDFConstants.ARGS_CSIZE, true, "2");
+    options.addOption(CDFConstants.ARGS_DINPUT, true, "2");
+    options.addOption(CDFConstants.ARGS_CINPUT, true, "2");
+    options.addOption(CDFConstants.ARGS_ITERATIONS, true, "2");
+
     @SuppressWarnings("deprecation")
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine commandLine = commandLineParser.parse(options, args);
 
     int instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
-    int parallelismValue =
+    parallelism =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
-    int dimension =
+    dimension =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_DIMENSIONS));
 
+    dsize = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_DSIZE));
+    csize = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_CSIZE));
+    iterations = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_CSIZE));
+
+    dataDirectory = commandLine.getOptionValue(CDFConstants.ARGS_DINPUT);
+    centroidDirectory = commandLine.getOptionValue(CDFConstants.ARGS_CINPUT);
+
     configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
-    configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelism));
     configurations.put(CDFConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
+
+    configurations.put(CDFConstants.ARGS_CSIZE, Integer.toString(dsize));
+    configurations.put(CDFConstants.ARGS_DSIZE, Integer.toString(csize));
+
+    configurations.put(CDFConstants.ARGS_DINPUT, dataDirectory);
+    configurations.put(CDFConstants.ARGS_CINPUT, centroidDirectory);
+    configurations.put(CDFConstants.ARGS_ITERATIONS, iterations);
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -133,11 +175,7 @@ public final class ConnectedDataflowExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
-    //TODO: Replace with user-defined values
-    String dataDirectory = "/tmp/dinput";
-    int dsize = 1000;
-    int dimension = 2;
+                                                DafaFlowJobConfig jobConfig) {
 
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
@@ -175,11 +213,7 @@ public final class ConnectedDataflowExample {
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
-    //TODO: Replace with user-defined values
-    String centroidDirectory = "/tmp/cinput";
-    int csize = 4;
-    int dimension = 2;
+                                                 DafaFlowJobConfig jobConfig) {
 
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
@@ -218,7 +252,8 @@ public final class ConnectedDataflowExample {
 
 
   private static DataFlowGraph generateThirdJob(Config config, int parallelismValue,
-                                                CDFWEnv cdfwEnv, DafaFlowJobConfig jobConfig) {
+                                                DafaFlowJobConfig jobConfig) {
+
     KMeansSourceTask kMeansSourceTask = new KMeansSourceTask();
     KMeansAllReduceTask kMeansAllReduceTask = new KMeansAllReduceTask();
     ComputeGraphBuilder kmeansComputeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
