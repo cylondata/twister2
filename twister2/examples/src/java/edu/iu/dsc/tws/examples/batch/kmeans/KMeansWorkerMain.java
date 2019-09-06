@@ -107,7 +107,7 @@ public class KMeansWorkerMain {
     } else if (Context.TWISTER2_TSET_JOB.equals(jobType)) {
       jobBuilder.setWorkerClass(KMeansTsetJob.class.getName());
     }
-    jobBuilder.addComputeResource(2, 512, 1.0, workers);
+    jobBuilder.addComputeResource(2, 4096, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job

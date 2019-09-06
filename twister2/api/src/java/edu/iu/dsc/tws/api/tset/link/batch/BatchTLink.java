@@ -42,7 +42,18 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
    *
    * @return output TSet
    */
-  BatchTSet<T0> cache();
+  default BatchTSet<T0> cache(boolean isIterative) {
+    throw new UnsupportedOperationException("Operation not implemented");
+  }
+
+  /**
+   * Runs the dataflow graph and caches data in memory
+   *
+   * @return output TSet
+   */
+  default BatchTSet<T0> cache() {
+    return cache(false);
+  }
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);

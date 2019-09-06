@@ -213,6 +213,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             parents = new HashSet<>();
           }
           parents.add(inEdge);
+          inEdges.put(inEdge, parents);
         }
       }
 
