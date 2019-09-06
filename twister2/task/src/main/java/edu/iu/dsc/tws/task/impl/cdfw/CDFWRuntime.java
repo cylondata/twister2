@@ -187,21 +187,10 @@ public class CDFWRuntime implements JobListener {
         taskExecutor.execute(taskGraph, executionPlan);
         LOG.info("I am executing non-iterative graph");
       }*/
+
       taskExecutor.execute(taskGraph, executionPlan);
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
-        LOG.log(Level.INFO, workerId + " Sending \t" + subGraph.getName()
-            + "\tsubgraph completed for\t" + index + "\titeration(s)" + "\tmessage to driver");
-        completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
-            .setIterations(index)
-            .setSubgraphName(subGraph.getName()).build();
-        ++index;
-      } else {
-        LOG.log(Level.INFO, workerId + " Sending " + subGraph.getName()
-            + "\tsubgraph completed message to driver");
-        completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
-            .setSubgraphName(subGraph.getName()).build();
-      }
-      //LOG.info("Graph Name:" + subGraph.getName() + "\tCompleted Message:" + completedMessage);
+      completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
+          .setSubgraphName(subGraph.getName()).build();
 
       Map<String, DataObject<Object>> outs = new HashMap<>();
       if (subGraph.getOutputsList().size() != 0) {

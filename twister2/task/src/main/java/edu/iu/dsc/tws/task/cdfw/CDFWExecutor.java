@@ -71,14 +71,11 @@ public final class CDFWExecutor {
       try {
         DataFlowGraph dataFlowGraph = buildCDFWSchedulePlan(graph, workerIDs);
         CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-        LOG.info("Driver State (1):" + driverState);
         // now submit the job
         submitJob(job);
         driverState = DriverState.JOB_SUBMITTED;
-        LOG.info("Driver State (2):" + driverState);
         waitForEvent(DriveEventType.FINISHED_JOB);
         driverState = DriverState.JOB_FINISHED;
-        LOG.info("Driver State (3):" + driverState);
       } catch (Exception e) {
         throw new RuntimeException("Driver is not initialized", e);
       }

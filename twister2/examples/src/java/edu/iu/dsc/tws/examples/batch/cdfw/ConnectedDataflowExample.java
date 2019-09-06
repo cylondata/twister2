@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -70,17 +71,14 @@ public final class ConnectedDataflowExample {
 
       DataFlowGraph job1 = generateFirstJob(config, 2, cdfwEnv, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, 2, cdfwEnv, jobConfig);
-      DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
+      //DataFlowGraph job3 = generateThirdJob(config, 4, cdfwEnv, jobConfig);
 
       //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
-
-      //cdfwEnv.executeDataFlowGraph(job1);
-      //cdfwEnv.executeDataFlowGraph(job2);
-      //cdfwEnv.executeDataFlowGraph(job3);
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
 
+      DataFlowGraph job3 = generateThirdJob(config, 2, cdfwEnv, jobConfig);
       for (int i = 0; i < 2; i++) {
         cdfwEnv.executeDataFlowGraph(job3);
       }
@@ -228,7 +226,7 @@ public final class ConnectedDataflowExample {
     //Add source, and sink tasks to the task graph builder for the third task graph
     kmeansComputeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
     ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, parallelismValue);
+        "kmeanssink", kMeansAllReduceTask, 2);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")
@@ -267,16 +265,14 @@ public final class ConnectedDataflowExample {
 
       DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
-      LOG.info("data points length:" + datapoints.length);
 
       DataPartition<?> centroidPartition = centroidsObject.getPartition(context.taskIndex());
       centroid = (double[][]) centroidPartition.getConsumer().next();
-      LOG.info("centroids length:" + centroid.length);
 
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
-      LOG.info("new centers length:" + kMeansCenters.length);
       context.writeEnd("all-reduce", kMeansCenters);
+      LOG.info("New centers:" + Arrays.deepToString(kMeansCenters));
     }
 
     @SuppressWarnings("unchecked")
@@ -311,8 +307,8 @@ public final class ConnectedDataflowExample {
 
     @Override
     public boolean execute(IMessage message) {
-      //LOG.log(Level.INFO, "Received centroids: " + context.getWorkerId()
-      //    + ":" + context.globalTaskId());
+      LOG.info("Received centroids: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
