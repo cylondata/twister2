@@ -135,7 +135,7 @@ public final class MesosMPIWorkerStarter {
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP().toString());
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
         jobMasterPort, numberOfWorkers);
-    jobMasterAgent.startThreaded();
+    jobMasterAgent.startThreaded(false);
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
   }

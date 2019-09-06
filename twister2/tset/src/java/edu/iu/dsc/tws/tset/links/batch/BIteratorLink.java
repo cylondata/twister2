@@ -35,6 +35,8 @@ import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {
 
+  private CachedTSet<T> savedCacheTSet;
+
   BIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
@@ -73,6 +75,24 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
   }
 
   @Override
+  public CachedTSet<T> cache(boolean isIterative) {
+    CachedTSet<T> cacheTSet;
+    if (isIterative && savedCacheTSet != null) {
+      cacheTSet = savedCacheTSet;
+    } else {
+      cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
+          getTargetParallelism());
+      savedCacheTSet = cacheTSet;
+      addChildToGraph(cacheTSet);
+    }
+
+    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet, isIterative);
+    cacheTSet.setData(output);
+
+    return cacheTSet;
+  }
+
+  @Override
   public CachedTSet<T> cache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
         getTargetParallelism());
@@ -80,7 +100,10 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
 
     DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
     cacheTSet.setData(output);
-
     return cacheTSet;
+  }
+
+  public void finishIter() {
+    getTSetEnv().finishIter();
   }
 }

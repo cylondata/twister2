@@ -67,9 +67,10 @@ public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
   @Override
   BatchTSet<T> union(TSet<T> unionTSet);
 
-
   @Override
   BatchTSet<T> union(Collection<TSet<T>> tSets);
+
+  BatchTSet<T> cache(boolean isIterative);
 
   @Override
   BatchTSet<T> cache();
