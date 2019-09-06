@@ -34,4 +34,8 @@ public final class TSetFunctions {
   public ComputeFunctions compute(){
     return ComputeFunctions.getInstance();
   }
+
+  public SinkFunctions sink(){
+    return SinkFunctions.getInstance();
+  }
 }

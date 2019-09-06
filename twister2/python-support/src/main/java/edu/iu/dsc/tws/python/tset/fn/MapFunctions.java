@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.python.tset.fn;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
+import java.io.Serializable;
+
 public class MapFunctions extends TFunc<MapFunc> {
 
   private static final MapFunctions INSTANCE = new MapFunctions();
@@ -26,9 +28,23 @@ public class MapFunctions extends TFunc<MapFunc> {
     return INSTANCE;
   }
 
+  static class MapFuncImpl implements MapFunc, Serializable {
+
+    private PythonLambdaProcessor lambdaProcessor;
+
+    MapFuncImpl(PythonLambdaProcessor lambdaProcessor) {
+      this.lambdaProcessor = lambdaProcessor;
+    }
+
+    @Override
+    public Object map(Object input) {
+      return lambdaProcessor.invoke(input);
+    }
+  }
+
   @Override
   public MapFunc build(byte[] pyBinary) {
     final PythonLambdaProcessor lambda = new PythonLambdaProcessor(pyBinary);
-    return (MapFunc) lambda::invoke;
+    return new MapFuncImpl(lambda);
   }
 }

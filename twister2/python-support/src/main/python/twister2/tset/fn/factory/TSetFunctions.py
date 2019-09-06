@@ -1,6 +1,7 @@
 from twister2.tset.fn.factory.ComputeFunctions import ComputeFunctions
 from twister2.tset.fn.factory.MapFunctions import MapFunctions
 from twister2.tset.fn.factory.PartitionFunctions import PartitionFunctions
+from twister2.tset.fn.factory.SinkFunctions import SinkFunctions
 
 
 class TSetFunctions:
@@ -10,6 +11,7 @@ class TSetFunctions:
         self.__partition_functions = PartitionFunctions(java_ref.partition(), env)
         self.__map_functions = MapFunctions(java_ref.map(), env)
         self.__compute_functions = ComputeFunctions(java_ref.compute(), env)
+        self.__sink_functions = SinkFunctions(java_ref.sink(), env)
 
     @property
     def partition(self) -> PartitionFunctions:
@@ -22,3 +24,7 @@ class TSetFunctions:
     @property
     def compute(self):
         return self.__compute_functions
+
+    @property
+    def sink(self):
+        return self.__sink_functions

@@ -1,4 +1,4 @@
-from twister2.tset.link import DirectTLink
+import twister2.tset.link.DirectTLink as dtl
 from twister2.tset.link.BaseTSet import BaseTSet
 
 
@@ -9,5 +9,5 @@ class BBaseTSet(BaseTSet):
         self.__java_ref = java_ref
         self.__env = env
 
-    def direct(self) -> DirectTLink:
-        return DirectTLink(self.__java_ref.direct(), self.__env)
+    def direct(self):  # can't use return type here, due to circular dependency issue
+        return dtl.DirectTLink(self.__java_ref.direct(), self.__env)
