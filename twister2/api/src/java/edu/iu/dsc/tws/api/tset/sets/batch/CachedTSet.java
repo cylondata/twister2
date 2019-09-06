@@ -140,7 +140,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public CachedTSet<T> cache() {
+  public CachedTSet<T> cache(boolean isIterative) {
     return this;
 //    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
