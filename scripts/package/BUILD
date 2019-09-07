@@ -127,6 +127,7 @@ pack_tw2(
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
         ":twister2-ompi-jars",
+        ":twister2-beam",
     ],
 )
 

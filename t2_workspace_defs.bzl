@@ -302,3 +302,6 @@ def load_modules():
     _maven_import(artifact = "org.apache.beam:beam-vendor-sdks-java-extensions-protobuf:2.14.0",licenses = ["notice"],sha256 = "7d7f2e082fa22d3fb8cff2ff5923a10a548ca04a6aaa9e9315db26ee2e6632b2",)
     _maven_import(artifact = "joda-time:joda-time:2.10.1",licenses = ["notice"],sha256 = "d269671656767e05a58dd634cbafc36ed70d417220b058d11c0d88dfd281616d",)
     _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0",licenses = ["notice"],sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb",)
+    _maven_import(artifact = "org.apache.beam:beam-vendor-guava-20_0:0.1",licenses = ["notice"],sha256 = "ea30aaecc425d9630ae8b0f285add31bbbc1600acf8be2a582ed3a7c1891b3f6",)
+    _maven_import(artifact = "javax.xml.bind:jaxb-api:2.3.1",licenses = ["notice"],sha256 = "88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06",)
+    _maven_import(artifact = "org.apache.beam:beam-vendor-grpc-1_13_1:0.2",licenses = ["notice"],sha256 = "3cdb4a043692be8a51e58ca5a6de55073c55a6500557852a3ad0b5d0fee33f49",)
