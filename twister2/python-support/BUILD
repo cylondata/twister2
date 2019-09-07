@@ -11,6 +11,7 @@ t2_java_lib(
       "@black_ninia_jep//jar",
       "//twister2/api/src/java:api-java",
       "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
+      "//twister2/tset/src/java:tset-java",
       "//twister2/tools/local-runner/src/java:local-runner-java",
       "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
       "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java"

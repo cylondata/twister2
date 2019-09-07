@@ -29,7 +29,7 @@ def t2_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_pom = T
         name = name,
         srcs = srcs,
         deps = deps,
-        tags = mvn_tag("edu.iu.dsc.tws", name, T2_VERSION),
+        tags = mvn_tag("org.twister2", name, T2_VERSION),
     )
 
     if (generate_pom):
@@ -44,7 +44,7 @@ def t2_proto_java_lib(name, deps = [], artifact_name = "", generate_pom = True):
     native.java_proto_library(
         name = name,
         deps = deps,
-        tags = mvn_tag("edu.iu.dsc.tws", name, T2_VERSION),
+        tags = mvn_tag("org.twister2", name, T2_VERSION),
     )
 
     if (generate_pom):

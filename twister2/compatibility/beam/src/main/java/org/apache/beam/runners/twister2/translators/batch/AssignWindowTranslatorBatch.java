@@ -28,8 +28,8 @@ import org.apache.beam.sdk.transforms.windowing.WindowFn;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
 /**
  * doc.

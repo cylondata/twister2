@@ -172,8 +172,10 @@ def submit_java_zip(cl_args, unknown_args):
 
 
 def submit_python(cl_args, unknown_args):
-    # we need to set the jar file here
+    # lets run the python file first
 
+
+    # we need to set the jar file here
     submit_fatjar(cl_args, unknown_args)
 
 def submit_python_zip(cl_args, unknown_args):

@@ -10,18 +10,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
 package edu.iu.dsc.tws.examples.batch.wordcount.tset;
 
 import java.io.BufferedReader;
@@ -36,41 +24,51 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
-import edu.iu.dsc.tws.api.tset.link.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.KeyedTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.splits.FileInputSplit;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
+import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 public class TSetWordCount implements BatchTSetIWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(TSetWordCount.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    int sourcePar = 1;
+    int sourcePar = 4;
 //    int sinkPar = 1;
 
-    SourceTSet<String> lines =
-        env.createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")),
-            sourcePar).setName("source");
+    Configuration configuration = new Configuration();
+
+    configuration.set(TextInputFormat.INPUT_DIR, "file:///tmp/wc");
+
+//    SourceTSet<String> lines =
+//        env.createHadoopSource(configuration, TextInputFormat.class, 1,
+//            (MapFunc<String, Tuple<LongWritable, Text>>) input -> input.getValue().toString());
+    SourceTSet<String> lines = env
+        .createSource(new WordCountFileSource((String) env.getConfig().get("INPUT_FILE")), 1);
 
     ComputeTSet<String, Iterator<String>> words =
-        lines.direct()
+        lines.partition(new HashingPartitioner<>(), sourcePar)
             .flatmap((FlatMapFunc<String, String>) (l, collector) -> {
               StringTokenizer itr = new StringTokenizer(l);
               while (itr.hasMoreTokens()) {
@@ -82,14 +80,19 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
 
     KeyedReduceTLink<String, Integer> keyedReduce = groupedWords.keyedReduce(Integer::sum);
 
-    keyedReduce.sink(new WordCountFileLogger((String) env.getConfig().get("OUTPUT_FILE")));
+    ComputeTSet<Tuple<String, Integer>, Iterator<Tuple<String, Integer>>> map =
+        keyedReduce.map(i -> i);
+
+    map.gather().sink(new WordCountFileLogger((String) env.getConfig().get("OUTPUT_FILE")));
   }
 
-  class WordCountFileSource extends BaseSourceFunc<String> {
+  static class WordCountFileSource extends BaseSourceFunc<String> {
 
     private String inputFile;
     private DataSource<String, FileInputSplit<String>> dataSource;
     private InputSplit<String> dataSplit;
+
+//    private Map<String, Integer> trusted1 = new TreeMap<>();
 
     WordCountFileSource(String inputFile) {
       this.inputFile = inputFile;
@@ -113,7 +116,13 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
           return true;
         } else {
           dataSplit = dataSource.getNextSplit(getTSetContext().getIndex());
-          return dataSplit != null;  //if datasplit is not null => hasnext true
+          if (dataSplit != null) {
+            return true;
+//          } else {
+//            for (Map.Entry<String, Integer> e : trusted1.entrySet()) {
+//              LOG.info(e.getKey() + " " + e.getValue());
+//            }
+          } //if datasplit is not null => hasnext true
         }
       } catch (IOException e) {
         e.printStackTrace();
@@ -124,7 +133,16 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     @Override
     public String next() {
       try {
-        return dataSplit.nextRecord(null);
+        String line = dataSplit.nextRecord(null);
+
+//        StringTokenizer itr = new StringTokenizer(line);
+//        while (itr.hasMoreTokens()) {
+//          String word = itr.nextToken();
+//          trusted1.putIfAbsent(word, 0);
+//          int count = trusted1.get(word);
+//          trusted1.put(word, ++count);
+//        }
+        return line;
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -134,7 +152,8 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
   }
 
 
-  class WordCountFileLogger extends BaseSinkFunc<Iterator<Tuple<String, Integer>>> {
+  static class WordCountFileLogger extends
+      BaseSinkFunc<Iterator<Tuple<Integer, Tuple<String, Integer>>>> {
     private BufferedWriter writer;
     private String fileName;
 
@@ -154,10 +173,10 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     }
 
     @Override
-    public boolean add(Iterator<Tuple<String, Integer>> value) {
+    public boolean add(Iterator<Tuple<Integer, Tuple<String, Integer>>> value) {
       try {
         while (value.hasNext()) {
-          Tuple<String, Integer> t = value.next();
+          Tuple<String, Integer> t = value.next().getValue();
           writer.write(t.getKey() + " " + t.getValue());
           writer.newLine();
         }
@@ -179,13 +198,14 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
 
   public static void main(String[] args) throws IOException {
 
-    String input = "/tmp/wordcount.in";
-    String output = "/tmp/wordcount.out";
+    String input = "/tmp/wc/wordcount.in";
+    String output = "/tmp/wc/wordcount.out";
 
 /*    Files.copy(Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader()
             .getResource("pride_and_predjudice.txt")).toURI()),
         Paths.get(input),
         StandardCopyOption.REPLACE_EXISTING);*/
+    long start = System.nanoTime();
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -195,12 +215,13 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("tset-wordcount");
     jobBuilder.setWorkerClass(TSetWordCount.class);
-    jobBuilder.addComputeResource(1, 512, 1);
+    jobBuilder.addComputeResource(1, 512, 4);
     jobBuilder.setConfig(jobConfig);
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), ResourceAllocator.getDefaultConfig());
 
+    LOG.info("time elapsed ms " + (System.nanoTime() - start) * 1e-6);
 
     // validate
     Map<String, Integer> trusted = new TreeMap<>();
@@ -241,11 +262,14 @@ public class TSetWordCount implements BatchTSetIWorker, Serializable {
     } else {
       LOG.severe("UNSUCCESSFUL!");
 
-      try (BufferedWriter br = new BufferedWriter(new FileWriter(output + ".trusted"))) {
+      try (BufferedWriter br = new BufferedWriter(new FileWriter(output + ".trusted",
+          false))) {
         for (Map.Entry<String, Integer> e : trusted.entrySet()) {
           br.write(String.format("%s %d\n", e.getKey(), e.getValue()));
         }
       }
     }
+
+
   }
 }

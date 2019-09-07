@@ -19,8 +19,8 @@ package org.apache.beam.runners.twister2.translators.batch;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.tset.worker.TSetBatchWorker;
-import edu.iu.dsc.tws.api.tset.worker.TwisterBatchContext;
+import edu.iu.dsc.tws.tset.worker.TSetBatchWorker;
+import edu.iu.dsc.tws.tset.worker.TwisterBatchContext;
 
 /**
  * doc.

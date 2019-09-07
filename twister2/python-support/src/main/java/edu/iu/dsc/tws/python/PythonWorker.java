@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.local.LocalSubmitter;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 import py4j.DefaultGatewayServerListener;
 import py4j.GatewayServer;
