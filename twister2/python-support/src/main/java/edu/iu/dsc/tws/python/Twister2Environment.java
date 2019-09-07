@@ -12,8 +12,6 @@
 package edu.iu.dsc.tws.python;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.TSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.python.tset.PyTSetSource;
 import edu.iu.dsc.tws.python.tset.fn.TSetFunctions;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
