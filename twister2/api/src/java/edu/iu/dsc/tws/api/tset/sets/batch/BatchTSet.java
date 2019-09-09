@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
-import edu.iu.dsc.tws.api.tset.sets.CacheableTSet;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {

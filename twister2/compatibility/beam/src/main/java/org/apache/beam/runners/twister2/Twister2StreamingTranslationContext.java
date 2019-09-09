@@ -17,7 +17,7 @@
  */
 package org.apache.beam.runners.twister2;
 
-import edu.iu.dsc.tws.api.tset.worker.TwisterStreamingContext;
+import edu.iu.dsc.tws.tset.worker.TwisterStreamingContext;
 
 /**
  * doc.

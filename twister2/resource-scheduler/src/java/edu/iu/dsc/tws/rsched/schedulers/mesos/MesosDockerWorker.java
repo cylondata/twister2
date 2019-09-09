@@ -58,10 +58,7 @@ public class MesosDockerWorker {
 
     //gets the docker home directory
     //String homeDir = System.getenv("HOME");
-    int restart = 0;
-    if (args != null) {
-      restart = Integer.parseInt(args[0]);
-    }
+
     workerId = Integer.parseInt(System.getenv("WORKER_ID"));
     jobName = System.getenv("JOB_NAME");
     MesosDockerWorker worker = new MesosDockerWorker();
@@ -77,6 +74,7 @@ public class MesosDockerWorker {
     logger.initLogging();
 
     LOG.info("WORKER ID ..:" + workerId);
+
     Map<String, Integer> additionalPorts =
         MesosWorkerUtils.generateAdditionalPorts(config, startingPort);
 
@@ -122,8 +120,9 @@ public class MesosDockerWorker {
 
     LOG.info(workerController.getWorkerInfo().toString());
     //start job master client
+
     worker.startJobMasterAgent(workerController.getWorkerInfo(), jobMasterIP, jobMasterPort,
-        workerCount, restart);
+        workerCount);
 
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
@@ -186,17 +185,14 @@ public class MesosDockerWorker {
   }
 
   public void startJobMasterAgent(JobMasterAPI.WorkerInfo workerInfo, String jobMasterIP,
-                                  int jobMasterPort, int numberOfWorkers, int restart) {
+                                  int jobMasterPort, int numberOfWorkers) {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
         jobMasterPort, numberOfWorkers);
-    if (restart > 0) {
-      jobMasterAgent.startThreaded(true);
-    } else {
-      jobMasterAgent.startThreaded(false);
-    }
+    jobMasterAgent.startThreaded();
+
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
   }

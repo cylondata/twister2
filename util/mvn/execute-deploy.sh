@@ -170,3 +170,7 @@ deploy_library \
   twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
   twister2/tools/local-runner/src/java/pom.xml
 
+deploy_library \
+  twister2/tset/src/java/libtset-java.jar \
+  twister2/tset/src/java/pom.xml
+

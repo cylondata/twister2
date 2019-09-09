@@ -32,8 +32,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
 
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 /**
  * doc.
  */
@@ -46,7 +46,7 @@ public class WordCountWorker implements Serializable, BatchTSetIWorker {
     Twister2PipelineOptions options = PipelineOptionsFactory.as(Twister2PipelineOptions.class);
     options.setTSetEnvironment(env);
     options.as(Twister2PipelineOptions.class).setRunner(Twister2LegacyRunner.class);
-    String resultPath = "/home/pulasthi/work/twister2/beamtest/testdir";
+    String resultPath = "/tmp/testdir";
     Pipeline p = Pipeline.create(options);
     PCollection<String> result =
         p.apply(GenerateSequence.from(0).to(10))
