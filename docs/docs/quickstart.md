@@ -21,38 +21,41 @@ There is an example called HelloWorld.java included with Twister2 examples packa
 package edu.iu.dsc.tws.examples.basic;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Submitter;
-import edu.iu.dsc.tws.api.job.Twister2Job;
-import edu.iu.dsc.tws.common.config.Config;
-import edu.iu.dsc.tws.common.discovery.IWorkerController;
-import edu.iu.dsc.tws.common.resource.AllocatedResources;
-import edu.iu.dsc.tws.common.resource.WorkerComputeResource;
-import edu.iu.dsc.tws.common.worker.IPersistentVolume;
-import edu.iu.dsc.tws.common.worker.IVolatileVolume;
-import edu.iu.dsc.tws.common.worker.IWorker;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
 /**
  * This is a Hello World example of Twister2. This is the most basic functionality of Twister2,
  * where it spawns set of parallel workers.
  */
 public class HelloWorld implements IWorker {
+
   private static final Logger LOG = Logger.getLogger(HelloWorld.class.getName());
 
   @Override
   public void execute(Config config, int workerID,
-                      AllocatedResources allocatedResources, IWorkerController workerController,
+                      IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
     // lets retrieve the configuration set in the job config
     String helloKeyValue = config.getStringValue("hello-key");
 
     // lets do a log to indicate we are running
     LOG.log(Level.INFO, String.format("Hello World from Worker %d; there are %d total workers "
-            + "and I got a configuration value %s", workerID,
+            + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
     List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
@@ -66,6 +69,7 @@ public class HelloWorld implements IWorker {
     } catch (InterruptedException e) {
       LOG.severe("Thread sleep interrupted.");
     }
+
   }
 
   public static void main(String[] args) {
@@ -83,8 +87,8 @@ public class HelloWorld implements IWorker {
     jobConfig.put("hello-key", "Twister2-Hello");
 
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setName("hello-world-job")
-        .setWorkerClass(HelloWorld.class.getName())
+        .setJobName("hello-world-job")
+        .setWorkerClass(HelloWorld.class)
         .addComputeResource(2, 1024, numberOfWorkers)
         .setConfig(jobConfig)
         .build();

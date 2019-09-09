@@ -21,9 +21,9 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
 import edu.iu.dsc.tws.local.LocalSubmitter;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
 import py4j.DefaultGatewayServerListener;
 import py4j.GatewayServer;
@@ -74,11 +74,13 @@ public class PythonWorker implements BatchTSetIWorker {
     LocalSubmitter localSubmitter = LocalSubmitter.prepare(""
         + "/home/chathura/Code/twister2/twister2/config/src/yaml/conf/");
 
+    System.out.println(System.getProperty("java.version"));
+
     JobConfig jobConfig = new JobConfig();
     Twister2Job twister2Job = Twister2Job.newBuilder()
         .setJobName("python-job")
         .setWorkerClass(PythonWorker.class)
-        .addComputeResource(1, 512, 4)
+        .addComputeResource(1, 512, 1)
         .setConfig(jobConfig)
         .build();
 

@@ -37,7 +37,7 @@ public final class WordCount {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
     JobConfig jobConfig = new JobConfig();
     int workers = 1;
-
+    System.out.println("Start");
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("KMeans-job");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());

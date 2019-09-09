@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.examples.ml.svm.util;
 
 import java.util.List;
 
-import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
 public final class TSetUtils {
   private TSetUtils() {

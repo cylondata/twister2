@@ -28,7 +28,7 @@ import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 
 /**
  * doc.
