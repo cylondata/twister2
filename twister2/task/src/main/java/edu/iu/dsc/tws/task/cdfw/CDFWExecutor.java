@@ -63,8 +63,8 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    DefaultScheduler defaultScheduler = new DefaultScheduler(this.executionEnv.getWorkerInfoList());
-    Set<Integer> workerIDs = defaultScheduler.schedule(graph);
+    CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
+    Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
 
     // this is the first time
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
@@ -101,11 +101,10 @@ public final class CDFWExecutor {
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
 
-    DefaultScheduler defaultScheduler = new DefaultScheduler(this.executionEnv.getWorkerInfoList());
-    Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = defaultScheduler.schedule(graph);
+    CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
+    Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
 
     for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
-
       // this is the first time
       if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
         try {

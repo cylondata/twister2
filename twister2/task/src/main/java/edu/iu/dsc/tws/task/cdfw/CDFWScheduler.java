@@ -26,15 +26,15 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
  * will be improved further with the complex logic. Now, based on the relations(parent -> child)
  * it will initiate the execution.
  */
-public class DefaultScheduler implements ICDFWScheduler {
-  private static final Logger LOG = Logger.getLogger(DefaultScheduler.class.getName());
+public class CDFWScheduler implements ICDFWScheduler {
+  private static final Logger LOG = Logger.getLogger(CDFWScheduler.class.getName());
 
   private List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   //To store the scheduled dataflow task graph and their corresponding worker list
   private static Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
 
-  protected DefaultScheduler(List<JobMasterAPI.WorkerInfo> workerInfoList) {
+  protected CDFWScheduler(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     this.workerInfoList = workerInfoList;
   }
 

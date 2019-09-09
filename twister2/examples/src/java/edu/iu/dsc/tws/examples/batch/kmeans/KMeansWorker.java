@@ -85,9 +85,8 @@ public class KMeansWorker implements IWorker {
     String dataDirectory = kMeansJobParameters.getDatapointDirectory();
     String centroidDirectory = kMeansJobParameters.getCentroidDirectory();
 
-
-//    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
-//        centroidDirectory);
+    workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
+        centroidDirectory);
 
     long startTime = System.currentTimeMillis();
 
@@ -163,7 +162,7 @@ public class KMeansWorker implements IWorker {
     LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
         + "\tData Load time : " + (endTimeData - startTime)
         + "\tCompute Time : " + (endTime - endTimeData));
-    LOG.fine("Final Centroids After\t" + iterations + "\titerations\t"
+    LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
         + Arrays.deepToString(centroid));
   }
 
@@ -171,7 +170,7 @@ public class KMeansWorker implements IWorker {
                                                int parallelismValue, int dimension,
                                                Config conf) {
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory, dsize);
+        dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, dimension);
     KMeansDataObjectDirectSink dataObjectSink = new KMeansDataObjectDirectSink("points");
