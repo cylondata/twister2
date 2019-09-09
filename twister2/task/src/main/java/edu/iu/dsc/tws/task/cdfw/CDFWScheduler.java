@@ -40,10 +40,8 @@ public class CDFWScheduler implements ICDFWScheduler {
 
   @Override
   public Set<Integer> schedule(DataFlowGraph graphJob) {
-
     Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
-    LOG.info("%%%% Scheduled Graph list details: %%%%" + scheduledGraph);
-
+    LOG.info("Scheduled Graph list details:" + scheduledGraph);
     return scheduledGraph;
   }
 
@@ -55,22 +53,16 @@ public class CDFWScheduler implements ICDFWScheduler {
   public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob) {
 
     Set<Integer> workerList;
-
     if (graphJob.length == 1) {
-      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers());
       workerList = scheduleGraphs(graphJob[0]);
       scheduledGraphMap.put(graphJob[0], workerList);
-
     } else if (graphJob.length > 1) {
-      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
-          + "\t" + graphJob[1].getWorkers());
       for (DataFlowGraph graph : graphJob) {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
-      LOG.info("Graph Resource Requirements:" + graphJob[0].getWorkers()
-          + "\t" + graphJob[1].getWorkers() + "\t" + workerInfoList.size()
-          + "%%%% Scheduled Graph Map details: %%%%" + scheduledGraphMap);
+      LOG.info("Graph Requirements:" + workerInfoList.size()
+          + "\tScheduled Details:" + scheduledGraphMap);
     }
     return scheduledGraphMap;
   }
@@ -82,7 +74,6 @@ public class CDFWScheduler implements ICDFWScheduler {
   private Set<Integer> scheduleGraphs(DataFlowGraph graph) {
 
     Set<Integer> workerList = new HashSet<>();
-
     if (workerInfoList.size() == graph.getWorkers()) {
       for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
         workerList.add(workerInfos.getWorkerID());
