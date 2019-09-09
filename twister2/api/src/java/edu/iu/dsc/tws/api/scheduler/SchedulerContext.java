@@ -39,6 +39,9 @@ public class SchedulerContext extends Context {
   public static final String JOB_PACKAGE_URL = "twister2.job.package.url";
   public static final String CORE_PACKAGE_URL = "twister2.core.package.url";
 
+  // the job file save location when submitting jobs from python and c++
+  public static final String JOB_FILE_LOCATION = "twister2.resource.job.file.dir";
+
   public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
 
   /**
@@ -151,6 +154,10 @@ public class SchedulerContext extends Context {
 
   public static double persistentVolumePerWorker(Config cfg) {
     return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
+  }
+
+  public static String getJobFileDirectory(Config cfg) {
+    return cfg.getStringValue(JOB_FILE_LOCATION, "/tmp/twister2");
   }
 
   /**

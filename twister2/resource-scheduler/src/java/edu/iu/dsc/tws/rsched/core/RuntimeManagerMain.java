@@ -11,8 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.rsched.core;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,6 +30,7 @@ import org.apache.commons.cli.ParseException;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class RuntimeManagerMain {
   private static final Logger LOG = Logger.getLogger(RuntimeManagerMain.class.getName());
@@ -58,11 +64,27 @@ public final class RuntimeManagerMain {
   }
 
   private static void executeCommand(Config cfg, String command) {
+    ResourceAllocator resourceAllocator = new ResourceAllocator();
     switch (command) {
       case "kill":
         // now load the correct class to terminate the job
-        ResourceAllocator resourceAllocator = new ResourceAllocator();
         resourceAllocator.terminateJob(SchedulerContext.jobName(cfg), cfg);
+        break;
+      case "submit":
+        // read the job file and create the job
+        String jobFile = SchedulerContext.getJobFileDirectory(cfg)
+            + SchedulerContext.getStringPropertyValue(cfg, SchedulerContext.JOB_NAME, null);
+        byte[] jobFileByes = readFileToByteArray(new File(jobFile));
+        try {
+          JobAPI.Job job = JobAPI.Job.parseFrom(jobFileByes);
+          resourceAllocator.submitJob(job, cfg);
+        } catch (InvalidProtocolBufferException e) {
+          LOG.log(Level.SEVERE, "Failed to read the job file", e);
+          throw new RuntimeException(e);
+        }
+        break;
+      default:
+        throw new RuntimeException("Un-expected command: " + command);
     }
   }
 
@@ -140,5 +162,29 @@ public final class RuntimeManagerMain {
     options.addOption(jobName);
 
     return options;
+  }
+
+  /**
+   * This method uses java.io.FileInputStream to read
+   * file content into a byte array
+   * @param file file
+   * @return the read byes
+   */
+  private static byte[] readFileToByteArray(File file) {
+    FileInputStream fis = null;
+    // Creating a byte array using the length of the file
+    // file.length returns long which is cast to int
+    byte[] bArray = new byte[(int) file.length()];
+    try {
+      fis = new FileInputStream(file);
+      int size = fis.read(bArray);
+      if (size != bArray.length) {
+        throw new RuntimeException("Cannot fully read the file: " + file.getName());
+      }
+      fis.close();
+    } catch (IOException ioExp) {
+      ioExp.printStackTrace();
+    }
+    return bArray;
   }
 }
