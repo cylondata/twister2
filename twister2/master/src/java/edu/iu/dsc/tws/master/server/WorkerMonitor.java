@@ -58,8 +58,6 @@ public class WorkerMonitor implements MessageHandler {
   private IDriver driver;
 
   // a flag to show whether allWorkersRegistered message is sent
-  private boolean sentAllWorkersRegistered = false;
-
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -131,14 +129,8 @@ public class WorkerMonitor implements MessageHandler {
       pingMessageReceived(id, ping);
 
     } else if (message instanceof JobMasterAPI.RegisterWorker) {
-      //JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
-      //registerWorkerMessageReceived(id, workerId, rwMessage);
-      JobMasterAPI.RegisterWorker registerMessage = (JobMasterAPI.RegisterWorker) message;
-      if (registerMessage.getFromFailure()) {
-        reregisterWorkerMessageReceived(id, registerMessage);
-      } else {
-        registerWorkerMessageReceived(id, registerMessage);
-      }
+      JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
+      registerWorkerMessageReceived(id, rwMessage);
     } else if (message instanceof JobMasterAPI.WorkerStateChange) {
       JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
       stateChangeMessageReceived(id, wscMessage);
@@ -190,25 +182,24 @@ public class WorkerMonitor implements MessageHandler {
 
     // if it is coming from failure
     // update the worker status and return
-//   int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
-//    if (registeredWorkerID >= 0) {
-//      // update the worker status in the worker list
-//      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
-//      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
-//
-//      // send the response message
-//      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
-//
-//      // send worker registration message to dashboard
-//      if (dashClient != null) {
-//        dashClient.registerWorker(workerInfo);
-//      }
-//      //  TO DO inform checkpoint master
-//      // what should be the message
-//      recoverFromFailure(workerInfo.getWorkerID(), workerInfo);
-//
-//      return;
-//    }
+
+    int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
+    if (registeredWorkerID >= 0) {
+      // update the worker status in the worker list
+      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
+      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
+
+      // send the response message
+      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+
+      // send worker registration message to dashboard
+      if (dashClient != null) {
+        dashClient.registerWorker(workerInfo);
+      }
+      //  TO DO inform checkpoint master
+      // what should be the message
+      return;
+    }
 
     // if job master assigns workerIDs, get new id and update it in WorkerInfo
     // also set in RRServer
@@ -327,16 +318,6 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
   //notify the worker when there was a worker coming from a failure.
-
-  private void recoverFromFailure(int workerID, JobMasterAPI.WorkerInfo workerInfo) {
-    rrServer.removeWorkerChannel(workerID);
-    rrServer.setWorkerChannel(workerID);
-    JobMasterAPI.Recover recoverMessage = JobMasterAPI.Recover.newBuilder()
-        .setWorkerID(workerID)
-        .build();
-    broadcastRecoveryMessage(recoverMessage);
-  }
-
 
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
