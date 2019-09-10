@@ -12,8 +12,10 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,7 +27,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -162,7 +168,7 @@ public class CDFWRuntime implements JobListener {
         taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
       }
 
-      /*if (subGraph.getGraphType().equalsIgnoreCase(Context.GRAPH_TYPE)) {
+      if (subGraph.getGraphType().equalsIgnoreCase(Context.GRAPH_TYPE)) {
         Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
         String collectorTask = null;
         Set<String> collectibleNameSet = null;
@@ -174,17 +180,15 @@ public class CDFWRuntime implements JobListener {
             collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           }
         }
-        taskExecutor.execute(taskGraph, executionPlan);
-        outPutObject = taskExecutor.getOutput(taskGraph, executionPlan, collectorTask);
-        LOG.info("Output object:" + outPutObject);
-        for (Object aCollectibleNameSet : collectibleNameSet) {
-          taskExecutor.addSourceInput(
-              taskGraph, executionPlan, aCollectibleNameSet.toString(), outPutObject);
-        }
-      } else {
-        taskExecutor.execute(taskGraph, executionPlan);
-        LOG.info("I am executing non-iterative graph");
-      }*/
+//        if (taskExecutor.getOutput(taskGraph, executionPlan, collectorTask) != null) {
+//          outPutObject = taskExecutor.getOutput(taskGraph, executionPlan, collectorTask);
+//          LOG.info("Output object:" + outPutObject);
+//          for (Object aCollectibleNameSet : collectibleNameSet) {
+//            taskExecutor.addSourceInput(
+//                taskGraph, executionPlan, aCollectibleNameSet.toString(), outPutObject);
+//          }
+//        }
+      }
 
       // reuse the task executor execute
       taskExecutor.execute(taskGraph, executionPlan);
