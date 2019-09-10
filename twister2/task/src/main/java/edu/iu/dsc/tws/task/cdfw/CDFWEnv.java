@@ -50,7 +50,7 @@ public class CDFWEnv {
     this.cdfwExecutor.execute(dataFlowGraph);
   }
 
-  public void executeDataFlowGraph(DataFlowGraph...dataFlowGraph) {
+  public void executeDataFlowGraph(DataFlowGraph... dataFlowGraph) {
     this.cdfwExecutor.executeCDFW(dataFlowGraph);
   }
 

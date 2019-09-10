@@ -92,6 +92,8 @@ public final class ConnectedDataflowExample {
 
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
+        job3.setIterationNumber(i);
+        LOG.info("job iteration at main:" + job3.getIterationNumber());
         cdfwEnv.executeDataFlowGraph(job3);
       }
     }
@@ -314,7 +316,7 @@ public final class ConnectedDataflowExample {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      //LOG.info("Received input: " + name);
+      LOG.info("Received input: " + name  + "\t" + data);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
@@ -344,7 +346,7 @@ public final class ConnectedDataflowExample {
     @Override
     public boolean execute(IMessage message) {
       //LOG.info("Received centroids: " + context.getWorkerId()
-      //    + ":" + context.globalTaskId());
+      //    + ":" + context.globalTaskId() + "\t" + message.getContent());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {

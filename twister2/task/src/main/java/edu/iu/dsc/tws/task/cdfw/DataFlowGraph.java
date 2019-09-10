@@ -155,6 +155,17 @@ public final class DataFlowGraph {
     return this;
   }
 
+  private int iterationNumber;
+
+  public int getIterationNumber() {
+    return iterationNumber;
+  }
+
+  public DataFlowGraph setIterationNumber(int iterationnumber) {
+    this.iterationNumber = iterationnumber;
+    return this;
+  }
+
   public DataFlowGraph addInput(String g, String input, String taskname) {
     inputs.add(CDFWJobAPI.Input.newBuilder()
         .setParentGraph(g).setName(input).setTaskname(taskname).build());
@@ -194,6 +205,7 @@ public final class DataFlowGraph {
         .addAllInputs(inputs)
         .setGraphType(graphType)
         .setIterations(iterations)
+        .setIterationNumber(iterationNumber)
         .build();
   }
 }

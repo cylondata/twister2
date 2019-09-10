@@ -12,10 +12,8 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -27,11 +25,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-import edu.iu.dsc.tws.api.compute.graph.Vertex;
-import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -143,58 +137,88 @@ public class CDFWRuntime implements JobListener {
 
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
+
+      LOG.info("Subgraph Iteration Number:" + subGraph.getIterationNumber());
       if (subGraph.getInputsList().size() != 0) {
-        for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
-          String inputName = input.getName();
-          String inputGraph = input.getParentGraph();
-          if (!outPuts.containsKey(inputGraph)) {
-            throw new RuntimeException("We cannot find the input graph: " + inputGraph);
+        if (subGraph.getIterationNumber() == 0) {
+          for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
+            String inputName = input.getName();
+            String inputGraph = input.getParentGraph();
+            if (!outPuts.containsKey(inputGraph)) {
+              throw new RuntimeException("We cannot find the input graph: " + inputGraph);
+            }
+            Map<String, DataObject<Object>> outsPerGraph = outPuts.get(inputGraph);
+            if (!outsPerGraph.containsKey(inputName)) {
+              throw new RuntimeException("We cannot find the input: " + inputName);
+            }
+            DataObject<Object> outPutObject = outsPerGraph.get(inputName);
+            LOG.info("%%%%%%%%%% Input Name:%%%%%%%%%%%%" + inputName);
+            taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
           }
-
-          Map<String, DataObject<Object>> outsPerGraph = outPuts.get(inputGraph);
-          if (!outsPerGraph.containsKey(inputName)) {
-            throw new RuntimeException("We cannot find the input: " + inputName);
-          }
-
-          DataObject<Object> outPutObject = outsPerGraph.get(inputName);
-          taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
-        }
-      }
-
-      List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
-      //now lets get those inputs
-      for (CDFWJobAPI.Input in : inputs) {
-        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
-      }
-
-      if (subGraph.getGraphType().equalsIgnoreCase(Context.GRAPH_TYPE)) {
-        Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
-        String collectorTask = null;
-        Set<String> collectibleNameSet = null;
-        DataObject<Object> outPutObject;
-        for (Vertex vertex : taskVertexSet) {
-          INode iNode = vertex.getTask();
-          if (iNode instanceof Collector) {
-            collectorTask = vertex.getName();
-            collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+        } else {
+          for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
+            String inputName = input.getName();
+            String inputGraph = input.getParentGraph();
+            DataObject<Object> outPutObject
+                = taskExecutor.getOutput(taskGraph, executionPlan, "kmeanssink");
+            LOG.info("DataObject Output:" + outPutObject);
+            //taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
           }
         }
-//        if (taskExecutor.getOutput(taskGraph, executionPlan, collectorTask) != null) {
-//          outPutObject = taskExecutor.getOutput(taskGraph, executionPlan, collectorTask);
-//          LOG.info("Output object:" + outPutObject);
-//          for (Object aCollectibleNameSet : collectibleNameSet) {
-//            taskExecutor.addSourceInput(
-//                taskGraph, executionPlan, aCollectibleNameSet.toString(), outPutObject);
-//          }
-//        }
       }
 
-      // reuse the task executor execute
+//      List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
+//      //now lets get those inputs
+//      for (CDFWJobAPI.Input in : inputs) {
+//        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+//        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+//      }
+
+      /*if (subGraph.getGraphType().equalsIgnoreCase(Context.GRAPH_TYPE)) {
+        if (subGraph.getIterationNumber() == 0) {
+          taskExecutor.execute(taskGraph, executionPlan);
+        } else {
+          Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
+          String collectorTask = null;
+          Set<String> collectibleNameSet = null;
+          Set<String> receivableNameSet = null;
+          DataObject<Object> outPutObject;
+          for (Vertex vertex : taskVertexSet) {
+            INode iNode = vertex.getTask();
+            if (iNode instanceof Collector) {
+              collectorTask = vertex.getName().trim();
+              collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+            }
+
+            if (iNode instanceof Receptor) {
+              receivableNameSet = ((Receptor) iNode).getReceivableNames();
+            }
+          }
+
+          List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
+          for (CDFWJobAPI.Output outputs : outPutNames) {
+            DataObject<Object> outPut = taskExecutor.getOutput(
+                taskGraph, executionPlan, outputs.getTaskname());
+            taskExecutor.addSourceInput(
+                taskGraph, executionPlan, outputs.getTaskname(), outPut);
+          }
+          //outPutObject = taskExecutor.getOutput(taskGraph, executionPlan, collectorTask);
+          *//*for (Object areceivableNameSet : receivableNameSet) {
+            outPutObject = taskExecutor.getOutput(
+                taskGraph, executionPlan, collectorTask, areceivableNameSet.toString());
+            taskExecutor.addSourceInput(
+                taskGraph, executionPlan, "kmeanssource", outPutObject);
+          }*//*
+          taskExecutor.execute(taskGraph, executionPlan);
+        }//end of else
+      } else {
+        taskExecutor.execute(taskGraph, executionPlan);
+      }*/
+
       taskExecutor.execute(taskGraph, executionPlan);
+      //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
-
       Map<String, DataObject<Object>> outs = new HashMap<>();
       if (subGraph.getOutputsList().size() != 0) {
         List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();

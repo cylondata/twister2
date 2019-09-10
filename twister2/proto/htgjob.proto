@@ -26,6 +26,7 @@ message SubGraph {
     repeated jobmaster.WorkerInfo worker_info = 13;
     CDFWSchedulePlan cdfw_scheduleplan = 14;
     int32 iterations = 15;
+    int32 iteration_number = 16;
 }
 
 message CDFWSchedulePlan {
