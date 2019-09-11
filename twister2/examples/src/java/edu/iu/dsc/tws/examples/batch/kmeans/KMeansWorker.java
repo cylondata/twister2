@@ -332,7 +332,6 @@ public class KMeansWorker implements IWorker {
     @Override
     public Set<String> getCollectibleNames() {
       Set<String> inputKeys = new HashSet<>();
-      //return Collections.singleton("centroids");
       inputKeys.add("centroids");
       return inputKeys;
     }

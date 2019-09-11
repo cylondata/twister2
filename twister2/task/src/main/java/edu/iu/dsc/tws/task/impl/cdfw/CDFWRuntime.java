@@ -163,7 +163,7 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE) && subGraph.getIterationNumber() > 0) {
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
         List<CDFWJobAPI.Input> inputs1 = subGraph.getInputsList();
         for (CDFWJobAPI.Input in : inputs1) {
           for (String key : iterativeOutPuts.keySet()) {
@@ -175,6 +175,7 @@ public class CDFWRuntime implements JobListener {
           }
         }
       }
+
       taskExecutor.execute(taskGraph, executionPlan);
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
@@ -204,23 +205,16 @@ public class CDFWRuntime implements JobListener {
   }
 
   private void processIterativeOuput(ComputeGraph taskGraph, ExecutionPlan executionPlan) {
-    DataObject<Object> outPut = null;
+    DataObject<Object> outPut;
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
     for (Vertex vertex : taskVertexSet) {
       INode iNode = vertex.getTask();
       if (iNode instanceof Collector) {
         Set<String> collectibleNameSet = ((Collector) iNode).getCollectibleNames();
         outPut = taskExecutor.getOutput(taskGraph, executionPlan, vertex.getName());
-        String key = collectibleNameSet.toString();
-        iterativeOutPuts.put(key, outPut);
+        iterativeOutPuts.put(collectibleNameSet.toString(), outPut);
       }
     }
-   /*DataPartition<?> centroidPartition = outPut.getPartition(workerId);
-    double[][] centroid = null;
-    if (centroidPartition.getConsumer().hasNext()) {
-      centroid = (double[][]) centroidPartition.getConsumer().next();
-    }
-    LOG.info("Final Centroids After\t" + Arrays.deepToString(centroid));*/
   }
 
   @Override
