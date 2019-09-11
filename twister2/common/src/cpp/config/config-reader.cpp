@@ -18,5 +18,10 @@ void ConfigReader::LoadConfig() {
     LOG(INFO) << "Reading config file " << _file;
   }
 }
+
+YAML::Node* ConfigReader::getNode() {
+  return &config_;
+}
+
 }  // namespace config
 }

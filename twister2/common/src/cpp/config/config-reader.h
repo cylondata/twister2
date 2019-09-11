@@ -13,13 +13,11 @@ class ConfigReader {
  public:
   ConfigReader(const std::string& _file);
   virtual ~ConfigReader();
-
- protected:
+  YAML::Node* getNode();
   void LoadConfig();
 
-  YAML::Node config_;
-
  private:
+  YAML::Node config_;
   std::string _file;
 };
 }

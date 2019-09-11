@@ -17,7 +17,8 @@ cc_library(
     deps = [
         "@com_github_jbeder_yaml_cpp//:yaml-cxx",
         "@com_github_google_glog//:glog",
-        "//twister2/api/src/cpp:api_cxx"
+        "//twister2/api/src/cpp:api_cxx",
+        "//twister2/common/src/cpp/config:config_cxx"
     ],
     linkstatic = 0,
 )
@@ -40,11 +41,14 @@ cc_library(
         "-I$(GENDIR)/twister2/resource-scheduler/src/cpp",
         "-I$(GENDIR)/twister2/api/src/cpp",
         "-Itwister2/api/src/cpp",
+        "-Itwister2/common/src/cpp/config",
+        "-I$(GENDIR)/twister2/common/src/cpp/config",
     ],
     deps = [
         "@com_github_jbeder_yaml_cpp//:yaml-cxx",
         "@com_github_google_glog//:glog",
-        "//twister2/api/src/cpp:api_cxx"
+        "//twister2/api/src/cpp:api_cxx",
+        "//twister2/common/src/cpp/config:config_cxx"
     ],
     linkstatic = 1,
 )
@@ -54,9 +58,11 @@ cc_binary(
     srcs = [
         "standalone/mpi_worker.cpp",
         "core/twister2_submitter.cpp",
+        "standalone/example_worker.cpp",
 
         "core/twister2_submitter.h",
         "standalone/mpi_worker.h",
+        "standalone/example_worker.h",
     ],
     copts = [
         "-Itwister2",
@@ -65,11 +71,14 @@ cc_binary(
         "-I$(GENDIR)/twister2/resource-scheduler/src/cpp",
         "-I$(GENDIR)/twister2/api/src/cpp",
         "-Itwister2/api/src/cpp",
+        "-Itwister2/common/src/cpp/config",
+        "-I$(GENDIR)/twister2/common/src/cpp/config",
     ],
     deps = [
         "@com_github_jbeder_yaml_cpp//:yaml-cxx",
         "@com_github_google_glog//:glog",
         "//twister2/api/src/cpp:api_cxx",
+        "//twister2/common/src/cpp/config:config_cxx"
     ],
     linkstatic = 1,
 )

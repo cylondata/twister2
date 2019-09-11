@@ -1,6 +1,7 @@
 #include "mpi_worker.h"
 #include "glog/logging.h"
 #include "resource/worker.h"
+#include "resource-config-reader.h"
 
 #include <getopt.h>
 #include <stdio.h>
@@ -98,8 +99,12 @@ int main(int argc, char* argv[]) {
   // first lets read the arguments
   read_command_line(argc, argv);
 
+  twister2::config::ResourceConfigReader::createInstance("/home/supun/projects/twister2/twister2/config/src/yaml/conf/standalone/resource.yaml");
+  twister2::config::ResourceConfigReader* reader = twister2::config::ResourceConfigReader::getInstance();
+  std::cout << reader->get_twister2_job_file_location();
+
   // lets create the worker
-  twister2::api::resource::IWorker* worker = create_worker("libexample_cxx.so");
+  twister2::api::resource::IWorker* worker = create_worker("/home/supun/projects/twister2/bazel-bin/twister2/resource-scheduler/src/cpp/libexample_cxx.so");
 
   // now lets create the config
   worker->execute(NULL, 0);

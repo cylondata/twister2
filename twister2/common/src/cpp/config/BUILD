@@ -6,15 +6,18 @@ cc_library(
         "config-reader.cpp",
         "core-config-reader.cpp",
         "network-config-reader.cpp",
+        "resource-config-reader.cpp",
 
         "config-reader.h",
         "core-config-reader.h",
         "network-config-reader.h",
+        "resource-config-reader.h",
     ],
     hdrs = [
         "config-reader.h",
         "core-config-reader.h",
         "network-config-reader.h",
+        "resource-config-reader.h",
     ],
     copts = [
         "-Itwister2",
