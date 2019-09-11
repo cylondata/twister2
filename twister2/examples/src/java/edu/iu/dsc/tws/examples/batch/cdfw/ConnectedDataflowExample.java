@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -85,7 +84,6 @@ public final class ConnectedDataflowExample {
 
       DataFlowGraph job1 = generateFirstJob(config, parallelism, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, parallelism, jobConfig);
-      //DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
@@ -93,7 +91,6 @@ public final class ConnectedDataflowExample {
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
         job3.setIterationNumber(i);
-        LOG.info("job iteration at main:" + job3.getIterationNumber());
         cdfwEnv.executeDataFlowGraph(job3);
       }
     }
@@ -141,7 +138,7 @@ public final class ConnectedDataflowExample {
 
     dsize = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_DSIZE));
     csize = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_CSIZE));
-    iterations = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_CSIZE));
+    iterations = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_ITERATIONS));
 
     dataDirectory = commandLine.getOptionValue(CDFConstants.ARGS_DINPUT);
     centroidDirectory = commandLine.getOptionValue(CDFConstants.ARGS_CINPUT);
@@ -211,7 +208,7 @@ public final class ConnectedDataflowExample {
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("points", "datapointsink")
         .setGraphType("non-iterative");
-    //.addOutput("first_graph", "first_out", "datapointsink");
+        //.addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
 
@@ -249,7 +246,7 @@ public final class ConnectedDataflowExample {
         .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .addOutput("centroids", "centroidsink")
         .setGraphType("non-iterative");
-    //.addOutput("second_graph", "second_out", "centroidsink");
+        //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
 
@@ -264,7 +261,7 @@ public final class ConnectedDataflowExample {
     //Add source, and sink tasks to the task graph builder for the third task graph
     kmeansComputeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
     ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addSink(
-        "kmeanssink", kMeansAllReduceTask, 2);
+        "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
     kMeanscomputeConnection.allreduce("kmeanssource")
@@ -310,13 +307,13 @@ public final class ConnectedDataflowExample {
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
-      LOG.info("New centers:" + Arrays.deepToString(kMeansCenters));
+      //LOG.info("New centers:" + Arrays.deepToString(kMeansCenters));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      LOG.info("Received input: " + name  + "\t" + data);
+      //LOG.info("Received input: " + name  + "\t" + data);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }
