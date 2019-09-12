@@ -176,7 +176,11 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      taskExecutor.execute(taskGraph, executionPlan);
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+        taskExecutor.itrExecute(taskGraph, executionPlan);
+      } else {
+        taskExecutor.execute(taskGraph, executionPlan);
+      }
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();

@@ -71,6 +71,7 @@ public final class ConnectedDataflowExample {
   private static int dimension;
   private static int dsize;
   private static int csize;
+  private static int instances;
 
   public static class CDExampleDriver extends BaseDriver {
 
@@ -130,7 +131,7 @@ public final class ConnectedDataflowExample {
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine commandLine = commandLineParser.parse(options, args);
 
-    int instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
+    instances = Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_WORKERS));
     parallelism =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_PARALLELISM_VALUE));
     dimension =
@@ -166,7 +167,7 @@ public final class ConnectedDataflowExample {
         .setJobName(CDExampleDriver.class.getName())
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(CDExampleDriver.class.getName())
-        .addComputeResource(1, 512, instances)
+        .addComputeResource(1, 2048, instances)
         .setConfig(jobConfig)
         .build();
     // now submit the job
@@ -205,7 +206,7 @@ public final class ConnectedDataflowExample {
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
-        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("points", "datapointsink")
         .setGraphType("non-iterative");
         //.addOutput("first_graph", "first_out", "datapointsink");
@@ -243,7 +244,7 @@ public final class ConnectedDataflowExample {
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
-        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("centroids", "centroidsink")
         .setGraphType("non-iterative");
         //.addOutput("second_graph", "second_out", "centroidsink");
@@ -273,7 +274,7 @@ public final class ConnectedDataflowExample {
     ComputeGraph thirdGraph = kmeansComputeGraphBuilder.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
-        .setWorkers(2).addDataFlowJobConfig(jobConfig)
+        .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addInput("datapointsink", "points", "datapointsink")
         .addInput("centroidsink", "centroids", "centroidsink")
         .setGraphType("iterative")
