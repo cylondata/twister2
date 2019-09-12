@@ -61,9 +61,6 @@ import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 public final class ConnectedDataflowExample {
   private static final Logger LOG = Logger.getLogger(ConnectedDataflowExample.class.getName());
 
-  private ConnectedDataflowExample() {
-  }
-
   private static String dataDirectory;
   private static String centroidDirectory;
   private static int parallelism;
@@ -72,6 +69,9 @@ public final class ConnectedDataflowExample {
   private static int dsize;
   private static int csize;
   private static int instances;
+
+  private ConnectedDataflowExample() {
+  }
 
   public static class CDExampleDriver extends BaseDriver {
 
