@@ -35,6 +35,12 @@ class TSet:
         reduce_t_link_java_ref = self.__java_ref.allReduce(reduce_func_java_ref)
         return tl.TLink(reduce_t_link_java_ref, self.__env)
 
+    def gather(self):
+        return tl.TLink(self.__java_ref.gather(), self.__env)
+
+    def all_gather(self):
+        return tl.TLink(self.__java_ref.allGather(), self.__env)
+
     def partition(self, partition_func: PartitionFunc):
         p_func_java_ref = self.__env.functions.partition.to_java_ref(partition_func)
         partition_link_java_ref = self.__java_ref.partition(p_func_java_ref)

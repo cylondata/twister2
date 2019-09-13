@@ -1,6 +1,5 @@
-import sys
-
 import cloudpickle as cp
+import sys
 from py4j.java_gateway import JavaGateway, GatewayParameters
 
 from twister2.tset.TSet import TSet
@@ -28,7 +27,7 @@ class Twister2Environment:
     def functions(self) -> TSetFunctions:
         return self.__predef_functions
 
-    def create_source(self, source_function, parallelism=0) -> TSet:
+    def create_source(self, source_function: SourceFunc, parallelism=0) -> TSet:
         if not isinstance(source_function, SourceFunc):
             raise Exception('source_function should be an instance of {}'.format(SourceFunc))
 

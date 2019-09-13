@@ -11,6 +11,8 @@ class TSetFunctions:
         self.__compute_functions = GenericFunctions(java_ref.compute(), env)
         self.__sink_functions = GenericFunctions(java_ref.sink(), env)
         self.__reduce_functions = GenericFunctions(java_ref.reduce(), env)
+        self.__apply_functions = GenericFunctions(java_ref.apply(), env)
+        self.__flat_map_functions = GenericFunctions(java_ref.flatMap(), env)
 
     @property
     def partition(self) -> PartitionFunctions:
@@ -21,12 +23,20 @@ class TSetFunctions:
         return self.__map_functions
 
     @property
+    def flat_map(self) -> GenericFunctions:
+        return self.__flat_map_functions
+
+    @property
     def compute(self) -> GenericFunctions:
         return self.__compute_functions
 
     @property
     def sink(self) -> GenericFunctions:
         return self.__sink_functions
+
+    @property
+    def apply(self) -> GenericFunctions:
+        return self.__apply_functions
 
     @property
     def reduce(self) -> GenericFunctions:

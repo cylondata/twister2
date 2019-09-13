@@ -14,6 +14,12 @@ class TLink:
         map_t_set_java_ref = self.__java_ref.map(map_func_java_ref)
         return ts.TSet(map_t_set_java_ref, self.__env)
 
+    def flat_map(self, lam):
+        flat_map_wrapper = function_wrapper(lam)
+        flat_map_func_java_ref = self.__env.functions.flat_map.build(flat_map_wrapper)
+        flat_map_t_set_java_ref = self.__java_ref.flatmap(flat_map_func_java_ref)
+        return ts.TSet(flat_map_t_set_java_ref, self.__env)
+
     def sink(self, sink_func):
         sink_wrapper = function_wrapper(sink_func)
         sink_func_java_ref = self.__env.functions.sink.build(sink_wrapper)
@@ -23,3 +29,8 @@ class TLink:
         compute_wrapper = function_wrapper(compute_func)
         compute_func_java_ref = self.__env.functions.compute.build(compute_wrapper)
         return ts.TSet(self.__java_ref.compute(compute_func_java_ref), self.__env)
+
+    def for_each(self, foreach_func):
+        foreach_wrapper = function_wrapper(foreach_func)
+        foreach_func_java_ref = self.__env.functions.apply.build(foreach_wrapper)
+        return ts.TSet(self.__java_ref.forEach(foreach_func_java_ref), self.__env)
