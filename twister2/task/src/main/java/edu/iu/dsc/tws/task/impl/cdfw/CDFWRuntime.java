@@ -12,8 +12,10 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
@@ -25,7 +27,11 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.Vertex;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -60,10 +66,16 @@ public class CDFWRuntime implements JobListener {
    */
   private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
 
+
+  private Map<String, DataObject<Object>> iterativeOutPuts = new HashMap<>();
+
   /**
    * Task executor
    */
   private TaskExecutor taskExecutor;
+
+
+  private static int index = 0;
 
   /**
    * Connected dataflow runtime
@@ -114,12 +126,9 @@ public class CDFWRuntime implements JobListener {
     JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
     CDFWJobAPI.ExecuteMessage executeMessage;
     ExecutionPlan executionPlan;
-    CDFWJobAPI.ExecuteCompletedMessage completedMessage;
+    CDFWJobAPI.ExecuteCompletedMessage completedMessage = null;
     try {
       executeMessage = msg.unpack(CDFWJobAPI.ExecuteMessage.class);
-//      LOG.log(Level.INFO, workerId + "Processing execute message: " + executeMessage);
-//      LOG.log(Level.INFO, workerId + " Executing the subgraph : " + subgraph);
-
       // get the subgraph from the map
       CDFWJobAPI.SubGraph subGraph = executeMessage.getGraph();
       ComputeGraph taskGraph = (ComputeGraph) serializer.deserialize(
@@ -128,55 +137,61 @@ public class CDFWRuntime implements JobListener {
         LOG.severe(workerId + " Unable to find the subgraph " + subGraph.getName());
         return true;
       }
+
       // use the taskexecutor to create the execution plan
       executionPlan = taskExecutor.plan(taskGraph);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan);
-//      LOG.log(Level.INFO, workerId + " exec plan : " + executionPlan.getNodes());
 
       if (subGraph.getInputsList().size() != 0) {
         for (CDFWJobAPI.Input input : subGraph.getInputsList()) {
           String inputName = input.getName();
           String inputGraph = input.getParentGraph();
-
           if (!outPuts.containsKey(inputGraph)) {
             throw new RuntimeException("We cannot find the input graph: " + inputGraph);
           }
-
           Map<String, DataObject<Object>> outsPerGraph = outPuts.get(inputGraph);
-
           if (!outsPerGraph.containsKey(inputName)) {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
-
           DataObject<Object> outPutObject = outsPerGraph.get(inputName);
           taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
         }
       }
 
-      List<CDFWJobAPI.Input> inputs = subGraph.getInputsList();
-      // now lets get those inputs
-      for (CDFWJobAPI.Input in : inputs) {
-        DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-        taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+        List<CDFWJobAPI.Input> inputs1 = subGraph.getInputsList();
+        for (CDFWJobAPI.Input in : inputs1) {
+          for (String key : iterativeOutPuts.keySet()) {
+            taskExecutor.addSourceInput(taskGraph, executionPlan, key, iterativeOutPuts.get(key));
+            if (!in.getName().equals(key)) {
+              DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+              taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+            }
+          }
+        }
       }
 
-      // reuse the task executor execute
-      taskExecutor.execute(taskGraph, executionPlan);
-
-      LOG.log(Level.INFO, workerId + " Completed subgraph : " + subGraph.getName());
-
-//      LOG.log(Level.INFO, workerId + " Sending subgraph completed message to driver");
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+        taskExecutor.itrExecute(taskGraph, executionPlan);
+      } else {
+        taskExecutor.execute(taskGraph, executionPlan);
+      }
+      //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
-
-      List<String> outPutNames = subGraph.getOutputsList();
       Map<String, DataObject<Object>> outs = new HashMap<>();
-      for (String out : outPutNames) {
-        // get the outputs
-        DataObject<Object> outPut = taskExecutor.getSinkOutput(taskGraph, executionPlan, out);
-        outs.put(out, outPut);
+      if (subGraph.getOutputsList().size() != 0) {
+        List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
+        for (CDFWJobAPI.Output outputs : outPutNames) {
+          DataObject<Object> outPut = taskExecutor.getOutput(
+              taskGraph, executionPlan, outputs.getTaskname());
+          outs.put(outputs.getName(), outPut);
+        }
+        outPuts.put(subGraph.getName(), outs);
       }
-      outPuts.put(subGraph.getName(), outs);
+
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+        processIterativeOuput(taskGraph, executionPlan);
+      }
 
       if (!workerMessenger.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
@@ -185,6 +200,19 @@ public class CDFWRuntime implements JobListener {
       LOG.log(Level.SEVERE, "Unable to unpack received message ", e);
     }
     return false;
+  }
+
+  private void processIterativeOuput(ComputeGraph taskGraph, ExecutionPlan executionPlan) {
+    DataObject<Object> outPut;
+    Set<Vertex> taskVertexSet = new LinkedHashSet<>(taskGraph.getTaskVertexSet());
+    for (Vertex vertex : taskVertexSet) {
+      INode iNode = vertex.getTask();
+      if (iNode instanceof Collector) {
+        Set<String> collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+        outPut = taskExecutor.getOutput(taskGraph, executionPlan, vertex.getName());
+        iterativeOutPuts.put(collectibleNameSet.toString(), outPut);
+      }
+    }
   }
 
   @Override

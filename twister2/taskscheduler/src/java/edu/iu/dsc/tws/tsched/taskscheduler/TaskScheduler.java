@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 
 /**
@@ -155,7 +156,7 @@ public class TaskScheduler implements ITaskScheduler {
           workerPlan);
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
         | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
-      throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
+      throw new Twister2RuntimeException(e);
     }
 
     if (taskSchedulePlan != null) {
@@ -192,7 +193,7 @@ public class TaskScheduler implements ITaskScheduler {
           newInstance, new Object[]{workerPlan, computeGraphs});
     } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException
         | InstantiationException | ClassNotFoundException | TaskSchedulerException e) {
-      throw new RuntimeException("Task Schedule Plan Not Able to Create:" + e.getMessage());
+      throw new Twister2RuntimeException(e);
     }
     return taskSchedulePlanMap;
   }

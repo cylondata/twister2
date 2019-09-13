@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.dataset.DataSource;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
@@ -47,19 +47,13 @@ public class DataObjectSource<T> extends BaseSource {
    */
   private String edgeName;
   private String dataDirectory;
-  private int dataSize;
 
-  public DataObjectSource(String edgename, String dataDirectory, int dsize) {
-    this.edgeName = edgename;
-    this.dataDirectory = dataDirectory;
-    this.dataSize = dsize;
+  public DataObjectSource() {
   }
-
 
   public DataObjectSource(String edgename, String dataDirectory) {
     this.edgeName = edgename;
     this.dataDirectory = dataDirectory;
-    this.dataSize = 1;
   }
 
   public String getDataDirectory() {
@@ -111,7 +105,7 @@ public class DataObjectSource<T> extends BaseSource {
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
     ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-    this.source = runtime.createInput(cfg, context, new LocalFixedInputPartitioner(
-        new Path(getDataDirectory()), context.getParallelism(), cfg, dataSize));
+    this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+        new Path(getDataDirectory()), context.getParallelism(), cfg));
   }
 }
