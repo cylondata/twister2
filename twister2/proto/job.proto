@@ -6,7 +6,9 @@ option java_outer_classname = "JobAPI";
 
 enum JobFormatType {
     JAR = 0;
-    ZIP = 1;
+    JAVA_ZIP = 1;
+    PYTHON = 2;
+    PYTHON_ZIP = 3;
 }
 
 message JobFormat {

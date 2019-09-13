@@ -43,33 +43,6 @@ def load_modules():
         sha256 = "6c96d85eac237fea84d9d5e7413c85b62f2df0b9f7b17b0168bd1e28b09ff0e8",
     )
 
-    http_archive(
-        name = "com_google_protobuf",
-        strip_prefix = "protobuf-3.9.0",
-        urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.9.0.tar.gz"],
-    )
-
-    http_archive(
-        name = "com_google_protobuf_javalite",
-        strip_prefix = "protobuf-javalite",
-        urls = ["https://github.com/google/protobuf/archive/javalite.zip"],
-    )
-
-    http_archive(
-        name = "zlib",
-        build_file = "@com_google_protobuf//:third_party/zlib.BUILD",
-        sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
-        strip_prefix = "zlib-1.2.11",
-        urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
-    )
-
-    http_archive(
-        name = "rules_proto",
-        sha256 = "88b0a90433866b44bb4450d4c30bc5738b8c4f9c9ba14e9661deb123f56a833d",
-        strip_prefix = "rules_proto-b0cc14be5da05168b01db282fe93bdf17aa2b9f4",
-        urls = ["https://github.com/bazelbuild/rules_proto/archive/b0cc14be5da05168b01db282fe93bdf17aa2b9f4.tar.gz"],
-    )
-
     #Guava
     _maven_import(
         artifact = "com.google.guava:guava:25.0-jre",
@@ -305,3 +278,8 @@ def load_modules():
     _maven_import(artifact = "org.apache.beam:beam-vendor-guava-20_0:0.1",licenses = ["notice"],sha256 = "ea30aaecc425d9630ae8b0f285add31bbbc1600acf8be2a582ed3a7c1891b3f6",)
     _maven_import(artifact = "javax.xml.bind:jaxb-api:2.3.1",licenses = ["notice"],sha256 = "88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06",)
     _maven_import(artifact = "org.apache.beam:beam-vendor-grpc-1_13_1:0.2",licenses = ["notice"],sha256 = "3cdb4a043692be8a51e58ca5a6de55073c55a6500557852a3ad0b5d0fee33f49",)
+
+    # For Python Support
+    _maven_import(artifact = "net.sf.py4j:py4j:0.10.8.1",licenses = ["notice"],sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835",)
+    _maven_import(artifact = "black.ninia:jep:3.8.2",licenses = ["notice"],sha256 = "dbd5cf18e130eca889bfec01edd6ed7fedaf2bbc1ba4ef405166625917c82003",)
+

@@ -48,7 +48,8 @@ public class SchedulerContext extends Context {
   public static final String TWISTER_2_HOME = "twister2_home";
   public static final String CONFIG_DIR = "config_dir";
   public static final String CLUSTER_TYPE = "cluster_type";
-  public static final String USER_JOB_JAR_FILE = "job_file";
+  public static final String USER_JOB_FILE = "job_file";
+  public static final String USER_JOB_TYPE = "job_type";
   public static final String JOB_DESCRIPTION_FILE_CMD_VAR = "job_desc_file";
   public static final String DEBUG = "debug";
 
@@ -135,7 +136,11 @@ public class SchedulerContext extends Context {
   }
 
   public static String userJobJarFile(Config cfg) {
-    return cfg.getStringValue(USER_JOB_JAR_FILE);
+    return cfg.getStringValue(USER_JOB_FILE);
+  }
+
+  public static String userJobType(Config cfg) {
+    return cfg.getStringValue(USER_JOB_TYPE);
   }
 
   public static String nfsServerAddress(Config cfg) {

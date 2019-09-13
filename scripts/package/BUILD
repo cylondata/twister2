@@ -40,6 +40,7 @@ load("//tools/rules:twister2_core.bzl", "twister2_beam_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_checkpointing_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_tset_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
+load("//tools/rules:twister2_core.bzl", "twister2_python_support_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_jersey_files")
 load(":pack_functions.bzl", "pack_tw2")
@@ -82,6 +83,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
+        ":twister2-python-support",
         ":twister2-tset",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
@@ -107,6 +109,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
+        ":twister2-python-support",
         ":twister2-tset",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
@@ -299,6 +302,7 @@ pack_tw2(
         ":twister2-master-jersey",
         ":twister2-master-lib",
         ":twister2-restarter",
+        ":twister2-python-support"
     ],
 )
 
@@ -312,6 +316,7 @@ pack_tw2(
         ":twister2-bin",
         ":twister2-checkpointing",
         ":twister2-tset",
+        ":twister2-python-support",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-common",
@@ -550,6 +555,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-beam",
     srcs = twister2_beam_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-python-support",
+    srcs = twister2_python_support_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )
