@@ -32,6 +32,13 @@ def t2_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_pom = T
         tags = mvn_tag("org.twister2", name, T2_VERSION),
     )
 
+    native.genrule(
+       name = name+"-javadoc",
+       srcs = [":"+name],
+       outs = [name+"-javadoc.jar"],
+       cmd = "cp $(SRCS) $@"
+    )
+
     if (generate_pom):
         pom_file(
             name = "pom",

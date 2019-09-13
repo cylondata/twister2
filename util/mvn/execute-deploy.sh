@@ -11,7 +11,7 @@ bazel_output_file() {
   local library=$1
   local output_file=bazel-bin/$library
   if [[ ! -e $output_file ]]; then
-     output_file=bazel-genfiles/$library
+    output_file=bazel-genfiles/$library
   fi
   if [[ ! -e $output_file ]]; then
     echo "Could not find bazel output file for $library"
@@ -21,14 +21,20 @@ bazel_output_file() {
 }
 
 deploy_library() {
-  local library=$1
-  local pomfile=$2
+  local library="$1/lib$2.jar"
+  local pomfile="$1/pom.xml"
+  local source="$1/lib$2-src.jar"
+  local javadoc="$1/$2-javadoc.jar"
   bazel build --define=pom_version="$VERSION_NAME" \
-    $library $pomfile
+    $library $pomfile $source $javadoc
+
+  printf "\nGenerating %s %s\n\n" "$1" "$MVN_GOAL"
 
   mvn $MVN_GOAL \
     -Dfile=$(bazel_output_file $library) \
     -DpomFile=$(bazel_output_file $pomfile) \
+    -Dsources=$(bazel_output_file $source) \
+    -Djavadoc=$(bazel_output_file $javadoc) \
     "${EXTRA_MAVEN_ARGS[@]:+${EXTRA_MAVEN_ARGS[@]}}"
 }
 
@@ -49,124 +55,123 @@ deploy_proto_library() {
 # APIs
 
 deploy_library \
-  twister2/api/src/java/libapi-java.jar \
-  twister2/api/src/java/pom.xml
+  twister2/api/src/java \
+  api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/libcheckpointing-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing \
+  checkpointing-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/comms/libcomms-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/comms/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/comms \
+  comms-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/config/libconfig-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/config/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/config \
+  config-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/data/libdata-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/data/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/data \
+  data-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/libdataset-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/dataset \
+  dataset-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/libexceptions-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions \
+  exceptions-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/net/libnetwork-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/net/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/net \
+  network-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/resource/libresource-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/resource/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/resource \
+  resource-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/libscheduler-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler \
+  scheduler-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/compute/libtask-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/compute/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute \
+  task-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/tset/libtset-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/tset/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/tset \
+  tset-api-java
 
 deploy_library \
-  twister2/api/src/java/edu/iu/dsc/tws/api/util/libapi-utils-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/util/pom.xml
+  twister2/api/src/java/edu/iu/dsc/tws/api/util \
+  api-utils-java
 # End of APIs
 
 deploy_library \
-  twister2/common/src/java/libcommon-java.jar \
-  twister2/common/src/java/pom.xml
+  twister2/common/src/java \
+  common-java
 
 deploy_library \
-  twister2/comms/src/java/libcomms-java.jar \
-  twister2/comms/src/java/pom.xml
+  twister2/comms/src/java \
+  comms-java
 
 deploy_library \
-  twister2/connectors/src/java/libconnector-java.jar \
-  twister2/connectors/src/java/pom.xml
+  twister2/connectors/src/java \
+  connector-java
 
 deploy_library \
-  twister2/data/src/main/java/libdata-java.jar \
-  twister2/data/src/main/java/pom.xml
+  twister2/data/src/main/java \
+  data-java
 
 deploy_library \
-  twister2/examples/src/java/libexamples-java.jar \
-  twister2/examples/src/java/pom.xml
+  twister2/examples/src/java \
+  examples-java
 
 deploy_library \
-  twister2/executor/src/java/libexecutor-java.jar \
-  twister2/executor/src/java/pom.xml
+  twister2/executor/src/java \
+  executor-java
 
 deploy_library \
-  twister2/master/src/java/libmaster-java.jar \
-  twister2/master/src/java/pom.xml
+  twister2/master/src/java \
+  master-java
 
 deploy_library \
-  twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
-  twister2/resource-scheduler/src/java/pom.xml
+  twister2/resource-scheduler/src/java \
+  resource-scheduler-java
 
 deploy_library \
-  twister2/task/src/main/java/libtask-java.jar \
-  twister2/task/src/main/java/pom.xml
+  twister2/task/src/main/java \
+  task-java
 
 deploy_library \
-  twister2/taskscheduler/src/java/libtaskscheduler-java.jar \
-  twister2/taskscheduler/src/java/pom.xml
+  twister2/taskscheduler/src/java \
+  taskscheduler-java
 
 deploy_library \
-  twister2/compatibility/storm/libtwister2-storm.jar \
-  twister2/compatibility/storm/pom.xml
+  twister2/compatibility/storm \
+  twister2-storm
 
 deploy_library \
-  twister2/compatibility/beam/libtwister2-beam.jar \
-  twister2/compatibility/beam/pom.xml
+  twister2/compatibility/beam \
+  twister2-beam
 
 deploy_library \
-  twister2/checkpointing/src/java/libcheckpointing-java.jar \
-  twister2/checkpointing/src/java/pom.xml
+  twister2/checkpointing/src/java \
+  checkpointing-java
 
-deploy_proto_library \
-  twister2/proto/proto-java \
-  twister2/proto/pom.xml \
-  twister2/proto/libproto-speed.jar
-
-deploy_library \
-  twister2/proto/utils/libproto-utils-java.jar \
-  twister2/proto/utils/pom.xml
+#deploy_proto_library \
+#  twister2/proto/proto-java \
+#  twister2/proto/pom.xml \
+#  twister2/proto/libproto-speed
 
 deploy_library \
-  twister2/compatibility/harp/libtwister2-harp.jar \
-  twister2/compatibility/harp/pom.xml
+  twister2/proto/utils \
+  proto-utils-java
 
 deploy_library \
-  twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
-  twister2/tools/local-runner/src/java/pom.xml
+  twister2/compatibility/harp \
+  twister2-harp
 
+deploy_library \
+  twister2/tools/local-runner/src/java \
+  local-runner-java
