@@ -38,6 +38,7 @@ load("//tools/rules:twister2_core.bzl", "twister2_dashboard_files")
 load("//tools/rules:twister2_core.bzl", "twister2_storm_files")
 load("//tools/rules:twister2_core.bzl", "twister2_beam_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_checkpointing_files")
+load("//tools/rules:twister2_core.bzl", "twister2_core_tset_files")
 load("//tools/rules:twister2_core.bzl", "twister2_core_restarter_files")
 load("//tools/rules:twister2_core.bzl", "twister2_python_support_files")
 load("//tools/rules:twister2_master.bzl", "twister2_master_lib_files")
@@ -82,6 +83,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
+        ":twister2-tset",
         ":twister2-python-support",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
@@ -108,6 +110,7 @@ pack_tw2(
     deps = [
         ":twister2-checkpointing",
         ":twister2-python-support",
+        ":twister2-tset",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -127,6 +130,7 @@ pack_tw2(
         ":twister2-ompi-include",
         ":twister2-ompi-lib",
         ":twister2-ompi-jars",
+        ":twister2-beam",
     ],
 )
 
@@ -270,6 +274,7 @@ pack_tw2(
     deps = [
         ":twister2-bin",
         ":twister2-checkpointing",
+        ":twister2-tset",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-dashboard",
@@ -310,6 +315,7 @@ pack_tw2(
     deps = [
         ":twister2-bin",
         ":twister2-checkpointing",
+        ":twister2-tset",
         ":twister2-python-support",
         ":twister2-communication",
         ":twister2-conf-aurora",
@@ -563,6 +569,13 @@ pack_tw2(
 pack_tw2(
     name = "twister2-checkpointing",
     srcs = twister2_core_checkpointing_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-tset",
+    srcs = twister2_core_tset_files(),
     package_dir = "lib",
     version = T2_VERSION,
 )

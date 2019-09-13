@@ -18,11 +18,11 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.api.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.api.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
 public class DirectIterExample extends BatchTsetExample {
@@ -38,7 +38,7 @@ public class DirectIterExample extends BatchTsetExample {
     for (int i = 0; i < 4; i++) {
       cached = testmap.cache(true);
     }
-    System.out.println(cached.getDataObject().getPartitions().length);
+    LOG.info("out: " + cached.getDataObject().getPartitions().length);
     testmap.finishIter();
   }
 

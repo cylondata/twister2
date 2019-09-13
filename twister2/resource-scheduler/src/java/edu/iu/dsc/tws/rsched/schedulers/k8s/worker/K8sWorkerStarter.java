@@ -141,7 +141,7 @@ public final class K8sWorkerStarter {
         JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
 
     // start JMWorkerAgent
-    jobMasterAgent.startThreaded(false);
+    jobMasterAgent.startThreaded();
 
     // we will be running the Worker, send running message
     jobMasterAgent.sendWorkerRunningMessage();
