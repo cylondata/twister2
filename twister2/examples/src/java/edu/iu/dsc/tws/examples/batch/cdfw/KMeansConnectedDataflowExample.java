@@ -58,8 +58,9 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
-public final class ConnectedDataflowExample {
-  private static final Logger LOG = Logger.getLogger(ConnectedDataflowExample.class.getName());
+public final class KMeansConnectedDataflowExample {
+  private static final Logger LOG
+      = Logger.getLogger(KMeansConnectedDataflowExample.class.getName());
 
   private static String dataDirectory;
   private static String centroidDirectory;
@@ -70,10 +71,10 @@ public final class ConnectedDataflowExample {
   private static int csize;
   private static int instances;
 
-  private ConnectedDataflowExample() {
+  private KMeansConnectedDataflowExample() {
   }
 
-  public static class CDExampleDriver extends BaseDriver {
+  public static class KMeansDriver extends BaseDriver {
 
     @Override
     public void execute(CDFWEnv cdfwEnv) {
@@ -164,9 +165,9 @@ public final class ConnectedDataflowExample {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(CDExampleDriver.class.getName())
+        .setJobName(KMeansDriver.class.getName())
         .setWorkerClass(CDFWWorker.class)
-        .setDriverClass(CDExampleDriver.class.getName())
+        .setDriverClass(KMeansDriver.class.getName())
         .addComputeResource(1, 2048, instances)
         .setConfig(jobConfig)
         .build();
@@ -209,7 +210,6 @@ public final class ConnectedDataflowExample {
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("points", "datapointsink")
         .setGraphType("non-iterative");
-        //.addOutput("first_graph", "first_out", "datapointsink");
     return job;
   }
 
@@ -247,7 +247,6 @@ public final class ConnectedDataflowExample {
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("centroids", "centroidsink")
         .setGraphType("non-iterative");
-        //.addOutput("second_graph", "second_out", "centroidsink");
     return job;
   }
 
@@ -308,7 +307,6 @@ public final class ConnectedDataflowExample {
       kMeansCalculator = new KMeansCalculator(datapoints, centroid, dim);
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
-      //LOG.info("New centers:" + Arrays.deepToString(kMeansCenters));
     }
 
     @SuppressWarnings("unchecked")
@@ -343,8 +341,6 @@ public final class ConnectedDataflowExample {
 
     @Override
     public boolean execute(IMessage message) {
-      //LOG.info("Received centroids: " + context.getWorkerId()
-      //    + ":" + context.globalTaskId() + "\t" + message.getContent());
       centroids = (double[][]) message.getContent();
       newCentroids = new double[centroids.length][centroids[0].length - 1];
       for (int i = 0; i < centroids.length; i++) {
@@ -409,7 +405,6 @@ public final class ConnectedDataflowExample {
           newCentroids[j][k] = newVal;
         }
       }
-      //LOG.info("New Centroid Value:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }
