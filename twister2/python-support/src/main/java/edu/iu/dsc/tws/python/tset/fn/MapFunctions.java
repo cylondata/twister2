@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-import java.io.Serializable;
-
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
+
+import java.io.Serializable;
 
 public final class MapFunctions extends TFunc<MapFunc> {
 
@@ -32,8 +32,8 @@ public final class MapFunctions extends TFunc<MapFunc> {
 
     private PythonLambdaProcessor lambdaProcessor;
 
-    MapFuncImpl(PythonLambdaProcessor lambdaProcessor) {
-      this.lambdaProcessor = lambdaProcessor;
+    MapFuncImpl(byte[] lambdaProcessor) {
+      this.lambdaProcessor = new PythonLambdaProcessor(lambdaProcessor);
     }
 
     @Override
@@ -44,7 +44,6 @@ public final class MapFunctions extends TFunc<MapFunc> {
 
   @Override
   public MapFunc build(byte[] pyBinary) {
-    final PythonLambdaProcessor lambda = new PythonLambdaProcessor(pyBinary);
-    return new MapFuncImpl(lambda);
+    return new MapFuncImpl(pyBinary);
   }
 }

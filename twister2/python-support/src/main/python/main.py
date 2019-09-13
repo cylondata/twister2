@@ -20,7 +20,7 @@ class IntegerSource(SourceFunc):
 
 int_source = IntegerSource()
 
-source = env.create_source(int_source, 1)
+source = env.create_source(int_source, 2)
 partitioned = source.partition(env.functions.partition.load_balanced)
 
 
@@ -32,9 +32,9 @@ mapped = partitioned.map(map)
 
 
 def sink(s):
-    for x in s:
-        print(x)
+    print(s)
     return True
 
 
-mapped.direct().sink(sink)
+direct = mapped.reduce(lambda x, y: x + y)
+direct.sink(sink)

@@ -38,4 +38,8 @@ public final class TSetFunctions {
   public SinkFunctions sink() {
     return SinkFunctions.getInstance();
   }
+
+  public ReduceFunctions reduce(){
+    return ReduceFunctions.getInstance();
+  }
 }

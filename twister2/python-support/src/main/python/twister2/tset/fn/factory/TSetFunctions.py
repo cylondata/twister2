@@ -1,7 +1,5 @@
-from twister2.tset.fn.factory.ComputeFunctions import ComputeFunctions
-from twister2.tset.fn.factory.MapFunctions import MapFunctions
+from twister2.tset.fn.factory.GenericFunctions import GenericFunctions
 from twister2.tset.fn.factory.PartitionFunctions import PartitionFunctions
-from twister2.tset.fn.factory.SinkFunctions import SinkFunctions
 
 
 class TSetFunctions:
@@ -9,22 +7,27 @@ class TSetFunctions:
     def __init__(self, java_ref, env):
         self.__java_ref = java_ref
         self.__partition_functions = PartitionFunctions(java_ref.partition(), env)
-        self.__map_functions = MapFunctions(java_ref.map(), env)
-        self.__compute_functions = ComputeFunctions(java_ref.compute(), env)
-        self.__sink_functions = SinkFunctions(java_ref.sink(), env)
+        self.__map_functions = GenericFunctions(java_ref.map(), env)
+        self.__compute_functions = GenericFunctions(java_ref.compute(), env)
+        self.__sink_functions = GenericFunctions(java_ref.sink(), env)
+        self.__reduce_functions = GenericFunctions(java_ref.reduce(), env)
 
     @property
     def partition(self) -> PartitionFunctions:
         return self.__partition_functions
 
     @property
-    def map(self):
+    def map(self) -> GenericFunctions:
         return self.__map_functions
 
     @property
-    def compute(self):
+    def compute(self) -> GenericFunctions:
         return self.__compute_functions
 
     @property
-    def sink(self):
+    def sink(self) -> GenericFunctions:
         return self.__sink_functions
+
+    @property
+    def reduce(self) -> GenericFunctions:
+        return self.__reduce_functions

@@ -11,35 +11,35 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
 import java.io.Serializable;
 
-public class ComputeFunctions extends TFunc<ComputeFunc> {
+public class ReduceFunctions extends TFunc<ReduceFunc> {
 
-  private static final ComputeFunctions INSTANCE = new ComputeFunctions();
+  private static final ReduceFunctions INSTANCE = new ReduceFunctions();
 
-  static ComputeFunctions getInstance() {
+  public static ReduceFunctions getInstance() {
     return INSTANCE;
   }
 
-  public static class ComputeFuncImpl implements ComputeFunc, Serializable {
+  public static class ReduceFuncImpl implements ReduceFunc, Serializable {
 
-    private PythonLambdaProcessor lambdaProcessor;
+    private PythonLambdaProcessor pythonLambdaProcessor;
 
-    ComputeFuncImpl(byte[] byBinary) {
-      this.lambdaProcessor = new PythonLambdaProcessor(byBinary);
+    public ReduceFuncImpl(byte[] pyBinary) {
+      this.pythonLambdaProcessor = new PythonLambdaProcessor(pyBinary);
     }
 
     @Override
-    public Object compute(Object input) {
-      return this.lambdaProcessor.invoke(input);
+    public Object reduce(Object t1, Object t2) {
+      return this.pythonLambdaProcessor.invoke(t1, t2);
     }
   }
 
   @Override
-  public ComputeFunc build(byte[] pyBinary) {
-    return new ComputeFuncImpl(pyBinary);
+  public ReduceFunc build(byte[] pyBinary) {
+    return new ReduceFuncImpl(pyBinary);
   }
 }

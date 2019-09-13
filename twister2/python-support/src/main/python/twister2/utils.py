@@ -12,6 +12,20 @@ class IteratorWrapper:
             raise StopIteration()
 
 
+def function_wrapper(lam):
+    """
+    This functions wraps a user defined function to support argument types conversion
+    :param lam: user defined function
+    :return: wrapped function
+    """
+
+    def func_wrapper(*args):
+        new_args = do_args_conversion(*args)
+        return lam(*new_args)
+
+    return func_wrapper
+
+
 def do_arg_map(arg):
     type_str = str(type(arg))
     if type_str == "<class 'jep.PyJList'>":
