@@ -41,12 +41,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-//import java.util.LinkedHashSet;
-//import java.util.Set;
-//import edu.iu.dsc.tws.api.compute.graph.Vertex;
-//import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-//import edu.iu.dsc.tws.api.compute.nodes.INode;
-
 public class CDFWRuntime implements JobListener {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
