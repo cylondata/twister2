@@ -40,7 +40,7 @@ import io.kubernetes.client.util.Watch;
  * or we don't watch pods. We just start the file transfer attempts after StatefulSets are created
  * If an attempt fails, we retry it after sleeping some time.
  * This behaviour is controlled by the configuration parameter in the config file:
- *   twister2.kubernetes.uploader.watch.pods.starting
+ *   twister2.resource.kubernetes.uploader.watch.pods.starting
  *
  * Determining pod starts:
  * when the first container in the pod becomes started, we assume the pod is started
