@@ -87,8 +87,8 @@ public final class KMeansConnectedDataflowExample {
       DataFlowGraph job1 = generateFirstJob(config, parallelism, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, parallelism, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1);
-      cdfwEnv.executeDataFlowGraph(job2);
+      cdfwEnv.executeDataFlowGraph(job1, job2);
+      //cdfwEnv.executeDataFlowGraph(job2);
 
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);

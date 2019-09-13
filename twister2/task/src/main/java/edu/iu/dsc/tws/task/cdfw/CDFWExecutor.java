@@ -14,7 +14,11 @@ package edu.iu.dsc.tws.task.cdfw;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+//import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,7 +108,21 @@ public final class CDFWExecutor {
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
 
+    ScheduledExecutorService executor = Executors.newScheduledThreadPool(scheduleGraphMap.size());
     for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
+      CDFWExecutorTask cdfwSchedulerTask
+          = new CDFWExecutorTask(dataFlowGraphEntry.getKey(), dataFlowGraphEntry.getValue());
+      executor.submit(cdfwSchedulerTask);
+    }
+
+    try {
+      executor.awaitTermination(10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    executor.shutdown();
+
+   /*for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
       // this is the first time
       if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
         try {
@@ -123,12 +141,42 @@ public final class CDFWExecutor {
           throw new RuntimeException("Driver is not initialized", e);
         }
       }
-    }
+    }*/
   }
 
   void close() {
     // send the close message
     sendCloseMessage();
+  }
+
+  private class CDFWExecutorTask implements Runnable {
+
+    private DataFlowGraph dataFlowGraph;
+    private Set<Integer> workerIDs;
+
+    protected CDFWExecutorTask(DataFlowGraph graph, Set<Integer> workerList) {
+      this.dataFlowGraph = graph;
+      this.workerIDs = workerList;
+    }
+
+    @Override
+    public void run() {
+      if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
+        try {
+          //build the schedule plan for the dataflow graph
+          dataFlowGraph = buildCDFWSchedulePlan(dataFlowGraph, workerIDs);
+          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
+          //now submit the job
+          submitJob(job);
+          driverState = DriverState.JOB_SUBMITTED;
+          // lets wait for another event
+          waitForEvent(DriveEventType.FINISHED_JOB);
+          driverState = DriverState.JOB_FINISHED;
+        } catch (Exception e) {
+          throw new RuntimeException("Driver is not initialized", e);
+        }
+      }
+    }
   }
 
   private DataFlowGraph buildCDFWSchedulePlan(DataFlowGraph dataFlowGraph,
