@@ -83,6 +83,7 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
+        ":twister2-python-support",
         ":twister2-tset",
         ":twister2-python-support",
         ":twister2-core-lib-api",

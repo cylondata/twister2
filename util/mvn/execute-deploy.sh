@@ -11,7 +11,7 @@ bazel_output_file() {
   local library=$1
   local output_file=bazel-bin/$library
   if [[ ! -e $output_file ]]; then
-     output_file=bazel-genfiles/$library
+    output_file=bazel-genfiles/$library
   fi
   if [[ ! -e $output_file ]]; then
     echo "Could not find bazel output file for $library"
@@ -25,6 +25,8 @@ deploy_library() {
   local pomfile=$2
   bazel build --define=pom_version="$VERSION_NAME" \
     $library $pomfile
+
+  printf "\nGenerating %s\n\n" "$1"
 
   mvn $MVN_GOAL \
     -Dfile=$(bazel_output_file $library) \
@@ -153,10 +155,10 @@ deploy_library \
   twister2/checkpointing/src/java/libcheckpointing-java.jar \
   twister2/checkpointing/src/java/pom.xml
 
-deploy_proto_library \
-  twister2/proto/proto-java \
-  twister2/proto/pom.xml \
-  twister2/proto/libproto-speed.jar
+#deploy_proto_library \
+#  twister2/proto/proto-java \
+#  twister2/proto/pom.xml \
+#  twister2/proto/libproto-speed.jar
 
 deploy_library \
   twister2/proto/utils/libproto-utils-java.jar \
@@ -169,4 +171,8 @@ deploy_library \
 deploy_library \
   twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
   twister2/tools/local-runner/src/java/pom.xml
+
+deploy_library \
+  twister2/tset/src/java/libtset-java.jar \
+  twister2/tset/src/java/pom.xml
 
