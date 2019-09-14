@@ -11,23 +11,23 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python;
 
+import edu.iu.dsc.tws.api.JobConfig;
+import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.api.tset.worker.BatchTSetIWorker;
+import edu.iu.dsc.tws.local.LocalSubmitter;
+import py4j.DefaultGatewayServerListener;
+import py4j.GatewayServer;
+import py4j.Py4JServerConnection;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.local.LocalSubmitter;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
-
-import py4j.DefaultGatewayServerListener;
-import py4j.GatewayServer;
-import py4j.Py4JServerConnection;
 
 public class PythonWorker implements BatchTSetIWorker {
 
@@ -44,9 +44,8 @@ public class PythonWorker implements BatchTSetIWorker {
     BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
     String line = null;
     while ((line = reader.readLine()) != null) {
-      System.out.println(line);
+      LOG.info(line);
     }
-
   }
 
   public void execute(BatchTSetEnvironment env) {
@@ -78,17 +77,12 @@ public class PythonWorker implements BatchTSetIWorker {
 
     JobConfig jobConfig = new JobConfig();
     Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName("python-job")
+        .setJobName("python-job-"+ UUID.randomUUID().toString())
         .setWorkerClass(PythonWorker.class)
         .addComputeResource(1, 512, 1)
         .setConfig(jobConfig)
         .build();
 
     localSubmitter.submitJob(twister2Job, Config.newBuilder().build());
-
-//        for (int i = 0; i < 1; i++) {
-//            new PythonWorker().execute(null, i,
-//                    null, null, null);
-//        }
   }
 }
