@@ -5,6 +5,7 @@ from py4j.java_gateway import JavaGateway, GatewayParameters
 from twister2.tset.TSet import TSet
 from twister2.tset.fn.SourceFunc import SourceFunc
 from twister2.tset.fn.factory.TSetFunctions import TSetFunctions
+from twister2.utils import SourceWrapper
 
 
 class Twister2Environment:
@@ -31,6 +32,8 @@ class Twister2Environment:
         if not isinstance(source_function, SourceFunc):
             raise Exception('source_function should be an instance of {}'.format(SourceFunc))
 
-        java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function), parallelism)
+        source_function_wrapper = SourceWrapper(source_function)
+
+        java_src_ref = self.__entrypoint.createSource(cp.dumps(source_function_wrapper), parallelism)
         src_tset = TSet(java_src_ref, self)
         return src_tset
