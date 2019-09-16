@@ -136,4 +136,6 @@ def twister2_beam_files():
 def twister2_python_support_files():
     return [
         "//twister2/python-support:python-support",
+        "@net_sf_py4j_py4j//jar",
+        "@black_ninia_jep//jar",
     ]

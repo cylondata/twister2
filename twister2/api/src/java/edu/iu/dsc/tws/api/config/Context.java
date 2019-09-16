@@ -69,7 +69,7 @@ public class Context {
   public static final ConfigEntry HADOOP_HOME = new ConfigEntry(
       "twister2.hadoop.home", "${HADOOP_HOME}", null, "HADOOP_HOME");
 
-  public static final String JOB_NAME = "twister2.job.name";
+  public static final String JOB_NAME = "twister2.resource.job.name";
   public static final String JOB_OBJECT = "twister2.job.object";
   public static final String JOB_ID = "twister2.job.id";
 
@@ -82,7 +82,7 @@ public class Context {
   public static final String JOB_ARCHIVE_DIRECTORY = "twister2-job";
 
   public static final int TWISTER2_WORKER_INSTANCES_DEFAULT = 1;
-  public static final String TWISTER2_WORKER_INSTANCES = "twister2.worker.instances";
+  public static final String TWISTER2_WORKER_INSTANCES = "twister2.resource.worker.instances";
   public static final String TWISTER2_DIRECT_EDGE = "direct";
 
   public static final String TWISTER2_DATA_INPUT = "generate"; // or "read"

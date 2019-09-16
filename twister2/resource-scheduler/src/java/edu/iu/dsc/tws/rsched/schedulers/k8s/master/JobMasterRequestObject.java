@@ -175,7 +175,7 @@ public final class JobMasterRequestObject {
     String containerImage = KubernetesContext.twister2DockerImageForK8s(config);
     if (containerImage == null) {
       throw new RuntimeException("Container Image name is null. Config parameter: "
-          + "twister2.docker.image.for.kubernetes can not be null");
+          + "twister2.resource.kubernetes.docker.image can not be null");
     }
     container.setImage(containerImage);
     container.setImagePullPolicy(KubernetesContext.imagePullPolicy(config));

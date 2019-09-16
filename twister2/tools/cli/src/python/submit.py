@@ -172,14 +172,65 @@ def submit_java_zip(cl_args, unknown_args):
 
 
 def submit_python(cl_args, unknown_args):
-    # lets run the python file first
+    # set up the system properties
+    java_system_props = setup_java_system_properties(cl_args)
 
+    props = read_client_properties(cl_args)
 
-    # we need to set the jar file here
-    submit_fatjar(cl_args, unknown_args)
+    # execute main of the job to create the job definition
+    job_file = cl_args['job-file-name']
+
+    main_class = cl_args['job-class-name']
+
+    java_system_props += ["python_file=" + job_file, "main_file=" + main_class]
+
+    res = execute.twister2_class(
+        class_name="edu.iu.dsc.tws.python.PythonWorker",
+        lib_jars=config.get_twister2_libs(jars.job_jars()),
+        extra_jars=[],
+        args=tuple(unknown_args),
+        java_defines=java_system_props,
+        client_props=props)
+
+    result.render(res)
+
+    if not res.is_successful():
+        err_context = ("Failed to create job definition " \
+                       "Please check logs for more information")
+        res.add_context(err_context)
+        return res
+
+    return res
 
 def submit_python_zip(cl_args, unknown_args):
-    pass
+    # set up the system properties
+    java_system_props = setup_java_system_properties(cl_args)
+
+    props = read_client_properties(cl_args)
+
+    # execute main of the job to create the job definition
+    job_file = cl_args['job-file-name']
+    main_class = cl_args['job-class-name']
+
+    java_system_props += ["python_file=" + job_file, "main_file=" + main_class]
+
+    res = execute.twister2_class(
+        class_name="edu.iu.dsc.tws.python.PythonWorker",
+        lib_jars=config.get_twister2_libs(jars.job_jars()),
+        extra_jars=[],
+        args=tuple(unknown_args),
+        java_defines=java_system_props,
+        client_props=props)
+
+    result.render(res)
+
+    if not res.is_successful():
+        err_context = ("Failed to create job definition " \
+                       "Please check logs for more information")
+        res.add_context(err_context)
+        return res
+
+    return res
 
 ################################################################################
 # pylint: disable=unused-argument

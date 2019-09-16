@@ -17,31 +17,31 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public final class MesosContext extends SchedulerContext {
   public static final String SCHEDULER_WORKING_DIRECTORY =
-      "twister2.scheduler.mesos.scheduler.working.directory";
+      "twister2.resource.mesos.scheduler.working.directory";
 
   public static final String MESOS_CLUSTER_NAME = "twister2.resource.scheduler.mesos.cluster";
 
-  public static final String MESOS_MASTER_URI = "twister2.mesos.master.uri";
+  public static final String MESOS_MASTER_URI = "twister2.resource.mesos.master.uri";
 
-  public static final String MESOS_MASTER_HOST = "twister2.mesos.master.host";
+  public static final String MESOS_MASTER_HOST = "twister2.resource.mesos.master.host";
 
-  public static final String MESOS_NATIVE_LIBRARY_PATH = "twister2.mesos.native.library.path";
+  public static final String MESOS_NATIVE_LIBRARY_PATH
+      = "twister2.resource.mesos.native.library.path";
 
   public static final String HTTP_FETCH_URI = "twister2.HTTP.fetch.uri";
 
   public static final String MESOS_FRAMEWORK_STAGING_TIMEOUT_MS =
-      "twister2.mesos.framework.staging.timeout.ms";
+      "twister2.resource.mesos.framework.staging.timeout.ms";
   public static final String MESOS_FRAMEWORK_NAME =
-      "twister2.mesos.framework.name";
+      "twister2.resource.mesos.framework.name";
 
   public static final String MESOS_SCHEDULER_DRIVER_STOP_TIMEOUT_MS =
-      "twister2.mesos.scheduler.driver.stop.timeout.ms";
+      "twister2.resource.mesos.scheduler.driver.stop.timeout.ms";
 
   public static final String MESOS_ROLE = "twister2.mesos.role";
   public static final String MESOS_TOPOLOGY_NAME = "twister2.mesos.topology.name";
 
   public static final String TWISTER2_CORE_PACKAGE_URI = "twister2.system.core-package.uri";
-//  public static final String TWISTER2_JOB_URI = "twister2.system.job.uri";
 
   public static final String ROLE = "twister2.resource.scheduler.mesos.role";
   public static final String ENVIRONMENT = "twister2.resource.scheduler.mesos.env";
@@ -51,13 +51,14 @@ public final class MesosContext extends SchedulerContext {
   public static final String DISK_PER_CONTAINER = "twister2.disk_per_container";
   public static final String NUMBER_OF_CONTAINERS = "twister2.number_of_containers";
   public static final String CONTAINER_PER_WORKER = "twister2.container_per_worker";
-  public static final String WORKER_PORT = "twister2.worker_port";
-  public static final String DESIRED_NODES = "twister2.desired_nodes";
-  public static final String USE_DOCKER_CONTAINER = "twister2.use_docker_container";
-  public static final String MESOS_OVERLAY_NETWORK_NAME = "twister2.mesos.overlay.network.name";
-  public static final String DOCKER_IMAGE_NAME = "twister2.docker.image.name";
+  public static final String WORKER_PORT = "twister2.resource.worker_port";
+  public static final String DESIRED_NODES = "twister2.resource.desired_nodes";
+  public static final String USE_DOCKER_CONTAINER = "twister2.resource.use_docker_container";
+  public static final String MESOS_OVERLAY_NETWORK_NAME
+      = "twister2.resource.mesos.overlay.network.name";
+  public static final String DOCKER_IMAGE_NAME = "twister2.resource.mesos.docker.image";
   public static final String MESOS_WORKER_CLASS = "twister2.class.mesos.worker";
-  public static final String MESOS_CONTAINER_CLASS = "twister2.job.worker.class";
+  public static final String MESOS_CONTAINER_CLASS = "twister2.resource.job.worker.class";
 
 
   public static final int DEFAULT_RAM_SIZE = 1024; // 1GB
