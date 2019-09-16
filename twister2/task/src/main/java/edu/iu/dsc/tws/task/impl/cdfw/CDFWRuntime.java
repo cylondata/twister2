@@ -75,8 +75,6 @@ public class CDFWRuntime implements JobListener {
   private TaskExecutor taskExecutor;
 
 
-  private static int index = 0;
-
   /**
    * Connected dataflow runtime
    *

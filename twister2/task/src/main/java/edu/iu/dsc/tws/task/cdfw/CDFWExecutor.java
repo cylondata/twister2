@@ -17,7 +17,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
-//import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,9 +113,8 @@ public final class CDFWExecutor {
           = new CDFWExecutorTask(dataFlowGraphEntry.getKey(), dataFlowGraphEntry.getValue());
       executor.submit(cdfwSchedulerTask);
     }
-
     try {
-      executor.awaitTermination(10, TimeUnit.SECONDS);
+      executor.awaitTermination(2, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
