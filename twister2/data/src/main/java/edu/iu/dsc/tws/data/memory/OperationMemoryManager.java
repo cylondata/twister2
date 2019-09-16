@@ -52,7 +52,6 @@ public class OperationMemoryManager {
     this.memoryManager = parentMM;
     this.messageType = type;
     this.deSerializer = new KryoSerializer();
-    deSerializer.init(new HashMap<String, Object>());
     isKeyed = false;
     init();
   }
@@ -64,7 +63,6 @@ public class OperationMemoryManager {
     this.messageType = type;
     this.keyType = keyType;
     this.deSerializer = new KryoSerializer();
-    deSerializer.init(new HashMap<String, Object>());
     isKeyed = true;
     init();
   }

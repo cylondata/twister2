@@ -12,13 +12,18 @@
 
 package edu.iu.dsc.tws.api.compute.exceptions;
 
+/**
+ * This exception is used when an error happens in scheduling
+ */
 public class ScheduleException extends TaskSchedulerException {
-
   public static final long serialVersionUID = 6599628617518713638L;
 
+  /**
+   * Create a scheduler exception
+   * @param message message
+   */
   public ScheduleException(String message) {
     super(message);
   }
-
 }
 

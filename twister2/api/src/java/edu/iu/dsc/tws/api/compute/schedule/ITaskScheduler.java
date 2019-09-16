@@ -21,10 +21,24 @@ import edu.iu.dsc.tws.api.config.Config;
  * This is the main interface for the task scheduler.
  */
 public interface ITaskScheduler {
-
+  /**
+   * Intialize the task scheduler with the configuration
+   * @param cfg configuration object
+   */
   void initialize(Config cfg);
 
+  /**
+   * Initialize with the worker id
+   * @param cfg configuration
+   * @param workerId this worker id
+   */
   void initialize(Config cfg, int workerId);
 
+  /**
+   * Schedule the task graph on the worker plan
+   * @param graph graph
+   * @param workerPlan worker plan
+   * @return the task schedule
+   */
   TaskSchedulePlan schedule(ComputeGraph graph, WorkerPlan workerPlan);
 }

@@ -27,14 +27,32 @@ import java.util.Objects;
 
 /**
  * This class has getter and setter property to get and set the values of task name, task id, and
- * task indexes.
+ * task indexes. <code>TaskInstanceId</code> is equal to another task id, if name, id and index are
+ * equal.
  */
 public class TaskInstanceId {
-
+  /**
+   * Task name
+   */
   private final String taskName;
+
+  /**
+   * Task id
+   */
   private final int taskId;
+
+  /**
+   * Task index
+   */
   private final int taskIndex;
 
+  /**
+   * Create a task instance id
+   *
+   * @param taskName name
+   * @param taskId task id
+   * @param taskIndex task index
+   */
   public TaskInstanceId(String taskName, int taskId, int taskIndex) {
     this.taskName = taskName;
     this.taskId = taskId;
