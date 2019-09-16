@@ -24,22 +24,23 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 
 public class SchedulerContext extends Context {
 
-  public static final String LAUNCHER_CLASS = "twister2.class.launcher";
-  public static final String UPLOADER_CLASS = "twister2.class.uploader";
-  public static final String WORKER_CLASS = "twister2.job.worker.class";
-  public static final String DRIVER_CLASS = "twister2.job.driver.class";
+  public static final String LAUNCHER_CLASS = "twister2.resource.class.launcher";
+  public static final String UPLOADER_CLASS = "twister2.resource.class.uploader";
+  public static final String WORKER_CLASS = "twister2.resource.job.worker.class";
+  public static final String DRIVER_CLASS = "twister2.resource.job.driver.class";
   public static final String THREADS_PER_WORKER = "twister2.exector.worker.threads";
   public static final String JOB_ARCHIVE_TEMP_DIR = "twister2.job.archive.temp.dir";
 
-  public static final String SYSTEM_PACKAGE_URI = "twister2.system.package.uri";
+  public static final String SYSTEM_PACKAGE_URI = "twister2.resource.system.package.uri";
 
   // Internal configuration for job package url
   public static final String JOB_PACKAGE_URI = "twister2.job.package.uri";
 
-  public static final String JOB_PACKAGE_URL = "twister2.job.package.url";
-  public static final String CORE_PACKAGE_URL = "twister2.core.package.url";
+  public static final String JOB_PACKAGE_URL = "twister2.resource.job.package.url";
+  public static final String CORE_PACKAGE_URL = "twister2.resource.core.package.url";
 
-  public static final String WORKER_COMPUTE_RESOURCES = "worker.compute.resources";
+  public static final String WORKER_COMPUTE_RESOURCES
+      = "twister2.resource.worker.compute.resources";
 
   /**
    * These are specified as system properties when deploying a job
@@ -64,21 +65,22 @@ public class SchedulerContext extends Context {
   // local temporary packages path on the submitting client
   public static final String TEMPORARY_PACKAGES_PATH = "temporary.packages.path";
 
-  public static final String NFS_SERVER_ADDRESS = "nfs.server.address";
-  public static final String NFS_SERVER_PATH = "nfs.server.path";
+  public static final String NFS_SERVER_ADDRESS = "twister2.resource.nfs.server.address";
+  public static final String NFS_SERVER_PATH = "twister2.resource.nfs.server.path";
 
   // persistent volume per worker in GB
   public static final double PERSISTENT_VOLUME_PER_WORKER_DEFAULT = 0.0;
-  public static final String PERSISTENT_VOLUME_PER_WORKER = "persistent.volume.per.worker";
+  public static final String PERSISTENT_VOLUME_PER_WORKER
+      = "twister2.resource.persistent.volume.per.worker";
 
-  public static final String RACK_LABEL_KEY = "rack.labey.key";
-  public static final String DATACENTER_LABEL_KEY = "datacenter.labey.key";
-  public static final String RACKS_LIST = "racks.list";
-  public static final String DATACENTERS_LIST = "datacenters.list";
+  public static final String RACK_LABEL_KEY = "twister2.resource.rack.labey.key";
+  public static final String DATACENTER_LABEL_KEY = "twister2.resource.datacenter.labey.key";
+  public static final String RACKS_LIST = "twister2.resource.racks.list";
+  public static final String DATACENTERS_LIST = "twister2.resource.datacenters.list";
 
-  public static final String ADDITIONAL_PORTS = "twister2.worker.additional.ports";
+  public static final String ADDITIONAL_PORTS = "twister2.resource.worker.additional.ports";
 
-  public static final String DOWNLOAD_METHOD = "twister2.uploader.download.method";
+  public static final String DOWNLOAD_METHOD = "twister2.resource.uploader.download.method";
 
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);

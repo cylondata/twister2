@@ -39,11 +39,11 @@ public class NomadContext extends SchedulerContext {
   // the requested names of ports
   public static final String PORT_NAMES = "twister2.network.port.names";
   // weather we are in a shared file system
-  public static final String SHARED_FILE_SYSTEM = "twister2.filesystem.shared";
+  public static final String SHARED_FILE_SYSTEM = "twister2.resource.filesystem.shared";
   // shell script to be executed
-  public static final String NOMAD_SHELL_SCRIPT = "twister2.nomad.shell.script";
+  public static final String NOMAD_SHELL_SCRIPT = "twister2.resource.nomad.shell.script";
   public static final String NOMAD_SCRIPT_NAME = "nomad.sh";
-  public static final String NOMAD_URI = "twister2.nomad.scheduler.uri";
+  public static final String NOMAD_URI = "twister2.resource.nomad.scheduler.uri";
 
   public static final String LOGGING_SANDBOX = "twister2.logging.sandbox.logging";
 

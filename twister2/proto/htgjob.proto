@@ -20,9 +20,13 @@ message SubGraph {
     tws.proto.job.Config config = 8;
     bytes graph_serialized = 9;
     repeated Input inputs = 10;
-    repeated string outputs = 11;
-    repeated jobmaster.WorkerInfo worker_info = 12;
-    CDFWSchedulePlan cdfw_scheduleplan = 13;
+    //repeated string outputs = 11;
+    repeated Output outputs = 11;
+    string graph_type = 12;
+    repeated jobmaster.WorkerInfo worker_info = 13;
+    CDFWSchedulePlan cdfw_scheduleplan = 14;
+    int32 iterations = 15;
+    int32 iteration_number = 16;
 }
 
 message CDFWSchedulePlan {
@@ -32,6 +36,12 @@ message CDFWSchedulePlan {
 message Input {
     string parentGraph = 1;
     string name = 2;
+    string taskname = 3;
+}
+
+message Output {
+    string name = 1;
+    string taskname = 2;
 }
 
 message Relation {
@@ -55,6 +65,12 @@ message ExecuteMessage {
 
 message ExecuteCompletedMessage {
     string subgraph_name = 1;
+    int32 iterations = 2;
+}
+
+message ExecuteIterationCompletedMessage {
+    string subgraph_name = 1;
+    int32 iterations = 2;
 }
 
 message CDFWJobCompletedMessage {
