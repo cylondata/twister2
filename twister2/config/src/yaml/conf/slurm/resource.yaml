@@ -17,10 +17,10 @@ twister2.resource.scheduler.slurm.partition: "juliet"
 twister2.resource.scheduler.mpi.home: ""
 
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 # the launcher class
-twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
+twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILauncher"
 
 
 # mpi run file, this assumes a mpirun that is shipped with the product
@@ -29,11 +29,11 @@ twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.MPILaunche
 twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
 
 # the uploader directory
-twister2.uploader.directory: "${HOME}/.twister2/repository"
+twister2.resource.uploader.directory: "${HOME}/.twister2/repository"
 
 # the uplaoder class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
-twister2.uploader.download.method: "HTTP"
+twister2.resource.uploader.download.method: "HTTP"

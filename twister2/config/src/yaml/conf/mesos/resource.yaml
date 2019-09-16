@@ -1,55 +1,55 @@
 # working directory for the topologies
-twister2.scheduler.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
+twister2.resource.mesos.scheduler.working.directory: "~/.twister2/repository"#"${TWISTER2_DIST}/topologies/${CLUSTER}/${ROLE}/${TOPOLOGY}"
 
 #directory of core package
-twister2.directory.core-package: "/root/.twister2/repository/twister2-core/"
+twister2.resource.directory.core-package: "/root/.twister2/repository/twister2-core/"
 
 # location of java - pick it up from shell environment
-twister2.directory.sandbox.java.home: "${JAVA_HOME}"
+twister2.resource.directory.sandbox.java.home: "${JAVA_HOME}"
 
 # The URI of Mesos Master
 # twister2.mesos.master.uri: "149.165.150.81:5050"
 
 # mesos framework name
-twister2.mesos.framework.name: "Twister2 framework"
+twister2.resource.mesos.framework.name: "Twister2 framework"
 
-twister2.mesos.master.uri: "zk://localhost:2181/mesos"
+twister2.resource.mesos.master.uri: "zk://localhost:2181/mesos"
 
-twister2.mesos.master.host: "localhost"
+twister2.resource.mesos.master.host: "localhost"
 # The maximum time in milliseconds waiting for MesosFramework got registered with Mesos Master
-twister2.mesos.framework.staging.timeout.ms: 2000
+twister2.resource.mesos.framework.staging.timeout.ms: 2000
 
 # The maximum time in milliseconds waiting for Mesos Scheduler Driver to complete stop()
-twister2.mesos.scheduler.driver.stop.timeout.ms: 5000
+twister2.resource.mesos.scheduler.driver.stop.timeout.ms: 5000
 
 # the path to load native mesos library
-twister2.mesos.native.library.path: "/usr/lib/mesos/0.28.1/lib/"
+twister2.resource.mesos.native.library.path: "/usr/lib/mesos/0.28.1/lib/"
 
 # the core package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 
 #overlay network name for docker containers
-twister2.mesos.overlay.network.name: "mesos-overlay"
+twister2.resource.mesos.overlay.network.name: "mesos-overlay"
 
-twister2.docker.image.name: "gurhangunduz/twister2-mesos:docker-mpi"
+twister2.resource.mesos.docker.image: "gurhangunduz/twister2-mesos:docker-mpi"
 
 # the job package uri for mesos agent to fetch.
 # For fetching http server must be running on mesos master
-# twister2.system.job.uri: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
+# twister2.resource.system.job.uri: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
 
 # launcher class for mesos submission
-twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
+twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosLauncher"
 
 
 
 # container class to run in workers
-#twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMesosWorker"
-#twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob"
-twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
+#twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMesosWorker"
+#twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicMpiJob"
+twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.comms.BroadcastCommunication"
 
 # the Mesos worker class
-twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"
+twister2.resource.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker"
 
 ###################################################################################
 # ZooKeeper related config parameters
@@ -57,45 +57,45 @@ twister2.class.mesos.worker: "edu.iu.dsc.tws.rsched.schedulers.mesos.MesosWorker
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "localhost:2181"
+twister2.resource.zookeeper.server.addresses: "localhost:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
-#twister2.zookeeper.root.node.path: "/twister2"
+#twister2.resource.zookeeper.root.node.path: "/twister2"
 
 
 
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
-twister2.uploader.directory: "/var/www/html/twister2/mesos/"
+twister2.resource.uploader.directory: "/var/www/html/twister2/mesos/"
 
-#twister2.uploader.directory.repository: "/var/www/html/twister2/mesos/"
+#twister2.resource.uploader.directory.repository: "/var/www/html/twister2/mesos/"
 
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
-twister2.uploader.scp.command.options: "--chmod=+rwx"
+twister2.resource.uploader.scp.command.options: "--chmod=+rwx"
 
 # The scp connection string sets the remote user name and host used by the uploader.
-twister2.uploader.scp.command.connection: "root@149.165.150.81"
+twister2.resource.uploader.scp.command.connection: "root@149.165.150.81"
 
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
-twister2.uploader.ssh.command.options: ""
+twister2.resource.uploader.ssh.command.options: ""
 
 # The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.ssh.command.connection: "root@149.165.150.81"
+twister2.resource.uploader.ssh.command.connection: "root@149.165.150.81"
 
 # the uploader class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
-twister2.uploader.download.method: "HTTP"
+twister2.resource.uploader.download.method: "HTTP"
 
 # HTTP fetch uri
-twister2.HTTP.fetch.uri: "http://149.165.150.81:8082"
+twister2.resource.HTTP.fetch.uri: "http://149.165.150.81:8082"
 
 
 ################################################################################
@@ -112,14 +112,14 @@ twister2.resource.scheduler.mesos.role: "www-data"
 twister2.resource.scheduler.mesos.env: "devel"
 
 # mesos job name
-twister2.job.name: "basic-mesos"
+twister2.resource.job.name: "basic-mesos"
 
 # A Twister2 job can have multiple sets of compute resources
 # Four fields are mandatory: cpu, ram, disk and instances
 # instances shows the number of compute resources to be started with this specification
 # workersPerPod shows the number of workers on each pod in Kubernetes.
 #    May be omitted in other clusters. default value is 1.
-worker.compute.resources:
+twister2.resource.worker.compute.resources:
   - cpu: 1  # number of cores for each worker, may be fractional such as 0.5 or 2.4
     ram: 1024 # ram for each worker as Mega bytes
     disk: 1.0 # volatile disk for each worker as Giga bytes
@@ -135,25 +135,25 @@ worker.compute.resources:
 # by default each worker has one port
 # additional ports can be requested for all workers in a job
 # please provide the requested port names as a list
-twister2.worker.additional.ports: ["port1", "port2", "port3"]
+twister2.resource.worker.additional.ports: ["port1", "port2", "port3"]
 
 # driver class to run
-twister2.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
+twister2.resource.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
 
 # nfs server address
-nfs.server.address: "149.165.150.81"
+twister2.resource.nfs.server.address: "149.165.150.81"
 
 # nfs server path
-nfs.server.path: "/nfs/shared-mesos/twister2"
+twister2.resource.nfs.server.path: "/nfs/shared-mesos/twister2"
 
 # worker port
-twister2.worker_port: "31000"
+twister2.resource.worker_port: "31000"
 
 # desired nodes
 #twister2.desired_nodes: "149.165.150.xx,149.165.150.xx,149.165.150.xx"
-twister2.desired_nodes: "all"
+twister2.resource.desired_nodes: "all"
 
-twister2.use_docker_container: "true"
+twister2.resource.use_docker_container: "true"
 
 # rack label key for Mesos nodes in a cluster
 # each rack should have a unique label
@@ -162,7 +162,7 @@ twister2.use_docker_container: "true"
 # Better data locality can be achieved
 # Example: rack=rack1, rack=rack2, rack=rack3, etc
 # no default value is specified
-rack.labey.key: rack
+twister2.resource.rack.labey.key: rack
 
 # data center label key
 # each data center should have a unique label
@@ -171,13 +171,13 @@ rack.labey.key: rack
 # Better data locality can be achieved
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
-datacenter.labey.key: datacenter
+twister2.resource.datacenter.labey.key: datacenter
 
 # Data center list with rack names
-datacenters.list:
+twister2.resource.datacenters.list:
   - echo: ['blue-rack', 'green-rack']
 
 # Rack list with node IPs in them
-racks.list:
+twister2.resource.racks.list:
   - blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
   - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']

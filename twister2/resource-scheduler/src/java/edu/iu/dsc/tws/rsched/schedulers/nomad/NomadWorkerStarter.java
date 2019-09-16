@@ -309,7 +309,7 @@ public final class NomadWorkerStarter {
         workerInfo, masterHost, masterPort, numberContainers);
     LOG.log(Level.INFO, String.format("Connecting to job master..: %s:%d", masterHost, masterPort));
 
-    jobMasterAgent.startThreaded(false);
+    jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
 

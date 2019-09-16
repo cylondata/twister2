@@ -102,7 +102,7 @@ public final class JobMasterClientExample {
     JMWorkerAgent client = JMWorkerAgent.createJMWorkerAgent(
         config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
 
-    client.startThreaded(false);
+    client.startThreaded();
 
     IWorkerController workerController = client.getJMWorkerController();
 
