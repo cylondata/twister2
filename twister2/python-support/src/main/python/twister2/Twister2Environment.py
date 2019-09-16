@@ -1,5 +1,7 @@
 import cloudpickle as cp
+import os
 import sys
+import time
 from py4j.java_gateway import JavaGateway, GatewayParameters
 
 from twister2.tset.TSet import TSet
@@ -10,11 +12,25 @@ from twister2.utils import SourceWrapper
 
 class Twister2Environment:
 
-    def __init__(self):
-        print("Connecting to java port %s" % sys.argv[1])
-        gateway = JavaGateway(gateway_parameters=GatewayParameters(port=int(sys.argv[1])))
+    def __init__(self, name=None, resources=None, config={}):
+        port = int(os.environ['T2_PORT'])
+        bootstrap = os.environ['T2_BOOTSTRAP'] == "true"
+        gateway = JavaGateway(gateway_parameters=GatewayParameters(port=port))
         self.__entrypoint = gateway.entry_point
-        self.__predef_functions = TSetFunctions(self.__entrypoint.functions(), self)
+
+        if bootstrap:
+            for key in config:
+                self.__entrypoint.addConfig(key, config[key])
+
+            if name is not None:
+                self.__entrypoint.setJobName(name)
+
+            self.__entrypoint.commit()
+            time.sleep(5)
+            gateway.shutdown()
+            sys.exit(0)
+        else:
+            self.__predef_functions = TSetFunctions(self.__entrypoint.functions(), self)
 
     @property
     def config(self):

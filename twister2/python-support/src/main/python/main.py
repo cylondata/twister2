@@ -3,7 +3,7 @@ import numpy as np
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
-env = Twister2Environment()
+env = Twister2Environment(name="My Python", config={"YOYO": 123})
 
 
 class IntegerSource(SourceFunc):
@@ -22,7 +22,7 @@ class IntegerSource(SourceFunc):
 
 int_source = IntegerSource()
 
-source = env.create_source(int_source, 2)
+source = env.create_source(int_source, 1)
 partitioned = source.partition(env.functions.partition.load_balanced)
 
 

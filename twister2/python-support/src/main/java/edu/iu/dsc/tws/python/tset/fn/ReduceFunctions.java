@@ -11,10 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
-
-import java.io.Serializable;
 
 public class ReduceFunctions extends TFunc<ReduceFunc> {
 

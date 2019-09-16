@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.LoadBalancePartitioner;
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.python.processors.PythonClassProcessor;
-
-import java.util.Set;
+import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
 
 public final class PartitionFunctions extends TFunc<PartitionFunc> {
 

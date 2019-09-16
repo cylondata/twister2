@@ -11,11 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
-
-import java.io.Serializable;
 
 public class FlatMapFunctions extends TFunc<FlatMapFunc> {
 
