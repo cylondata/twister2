@@ -143,7 +143,7 @@ public class SortJob implements IWorker {
       destinations.add(noOfSources + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
-        logicalPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisWorker(), sources, destinations));
   }
 
   private class IntegerComparator implements Comparator<Object> {

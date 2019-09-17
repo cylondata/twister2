@@ -35,6 +35,19 @@ import edu.iu.dsc.tws.api.config.Config;
  * this can cause errors
  */
 public interface ReduceFunction {
+  /**
+   * Initialize the function
+   * @param cfg configuration
+   * @param op options
+   * @param expectedIds for each target, expected source ids
+   */
   void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds);
+
+  /**
+   * Reduce t1 and t2 to a single value
+   * @param t1 first value
+   * @param t2 second value
+   * @return the reduced value
+   */
   Object reduce(Object t1, Object t2);
 }

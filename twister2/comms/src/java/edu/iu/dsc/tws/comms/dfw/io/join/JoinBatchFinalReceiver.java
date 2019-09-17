@@ -106,8 +106,8 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     if (operationLeft != null) {
       this.operationRight = op;
     } else {
-      executor = op.getLogicalPlan().getThisExecutor();
-      thisWorker = op.getLogicalPlan().getThisExecutor();
+      executor = op.getLogicalPlan().getThisWorker();
+      thisWorker = op.getLogicalPlan().getThisWorker();
       this.operationLeft = op;
       this.sources = ((MToNSimple) op).getSources();
 

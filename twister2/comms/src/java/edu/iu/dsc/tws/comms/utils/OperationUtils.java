@@ -74,7 +74,7 @@ public final class OperationUtils {
                                                                int destination) {
     Map<Integer, List<Integer>> integerMapMap = router.receiveExpectedTaskIds();
     // add the main task to receive from iteself
-    int key = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+    int key = router.mainTaskOfExecutor(instancePlan.getThisWorker(),
         CommunicationContext.DEFAULT_DESTINATION);
     List<Integer> mainReceives = integerMapMap.get(key);
     if (mainReceives == null) {

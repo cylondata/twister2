@@ -228,10 +228,9 @@ public class InMessage {
     Object key = keyBuilder.getFinalObject();
     Object value = dataBuilder.getFinalObject();
     if (header.getNumberTuples() == -1) {
-      deserializedData = new Tuple(key, value, keyType, dataType);
+      deserializedData = new Tuple(key, value);
     } else {
-      ((List<Object>) deserializedData).add(new Tuple(key, value,
-          keyType, dataType));
+      ((List<Object>) deserializedData).add(new Tuple(key, value));
     }
     unPkNumberObjects++;
     this.setUnPkCurrentObjectLength(-1);

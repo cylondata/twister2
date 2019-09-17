@@ -46,7 +46,7 @@ public class DirectRouter {
     this.externalSendTasks = new HashMap<>();
     this.internalSendTasks = new HashMap<>();
 
-    Set<Integer> myTasks = logicalPlan.getChannelsOfExecutor(logicalPlan.getThisExecutor());
+    Set<Integer> myTasks = logicalPlan.getLogicalIdsOfWorker(logicalPlan.getThisWorker());
     if (myTasks != null) {
       for (int i = 0; i < srscs.size(); i++) {
         // for each source we have a fixed target
@@ -79,8 +79,8 @@ public class DirectRouter {
         this.upstream.put(tar, sources);
 
         // get the executor of source
-        int executor = logicalPlan.getExecutorForChannel(src);
-        if (executor != logicalPlan.getThisExecutor()) {
+        int executor = logicalPlan.getWorkerForForLogicalId(src);
+        if (executor != logicalPlan.getThisWorker()) {
           receiveExecutors.add(executor);
         }
       }
@@ -88,7 +88,7 @@ public class DirectRouter {
   }
 
   public Set<Integer> receivingExecutors() {
-    LOG.fine(logicalPlan.getThisExecutor() + " Receiving executors: " + receiveExecutors);
+    LOG.fine(logicalPlan.getThisWorker() + " Receiving executors: " + receiveExecutors);
     return receiveExecutors;
   }
 
@@ -102,7 +102,7 @@ public class DirectRouter {
    * @return true
    */
   public boolean isLastReceiver() {
-    Set<Integer> tasksOfThisExecutor = logicalPlan.getTasksOfThisExecutor();
+    Set<Integer> tasksOfThisExecutor = logicalPlan.getLogicalIdsOfThisWorker();
     for (int t : destination) {
       // now check if destination is in this worker
       if (tasksOfThisExecutor != null && tasksOfThisExecutor.contains(t)) {

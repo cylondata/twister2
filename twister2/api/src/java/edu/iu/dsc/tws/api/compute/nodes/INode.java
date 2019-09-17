@@ -9,7 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.compute.nodes;
 
 import java.io.Serializable;
@@ -17,6 +16,9 @@ import java.io.Serializable;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.config.Config;
 
+/**
+ * This is the base interface of all nodes in the dataflow graph.
+ */
 public interface INode extends Serializable {
   /**
    * Prepare the task to be executed

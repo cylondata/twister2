@@ -9,37 +9,36 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.comms.structs;
-
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 
 /**
  * Keyed content is serialized given priority and serialized as two parts of key and object.
  */
 public class Tuple<K, V> {
+  /**
+   * First value
+   */
   private K key;
 
+  /**
+   * Second value
+   */
   private V value;
 
+  /**
+   * Create a tuple
+   */
   public Tuple() {
   }
 
+  /**
+   * Create a tuple wit key and value
+   * @param key first value
+   * @param value second value
+   */
   public Tuple(K key, V value) {
     this.key = key;
     this.value = value;
-  }
-
-  public Tuple(K k, V data,
-               MessageType keyType, MessageType dataType) {
-    this.key = k;
-    this.value = data;
-  }
-
-  public static <K, V> Tuple of(K key, V value,
-                                MessageType<K, ?> keyType,
-                                MessageType<V, ?> valueType) {
-    return new Tuple<>(key, value, keyType, valueType);
   }
 
   public static <K, V> Tuple of(K key, V value) {

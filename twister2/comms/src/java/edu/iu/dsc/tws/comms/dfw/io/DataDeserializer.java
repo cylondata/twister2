@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.comms.dfw.InMessage;
 public class DataDeserializer implements MessageDeSerializer {
 
   @Override
-  public void init(Config cfg, boolean k) {
+  public void init(Config cfg) {
   }
 
   /**
@@ -36,10 +36,9 @@ public class DataDeserializer implements MessageDeSerializer {
    *
    * @param partialObject message object that needs to be built
    * @param edge the edge value associated with this message
-   * @return the built message as a list of objects
    */
   @Override
-  public Object build(Object partialObject, int edge) {
+  public void build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
     DataPacker dataPacker = currentMessage.getDataType().getDataPacker();
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
@@ -142,7 +141,6 @@ public class DataDeserializer implements MessageDeSerializer {
       channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
-    return null;
   }
 
   @Override

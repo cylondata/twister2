@@ -102,7 +102,7 @@ public class BGather extends BaseOperation {
    * @return true if the message is accepted
    */
   public boolean gather(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message, MessageTypes.INTEGER, dataType);
+    Tuple tuple = new Tuple(source, message);
     return op.send(source, tuple, flags);
   }
 }

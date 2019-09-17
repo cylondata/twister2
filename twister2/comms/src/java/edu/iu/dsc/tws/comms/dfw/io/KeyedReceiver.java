@@ -109,7 +109,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     this.dataFlowOperation = op;
-    this.executor = dataFlowOperation.getLogicalPlan().getThisExecutor();
+    this.executor = dataFlowOperation.getLogicalPlan().getThisWorker();
     this.limitPerKey = 100; //TODO: use config to init this
     this.keyLimit = 10; //TODO: use config to init this
     this.thisSources = TaskPlanUtils.getTasksOfThisWorker(op.getLogicalPlan(), op.getSources());
@@ -293,8 +293,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
       Object current;
 
       while ((current = entryQueue.peek()) != null) {
-        Tuple send = new Tuple(entry.getKey(), current,
-            dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+        Tuple send = new Tuple(entry.getKey(), current);
 
         if (targetSendQueue.offer(send)) {
           entryQueue.poll();
@@ -325,8 +324,7 @@ public abstract class KeyedReceiver implements MessageReceiver {
     Object current;
 
     while ((current = entryQueue.peek()) != null) {
-      Tuple send = new Tuple(key, current,
-          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+      Tuple send = new Tuple(key, current);
 
       if (targetSendQueue.offer(send)) {
         entryQueue.poll();

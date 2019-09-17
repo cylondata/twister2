@@ -46,6 +46,8 @@ public interface Collector {
    * If {@link Collector} C of task graph TG1 collects variable "var1" and C's parallelism is n,  If
    * {@link Receptor} R of task graph TG2 is interested in receiving "var1", R's parallelism should
    * be equal to n and, R should have the same distribution as C among the workers.
+   *
+   * @return set of names of collectbles
    */
 
   default Set<String> getCollectibleNames() {

@@ -13,13 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.nodes.SourceTask;
+import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.connectors.config.KafkaConsumerConfig;
 
-//import edu.iu.dsc.tws.checkpointmanager.CheckpointListener;
-
-public class TwsKafkaConsumerModified<T> extends SourceTask {
+public class TwsKafkaConsumerModified<T> implements ISource {
 
   private static final long serialVersionUID = -264264120110286748L;
   private static final Logger LOG = LoggerFactory.getLogger(TwsKafkaConsumer.class);

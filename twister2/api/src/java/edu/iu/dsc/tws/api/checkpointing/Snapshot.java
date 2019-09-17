@@ -26,27 +26,51 @@ package edu.iu.dsc.tws.api.checkpointing;
 
 import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 
+/**
+ * Represent a snapshot persisted
+ */
 public interface Snapshot {
 
   /**
    * This method can be used to define packers. Packers will be used when deserializing
    * values. If packer is not defined for a particular value, that value will be treated
    * as an {@link Object} and serialized with {@link edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker}
+   * @param key key
+   * @param dataPacker the data packer to use for the key
    */
   void setPacker(String key, DataPacker dataPacker);
 
   /**
    * This method can be used to set/update values into the snapshot
+   * @param key key
+   * @param value value to add
    */
   void setValue(String key, Object value);
 
+  /**
+   * Set a value along with the packer to use for serializing the value
+   * @param key key
+   * @param value value
+   * @param packer packer
+   */
   default void setValue(String key, Object value, DataPacker packer) {
     this.setPacker(key, packer);
     this.setValue(key, value);
   }
 
+  /**
+   * Get the value for key or the default
+   * @param key key
+   * @param defaultValue default value
+   * @return value corresponding to key
+   */
   Object getOrDefault(String key, Object defaultValue);
 
+  /**
+   * Get the value for a key
+   * @param key key
+   * @return value
+   */
   Object get(String key);
 
   /**
@@ -54,5 +78,10 @@ public interface Snapshot {
    */
   long getVersion();
 
+  /**
+   * Weater a checkpoint available for a kye
+   * @param key key
+   * @return true if a key is available
+   */
   boolean checkpointAvailable(String key);
 }

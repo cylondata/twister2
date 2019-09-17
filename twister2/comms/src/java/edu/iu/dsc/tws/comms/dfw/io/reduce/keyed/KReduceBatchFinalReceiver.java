@@ -127,8 +127,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
     @Override
     public Tuple next() {
       Map.Entry<Object, Object> entry = it.next();
-      return new Tuple(entry.getKey(), entry.getValue(),
-          operation.getKeyType(), operation.getDataType());
+      return new Tuple(entry.getKey(), entry.getValue());
     }
   }
 

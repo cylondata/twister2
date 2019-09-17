@@ -46,7 +46,7 @@ public class PartitionRouter {
     this.internalSendTasks = new HashMap<>();
     this.partialReceives = new HashMap<>();
 
-    Set<Integer> myTasks = logicalPlan.getChannelsOfExecutor(logicalPlan.getThisExecutor());
+    Set<Integer> myTasks = logicalPlan.getLogicalIdsOfWorker(logicalPlan.getThisWorker());
     for (int src : srscs) {
       if (myTasks.contains(src)) {
         for (int dest : dests) {
@@ -85,7 +85,7 @@ public class PartitionRouter {
 
     receiveExecutors = PartitionRouter.getExecutorsHostingTasks(plan, srscs);
     // we are not interested in our own
-    receiveExecutors.remove(logicalPlan.getThisExecutor());
+    receiveExecutors.remove(logicalPlan.getThisWorker());
 
     List<Integer> thisSources = new ArrayList<>(
         TaskPlanUtils.getTasksOfThisWorker(logicalPlan, srscs));
@@ -123,11 +123,11 @@ public class PartitionRouter {
   private static Set<Integer> getExecutorsHostingTasks(LogicalPlan plan, Set<Integer> tasks) {
     Set<Integer> executors = new HashSet<>();
 
-    Set<Integer> allExecutors = plan.getAllExecutors();
-    LOG.fine(String.format("%d All executors: %s", plan.getThisExecutor(), allExecutors));
+    Set<Integer> allExecutors = plan.getAllWorkers();
+    LOG.fine(String.format("%d All executors: %s", plan.getThisWorker(), allExecutors));
     for (int e : allExecutors) {
-      Set<Integer> tasksOfExecutor = plan.getChannelsOfExecutor(e);
-      LOG.fine(String.format("%d Tasks of executors: %s", plan.getThisExecutor(), tasksOfExecutor));
+      Set<Integer> tasksOfExecutor = plan.getLogicalIdsOfWorker(e);
+      LOG.fine(String.format("%d Tasks of executors: %s", plan.getThisWorker(), tasksOfExecutor));
       for (int t : tasks) {
         if (tasksOfExecutor.contains(t)) {
           executors.add(e);

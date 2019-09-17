@@ -53,7 +53,7 @@ public class BinaryTreeRouter {
     BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
     Node treeRoot = tree.buildInterGroupTree(0);
 
-    Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
+    Set<Integer> thisExecutorTasks = plan.getLogicalIdsOfWorker(plan.getThisWorker());
     /*
       Tasks belonging to this operation and in the same executor
     */
@@ -63,7 +63,7 @@ public class BinaryTreeRouter {
         thisExecutorTasksOfOperation.add(t);
       }
     }
-    LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+    LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisWorker(),
         thisExecutorTasksOfOperation.toString()));
     this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
@@ -83,10 +83,10 @@ public class BinaryTreeRouter {
       // okay this is the main task of this executor
       if (search != null) {
         mainTask = search.getTaskId();
-        LOG.fine(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
+        LOG.fine(String.format("%d main task: %d", plan.getThisWorker(), mainTask));
         // this is the only task that receives messages and it receive from its parent
         if (search.getParent() != null) {
-          receiveExecutors.add(plan.getExecutorForChannel(search.getParent().getTaskId()));
+          receiveExecutors.add(plan.getWorkerForForLogicalId(search.getParent().getTaskId()));
           recv.add(search.getParent().getTaskId());
         }
         if (!recv.isEmpty()) {
@@ -115,7 +115,7 @@ public class BinaryTreeRouter {
         sendExternalTasks.put(t, mainExternalSendTasks);
         destinationIdentifiers.put(t, 0);
       } else {
-        LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+        LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisWorker(), t));
       }
     }
   }

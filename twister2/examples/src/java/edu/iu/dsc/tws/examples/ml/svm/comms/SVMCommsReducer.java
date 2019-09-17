@@ -56,7 +56,7 @@ public class SVMCommsReducer extends CommsWorker {
       sourcesDone = true;
     }
 
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(target)) {
+    if (!logicalPlan.getLogicalIdsOfWorker(workerId).contains(target)) {
       reduceDone = true;
     }
 

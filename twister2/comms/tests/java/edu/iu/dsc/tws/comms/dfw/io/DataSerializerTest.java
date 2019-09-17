@@ -97,17 +97,17 @@ public class DataSerializerTest {
         null, type, null, null, data);
 
     DataSerializer serializer = new DataSerializer();
-    serializer.init(Config.newBuilder().build(), bufferQueue, false);
+    serializer.init(Config.newBuilder().build(), bufferQueue);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      ChannelMessage ch = serializer.build(data, outMessage);
       messages.add(ch);
     }
 
     DataDeserializer deserializer = new DataDeserializer();
-    deserializer.init(Config.newBuilder().build(), false);
+    deserializer.init(Config.newBuilder().build());
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
@@ -233,18 +233,18 @@ public class DataSerializerTest {
         null, type, null, null, data);
 
     DataSerializer serializer = new DataSerializer();
-    serializer.init(Config.newBuilder().build(), bufferQueue, false);
+    serializer.init(Config.newBuilder().build(), bufferQueue);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
 
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      ChannelMessage ch = serializer.build(data, outMessage);
       messages.add(ch);
     }
 
     DataDeserializer deserializer = new DataDeserializer();
-    deserializer.init(Config.newBuilder().build(), false);
+    deserializer.init(Config.newBuilder().build());
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);

@@ -43,7 +43,7 @@ public class BAllReduce extends BaseOperation {
 
     int middleTask = comm.nextId();
     int firstSource = sources.iterator().next();
-    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+    plan.addLogicalIdToWorker(plan.getWorkerForForLogicalId(firstSource), middleTask);
 
     op = new AllReduce(comm.getConfig(), comm.getChannel(), plan, sources,
         targets, middleTask, fnc, rcvr, dataType, reduceEdgeId, broadEdgeId,

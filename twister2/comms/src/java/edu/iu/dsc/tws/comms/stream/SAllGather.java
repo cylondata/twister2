@@ -52,7 +52,7 @@ public class SAllGather extends BaseOperation {
     int middleTask = comm.nextId();
 
     int firstSource = sources.iterator().next();
-    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+    plan.addLogicalIdToWorker(plan.getWorkerForForLogicalId(firstSource), middleTask);
     op = new AllGather(comm.getConfig(), comm.getChannel(), plan, sources, targets,
         middleTask, rcvr, dataType, gtrEdgeId, bcstEdgeId, true, messageSchema);
   }

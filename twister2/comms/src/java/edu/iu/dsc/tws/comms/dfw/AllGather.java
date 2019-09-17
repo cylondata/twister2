@@ -143,7 +143,7 @@ public class AllGather implements DataFlowOperation {
 
   @Override
   public boolean send(int source, Object message, int flags) {
-    Tuple tuple = new Tuple<>(source, message, MessageTypes.INTEGER, dataType);
+    Tuple tuple = new Tuple<>(source, message);
     return gather.send(source, tuple, flags);
   }
 

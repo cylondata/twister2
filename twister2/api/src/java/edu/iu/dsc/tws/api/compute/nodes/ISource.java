@@ -36,7 +36,7 @@
 package edu.iu.dsc.tws.api.compute.nodes;
 
 /**
- * The interface that that all data input sources (Batch, Streaming, etc)
+ * The interface that all data input sources (Batch, Streaming, etc)
  */
 public interface ISource extends INode {
   /**
