@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
@@ -212,7 +212,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         dataAwareAllocationMap.put(i, new ArrayList<>());
       }
     } else {
-      throw new ScheduleException("Task scheduling couldn't be performed for the container "
+      throw new TaskSchedulerException("Task scheduling couldn't be performed for the container "
           + "capacity of " + containerCapacity + " and " + totalInstances + " task instances");
     }
 
@@ -248,8 +248,8 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
                   new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
               ++maxContainerTaskObjectSize;
             } else {
-              throw new ScheduleException("Task Scheduling couldn't be possible for the present"
-                  + "configuration, please check the number of workers, "
+              throw new TaskSchedulerException("Task Scheduling couldn't be possible for the "
+                  + "present configuration, please check the number of workers, "
                   + "maximum instances per worker");
             }
           }
@@ -318,13 +318,12 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     if (config.get(DataObjectConstants.DINPUT_DIRECTORY) != null) {
       directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
     }
-
     final Path path = new Path(directory + workerId);
     final FileSystem fileSystem;
     try {
       fileSystem = FileSystemUtils.get(path);
-
-      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(Context.TWISTER2_HDFS_FILESYSTEM)) {
+      if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
+          Context.TWISTER2_HDFS_FILESYSTEM)) {
         final FileStatus pathFile = fileSystem.getFileStatus(path);
         inputDataList.add(String.valueOf(pathFile.getPath()));
       } else if (config.get(DataObjectConstants.FILE_SYSTEM).equals(
@@ -337,7 +336,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
         }
       }
     } catch (IOException e) {
-      throw new RuntimeException("IOException Occured" + e.getMessage());
+      throw new TaskSchedulerException("Not able to get the input files", e);
     }
     return inputDataList;
   }

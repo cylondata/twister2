@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
@@ -193,7 +193,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
   }
 
   private Map<Integer, List<TaskInstanceId>> roundRobinBatchSchedulingAlgorithm(
-      ComputeGraph graph, Vertex vertex) throws ScheduleException {
+      ComputeGraph graph, Vertex vertex) throws TaskSchedulerException {
 
     Map<String, Integer> parallelTaskMap;
     if (!graph.getGraphConstraints().isEmpty()) {
@@ -212,7 +212,7 @@ public class RoundRobinBatchTaskScheduler implements ITaskScheduler {
 
 
   private Map<Integer, List<TaskInstanceId>> roundRobinBatchSchedulingAlgorithm(
-      ComputeGraph graph, Set<Vertex> vertexSet) throws ScheduleException {
+      ComputeGraph graph, Set<Vertex> vertexSet) throws TaskSchedulerException {
 
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
     orderedTaskSet.addAll(vertexSet);
