@@ -28,25 +28,53 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 
 /**
- * This is a basic job with only communication available
+ * Creates a <code>Twister2Job</code>. This class can be used to configure a job along with its
+ * resource. Every job should have a name and a <code>IWorker</code> class.
+ * <code>Twister2JobBuilder</code> is used for creating and configuring the job object.
  */
 public final class Twister2Job {
-
   private static final Logger LOG = Logger.getLogger(Twister2Job.class.getName());
 
+  /**
+   * Kryo serializer
+    */
   private static final KryoSerializer KRYO_SERIALIZER = new KryoSerializer();
 
+  /**
+   * Name of the job
+   */
   private String jobName;
+
+  /**
+   * IWorker class name
+   */
   private String workerClass;
+
+  /**
+   * Driver class name, for connected dataflow jobs
+   */
   private String driverClass;
+
+  /**
+   * Configuration of compute resources required for the job
+   */
   private ArrayList<JobAPI.ComputeResource> computeResources = new ArrayList<>();
+
+  /**
+   * The job configuration, the values put into the job configuration will be available through
+   * the configuration, when workers start.
+   */
   private JobConfig config;
 
+  /**
+   * Private constructor
+   */
   private Twister2Job() {
   }
 
   /**
-   * Serializing the JobAPI
+   * Converts the job into a protobuf format. This protobuf is used by the workers to
+   * create the job at the workers.
    **/
   public JobAPI.Job serialize() {
 
@@ -119,37 +147,36 @@ public final class Twister2Job {
   }
 
   /**
-   * find the index of the first scalable ComputeResource in the list
+   * Find the index of the first scalable ComputeResource in the list
    */
   private int indexOfFirstScalableComputeResource() {
-
     int index = 0;
     for (JobAPI.ComputeResource computeResource : computeResources) {
       if (computeResource.getScalable()) {
         return index;
       }
-
       index++;
     }
-
     return -1;
   }
 
   /**
-   * count the number of scalable indexes
+   * Count the number of scalable indexes
+   * @return number of compute resources
    */
   private int countScalableComputeResources() {
-
     int counter = 0;
     for (JobAPI.ComputeResource computeResource : computeResources) {
       if (computeResource.getScalable()) {
         counter++;
       }
     }
-
     return counter;
   }
 
+  /**
+   * Check the job parameters and throws exceptions, if they are invalid
+   */
   private void checkJobParameters() {
     if (jobName == null) {
       throw new RuntimeException("Job jobName is null. You have to provide a unique jobName");
@@ -218,6 +245,9 @@ public final class Twister2Job {
     return new Twister2JobBuilder();
   }
 
+  /**
+   * Builder class for creating the job.
+   */
   public static final class Twister2JobBuilder {
     private Twister2Job twister2Job;
     private int computeIndexCounter = 0;

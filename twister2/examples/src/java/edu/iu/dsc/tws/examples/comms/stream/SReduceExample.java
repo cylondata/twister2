@@ -67,7 +67,7 @@ public class SReduceExample extends BenchWorker {
 
     sourcesDone = tasksOfExecutor.size() == 0;
 
-    reduceDone = !logicalPlan.getChannelsOfExecutor(workerId).contains(
+    reduceDone = !logicalPlan.getLogicalIdsOfWorker(workerId).contains(
         logicalPlanBuilder.getTargets().iterator().next()
     );
 

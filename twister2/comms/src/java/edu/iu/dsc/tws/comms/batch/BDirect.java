@@ -41,7 +41,7 @@ public class BDirect extends BaseOperation {
 
     int middleTask = comm.nextId();
     int firstSource = sources.iterator().next();
-    plan.addChannelToExecutor(plan.getExecutorForChannel(firstSource), middleTask);
+    plan.addLogicalIdToWorker(plan.getWorkerForForLogicalId(firstSource), middleTask);
 
     op = new OneToOne(comm.getChannel(), sources, targets,
         new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan,

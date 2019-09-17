@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.dfw.OutMessage;
 public class KeyedDataSerializer extends BaseSerializer {
 
   @Override
-  public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
+  public void init(Config cfg, Queue<DataBuffer> buffers) {
     this.sendBuffers = buffers;
   }
 

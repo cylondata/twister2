@@ -104,7 +104,7 @@ public class BinaryTree {
     // get the groups hosting the component
     // rotate according to index, this will create a unique tree for each index
     List<Integer> groups = rotateList(new ArrayList<>(getGroupsHostingTasks(nodes)), index);
-    LOG.log(Level.FINE, logicalPlan.getThisExecutor() + " Groups for binary tree: " + groups);
+    LOG.log(Level.FINE, logicalPlan.getThisWorker() + " Groups for binary tree: " + groups);
     if (groups.size() == 0) {
       LOG.log(Level.WARNING, "Groups for destinations is zero");
       return null;
@@ -159,7 +159,7 @@ public class BinaryTree {
     // sort the taskIds to make sure everybody creating the same tree
     Collections.sort(executorIds);
     // now check weather root is part of this group
-    int rootExecutor = logicalPlan.getExecutorForChannel(root);
+    int rootExecutor = logicalPlan.getWorkerForForLogicalId(root);
     if (executorIds.contains(rootExecutor)) {
       // move the executor to 0
       executorIds.remove(new Integer(rootExecutor));
@@ -229,18 +229,18 @@ public class BinaryTree {
   }
 
   private int getGroupHostingTask(int task) {
-    int executor = logicalPlan.getExecutorForChannel(task);
+    int executor = logicalPlan.getWorkerForForLogicalId(task);
     if (executor < 0) {
       String format = String.format("Cannot find executor for task: %d", task);
       LOG.severe(format);
       throw new RuntimeException(format);
     }
-    return logicalPlan.getGroupOfExecutor(executor);
+    return logicalPlan.getGroupOfWorker(executor);
   }
 
   private Set<Integer> getTasksInExecutor(int e) {
     Set<Integer> tasks = new HashSet<>();
-    Set<Integer> tasksOfExecutor = logicalPlan.getChannelsOfExecutor(e);
+    Set<Integer> tasksOfExecutor = logicalPlan.getLogicalIdsOfWorker(e);
     if (tasksOfExecutor != null) {
       for (int t: tasksOfExecutor) {
         if (nodes.contains(t) || t == root) {
@@ -252,11 +252,11 @@ public class BinaryTree {
   }
 
   private Set<Integer> getExecutorsHostingTask(int groupId) {
-    Set<Integer> executors = logicalPlan.getExecutesOfGroup(groupId);
+    Set<Integer> executors = logicalPlan.getWorkersOfGroup(groupId);
 
     Set<Integer> execs = new HashSet<>();
     for (int ex : executors) {
-      Set<Integer> tasksOfExec = logicalPlan.getChannelsOfExecutor(ex);
+      Set<Integer> tasksOfExec = logicalPlan.getLogicalIdsOfWorker(ex);
       if (tasksOfExec != null) {
         for (int t : nodes) {
           if (tasksOfExec.contains(t)) {
@@ -275,8 +275,8 @@ public class BinaryTree {
   private Set<Integer> getGroupsHostingTasks(Set<Integer> tasks) {
     Set<Integer> groups = new HashSet<>();
     for (int t : tasks) {
-      int executor = logicalPlan.getExecutorForChannel(t);
-      int group = logicalPlan.getGroupOfExecutor(executor);
+      int executor = logicalPlan.getWorkerForForLogicalId(t);
+      int group = logicalPlan.getGroupOfWorker(executor);
       groups.add(group);
     }
     return groups;

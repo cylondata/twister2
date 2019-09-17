@@ -99,8 +99,7 @@ public class SKeyedPartition extends BaseOperation {
   public boolean partition(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
 
-    boolean send = op.send(src, new Tuple<>(key, message, op.getKeyType(),
-        op.getDataType()), flags, dest);
+    boolean send = op.send(src, new Tuple<>(key, message), flags, dest);
     if (send) {
       destinationSelector.commit(src, dest);
     }

@@ -93,6 +93,7 @@ public final class KMeansConnectedDataflowExample {
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
         job3.setIterationNumber(i);
+        cdfwEnv.increaseWorkers(8);
         cdfwEnv.executeDataFlowGraph(job3);
       }
     }
@@ -165,7 +166,7 @@ public final class KMeansConnectedDataflowExample {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName(KMeansDriver.class.getName())
+        .setJobName("kmeans-connecteddataflow")
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(KMeansDriver.class.getName())
         .addComputeResource(1, 2048, instances)

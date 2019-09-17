@@ -9,11 +9,10 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.api.compute;
 
 /**
- * Wrapper interface for all the messages types.
+ * Message implementation. A task should use this message to send and receive.
  */
 public class TaskMessage<T> implements IMessage<T> {
   /**
@@ -31,7 +30,10 @@ public class TaskMessage<T> implements IMessage<T> {
    */
   private int sourceTask;
 
-  private int flag;
+  /**
+   * The flags for the message
+   */
+  private int flag = 0;
 
   /**
    * Create a task message with data
@@ -55,6 +57,14 @@ public class TaskMessage<T> implements IMessage<T> {
     this.sourceTask = sourceTask;
   }
 
+  /**
+   * Create a task message with data
+   *
+   * @param content content of the message
+   * @param flag flag
+   * @param edge edge
+   * @param sourceTask source task
+   */
   public TaskMessage(T content, int flag, String edge, int sourceTask) {
     this(content, edge, sourceTask);
     this.flag = flag;

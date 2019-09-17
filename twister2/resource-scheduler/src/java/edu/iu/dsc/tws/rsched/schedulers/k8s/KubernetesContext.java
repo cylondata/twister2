@@ -18,7 +18,8 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public class KubernetesContext extends SchedulerContext {
 
-  public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S = "twister2.docker.image.for.kubernetes";
+  public static final String TWISTER2_DOCKER_IMAGE_FOR_K8S
+      = "twister2.resource.kubernetes.docker.image";
 
   public static final String KUBERNETES_NAMESPACE_DEFAULT = "default";
   public static final String KUBERNETES_NAMESPACE = "kubernetes.namespace";
@@ -27,7 +28,8 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_WORKER_BASE_PORT = "kubernetes.worker.base.port";
 
   public static final boolean NODE_LOCATIONS_FROM_CONFIG_DEFAULT = true;
-  public static final String NODE_LOCATIONS_FROM_CONFIG = "kubernetes.node.locations.from.config";
+  public static final String NODE_LOCATIONS_FROM_CONFIG
+      = "twister2.resource.kubernetes.node.locations.from.config";
 
   public static final boolean NODE_PORT_SERVICE_REQUESTED_DEFAULT = false;
   public static final String NODE_PORT_SERVICE_REQUESTED = "kubernetes.node.port.service.requested";
@@ -42,10 +44,12 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
 
   public static final String K8S_PERSISTENT_STORAGE_CLASS_DEFAULT = "twister2";
-  public static final String K8S_PERSISTENT_STORAGE_CLASS = "kubernetes.persistent.storage.class";
+  public static final String K8S_PERSISTENT_STORAGE_CLASS
+      = "twister2.resource.kubernetes.persistent.storage.class";
 
   public static final String K8S_STORAGE_ACCESS_MODE_DEFAULT = "ReadWriteMany";
-  public static final String K8S_STORAGE_ACCESS_MODE = "kubernetes.storage.access.mode";
+  public static final String K8S_STORAGE_ACCESS_MODE
+      = "twister2.resource.kubernetes.storage.access.mode";
 
   public static final boolean K8S_BIND_WORKER_TO_CPU_DEFAULT = false;
   public static final String K8S_BIND_WORKER_TO_CPU = "kubernetes.bind.worker.to.cpu";
@@ -53,9 +57,12 @@ public class KubernetesContext extends SchedulerContext {
   public static final boolean K8S_WORKER_TO_NODE_MAPPING_DEFAULT = false;
   public static final String K8S_WORKER_TO_NODE_MAPPING = "kubernetes.worker.to.node.mapping";
 
-  public static final String K8S_WORKER_MAPPING_KEY = "kubernetes.worker.mapping.key";
-  public static final String K8S_WORKER_MAPPING_OPERATOR = "kubernetes.worker.mapping.operator";
-  public static final String K8S_WORKER_MAPPING_VALUES = "kubernetes.worker.mapping.values";
+  public static final String K8S_WORKER_MAPPING_KEY
+      = "twister2.resource.kubernetes.worker.mapping.key";
+  public static final String K8S_WORKER_MAPPING_OPERATOR
+      = "twister2.resource.kubernetes.worker.mapping.operator";
+  public static final String K8S_WORKER_MAPPING_VALUES
+      = "twister2.resource.kubernetes.worker.mapping.values";
 
   // it can be either of: "all-same-node", "all-separate-nodes", "none"
   public static final String K8S_WORKER_MAPPING_UNIFORM_DEFAULT = "none";
@@ -63,13 +70,13 @@ public class KubernetesContext extends SchedulerContext {
 
   public static final boolean CLIENT_TO_PODS_UPLOADING_DEFAULT = true;
   public static final String CLIENT_TO_PODS_UPLOADING =
-      "twister2.kubernetes.client.to.pods.uploading";
+      "twister2.resource.kubernetes.client.to.pods.uploading";
 
   public static final String SECRET_NAME = "kubernetes.secret.name";
 
   public static final boolean WATCH_BEFORE_UPLOAD_ATTEMPTS_DEFAULT = true;
   public static final String WATCH_BEFORE_UPLOAD_ATTEMPTS =
-      "twister2.kubernetes.uploader.watch.pods.starting";
+      "twister2.resource.kubernetes.uploader.watch.pods.starting";
 
   public static String twister2DockerImageForK8s(Config cfg) {
     return cfg.getStringValue(TWISTER2_DOCKER_IMAGE_FOR_K8S);

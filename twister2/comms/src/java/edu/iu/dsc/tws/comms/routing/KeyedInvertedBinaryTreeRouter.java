@@ -87,7 +87,7 @@ public class KeyedInvertedBinaryTreeRouter {
           root, dests);
       Node treeRoot = tree.buildInterGroupTree(path);
 
-      Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
+      Set<Integer> thisExecutorTasks = plan.getLogicalIdsOfWorker(plan.getThisWorker());
       /*
         Tasks belonging to this operation and in the same executor
       */
@@ -97,7 +97,7 @@ public class KeyedInvertedBinaryTreeRouter {
           thisExecutorTasksOfOperation.add(t);
         }
       }
-      LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+      LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisWorker(),
           thisExecutorTasksOfOperation.toString()));
 
       // now lets construct the receive tasks tasks
@@ -108,10 +108,10 @@ public class KeyedInvertedBinaryTreeRouter {
         // okay this is the main task of this executor
         if (search != null) {
           mainTask.put(path, search.getTaskId());
-          LOG.fine(String.format("%d main task: %s", plan.getThisExecutor(), mainTask));
+          LOG.fine(String.format("%d main task: %s", plan.getThisWorker(), mainTask));
           // this is the only task that receives messages
           for (int k : search.getRemoteChildrenIds()) {
-            receiveExecutors.add(plan.getExecutorForChannel(k));
+            receiveExecutors.add(plan.getWorkerForForLogicalId(k));
           }
           recv.addAll(search.getAllChildrenIds());
 
@@ -130,7 +130,7 @@ public class KeyedInvertedBinaryTreeRouter {
 
           if (t == path) {
             LOG.log(Level.FINE, String.format("%d direct children %s",
-                plan.getThisExecutor(), directChildren));
+                plan.getThisWorker(), directChildren));
           }
 
           for (int child : directChildren) {
@@ -177,7 +177,7 @@ public class KeyedInvertedBinaryTreeRouter {
             mainTaskLast = true;
           }
         } else {
-          LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+          LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisWorker(), t));
         }
       }
     }
@@ -225,7 +225,7 @@ public class KeyedInvertedBinaryTreeRouter {
       return mainTask.get(path);
     } else {
       throw new RuntimeException(String.format("%d Requesting an path that doesn't exist: %d",
-          logicalPlan.getThisExecutor(), path));
+          logicalPlan.getThisWorker(), path));
     }
   }
 

@@ -1,45 +1,45 @@
 # working directory
 twister2.resource.scheduler.mpi.working.directory: "${HOME}/.twister2/jobs"
 
-twister2.job.package.url: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
+twister2.resource.job.package.url: "http://localhost:8082/twister2/mesos/twister2-job.tar.gz"
 
-twister2.core.package.url: "http://localhost:8082/twister2/mesos/twister2-core-0.2.2.tar.gz"
+twister2.resource.core.package.url: "http://localhost:8082/twister2/mesos/twister2-core-0.2.2.tar.gz"
 
 
 # the launcher class
-twister2.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.nomad.NomadLauncher"
+twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.nomad.NomadLauncher"
 
 # The URI of Nomad API
 #twister2.nomad.scheduler.uri: "http://149.165.150.81:4646"
 
 #The URI of Nmad on local machine
-twister2.nomad.scheduler.uri: "http://127.0.0.1:4646"
+twister2.resource.nomad.scheduler.uri: "http://127.0.0.1:4646"
 
 # The nomad schedules cpu resources in terms of clock frequency (e.g. MHz), while Heron topologies
 # specify cpu requests in term of cores.  This config maps core to clock freqency.
-twister2.nomad.core.freq.mapping: 2000
+twister2.resource.nomad.core.freq.mapping: 2000
 
 
 # weather we are in a shared file system, if that is the case, each worker will not download the
 # core package and job package, otherwise they will download those packages
-twister2.filesystem.shared: true
+twister2.resource.filesystem.shared: true
 
 # name of the script
-twister2.nomad.shell.script: "nomad.sh"
+twister2.resource.nomad.shell.script: "nomad.sh"
 
 # path to the system core package
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "localhost:2181"
+twister2.resource.zookeeper.server.addresses: "localhost:2181"
 
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
 
 #twister2.uploader.directory: "/root/.twister2/repository"
 # if you want to run it on a local machine use this value
-twister2.uploader.directory: "/tmp/repository"
+twister2.resource.uploader.directory: "/tmp/repository"
 
 # if you want to use http server on echo
 #twister2.uploader.directory: "/var/www/html/twister2/mesos/"
@@ -48,35 +48,35 @@ twister2.uploader.directory: "/tmp/repository"
 
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
-twister2.uploader.scp.command.options: "--chmod=+rwx"
+twister2.resource.uploader.scp.command.options: "--chmod=+rwx"
 
 # The scp connection string sets the remote user name and host used by the uploader.
-twister2.uploader.scp.command.connection: "root@localhost"
+twister2.resource.uploader.scp.command.connection: "root@localhost"
 
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
-twister2.uploader.ssh.command.options: ""
+twister2.resource.uploader.ssh.command.options: ""
 
 # The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.ssh.command.connection: "root@localhost"
+twister2.resource.uploader.ssh.command.connection: "root@localhost"
 
 # file system uploader to be used
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
-# twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
+# twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 
 # this is the method that workers use to download the core and job packages
 # it could be  LOCAL,  HTTP, HDFS, ..
-twister2.uploader.download.method: "LOCAL"
+twister2.resource.uploader.download.method: "LOCAL"
 
 ########################################################################################
 # client related configurations for job submit
 ########################################################################################
 
 # nfs server address
-nfs.server.address: "localhost"
+twister2.resource.nfs.server.address: "localhost"
 
 # nfs server path
-nfs.server.path: "/nfs/shared/twister2"
+twister2.resource.nfs.server.path: "/nfs/shared/twister2"
 
 # rack label key for Mesos nodes in a cluster
 # each rack should have a unique label
@@ -85,7 +85,7 @@ nfs.server.path: "/nfs/shared/twister2"
 # Better data locality can be achieved
 # Example: rack=rack1, rack=rack2, rack=rack3, etc
 # no default value is specified
-rack.labey.key: rack
+twister2.resource.rack.labey.key: rack
 
 # data center label key
 # each data center should have a unique label
@@ -94,14 +94,14 @@ rack.labey.key: rack
 # Better data locality can be achieved
 # Example: datacenter=dc1, datacenter=dc1, datacenter=dc1, etc
 # no default value is specified
-datacenter.labey.key: datacenter
+twister2.resource.datacenter.labey.key: datacenter
 
 # Data center list with rack names
-datacenters.list:
+twister2.resource.datacenters.list:
   - echo: ['blue-rack', 'green-rack']
 
 # Rack list with node IPs in them
-racks.list:
+twister2.resource.racks.list:
   - blue-rack: ['10.0.0.40', '10.0.0.41', '10.0.0.42', '10.0.0.43', '10.0.0.44', ]
   - green-rack: ['node11.ip', 'node12.ip', 'node13.ip']
 
@@ -110,7 +110,7 @@ racks.list:
 # instances shows the number of compute resources to be started with this specification
 # workersPerPod shows the number of workers on each pod in Kubernetes.
 #    May be omitted in other clusters. default value is 1.
-worker.compute.resources:
+twister2.resource.worker.compute.resources:
   - cpu: 1  # number of cores for each worker, may be fractional such as 0.5 or 2.4
     ram: 1024 # ram for each worker as Mega bytes
     disk: 1.0 # volatile disk for each worker as Giga bytes
@@ -126,7 +126,7 @@ worker.compute.resources:
 # by default each worker has one port
 # additional ports can be requested for all workers in a job
 # please provide the requested port names as a list
-twister2.worker.additional.ports: ["port1", "port2", "port3"]
+twister2.resource.worker.additional.ports: ["port1", "port2", "port3"]
 
 # worker port
-twister2.worker_port: "31000"
+twister2.resource.worker_port: "31000"

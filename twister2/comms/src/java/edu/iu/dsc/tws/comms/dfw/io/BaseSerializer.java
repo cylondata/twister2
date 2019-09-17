@@ -44,12 +44,12 @@ public abstract class BaseSerializer implements MessageSerializer {
   protected KryoSerializer serializer;
 
   @Override
-  public void init(Config cfg, Queue<DataBuffer> buffers, boolean k) {
+  public void init(Config cfg, Queue<DataBuffer> buffers) {
     this.sendBuffers = buffers;
   }
 
   @Override
-  public Object build(Object data, Object partialBuildObject) {
+  public ChannelMessage build(Object data, Object partialBuildObject) {
     OutMessage sendMessage = (OutMessage) partialBuildObject;
     ChannelMessage channelMessage = new ChannelMessage(sendMessage.getSource(),
         sendMessage.getDataType(), MessageDirection.OUT, sendMessage.getReleaseCallback());

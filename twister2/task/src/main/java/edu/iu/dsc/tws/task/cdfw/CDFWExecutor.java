@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import com.google.protobuf.Any;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.common.driver.IDriverMessenger;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 
@@ -68,23 +69,7 @@ public final class CDFWExecutor {
 
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
-
-    // this is the first time
-    if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
-      try {
-        DataFlowGraph dataFlowGraph = buildCDFWSchedulePlan(graph, workerIDs);
-        CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-        // now submit the job
-        submitJob(job);
-        driverState = DriverState.JOB_SUBMITTED;
-        waitForEvent(DriveEventType.FINISHED_JOB);
-        driverState = DriverState.JOB_FINISHED;
-      } catch (Exception e) {
-        throw new RuntimeException("Driver is not initialized", e);
-      }
-    } else {
-      throw new RuntimeException("Failed to submit job while in this state: " + driverState);
-    }
+    submitGraph(graph, workerIDs);
   }
 
   /**
@@ -106,44 +91,23 @@ public final class CDFWExecutor {
 
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
-
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(scheduleGraphMap.size());
-    for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
-      CDFWExecutorTask cdfwSchedulerTask
-          = new CDFWExecutorTask(dataFlowGraphEntry.getKey(), dataFlowGraphEntry.getValue());
+    for (Map.Entry<DataFlowGraph, Set<Integer>> entry : scheduleGraphMap.entrySet()) {
+      CDFWExecutorTask cdfwSchedulerTask = new CDFWExecutorTask(entry.getKey(), entry.getValue());
       executor.submit(cdfwSchedulerTask);
     }
-    try {
-      executor.awaitTermination(2, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-    executor.shutdown();
 
-   /*for (Map.Entry<DataFlowGraph, Set<Integer>> dataFlowGraphEntry : scheduleGraphMap.entrySet()) {
-      // this is the first time
-      if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
-        try {
-          DataFlowGraph dataFlowGraph = dataFlowGraphEntry.getKey();
-          Set<Integer> workerIDs = dataFlowGraphEntry.getValue();
-          //build the schedule plan for the dataflow graph
-          dataFlowGraph = buildCDFWSchedulePlan(dataFlowGraph, workerIDs);
-          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-          //now submit the job
-          submitJob(job);
-          driverState = DriverState.JOB_SUBMITTED;
-          // lets wait for another event
-          waitForEvent(DriveEventType.FINISHED_JOB);
-          driverState = DriverState.JOB_FINISHED;
-        } catch (Exception e) {
-          throw new RuntimeException("Driver is not initialized", e);
-        }
-      }
-    }*/
+    try {
+      executor.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      throw new Twister2RuntimeException(e);
+    } finally {
+      executor.shutdown();
+    }
   }
 
   void close() {
-    // send the close message
+    //send the close message
     sendCloseMessage();
   }
 
@@ -152,28 +116,34 @@ public final class CDFWExecutor {
     private DataFlowGraph dataFlowGraph;
     private Set<Integer> workerIDs;
 
-    protected CDFWExecutorTask(DataFlowGraph graph, Set<Integer> workerList) {
+    CDFWExecutorTask(DataFlowGraph graph, Set<Integer> workerList) {
       this.dataFlowGraph = graph;
       this.workerIDs = workerList;
     }
 
     @Override
     public void run() {
-      if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
-        try {
-          //build the schedule plan for the dataflow graph
-          dataFlowGraph = buildCDFWSchedulePlan(dataFlowGraph, workerIDs);
-          CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
-          //now submit the job
-          submitJob(job);
-          driverState = DriverState.JOB_SUBMITTED;
-          // lets wait for another event
-          waitForEvent(DriveEventType.FINISHED_JOB);
-          driverState = DriverState.JOB_FINISHED;
-        } catch (Exception e) {
-          throw new RuntimeException("Driver is not initialized", e);
-        }
+      submitGraph(dataFlowGraph, workerIDs);
+    }
+  }
+
+  private void submitGraph(DataFlowGraph dataFlowgraph, Set<Integer> workerIDs) {
+    if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
+      try {
+        //build the schedule plan for the dataflow graph
+        DataFlowGraph dataFlowGraph = buildCDFWSchedulePlan(dataFlowgraph, workerIDs);
+        CDFWJobAPI.SubGraph job = buildCDFWJob(dataFlowGraph);
+        //now submit the job
+        submitJob(job);
+        driverState = DriverState.JOB_SUBMITTED;
+        // lets wait for another event
+        waitForEvent(DriveEventType.FINISHED_JOB);
+        driverState = DriverState.JOB_FINISHED;
+      } catch (Exception e) {
+        throw new Twister2RuntimeException("Driver is not initialized", e);
       }
+    } else {
+      throw new Twister2RuntimeException("Failed to submit job in this state: " + driverState);
     }
   }
 
@@ -227,7 +197,7 @@ public final class CDFWExecutor {
       }
       return event;
     } catch (InterruptedException e) {
-      throw new RuntimeException("Failed to take event", e);
+      throw new Twister2RuntimeException("Failed to take event", e);
     }
   }
 }

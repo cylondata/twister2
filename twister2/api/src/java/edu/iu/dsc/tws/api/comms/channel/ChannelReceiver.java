@@ -15,6 +15,9 @@ package edu.iu.dsc.tws.api.comms.channel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 
+/**
+ * Get notifications about receives and sends
+ */
 public interface ChannelReceiver {
   /**
    * Receive a fully built message

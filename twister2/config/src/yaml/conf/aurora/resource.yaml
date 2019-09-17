@@ -1,19 +1,19 @@
 # the package uri
-twister2.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
+twister2.resource.system.package.uri: "${TWISTER2_DIST}/twister2-core-0.3.0.tar.gz"
 
 # launcher class for aurora submission
-twister2.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher
+twister2.resource.class.launcher: edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraLauncher
 
 # the uploader class
-twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
+twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.scp.ScpUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.NullUploader"
 # twister2.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.LocalFileSystemUploader"
 
 # container class to run in workers
-twister2.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicAuroraContainer"
+twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicAuroraContainer"
 
 # the Aurora worker class
-twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter"
+twister2.resource.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWorkerStarter"
 
 ###################################################################################
 # ZooKeeper related config parameters
@@ -21,14 +21,11 @@ twister2.class.aurora.worker: "edu.iu.dsc.tws.rsched.schedulers.aurora.AuroraWor
 
 # ZooKeeper server addresses: comma separated host:port pairs
 # example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-twister2.zookeeper.server.addresses: "149.165.150.81:2181"
+twister2.resource.zookeeper.server.addresses: "149.165.150.81:2181"
 
 # the root node path of this job on ZooKeeper
 # the default is "/twister2"
 #twister2.zookeeper.root.node.path: "/twister2"
-
-# if the workers want to wait for all others to join a job, max wait time in ms
-twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
 ##############################################################################
 # Uploader configuration
@@ -36,23 +33,21 @@ twister2.zookeeper.max.wait.time.for.all.workers.to.join: 100000
 
 # the directory where the file will be uploaded, make sure the user has the necessary permissions
 # to upload the file here.
-twister2.uploader.directory: "/root/.twister2/repository/"
-
-twister2.uploader.directory.repository: "/root/.twister2/repository/"
+twister2.resource.uploader.directory: "/root/.twister2/repository/"
 
 # This is the scp command options that will be used by the uploader, this can be used to
 # specify custom options such as the location of ssh keys.
-twister2.uploader.scp.command.options: ""
+twister2.resource.uploader.scp.command.options: ""
 
 # The scp connection string sets the remote user name and host used by the uploader.
-twister2.uploader.scp.command.connection: "root@149.165.150.81"
+twister2.resource.uploader.scp.command.connection: "root@149.165.150.81"
 
 # The ssh command options that will be used when connecting to the uploading host to execute
 # command such as delete files, make directories.
-twister2.uploader.ssh.command.options: ""
+twister2.resource.uploader.ssh.command.options: ""
 
 # The ssh connection string sets the remote user name and host used by the uploader.
-twister2.uploader.ssh.command.connection: "root@149.165.150.81"
+twister2.resource.uploader.ssh.command.connection: "root@149.165.150.81"
 
 
 ################################################################################
@@ -74,26 +69,26 @@ twister2.resource.scheduler.aurora.role: "www-data"
 twister2.resource.scheduler.aurora.env: "devel"
 
 # aurora job name
-twister2.job.name: "basic-aurora"
+twister2.resource.job.name: "basic-aurora"
 # twister2.resource.scheduler.aurora.jobname: "basic-aurora"
 
 # number of cores for each worker
 # it is a floating point number
 # each worker can have fractional cores such as 0.5 cores or multiple cores as 2
 # default value is 1.0 core
-twister2.worker.cpu: 1.0
+twister2.resource.worker.cpu: 1.0
 
 # amount of memory for each worker in the job in mega bytes as integer
 # default value is 200 MB
-twister2.worker.ram: 200
+twister2.resource.worker.ram: 200
 
 # amount of hard disk space on each worker in mega bytes
 # this only used when running twister2 in Aurora
 # default value is 1024 MB.
-twister2.worker.disk: 1024
+twister2.resource.worker.disk: 1024
 
 # number of worker instances
-twister2.worker.instances: 6
+twister2.resource.worker.instances: 6
 
 
 

@@ -17,17 +17,17 @@ import edu.iu.dsc.tws.api.config.TokenSub;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 
 public class ScpContext extends SchedulerContext {
-  public static final String UPLOAD_DIRECTORY = "twister2.uploader.directory";
-  public static final String DOWNLOAD_DIRECTORY = "twister2.download.directory";
+  public static final String UPLOAD_DIRECTORY = "twister2.resource.uploader.directory";
+  public static final String DOWNLOAD_DIRECTORY = "twister2.resource.download.directory";
 
   public static final String TWISTER2_UPLOADER_SCP_OPTIONS =
-      "twister2.uploader.scp.command.options";
+      "twister2.resource.uploader.scp.command.options";
   public static final String TWISTER2_UPLOADER_SCP_CONNECTION =
-      "twister2.uploader.scp.command.connection";
+      "twister2.resource.uploader.scp.command.connection";
   public static final String TWISTER2_UPLOADER_SSH_OPTIONS =
-      "twister2.uploader.ssh.command.options";
+      "twister2.resource.uploader.ssh.command.options";
   public static final String TWISTER2_UPLOADER_SSH_CONNECTION =
-      "twister2.uploader.ssh.command.connection";
+      "twister2.resource.uploader.ssh.command.connection";
 
   /**
    * Get the directory to upload the file

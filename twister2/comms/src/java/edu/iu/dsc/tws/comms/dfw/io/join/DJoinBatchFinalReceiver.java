@@ -149,8 +149,8 @@ public class DJoinBatchFinalReceiver implements MessageReceiver {
     if (operationLeft != null) {
       this.operationRight = op;
     } else {
-      executor = op.getLogicalPlan().getThisExecutor();
-      thisWorker = op.getLogicalPlan().getThisExecutor();
+      executor = op.getLogicalPlan().getThisWorker();
+      thisWorker = op.getLogicalPlan().getThisWorker();
       this.operationLeft = op;
       this.sources = op.getSources();
       this.targets = new HashSet<>(expectedIds.keySet());

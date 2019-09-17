@@ -40,10 +40,10 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
   public void setUp() throws Exception {
     bufferQueue = createDataQueue(32, 1024000);
     serializer = new KeyedDataSerializer();
-    serializer.init(Config.newBuilder().build(), bufferQueue, true);
+    serializer.init(Config.newBuilder().build(), bufferQueue);
 
     deserializer = new KeyedDataDeSerializer();
-    deserializer.init(Config.newBuilder().build(), true);
+    deserializer.init(Config.newBuilder().build());
   }
 
   @SuppressWarnings("Unchecked")
@@ -87,7 +87,7 @@ public class KeyedSerializerLargeTest extends BaseSerializeTest {
 
     int count = 0;
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      ChannelMessage ch = serializer.build(data, outMessage);
       messages.add(ch);
       System.out.println("Adding count " + count++);
     }

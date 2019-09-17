@@ -71,7 +71,7 @@ public class SGatherExample extends BenchWorker {
       sourcesDone = true;
     }
 
-    if (!logicalPlan.getChannelsOfExecutor(workerId).contains(
+    if (!logicalPlan.getLogicalIdsOfWorker(workerId).contains(
         logicalPlanBuilder.getTargets().iterator().next())) {
       gatherDone = true;
     }

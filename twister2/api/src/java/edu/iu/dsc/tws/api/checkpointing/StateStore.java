@@ -28,13 +28,39 @@ import java.io.IOException;
 
 import edu.iu.dsc.tws.api.config.Config;
 
+/**
+ * Interface for saving state to different stores
+ */
 public interface StateStore {
 
+  /**
+   * Initialize the store
+   * @param config configuration
+   * @param path path
+   */
   void init(Config config, String... path);
 
+  /**
+   * Put a key and data
+   * @param key key
+   * @param data data
+   * @throws IOException if an error occurs
+   */
   void put(String key, byte[] data) throws IOException;
 
+  /**
+   * Get the bye value of the key
+   * @param key key
+   * @return byte array
+   * @throws IOException if an error occurs
+   */
   byte[] get(String key) throws IOException;
 
+  /**
+   * Check weather the specified key is in the store
+   * @param key key
+   * @return true if the key in store
+   * @throws IOException if an error occurs
+   */
   boolean contains(String key) throws IOException;
 }

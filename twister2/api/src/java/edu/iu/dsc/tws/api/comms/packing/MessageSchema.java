@@ -12,12 +12,26 @@
 
 package edu.iu.dsc.tws.api.comms.packing;
 
+/**
+ * Define a message schema for a type
+ */
 public final class MessageSchema {
 
   private static final MessageSchema NO_SCHEMA = new MessageSchema();
 
+  /**
+   * Size of the message
+   */
   private int messageSize; // total message size
+
+  /**
+   * Key size
+   */
   private int keySize;
+
+  /**
+   * Weather we have fixed size messages
+   */
   private boolean fixedSchema = true;
 
   private MessageSchema(int messageSize, int keySize) {
@@ -55,15 +69,5 @@ public final class MessageSchema {
 
   public static MessageSchema ofSize(int totalMessageSize, int keySize) {
     return new MessageSchema(totalMessageSize, keySize);
-  }
-
-  /**
-   * Amount read from buffer to determine length
-   */
-  public int amountReadFromBuffer() {
-    if (this.fixedSchema) {
-      return 0;
-    }
-    return Integer.BYTES;
   }
 }
