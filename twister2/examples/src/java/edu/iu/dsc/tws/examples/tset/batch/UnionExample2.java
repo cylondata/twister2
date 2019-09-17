@@ -9,45 +9,47 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
-import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-public class JoinExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(JoinExample.class.getName());
+/**
+ * Example to test -
+ * compute and sink tasks with multiple input edges do not call execute properly #633
+ */
+public class UnionExample2 extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(UnionExample2.class.getName());
+  private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
-    int para = 2;
-    SourceTSet<Integer> src0 = dummySource(env, COUNT, para).setName("src0");
-    KeyedTSet<Integer, Integer> left = src0.mapToTuple(i -> new Tuple<>(i % 2, i)).setName("left");
+//    SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+    SourceTSet<Integer> src1 = dummySource(env, COUNT, PARALLELISM).setName("src1");
 
-    SourceTSet<Integer> src1 = dummySource(env, COUNT, para).setName("src1");
-    KeyedTSet<Integer, Integer> right = src1.mapToTuple(i -> new Tuple<>(i % 2, i)).setName(
-        "right");
+    ComputeTSet<Integer, Iterator<Integer>> map = src1.direct().map(i -> i + 50);
 
-    JoinTLink<Integer, Integer, Integer> join =
-        left.join(right, CommunicationContext.JoinType.INNER, Integer::compareTo)
-            .setName("join");
+    //    src.direct().forEach(s -> LOG.info("map sssss: " + s));
+    ComputeTSet<Integer, Iterator<Integer>> unionTSet = src1.union(map);
 
-    join.forEach(t -> LOG.info("out" + t.toString()));
+    LOG.info("test source union");
+    unionTSet.direct().forEach(s -> LOG.info("union: " + s));
   }
+
 
   public static void main(String[] args) {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, JoinExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, UnionExample2.class.getName());
   }
 }
