@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -31,9 +32,10 @@ public class CDFWScheduler implements ICDFWScheduler {
   private static final Logger LOG = Logger.getLogger(CDFWScheduler.class.getName());
 
   private LinkedList<JobMasterAPI.WorkerInfo> workerInfoList;
+  private Set<Integer> workerList = new LinkedHashSet<>();
 
   //To store the scheduled dataflow task graph and their corresponding worker list
-  private static Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
+  private Map<DataFlowGraph, Set<Integer>> scheduledGraphMap = new LinkedHashMap<>();
 
   protected CDFWScheduler(List<JobMasterAPI.WorkerInfo> workerInfoList) {
     this.workerInfoList = (LinkedList<JobMasterAPI.WorkerInfo>) workerInfoList;
@@ -42,7 +44,6 @@ public class CDFWScheduler implements ICDFWScheduler {
   @Override
   public Set<Integer> schedule(DataFlowGraph graphJob) {
     Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
-    LOG.info("Scheduled Graph list details:" + scheduledGraph);
     return scheduledGraph;
   }
 
@@ -51,14 +52,13 @@ public class CDFWScheduler implements ICDFWScheduler {
    * corresponds to the dataflow graph and their worker ids.
    */
   @Override
-  public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... graphJob) {
-    //Set<Integer> workerList;
-    if (graphJob.length == 1) {
-      Set<Integer> workerList = scheduleGraphs(graphJob[0]);
-      scheduledGraphMap.put(graphJob[0], workerList);
-    } else if (graphJob.length > 1) {
-      for (DataFlowGraph graph : graphJob) {
-        Set<Integer> workerList = scheduleGraphs(graph);
+  public Map<DataFlowGraph, Set<Integer>> schedule(DataFlowGraph... dataFlowGraphs) {
+    if (dataFlowGraphs.length == 1) {
+      workerList = scheduleGraphs(dataFlowGraphs[0]);
+      scheduledGraphMap.put(dataFlowGraphs[0], workerList);
+    } else if (dataFlowGraphs.length > 1) {
+      for (DataFlowGraph graph : dataFlowGraphs) {
+        workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
       LOG.info("Requirements:" + workerInfoList.size() + "\tSchedule Details:" + scheduledGraphMap);
@@ -71,7 +71,6 @@ public class CDFWScheduler implements ICDFWScheduler {
    * based on the requested workers and the available workers in the worker info list.
    */
   private Set<Integer> scheduleGraphs(DataFlowGraph graph) {
-    Set<Integer> workerList = new LinkedHashSet<>();
     if (workerInfoList.size() == graph.getWorkers()) {
       for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
         workerList.add(workerInfos.getWorkerID());
@@ -85,7 +84,7 @@ public class CDFWScheduler implements ICDFWScheduler {
         }
       }
     } else {
-      throw new RuntimeException("Insufficient resources to run the dataflow graph");
+      throw new Twister2RuntimeException("Insufficient resources to run the dataflow graph");
     }
     return workerList;
   }
