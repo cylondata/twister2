@@ -12,17 +12,15 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
@@ -39,8 +37,7 @@ public class JoinExample extends BatchTsetExample {
     KeyedTSet<Integer, Integer> right = src1.mapToTuple(i -> new Tuple<>(i % 2, i)).setName(
         "right");
 
-    BatchTLink<Iterator<JoinedTuple<Integer, Integer, Integer>>,
-        JoinedTuple<Integer, Integer, Integer>> join =
+    JoinTLink<Integer, Integer, Integer> join =
         left.join(right, CommunicationContext.JoinType.INNER, Integer::compareTo)
             .setName("join");
 
