@@ -231,7 +231,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     this.instancePlan = tPlan;
     this.type = t;
     this.edge = ed;
-    this.executor = tPlan.getThisExecutor();
+    this.executor = tPlan.getThisWorker();
     this.currentReceiveMessage = new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
 
     // we will only have one distinct route
@@ -392,7 +392,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public boolean handleReceivedChannelMessage(ChannelMessage currentMessage) {
-    int src = router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+    int src = router.mainTaskOfExecutor(instancePlan.getThisWorker(),
         CommunicationContext.DEFAULT_DESTINATION);
 
     RoutingParameters routingParameters;

@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.util.KryoSerializer;

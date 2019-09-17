@@ -88,7 +88,7 @@ public abstract class SourceReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getLogicalPlan().getThisExecutor();
+    workerId = op.getLogicalPlan().getThisWorker();
     sendPendingMax = CommunicationContext.sendPendingMax(cfg);
     this.operation = op;
 

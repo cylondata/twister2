@@ -127,7 +127,7 @@ public class SKeyedGather extends BaseOperation {
    */
   public boolean gather(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
-    return op.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
+    return op.send(src, new Tuple(key, message), flags, dest);
   }
 
   /**

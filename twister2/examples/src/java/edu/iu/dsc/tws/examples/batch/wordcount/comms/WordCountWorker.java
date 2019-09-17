@@ -116,7 +116,7 @@ public class WordCountWorker implements IWorker {
       destinations.add(NO_OF_TASKS + i);
     }
     LOG.fine(String.format("%d sources %s destinations %s",
-        logicalPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisWorker(), sources, destinations));
   }
 
   private void scheduleTasks() {

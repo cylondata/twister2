@@ -49,13 +49,13 @@ public class InvertedBinaryTreeRouter {
                                   int root, Set<Integer> dests, int index) {
     int interNodeDegree = CommunicationContext.interNodeDegree(cfg, 2);
     int intraNodeDegree = CommunicationContext.intraNodeDegree(cfg, 2);
-    this.executor = plan.getThisExecutor();
+    this.executor = plan.getThisWorker();
     this.mainTaskLast = false;
     // lets build the tree
     BinaryTree tree = new BinaryTree(interNodeDegree, intraNodeDegree, plan, root, dests);
     Node treeRoot = tree.buildInterGroupTree(index);
 
-    Set<Integer> thisExecutorTasks = plan.getChannelsOfExecutor(plan.getThisExecutor());
+    Set<Integer> thisExecutorTasks = plan.getLogicalIdsOfWorker(plan.getThisWorker());
     /*
       Tasks belonging to this operation and in the same executor
     */
@@ -65,7 +65,7 @@ public class InvertedBinaryTreeRouter {
         thisExecutorTasksOfOperation.add(t);
       }
     }
-    LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisExecutor(),
+    LOG.fine(String.format("%d Executor Tasks: %s", plan.getThisWorker(),
         thisExecutorTasksOfOperation.toString()));
     this.destinationIdentifiers = new HashMap<>();
     // construct the map of receiving ids
@@ -84,10 +84,10 @@ public class InvertedBinaryTreeRouter {
       // okay this is the main task of this executor
       if (search != null) {
         mainTask = search.getTaskId();
-        LOG.fine(String.format("%d main task: %d", plan.getThisExecutor(), mainTask));
+        LOG.fine(String.format("%d main task: %d", plan.getThisWorker(), mainTask));
         // this is the only task that receives messages
         for (int k : search.getRemoteChildrenIds()) {
-          receiveExecutors.add(plan.getExecutorForChannel(k));
+          receiveExecutors.add(plan.getWorkerForForLogicalId(k));
         }
         List<Integer> recv = new ArrayList<>(search.getAllChildrenIds());
         receiveTasks.put(t, new ArrayList<>(recv));
@@ -113,7 +113,7 @@ public class InvertedBinaryTreeRouter {
           mainTaskLast = true;
         }
       } else {
-        LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisExecutor(), t));
+        LOG.fine(String.format("%d doesn't have a node in tree: %d", plan.getThisWorker(), t));
       }
     }
   }

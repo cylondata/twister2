@@ -39,10 +39,9 @@ public class FixedSchemaKeyedDataDeSerializer extends KeyedDataDeSerializer {
    *
    * @param partialObject message object that needs to be built
    * @param edge the edge value associated with this message
-   * @return the built message as a list of objects
    */
   @Override
-  public Object build(Object partialObject, int edge) {
+  public void build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
     MessageType keyType = currentMessage.getKeyType();
     DataPacker keyPacker = keyType.getDataPacker();
@@ -195,6 +194,5 @@ public class FixedSchemaKeyedDataDeSerializer extends KeyedDataDeSerializer {
       channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
-    return null;
   }
 }

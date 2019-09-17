@@ -124,7 +124,7 @@ public class SKeyedReduce extends BaseOperation {
    */
   public boolean reduce(int src, Object key, Object message, int flags) {
     int dest = destinationSelector.next(src, key, message);
-    return op.send(src, new Tuple(key, message, keyType, dataType), flags, dest);
+    return op.send(src, new Tuple(key, message), flags, dest);
   }
 
   /**

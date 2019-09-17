@@ -155,11 +155,11 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
         && partialReceiver != null) {
       return partialReceiver.onMessage(header.getSourceId(),
           CommunicationContext.DEFAULT_DESTINATION,
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          router.mainTaskOfExecutor(instancePlan.getThisWorker(),
               CommunicationContext.DEFAULT_DESTINATION), header.getFlags(), object);
     } else {
       return finalReceiver.onMessage(header.getSourceId(), CommunicationContext.DEFAULT_DESTINATION,
-          router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+          router.mainTaskOfExecutor(instancePlan.getThisWorker(),
               CommunicationContext.DEFAULT_DESTINATION), header.getFlags(), object);
     }
   }
@@ -211,7 +211,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       }
 
       // we are going to add source if we are the main workerId
-      if (router.mainTaskOfExecutor(instancePlan.getThisExecutor(),
+      if (router.mainTaskOfExecutor(instancePlan.getThisWorker(),
           CommunicationContext.DEFAULT_DESTINATION) == source) {
         routingParameters.addInteranlRoute(source);
       }
@@ -263,7 +263,7 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType t, LogicalPlan logicalPlan, int edge) {
     this.instancePlan = logicalPlan;
     this.dataType = t;
-    int workerId = instancePlan.getThisExecutor();
+    int workerId = instancePlan.getThisWorker();
     this.edgeValue = edge;
 
     // we only have one path

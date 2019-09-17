@@ -145,8 +145,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
 
     @Override
     public Object next() {
-      Tuple tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++),
-          operation.getKeyType(), operation.getDataType());
+      Tuple tuple = new Tuple(this.currentKey, currentValues.get(currentIndex++));
 
       if (this.currentIndex == this.currentValues.size()) {
         this.moveToNextKey();
@@ -176,8 +175,7 @@ public class KGatherBatchFinalReceiver extends TargetFinalReceiver {
     public Object next() {
       Object key = keyList.poll();
       List value = messageMap.remove(key);
-      return new Tuple(key, value.iterator(),
-          operation.getKeyType(), operation.getDataType());
+      return new Tuple(key, value.iterator());
     }
   }
 

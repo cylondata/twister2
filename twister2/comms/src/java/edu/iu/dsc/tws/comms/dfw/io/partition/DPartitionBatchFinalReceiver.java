@@ -147,7 +147,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     int parallelIOAllowance = CommunicationContext.getParallelIOAllowance(cfg);
 
     expIds = expectedIds;
-    thisWorker = op.getLogicalPlan().getThisExecutor();
+    thisWorker = op.getLogicalPlan().getThisWorker();
     finishedSources = new Int2ObjectOpenHashMap<>();
     partition = op;
     keyed = partition.getKeyType() != null;

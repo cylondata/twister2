@@ -219,9 +219,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     this.edge = ed;
 
     Set<Integer> thisSources = TaskPlanUtils.getTasksOfThisWorker(logicalPlan, sources);
-    int executor = logicalPlan.getThisExecutor();
+    int executor = logicalPlan.getThisWorker();
     LOG.log(Level.FINE, String.format("%d setup loadbalance routing %s %s",
-        logicalPlan.getThisExecutor(), sources, destinations));
+        logicalPlan.getThisWorker(), sources, destinations));
     this.router = new PartitionRouter(logicalPlan, sources, destinations);
     Map<Integer, Set<Integer>> internal = router.getInternalSendTasks();
     Map<Integer, Set<Integer>> external = router.getExternalSendTasks();
@@ -232,7 +232,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
     }
 
     LOG.log(Level.FINE, String.format("%d adding internal/external routing",
-        logicalPlan.getThisExecutor()));
+        logicalPlan.getThisWorker()));
     for (int s : thisSources) {
       Set<Integer> integerSetMap = internal.get(s);
       if (integerSetMap != null) {
@@ -244,12 +244,12 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
         this.externalDestinations.addAll(integerSetMap1);
       }
       LOG.fine(String.format("%d adding internal/external routing %d",
-          logicalPlan.getThisExecutor(), s));
+          logicalPlan.getThisWorker(), s));
       break;
     }
 
     LOG.log(Level.FINE, String.format("%d done adding internal/external routing",
-        logicalPlan.getThisExecutor()));
+        logicalPlan.getThisWorker()));
     this.finalReceiver.init(cfg, this, receiveExpectedTaskIds());
     this.partialReceiver.init(cfg, this, router.partialExpectedTaskIds());
 

@@ -212,7 +212,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
     this.groupingSize = CommunicationContext.getNetworkPartitionBatchGroupingSize(cfg);
 
     // this worker
-    this.thisWorker = tPlan.getThisExecutor();
+    this.thisWorker = tPlan.getThisWorker();
     this.messageSchema = messageSchema;
 
     // get the tasks of this executor
@@ -265,7 +265,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
     // calculate the workers from we are receiving
     Set<Integer> receiveWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, sources);
-    receiveWorkers.remove(logicalPlan.getThisExecutor());
+    receiveWorkers.remove(logicalPlan.getThisWorker());
 
     Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -302,7 +302,7 @@ public class MToNRing implements DataFlowOperation, ChannelReceiver {
 
   private void calculateWorkerIdToTargets() {
     for (int t : targets) {
-      int worker = logicalPlan.getExecutorForChannel(t);
+      int worker = logicalPlan.getWorkerForForLogicalId(t);
       List<Integer> ts;
       if (workerToTargets.containsKey(worker)) {
         ts = workerToTargets.get(worker);

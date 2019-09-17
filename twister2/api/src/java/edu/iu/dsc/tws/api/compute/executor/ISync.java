@@ -23,6 +23,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.compute.executor;
 
+/**
+ * Sync interface, this method is called when barriers come and tasks sync
+ */
 public interface ISync {
+  /**
+   * Callback for sync
+   * @param edge edge name
+   * @param value value, can be null
+   * @return if we handled the sync, return true
+   */
   boolean sync(String edge, byte[] value);
 }

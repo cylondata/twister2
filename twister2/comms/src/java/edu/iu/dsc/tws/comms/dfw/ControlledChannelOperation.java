@@ -233,7 +233,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     this.receiveDataType = rcvDataType;
     this.receiveKeyType = rcvKeyType;
     this.keyType = kType;
-    this.executor = instancePlan.getThisExecutor();
+    this.executor = instancePlan.getThisWorker();
     this.receivingExecutors = recvExecutors;
     this.receiver = msgReceiver;
     this.isKeyed = keyed;
@@ -258,12 +258,12 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
     }
     this.receiveBuffers = new HashMap<>();
 
-    LOG.log(Level.FINE, String.format("%d setup communication", instancePlan.getThisExecutor()));
+    LOG.log(Level.FINE, String.format("%d setup communication", instancePlan.getThisWorker()));
     // now setup the sends and receives
     setupCommunication();
 
     // initialize the serializers
-    LOG.fine(String.format("%d setup initializers", instancePlan.getThisExecutor()));
+    LOG.fine(String.format("%d setup initializers", instancePlan.getThisWorker()));
     initSerializers();
 
     setupReceiveGroups(receiveGroupsSources);
@@ -274,10 +274,10 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   private void initSerializers() {
     // initialize the serializers
     for (MessageSerializer serializer : messageSerializer.values()) {
-      serializer.init(config, sendBuffers, isKeyed);
+      serializer.init(config, sendBuffers);
     }
     for (MessageDeSerializer deSerializer : messageDeSerializer.values()) {
-      deSerializer.init(config, isKeyed);
+      deSerializer.init(config);
     }
   }
 
@@ -298,7 +298,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       for (Integer recv : wokersForGroup) {
         Queue<DataBuffer> recvList = new LinkedBlockingQueue<>();
         // register with the channel
-        LOG.fine(instancePlan.getThisExecutor() + " Register to receive from: " + recv);
+        LOG.fine(instancePlan.getThisWorker() + " Register to receive from: " + recv);
         channel.receiveMessage(i, recv, edge, this, recvList);
         receiveBuffers.put(recv, recvList);
       }
@@ -752,7 +752,7 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   private boolean sendMessageToTarget(ChannelMessage channelMessage, int i) {
-    int e = instancePlan.getExecutorForChannel(i);
+    int e = instancePlan.getWorkerForForLogicalId(i);
     return channel.sendMessage(e, channelMessage, this);
   }
 

@@ -30,7 +30,7 @@ public class AggregatorListTest extends BaseSerializeTest {
     for (int i = 0; i < 4; i++) {
       data.add("I " + i);
     }
-    Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
+    Tuple tuple = new Tuple(1, data);
 
     InMessage inMessage = keyedSingleValueCase(numBuffers, size, MessageTypes.OBJECT,
         MessageTypes.INTEGER, tuple);
@@ -51,7 +51,7 @@ public class AggregatorListTest extends BaseSerializeTest {
       for (int i = 0; i < 4; i++) {
         data.add("I " + i);
       }
-      Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
+      Tuple tuple = new Tuple(1, data);
       tuples.add(tuple);
     }
 
@@ -69,7 +69,7 @@ public class AggregatorListTest extends BaseSerializeTest {
       for (int i = 0; i < 4; i++) {
         data.add("I " + i);
       }
-      Tuple tuple = new Tuple(1, data, MessageTypes.INTEGER, MessageTypes.OBJECT);
+      Tuple tuple = new Tuple(1, data);
       aTuples.add(tuple);
     }
 
