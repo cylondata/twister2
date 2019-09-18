@@ -213,8 +213,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     trainingDoubleDataPointObject = taskExecutor
         .getOutput(trainingDatapointsTaskGraph, datapointsExecutionPlan,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+    double[][] datapoints = null;
     for (int i = 0; i < trainingDoubleDataPointObject.getPartitions().length; i++) {
-      double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[i].getConsumer()
+      datapoints = trainingDoubleDataPointObject.getPartitions()[i].getConsumer()
           .next();
       LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0]
           .length));
@@ -222,6 +223,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
       LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
           .toString(datapoints[randomIndex])));
+      System.out.println("---------Training Data-------------");
+    }
+    for (int j = 0; j < datapoints.length; j++) {
+      System.out.println(Arrays.toString(datapoints[j]));
     }
   }
 
@@ -233,8 +238,9 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .getOutput(testingDatapointsTaskGraph, datapointsExecutionPlan,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING);
 
+    double[][] datapoints = null;
     for (int i = 0; i < testingDoubleDataPointObject.getPartitions().length; i++) {
-      double[][] datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
+      datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
       int randomIndex = new Random()
@@ -243,6 +249,10 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           .toString(datapoints[randomIndex])));
     }
 
+    System.out.println("---------Testing Data-------------");
+    for (int j = 0; j < datapoints.length; j++) {
+      System.out.println(Arrays.toString(datapoints[j]));
+    }
   }
 
   private ComputeGraph buildTrainingDataPointsTG() {
