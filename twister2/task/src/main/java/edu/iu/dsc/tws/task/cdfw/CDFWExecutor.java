@@ -86,11 +86,14 @@ public final class CDFWExecutor {
 
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
+
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(scheduleGraphMap.size());
+
     for (Map.Entry<DataFlowGraph, Set<Integer>> entry : scheduleGraphMap.entrySet()) {
       CDFWExecutorTask cdfwSchedulerTask = new CDFWExecutorTask(entry.getKey(), entry.getValue());
       executor.submit(cdfwSchedulerTask);
     }
+
     try {
       executor.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {

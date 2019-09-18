@@ -82,6 +82,7 @@ public class CDFWScheduler implements ICDFWScheduler {
         if (workerList.size() == graph.getWorkers()) {
           break;
         }
+
       }
     } else {
       throw new Twister2RuntimeException("Insufficient resources to run the dataflow graph");
