@@ -11,12 +11,41 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.cdfw;
 
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
+import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
 
+  private CDFWEnv cdfwEnv;
+
   public BatchTSetCDFWEnvironment(CDFWEnv env) {
     super();
+    this.cdfwEnv = env;
+  }
+
+  @Override
+  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
+                                                   BuildableTSet outputTset, boolean isIterative) {
+    DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", dataflowGraph).
+        setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig);
+    cdfwEnv.executeDataFlowGraph(job);
+    return null;
+  }
+
+  @Override
+  public void finishIter() {
+    return;
+  }
+
+  @Override
+  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
+    return;
   }
 }
