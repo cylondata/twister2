@@ -72,7 +72,7 @@ public class IterativeSVMDataObjectCompute extends AbstractIterableDataCompute<S
     this.features = features;
     this.delemiter = del;
     int size = this.datasize % this.parallelism == 0
-        ? (this.datasize / parallelism) + 1 : (this.datasize / parallelism);
+        ? (this.datasize / parallelism) : (this.datasize / parallelism);
     this.dataPointsLocal = new double[size][this.features + 1];
   }
 
@@ -82,7 +82,7 @@ public class IterativeSVMDataObjectCompute extends AbstractIterableDataCompute<S
     this.features = features;
     this.delemiter = del;
     int size = this.datasize % this.parallelism == 0
-        ? (this.datasize / parallelism) + 1 : (this.datasize / parallelism);
+        ? (this.datasize / parallelism)  : (this.datasize / parallelism);
     this.dataPointsLocal = new double[size][this.features + 1];
   }
 
