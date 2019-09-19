@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -72,7 +73,7 @@ public final class ZKUtil {
     try {
       CuratorFramework client = connectToServer(config);
 
-      String jobPath = constructJobPath(config, jobName);
+      String jobPath = constructJobPath(ZKContext.rootNode(config), jobName);
 
       // check whether the job node exists, if not, return false, nothing to do
       if (client.checkExists().forPath(jobPath) == null) {
@@ -102,8 +103,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructJobPath(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName;
+  public static String constructJobPath(String rootPath, String jobName) {
+    return rootPath + "/" + jobName;
   }
 
   /**
@@ -111,8 +112,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructDaiPathForWorkerID(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-worker-id";
+  public static String constructDaiPathForWorkerID(String rootPath, String jobName) {
+    return rootPath + "/" + jobName + "-dai-for-worker-id";
   }
 
   /**
@@ -120,8 +121,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructDaiPathForBarrier(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName + "-dai-for-barrier";
+  public static String constructDaiPathForBarrier(String rootPath, String jobName) {
+    return rootPath + "/" + jobName + "-dai-for-barrier";
   }
 
   /**
@@ -129,8 +130,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructBarrierPath(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName + "-barrier";
+  public static String constructBarrierPath(String rootPath, String jobName) {
+    return rootPath + "/" + jobName + "-barrier";
   }
 
   /**
@@ -138,8 +139,8 @@ public final class ZKUtil {
    * @param jobName
    * @return
    */
-  public static String constructJobLockPath(Config config, String jobName) {
-    return ZKContext.rootNode(config) + "/" + jobName + "-lock";
+  public static String constructJobLockPath(String rootPath, String jobName) {
+    return rootPath + "/" + jobName + "-lock";
   }
 
   /**
@@ -164,8 +165,9 @@ public final class ZKUtil {
    * @return
    */
   public static boolean deleteJobZNodes(Config config, CuratorFramework client, String jobName) {
+    String rootPath = ZKContext.rootNode(config);
     try {
-      String jobPath = constructJobPath(config, jobName);
+      String jobPath = constructJobPath(rootPath, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(jobPath);
         LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
@@ -173,17 +175,8 @@ public final class ZKUtil {
         LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
       }
 
-      // delete distributed atomic integer for workerID
-      String daiPath = constructDaiPathForWorkerID(config, jobName);
-      if (client.checkExists().forPath(daiPath) != null) {
-        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
-        LOG.info("DistributedAtomicInteger for workerID deleted from ZooKeeper: " + daiPath);
-      } else {
-        LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
-      }
-
       // delete distributed atomic integer for barrier
-      daiPath = constructDaiPathForBarrier(config, jobName);
+      String daiPath = constructDaiPathForBarrier(rootPath, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
@@ -192,7 +185,7 @@ public final class ZKUtil {
       }
 
       // delete distributed lock znode
-      String lockPath = constructJobLockPath(config, jobName);
+      String lockPath = constructJobLockPath(rootPath, jobName);
       if (client.checkExists().forPath(lockPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
         LOG.log(Level.INFO, "Distributed lock znode deleted from ZooKeeper: " + lockPath);
@@ -294,6 +287,28 @@ public final class ZKUtil {
   }
 
   /**
+   * encode the given list of WorkerInfo objects as a byte array.
+   * We put the length of each WorkerInfo as a byte array before serialized WorkerInfo
+   * resulting byte array has the length and serialized workerInfo objects in a single byte array
+   * @return
+   */
+  public static byte[] encodeWorkerInfos(List<JobMasterAPI.WorkerInfo> workerInfos) {
+
+    // for each workerInfo, we have two byte arrays
+    // one for length, the other for WorkerInfo
+    byte[][] serializedInfos = new byte[workerInfos.size() * 2][];
+
+    int i = 0;
+    for (JobMasterAPI.WorkerInfo info: workerInfos) {
+      serializedInfos[i + 1] = info.toByteArray();
+      serializedInfos[i] = Ints.toByteArray(serializedInfos[i + 1].length);
+      i += 2;
+    }
+
+    return Bytes.concat(serializedInfos);
+  }
+
+  /**
    * encode the given WorkerInfo object as a byte array.
    * First put the length of the byte array as a 4 byte array to the beginning
    * resulting byte array has the length and workerInfo object after that
@@ -305,7 +320,6 @@ public final class ZKUtil {
 
     return addTwoByteArrays(lengthBytes, workerInfoBytes);
   }
-
 
   /**
    * add two byte arrays
