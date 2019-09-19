@@ -299,7 +299,7 @@ public class ResourceAllocator {
 
     launcher.launch(updatedJob);
 
-//    clearTemporaryFiles(jobDirectory);
+    clearTemporaryFiles(jobDirectory);
   }
 
   /**
