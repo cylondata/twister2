@@ -33,6 +33,14 @@ public final class Matrix implements Serializable {
     return result;
   }
 
+  public static double sum(double[] arr) {
+    double sum = -1;
+    for (int i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
+    return sum;
+  }
+
   public static double[] scalarMultiplyR(double[] x, double y, double[] result) {
     for (int i = 0; i < x.length; i++) {
       result[i] = x[i] * y;
