@@ -51,7 +51,7 @@ import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 public class TSetGraph {
   private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
 
-  private static int taskGraphCount = 0;
+  private static int taskGraphCount = 0; // todo: this could be a problem for fault tolerance
 
   private TSetEnvironment env;
   private MutableGraph<TBase> graph;

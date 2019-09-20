@@ -113,24 +113,22 @@ public class PegasosSgdSvm extends SgdSvm implements Serializable {
   public void iterativeTaskSgd(double[] w1, double[][] x1, double[] y1)
       throws NullDataSetException, MatrixMultiplicationException {
     double[] currentW = w;
+    double[] grad = w;
+    double[] wTemp = new double[w.length];
+    double[] xyTemp = new double[w.length];
 
     for (int j = 0; j < x1.length; j++) {
       double condition = y1[j] * Matrix.dot(x1[j], currentW);
-      double[] newW;
+
       if (condition < 1) {
-        this.xyia = new double[x1.length];
-        this.xyia = Matrix.scalarMultiply(Matrix
-            .subtract(currentW, Matrix.scalarMultiply(x1[j], y1[j])), alpha);
-        newW = Matrix.subtract(currentW, xyia);
+        grad = Matrix.subtractR(w, Matrix.scalarMultiplyR(x1[j], y1[j], xyTemp), wTemp);
       } else {
-        wa = new double[x1.length];
-        wa = Matrix.scalarMultiply(currentW, alpha);
-        newW = Matrix.subtract(currentW, wa);
+        grad = w;
       }
-      currentW = newW;
+      w = Matrix.subtractR(w, Matrix.scalarMultiplyR(grad, this.alpha, wTemp), currentW);
     }
 
-    this.setW(currentW);
+    this.setW(w);
   }
 
   /**

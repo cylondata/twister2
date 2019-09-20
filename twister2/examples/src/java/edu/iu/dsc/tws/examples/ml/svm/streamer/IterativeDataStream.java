@@ -122,8 +122,6 @@ public class IterativeDataStream extends BaseSource implements IReceptor<double[
     if (debug) {
       LOG.info(String.format("Recieved Input Data : %s ", this.datapoints.getClass().getName()));
     }
-
-
 //    LOG.info(String.format("Data Point TaskIndex[%d], Size : %d ", context.taskIndex(),
 //        this.datapoints.length));
 //    LOG.info(String.format("Weight Vector TaskIndex[%d], Size : %d ", context.taskIndex(),

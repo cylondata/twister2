@@ -60,11 +60,12 @@ public final class Twister2Submitter {
 
     Config configCopy = JobUtils.resolveJobId(config, twister2Job.getJobName());
 
-    // save the job to transfer to workers
-    JobAPI.Job job = twister2Job.serialize();
-
     // get existing id or create a new job id
     String jobId = configCopy.getStringValue(Context.JOB_ID);
+
+    // save the job to transfer to workers
+    twister2Job.getConfig().put(Context.JOB_ID, jobId);
+    JobAPI.Job job = twister2Job.serialize();
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
     if (CheckpointingConfigurations.isCheckpointingEnabled(configCopy)) {

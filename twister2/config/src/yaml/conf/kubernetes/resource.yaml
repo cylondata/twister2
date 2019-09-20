@@ -150,7 +150,7 @@ twister2.resource.worker.compute.resources:
 #  workersPerPod: 1 # number of workers on each pod in Kubernetes. May be omitted in other clusters.
 
 # driver class to run
-twister2.resource.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
+# twister2.resource.job.driver.class: "edu.iu.dsc.tws.examples.internal.rsched.DriverExample"
 
 # worker class to run
 twister2.resource.job.worker.class: "edu.iu.dsc.tws.examples.internal.rsched.BasicK8sWorker"
