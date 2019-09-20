@@ -34,7 +34,7 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
                                                    BuildableTSet outputTset, boolean isIterative) {
     DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", dataflowGraph).
-        setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig);
+        setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig).setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);
     return null;
   }

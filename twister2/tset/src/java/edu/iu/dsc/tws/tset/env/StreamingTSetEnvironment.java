@@ -23,6 +23,10 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
     super(wEnv);
   }
 
+  public StreamingTSetEnvironment() {
+    super();
+  }
+
   @Override
   public OperationMode getOperationMode() {
     return OperationMode.STREAMING;

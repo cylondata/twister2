@@ -28,7 +28,8 @@ public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
   }
 
   @Override
-  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph, BuildableTSet outputTset, boolean isIterative) {
+  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
+                                                   BuildableTSet outputTset, boolean isIterative) {
     return super.executeDataFlowGraph(dataflowGraph, outputTset, isIterative);
   }
 
