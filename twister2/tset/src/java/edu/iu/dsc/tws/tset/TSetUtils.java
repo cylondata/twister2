@@ -16,14 +16,8 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 
 public final class TSetUtils {
-  private static long genCount = 0;
-
   private TSetUtils() {
   }
-
-//  public static String generateName(String prefix) {
-//    return "__" + prefix + (++genCount);
-//  }
 
   public static MessageType getDataType(Class type) {
     if (type == int[].class) {
