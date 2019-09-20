@@ -3,9 +3,12 @@ import setuptools
 with open("../../../../../README.md", "r") as fh:
     long_description = fh.read()
 
+
+print(setuptools.find_packages())
+
 setuptools.setup(
     name='twister2',
-    version='0.1.1',
+    version='0.1.2',
     author="Twister2 Developers",
     author_email="twister2@googlegroups.com",
     description="Twister2 is a composable big data environment supporting streaming, data pipelines and analytics. Our vision is to build robust, simple to use data analytics solutions that can leverage both clouds and high performance computing infrastructure.",
@@ -19,4 +22,9 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[
+        'jep',
+        'cloudpickle',
+        'numpy'
+    ],
 )

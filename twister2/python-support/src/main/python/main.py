@@ -3,7 +3,6 @@ import numpy as np
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
-print("Test")
 env = Twister2Environment(name="MyPython", config={"YOYO": 123}, resources=[{"cpu": 1, "ram": 1024, "instances": 2}])
 
 
@@ -28,7 +27,6 @@ partitioned = source.partition(env.functions.partition.load_balanced)
 
 
 def map(x):
-    print("Mapping")
     x[1, 1] = 200
     return x.reshape(6, 1)
 

@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
@@ -109,14 +110,21 @@ public class PythonWorker implements BatchTSetIWorker {
     String mainFile = System.getProperty("main_file");
 
     boolean zip = pythonFile.endsWith("zip");
+    if (zip) {
+      try {
+        String unzipDir = PythonWorkerUtils.unzip(pythonFile);
+        pythonFile = new File(unzipDir, mainFile).getAbsolutePath();
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed when extracting zip file.", e);
+        return;
+      }
+    }
 
     final BootstrapPoint bootstrapPoint = new BootstrapPoint();
     String mainPy = new File(pythonFile).getAbsolutePath();
     final GatewayServer gatewayServer = initJavaServer(4500, bootstrapPoint, mainPy, true);
     final Semaphore semaphore = new Semaphore(0);
-    bootstrapPoint.setBootstrapListener(bootstrapPoint1 -> {
-      semaphore.release();
-    });
+    bootstrapPoint.setBootstrapListener(bootstrapPoint1 -> semaphore.release());
     LOG.info("Exchanging configurations...");
     gatewayServer.start();
 
