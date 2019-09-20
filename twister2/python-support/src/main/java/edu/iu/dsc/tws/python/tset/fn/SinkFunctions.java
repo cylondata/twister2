@@ -27,7 +27,6 @@ public class SinkFunctions extends TFunc<SinkFunc> {
     PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(pyBinary);
     return (SinkFunc) value -> {
       Object invoke = pythonLambdaProcessor.invoke(value);
-      System.out.println(invoke);
       // in python lambda, use can return nothing
       if (invoke == null) {
         return false;

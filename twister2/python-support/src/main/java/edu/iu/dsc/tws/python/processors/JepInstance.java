@@ -23,12 +23,11 @@ public final class JepInstance extends ThreadLocal<Jep> {
   protected Jep initialValue() {
     JepConfig jepConfig = new JepConfig();
     jepConfig.setRedirectOutputStreams(true);
-    //todo temp fix
-    jepConfig.addIncludePaths(
-        "/home/chathura/Code/twister2/twister2/python-support/src/main/python"
-    );
+//    jepConfig.addIncludePaths(
+//        "/home/chathura/Code/twister2/twister2/python-support/src/main/python"
+//    );
     try {
-      Jep jep = new Jep(jepConfig);
+      TSharedInterpreter jep = new TSharedInterpreter(jepConfig);
       jep.eval("import cloudpickle as cp");
       jep.eval("import base64");
       jep.eval("from abc import ABC, abstractmethod");

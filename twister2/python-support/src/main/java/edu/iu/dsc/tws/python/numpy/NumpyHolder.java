@@ -12,16 +12,34 @@
 package edu.iu.dsc.tws.python.numpy;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NumpyHolder implements Serializable {
 
   private Object numpyFlatArray;
-  private final Object type;
-  private final Object shape;
+  private Object type;
+  private Object shape;
+
+  public NumpyHolder() {
+
+  }
 
   public NumpyHolder(Object numpyFlatArray, Object type, Object shape) {
     this.numpyFlatArray = numpyFlatArray;
+    this.type = new ArrayList<>((List) type);
+    this.shape = shape;
+  }
+
+  public void setNumpyFlatArray(Object numpyFlatArray) {
+    this.numpyFlatArray = numpyFlatArray;
+  }
+
+  public void setType(Object type) {
     this.type = type;
+  }
+
+  public void setShape(Object shape) {
     this.shape = shape;
   }
 

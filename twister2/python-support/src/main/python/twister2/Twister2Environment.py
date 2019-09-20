@@ -12,7 +12,12 @@ from twister2.utils import SourceWrapper
 
 class Twister2Environment:
 
-    def __init__(self, name=None, resources=None, config={}):
+    def __init__(self, name=None, resources=None, config=None):
+        if config is None:
+            config = {}
+        if resources is None:
+            resources = []
+
         port = int(os.environ['T2_PORT'])
         bootstrap = os.environ['T2_BOOTSTRAP'] == "true"
         gateway = JavaGateway(gateway_parameters=GatewayParameters(port=port))
@@ -24,6 +29,9 @@ class Twister2Environment:
 
             if name is not None:
                 self.__entrypoint.setJobName(name)
+
+            for resource in resources:
+                self.__entrypoint.createComputeResource(resource["cpu"], resource["ram"], resource["instances"])
 
             self.__entrypoint.commit()
             time.sleep(5)

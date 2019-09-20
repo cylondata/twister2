@@ -29,8 +29,9 @@ public class BootstrapPoint {
     }
   }
 
-  public void createComputeResource(double cpu, int ram, int instances) {
-    this.computeResources.add(new ComputeResource(cpu, ram, instances));
+  public void createComputeResource(Number cpu, Number ram, Number instances) {
+    this.computeResources.add(new ComputeResource(cpu.doubleValue(), ram.intValue(),
+        instances.intValue()));
   }
 
   public String getJobName() {

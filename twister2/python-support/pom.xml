@@ -25,6 +25,13 @@
             <artifactId>api-java</artifactId>
             <version>0.3.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.ow2.asm/asm -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>5.0.3</version>
+        </dependency>
+
         <dependency>
             <groupId>org.twister2</groupId>
             <artifactId>tset-java</artifactId>

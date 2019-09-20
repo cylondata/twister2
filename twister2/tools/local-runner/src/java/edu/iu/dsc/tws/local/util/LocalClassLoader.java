@@ -50,6 +50,7 @@ public class LocalClassLoader extends SecureClassLoader {
     // delegating following packages to parent class loader
     twsPackagesToExclude.add("edu.iu.dsc.tws.proto");
     twsPackagesToExclude.add("jep"); // to support python debugging
+    twsPackagesToExclude.add("edu.iu.dsc.tws.python.processors.JepInstance");
   }
 
   public void addJobClass(String jobClass) {
