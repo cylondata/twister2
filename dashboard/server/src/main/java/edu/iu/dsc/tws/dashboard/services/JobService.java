@@ -61,7 +61,7 @@ public class JobService {
       computeResource.setJob(job);
     });
 
-    if (scalableResourcesCount.get() != 1) {
+    if (scalableResourcesCount.get() > 1) {
       throw new RuntimeException("Job should have exactly one "
           + "scalable resource. Found : " + scalableResourcesCount);
     }
