@@ -30,6 +30,10 @@ public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Recep
 
   private TSetContext tSetContext;
 
+  public SinkOp() {
+
+  }
+
   public SinkOp(SinkFunc<T> sink) {
     this.sink = sink;
   }

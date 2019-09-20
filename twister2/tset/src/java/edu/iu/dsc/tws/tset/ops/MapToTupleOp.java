@@ -11,7 +11,6 @@
 //  limitations under the License.
 
 
-
 package edu.iu.dsc.tws.tset.ops;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -21,6 +20,10 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 public class MapToTupleOp<K, O, I> extends BaseComputeOp<I> {
   private MapFunc<Tuple<K, O>, I> mapFunction;
+
+  public MapToTupleOp() {
+
+  }
 
   public MapToTupleOp(MapFunc<Tuple<K, O>, I> mapToTupFn) {
     this.mapFunction = mapToTupFn;
