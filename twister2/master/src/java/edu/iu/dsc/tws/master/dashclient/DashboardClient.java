@@ -55,6 +55,7 @@ public class DashboardClient {
   public boolean registerJob(JobAPI.Job job, JobMasterAPI.NodeInfo jobMasterNodeInfo) {
 
     RegisterJob registerJob = new RegisterJob(jobID, job, jobMasterNodeInfo);
+    LOG.fine("Registering job to dashboard: " + job + "jobMasterNodeInfo: " + jobMasterNodeInfo);
     String path = "jobs/";
 
     try {
