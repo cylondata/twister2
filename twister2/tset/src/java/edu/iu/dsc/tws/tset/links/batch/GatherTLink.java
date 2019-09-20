@@ -27,7 +27,6 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 /**
@@ -49,7 +48,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 public class GatherTLink<T> extends BBaseGatherLink<T> {
 
   public GatherTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("gather"), sourceParallelism, 1);
+    super(tSetEnv, "gather", sourceParallelism, 1);
   }
 
   @Override

@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -42,17 +41,17 @@ public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
 
   @Override
   public <P> SComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("smap"), new MapIterCompute<>(mapFn));
+    return compute("smap", new MapIterCompute<>(mapFn));
   }
 
   @Override
   public <P> SComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("sflatmap"), new FlatMapIterCompute<>(mapFn));
+    return compute("sflatmap", new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    SComputeTSet<Object, Iterator<T>> set = compute(TSetUtils.generateName("sforeach"),
+    SComputeTSet<Object, Iterator<T>> set = compute("sforeach",
         new ForEachIterCompute<>(applyFunction)
     );
   }

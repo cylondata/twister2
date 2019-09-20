@@ -17,7 +17,6 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
 public class SKeyedPartitionTLink<K, V> extends SSingleLink<Tuple<K, V>> {
@@ -25,7 +24,7 @@ public class SKeyedPartitionTLink<K, V> extends SSingleLink<Tuple<K, V>> {
 
   public SKeyedPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
                               int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("skpartition"), sourceParallelism);
+    super(tSetEnv, "skpartition", sourceParallelism);
     this.partitionFunction = parFn;
   }
 

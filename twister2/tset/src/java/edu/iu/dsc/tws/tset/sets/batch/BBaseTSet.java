@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
@@ -109,7 +108,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
           + "perform a union operation");
     }
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
         new MapIterCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -127,7 +126,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
         new MapIterCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet

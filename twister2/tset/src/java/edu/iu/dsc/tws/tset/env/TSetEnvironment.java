@@ -38,7 +38,7 @@ import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-import edu.iu.dsc.tws.tset.TSetGraph;
+import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
@@ -50,7 +50,7 @@ public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
-  private TSetGraph tsetGraph;
+  private TBaseGraph tBaseGraph;
   private TaskExecutor taskExecutor;
   private ComputeGraph itergraph;
   private ExecutionPlan iterexecutionPlan;
@@ -63,7 +63,7 @@ public abstract class TSetEnvironment {
   protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
 
-    this.tsetGraph = new TSetGraph(this, getOperationMode());
+    this.tBaseGraph = new TBaseGraph(getOperationMode());
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
@@ -78,8 +78,8 @@ public abstract class TSetEnvironment {
    *
    * @return tset graph
    */
-  public TSetGraph getGraph() {
-    return tsetGraph;
+  public TBaseGraph getGraph() {
+    return tBaseGraph;
   }
 
   /**
@@ -122,12 +122,12 @@ public abstract class TSetEnvironment {
    * Runs the entire TSet graph
    */
   public void run() {
-    ComputeGraph graph = tsetGraph.build();
+    ComputeGraph graph = tBaseGraph.build();
     executeDataFlowGraph(graph, null, false);
   }
 
-  protected TSetGraph getTSetGraph() {
-    return tsetGraph;
+  protected TBaseGraph getTSetGraph() {
+    return tBaseGraph;
   }
 
   /**
@@ -162,7 +162,7 @@ public abstract class TSetEnvironment {
       taskExecutor.execute(dataflowGraph, executionPlan);
 
       // once a graph is built and executed, reset the underlying builder!
-      tsetGraph.resetDfwGraphBuilder();
+      tBaseGraph.resetDfwGraphBuilder();
     }
 
     // output tset alone does not guarantees that there will be an output available.
@@ -178,7 +178,7 @@ public abstract class TSetEnvironment {
 
   public void finishIter() {
     taskExecutor.waitFor(itergraph, iterexecutionPlan);
-    tsetGraph.resetDfwGraphBuilder();
+    tBaseGraph.resetDfwGraphBuilder();
     itergraph = null;
     iterexecutionPlan = null;
   }

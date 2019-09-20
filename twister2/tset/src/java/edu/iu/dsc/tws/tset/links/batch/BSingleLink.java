@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
@@ -56,18 +55,17 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
 
   @Override
   public <P> ComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("map"), new MapCompute<>(mapFn));
+    return compute("map", new MapCompute<>(mapFn));
   }
 
   @Override
   public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("flatmap"), new FlatMapCompute<>(mapFn));
+    return compute("flatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = compute(TSetUtils.generateName("foreach"),
-        new ForEachCompute<>(applyFunction));
+    ComputeTSet<Object, T> set = compute("foreach", new ForEachCompute<>(applyFunction));
 
     getTSetEnv().run(set);
   }

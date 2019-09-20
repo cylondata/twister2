@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SAllGatherTLink;
@@ -115,7 +114,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
           + "perform a union operation");
     }
 
-    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+    SComputeTSet<T, T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
@@ -132,7 +131,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
 
   @Override
   public SComputeTSet<T, T> union(Collection<TSet<T>> tSets) {
-    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+    SComputeTSet<T, T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet

@@ -26,13 +26,11 @@
 package edu.iu.dsc.tws.tset;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -44,24 +42,21 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
-import edu.iu.dsc.tws.tset.env.TSetEnvironment;
-import edu.iu.dsc.tws.tset.links.BuildableTLink;
+import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
-public class TSetGraph {
-  private static final Logger LOG = Logger.getLogger(TSetGraph.class.getName());
+public class TBaseGraph {
+  private static final Logger LOG = Logger.getLogger(TBaseGraph.class.getName());
 
   private static int taskGraphCount = 0; // todo: this could be a problem for fault tolerance
 
-  private TSetEnvironment env;
   private MutableGraph<TBase> graph;
   private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
   private OperationMode opMode;
 
   private Set<BuildableTSet> sources;
 
-  public TSetGraph(TSetEnvironment tSetEnv, OperationMode operationMode) {
-    this.env = tSetEnv;
+  public TBaseGraph(OperationMode operationMode) {
     this.graph = GraphBuilder.directed()
         .allowsSelfLoops(false) // because this is a DAG
         .expectedNodeCount(100000) // use config and change this value
@@ -146,23 +141,22 @@ public class TSetGraph {
 
   /**
    * Builds the entire graph
-   * todo: this is performing iterative BFS. Use multi source BFS instead
    *
    * @return data flow graph to execute
    */
   public ComputeGraph build() {
-    Set<BuildableTLink> links = new LinkedHashSet<>();
-    Set<BuildableTSet> sets = new LinkedHashSet<>();
+    Set<TBase> buildSeq = conditionalBFS(sources, this::getSuccessors);
+    LOG.info(() -> "Build order: " + buildSeq.toString());
 
-    Set<TBase> buildOrder = new LinkedHashSet<>();
+    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
+    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
 
-    for (BuildableTSet src : sources) {
-      buildOrder.addAll(bfs(src, links, sets, this::getSuccessors));
-    }
+    // clean the upstream of the cached tsets
+//    if (cleanUpstream(sets)) {
+//      LOG.fine("Some TSets have been cleaned up!");
+//    }
 
-    LOG.fine(() -> "Build order: " + buildOrder.toString());
-
-    return buildGraph(links, sets, false);
+    return dataflowGraph;
   }
 
   /**
@@ -172,84 +166,83 @@ public class TSetGraph {
    * @return data flow graph to execute the subgraph of TSets
    */
   public ComputeGraph build(BuildableTSet leafTSet) {
-    Set<BuildableTLink> links = new LinkedHashSet<>();
-    Set<BuildableTSet> sets = new LinkedHashSet<>();
+    Set<TBase> buildSeq = conditionalBFS(leafTSet, this::getPredecessors);
 
-    Set<TBase> buildOrder = bfs(leafTSet, links, sets, this::getPredecessors);
-
-    LOG.fine(() -> "Build order: " + buildOrder.toString());
-
-    return buildGraph(links, sets, true);
-  }
-
-  private ComputeGraph buildGraph(Collection<BuildableTLink> links, Collection<BuildableTSet> sets,
-                                  boolean reverse) {
-
-    LOG.fine(() -> "Node build order: " + sets + " reversed: " + reverse);
-    Iterator<BuildableTSet> setsItr = reverse ? new LinkedList<>(sets).descendingIterator()
-        : sets.iterator();
-    while (setsItr.hasNext()) {
-      setsItr.next().build(this);
-    }
-
-    LOG.fine(() -> "Edge build order: " + links + " reversed: " + reverse);
-    // links need to be built in order. check issue #519
-/*    for (int i = 0; i < links.size(); i++) {
-      links.get(links.size() - i - 1).build(this, sets);
-    }*/
-    Iterator<BuildableTLink> linksItr = reverse ? new LinkedList<>(links).descendingIterator()
-        : links.iterator();
-    while (linksItr.hasNext()) {
-      linksItr.next().build(this, sets);
-    }
+    LOG.info(() -> "Build order: " + buildSeq.toString());
 
     ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
 
     // clean the upstream of the cached tsets
-    if (cleanUpstream(sets)) {
-      LOG.fine("Some TSets have been cleaned up!");
-    }
+//    if (cleanUpstream(sets)) {
+//      LOG.fine("Some TSets have been cleaned up!");
+//    }
 
     return dataflowGraph;
   }
 
-  private Set<TBase> bfs(BuildableTSet s, Collection<BuildableTLink> links,
-                         Collection<BuildableTSet> sets, AdjNodesExtractor adjNodesExtractor) {
-    Set<TBase> buildOrder = new LinkedHashSet<>();
+  /**
+   * This is a tweaked version of BFS, where a node would be skipped from processing and added back
+   * to the queue, if a particular condition is met.
+   * Here, the condition is, if the current TBase is a TLink, then check if all its adjacent nodes
+   * have been traversed. If these conditions are met, process the tlink, else add it back to the
+   * end of the queue
+   *
+   * @return build seq
+   */
+  private Set<TBase> conditionalBFS(BuildableTSet root, AdjNodesExtractor adjNodesExtractor) {
+    return conditionalBFS(Collections.singletonList(root), adjNodesExtractor);
+  }
 
-    Map<TBase, Boolean> visited = new HashMap<>();
-
+  /**
+   * Same case as above this but can handle multiple roots
+   *
+   * @return build seq
+   */
+  private Set<TBase> conditionalBFS(Collection<? extends BuildableTSet> roots,
+                                    AdjNodesExtractor adjNodesExtractor) {
+    Set<TBase> buildSequence = new LinkedHashSet<>();
+    Set<TBase> visited = new HashSet<>();
     Deque<TBase> queue = new LinkedList<>();
 
-    visited.put(s, true);
-    queue.add(s);
+    for (TBase root : roots) {
+      visited.add(root);
+      queue.add(root);
 
-    while (queue.size() != 0) {
-      TBase t = queue.poll();
-      buildOrder.add(t);
-      if (t instanceof BuildableTLink) {
-        links.add((BuildableTLink) t);
-      } else if (t instanceof BuildableTSet) {
-        sets.add((BuildableTSet) t);
-      }
+      while (queue.size() != 0) {
+        TBase t = queue.poll();
 
-      for (TBase parent : adjNodesExtractor.extract(t)) {
-        if (visited.get(parent) == null || !visited.get(parent)) {
-          visited.put(parent, true);
-          queue.add(parent);
+        for (TBase adj : adjNodesExtractor.extract(t)) {
+          if (!visited.contains(adj)) {
+            visited.add(adj);
+            queue.add(adj);
+          }
         }
+
+        if (t instanceof TLink && !allAdjNodesTraversed((TLink) t, buildSequence,
+            adjNodesExtractor)) {
+          queue.add(t);
+          continue;
+        }
+
+        buildSequence.add(t);
+        // here it is sufficient to pass the partial build sequence to build the links. Because the
+        // above condition ensures that all the relevant nodes at both ends of a tlink are built,
+        // before building the TLink.
+        ((Buildable) t).build(buildSequence);
       }
     }
 
-    return buildOrder;
+    return buildSequence;
   }
 
+  // todo: this functionality is broken!!
   private boolean cleanUpstream(Collection<BuildableTSet> tSets) {
     Set<TBase> toRemove = new HashSet<>();
 
     boolean changed = false;
 
+    // todo: need to clean up the entire upstream! not just the precessesor of cacheable!!
     for (BuildableTSet tset : tSets) {
       if (tset instanceof Cacheable) {
         toRemove.addAll(getPredecessors(tset));
@@ -265,5 +258,16 @@ public class TSetGraph {
 
   interface AdjNodesExtractor {
     Set<TBase> extract(TBase node);
+  }
+
+  private boolean allAdjNodesTraversed(TLink node, Set<TBase> buildSeq,
+                                       AdjNodesExtractor adjNodesExtractor) {
+    // all adj nodes needs to be in the build sequence
+    for (TBase adj : adjNodesExtractor.extract((TBase) node)) {
+      if (!buildSeq.contains(adj)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

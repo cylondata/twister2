@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 
@@ -39,7 +38,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * @param parallelism the parallelism of the sink
    */
   public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("ssink"), parallelism);
+    super(tSetEnv, "ssink", parallelism);
     this.sink = s;
   }
 

@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
@@ -25,12 +24,12 @@ public class ComputeTSet<O, I> extends BBaseTSet<O> {
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
                      int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("compute"), computeFunction, parallelism);
+    this(tSetEnv, "compute", computeFunction, parallelism);
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
                      int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("computec"), compOp, parallelism);
+    this(tSetEnv, "computec", compOp, parallelism);
   }
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeOp<O, I> computeFunction,

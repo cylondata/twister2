@@ -16,7 +16,6 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
@@ -35,13 +34,13 @@ public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
                     MapToTupleIterOp<K, V, ?> genTupleOp, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
+    super(tSetEnv, "skeyed", parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
                     MapToTupleOp<K, V, ?> genTupleOp, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("skeyed"), parallelism);
+    super(tSetEnv, "skeyed", parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 

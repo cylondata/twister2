@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
@@ -40,18 +39,17 @@ public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
 
   @Override
   public <P> SComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("smap"), new MapCompute<>(mapFn));
+    return compute("smap", new MapCompute<>(mapFn));
   }
 
   @Override
   public <P> SComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("sflatmap"), new FlatMapCompute<>(mapFn));
+    return compute("sflatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    SComputeTSet<Object, T> set = compute(TSetUtils.generateName("sforeach"),
-        new ForEachCompute<>(applyFunction));
+    SComputeTSet<Object, T> set = compute("sforeach", new ForEachCompute<>(applyFunction));
   }
 
   @Override

@@ -31,7 +31,6 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedGatherTLink<K, V> extends BIteratorLink<Tuple<K, Iterator<V>>> {
@@ -43,7 +42,7 @@ public class KeyedGatherTLink<K, V> extends BIteratorLink<Tuple<K, Iterator<V>>>
 
   public KeyedGatherTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> partitionFn,
                           int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("kgather"), sourceParallelism);
+    super(tSetEnv, "kgather", sourceParallelism);
     this.partitionFunction = partitionFn;
   }
 

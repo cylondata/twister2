@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
@@ -68,7 +67,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
   public CachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("cached"), parallelism);
+    super(tSetEnv, "cached", parallelism);
     this.data = new DataObjectImpl<>(tSetEnv.getConfig());
 
     this.sinkOp = new SinkOp<>(sinkFunc);
@@ -82,21 +81,21 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   @Override
   public DirectTLink<T> direct() {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.direct();
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.reduce(reduceFn);
   }
 
   @Override
   public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.partition(partitionFn, targetParallelism);
   }
 
@@ -108,35 +107,35 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   @Override
   public GatherTLink<T> gather() {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.gather();
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.allReduce(reduceFn);
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.allGather();
   }
 
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.mapToTuple(generateTuple);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
     SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(data),
-        getParallelism()).setName(TSetUtils.generateName(generatePrefix()));
+        getParallelism()).setName(generatePrefix());
     return cacheSource.replicate(replications);
   }
 

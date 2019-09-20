@@ -24,8 +24,7 @@ import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
-import edu.iu.dsc.tws.tset.TSetGraph;
-import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
@@ -49,7 +48,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
   public JoinTLink(BatchTSetEnvironment env, CommunicationContext.JoinType type,
                    Comparator<K> kComparator, TaskPartitioner<K> partitioner, TupleTSet leftT,
                    TupleTSet rightT) {
-    super(env, TSetUtils.generateName("join"), ((BuildableTSet) leftT).getParallelism());
+    super(env, "join", ((BuildableTSet) leftT).getParallelism());
     this.joinType = type;
     this.leftTSet = leftT;
     this.rightTSet = rightT;
@@ -69,11 +68,11 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
   }
 
   @Override
-  public void build(TSetGraph tSetGraph, Collection<? extends TBase> tSets) {
+  public void build(Collection<? extends TBase> partialBuildSeq) {
 
     // filter out the relevant sources out of the predecessors
-    ArrayList<TBase> sources = new ArrayList<>(tSetGraph.getPredecessors(this));
-    sources.retainAll(tSets);
+    ArrayList<TBase> sources = new ArrayList<>(getTBaseGraph().getPredecessors(this));
+    sources.retainAll(partialBuildSeq);
 
     if (sources.size() != 2) {
       throw new RuntimeException("Join TLink predecessor count should be 2: Received "
@@ -81,8 +80,8 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     }
 
     // filter out the relevant sources out of the successors
-    HashSet<TBase> targets = new HashSet<>(tSetGraph.getSuccessors(this));
-    targets.retainAll(tSets);
+    HashSet<TBase> targets = new HashSet<>(getTBaseGraph().getSuccessors(this));
+    targets.retainAll(partialBuildSeq);
 
     for (TBase target : targets) {
       // group name = left_right_join_target
@@ -90,14 +89,14 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
           + target.getId();
 
       // build left
-      buildJoin(tSetGraph, leftTSet, target, 0, groupName);
+      buildJoin(getTBaseGraph(), leftTSet, target, 0, groupName);
 
       // build right
-      buildJoin(tSetGraph, rightTSet, target, 1, groupName);
+      buildJoin(getTBaseGraph(), rightTSet, target, 1, groupName);
     }
   }
 
-  private void buildJoin(TSetGraph tSetGraph, TBase s, TBase t, int idx, String groupName) {
+  private void buildJoin(TBaseGraph tBaseGraph, TBase s, TBase t, int idx, String groupName) {
     Edge e = getEdge();
     // override edge name with join_source_target
     e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
@@ -111,6 +110,6 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, false);
 
-    tSetGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
+    tBaseGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
   }
 }

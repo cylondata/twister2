@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.tset.sets.streaming;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
@@ -24,12 +23,12 @@ public class SComputeTSet<O, I> extends SBaseTSet<O> {
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
                       int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("scompute"), computeFunction, parallelism);
+    this(tSetEnv, "scompute", computeFunction, parallelism);
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
                       int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("scomputec"), compOp, parallelism);
+    this(tSetEnv, "scomputec", compOp, parallelism);
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,

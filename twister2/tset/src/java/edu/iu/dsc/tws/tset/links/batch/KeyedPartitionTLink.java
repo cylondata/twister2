@@ -29,7 +29,6 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
 public class KeyedPartitionTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
@@ -37,7 +36,7 @@ public class KeyedPartitionTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
 
   public KeyedPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> parFn,
                              int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("kpartition"), sourceParallelism);
+    super(tSetEnv, "kpartition", sourceParallelism);
     this.partitionFunction = parFn;
   }
 

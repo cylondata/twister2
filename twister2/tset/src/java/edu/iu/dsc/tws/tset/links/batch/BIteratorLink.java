@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
@@ -47,17 +46,17 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
 
   @Override
   public <P> ComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("map"), new MapIterCompute<>(mapFn));
+    return compute("map", new MapIterCompute<>(mapFn));
   }
 
   @Override
   public <P> ComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("flatmap"), new FlatMapIterCompute<>(mapFn));
+    return compute("flatmap", new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, Iterator<T>> set = compute(TSetUtils.generateName("foreach"),
+    ComputeTSet<Object, Iterator<T>> set = compute("foreach",
         new ForEachIterCompute<>(applyFunction)
     );
 

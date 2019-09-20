@@ -70,13 +70,13 @@ public abstract class BaseTSet<T> implements BuildableTSet {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(TSetEnvironment tSetEnv, String name) {
-    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
+  public BaseTSet(TSetEnvironment tSetEnv, String id) {
+    this(tSetEnv, id, tSetEnv.getDefaultParallelism());
   }
 
   public BaseTSet(TSetEnvironment env, String n, int parallel) {
     this.tSetEnv = env;
-    this.id = n;
+    this.id = generateID(n);
     this.parallelism = parallel;
 
     this.name = id;
@@ -137,7 +137,7 @@ public abstract class BaseTSet<T> implements BuildableTSet {
 
   @Override
   public String toString() {
-    return getName() + "(" + getId() + ")[" + getParallelism() + "]";
+    return getName() + "[" + getParallelism() + "]";
   }
 
   @Override

@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.tset.links.streaming;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
 /**
@@ -26,7 +25,7 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 public class SGatherTLink<T> extends SBaseGatherLink<T> {
 
   public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("sgather"), sourceParallelism, 1);
+    super(tSetEnv, "sgather", sourceParallelism, 1);
   }
 
   @Override

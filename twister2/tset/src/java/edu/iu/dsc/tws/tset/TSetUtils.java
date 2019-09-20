@@ -21,9 +21,9 @@ public final class TSetUtils {
   private TSetUtils() {
   }
 
-  public static String generateName(String prefix) {
-    return prefix + (++genCount);
-  }
+//  public static String generateName(String prefix) {
+//    return "__" + prefix + (++genCount);
+//  }
 
   public static MessageType getDataType(Class type) {
     if (type == int[].class) {

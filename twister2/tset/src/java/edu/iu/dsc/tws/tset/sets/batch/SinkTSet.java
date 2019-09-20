@@ -14,7 +14,6 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 
@@ -39,7 +38,7 @@ public class SinkTSet<T> extends BBaseTSet<T> {
    * @param parallelism the parallelism of the sink
    */
   public SinkTSet(BatchTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("sink"), parallelism);
+    super(tSetEnv, "sink", parallelism);
     this.sink = s;
   }
 

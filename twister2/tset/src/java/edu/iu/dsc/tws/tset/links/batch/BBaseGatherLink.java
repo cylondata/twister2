@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
@@ -56,26 +55,26 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   computeWithoutKey(ComputeCollector<P, Iterator<T>> computeFunction) {
     ComputeCollectorWrapper<P, Integer, T> computeFnWrapper =
         new ComputeCollectorWrapper<>(computeFunction);
-    return compute(TSetUtils.generateName("computec"));
+    return compute("computec");
   }*/
 
   @Override
   public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
     GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
-    return compute(TSetUtils.generateName("map"), comp);
+    return compute("map", comp);
   }
 
   @Override
   public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
     GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
-    return compute(TSetUtils.generateName("map"), comp);
+    return compute("map", comp);
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
     ComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
-        compute(TSetUtils.generateName("foreach"), comp);
+        compute("foreach", comp);
     addChildToGraph(foreach);
     getTSetEnv().run(foreach);
   }

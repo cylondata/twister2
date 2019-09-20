@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
@@ -44,13 +43,13 @@ public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V>
 
   public KeyedTSet(BatchTSetEnvironment tSetEnv, MapToTupleIterOp<K, V, ?> genTupleOp,
                    int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
+    super(tSetEnv, "keyed", parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
   public KeyedTSet(BatchTSetEnvironment tSetEnv,
                    MapToTupleOp<K, V, ?> genTupleOp, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("keyed"), parallelism);
+    super(tSetEnv, "keyed", parallelism);
     this.mapToTupleOp = genTupleOp;
   }
 
