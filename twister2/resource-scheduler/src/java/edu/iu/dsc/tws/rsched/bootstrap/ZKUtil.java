@@ -238,6 +238,7 @@ public final class ZKUtil {
    * create a PersistentNode object in the given path
    * it needs to be deleted explicitly, not ephemeral
    * it will be persistent for occasional network problems
+   *
    * @param path
    * @param payload
    * @return
@@ -247,7 +248,7 @@ public final class ZKUtil {
                                                               String path,
                                                               byte[] payload) {
 
-    return new PersistentNode(client, CreateMode.EPHEMERAL, false, path, payload);
+    return new PersistentNode(client, CreateMode.PERSISTENT, true, path, payload);
   }
 
   /**

@@ -155,7 +155,7 @@ public final class ZKJobGroupExample {
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time
-    sleeeep((long) (Math.random() * 2000));
+//    sleeeep((long) (Math.random() * 2000));
     zkJobGroup.close();
   }
 
