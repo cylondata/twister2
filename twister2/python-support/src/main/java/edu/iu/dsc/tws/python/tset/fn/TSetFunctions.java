@@ -31,11 +31,23 @@ public final class TSetFunctions {
     return MapFunctions.getInstance();
   }
 
+  public FlatMapFunctions flatMap() {
+    return FlatMapFunctions.getInstance();
+  }
+
   public ComputeFunctions compute() {
     return ComputeFunctions.getInstance();
   }
 
   public SinkFunctions sink() {
     return SinkFunctions.getInstance();
+  }
+
+  public ReduceFunctions reduce() {
+    return ReduceFunctions.getInstance();
+  }
+
+  public ApplyFunctions apply() {
+    return ApplyFunctions.getInstance();
   }
 }

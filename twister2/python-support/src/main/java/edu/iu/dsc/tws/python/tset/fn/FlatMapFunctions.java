@@ -13,37 +13,34 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-public final class MapFunctions extends TFunc<MapFunc> {
+public class FlatMapFunctions extends TFunc<FlatMapFunc> {
 
-  private static final MapFunctions INSTANCE = new MapFunctions();
+  private static final FlatMapFunctions INSTANCE = new FlatMapFunctions();
 
-  private MapFunctions() {
-
-  }
-
-  static MapFunctions getInstance() {
+  public static FlatMapFunctions getInstance() {
     return INSTANCE;
   }
 
-  static class MapFuncImpl implements MapFunc, Serializable {
+  public static class FlatMapFuncImpl implements FlatMapFunc, Serializable {
 
-    private PythonLambdaProcessor lambdaProcessor;
+    private PythonLambdaProcessor pythonLambdaProcessor;
 
-    MapFuncImpl(byte[] lambdaProcessor) {
-      this.lambdaProcessor = new PythonLambdaProcessor(lambdaProcessor);
+    FlatMapFuncImpl(byte[] pyBinary) {
+      this.pythonLambdaProcessor = new PythonLambdaProcessor(pyBinary);
     }
 
     @Override
-    public Object map(Object input) {
-      return lambdaProcessor.invoke(input);
+    public void flatMap(Object o, Collector collector) {
+      this.pythonLambdaProcessor.invoke(o, collector);
     }
   }
 
   @Override
-  public MapFunc build(byte[] pyBinary) {
-    return new MapFuncImpl(pyBinary);
+  public FlatMapFunc build(byte[] pyBinary) {
+    return new FlatMapFuncImpl(pyBinary);
   }
 }

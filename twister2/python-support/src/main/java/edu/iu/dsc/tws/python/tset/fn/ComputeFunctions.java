@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
+import java.io.Serializable;
+
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
@@ -22,9 +24,22 @@ public class ComputeFunctions extends TFunc<ComputeFunc> {
     return INSTANCE;
   }
 
+  public static class ComputeFuncImpl implements ComputeFunc, Serializable {
+
+    private PythonLambdaProcessor lambdaProcessor;
+
+    ComputeFuncImpl(byte[] byBinary) {
+      this.lambdaProcessor = new PythonLambdaProcessor(byBinary);
+    }
+
+    @Override
+    public Object compute(Object input) {
+      return this.lambdaProcessor.invoke(input);
+    }
+  }
+
   @Override
   public ComputeFunc build(byte[] pyBinary) {
-    final PythonLambdaProcessor lambdaProcessor = new PythonLambdaProcessor(pyBinary);
-    return (ComputeFunc) lambdaProcessor::invoke;
+    return new ComputeFuncImpl(pyBinary);
   }
 }

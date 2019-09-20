@@ -11,27 +11,36 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import java.io.Serializable;
+
+import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-public class SinkFunctions extends TFunc<SinkFunc> {
+public class ApplyFunctions extends TFunc<ApplyFunc> {
 
-  private static final SinkFunctions INSTANCE = new SinkFunctions();
+  private static final ApplyFunctions INSTANCE = new ApplyFunctions();
 
-  static SinkFunctions getInstance() {
+  public static ApplyFunctions getInstance() {
     return INSTANCE;
   }
 
+  public static class ApplyFuncImpl implements ApplyFunc, Serializable {
+
+    private PythonLambdaProcessor pythonLambdaProcessor;
+
+    ApplyFuncImpl(byte[] pyBytes) {
+      this.pythonLambdaProcessor = new PythonLambdaProcessor(pyBytes);
+    }
+
+    @Override
+    public void apply(Object data) {
+      this.pythonLambdaProcessor.invoke(data);
+    }
+  }
+
+
   @Override
-  public SinkFunc build(byte[] pyBinary) {
-    PythonLambdaProcessor pythonLambdaProcessor = new PythonLambdaProcessor(pyBinary);
-    return (SinkFunc) value -> {
-      Object invoke = pythonLambdaProcessor.invoke(value);
-      // in python lambda, use can return nothing
-      if (invoke == null) {
-        return false;
-      }
-      return (Boolean) invoke;
-    };
+  public ApplyFunc build(byte[] pyBinary) {
+    return new ApplyFuncImpl(pyBinary);
   }
 }

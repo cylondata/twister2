@@ -15,13 +15,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.local.LocalSubmitter;
+import edu.iu.dsc.tws.python.util.PythonWorkerUtils;
+import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
+import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -33,62 +37,124 @@ public class PythonWorker implements BatchTSetIWorker {
 
   private static final Logger LOG = Logger.getLogger(PythonWorker.class.getName());
 
-  private void startPythonProcess(int port) throws IOException {
-    String mainPy = new File(".", "src/main/python/main.py").getAbsolutePath();
-    ProcessBuilder python3 = new ProcessBuilder().command("python3", mainPy,
+  private static void startPythonProcess(String pythonPath, int port,
+                                         boolean bootstrap) throws IOException {
+    LOG.info("Starting python process : " + pythonPath);
+    ProcessBuilder python3 = new ProcessBuilder().command("python3", pythonPath,
         Integer.toString(port));
-    python3.redirectErrorStream(true);
+    python3.environment().put("T2_PORT", Integer.toString(port));
+    python3.environment().put("T2_BOOTSTRAP", Boolean.toString(bootstrap));
 
+    python3.redirectErrorStream(true);
     Process exec = python3.start();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
     String line = null;
     while ((line = reader.readLine()) != null) {
-      System.out.println(line);
+      LOG.info(line);
     }
+    LOG.info("Python process ended.");
+  }
 
+  private static GatewayServer initJavaServer(int port, Object entryPoint,
+                                              String pythonPath, boolean bootstrap) {
+    GatewayServer py4jServer = new GatewayServer(entryPoint, port);
+    py4jServer.addListener(new DefaultGatewayServerListener() {
+
+      @Override
+      public void connectionStarted(Py4JServerConnection gatewayConnection) {
+        LOG.info("Connection established");
+      }
+
+      @Override
+      public void serverStarted() {
+        LOG.info("Started java server on " + port);
+        new Thread(() -> {
+          try {
+            startPythonProcess(pythonPath, port, bootstrap);
+            py4jServer.shutdown();
+          } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Error in starting python process");
+          }
+        }, "python-process" + (bootstrap ? "-bootstrap" : "")).start();
+      }
+    });
+    return py4jServer;
   }
 
   public void execute(BatchTSetEnvironment env) {
-    int port = 12345 + env.getWorkerID();
+    int port = 5000 + env.getWorkerID();
     Twister2Environment twister2Environment = new Twister2Environment(env);
-    GatewayServer py4jServer = new GatewayServer(twister2Environment, port);
-    py4jServer.addListener(new DefaultGatewayServerListener() {
+    String tw2Home = env.getConfig().getStringValue("twister2.directory.home");
+    String pythonFileName = env.getConfig().getStringValue("python_file");
+    String mainPy = new File(tw2Home, pythonFileName).getAbsolutePath();
+    GatewayServer gatewayServer = initJavaServer(port, twister2Environment, mainPy, false);
+    gatewayServer.start();
+    final Semaphore wait = new Semaphore(0);
+    gatewayServer.addListener(new DefaultGatewayServerListener() {
       @Override
-      public void connectionStopped(Py4JServerConnection gatewayConnection) {
-        py4jServer.shutdown();
+      public void serverStopped() {
+        wait.release();
       }
     });
-    LOG.info("Started java server on " + port);
     try {
-      py4jServer.start();
-      this.startPythonProcess(
-          port
-      );
-    } catch (IOException e) {
-      LOG.log(Level.SEVERE, "Error in starting python process");
+      wait.acquire();
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Failed while waiting for the server to stop", e);
     }
   }
 
-  public static void main(String[] args) {
-    LocalSubmitter localSubmitter = LocalSubmitter.prepare(""
-        + "/home/chathura/Code/twister2/twister2/config/src/yaml/conf/");
+  public static void main(String[] args) throws InterruptedException {
+    LOG.info("JP : " + System.getProperty("java.library.path"));
+    String pythonFile = System.getProperty("python_file");
+    String mainFile = System.getProperty("main_file");
 
-    System.out.println(System.getProperty("java.version"));
+    boolean zip = pythonFile.endsWith("zip");
+    if (zip) {
+      try {
+        String unzipDir = PythonWorkerUtils.unzip(pythonFile);
+        pythonFile = new File(unzipDir, mainFile).getAbsolutePath();
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Failed when extracting zip file.", e);
+        return;
+      }
+    }
+
+    final BootstrapPoint bootstrapPoint = new BootstrapPoint();
+    String mainPy = new File(pythonFile).getAbsolutePath();
+    final GatewayServer gatewayServer = initJavaServer(4500, bootstrapPoint, mainPy, true);
+    final Semaphore semaphore = new Semaphore(0);
+    bootstrapPoint.setBootstrapListener(bootstrapPoint1 -> semaphore.release());
+    LOG.info("Exchanging configurations...");
+    gatewayServer.start();
+
+    // this is to start Twister2 job in the main thread. Starting this inside callback, throws
+    // twister2 errors inside python process, since callback is called by python
+    semaphore.acquire();
 
     JobConfig jobConfig = new JobConfig();
-    Twister2Job twister2Job = Twister2Job.newBuilder()
-        .setJobName("python-job")
+    jobConfig.putAll(bootstrapPoint.getConfigs());
+    jobConfig.put("python_file", new File(pythonFile).getName());
+
+    Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
+        .setJobName(bootstrapPoint.getJobName())
         .setWorkerClass(PythonWorker.class)
-        .addComputeResource(1, 512, 1)
-        .setConfig(jobConfig)
-        .build();
+        .setConfig(jobConfig);
 
-    localSubmitter.submitJob(twister2Job, Config.newBuilder().build());
+    if (!bootstrapPoint.getComputeResources().isEmpty()) {
+      bootstrapPoint.getComputeResources().forEach(computeResource -> {
+        twister2JobBuilder.addComputeResource(
+            computeResource.getCpu(),
+            computeResource.getRam(),
+            computeResource.getInstances()
+        );
+      });
+    } else {
+      LOG.warning("Computer resources not specified. Using default resource configurations.");
+      twister2JobBuilder.addComputeResource(1, 512, 1);
+    }
 
-//        for (int i = 0; i < 1; i++) {
-//            new PythonWorker().execute(null, i,
-//                    null, null, null);
-//        }
+    Config config = ResourceAllocator.loadConfig(Collections.emptyMap());
+    Twister2Submitter.submitJob(twister2JobBuilder.build(), config);
   }
 }

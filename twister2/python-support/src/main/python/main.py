@@ -1,7 +1,9 @@
+import numpy as np
+
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
-env = Twister2Environment()
+env = Twister2Environment(name="MyPython", config={"YOYO": 123}, resources=[{"cpu": 1, "ram": 1024, "instances": 2}])
 
 
 class IntegerSource(SourceFunc):
@@ -15,26 +17,28 @@ class IntegerSource(SourceFunc):
 
     def next(self):
         self.x += 1
-        return self.x
+        return np.array([[1, 1, 1], [1, 1, 1.1]])
 
 
 int_source = IntegerSource()
 
-source = env.create_source(int_source, 1)
+source = env.create_source(int_source, 4)
 partitioned = source.partition(env.functions.partition.load_balanced)
 
 
 def map(x):
-    return x + 1
+    x[1, 1] = 200
+    return x.reshape(6, 1)
 
 
 mapped = partitioned.map(map)
 
 
 def sink(s):
-    for x in s:
-        print(x)
+    for i in s:
+        print(i)
     return True
 
 
-mapped.direct().sink(sink)
+direct = mapped.direct()
+direct.sink(sink)

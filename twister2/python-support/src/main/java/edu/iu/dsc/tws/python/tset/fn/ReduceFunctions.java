@@ -13,37 +13,33 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
-public final class MapFunctions extends TFunc<MapFunc> {
+public class ReduceFunctions extends TFunc<ReduceFunc> {
 
-  private static final MapFunctions INSTANCE = new MapFunctions();
+  private static final ReduceFunctions INSTANCE = new ReduceFunctions();
 
-  private MapFunctions() {
-
-  }
-
-  static MapFunctions getInstance() {
+  public static ReduceFunctions getInstance() {
     return INSTANCE;
   }
 
-  static class MapFuncImpl implements MapFunc, Serializable {
+  public static class ReduceFuncImpl implements ReduceFunc, Serializable {
 
-    private PythonLambdaProcessor lambdaProcessor;
+    private PythonLambdaProcessor pythonLambdaProcessor;
 
-    MapFuncImpl(byte[] lambdaProcessor) {
-      this.lambdaProcessor = new PythonLambdaProcessor(lambdaProcessor);
+    public ReduceFuncImpl(byte[] pyBinary) {
+      this.pythonLambdaProcessor = new PythonLambdaProcessor(pyBinary);
     }
 
     @Override
-    public Object map(Object input) {
-      return lambdaProcessor.invoke(input);
+    public Object reduce(Object t1, Object t2) {
+      return this.pythonLambdaProcessor.invoke(t1, t2);
     }
   }
 
   @Override
-  public MapFunc build(byte[] pyBinary) {
-    return new MapFuncImpl(pyBinary);
+  public ReduceFunc build(byte[] pyBinary) {
+    return new ReduceFuncImpl(pyBinary);
   }
 }
