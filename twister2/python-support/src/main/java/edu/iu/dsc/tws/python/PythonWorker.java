@@ -38,10 +38,13 @@ public class PythonWorker implements BatchTSetIWorker {
   private static final Logger LOG = Logger.getLogger(PythonWorker.class.getName());
 
   private static void startPythonProcess(String pythonPath, int port,
-                                         boolean bootstrap) throws IOException {
+                                         boolean bootstrap, String[] args) throws IOException {
     LOG.info("Starting python process : " + pythonPath);
-    ProcessBuilder python3 = new ProcessBuilder().command("python3", pythonPath,
-        Integer.toString(port));
+    String[] newArgs = new String[args.length + 2];
+    newArgs[0] = "python3";
+    newArgs[1] = pythonPath;
+    System.arraycopy(args, 0, newArgs, 2, args.length);
+    ProcessBuilder python3 = new ProcessBuilder().command(newArgs);
     python3.environment().put("T2_PORT", Integer.toString(port));
     python3.environment().put("T2_BOOTSTRAP", Boolean.toString(bootstrap));
 
@@ -57,7 +60,7 @@ public class PythonWorker implements BatchTSetIWorker {
   }
 
   private static GatewayServer initJavaServer(int port, Object entryPoint,
-                                              String pythonPath, boolean bootstrap) {
+                                              String pythonPath, boolean bootstrap, String[] args) {
     GatewayServer py4jServer = new GatewayServer(entryPoint, port);
     py4jServer.addListener(new DefaultGatewayServerListener() {
 
@@ -71,7 +74,7 @@ public class PythonWorker implements BatchTSetIWorker {
         LOG.info("Started java server on " + port);
         new Thread(() -> {
           try {
-            startPythonProcess(pythonPath, port, bootstrap);
+            startPythonProcess(pythonPath, port, bootstrap, args);
             py4jServer.shutdown();
           } catch (IOException e) {
             LOG.log(Level.SEVERE, "Error in starting python process");
@@ -87,8 +90,9 @@ public class PythonWorker implements BatchTSetIWorker {
     Twister2Environment twister2Environment = new Twister2Environment(env);
     String tw2Home = env.getConfig().getStringValue("twister2.directory.home");
     String pythonFileName = env.getConfig().getStringValue("python_file");
+    String[] args = (String[]) env.getConfig().get("args");
     String mainPy = new File(tw2Home, pythonFileName).getAbsolutePath();
-    GatewayServer gatewayServer = initJavaServer(port, twister2Environment, mainPy, false);
+    GatewayServer gatewayServer = initJavaServer(port, twister2Environment, mainPy, false, args);
     gatewayServer.start();
     final Semaphore wait = new Semaphore(0);
     gatewayServer.addListener(new DefaultGatewayServerListener() {
@@ -105,7 +109,6 @@ public class PythonWorker implements BatchTSetIWorker {
   }
 
   public static void main(String[] args) throws InterruptedException {
-    LOG.info("JP : " + System.getProperty("java.library.path"));
     String pythonFile = System.getProperty("python_file");
     String mainFile = System.getProperty("main_file");
 
@@ -122,7 +125,7 @@ public class PythonWorker implements BatchTSetIWorker {
 
     final BootstrapPoint bootstrapPoint = new BootstrapPoint();
     String mainPy = new File(pythonFile).getAbsolutePath();
-    final GatewayServer gatewayServer = initJavaServer(4500, bootstrapPoint, mainPy, true);
+    final GatewayServer gatewayServer = initJavaServer(4500, bootstrapPoint, mainPy, true, args);
     final Semaphore semaphore = new Semaphore(0);
     bootstrapPoint.setBootstrapListener(bootstrapPoint1 -> semaphore.release());
     LOG.info("Exchanging configurations...");
@@ -135,6 +138,7 @@ public class PythonWorker implements BatchTSetIWorker {
     JobConfig jobConfig = new JobConfig();
     jobConfig.putAll(bootstrapPoint.getConfigs());
     jobConfig.put("python_file", new File(pythonFile).getName());
+    jobConfig.put("args", args);
 
     Twister2Job.Twister2JobBuilder twister2JobBuilder = Twister2Job.newBuilder()
         .setJobName(bootstrapPoint.getJobName())
