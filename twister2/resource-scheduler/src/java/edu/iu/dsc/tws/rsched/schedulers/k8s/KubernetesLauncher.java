@@ -154,6 +154,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
     }
 
+    // If clientToPodsUploading is used, wait uploader thread to finish
+    // When dynamic IDriver is used, this thread never finishes
+    // It waits in case a new worker is added by IDriver
+    // User should finish this process with control-C
+    // TODO: may be we can watch the job somehow and exit it when the job completes
+    if (KubernetesContext.clientToPodsUploading(config)) {
+      try {
+        uploader.join();
+      } catch (InterruptedException e) {
+        LOG.warning("Thread Interrupted when waiting for uploader to join.");
+      }
+    }
     return true;
   }
 

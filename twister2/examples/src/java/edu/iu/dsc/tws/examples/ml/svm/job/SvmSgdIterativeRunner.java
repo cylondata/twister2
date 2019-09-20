@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.ml.svm.job;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Random;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -37,6 +36,7 @@ import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMDataObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectCompute;
 import edu.iu.dsc.tws.examples.ml.svm.data.IterativeSVMWeightVectorObjectDirectSink;
 import edu.iu.dsc.tws.examples.ml.svm.data.SVMDataObjectSource;
+import edu.iu.dsc.tws.examples.ml.svm.math.Matrix;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativeDataStream;
 import edu.iu.dsc.tws.examples.ml.svm.streamer.IterativePredictionDataStreamer;
 import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
@@ -213,16 +213,25 @@ public class SvmSgdIterativeRunner extends TaskWorker {
     trainingDoubleDataPointObject = taskExecutor
         .getOutput(trainingDatapointsTaskGraph, datapointsExecutionPlan,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK);
+    double[][] datapoints = null;
+
     for (int i = 0; i < trainingDoubleDataPointObject.getPartitions().length; i++) {
-      double[][] datapoints = trainingDoubleDataPointObject.getPartitions()[i].getConsumer()
+      datapoints = trainingDoubleDataPointObject.getPartitions()[i].getConsumer()
           .next();
       LOG.info(String.format("Training Datapoints : %d,%d", datapoints.length, datapoints[0]
           .length));
-      int randomIndex = new Random()
-          .nextInt(this.svmJobParameters.getSamples() / dataStreamerParallelism - 1);
-      LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
-          .toString(datapoints[randomIndex])));
     }
+    System.out.println("---------Training Data-------------");
+    double sum = 0;
+    int count = 0;
+    for (int j = 0; j < datapoints.length; j++) {
+      sum = Matrix.sum(datapoints[j]);
+      if (sum == 0) {
+        count++;
+      }
+    }
+    System.out.println(String.format("Training: %d,%d, Zero Sum: %d", datapoints.length,
+        datapoints[0].length, count));
   }
 
   private void loadTestingData() {
@@ -233,15 +242,24 @@ public class SvmSgdIterativeRunner extends TaskWorker {
         .getOutput(testingDatapointsTaskGraph, datapointsExecutionPlan,
             Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING);
 
+    double[][] datapoints = null;
     for (int i = 0; i < testingDoubleDataPointObject.getPartitions().length; i++) {
-      double[][] datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
+      datapoints = testingDoubleDataPointObject.getPartitions()[i].getConsumer().next();
       LOG.info(String.format("Partition[%d] Testing Datapoints : %d,%d", i, datapoints.length,
           datapoints[0].length));
-      int randomIndex = new Random()
-          .nextInt(this.svmJobParameters.getTestingSamples() / dataStreamerParallelism - 1);
-      LOG.info(String.format("Random DataPoint[%d] : %s", randomIndex, Arrays
-          .toString(datapoints[randomIndex])));
     }
+
+    System.out.println("---------Testing Data-------------");
+    double sum = 0;
+    int count = 0;
+    for (int j = 0; j < datapoints.length; j++) {
+      sum = Matrix.sum(datapoints[j]);
+      if (sum == 0) {
+        count++;
+      }
+    }
+    System.out.println(String.format("%d,%d, Zero Sum: %d", datapoints.length,
+        datapoints[0].length, count));
 
   }
 

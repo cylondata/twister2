@@ -152,12 +152,10 @@ public class BJoin {
 
     boolean send;
     if (tag == 0) {
-      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
-          partitionLeft.getDataType());
+      Tuple message = new Tuple<>(key, data);
       send = partitionLeft.send(source, message, flags, dest);
     } else if (tag == 1) {
-      Tuple message = new Tuple<>(key, data, partitionLeft.getKeyType(),
-          partitionRight.getDataType());
+      Tuple message = new Tuple<>(key, data);
       send = partitionRight.send(source, message, flags, dest);
     } else {
       throw new RuntimeException("Tag value must be either 0(left) or 1(right) for join operation");

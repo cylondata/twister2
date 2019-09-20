@@ -35,18 +35,18 @@ public class BaseSerializeTest {
         null, type, null, null, data);
 
     KeyedDataSerializer serializer = new KeyedDataSerializer();
-    serializer.init(Config.newBuilder().build(), bufferQueue, true);
+    serializer.init(Config.newBuilder().build(), bufferQueue);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
 
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      ChannelMessage ch = serializer.build(data, outMessage);
       messages.add(ch);
     }
 
     KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
-    deserializer.init(Config.newBuilder().build(), true);
+    deserializer.init(Config.newBuilder().build());
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
@@ -70,17 +70,17 @@ public class BaseSerializeTest {
         null, type, keyType, null, data);
 
     KeyedDataSerializer serializer = new KeyedDataSerializer();
-    serializer.init(Config.newBuilder().build(), bufferQueue, true);
+    serializer.init(Config.newBuilder().build(), bufferQueue);
 
     List<ChannelMessage> messages = new ArrayList<>();
 
     while (outMessage.getSendState() != OutMessage.SendState.SERIALIZED) {
-      ChannelMessage ch = (ChannelMessage) serializer.build(data, outMessage);
+      ChannelMessage ch = serializer.build(data, outMessage);
       messages.add(ch);
     }
 
     KeyedDataDeSerializer deserializer = new KeyedDataDeSerializer();
-    deserializer.init(Config.newBuilder().build(), true);
+    deserializer.init(Config.newBuilder().build());
 
     MessageHeader header = deserializer.buildHeader(
         messages.get(0).getBuffers().get(0), 1);
@@ -183,12 +183,12 @@ public class BaseSerializeTest {
   public Object createKeyedData(int size, MessageType dataType, MessageType keyType) {
     Object data = createDataObject(size, dataType);
     Object key = createKeyObject(keyType);
-    return new Tuple(key, data, keyType, dataType);
+    return new Tuple(key, data);
   }
 
   public Object createKeyedData(int size, MessageType dataType, int keySize, MessageType keyType) {
     Object data = createDataObject(size, dataType);
     Object key = createKeyObject(keyType, keySize);
-    return new Tuple(key, data, keyType, dataType);
+    return new Tuple(key, data);
   }
 }

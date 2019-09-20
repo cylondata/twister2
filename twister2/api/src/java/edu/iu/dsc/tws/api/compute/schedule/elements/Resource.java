@@ -40,28 +40,52 @@ package edu.iu.dsc.tws.api.compute.schedule.elements;
  * values to the task instances.
  */
 public class Resource {
-
+  /**
+   * Amount of ram of this resource
+   */
   private Double ram;
+  /**
+   * Amount of disk of this resource
+   */
   private Double disk;
+
+  /**
+   * CPUs assigned to this resource
+   */
   private Double cpu;
 
+  /**
+   * Resource id
+   */
+  private int id;
+
+  /**
+   * Get the unique id of the resource
+   * @return id
+   */
   public int getId() {
     return id;
   }
 
-  public Resource setId(int idx) {
-    this.id = idx;
-    return this;
-  }
-
-  private int id;
-
+  /**
+   * Create a resource
+   * @param ram ram amount
+   * @param disk disk amount
+   * @param cpu cpu amout
+   */
   public Resource(Double ram, Double disk, Double cpu) {
     this.ram = ram;
     this.disk = disk;
     this.cpu = cpu;
   }
 
+  /**
+   * Create a resource
+   * @param ram ram amount
+   * @param disk disk amount
+   * @param cpu cpu amout
+   * @param idx resource id
+   */
   public Resource(Double ram, Double disk, Double cpu, Integer idx) {
     this.ram = ram;
     this.disk = disk;
@@ -117,12 +141,7 @@ public class Resource {
   }
 
   public Resource cloneWithRam(double newRam) {
-    return new Resource(newRam, this.getDisk(), this.getCpu());
-  }
-
-  //This will be used in future.
-  public Resource cloneWithRam(double newRam, double newDisk, double newCpu) {
-    return new Resource(newRam, newDisk, newCpu);
+    return new Resource(newRam, this.getDisk(), this.getCpu(), id);
   }
 }
 

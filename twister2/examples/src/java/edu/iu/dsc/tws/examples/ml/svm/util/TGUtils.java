@@ -47,7 +47,7 @@ public final class TGUtils {
                                                             OperationMode opMode) {
     SVMDataObjectSource<String, TextInputSplit> sourceTask
         = new SVMDataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataSourcePathStr);
+        dataSourcePathStr, samples);
     IterativeSVMDataObjectCompute dataObjectCompute
         = new IterativeSVMDataObjectCompute(Context.TWISTER2_DIRECT_EDGE, parallelism,
         samples, numOfFeatures, DELIMITER);

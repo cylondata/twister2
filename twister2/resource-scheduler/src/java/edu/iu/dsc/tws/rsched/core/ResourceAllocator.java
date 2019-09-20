@@ -285,8 +285,6 @@ public class ResourceAllocator {
     String scpPath = scpServerAdress + ":" + packageURI.toString() + "/";
     LOG.log(Level.INFO, "SCP PATH to copy files from: " + scpPath);
 
-    clearTemporaryFiles(jobDirectory);
-
     // now launch the launcher
     // Update the runtime config with the packageURI
     updatedConfig = Config.newBuilder()
@@ -300,6 +298,8 @@ public class ResourceAllocator {
     launcher.initialize(updatedConfig);
 
     launcher.launch(updatedJob);
+
+    clearTemporaryFiles(jobDirectory);
   }
 
   /**

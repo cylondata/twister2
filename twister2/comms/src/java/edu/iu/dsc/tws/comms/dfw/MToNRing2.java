@@ -450,7 +450,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
     }
 
     // this worker
-    this.thisWorker = tPlan.getThisExecutor();
+    this.thisWorker = tPlan.getThisWorker();
 
     // get the tasks of this executor
     targetsOfThisWorker = new IntArraySet(TaskPlanUtils.getTasksOfThisWorker(tPlan, targets));
@@ -517,7 +517,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
 
     // calculate the workers from we are receiving
     Set<Integer> receiveWorkers = TaskPlanUtils.getWorkersOfTasks(tPlan, sources);
-    receiveWorkers.remove(taskPlan.getThisExecutor());
+    receiveWorkers.remove(taskPlan.getThisWorker());
 
     Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendMessagesPerSource =
         new HashMap<>();
@@ -669,7 +669,7 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
                                           Map<Integer, IntArrayList> workerToIds,
                                           Map<Integer, Integer> idToWorkers) {
     for (int t : logicalIds) {
-      int worker = taskPlan.getExecutorForChannel(t);
+      int worker = taskPlan.getWorkerForForLogicalId(t);
       IntArrayList ts;
       if (workerToIds.containsKey(worker)) {
         ts = workerToIds.get(worker);

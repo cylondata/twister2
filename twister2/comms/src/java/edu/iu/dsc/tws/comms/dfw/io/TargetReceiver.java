@@ -104,7 +104,7 @@ public abstract class TargetReceiver implements MessageReceiver {
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
-    workerId = op.getLogicalPlan().getThisExecutor();
+    workerId = op.getLogicalPlan().getThisWorker();
     operation = op;
     lowWaterMark = CommunicationContext.getNetworkPartitionMessageGroupLowWaterMark(cfg);
     highWaterMark = CommunicationContext.getNetworkPartitionMessageGroupHighWaterMark(cfg);

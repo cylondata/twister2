@@ -17,10 +17,24 @@ package edu.iu.dsc.tws.api.compute.schedule.elements;
  * requirements of the task instances.
  */
 public class TaskInstancePlan implements Comparable<TaskInstancePlan> {
-
+  /**
+   * Task name
+   */
   private final String taskName;
+
+  /**
+   * Task id
+   */
   private final int taskId;
+
+  /**
+   * Task index
+   */
   private final int taskIndex;
+
+  /**
+   * Resource
+   */
   private final Resource resource;
 
   public TaskInstancePlan(String taskName, int taskId, int taskIndex, Resource resource) {

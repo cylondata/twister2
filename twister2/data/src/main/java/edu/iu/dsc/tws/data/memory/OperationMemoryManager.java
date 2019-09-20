@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.data.memory;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -52,7 +51,6 @@ public class OperationMemoryManager {
     this.memoryManager = parentMM;
     this.messageType = type;
     this.deSerializer = new KryoSerializer();
-    deSerializer.init(new HashMap<String, Object>());
     isKeyed = false;
     init();
   }
@@ -64,7 +62,6 @@ public class OperationMemoryManager {
     this.messageType = type;
     this.keyType = keyType;
     this.deSerializer = new KryoSerializer();
-    deSerializer.init(new HashMap<String, Object>());
     isKeyed = true;
     init();
   }

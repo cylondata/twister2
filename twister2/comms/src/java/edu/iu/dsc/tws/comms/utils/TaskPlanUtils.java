@@ -33,7 +33,7 @@ public final class TaskPlanUtils {
   }
 
   public static Set<Integer> getTasksOfThisWorker(LogicalPlan plan, Set<Integer> tasks) {
-    Set<Integer> allTasksOfThisExec = plan.getTasksOfThisExecutor();
+    Set<Integer> allTasksOfThisExec = plan.getLogicalIdsOfThisWorker();
     Set<Integer> tasksOfThisExec = new HashSet<>();
 
     for (int t : tasks) {
@@ -45,7 +45,7 @@ public final class TaskPlanUtils {
   }
 
   public static Set<Integer> getTasksOfWorker(LogicalPlan plan, int worker, Set<Integer> tasks) {
-    Set<Integer> workerTasks = plan.getChannelsOfExecutor(worker);
+    Set<Integer> workerTasks = plan.getLogicalIdsOfWorker(worker);
     Set<Integer> newTasks = new HashSet<>(workerTasks);
     newTasks.retainAll(tasks);
     return newTasks;
@@ -55,13 +55,13 @@ public final class TaskPlanUtils {
     Set<Integer> workersOfTasks = new HashSet<>();
 
     for (int t : tasks) {
-      int w = plan.getExecutorForChannel(t);
+      int w = plan.getWorkerForForLogicalId(t);
       workersOfTasks.add(w);
     }
     return workersOfTasks;
   }
 
   public static Set<Integer> getThisWorkerTasks(LogicalPlan plan) {
-    return plan.getChannelsOfExecutor(plan.getThisExecutor());
+    return plan.getLogicalIdsOfWorker(plan.getThisWorker());
   }
 }

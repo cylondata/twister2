@@ -129,8 +129,7 @@ public abstract class KReduceStreamingReceiver extends KeyedReceiver {
                                             Map<Object, Queue<Object>> messagesPerTarget) {
     Queue<Object> targetSendQueue = sendQueue.get(target);
     messagesPerTarget.entrySet().removeIf(entry -> {
-      Tuple send = new Tuple(entry.getKey(), entry.getValue().peek(),
-          dataFlowOperation.getKeyType(), dataFlowOperation.getDataType());
+      Tuple send = new Tuple(entry.getKey(), entry.getValue().peek());
       return targetSendQueue.offer(send);
     });
 

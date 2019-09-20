@@ -32,10 +32,5 @@ import java.util.HashMap;
  * But later on, we may only put the parameters that are relevant to Worker processes
  */
 public class JobConfig extends HashMap<String, Object> {
-
   private static final long serialVersionUID = 6585146860991205058L;
-
-  //todo refactor tws.api such that it doesn't depend on other packages.
-  // Till that keeping below properties(unused) here
-
 }

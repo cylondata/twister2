@@ -349,7 +349,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   }
 
   private void calculateRoutingParameters() {
-    Set<Integer> workerTasks = logicalPlan.getTasksOfThisExecutor();
+    Set<Integer> workerTasks = logicalPlan.getLogicalIdsOfThisWorker();
     for (int i = 0; i < sources.size(); i++) {
       // for each source we have a fixed target
       int src = sources.get(i);

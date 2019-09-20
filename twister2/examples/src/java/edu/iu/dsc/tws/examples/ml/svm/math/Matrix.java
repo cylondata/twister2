@@ -33,6 +33,21 @@ public final class Matrix implements Serializable {
     return result;
   }
 
+  public static double sum(double[] arr) {
+    double sum = -1;
+    for (int i = 0; i < arr.length; i++) {
+      sum += arr[i];
+    }
+    return sum;
+  }
+
+  public static double[] scalarMultiplyR(double[] x, double y, double[] result) {
+    for (int i = 0; i < x.length; i++) {
+      result[i] = x[i] * y;
+    }
+    return result;
+  }
+
   public static double[] scalarDivide(double[] x, double y) {
     double[] result = new double[x.length];
     for (int i = 0; i < x.length; i++) {
@@ -110,6 +125,19 @@ public final class Matrix implements Serializable {
         result[i] = w1[i] - w2[i];
       }
       return result;
+    } else {
+      throw new MatrixMultiplicationException("Invalid Dimensions x.length "
+          + w1.length + ", w.length : " + w2.length);
+    }
+  }
+
+  public static double[] subtractR(double[] w1, double[] w2, double[] res)
+      throws MatrixMultiplicationException {
+    if (w1.length == w2.length) {
+      for (int i = 0; i < w1.length; i++) {
+        res[i] = w1[i] - w2[i];
+      }
+      return res;
     } else {
       throw new MatrixMultiplicationException("Invalid Dimensions x.length "
           + w1.length + ", w.length : " + w2.length);

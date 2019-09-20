@@ -38,10 +38,9 @@ public class FixedSchemaDataDeserializer extends DataDeserializer {
    *
    * @param partialObject message object that needs to be built
    * @param edge the edge value associated with this message
-   * @return the built message as a list of objects
    */
   @Override
-  public Object build(Object partialObject, int edge) {
+  public void build(Object partialObject, int edge) {
     InMessage currentMessage = (InMessage) partialObject;
     DataPacker dataPacker = currentMessage.getDataType().getDataPacker();
     Queue<DataBuffer> buffers = currentMessage.getBuffers();
@@ -128,6 +127,5 @@ public class FixedSchemaDataDeserializer extends DataDeserializer {
       channelMessage.incrementRefCount();
       currentMessage.addBuiltMessage(channelMessage);
     }
-    return null;
   }
 }

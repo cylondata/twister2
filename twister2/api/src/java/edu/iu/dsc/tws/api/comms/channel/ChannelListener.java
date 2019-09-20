@@ -15,6 +15,9 @@ package edu.iu.dsc.tws.api.comms.channel;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 
+/**
+ * A listener for getting notifications about completion of network events
+ */
 public interface ChannelListener {
   /**
    * After a receive is complete this function gets called
