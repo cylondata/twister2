@@ -17,11 +17,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 
 /**
@@ -49,11 +52,13 @@ public class AuroraLauncher implements ILauncher {
     String jobName = job.getJobName();
 
     // first check whether there is an active job running with same name on ZooKeeper
-    if (ZKUtil.isThereAnActiveJob(jobName, config)) {
+    CuratorFramework client = ZKUtil.connectToServer(config);
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
       throw new RuntimeException("There is an active job in ZooKeeper with same name."
           + "\nFirst try to kill that job. Run terminate job command."
           + "\nThis job is not submitted to Aurora Server");
     }
+    ZKUtil.closeClient(client);
 
     //construct the controller to submit the job to Aurora Scheduler
     String cluster = AuroraContext.auroraClusterName(config);
@@ -112,7 +117,7 @@ public class AuroraLauncher implements ILauncher {
     }
 
     // first clear ZooKeeper data
-    boolean deletedZKNodes = ZKUtil.terminateJob(jobName, config);
+    boolean deletedZKNodes = ZKJobZnodeUtil.terminateJob(jobName, config);
 
     return killedAuroraJob && deletedZKNodes;
   }

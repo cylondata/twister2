@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.common.primitives.Bytes;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -348,7 +349,7 @@ public class ZKWorkerController implements IWorkerController {
       lock.acquire();
       byte[] parentData = client.getData().forPath(jobPath);
       byte[] encodedWorkerInfoBytes = ZKUtil.encodeWorkerInfo(workerInfo);
-      byte[] allBytes = ZKUtil.addTwoByteArrays(parentData, encodedWorkerInfoBytes);
+      byte[] allBytes = Bytes.concat(parentData, encodedWorkerInfoBytes);
 
       client.setData().forPath(jobPath, allBytes);
       lock.release();
@@ -609,7 +610,7 @@ public class ZKWorkerController implements IWorkerController {
         // if this is the last worker, delete znodes for the job
         if (noOfChildren == 1) {
           LOG.log(Level.INFO, "This is the last worker to finish. Deleting the job znodes.");
-          ZKUtil.deleteJobZNodes(config, client, jobName);
+          ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
         }
         CloseableUtils.closeQuietly(client);
       } catch (Exception e) {

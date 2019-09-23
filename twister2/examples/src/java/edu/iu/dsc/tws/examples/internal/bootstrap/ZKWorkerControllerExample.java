@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -36,6 +38,7 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
 
@@ -104,13 +107,13 @@ public final class ZKWorkerControllerExample {
   }
 
   public static void deleteJobZnode(String jobName, Config cnfg) {
-    if (ZKUtil.isThereAnActiveJob(jobName, cnfg)) {
-      ZKUtil.terminateJob(jobName, cnfg);
-      return;
-    } else {
-      LOG.info("No job Znode to delete for the jobName: " + jobName);
-      return;
+    CuratorFramework client = ZKUtil.connectToServer(cnfg);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, cnfg)) {
+      ZKJobZnodeUtil.deleteJobZNodes(cnfg, client, jobName);
     }
+
+    ZKUtil.closeClient(client);
   }
 
   /**

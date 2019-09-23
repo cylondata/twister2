@@ -16,8 +16,12 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
+import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
@@ -25,13 +29,100 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKJobGroup;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 
-public final class ZKJobGroupExample {
+public final class ZKJobGroupExample extends Thread {
   public static final Logger LOG = Logger.getLogger(ZKJobGroupExample.class.getName());
 
-  private ZKJobGroupExample() {
+  public static String jobName;
+  public static Config config;
+  public static int numberOfWorkers;
+
+  private int workerID;
+
+  ZKJobGroupExample(int workerID) {
+    this.workerID = workerID;
   }
+
+  @Override
+  public void run() {
+    try {
+      simulateWorker();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * an example usage of ZKWorkerController class
+   */
+  public void simulateWorker()
+      throws Exception {
+
+    int port = 1000 + (int) (Math.random() * 1000);
+    String workerIP;
+    workerIP = InetAddress.getLocalHost().getHostAddress();
+
+    JobMasterAPI.NodeInfo nodeInfo =
+        NodeInfoUtils.createNodeInfo("node1.on.hostx", "rack1", "dc01");
+    JobAPI.ComputeResource computeResource =
+        ComputeResourceUtils.createComputeResource(0, 1, 1024, 2);
+
+    JobMasterAPI.WorkerInfo workerInfo =
+        WorkerInfoUtils.createWorkerInfo(workerID, workerIP, port);
+//      WorkerInfoUtils.createWorkerInfo(workerID, workerIP, port, nodeInfo, computeResource);
+
+    LOG.info("workerInfo at example: " + workerInfo.toString());
+
+    ZKJobGroup zkJobGroup = new ZKJobGroup(config, jobName, numberOfWorkers, workerInfo);
+
+    zkJobGroup.initialize();
+
+    List<JobMasterAPI.WorkerInfo> workerList = zkJobGroup.getJoinedWorkers();
+    LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
+
+    LOG.info("Waiting for all workers to join: ");
+    // wait until 100sec
+    workerList = zkJobGroup.getAllWorkers();
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
+
+    // test state change
+    zkJobGroup.updateWorkerState(JobMasterAPI.WorkerState.RUNNING);
+    sleeeep((long) (Math.random() * 10000));
+
+    LOG.info("Waiting on the first barrier -------------------------- ");
+
+    zkJobGroup.waitOnBarrier();
+    LOG.info("All workers reached the barrier. Proceeding.");
+
+    workerList = zkJobGroup.getAllWorkers();
+    LOG.info("Workers after first barrier: \n" + WorkerInfoUtils.workerListAsString(workerList));
+
+    sleeeep((long) (Math.random() * 10000));
+
+    LOG.info("Waiting on the second barrier -------------------------- ");
+    zkJobGroup.waitOnBarrier();
+    LOG.info("All workers reached the barrier. Proceeding.");
+    zkJobGroup.updateWorkerState(JobMasterAPI.WorkerState.COMPLETED);
+
+    // sleep some random amount of time before closing
+    // this is to prevent all workers to close almost at the same time
+//    sleeeep((long) (Math.random() * 2000));
+    zkJobGroup.close();
+  }
+
+  public void sleeeep(long duration) {
+
+    LOG.info("Sleeping " + duration + "ms .....");
+
+    try {
+      sleep(duration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
 
   /**
    * example usage of ZKWorkerController class
@@ -60,18 +151,29 @@ public final class ZKJobGroupExample {
 
     String zkAddress = args[0];
     String action = args[1];
-    String jobName = "test-job";
+    jobName = "test-job";
 
-    Config cnfg = buildTestConfig(zkAddress, jobName);
+    config = buildTestConfig(zkAddress);
 
     if ("delete".equalsIgnoreCase(action)) {
-      deleteJobZnode(jobName, cnfg);
+      deleteJobZnode();
     } else if ("join".equalsIgnoreCase(action)) {
-      int numberOfWorkers = Integer.parseInt(args[2]);
-      int workerID = Integer.parseInt(args[3]);
+      numberOfWorkers = Integer.parseInt(args[2]);
+//      int workerID = Integer.parseInt(args[3]);
 
-      LoggingHelper.initTwisterFileLogHandler(workerID + "", "logs", cnfg);
-      simulateWorker(jobName, numberOfWorkers, workerID, cnfg);
+      LoggingHelper.initTwisterFileLogHandler(numberOfWorkers + "", "logs", config);
+
+      Twister2Job twister2Job = Twister2Job.newBuilder()
+          .setJobName(jobName)
+          .setWorkerClass(HelloWorld.class)
+          .addComputeResource(2, 1024, numberOfWorkers)
+          .build();
+      JobAPI.Job job = twister2Job.serialize();
+      createJobZnode(job);
+
+      for (int i = 0; i < numberOfWorkers; i++) {
+        new ZKJobGroupExample(i).start();
+      }
     }
 
   }
@@ -79,7 +181,7 @@ public final class ZKJobGroupExample {
   /**
    * construct a test Config object
    */
-  public static Config buildTestConfig(String zkAddresses, String jobName) {
+  public static Config buildTestConfig(String zkAddresses) {
 
     return Config.newBuilder()
         .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddresses)
@@ -94,80 +196,39 @@ public final class ZKJobGroupExample {
         + "\tnumberOfWorkers is only needed for join");
   }
 
-  public static void deleteJobZnode(String jobName, Config cnfg) {
-    if (ZKUtil.isThereAnActiveJob(jobName, cnfg)) {
-      ZKUtil.terminateJob(jobName, cnfg);
-      return;
-    } else {
-      LOG.info("No job Znode to delete for the jobName: " + jobName);
-      return;
+  public static void createJobZnode(JobAPI.Job job) {
+
+    CuratorFramework client = ZKUtil.connectToServer(config);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
+      ZKJobZnodeUtil.deleteJobZNodes(config, client, job.getJobName());
     }
-  }
-
-  /**
-   * an example usage of ZKWorkerController class
-   */
-  public static void simulateWorker(String jobName, int numberOfWorkers, int workerID, Config cnf)
-      throws Exception {
-
-    int port = 1000 + (int) (Math.random() * 1000);
-    String workerIP;
-    workerIP = InetAddress.getLocalHost().getHostAddress();
-
-    JobMasterAPI.NodeInfo nodeInfo =
-        NodeInfoUtils.createNodeInfo("node1.on.hostx", "rack1", "dc01");
-    JobAPI.ComputeResource computeResource =
-        ComputeResourceUtils.createComputeResource(0, 1, 1024, 2);
-
-    JobMasterAPI.WorkerInfo workerInfo =
-        WorkerInfoUtils.createWorkerInfo(workerID, workerIP, port);
-//      WorkerInfoUtils.createWorkerInfo(workerID, workerIP, port, nodeInfo, computeResource);
-
-    LOG.info("workerInfo at example: " + workerInfo.toString());
-
-    ZKJobGroup zkJobGroup = new ZKJobGroup(cnf, jobName, numberOfWorkers, workerInfo);
-
-    zkJobGroup.initialize();
-
-    List<JobMasterAPI.WorkerInfo> workerList = zkJobGroup.getJoinedWorkers();
-    LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
-
-    LOG.info("Waiting for all workers to join: ");
-    // wait until 100sec
-    workerList = zkJobGroup.getAllWorkers();
-    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
-
-    sleeeep((long) (Math.random() * 10000));
-
-    LOG.info("Waiting on the first barrier -------------------------- ");
-
-    zkJobGroup.waitOnBarrier();
-    LOG.info("All workers reached the barrier. Proceeding.");
-
-    workerList = zkJobGroup.getAllWorkers();
-    LOG.info("Workers after first barrier: \n" + WorkerInfoUtils.workerListAsString(workerList));
-
-    sleeeep((long) (Math.random() * 10000));
-
-    LOG.info("Waiting on the second barrier -------------------------- ");
-    zkJobGroup.waitOnBarrier();
-    LOG.info("All workers reached the barrier. Proceeding.");
-
-    // sleep some random amount of time before closing
-    // this is to prevent all workers to close almost at the same time
-//    sleeeep((long) (Math.random() * 2000));
-    zkJobGroup.close();
-  }
-
-  public static void sleeeep(long duration) {
-
-    LOG.info("Sleeping " + duration + "ms .....");
 
     try {
-      Thread.sleep(duration);
-    } catch (InterruptedException e) {
+      ZKJobZnodeUtil.createJobZNode(client, job, config);
+
+      // test job znode content reading
+      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      LOG.info("JobZNode content: " + readJob);
+
+    } catch (Exception e) {
       e.printStackTrace();
     }
+
+    ZKUtil.closeClient(client);
   }
 
+  public static void deleteJobZnode() {
+
+    CuratorFramework client = ZKUtil.connectToServer(config);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
+      ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
+    }
+
+    ZKUtil.closeClient(client);
+  }
+
+
 }
+

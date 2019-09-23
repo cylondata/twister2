@@ -20,6 +20,8 @@ import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
@@ -28,7 +30,8 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -42,8 +45,6 @@ public final class ZKUtil {
 
   /**
    * connect to ZooKeeper server
-   * @param config
-   * @return
    */
   public static CuratorFramework connectToServer(Config config) {
 
@@ -63,45 +64,12 @@ public final class ZKUtil {
     }
   }
 
-  /**
-   * check whether there is an active job
-   * if not, but there are znodes from previous sessions, those will be deleted
-   * @param jobName
-   * @return
-   */
-  public static boolean isThereAnActiveJob(String jobName, Config config) {
-    try {
-      CuratorFramework client = connectToServer(config);
-
-      String jobPath = constructJobPath(ZKContext.rootNode(config), jobName);
-
-      // check whether the job node exists, if not, return false, nothing to do
-      if (client.checkExists().forPath(jobPath) == null) {
-        return false;
-
-        // if the node exists but does not have any children, remove the job related znodes
-      } else if (client.getChildren().forPath(jobPath).size() == 0) {
-        deleteJobZNodes(config, client, jobName);
-        client.close();
-
-        return false;
-
-        // if there are some children of job znode, it means there is an active job
-        // don't delete, return true
-      } else {
-        return true;
-      }
-
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "", e);
-      return false;
-    }
+  public static void closeClient(CuratorFramework client) {
+    client.close();
   }
 
   /**
    * construct a job path from the given job name
-   * @param jobName
-   * @return
    */
   public static String constructJobPath(String rootPath, String jobName) {
     return rootPath + "/" + jobName;
@@ -109,8 +77,6 @@ public final class ZKUtil {
 
   /**
    * construct a distributed atomic integer path for assigning worker ids
-   * @param jobName
-   * @return
    */
   public static String constructDaiPathForWorkerID(String rootPath, String jobName) {
     return rootPath + "/" + jobName + "-dai-for-worker-id";
@@ -118,8 +84,6 @@ public final class ZKUtil {
 
   /**
    * construct a distributed atomic integer path for barrier
-   * @param jobName
-   * @return
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
     return rootPath + "/" + jobName + "-dai-for-barrier";
@@ -127,8 +91,6 @@ public final class ZKUtil {
 
   /**
    * construct a distributed barrier path
-   * @param jobName
-   * @return
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
     return rootPath + "/" + jobName + "-barrier";
@@ -136,8 +98,6 @@ public final class ZKUtil {
 
   /**
    * construct a job distributed lock path from the given job name
-   * @param jobName
-   * @return
    */
   public static String constructJobLockPath(String rootPath, String jobName) {
     return rootPath + "/" + jobName + "-lock";
@@ -145,7 +105,6 @@ public final class ZKUtil {
 
   /**
    * construct a worker path from the given job path and worker network info
-   * @return
    */
   public static String constructWorkerPath(String jobPath, String workerHostAndPort) {
     return jobPath + "/" + workerHostAndPort;
@@ -153,68 +112,9 @@ public final class ZKUtil {
 
   /**
    * construct a worker path from the given job path and worker network info
-   * @return
    */
   public static String constructJobMasterPath(Config config) {
     return ZKContext.rootNode(config) + "/" + Context.jobName(config) + "-job-master";
-  }
-
-  /**
-   * delete job related znode from previous sessions
-   * @param jobName
-   * @return
-   */
-  public static boolean deleteJobZNodes(Config config, CuratorFramework client, String jobName) {
-    String rootPath = ZKContext.rootNode(config);
-    try {
-      String jobPath = constructJobPath(rootPath, jobName);
-      if (client.checkExists().forPath(jobPath) != null) {
-        client.delete().deletingChildrenIfNeeded().forPath(jobPath);
-        LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
-      } else {
-        LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
-      }
-
-      // delete distributed atomic integer for barrier
-      String daiPath = constructDaiPathForBarrier(rootPath, jobName);
-      if (client.checkExists().forPath(daiPath) != null) {
-        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
-        LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
-      } else {
-        LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
-      }
-
-      // delete distributed lock znode
-      String lockPath = constructJobLockPath(rootPath, jobName);
-      if (client.checkExists().forPath(lockPath) != null) {
-        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
-        LOG.log(Level.INFO, "Distributed lock znode deleted from ZooKeeper: " + lockPath);
-      } else {
-        LOG.log(Level.INFO, "No distributed lock znode to delete from ZooKeeper: " + lockPath);
-      }
-
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "", e);
-      return false;
-    }
-  }
-
-  /**
-   * delete all znodes related to the given jobName
-   * @param jobName
-   * @return
-   */
-  public static boolean terminateJob(String jobName, Config config) {
-    try {
-      CuratorFramework client = connectToServer(config);
-      boolean deleteResult = deleteJobZNodes(config, client, jobName);
-      client.close();
-      return deleteResult;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not delete job znodes", e);
-      return false;
-    }
   }
 
   /**
@@ -222,10 +122,6 @@ public final class ZKUtil {
    * it is ephemeral and persistent
    * it will be deleted after the worker leaves or fails
    * it will be persistent for occasional network problems
-   * @param path
-   * @param payload
-   * @return
-   * @throws Exception
    */
   public static PersistentNode createPersistentEphemeralZnode(CuratorFramework client,
                                                               String path,
@@ -238,32 +134,26 @@ public final class ZKUtil {
    * create a PersistentNode object in the given path
    * it needs to be deleted explicitly, not ephemeral
    * it will be persistent for occasional network problems
-   *
-   * @param path
-   * @param payload
-   * @return
-   * @throws Exception
    */
   public static PersistentNode createPersistentZnode(CuratorFramework client,
-                                                              String path,
-                                                              byte[] payload) {
+                                                     String path,
+                                                     byte[] payload) {
 
     return new PersistentNode(client, CreateMode.PERSISTENT, true, path, payload);
   }
 
   /**
    * decode the given binary encoded WorkerInfo object list
-   * encoding assumed to be dones by encodeWorkerInfo method
+   * encoding assumed to be done by encodeWorkerInfo method
    * length of each WorkerInfo object is encoded before the WorkerInfo object bytes
-   * @return
    */
-  public static List<JobMasterAPI.WorkerInfo> decodeWorkerInfos(byte[] encodedBytes) {
+  public static List<WorkerInfo> decodeWorkerInfos(byte[] encodedBytes) {
 
     if (encodedBytes == null) {
       return null;
     }
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList = new ArrayList<>();
+    List<WorkerInfo> workerInfoList = new ArrayList<>();
 
     int nextWorkerInfoIndex = 0;
     while (nextWorkerInfoIndex < encodedBytes.length) {
@@ -272,7 +162,7 @@ public final class ZKUtil {
       int length = intFromBytes(encodedBytes, nextWorkerInfoIndex);
 
       try {
-        JobMasterAPI.WorkerInfo workerInfo = JobMasterAPI.WorkerInfo.newBuilder()
+        WorkerInfo workerInfo = WorkerInfo.newBuilder()
             .mergeFrom(encodedBytes, nextWorkerInfoIndex + 4, length)
             .build();
         workerInfoList.add(workerInfo);
@@ -288,19 +178,44 @@ public final class ZKUtil {
   }
 
   /**
+   * decode the given binary encoded WorkerInfo object
+   * encoding assumed to be done by encodeWorkerInfo method
+   * first 4 bytes is the length. remaining bytes are encoded WorkerInfo bytes
+   */
+  public static Pair<WorkerInfo, WorkerState> decodeWorkerInfo(byte[] encodedBytes) {
+
+    if (encodedBytes == null) {
+      return null;
+    }
+
+    // first 4 bytes is the length
+    int state = intFromBytes(encodedBytes, 0);
+    WorkerState workerState = WorkerState.forNumber(state);
+
+    try {
+      WorkerInfo workerInfo = WorkerInfo.newBuilder()
+          .mergeFrom(encodedBytes, 4, encodedBytes.length - 4)
+          .build();
+      return new ImmutablePair<>(workerInfo, workerState);
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
+      return null;
+    }
+  }
+
+  /**
    * encode the given list of WorkerInfo objects as a byte array.
    * We put the length of each WorkerInfo as a byte array before serialized WorkerInfo
    * resulting byte array has the length and serialized workerInfo objects in a single byte array
-   * @return
    */
-  public static byte[] encodeWorkerInfos(List<JobMasterAPI.WorkerInfo> workerInfos) {
+  public static byte[] encodeWorkerInfos(List<WorkerInfo> workerInfos) {
 
     // for each workerInfo, we have two byte arrays
     // one for length, the other for WorkerInfo
     byte[][] serializedInfos = new byte[workerInfos.size() * 2][];
 
     int i = 0;
-    for (JobMasterAPI.WorkerInfo info: workerInfos) {
+    for (WorkerInfo info : workerInfos) {
       serializedInfos[i + 1] = info.toByteArray();
       serializedInfos[i] = Ints.toByteArray(serializedInfos[i + 1].length);
       i += 2;
@@ -311,36 +226,18 @@ public final class ZKUtil {
 
   /**
    * encode the given WorkerInfo object as a byte array.
-   * First put the length of the byte array as a 4 byte array to the beginning
-   * resulting byte array has the length and workerInfo object after that
-   * @return
+   * First put the worker state as a 4 byte array to the beginning
+   * resulting byte array has the state bytes and workerInfo object after that
    */
-  public static byte[] encodeWorkerInfo(JobMasterAPI.WorkerInfo workerInfo) {
+  public static byte[] encodeWorkerInfo(WorkerInfo workerInfo, int state) {
+    byte[] stateBytes = Ints.toByteArray(state);
     byte[] workerInfoBytes = workerInfo.toByteArray();
-    byte[] lengthBytes = Ints.toByteArray(workerInfoBytes.length);
 
-    return addTwoByteArrays(lengthBytes, workerInfoBytes);
-  }
-
-  /**
-   * add two byte arrays
-   * like appending the second one to first one, but in a new array
-   * @param byteArray1
-   * @param byteArray2
-   * @return
-   */
-  public static byte[] addTwoByteArrays(byte[] byteArray1, byte[] byteArray2) {
-    byte[] allBytes = new byte[byteArray1.length + byteArray2.length];
-    System.arraycopy(byteArray1, 0, allBytes, 0, byteArray1.length);
-    System.arraycopy(byteArray2, 0, allBytes, byteArray1.length, byteArray2.length);
-    return allBytes;
+    return Bytes.concat(stateBytes, workerInfoBytes);
   }
 
   /**
    * construct an int from four bytes starting at the given index
-   * @param byteArray
-   * @param startIndex
-   * @return
    */
   public static int intFromBytes(byte[] byteArray, int startIndex) {
     // provide 4 bytes of length int
@@ -350,5 +247,15 @@ public final class ZKUtil {
         byteArray[startIndex + 2],
         byteArray[startIndex + 3]);
   }
+
+  /**
+   * TBD
+   * @param workerInfo
+   * @return
+   */
+  public static byte[] encodeWorkerInfo(WorkerInfo workerInfo) {
+    return null;
+  }
+
 
 }
