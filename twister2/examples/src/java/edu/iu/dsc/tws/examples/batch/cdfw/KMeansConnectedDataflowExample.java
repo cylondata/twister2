@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -87,8 +88,8 @@ public final class KMeansConnectedDataflowExample {
       DataFlowGraph job1 = generateFirstJob(config, parallelism, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, parallelism, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
-      //cdfwEnv.executeDataFlowGraph(job2);
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
 
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
@@ -166,7 +167,7 @@ public final class KMeansConnectedDataflowExample {
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
-        .setJobName("kmeans-connecteddataflow")
+        .setJobName("kmeans-connected-dataflow")
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(KMeansDriver.class.getName())
         .addComputeResource(1, 2048, instances)
@@ -207,7 +208,7 @@ public final class KMeansConnectedDataflowExample {
     datapointsComputeGraphBuilder.setTaskGraphName("datapointsTG");
     ComputeGraph firstGraph = datapointsComputeGraphBuilder.build();
 
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datapointsink", firstGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("dsink", firstGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("points", "datapointsink")
         .setGraphType("non-iterative");
@@ -244,7 +245,7 @@ public final class KMeansConnectedDataflowExample {
 
     //Build the second taskgraph
     ComputeGraph secondGraph = centroidsComputeGraphBuilder.build();
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("centroidsink", secondGraph)
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("csink", secondGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
         .addOutput("centroids", "centroidsink")
         .setGraphType("non-iterative");
@@ -275,8 +276,8 @@ public final class KMeansConnectedDataflowExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("kmeansTG", thirdGraph)
         .setWorkers(instances).addDataFlowJobConfig(jobConfig)
-        .addInput("datapointsink", "points", "datapointsink")
-        .addInput("centroidsink", "centroids", "centroidsink")
+        .addInput("dsink", "points", "datapointsink")
+        .addInput("csink", "centroids", "centroidsink")
         .setGraphType("iterative")
         .setIterations(100);
     return job;

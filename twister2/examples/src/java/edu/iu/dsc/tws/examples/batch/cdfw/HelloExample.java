@@ -72,7 +72,8 @@ public final class HelloExample {
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
+          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig)
+          .setGraphType("non-iterative");
       execEnv.executeDataFlowGraph(job);
     }
   }

@@ -99,7 +99,6 @@ public class CDFWRuntime implements JobListener {
     while (true) {
       try {
         msg = executeMessageQueue.take();
-
         if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
           if (handleExecuteMessage(msg)) {
             return false;
