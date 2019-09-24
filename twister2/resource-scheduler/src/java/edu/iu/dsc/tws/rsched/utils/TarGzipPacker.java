@@ -22,8 +22,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -35,7 +38,9 @@ import org.apache.commons.compress.utils.IOUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
+
 /**
  * a class to generate a tar.gz file.
  * Used to pack multiple files into an archive file
@@ -77,6 +82,7 @@ public final class TarGzipPacker {
 
   /**
    * Get name
+   *
    * @return archive filename with path
    */
   public String getArchiveFileName() {
@@ -110,6 +116,39 @@ public final class TarGzipPacker {
       return true;
     } catch (IOException ioe) {
       LOG.log(Level.SEVERE, "Archive File can not be added: " + tarGzipFile, ioe);
+      return false;
+    }
+  }
+
+  /**
+   * given tar.gz file will be copied to this tar.gz file.
+   * all files will be transferred to new tar.gz file one by one.
+   * original directory structure will be kept intact
+   *
+   * @param zipFile the archive file to be copied to the new archive
+   */
+  public boolean addZipToArchive(String zipFile) {
+    try {
+      // construct input stream
+      ZipFile zipFileObj = new ZipFile(zipFile);
+      Enumeration<? extends ZipEntry> entries = zipFileObj.entries();
+
+      // copy the existing entries from source gzip file
+      while (entries.hasMoreElements()) {
+        ZipEntry nextEntry = entries.nextElement();
+        TarArchiveEntry entry = new TarArchiveEntry(nextEntry.getName());
+        entry.setSize(nextEntry.getSize());
+        entry.setModTime(nextEntry.getTime());
+
+        tarOutputStream.putArchiveEntry(entry);
+        IOUtils.copy(zipFileObj.getInputStream(nextEntry), tarOutputStream);
+        tarOutputStream.closeArchiveEntry();
+      }
+
+      zipFileObj.close();
+      return true;
+    } catch (IOException ioe) {
+      LOG.log(Level.SEVERE, "Archive File can not be added: " + zipFile, ioe);
       return false;
     }
   }
@@ -211,8 +250,6 @@ public final class TarGzipPacker {
    * unpack the received job package
    * job package needs to be a tar.gz package
    * it unpacks to the directory where the job package resides
-   * @param sourceGzip
-   * @return
    */
   public static boolean unpack(final String sourceGzip) {
 
@@ -223,9 +260,6 @@ public final class TarGzipPacker {
 
   /**
    * unpackage the given tar.gz file to the provided output directory
-   * @param sourceGzip
-   * @param outputDir
-   * @return
    */
   public static boolean unpack(final String sourceGzip, File outputDir) {
 

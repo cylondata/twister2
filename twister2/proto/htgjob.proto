@@ -1,8 +1,8 @@
 syntax = "proto3";
 package tws.proto.htgjob;
 
-import "job.proto";
-import "jobmaster.proto";
+import "twister2/proto/job.proto";
+import "twister2/proto/jobmaster.proto";
 
 option java_package = "edu.iu.dsc.tws.proto.system.job";
 option java_outer_classname = "CDFWJobAPI";
