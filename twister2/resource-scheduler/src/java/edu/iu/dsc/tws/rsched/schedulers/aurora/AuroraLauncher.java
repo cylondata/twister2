@@ -24,8 +24,8 @@ import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
+import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 
 /**
  * submit a job to Aurora Scheduler using AuroraClientController

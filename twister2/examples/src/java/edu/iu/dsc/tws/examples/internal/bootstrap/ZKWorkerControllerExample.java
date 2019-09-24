@@ -38,9 +38,9 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKWorkerController;
+import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 
 public final class ZKWorkerControllerExample {
   public static final Logger LOG = Logger.getLogger(ZKWorkerControllerExample.class.getName());

@@ -9,7 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.bootstrap;
+
+package edu.iu.dsc.tws.rsched.zk;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,15 +33,16 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
  * in addition, it provides methods to cleanup znodes on zookeeper server
  */
-public final class ZKUtil {
-  public static final Logger LOG = Logger.getLogger(ZKUtil.class.getName());
+public final class ZKUtils {
+  public static final Logger LOG = Logger.getLogger(ZKUtils.class.getName());
 
-  private ZKUtil() {
+  private ZKUtils() {
   }
 
   /**

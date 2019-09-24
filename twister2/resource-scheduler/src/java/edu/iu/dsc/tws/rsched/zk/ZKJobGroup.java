@@ -10,7 +10,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-package edu.iu.dsc.tws.rsched.bootstrap;
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+package edu.iu.dsc.tws.rsched.zk;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +54,7 @@ import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class
@@ -125,7 +138,7 @@ public class ZKJobGroup implements IWorkerController {
 
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
-    this.jobPath = ZKUtil.constructJobPath(rootPath, jobName);
+    this.jobPath = ZKJobZnodeUtil.constructJobPath(rootPath, jobName);
     this.workerInfo = workerInfo;
 
     jobWorkers = new HashMap<>(numberOfWorkers);
@@ -147,10 +160,10 @@ public class ZKJobGroup implements IWorkerController {
           new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      String barrierPath = ZKUtil.constructBarrierPath(rootPath, jobName);
+      String barrierPath = ZKJobZnodeUtil.constructBarrierPath(rootPath, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
 
-      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPathForBarrier = ZKJobZnodeUtil.constructDaiPathForBarrier(rootPath, jobName);
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
@@ -205,12 +218,12 @@ public class ZKJobGroup implements IWorkerController {
    * create the znode for this worker
    */
   private void createWorkerZnode() {
-    String workerPath = ZKUtil.constructWorkerPath(jobPath, "w-" + workerInfo.getWorkerID());
+    String workerPath = ZKUtils.constructWorkerPath(jobPath, workerInfo.getWorkerID());
 
     // put WorkerInfo and its state into znode body
     int initialState = JobMasterAPI.WorkerState.STARTING_VALUE;
-    byte[] workerZnodeBody = ZKUtil.encodeWorkerInfo(workerInfo, initialState);
-    workerZNode = ZKUtil.createPersistentEphemeralZnode(client, workerPath, workerZnodeBody);
+    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, initialState);
+    workerZNode = ZKUtils.createPersistentEphemeralZnode(client, workerPath, workerZnodeBody);
     workerZNode.start();
     try {
       workerZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
@@ -232,7 +245,7 @@ public class ZKJobGroup implements IWorkerController {
    */
   public boolean updateWorkerState(JobMasterAPI.WorkerState newState) {
 
-    byte[] workerZnodeBody = ZKUtil.encodeWorkerInfo(workerInfo, newState.getNumber());
+    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newState.getNumber());
 
     try {
       client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
@@ -254,7 +267,7 @@ public class ZKJobGroup implements IWorkerController {
     List<WorkerInfo> currentWorkers = new ArrayList<>();
 
     for (ChildData child: childrenCache.getCurrentData()) {
-      int id = getWorkerIDFromPath(child.getPath());
+      int id = ZKUtils.getWorkerIDFromPath(child.getPath());
       WorkerInfo worker = getWorkerInfoForID(id);
       if (worker != null) {
         currentWorkers.add(worker);
@@ -337,16 +350,6 @@ public class ZKJobGroup implements IWorkerController {
       throw new TimeoutException("Not all workers joined the job on the given time limit: "
           + timeLimit + "ms.");
     }
-  }
-
-  /**
-   * WorkerID is at the end of workerPath
-   * The string "w-" proceeds the workerID
-   * @return
-   */
-  private int getWorkerIDFromPath(String workerPath) {
-    String workerIDStr = workerPath.substring(workerPath.lastIndexOf("w-") + 2);
-    return Integer.parseInt(workerIDStr);
   }
 
   /**
@@ -434,7 +437,7 @@ public class ZKJobGroup implements IWorkerController {
 
         switch (event.getType()) {
           case CHILD_ADDED:
-            pair = ZKUtil.decodeWorkerInfo(event.getData().getData());
+            pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
 
             // if there is an existing WorkerInfo for newly added worker
             // Delete that WorkerInfo.
@@ -458,7 +461,7 @@ public class ZKJobGroup implements IWorkerController {
             break;
 
           case CHILD_UPDATED:
-            pair = ZKUtil.decodeWorkerInfo(event.getData().getData());
+            pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
 
             // update the worker state in the map
             jobWorkers.put(pair.getKey(), pair.getValue());
@@ -470,7 +473,7 @@ public class ZKJobGroup implements IWorkerController {
           // need to distinguish between completed and failed workers
           // need to inform the worker for other worker failures
           case CHILD_REMOVED:
-            int removedWorkerID = getWorkerIDFromPath(event.getData().getPath());
+            int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
 
             if (getWorkerStateForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
               LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));

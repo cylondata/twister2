@@ -9,7 +9,8 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.rsched.bootstrap;
+
+package edu.iu.dsc.tws.rsched.zk;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,11 +20,33 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
+import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 public final class ZKJobZnodeUtil {
   public static final Logger LOG = Logger.getLogger(ZKJobZnodeUtil.class.getName());
 
   private ZKJobZnodeUtil() { }
+
+  /**
+   * construct a job path from the given job name
+   */
+  public static String constructJobPath(String rootPath, String jobName) {
+    return rootPath + "/" + jobName;
+  }
+
+  /**
+   * construct a distributed barrier path
+   */
+  public static String constructBarrierPath(String rootPath, String jobName) {
+    return rootPath + "-barrier/" + jobName;
+  }
+
+  /**
+   * construct a distributed atomic integer path for barrier
+   */
+  public static String constructDaiPathForBarrier(String rootPath, String jobName) {
+    return rootPath + "-dai-for-barrier/" + jobName;
+  }
 
   /**
    * check whether there is an active job
@@ -37,21 +60,14 @@ public final class ZKJobZnodeUtil {
 
     try {
       // check whether the job node exists, if not, return false, nothing to do
-      String jobPath = ZKUtil.constructJobPath(rootPath, jobName);
+      String jobPath = ZKUtils.constructJobPath(rootPath, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
         jobZnodesExist = true;
         logMessage.append("jobZnode exists: " + jobPath);
       }
 
       // check whether the job node exists, if not, return false, nothing to do
-      String barrierPath = ZKUtil.constructBarrierPath(rootPath, jobName);
-      if (client.checkExists().forPath(barrierPath) != null) {
-        jobZnodesExist = true;
-        logMessage.append("\nJob barrierPath exists: " + barrierPath);
-      }
-
-      // check whether the job node exists, if not, return false, nothing to do
-      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPathForBarrier = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
       if (client.checkExists().forPath(daiPathForBarrier) != null) {
         jobZnodesExist = true;
         logMessage.append("\nJob daiPathForBarrier exists: " + daiPathForBarrier);
@@ -77,7 +93,7 @@ public final class ZKJobZnodeUtil {
   public static void createJobZNode(CuratorFramework client, JobAPI.Job job, Config config)
       throws Exception {
 
-    String jobPath = ZKUtil.constructJobPath(ZKContext.rootNode(config), job.getJobName());
+    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), job.getJobName());
 
     try {
       client
@@ -102,7 +118,7 @@ public final class ZKJobZnodeUtil {
   public static JobAPI.Job readJobZNodeBody(CuratorFramework client, String jobName, Config config)
       throws Exception {
 
-    String jobPath = ZKUtil.constructJobPath(ZKContext.rootNode(config), jobName);
+    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), jobName);
 
     try {
       byte[] jobBytes = client.getData().forPath(jobPath);
@@ -123,7 +139,7 @@ public final class ZKJobZnodeUtil {
    */
   public static boolean terminateJob(String jobName, Config config) {
     try {
-      CuratorFramework client = ZKUtil.connectToServer(config);
+      CuratorFramework client = ZKUtils.connectToServer(config);
       boolean deleteResult = deleteJobZNodes(config, client, jobName);
       client.close();
       return deleteResult;
@@ -139,7 +155,7 @@ public final class ZKJobZnodeUtil {
   public static boolean deleteJobZNodes(Config config, CuratorFramework client, String jobName) {
     String rootPath = ZKContext.rootNode(config);
     try {
-      String jobPath = ZKUtil.constructJobPath(rootPath, jobName);
+      String jobPath = ZKJobZnodeUtil.constructJobPath(rootPath, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(jobPath);
         LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
@@ -148,21 +164,12 @@ public final class ZKJobZnodeUtil {
       }
 
       // delete distributed atomic integer for barrier
-      String daiPath = ZKUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPath = ZKJobZnodeUtil.constructDaiPathForBarrier(rootPath, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
       } else {
         LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
-      }
-
-      // delete distributed lock znode
-      String lockPath = ZKUtil.constructJobLockPath(rootPath, jobName);
-      if (client.checkExists().forPath(lockPath) != null) {
-        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPath);
-        LOG.log(Level.INFO, "Distributed lock znode deleted from ZooKeeper: " + lockPath);
-      } else {
-        LOG.log(Level.INFO, "No distributed lock znode to delete from ZooKeeper: " + lockPath);
       }
 
       return true;

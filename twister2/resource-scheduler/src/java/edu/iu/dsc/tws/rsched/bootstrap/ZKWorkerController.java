@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
@@ -322,7 +323,7 @@ public class ZKWorkerController implements IWorkerController {
   private void createWorkerZnode() {
     try {
       String thisNodePath =
-          ZKUtil.constructWorkerPath(jobPath, getWorkerIpAndPort(workerInfo));
+          ZKUtil.constructWorkerPath(jobPath, workerInfo.getWorkerID());
 
       jobZNode = ZKUtil.createPersistentEphemeralZnode(
           client, thisNodePath, workerInfo.toByteArray());

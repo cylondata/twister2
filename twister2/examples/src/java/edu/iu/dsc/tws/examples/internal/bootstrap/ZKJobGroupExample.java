@@ -28,9 +28,9 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobGroup;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobZnodeUtil;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKUtil;
+import edu.iu.dsc.tws.rsched.zk.ZKJobGroup;
+import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.rsched.zk.ZKUtils;
 
 public final class ZKJobGroupExample extends Thread {
   public static final Logger LOG = Logger.getLogger(ZKJobGroupExample.class.getName());
@@ -108,7 +108,7 @@ public final class ZKJobGroupExample extends Thread {
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time
-//    sleeeep((long) (Math.random() * 2000));
+    sleeeep((long) (Math.random() * 2000));
     zkJobGroup.close();
   }
 
@@ -198,7 +198,7 @@ public final class ZKJobGroupExample extends Thread {
 
   public static void createJobZnode(JobAPI.Job job) {
 
-    CuratorFramework client = ZKUtil.connectToServer(config);
+    CuratorFramework client = ZKUtils.connectToServer(config);
 
     if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
       ZKJobZnodeUtil.deleteJobZNodes(config, client, job.getJobName());
@@ -215,18 +215,18 @@ public final class ZKJobGroupExample extends Thread {
       e.printStackTrace();
     }
 
-    ZKUtil.closeClient(client);
+    ZKUtils.closeClient(client);
   }
 
   public static void deleteJobZnode() {
 
-    CuratorFramework client = ZKUtil.connectToServer(config);
+    CuratorFramework client = ZKUtils.connectToServer(config);
 
     if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
       ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
     }
 
-    ZKUtil.closeClient(client);
+    ZKUtils.closeClient(client);
   }
 
 
