@@ -52,6 +52,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
@@ -87,7 +88,7 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKJobGroup implements IWorkerController {
+public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
   public static final Logger LOG = Logger.getLogger(ZKJobGroup.class.getName());
 
   // WorkerInfo object for this worker
@@ -238,24 +239,24 @@ public class ZKJobGroup implements IWorkerController {
   }
 
   /**
-   * Update worker state with new state
+   * Update worker status with new state
    * return true if successful
-   * @param newState
+   * @param newStatus
    * @return
    */
-  public boolean updateWorkerState(JobMasterAPI.WorkerState newState) {
+  @Override
+  public boolean updateWorkerState(JobMasterAPI.WorkerState newStatus) {
 
-    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newState.getNumber());
+    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newStatus.getNumber());
 
     try {
       client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
       return true;
     } catch (Exception e) {
       LOG.log(Level.SEVERE,
-          "Could not update worker state in znode: " + workerInfo.getWorkerID(), e);
+          "Could not update worker status in znode: " + workerInfo.getWorkerID(), e);
       return false;
     }
-
   }
 
   /**
