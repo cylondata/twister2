@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
-import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
 
@@ -104,8 +103,8 @@ public class ZKJobMasterRegistrar {
   private boolean createJobMasterZnode() {
     String jobMasterIPandPort = jobMasterIP + ":" + jobMasterPort;
     try {
-      jobMasterNode = new PersistentNode(
-          client, CreateMode.EPHEMERAL, false, jobMasterPath, jobMasterIPandPort.getBytes());
+      jobMasterNode = ZKUtil.createPersistentZnode(
+          client, jobMasterPath, jobMasterIPandPort.getBytes());
       jobMasterNode.start();
       jobMasterNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
       jobMasterPath = jobMasterNode.getActualPath();

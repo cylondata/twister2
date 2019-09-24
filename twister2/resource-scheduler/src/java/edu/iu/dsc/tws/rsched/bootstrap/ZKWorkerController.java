@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.common.primitives.Bytes;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.apache.curator.framework.CuratorFramework;
@@ -40,7 +39,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 
 /**
  * gets unique workerID's for each client by using DistributedAtomicInteger
@@ -99,7 +97,6 @@ public class ZKWorkerController implements IWorkerController {
 
   // config object
   private Config config;
-  private String rootPath;
 
   public ZKWorkerController(Config config,
                             String jobName,
@@ -108,12 +105,10 @@ public class ZKWorkerController implements IWorkerController {
                             NodeInfo nodeInfo,
                             JobAPI.ComputeResource computeResource) {
     this.config = config;
-    this.rootPath = ZKContext.rootNode(config);
-
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
     this.nodeInfo = nodeInfo;
-    this.jobPath = ZKUtil.constructJobPath(rootPath, jobName);
+    this.jobPath = ZKUtil.constructJobPath(config, jobName);
     this.computeResource = computeResource;
 
     String[] fields = workerIpAndPort.split(":");
@@ -136,14 +131,14 @@ public class ZKWorkerController implements IWorkerController {
           new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      String barrierPath = ZKUtil.constructBarrierPath(rootPath, jobName);
+      String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
 
-      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(rootPath, jobName);
+      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
       daiForWorkerID = new DistributedAtomicInteger(client,
           daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
 
-      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
@@ -213,14 +208,14 @@ public class ZKWorkerController implements IWorkerController {
           new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      String barrierPath = ZKUtil.constructBarrierPath(rootPath, jobName);
+      String barrierPath = ZKUtil.constructBarrierPath(config, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
 
-      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(rootPath, jobName);
+      String daiPathForWorkerID = ZKUtil.constructDaiPathForWorkerID(config, jobName);
       daiForWorkerID = new DistributedAtomicInteger(client,
           daiPathForWorkerID, new ExponentialBackoffRetry(1000, 3));
 
-      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPathForBarrier = ZKUtil.constructDaiPathForBarrier(config, jobName);
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
@@ -323,7 +318,7 @@ public class ZKWorkerController implements IWorkerController {
   private void createWorkerZnode() {
     try {
       String thisNodePath =
-          ZKUtil.constructWorkerPath(jobPath, workerInfo.getWorkerID());
+          ZKUtil.constructWorkerPath(jobPath, getWorkerIpAndPort(workerInfo));
 
       jobZNode = ZKUtil.createPersistentEphemeralZnode(
           client, thisNodePath, workerInfo.toByteArray());
@@ -344,13 +339,13 @@ public class ZKWorkerController implements IWorkerController {
    */
   private void appendWorkerInfo() {
 
-    String lockPath = ZKUtil.constructJobLockPath(rootPath, jobName);
+    String lockPath = ZKUtil.constructJobLockPath(config, jobName);
     InterProcessMutex lock = new InterProcessMutex(client, lockPath);
     try {
       lock.acquire();
       byte[] parentData = client.getData().forPath(jobPath);
       byte[] encodedWorkerInfoBytes = ZKUtil.encodeWorkerInfo(workerInfo);
-      byte[] allBytes = Bytes.concat(parentData, encodedWorkerInfoBytes);
+      byte[] allBytes = ZKUtil.addTwoByteArrays(parentData, encodedWorkerInfoBytes);
 
       client.setData().forPath(jobPath, allBytes);
       lock.release();
@@ -611,7 +606,7 @@ public class ZKWorkerController implements IWorkerController {
         // if this is the last worker, delete znodes for the job
         if (noOfChildren == 1) {
           LOG.log(Level.INFO, "This is the last worker to finish. Deleting the job znodes.");
-          ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
+          ZKUtil.deleteJobZNodes(config, client, jobName);
         }
         CloseableUtils.closeQuietly(client);
       } catch (Exception e) {
