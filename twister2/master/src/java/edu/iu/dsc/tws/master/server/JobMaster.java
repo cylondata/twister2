@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
@@ -130,17 +129,10 @@ public class JobMaster {
    */
   private IScalerPerCluster clusterScaler;
 
-
   /**
    * the driver object
    */
   private IDriver driver;
-
-  /**
-   * a UUID generated for each job
-   * it is primarily used when communicating with Dashboard
-   */
-  private String jobID;
 
   /**
    * host address of Dashboard server
@@ -192,17 +184,12 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.jobID = config.getStringValue(Context.JOB_ID);
-
-    if (this.jobID == null) {
-      throw new RuntimeException("Job ID not specified in the config.");
-    }
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
       this.dashClient = null;
     } else {
-      this.dashClient = new DashboardClient(dashboardHost, jobID);
+      this.dashClient = new DashboardClient(dashboardHost, job.getJobId());
     }
   }
 
@@ -314,11 +301,11 @@ public class JobMaster {
     //initialize checkpoint manager
     if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
-      stateStore.init(config, this.jobID);
+      stateStore.init(config, job.getJobId());
       this.checkpointManager = new CheckpointManager(
           this.rrServer,
           stateStore,
-          this.jobID
+          job.getJobId()
       );
       LOG.info("Checkpoint manager initialized");
       this.checkpointManager.init();

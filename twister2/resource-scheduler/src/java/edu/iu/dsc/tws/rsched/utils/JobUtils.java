@@ -199,9 +199,9 @@ public final class JobUtils {
   }
 
   public static String toString(JobAPI.Job job) {
-    String jobStr = "[jobName=" + job.getJobName() + "], "
-        + "[numberOfWorkers=" + job.getNumberOfWorkers() + "]"
-        + "\n[workerClass=" + job.getWorkerClassName() + "]";
+    String jobStr =
+        String.format("[jobName=%s], [jobID=%s], \n[numberOfWorkers=%s], [workerClass=%s]",
+        job.getJobName(), job.getJobId(), job.getNumberOfWorkers(), job.getWorkerClassName());
 
     for (JobAPI.ComputeResource cr : job.getComputeResourceList()) {
       jobStr += "\n" + ComputeResourceUtils.toString(cr);
