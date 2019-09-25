@@ -5,9 +5,10 @@ support different API's developed by different projects. We have added the Apach
 of now and looking to add more API's in the future.
 
 1. [Apache Storm API](storm.md)
+2. [Apache Beam API](beam.md)
+3. [Python API](beam.md)
 
 ## Future Possibilities
 
-1. Apache Beam API
-2. SQL API
-3. Python API
+1. SQL API
+2. Python API
