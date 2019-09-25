@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
-public class DriverExample implements IDriver {
+public class  DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   @Override

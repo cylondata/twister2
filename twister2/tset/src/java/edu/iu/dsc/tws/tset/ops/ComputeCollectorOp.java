@@ -28,6 +28,10 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
 
   private ComputeCollectorFunc<O, I> computeFunction;
 
+  public ComputeCollectorOp() {
+
+  }
+
   public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction) {
     this.computeFunction = computeFunction;
   }
