@@ -11,7 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.python.numpy;
 
-public class NumpyHolderBuilder {
+import java.io.Serializable;
+
+public class NumpyHolderBuilder implements Serializable {
 
   private static final NumpyHolderBuilder INSTANCE = new NumpyHolderBuilder();
 
