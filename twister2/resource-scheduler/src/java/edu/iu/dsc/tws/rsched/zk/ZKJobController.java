@@ -62,13 +62,13 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * we assume that the worker is coming from failure. It is the same worker.
  * It is very important that there is no worker ID collusion among different workers in the same job
  *
- * We create a persistent znode for the job
- * We create an ephemeral znode for each worker under the job znode
- * Actually, job znode is automatically created, when the first worker creates its worker znode
+ * We create a persistent znode for the job.
+ * Job znode is created with submitting client.
+ * We create an ephemeral znode for each worker under the job znode.
  *
- * We keep the WorkerInfo objects of each worker on its ephemeral worker znode
- * We encode WorkerInfo objects as byte arrays.
- * Before the WorkerInfo byte array, we put the length of the byte array as 4 bytes.
+ * Each worker znode keeps two pieces of data:
+ *    WorkerInfo object of the worker that created the ephemeral worker znode
+ *    status of this worker. Worker status changes during job execution and this field is updated.
  *
  * When workers fail, and their znodes are deleted from ZooKeeper,
  * Their workerInfo objects will be also gone.
@@ -207,6 +207,13 @@ public class ZKJobController implements IWorkerController {
   /**
    * Update worker status with new state
    * return true if successful
+   *
+   * Initially worker status is set at STARTING.
+   * Therefore, there is no need to call this method after starting this IWorkerController
+   * This method should be called to change worker status to RUNNING, COMPLETED, etc.
+   * FAILED status can not be set with this method because the worker already failed.
+   * Other workers figure out failed worker when the worker looses its connection to ZK server
+   *
    * @param newStatus
    * @return
    */

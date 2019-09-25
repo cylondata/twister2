@@ -28,11 +28,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
-import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.ZKPaths;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -57,10 +55,7 @@ public class ZKJobsMonitor {
   public boolean initialize() throws Exception {
 
     try {
-      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
-      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
-          new ExponentialBackoffRetry(1000, 3));
-      client.start();
+      client = ZKUtils.connectToServer(config);
 
       // We childrenCache children data for parent path.
       // So we will listen for all workers in the job
@@ -90,6 +85,8 @@ public class ZKJobsMonitor {
             try {
               JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(clientOfEvent, jobName, config);
               LOG.info("Job added: " + job);
+
+
             } catch (Exception e) {
               LOG.log(Level.SEVERE, e.getMessage(), e);
             }
