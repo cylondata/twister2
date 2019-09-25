@@ -4,7 +4,7 @@ title: Python API
 sidebar_label: Python API
 ---
 
-The Python API for twister2 provides scientific computing community and data scientists the ability to write and submit jobs to Twister2 using their fav
+The Python API provides the ability to define Twister2 TSet jobs in python.
 
 ## Getting Started
 
