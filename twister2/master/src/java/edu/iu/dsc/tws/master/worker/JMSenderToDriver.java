@@ -13,13 +13,13 @@ package edu.iu.dsc.tws.master.worker;
 
 import com.google.protobuf.Message;
 
-import edu.iu.dsc.tws.api.resource.IWorkerMessenger;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 
-public class JMWorkerMessenger implements IWorkerMessenger {
+public class JMSenderToDriver implements ISenderToDriver {
 
   private JMWorkerAgent workerAgent;
 
-  public JMWorkerMessenger(JMWorkerAgent workerAgent) {
+  public JMSenderToDriver(JMWorkerAgent workerAgent) {
     this.workerAgent = workerAgent;
   }
 

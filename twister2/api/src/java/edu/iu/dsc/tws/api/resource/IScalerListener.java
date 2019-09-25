@@ -37,14 +37,12 @@ package edu.iu.dsc.tws.api.resource;
 
 import java.util.List;
 
-import com.google.protobuf.Any;
-
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * IWorker should listen on this interface to get messages from the driver
  */
-public interface JobListener {
+public interface IScalerListener {
 
   /**
    * called when new instances of workers are added the job
@@ -57,12 +55,6 @@ public interface JobListener {
    * @param instancesRemoved
    */
   void workersScaledDown(int instancesRemoved);
-
-  /**
-   * received a broadcast message from the driver
-   * @param anyMessage received message from the driver
-   */
-  void driverMessageReceived(Any anyMessage);
 
   /**
    * this method is invoked when all workers joined the job initially

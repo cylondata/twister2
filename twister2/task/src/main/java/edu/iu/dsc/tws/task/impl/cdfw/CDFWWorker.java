@@ -101,8 +101,9 @@ public class CDFWWorker implements IWorker {
     communicator = new Communicator(config, channel, persistent);
     // create the executor
     taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
-    // register driver listener
-    JMWorkerAgent.addJobListener(taskExecutor);
+    // register message receiver and job listener
+    JMWorkerAgent.addReceiverFromDriver(taskExecutor);
+    JMWorkerAgent.addScalerListener(taskExecutor);
 
     // call execute
     execute();
