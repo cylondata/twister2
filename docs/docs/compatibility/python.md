@@ -10,7 +10,7 @@ The Python API provides the ability to define Twister2 TSet jobs in python.
 
 ### Following components are required in your system.
 
-1. Python 3.7+
+1. Python 3.7
 2. JVM 8+
 
 ### Setting up twister2 python support
