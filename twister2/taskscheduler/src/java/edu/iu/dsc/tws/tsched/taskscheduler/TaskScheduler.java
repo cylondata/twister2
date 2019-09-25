@@ -146,7 +146,7 @@ public class TaskScheduler implements ITaskScheduler {
     TaskSchedulePlan taskSchedulePlan;
 
     try {
-      taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
+      taskSchedulerClass = getClass().getClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);
@@ -183,7 +183,7 @@ public class TaskScheduler implements ITaskScheduler {
     Method method;
     Map<String, TaskSchedulePlan> taskSchedulePlanMap;
     try {
-      taskSchedulerClass = ClassLoader.getSystemClassLoader().loadClass(className);
+      taskSchedulerClass = getClass().getClassLoader().loadClass(className);
       Object newInstance = taskSchedulerClass.newInstance();
       method = taskSchedulerClass.getMethod("initialize", new Class<?>[]{Config.class});
       method.invoke(newInstance, config);

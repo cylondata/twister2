@@ -28,6 +28,8 @@ public class SourceOp<T> implements ISource, Receptor {
 
   private SourceFunc<T> source;
 
+  public SourceOp() {
+  }
   public SourceOp(SourceFunc<T> src) {
     this.source = src;
   }

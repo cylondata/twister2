@@ -132,3 +132,10 @@ def twister2_beam_files():
         "@org_apache_beam_beam_vendor_sdks_java_extensions_protobuf//jar",
         "@org_apache_beam_beam_vendor_grpc_1_13_1//jar",
     ]
+
+def twister2_python_support_files():
+    return [
+        "//twister2/python-support:python-support",
+        "@net_sf_py4j_py4j//jar",
+        "@black_ninia_jep//jar",
+    ]

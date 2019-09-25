@@ -23,6 +23,10 @@ public class ComputeOp<O, I> extends BaseComputeOp<I> {
 
   private ComputeFunc<O, I> computeFunction;
 
+  public ComputeOp() {
+
+  }
+
   public ComputeOp(ComputeFunc<O, I> computeFunction) {
     this.computeFunction = computeFunction;
   }

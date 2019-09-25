@@ -35,6 +35,10 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     super(wEnv);
   }
 
+  public BatchTSetEnvironment() {
+    super();
+  }
+
   @Override
   public OperationMode getOperationMode() {
     return OperationMode.BATCH;
