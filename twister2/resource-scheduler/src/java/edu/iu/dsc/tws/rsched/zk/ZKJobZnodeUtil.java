@@ -20,7 +20,6 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 public final class ZKJobZnodeUtil {
   public static final Logger LOG = Logger.getLogger(ZKJobZnodeUtil.class.getName());

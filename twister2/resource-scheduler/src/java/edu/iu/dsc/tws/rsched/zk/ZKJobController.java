@@ -51,11 +51,11 @@ import org.apache.curator.utils.ZKPaths;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
+import edu.iu.dsc.tws.api.resource.IJobListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class
@@ -88,8 +88,8 @@ import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
-  public static final Logger LOG = Logger.getLogger(ZKJobGroup.class.getName());
+public class ZKJobController implements IWorkerController, IWorkerStatusUpdater {
+  public static final Logger LOG = Logger.getLogger(ZKJobController.class.getName());
 
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
@@ -130,10 +130,13 @@ public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
   // all workers in the job, including completed and failed ones
   private HashMap<WorkerInfo, JobMasterAPI.WorkerState> jobWorkers;
 
-  public ZKJobGroup(Config config,
-                    String jobName,
-                    int numberOfWorkers,
-                    WorkerInfo workerInfo) {
+  // Inform job events
+  private IJobListener jobListener;
+
+  public ZKJobController(Config config,
+                         String jobName,
+                         int numberOfWorkers,
+                         WorkerInfo workerInfo) {
     this.config = config;
     this.rootPath = ZKContext.rootNode(config);
 
@@ -157,8 +160,10 @@ public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
 
     try {
       String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      int sessionTimeoutMs = ZKContext.sessionTimeout(config);
+      int connectionTimeoutMs = sessionTimeoutMs;
       client = CuratorFrameworkFactory.newClient(zkServerAddresses,
-          new ExponentialBackoffRetry(1000, 3));
+          sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
       String barrierPath = ZKJobZnodeUtil.constructBarrierPath(rootPath, jobName);
@@ -181,6 +186,43 @@ public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Exception when initializing ZKJobGroup", e);
       throw e;
+    }
+  }
+
+  /**
+   * add a single JobListener
+   * if additional JobListeners tried to be added,
+   * do not add and return false
+   * @param iJobListener
+   * @return
+   */
+  public boolean addJobListener(IJobListener iJobListener) {
+    if (this.jobListener == null) {
+      this.jobListener = iJobListener;
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Update worker status with new state
+   * return true if successful
+   * @param newStatus
+   * @return
+   */
+  @Override
+  public boolean updateWorkerState(JobMasterAPI.WorkerState newStatus) {
+
+    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newStatus.getNumber());
+
+    try {
+      client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not update worker status in znode: " + workerInfo.getWorkerID(), e);
+      return false;
     }
   }
 
@@ -236,27 +278,6 @@ public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
 
     String fullWorkerPath = workerZNode.getActualPath();
     LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
-  }
-
-  /**
-   * Update worker status with new state
-   * return true if successful
-   * @param newStatus
-   * @return
-   */
-  @Override
-  public boolean updateWorkerState(JobMasterAPI.WorkerState newStatus) {
-
-    byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newStatus.getNumber());
-
-    try {
-      client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not update worker status in znode: " + workerInfo.getWorkerID(), e);
-      return false;
-    }
   }
 
   /**
@@ -471,15 +492,20 @@ public class ZKJobGroup implements IWorkerController, IWorkerStatusUpdater {
                 pair.getKey().getWorkerID(), pair.getValue()));
             break;
 
-          // need to distinguish between completed and failed workers
-          // need to inform the worker for other worker failures
           case CHILD_REMOVED:
+            // need to distinguish between completed and failed workers
+            // if a worker completed before, it has left the job by completion
+            // it did not fail
+            // otherwise, the worker failed. We inform the jobListener.
             int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
 
             if (getWorkerStateForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
               LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
             } else {
               LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
+              if (jobListener != null) {
+                jobListener.workerFailed(getWorkerInfoForID(removedWorkerID));
+              }
             }
             break;
 

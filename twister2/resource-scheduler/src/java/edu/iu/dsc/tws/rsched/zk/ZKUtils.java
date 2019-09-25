@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 /**
  * this class provides methods to construct znode path names for jobs and workers
@@ -53,8 +52,10 @@ public final class ZKUtils {
     String zkServer = ZKContext.zooKeeperServerAddresses(config);
 
     try {
-      CuratorFramework client =
-          CuratorFrameworkFactory.newClient(zkServer, new ExponentialBackoffRetry(1000, 3));
+      int sessionTimeoutMs = ZKContext.sessionTimeout(config);
+      int connectionTimeoutMs = sessionTimeoutMs;
+      CuratorFramework client = CuratorFrameworkFactory.newClient(zkServer,
+          sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
       LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServer);

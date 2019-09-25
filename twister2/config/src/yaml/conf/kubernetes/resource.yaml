@@ -56,6 +56,11 @@ twister2.resource.zookeeper.server.addresses: "ip:port"
 # the default is "/twister2"
 # twister2.zookeeper.root.node.path: "/twister2"
 
+# session timeout determines worker failures.
+# If workers do not send heartbeat messages for this many milli seconds,
+# they are assumed failed
+twister2.resource.zookeeper.session.timeout: 10000
+
 #########################################################################
 # When a job is submitted, the job package needs to be transferred to worker pods
 # Two upload methods are provided:

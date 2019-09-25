@@ -38,7 +38,6 @@ import org.apache.curator.utils.ZKPaths;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 
 public class ZKJobsMonitor {
   public static final Logger LOG = Logger.getLogger(ZKJobsMonitor.class.getName());
