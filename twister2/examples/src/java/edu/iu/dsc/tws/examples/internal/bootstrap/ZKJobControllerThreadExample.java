@@ -88,7 +88,7 @@ public final class ZKJobControllerThreadExample extends Thread {
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // test state change
-    jobController.updateWorkerState(JobMasterAPI.WorkerState.RUNNING);
+    jobController.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
     ZKJobControllerExample.sleeeep((long) (Math.random() * 10000));
 
     // test worker failure
@@ -106,7 +106,7 @@ public final class ZKJobControllerThreadExample extends Thread {
     workerList = jobController.getAllWorkers();
     LOG.info("Workers after first barrier: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
-    jobController.updateWorkerState(JobMasterAPI.WorkerState.COMPLETED);
+    jobController.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time

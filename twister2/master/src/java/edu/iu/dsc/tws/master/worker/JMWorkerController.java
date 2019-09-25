@@ -216,4 +216,15 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   public CheckpointingClient getCheckpointingClient() {
     return this.checkpointingClient;
   }
+
+  @Override
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
+    return false;
+  }
+
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
+    return null;
+  }
+
 }

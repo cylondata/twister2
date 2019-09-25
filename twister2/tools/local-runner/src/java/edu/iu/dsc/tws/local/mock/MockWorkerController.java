@@ -87,4 +87,15 @@ public class MockWorkerController implements IWorkerController {
       throw new TimeoutException("Timeout on barrier");
     }
   }
+
+  @Override
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
+    return false;
+  }
+
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
+    return null;
+  }
+
 }

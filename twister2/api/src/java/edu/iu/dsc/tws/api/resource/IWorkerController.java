@@ -41,7 +41,7 @@ public interface IWorkerController {
 
   /**
    * get all joined workers in this job, including the ones finished execution
-   * some workers that has not joined yet, may not be included in this list.
+   * if there are some workers that have not joined yet, they may not be included in this list.
    * users can compare the total number of workers to the size of this list and
    * understand whether there are non-joined workers
    */
@@ -56,6 +56,24 @@ public interface IWorkerController {
    * return all workers in the job including the ones that have already left, if any
    */
   List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException;
+
+  /**
+   * update the status of this worker in the job
+   * each worker reports its status changes with this method
+   * Dashboard, JobMaster and other workers get worker status updates
+   *
+   * if status update is unsuccessful, return false
+   * @param newState
+   * @return
+   */
+  boolean updateWorkerStatus(JobMasterAPI.WorkerState newState);
+
+  /**
+   * return the status of any worker in the job
+   * @param id
+   * @return
+   */
+  JobMasterAPI.WorkerState getWorkerStatusForID(int id);
 
   /**
    * wait for all workers in the job to arrive at this barrier

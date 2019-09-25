@@ -53,7 +53,6 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IJobListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
@@ -88,7 +87,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKJobController implements IWorkerController, IWorkerStatusUpdater {
+public class ZKJobController implements IWorkerController {
   public static final Logger LOG = Logger.getLogger(ZKJobController.class.getName());
 
   // WorkerInfo object for this worker
@@ -212,7 +211,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
    * @return
    */
   @Override
-  public boolean updateWorkerState(JobMasterAPI.WorkerState newStatus) {
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newStatus) {
 
     byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newStatus.getNumber());
 
@@ -242,7 +241,8 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
     return null;
   }
 
-  public JobMasterAPI.WorkerState getWorkerStateForID(int id) {
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
     for (Map.Entry<WorkerInfo, JobMasterAPI.WorkerState> entry: jobWorkers.entrySet()) {
       if (entry.getKey().getWorkerID() == id) {
         return entry.getValue();
@@ -499,7 +499,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
             // otherwise, the worker failed. We inform the jobListener.
             int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
 
-            if (getWorkerStateForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
+            if (getWorkerStatusForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
               LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
             } else {
               LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));

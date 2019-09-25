@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.NodeInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -613,6 +614,16 @@ public class ZKWorkerController implements IWorkerController {
         LOG.log(Level.SEVERE, "Exception when closing", e);
       }
     }
+  }
+
+  @Override
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
+    return false;
+  }
+
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
+    return null;
   }
 
 }

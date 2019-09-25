@@ -371,4 +371,14 @@ public class K8sWorkerController implements IWorkerController {
   public void waitOnBarrier() throws TimeoutException {
   }
 
+  @Override
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
+    return false;
+  }
+
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
+    return null;
+  }
+
 }

@@ -168,4 +168,15 @@ public class MesosWorkerController implements IWorkerController {
   public void close() {
     zkWorkerController.close();
   }
+
+  @Override
+  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
+    return false;
+  }
+
+  @Override
+  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
+    return null;
+  }
+
 }
