@@ -70,17 +70,19 @@ class IntegerSource(SourceFunc):
         return self.x
 ```
 
-Once defined, you add this source to TSet environment as follows.
+Once defined, you may add this source to TSet environment as follows.
 
 ```python
 source = env.create_source(IntegerSource(10), 4)
 ```
 
-The second parameter of ```create_source``` is the parallelism. In this case(4), twister2 will run 4 integer sources in parallel across the cluster.
+The second parameter of ```create_source``` is the parallelism. In this case(4), twister2 will run 4 integer sources parallelly across the cluster.
 
 Starting from a source, you may transform your data as required by utilizing twister2 TSet operations.
 
-### Example
+### Example - KMeans
+
+This example utilizes existing tools for python such as ```numpy``` and ```scikit-learn``` for data representation and computation and use twister2 for communication.
 
 ```python
 # Twister2 Python API supports Numpy
@@ -151,12 +153,14 @@ Twister2 accepts two types of python jobs.
 
 1. Single python file (If you have just one file defining the whole job)
 ```bash
-./bin/twister2 submit standalone python /absolute/path/to/kmeans.py kmeans.py  arg1 arg2
+./bin/twister2 submit standalone python /absolute/path/to/your_script.py your_script.py  arg1 arg2
 ```
 
 2. Zip file (If you have multiple python files, you can submit them as a zip file)
 ```bash
-./bin/twister2 submit standalone python /absolute/path/to/kmeans.zip kmeans.py  arg1 arg2
+./bin/twister2 submit standalone python_zip /absolute/path/to/your_zip.zip entry_point.py  arg1 arg2
 ```
+
+```entry_point.py``` is where you would initialize Twister2Environment
 
 ```arg1``` and ```arg2``` in above two commands will be passed as system args to the python script.
