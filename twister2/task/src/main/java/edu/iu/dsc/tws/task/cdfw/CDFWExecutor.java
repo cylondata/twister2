@@ -61,12 +61,11 @@ public final class CDFWExecutor {
    */
   public void execute(DataFlowGraph graph) {
     LOG.info("Starting task graph Requirements:" + graph.getGraphName());
-
     if (!(driverState == DriverState.JOB_FINISHED || driverState == DriverState.INITIALIZE)) {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
-
+    LOG.info("Newly joined worker list:" + this.executionEnv.getWorkerInfoList());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
     submitGraph(graph, workerIDs);
@@ -183,7 +182,6 @@ public final class CDFWExecutor {
         anyMessage.getClass().getName()));
     driverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage, senderWorkerID));
   }
-
 
   private DriverEvent waitForEvent(DriveEventType type) throws Exception {
     // lets wait for driver events
