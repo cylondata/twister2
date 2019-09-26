@@ -16,8 +16,6 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.curator.framework.CuratorFramework;
-
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
@@ -28,8 +26,6 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.zk.ZKJobController;
-import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
-import edu.iu.dsc.tws.rsched.zk.ZKUtils;
 
 public final class ZKJobControllerThreadExample extends Thread {
   public static final Logger LOG = Logger.getLogger(ZKJobControllerThreadExample.class.getName());
@@ -154,34 +150,13 @@ public final class ZKJobControllerThreadExample extends Thread {
         .addComputeResource(2, 1024, numberOfWorkers)
         .build();
     JobAPI.Job job = twister2Job.serialize();
-    createJobZnode(job);
+
+    ZKJobControllerExample.createJobZnode(job);
 
     for (int i = 0; i < numberOfWorkers; i++) {
       new ZKJobControllerThreadExample(i).start();
     }
 
-  }
-
-  public static void createJobZnode(JobAPI.Job job) {
-
-    CuratorFramework client = ZKUtils.connectToServer(config);
-
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
-      ZKJobZnodeUtil.deleteJobZNodes(config, client, job.getJobName());
-    }
-
-    try {
-      ZKJobZnodeUtil.createJobZNode(client, job, config);
-
-      // test job znode content reading
-      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
-      LOG.info("JobZNode content: " + readJob);
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    ZKUtils.closeClient(client);
   }
 
 

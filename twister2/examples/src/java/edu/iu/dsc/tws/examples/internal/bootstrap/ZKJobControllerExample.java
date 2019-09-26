@@ -20,6 +20,7 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
@@ -30,8 +31,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
+import edu.iu.dsc.tws.rsched.zk.ZKContext;
 import edu.iu.dsc.tws.rsched.zk.ZKJobController;
 import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.zk.ZKUtils;
@@ -61,25 +62,23 @@ public final class ZKJobControllerExample {
 
     if ("delete".equalsIgnoreCase(action)) {
       deleteJobZnode();
+
+    } else if ("create".equalsIgnoreCase(action)) {
+      numberOfWorkers = Integer.parseInt(args[2]);
+      JobAPI.Job job = buildJob();
+      createJobZnode(job);
+
+    } else if ("update".equalsIgnoreCase(action)) {
+      numberOfWorkers = Integer.parseInt(args[2]);
+      JobAPI.Job job = buildJob();
+      updateJobZnode(job);
+
     } else if ("join".equalsIgnoreCase(action)) {
       numberOfWorkers = Integer.parseInt(args[2]);
       int workerID = Integer.parseInt(args[3]);
 
       LoggingHelper.initTwisterFileLogHandler(workerID + "", "logs", config);
-
-      config = JobUtils.resolveJobId(config, jobName);
-
-      Twister2Job twister2Job = Twister2Job.newBuilder()
-          .setJobName(jobName)
-          .setJobID(config.getStringValue(Context.JOB_ID))
-          .setWorkerClass(HelloWorld.class)
-          .addComputeResource(2, 1024, numberOfWorkers)
-          .build();
-      JobAPI.Job job = twister2Job.serialize();
-//      createJobZnode(job);
-
       simulateWorker(workerID);
-
     }
 
   }
@@ -124,6 +123,13 @@ public final class ZKJobControllerExample {
       }
     });
 
+    jobController.addAllJoinedListener(new IAllJoinedListener() {
+      @Override
+      public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+        LOG.info("**************** All workers joined. Number of workers: " + workerList.size());
+      }
+    });
+
     jobController.initialize();
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
@@ -136,14 +142,14 @@ public final class ZKJobControllerExample {
 
     // test state change
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
-    sleeeep((long) (Math.random() * 10000));
+    sleeeep((long) (Math.random() * 100000));
 
     // test worker failure
     // assume this worker failed
     // it does not send COMPLETE message, before leaving
-    if (workerID == 1) {
-      throw new RuntimeException();
-    }
+//    if (workerID == 1) {
+//      throw new RuntimeException();
+//    }
 
     LOG.info("Waiting on the first barrier -------------------------- ");
 
@@ -161,15 +167,51 @@ public final class ZKJobControllerExample {
     jobController.close();
   }
 
+  public static JobAPI.Job buildJob() {
+
+    Twister2Job twister2Job = Twister2Job.newBuilder()
+        .setJobName(jobName)
+        .setJobID(config.getStringValue(Context.JOB_ID))
+        .setWorkerClass(HelloWorld.class)
+        .addComputeResource(2, 1024, numberOfWorkers)
+        .build();
+    JobAPI.Job job = twister2Job.serialize();
+    return job;
+  }
 
   /**
    * construct a test Config object
    */
   public static Config buildTestConfig(String zkAddresses) {
 
-    return Config.newBuilder()
+    config = Config.newBuilder()
         .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddresses)
         .build();
+
+    config = JobUtils.resolveJobId(config, jobName);
+    return config;
+  }
+
+  public static void createJobZnode(JobAPI.Job job) {
+
+    CuratorFramework client = ZKUtils.connectToServer(config);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
+      ZKJobZnodeUtil.deleteJobZNodes(config, client, job.getJobName());
+    }
+
+    try {
+      ZKJobZnodeUtil.createJobZNode(client, job, config);
+
+      // test job znode content reading
+      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      LOG.info("JobZNode content: " + readJob);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    ZKUtils.closeClient(client);
   }
 
   public static void deleteJobZnode() {
@@ -179,6 +221,15 @@ public final class ZKJobControllerExample {
     if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
       ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
     }
+
+    ZKUtils.closeClient(client);
+  }
+
+  public static void updateJobZnode(JobAPI.Job job) throws Exception {
+
+    CuratorFramework client = ZKUtils.connectToServer(config);
+    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), jobName);
+    ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
 
     ZKUtils.closeClient(client);
   }

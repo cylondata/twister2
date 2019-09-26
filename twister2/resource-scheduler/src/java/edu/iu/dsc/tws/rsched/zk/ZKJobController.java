@@ -40,22 +40,25 @@ import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.NodeCache;
+import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
-import org.apache.curator.utils.ZKPaths;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class
@@ -110,6 +113,9 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   private PersistentNode workerZNode;
 
   // children cache for job znode
+  private NodeCache jobZnodeCache;
+
+  // children cache for job znode
   private PathChildrenCache childrenCache;
 
   // variables related to the barrier
@@ -130,8 +136,11 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   // all workers in the job, including completed and failed ones
   private HashMap<WorkerInfo, JobMasterAPI.WorkerState> jobWorkers;
 
-  // Inform job events
+  // Inform worker failure events
   private IWorkerFailureListener failureListener;
+
+  // Inform when all workers joined the job
+  private IAllJoinedListener allJoinedListener;
 
   public ZKJobController(Config config,
                          String jobName,
@@ -175,10 +184,15 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
 
       createWorkerZnode();
 
-      // We childrenCache children data for parent path.
+      // cache jobZnode data, and watch that node for changes
+      jobZnodeCache = new NodeCache(client, jobPath);
+      addJobNodeListener();
+      jobZnodeCache.start();
+
+      // We cache children data for parent path.
       // So we will listen for all workers in the job
       childrenCache = new PathChildrenCache(client, jobPath, true);
-      addListener(childrenCache);
+      addChildrenCacheListener(childrenCache);
       childrenCache.start();
 
       LOG.info("This worker: " + workerInfo.getWorkerID() + " initialized successfully.");
@@ -197,12 +211,21 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
    * @return
    */
   public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
-    if (this.failureListener == null) {
-      this.failureListener = iWorkerFailureListener;
-      return true;
+    if (this.failureListener != null) {
+      return false;
     }
 
-    return false;
+    this.failureListener = iWorkerFailureListener;
+    return true;
+  }
+
+  public boolean addAllJoinedListener(IAllJoinedListener iAllJoinedListener) {
+    if (allJoinedListener != null) {
+      return false;
+    }
+
+    allJoinedListener = iAllJoinedListener;
+    return true;
   }
 
   /**
@@ -458,7 +481,39 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
     }
   }
 
-  private void addListener(PathChildrenCache cache) {
+  private void addJobNodeListener() {
+    NodeCacheListener listener = new NodeCacheListener() {
+      @Override
+      public void nodeChanged() throws Exception {
+        byte[] jobZnodeBodyBytes = client.getData().forPath(jobPath);
+        JobAPI.Job job = ZKJobZnodeUtil.decodeJobZnode(jobZnodeBodyBytes);
+        LOG.fine("NodeChanged. New Number of workers: " + job.getNumberOfWorkers());
+
+        if (numberOfWorkers == job.getNumberOfWorkers()) {
+          // if numberOfWorkers in this worker and the one in the job are equal,
+          // nothing to be done
+          // the job is not scaled up or down
+
+        } else if (numberOfWorkers < job.getNumberOfWorkers()) {
+          // this means the job is scaled up
+          // update numberOfWorkers
+          // unset the flag allJoined
+          numberOfWorkers = job.getNumberOfWorkers();
+          allJoined = false;
+        } else {
+          // the job is scaled down
+          // update numberOfWorkers
+          numberOfWorkers = job.getNumberOfWorkers();
+          // remove scaled down workers from worker list
+          jobWorkers.keySet().removeIf(wInfo -> wInfo.getWorkerID() >= numberOfWorkers);
+        }
+      }
+    };
+
+    jobZnodeCache.getListenable().addListener(listener);
+  }
+
+  private void addChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
       public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
@@ -489,13 +544,18 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
             // we don't check the size of jobWorkers,
             // because some workers may have joined and failed.
             // This shows currently existing workers in the job group
-            if (numberOfWorkers == cache.getCurrentData().size()) {
+            if (numberOfWorkers == cache.getCurrentData().size() && !allJoined) {
               allJoined = true;
               synchronized (waitObject) {
                 waitObject.notify();
               }
+
+              // inform the allJoinedListener
+              if (allJoinedListener != null) {
+                allJoinedListener.allWorkersJoined(getJoinedWorkers());
+              }
             }
-            LOG.info("Worker added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
+            LOG.info(String.format("Worker[%s] added: ", newWorkerID));
             break;
 
           case CHILD_UPDATED:
@@ -547,6 +607,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   public void close() {
     if (client != null) {
       try {
+        jobZnodeCache.close();
         int noOfChildren =  childrenCache.getCurrentData().size();
         workerZNode.close();
         CloseableUtils.closeQuietly(childrenCache);

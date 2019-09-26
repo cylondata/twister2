@@ -15,6 +15,8 @@ package edu.iu.dsc.tws.rsched.zk;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
@@ -121,14 +123,40 @@ public final class ZKJobZnodeUtil {
 
     try {
       byte[] jobBytes = client.getData().forPath(jobPath);
-      JobAPI.Job job = JobAPI.Job.newBuilder()
-          .mergeFrom(jobBytes, 0, jobBytes.length)
-          .build();
-
-      return job;
-
+      return decodeJobZnode(jobBytes);
     } catch (Exception e) {
       LOG.severe("Could not read job znode body: " + e.getMessage());
+      throw e;
+    }
+  }
+
+  /**
+   * decode job znode body bytes
+   */
+  public static JobAPI.Job decodeJobZnode(byte[] body) throws InvalidProtocolBufferException {
+
+    return JobAPI.Job.newBuilder()
+        .mergeFrom(body, 0, body.length)
+        .build();
+  }
+
+  /**
+   * Create job znode with JobAPI.Job object as its payload
+   * Assumes that there is no job znode exists in the ZooKeeper
+   * This method should be called by the submitting client
+   */
+  public static void updateJobZNode(CuratorFramework client, JobAPI.Job job, String jobPath)
+      throws Exception {
+
+    try {
+      client
+          .setData()
+          .forPath(jobPath, job.toByteArray());
+
+      LOG.info("JobZNode Updated: " + jobPath);
+
+    } catch (Exception e) {
+      LOG.severe("Could not update job znode: " + e.getMessage());
       throw e;
     }
   }
