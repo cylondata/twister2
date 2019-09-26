@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
@@ -42,7 +43,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class CDFWRuntime implements IReceiverFromDriver, IScalerListener {
+public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJoinedListener {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 

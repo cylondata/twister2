@@ -104,6 +104,7 @@ public class CDFWWorker implements IWorker {
     // register message receiver and job listener
     JMWorkerAgent.addReceiverFromDriver(taskExecutor);
     JMWorkerAgent.addScalerListener(taskExecutor);
+    JMWorkerAgent.addAllJoinedListener(taskExecutor);
 
     // call execute
     execute();

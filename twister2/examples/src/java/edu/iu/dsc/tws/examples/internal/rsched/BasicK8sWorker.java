@@ -33,6 +33,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
@@ -46,7 +47,9 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 
-public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDriver {
+public class BasicK8sWorker implements
+    IWorker, IScalerListener, IReceiverFromDriver, IAllJoinedListener {
+
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
   @Override
@@ -58,6 +61,8 @@ public class BasicK8sWorker implements IWorker, IScalerListener, IReceiverFromDr
 
     JMWorkerAgent.addScalerListener(this);
     JMWorkerAgent.addReceiverFromDriver(this);
+    JMWorkerAgent.addAllJoinedListener(this);
+
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {

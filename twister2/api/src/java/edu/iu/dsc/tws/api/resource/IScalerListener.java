@@ -35,12 +35,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.resource;
 
-import java.util.List;
-
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-
 /**
- * IWorker should listen on this interface to get messages from the driver
+ * IWorker should listen on this interface to get scaling events from the driver
  */
 public interface IScalerListener {
 
@@ -55,13 +51,4 @@ public interface IScalerListener {
    * @param instancesRemoved
    */
   void workersScaledDown(int instancesRemoved);
-
-  /**
-   * this method is invoked when all workers joined the job initially
-   * and also, after each scale up operation,
-   * when all new workers joined the job, it is invoked
-   * @param workerList
-   */
-  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
-
 }

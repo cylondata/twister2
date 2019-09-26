@@ -15,6 +15,10 @@ import java.util.List;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * Workers can be informed when all workers joined the job
+ */
+
 public interface IAllJoinedListener {
 
   /**

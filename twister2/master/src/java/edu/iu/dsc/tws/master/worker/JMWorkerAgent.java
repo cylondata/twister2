@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.checkpointing.client.CheckpointingClientImpl;
@@ -107,7 +108,19 @@ public final class JMWorkerAgent {
    * if events arrive before IScalerListener added,
    * buffer those events in this list and deliver them when an IScalerListener added
    */
-  private LinkedList<Message> eventBuffer = new LinkedList<>();
+  private LinkedList<JobMasterAPI.WorkersScaled> scaledEventBuffer = new LinkedList<>();
+
+
+  /**
+   * workers can register an IAllJoinedListener to be informed when all workers joined
+   */
+  private IAllJoinedListener allJoinedListener;
+
+  /**
+   * if events arrive before IScalerListener added,
+   * buffer those events in this list and deliver them when an IScalerListener added
+   */
+  private LinkedList<JobMasterAPI.WorkersJoined> allJoinedEventBuffer = new LinkedList<>();
 
   /**
    * This is a singleton class
@@ -402,7 +415,24 @@ public final class JMWorkerAgent {
     workerAgent.scalerListener = scalerListener;
 
     // deliver buffered messages if any
-    workerAgent.deliverBufferedEvents();
+    workerAgent.deliverBufferedScaledEvents();
+
+    return true;
+  }
+
+  /**
+   * only one IAllJoinedListener can be added
+   * if the second IAllJoinedListener tried to be added, false returned
+   */
+  public static boolean addAllJoinedListener(IAllJoinedListener iAllJoinedListener) {
+    if (workerAgent.allJoinedListener != null) {
+      return false;
+    }
+
+    workerAgent.allJoinedListener = iAllJoinedListener;
+
+    // deliver buffered messages if any
+    workerAgent.deliverBufferedAllJoinedEvents();
 
     return true;
   }
@@ -522,10 +552,20 @@ public final class JMWorkerAgent {
   /**
    * deliver all buffered messages to the IScalerListener
    */
-  private void deliverBufferedEvents() {
+  private void deliverBufferedScaledEvents() {
 
-    while (!eventBuffer.isEmpty()) {
-      deliverEventToScalerListener(eventBuffer.poll());
+    while (!scaledEventBuffer.isEmpty()) {
+      deliverToScalerListener(scaledEventBuffer.poll());
+    }
+  }
+
+  /**
+   * deliver all buffered messages to the IScalerListener
+   */
+  private void deliverBufferedAllJoinedEvents() {
+
+    while (!allJoinedEventBuffer.isEmpty()) {
+      deliverToAllJoinedListener(allJoinedEventBuffer.poll());
     }
   }
 
@@ -542,23 +582,21 @@ public final class JMWorkerAgent {
   /**
    * deliver the received event to IScalerListener
    */
-  private void deliverEventToScalerListener(Message event) {
+  private void deliverToScalerListener(JobMasterAPI.WorkersScaled event) {
 
-    if (event instanceof JobMasterAPI.WorkersScaled) {
-
-      JobMasterAPI.WorkersScaled scaledEvent = (JobMasterAPI.WorkersScaled) event;
-      if (scaledEvent.getChange() > 0) {
-        scalerListener.workersScaledUp(scaledEvent.getChange());
-      } else if (scaledEvent.getChange() < 0) {
-        scalerListener.workersScaledDown(0 - scaledEvent.getChange());
-      }
-
-    } else if (event instanceof JobMasterAPI.WorkersJoined) {
-
-      JobMasterAPI.WorkersJoined joinedEvent = (JobMasterAPI.WorkersJoined) event;
-      scalerListener.allWorkersJoined(joinedEvent.getWorkerList());
-
+    if (event.getChange() > 0) {
+      scalerListener.workersScaledUp(event.getChange());
+    } else if (event.getChange() < 0) {
+      scalerListener.workersScaledDown(0 - event.getChange());
     }
+  }
+
+  /**
+   * deliver the received event to AllJoinedListener
+   */
+  private void deliverToAllJoinedListener(JobMasterAPI.WorkersJoined event) {
+
+    allJoinedListener.allWorkersJoined(event.getWorkerList());
   }
 
   /**
@@ -610,21 +648,27 @@ public final class JMWorkerAgent {
           deliverMessageToReceiver(driverMessage);
         }
 
-      } else if (message instanceof JobMasterAPI.WorkersJoined
-          || message instanceof JobMasterAPI.WorkersScaled) {
+      } else if (message instanceof JobMasterAPI.WorkersScaled) {
 
         LOG.fine("Received " + message.getClass().getSimpleName()
             + " message from the master. \n" + message);
 
+        JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
         if (scalerListener == null) {
-          eventBuffer.add(message);
+          scaledEventBuffer.add(scaledMessage);
         } else {
-          deliverEventToScalerListener(message);
+          deliverToScalerListener(scaledMessage);
         }
 
-        if (message instanceof JobMasterAPI.WorkersScaled) {
-          JobMasterAPI.WorkersScaled scaledMessage = (JobMasterAPI.WorkersScaled) message;
-          workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
+        workerController.scaled(scaledMessage.getChange(), scaledMessage.getNumberOfWorkers());
+
+      } else if (message instanceof JobMasterAPI.WorkersJoined) {
+
+        JobMasterAPI.WorkersJoined joinedMessage = (JobMasterAPI.WorkersJoined) message;
+        if (allJoinedListener == null) {
+          allJoinedEventBuffer.add(joinedMessage);
+        } else {
+          deliverToAllJoinedListener(joinedMessage);
         }
 
       } else if (message instanceof JobMasterAPI.Recover) {
