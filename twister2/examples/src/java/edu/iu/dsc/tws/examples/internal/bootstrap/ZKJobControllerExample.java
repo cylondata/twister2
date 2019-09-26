@@ -19,6 +19,10 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -27,6 +31,7 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.zk.ZKJobController;
 import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.zk.ZKUtils;
@@ -62,8 +67,11 @@ public final class ZKJobControllerExample {
 
       LoggingHelper.initTwisterFileLogHandler(workerID + "", "logs", config);
 
+      config = JobUtils.resolveJobId(config, jobName);
+
       Twister2Job twister2Job = Twister2Job.newBuilder()
           .setJobName(jobName)
+          .setJobID(config.getStringValue(Context.JOB_ID))
           .setWorkerClass(HelloWorld.class)
           .addComputeResource(2, 1024, numberOfWorkers)
           .build();
@@ -99,18 +107,35 @@ public final class ZKJobControllerExample {
     ZKJobController jobController =
         new ZKJobController(config, jobName, numberOfWorkers, workerInfo);
 
+    IWorkerController workerController = jobController;
+    IWorkerStatusUpdater workerStatusUpdater = jobController;
+
+    jobController.addFailureListener(new IWorkerFailureListener() {
+      @Override
+      public void workerFailed(JobMasterAPI.WorkerInfo workerInfo) {
+        LOG.info(String.format("Worker[%s] failed.......................................",
+            workerInfo.getWorkerID()));
+      }
+
+      @Override
+      public void failedWorkerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+        LOG.info(String.format("Worker[%s] has come back from failure ......................",
+            workerInfo.getWorkerID()));
+      }
+    });
+
     jobController.initialize();
 
-    List<JobMasterAPI.WorkerInfo> workerList = jobController.getJoinedWorkers();
+    List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
     LOG.info("Waiting for all workers to join: ");
     // wait until 100sec
-    workerList = jobController.getAllWorkers();
+    workerList = workerController.getAllWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // test state change
-    jobController.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
     sleeeep((long) (Math.random() * 10000));
 
     // test worker failure
@@ -122,13 +147,13 @@ public final class ZKJobControllerExample {
 
     LOG.info("Waiting on the first barrier -------------------------- ");
 
-    jobController.waitOnBarrier();
+    workerController.waitOnBarrier();
     LOG.info("All workers reached the barrier. Proceeding.");
 
-    workerList = jobController.getAllWorkers();
+    workerList = workerController.getAllWorkers();
     LOG.info("Workers after first barrier: \n" + WorkerInfoUtils.workerListAsString(workerList));
 
-    jobController.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time

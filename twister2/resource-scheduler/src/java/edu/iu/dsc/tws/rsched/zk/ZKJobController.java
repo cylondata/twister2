@@ -51,8 +51,8 @@ import org.apache.curator.utils.ZKPaths;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
-import edu.iu.dsc.tws.api.resource.IJobListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
@@ -131,7 +131,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   private HashMap<WorkerInfo, JobMasterAPI.WorkerState> jobWorkers;
 
   // Inform job events
-  private IJobListener jobListener;
+  private IWorkerFailureListener failureListener;
 
   public ZKJobController(Config config,
                          String jobName,
@@ -190,15 +190,15 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   }
 
   /**
-   * add a single JobListener
-   * if additional JobListeners tried to be added,
+   * add a single IWorkerFailureListener
+   * if additional IWorkerFailureListener tried to be added,
    * do not add and return false
-   * @param iJobListener
+   * @param iWorkerFailureListener
    * @return
    */
-  public boolean addJobListener(IJobListener iJobListener) {
-    if (this.jobListener == null) {
-      this.jobListener = iJobListener;
+  public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
+    if (this.failureListener == null) {
+      this.failureListener = iWorkerFailureListener;
       return true;
     }
 
@@ -470,12 +470,20 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
             pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
 
             // if there is an existing WorkerInfo for newly added worker
-            // Delete that WorkerInfo.
-            // this worker must be coming from failure
-            WorkerInfo existingWorkerInfo = getWorkerInfoForID(pair.getKey().getWorkerID());
-            jobWorkers.remove(existingWorkerInfo);
+            // and its previous status is FAILED, it means that this worker is coming from failure
+            // Inform the failure listener
+            int newWorkerID = pair.getKey().getWorkerID();
+            WorkerInfo existingWorkerInfo = getWorkerInfoForID(newWorkerID);
+            if (existingWorkerInfo != null
+                && getWorkerStatusForID(newWorkerID) == JobMasterAPI.WorkerState.FAILED
+                && failureListener != null) {
 
-            jobWorkers.put(pair.getKey(), pair.getValue());
+              jobWorkers.put(pair.getKey(), pair.getValue());
+              failureListener.failedWorkerRejoined(pair.getKey());
+            } else {
+
+              jobWorkers.put(pair.getKey(), pair.getValue());
+            }
 
             // if currently all workers exist in the job, let the workers know that all joined
             // we don't check the size of jobWorkers,
@@ -504,15 +512,19 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
             // need to distinguish between completed and failed workers
             // if a worker completed before, it has left the job by completion
             // it did not fail
-            // otherwise, the worker failed. We inform the jobListener.
+            // otherwise, the worker failed. We inform the failureListener.
             int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
 
             if (getWorkerStatusForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
               LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
             } else {
               LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
-              if (jobListener != null) {
-                jobListener.workerFailed(getWorkerInfoForID(removedWorkerID));
+              if (failureListener != null) {
+                // first change worker state into failed in local list
+                WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
+                jobWorkers.put(failedWorker, JobMasterAPI.WorkerState.FAILED);
+                // inform the listener
+                failureListener.workerFailed(failedWorker);
               }
             }
             break;

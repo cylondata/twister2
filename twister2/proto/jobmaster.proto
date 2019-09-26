@@ -40,8 +40,9 @@ enum WorkerState {
     RESTARTING = 1;
     RUNNING = 2;
     COMPLETED = 3;
-    ERROR = 4;
-    UNASSIGNED = 5;
+    FAILED = 4;
+    ERROR = 5;
+    UNASSIGNED = 6;
 }
 
 message NodeInfo {
