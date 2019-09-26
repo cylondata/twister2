@@ -58,24 +58,6 @@ public interface IWorkerController {
   List<JobMasterAPI.WorkerInfo> getAllWorkers() throws TimeoutException;
 
   /**
-   * update the status of this worker in the job
-   * each worker reports its status changes with this method
-   * Dashboard, JobMaster and other workers get worker status updates
-   *
-   * if status update is unsuccessful, return false
-   * @param newState
-   * @return
-   */
-  boolean updateWorkerStatus(JobMasterAPI.WorkerState newState);
-
-  /**
-   * return the status of any worker in the job
-   * @param id
-   * @return
-   */
-  JobMasterAPI.WorkerState getWorkerStatusForID(int id);
-
-  /**
    * wait for all workers in the job to arrive at this barrier
    * After waiting for the timeout specified in ControllerContext.maxWaitTimeOnBarrier
    * if some workers still could not arrive at the barrier, throw an exception

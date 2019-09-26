@@ -53,6 +53,7 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IJobListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 
@@ -87,7 +88,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKJobController implements IWorkerController {
+public class ZKJobController implements IWorkerController, IWorkerStatusUpdater {
   public static final Logger LOG = Logger.getLogger(ZKJobController.class.getName());
 
   // WorkerInfo object for this worker
