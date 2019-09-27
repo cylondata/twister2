@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
+import edu.iu.dsc.tws.api.tset.TSetContext;
+import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
@@ -28,17 +30,23 @@ public final class MapFunctions extends TFunc<MapFunc> {
     return INSTANCE;
   }
 
-  static class MapFuncImpl implements MapFunc, Serializable {
+  static class MapFuncImpl extends BaseMapFunc implements Serializable {
 
     private PythonLambdaProcessor lambdaProcessor;
+    private TSetContext context;
 
     MapFuncImpl(byte[] lambdaProcessor) {
       this.lambdaProcessor = new PythonLambdaProcessor(lambdaProcessor);
     }
 
     @Override
+    public void prepare(TSetContext ctx) {
+      this.context = ctx;
+    }
+
+    @Override
     public Object map(Object input) {
-      return lambdaProcessor.invoke(input);
+      return lambdaProcessor.invoke(input, context);
     }
   }
 

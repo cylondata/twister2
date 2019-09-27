@@ -1,7 +1,6 @@
 package edu.iu.dsc.tws.python.tset;
 
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.python.numpy.NumpyHolderBuilder;
 import edu.iu.dsc.tws.python.processors.PythonClassProcessor;
 
 public class PyTSetSource implements SourceFunc {
@@ -19,6 +18,6 @@ public class PyTSetSource implements SourceFunc {
 
   @Override
   public Object next() {
-    return this.processor.invoke("next", NumpyHolderBuilder.getInstance());
+    return this.processor.invoke("next");
   }
 }

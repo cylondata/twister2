@@ -2,8 +2,12 @@ package edu.iu.dsc.tws.python.processors;
 
 import java.io.Serializable;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.python.numpy.NumpyHolderBuilder;
 
 import jep.Jep;
 import jep.JepException;
@@ -13,6 +17,7 @@ public abstract class AbstractPythonProcessor extends ThreadLocal<Jep> implement
   private static int objectIdCounter = 0;
   protected final String objectId;
   private byte[] bytes;
+  private static transient Map<String, Object> emptyKwargs;
 
   @Override
   protected Jep initialValue() {
@@ -37,9 +42,23 @@ public abstract class AbstractPythonProcessor extends ThreadLocal<Jep> implement
     this.bytes = bytes;
   }
 
-  Object invoke(String handler, Object... args) {
+  public static Map<String, Object> getEmptyKwargs() {
+    if (emptyKwargs == null) {
+      emptyKwargs = Collections.singletonMap(
+          "numpy_builder", NumpyHolderBuilder.getInstance());
+    }
+    return emptyKwargs;
+  }
+
+  public static Map<String, Object> newKwargs() {
+    Map<String, Object> kwargs = new HashMap<>();
+    kwargs.put("numpy_builder", NumpyHolderBuilder.getInstance());
+    return kwargs;
+  }
+
+  Object invoke(String handler, Map<String, Object> kwargs, Object... args) {
     try {
-      return this.get().invoke(handler, args);
+      return this.get().invoke(handler, args, kwargs);
     } catch (JepException e) {
       throw new Twister2RuntimeException("Error in invoking python function", e);
     }
