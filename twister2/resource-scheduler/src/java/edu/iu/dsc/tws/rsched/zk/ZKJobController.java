@@ -35,7 +35,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
@@ -151,7 +150,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
 
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
-    this.jobPath = ZKJobZnodeUtil.constructJobPath(rootPath, jobName);
+    this.jobPath = ZKUtils.constructJobPath(rootPath, jobName);
     this.workerInfo = workerInfo;
 
     jobWorkers = new HashMap<>(numberOfWorkers);
@@ -168,17 +167,14 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   public boolean initialize() throws Exception {
 
     try {
-      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      String zkServerAddresses = ZKContext.serverAddresses(config);
       int sessionTimeoutMs = ZKContext.sessionTimeout(config);
-      int connectionTimeoutMs = sessionTimeoutMs;
-      client = CuratorFrameworkFactory.newClient(zkServerAddresses,
-          sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 3));
-      client.start();
+      client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
 
-      String barrierPath = ZKJobZnodeUtil.constructBarrierPath(rootPath, jobName);
+      String barrierPath = ZKUtils.constructBarrierPath(rootPath, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
 
-      String daiPathForBarrier = ZKJobZnodeUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPathForBarrier = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
@@ -297,7 +293,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
     // put WorkerInfo and its state into znode body
     int initialState = JobMasterAPI.WorkerState.STARTING_VALUE;
     byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, initialState);
-    workerZNode = ZKUtils.createPersistentEphemeralZnode(client, workerPath, workerZnodeBody);
+    workerZNode = ZKUtils.createPersistentEphemeralZnode(workerPath, workerZnodeBody);
     workerZNode.start();
     try {
       workerZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
@@ -358,6 +354,23 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
       clone.add(info);
     }
     return clone;
+  }
+
+  /**
+   * count joined and live workers
+   * @return
+   */
+  private int countJoinedLiveWorkers() {
+
+    int count = 0;
+    for (JobMasterAPI.WorkerState state: jobWorkers.values()) {
+      if (state == JobMasterAPI.WorkerState.STARTING
+          || state == JobMasterAPI.WorkerState.RUNNING
+          || state == JobMasterAPI.WorkerState.RESTARTING) {
+        count++;
+      }
+    }
+    return count;
   }
 
   /**
@@ -487,7 +500,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
       public void nodeChanged() throws Exception {
         byte[] jobZnodeBodyBytes = client.getData().forPath(jobPath);
         JobAPI.Job job = ZKJobZnodeUtil.decodeJobZnode(jobZnodeBodyBytes);
-        LOG.fine("NodeChanged. New Number of workers: " + job.getNumberOfWorkers());
+        LOG.info("NodeChanged. New Number of workers: " + job.getNumberOfWorkers());
 
         if (numberOfWorkers == job.getNumberOfWorkers()) {
           // if numberOfWorkers in this worker and the one in the job are equal,
@@ -544,7 +557,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
             // we don't check the size of jobWorkers,
             // because some workers may have joined and failed.
             // This shows currently existing workers in the job group
-            if (numberOfWorkers == cache.getCurrentData().size() && !allJoined) {
+            if (numberOfWorkers == countJoinedLiveWorkers() && !allJoined) {
               allJoined = true;
               synchronized (waitObject) {
                 waitObject.notify();
@@ -614,7 +627,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
         // if this is the last worker, delete znodes for the job
         if (noOfChildren == 1) {
           LOG.log(Level.INFO, "This is the last worker to finish. Deleting the job znodes.");
-          ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
+          ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
         }
         CloseableUtils.closeQuietly(client);
       } catch (Exception e) {
@@ -624,4 +637,3 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   }
 
 }
-

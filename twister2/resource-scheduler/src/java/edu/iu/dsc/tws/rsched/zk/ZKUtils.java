@@ -12,8 +12,6 @@
 
 package edu.iu.dsc.tws.rsched.zk;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,33 +39,46 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 public final class ZKUtils {
   public static final Logger LOG = Logger.getLogger(ZKUtils.class.getName());
 
+  // a singleton client
+  private static CuratorFramework client;
+
   private ZKUtils() {
   }
 
   /**
    * connect to ZooKeeper server
+   * @param zkServers
+   * @return
    */
-  public static CuratorFramework connectToServer(Config config) {
+  public static CuratorFramework connectToServer(String zkServers) {
+    return connectToServer(zkServers, ZKContext.SESSION_TIMEOUT_DEFAULT);
+  }
 
-    String zkServer = ZKContext.zooKeeperServerAddresses(config);
+  /**
+   * connect to ZooKeeper server
+   */
+  public static CuratorFramework connectToServer(String zkServers, int sessionTimeoutMs) {
+
+    if (client != null) {
+      return client;
+    }
 
     try {
-      int sessionTimeoutMs = ZKContext.sessionTimeout(config);
       int connectionTimeoutMs = sessionTimeoutMs;
-      CuratorFramework client = CuratorFrameworkFactory.newClient(zkServer,
+      client = CuratorFrameworkFactory.newClient(zkServers,
           sessionTimeoutMs, connectionTimeoutMs, new ExponentialBackoffRetry(1000, 3));
       client.start();
 
-      LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServer);
+      LOG.log(Level.INFO, "Connected to ZooKeeper server: " + zkServers);
       return client;
 
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Could not connect to ZooKeeper server" + zkServer, e);
+      LOG.log(Level.SEVERE, "Could not connect to ZooKeeper server" + zkServers, e);
       throw new RuntimeException(e);
     }
   }
 
-  public static void closeClient(CuratorFramework client) {
+  public static void closeClient() {
     client.close();
   }
 
@@ -79,31 +90,17 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a distributed atomic integer path for assigning worker ids
-   */
-  public static String constructDaiPathForWorkerID(String rootPath, String jobName) {
-    return rootPath + "/" + jobName + "-dai-for-worker-id";
-  }
-
-  /**
    * construct a distributed atomic integer path for barrier
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return rootPath + "/" + jobName + "-dai-for-barrier";
+    return rootPath + "-dai-for-barrier/" + jobName;
   }
 
   /**
    * construct a distributed barrier path
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
-    return rootPath + "/" + jobName + "-barrier";
-  }
-
-  /**
-   * construct a job distributed lock path from the given job name
-   */
-  public static String constructJobLockPath(String rootPath, String jobName) {
-    return rootPath + "/" + jobName + "-lock";
+    return rootPath + "-barrier/" + jobName;
   }
 
   /**
@@ -136,8 +133,7 @@ public final class ZKUtils {
    * it will be deleted after the worker leaves or fails
    * it will be persistent for occasional network problems
    */
-  public static PersistentNode createPersistentEphemeralZnode(CuratorFramework client,
-                                                              String path,
+  public static PersistentNode createPersistentEphemeralZnode(String path,
                                                               byte[] payload) {
 
     return new PersistentNode(client, CreateMode.EPHEMERAL, true, path, payload);
@@ -148,46 +144,10 @@ public final class ZKUtils {
    * it needs to be deleted explicitly, not ephemeral
    * it will be persistent for occasional network problems
    */
-  public static PersistentNode createPersistentZnode(CuratorFramework client,
-                                                     String path,
+  public static PersistentNode createPersistentZnode(String path,
                                                      byte[] payload) {
 
     return new PersistentNode(client, CreateMode.PERSISTENT, true, path, payload);
-  }
-
-  /**
-   * decode the given binary encoded WorkerInfo object list
-   * encoding assumed to be done by encodeWorkerInfo method
-   * length of each WorkerInfo object is encoded before the WorkerInfo object bytes
-   */
-  public static List<WorkerInfo> decodeWorkerInfos(byte[] encodedBytes) {
-
-    if (encodedBytes == null) {
-      return null;
-    }
-
-    List<WorkerInfo> workerInfoList = new ArrayList<>();
-
-    int nextWorkerInfoIndex = 0;
-    while (nextWorkerInfoIndex < encodedBytes.length) {
-
-      // provide 4 bytes of length int
-      int length = intFromBytes(encodedBytes, nextWorkerInfoIndex);
-
-      try {
-        WorkerInfo workerInfo = WorkerInfo.newBuilder()
-            .mergeFrom(encodedBytes, nextWorkerInfoIndex + 4, length)
-            .build();
-        workerInfoList.add(workerInfo);
-      } catch (InvalidProtocolBufferException e) {
-        LOG.log(Level.SEVERE, "Could not decode received byte array as a WorkerInfo object", e);
-        return null;
-      }
-
-      nextWorkerInfoIndex += 4 + length;
-    }
-
-    return workerInfoList;
   }
 
   /**
@@ -217,27 +177,6 @@ public final class ZKUtils {
   }
 
   /**
-   * encode the given list of WorkerInfo objects as a byte array.
-   * We put the length of each WorkerInfo as a byte array before serialized WorkerInfo
-   * resulting byte array has the length and serialized workerInfo objects in a single byte array
-   */
-  public static byte[] encodeWorkerInfos(List<WorkerInfo> workerInfos) {
-
-    // for each workerInfo, we have two byte arrays
-    // one for length, the other for WorkerInfo
-    byte[][] serializedInfos = new byte[workerInfos.size() * 2][];
-
-    int i = 0;
-    for (WorkerInfo info : workerInfos) {
-      serializedInfos[i + 1] = info.toByteArray();
-      serializedInfos[i] = Ints.toByteArray(serializedInfos[i + 1].length);
-      i += 2;
-    }
-
-    return Bytes.concat(serializedInfos);
-  }
-
-  /**
    * encode the given WorkerInfo object as a byte array.
    * First put the worker state as a 4 byte array to the beginning
    * resulting byte array has the state bytes and workerInfo object after that
@@ -260,15 +199,5 @@ public final class ZKUtils {
         byteArray[startIndex + 2],
         byteArray[startIndex + 3]);
   }
-
-  /**
-   * TBD
-   * @param workerInfo
-   * @return
-   */
-  public static byte[] encodeWorkerInfo(WorkerInfo workerInfo) {
-    return null;
-  }
-
 
 }

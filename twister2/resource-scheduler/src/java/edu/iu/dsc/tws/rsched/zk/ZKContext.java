@@ -40,7 +40,7 @@ public final class ZKContext extends Context {
     return cfg.getStringValue(ROOT_NODE, ROOT_NODE_DEFAULT);
   }
 
-  public static String zooKeeperServerAddresses(Config cfg) {
+  public static String serverAddresses(Config cfg) {
     return cfg.getStringValue(ZOOKEEPER_SERVER_ADDRESSES);
   }
 

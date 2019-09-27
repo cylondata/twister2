@@ -194,10 +194,10 @@ public final class ZKJobControllerExample {
 
   public static void createJobZnode(JobAPI.Job job) {
 
-    CuratorFramework client = ZKUtils.connectToServer(config);
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
 
     if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
-      ZKJobZnodeUtil.deleteJobZNodes(config, client, job.getJobName());
+      ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), job.getJobName());
     }
 
     try {
@@ -211,27 +211,27 @@ public final class ZKJobControllerExample {
       e.printStackTrace();
     }
 
-    ZKUtils.closeClient(client);
+    ZKUtils.closeClient();
   }
 
   public static void deleteJobZnode() {
 
-    CuratorFramework client = ZKUtils.connectToServer(config);
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
 
     if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
-      ZKJobZnodeUtil.deleteJobZNodes(config, client, jobName);
+      ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
     }
 
-    ZKUtils.closeClient(client);
+    ZKUtils.closeClient();
   }
 
   public static void updateJobZnode(JobAPI.Job job) throws Exception {
 
-    CuratorFramework client = ZKUtils.connectToServer(config);
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), jobName);
     ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
 
-    ZKUtils.closeClient(client);
+    ZKUtils.closeClient();
   }
 
   public static void sleeeep(long duration) {

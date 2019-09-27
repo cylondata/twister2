@@ -58,13 +58,13 @@ public class ZKJobMonitor {
   public ZKJobMonitor(Config config, String jobName) {
     this.config = config;
     this.jobName = jobName;
-    this.jobPath = ZKJobZnodeUtil.constructJobPath(ZKContext.rootNode(config), jobName);
+    this.jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), jobName);
   }
 
   public boolean initialize() throws Exception {
 
     try {
-      String zkServerAddresses = ZKContext.zooKeeperServerAddresses(config);
+      String zkServerAddresses = ZKContext.serverAddresses(config);
       client = CuratorFrameworkFactory.newClient(zkServerAddresses,
           new ExponentialBackoffRetry(1000, 3));
       client.start();

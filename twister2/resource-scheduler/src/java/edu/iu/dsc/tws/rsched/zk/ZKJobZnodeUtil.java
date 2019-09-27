@@ -29,27 +29,6 @@ public final class ZKJobZnodeUtil {
   private ZKJobZnodeUtil() { }
 
   /**
-   * construct a job path from the given job name
-   */
-  public static String constructJobPath(String rootPath, String jobName) {
-    return rootPath + "/" + jobName;
-  }
-
-  /**
-   * construct a distributed barrier path
-   */
-  public static String constructBarrierPath(String rootPath, String jobName) {
-    return rootPath + "-barrier/" + jobName;
-  }
-
-  /**
-   * construct a distributed atomic integer path for barrier
-   */
-  public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return rootPath + "-dai-for-barrier/" + jobName;
-  }
-
-  /**
    * check whether there is an active job
    * if not, but there are znodes from previous sessions, those will be deleted
    */
@@ -164,10 +143,10 @@ public final class ZKJobZnodeUtil {
   /**
    * delete all znodes related to the given jobName
    */
-  public static boolean terminateJob(String jobName, Config config) {
+  public static boolean terminateJob(String zkServers, String rootPath, String jobName) {
     try {
-      CuratorFramework client = ZKUtils.connectToServer(config);
-      boolean deleteResult = deleteJobZNodes(config, client, jobName);
+      CuratorFramework client = ZKUtils.connectToServer(zkServers);
+      boolean deleteResult = deleteJobZNodes(client, rootPath, jobName);
       client.close();
       return deleteResult;
     } catch (Exception e) {
@@ -179,10 +158,9 @@ public final class ZKJobZnodeUtil {
   /**
    * delete job related znode from previous sessions
    */
-  public static boolean deleteJobZNodes(Config config, CuratorFramework client, String jobName) {
-    String rootPath = ZKContext.rootNode(config);
+  public static boolean deleteJobZNodes(CuratorFramework client, String rootPath, String jobName) {
     try {
-      String jobPath = ZKJobZnodeUtil.constructJobPath(rootPath, jobName);
+      String jobPath = ZKUtils.constructJobPath(rootPath, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(jobPath);
         LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
@@ -191,7 +169,7 @@ public final class ZKJobZnodeUtil {
       }
 
       // delete distributed atomic integer for barrier
-      String daiPath = ZKJobZnodeUtil.constructDaiPathForBarrier(rootPath, jobName);
+      String daiPath = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);

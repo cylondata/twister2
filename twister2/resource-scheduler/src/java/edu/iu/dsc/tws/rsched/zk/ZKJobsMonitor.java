@@ -55,7 +55,7 @@ public class ZKJobsMonitor {
   public boolean initialize() throws Exception {
 
     try {
-      client = ZKUtils.connectToServer(config);
+      client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
 
       // We childrenCache children data for parent path.
       // So we will listen for all workers in the job
