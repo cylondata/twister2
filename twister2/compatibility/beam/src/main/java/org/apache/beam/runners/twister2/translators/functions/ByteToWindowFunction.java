@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 /**
- * doc.
+ * ByteToWindow function.
  */
 public class ByteToWindowFunction<K, V>
     implements MapFunc<KV<K, Iterable<WindowedValue<V>>>, Tuple<byte[], Iterator<byte[]>>> {
@@ -47,11 +47,11 @@ public class ByteToWindowFunction<K, V>
 
   @Override
   public KV<K, Iterable<WindowedValue<V>>> map(Tuple<byte[], Iterator<byte[]>> input) {
-    K key = TranslationUtils.<K>fromByteArray(input.getKey(), keyCoder);
+    K key = TranslationUtils.fromByteArray(input.getKey(), keyCoder);
     Iterable<WindowedValue<V>> value =
         StreamSupport.stream(
             Spliterators.spliteratorUnknownSize(input.getValue(), Spliterator.ORDERED), false)
-            .map(bytes -> TranslationUtils.<V>fromByteArray(bytes, wvCoder))
+            .map(bytes -> TranslationUtils.fromByteArray(bytes, wvCoder))
             .collect(Collectors.toList());
     return KV.of(key, value);
   }

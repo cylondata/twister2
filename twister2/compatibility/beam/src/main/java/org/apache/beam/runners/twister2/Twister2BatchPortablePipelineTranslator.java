@@ -47,12 +47,6 @@ public class Twister2BatchPortablePipelineTranslator implements Twister2Portable
 
   @Override
   public Set<String> knownUrns() {
-    // Do not expose Read as a known URN because we only want to support Read
-    // through the Java ExpansionService. We can't translate Reads for other
-    // languages.
-    //    return Sets.difference(
-    //        urnToTransformTranslator.keySet(),
-    //        ImmutableSet.of(PTransformTranslation.READ_TRANSFORM_URN));
     return null;
   }
 

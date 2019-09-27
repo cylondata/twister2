@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 /**
- * doc.
+ * Source translator
  */
 public class ReadSourceTranslatorBatch<T> implements BatchTransformTranslator<Read.Bounded<T>> {
   private static final Logger LOG = Logger.getLogger(ReadSourceTranslatorBatch.class.getName());

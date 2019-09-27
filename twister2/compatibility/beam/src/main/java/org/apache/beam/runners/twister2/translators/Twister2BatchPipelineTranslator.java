@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.Twister2PipelineOptions;
 import org.apache.beam.runners.twister2.translators.batch.AssignWindowTranslatorBatch;
-import org.apache.beam.runners.twister2.translators.batch.FlatternTranslatorBatch;
+import org.apache.beam.runners.twister2.translators.batch.FlattenTranslatorBatch;
 import org.apache.beam.runners.twister2.translators.batch.GroupByKeyTranslatorBatch;
 import org.apache.beam.runners.twister2.translators.batch.PCollectionViewTranslatorBatch;
 import org.apache.beam.runners.twister2.translators.batch.ParDoMultiOutputTranslatorBatch;
@@ -39,7 +39,7 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.windowing.Window;
 
 /**
- * doc.
+ * Twister pipeline translator for batch pipelines.
  */
 public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator {
 
@@ -57,7 +57,7 @@ public class Twister2BatchPipelineTranslator extends Twister2PipelineTranslator 
   private final Twister2BatchTranslationContext translationContext;
 
   static {
-    registerTransformTranslator(Flatten.PCollections.class, new FlatternTranslatorBatch());
+    registerTransformTranslator(Flatten.PCollections.class, new FlattenTranslatorBatch());
     registerTransformTranslator(Read.Bounded.class, new ReadSourceTranslatorBatch());
     registerTransformTranslator(ParDo.MultiOutput.class, new ParDoMultiOutputTranslatorBatch());
     registerTransformTranslator(Window.Assign.class, new AssignWindowTranslatorBatch());

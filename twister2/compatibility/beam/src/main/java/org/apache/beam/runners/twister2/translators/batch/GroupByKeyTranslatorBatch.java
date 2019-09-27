@@ -40,17 +40,16 @@ import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 /**
- * WindowingStrategy doc.
+ * GroupByKey translator.
  */
 public class GroupByKeyTranslatorBatch<K, V> implements BatchTransformTranslator<GroupByKey<K, V>> {
 
   @Override
   public void translateNode(GroupByKey<K, V> transform, Twister2BatchTranslationContext context) {
-    PCollection<KV<K, V>> input = (PCollection<KV<K, V>>) context.getInput(transform);
+    PCollection<KV<K, V>> input = context.getInput(transform);
     BBaseTSet<WindowedValue<KV<K, V>>> inputTTSet = context.getInputDataSet(input);
     final KvCoder<K, V> coder = (KvCoder<K, V>) context.getInput(transform).getCoder();
     Coder<K> inputKeyCoder = ((KvCoder<K, V>) input.getCoder()).getKeyCoder();
-    // TimestampCombiner timestampCombiner = input.getWindowingStrategy().getTimestampCombiner();
     WindowingStrategy windowingStrategy = input.getWindowingStrategy();
     WindowFn<KV<K, V>, BoundedWindow> windowFn =
         (WindowFn<KV<K, V>, BoundedWindow>) windowingStrategy.getWindowFn();
