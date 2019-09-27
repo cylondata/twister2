@@ -13,10 +13,10 @@ package edu.iu.dsc.tws.examples.internal.batchscheduler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
@@ -73,6 +72,56 @@ public class ConstraintTaskExample implements IWorker {
   private int dimension;
   private String dinput;*/
 
+  public static void main(String[] args) throws ParseException {
+    LOG.log(Level.INFO, "Constraint Task Graph Example");
+
+    // first load the configurations from command line and config files
+    Config config = ResourceAllocator.loadConfig(new HashMap<>());
+
+    // build JobConfig
+    HashMap<String, Object> configurations = new HashMap<>();
+    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
+
+    Options options = new Options();
+    options.addOption(DataObjectConstants.WORKERS, true, "Workers");
+    options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
+    options.addOption(DataObjectConstants.DSIZE, true, "dsize");
+    options.addOption(DataObjectConstants.DIMENSIONS, true, "dim");
+    options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY,
+        true, "Data points Input directory", true));
+
+    @SuppressWarnings("deprecation")
+    CommandLineParser commandLineParser = new DefaultParser();
+    CommandLine cmd = commandLineParser.parse(options, args);
+
+    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
+    int parallelismValue = Integer.parseInt(cmd.getOptionValue(
+        DataObjectConstants.PARALLELISM_VALUE));
+    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
+    int dimension = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DIMENSIONS));
+    String dinput = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
+
+    // build JobConfig
+    configurations.put(DataObjectConstants.WORKERS, Integer.toString(workers));
+    configurations.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
+    configurations.put(DataObjectConstants.DIMENSIONS, Integer.toString(dimension));
+    configurations.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
+    configurations.put(DataObjectConstants.DINPUT_DIRECTORY, dinput);
+
+    // build JobConfig
+    JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configurations);
+
+    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
+    jobBuilder.setJobName("Constraint-Example");
+    jobBuilder.setWorkerClass(ConstraintTaskExample.class.getName());
+    jobBuilder.addComputeResource(2, 2048, 1.0, workers);
+    jobBuilder.setConfig(jobConfig);
+
+    // now submit the job
+    Twister2Submitter.submitJob(jobBuilder.build(), config);
+  }
+
   @Override
   public void execute(Config config, int workerID, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
@@ -91,12 +140,11 @@ public class ConstraintTaskExample implements IWorker {
         = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.PARALLELISM_VALUE)));
     int dsize = Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DSIZE)));
 
-    LOG.info("Data Input Directory:" + dinput);
     DataGenerator dataGenerator = new DataGenerator(config, workerID);
     dataGenerator.generate(new Path(dinput), dsize, dimension);
 
-    ComputeGraph firstGraph = buildFirstGraph(parallelismValue, config, dinput, dsize);
-    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, dinput, dsize);
+    ComputeGraph firstGraph = buildFirstGraph(parallelismValue, config, dinput, dsize, dimension);
+    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, dinput, dsize, dimension);
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
@@ -104,22 +152,24 @@ public class ConstraintTaskExample implements IWorker {
     DataObject<Object> firstGraphObject = taskExecutor.getOutput(
         firstGraph, firstGraphExecutionPlan, "firstsink");
 
+    LOG.info("First Task Graph Object:" + Arrays.deepToString(firstGraphObject.getPartitions()));
+
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
     taskExecutor.addInput(secondGraph, secondGraphExecutionPlan,
         "secondsource", "secondgraphpoints", firstGraphObject);
-    /*taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
+    taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
     DataObject<Object> secondGraphObject = taskExecutor.getOutput(
         secondGraph, secondGraphExecutionPlan, "secondsink");
-    LOG.info("Second Graph Object:" + secondGraphObject);*/
+    LOG.info("Second Graph Object:" + secondGraphObject);
     long endTime = System.currentTimeMillis();
     LOG.info("Total Execution Time: " + (endTime - startTime));
   }
 
   private ComputeGraph buildFirstGraph(int parallelism, Config conf,
-                                       String dataInput, int dataSize) {
+                                       String dataInput, int dataSize, int dimension) {
     FirstSourceTask sourceTask = new FirstSourceTask(dataInput, dataSize);
-    FirstSinkTask sinkTask = new FirstSinkTask(dataSize);
+    FirstSinkTask sinkTask = new FirstSinkTask(dimension);
 
     ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     firstGraphBuilder.addSource("firstsource", sourceTask, parallelism);
@@ -134,10 +184,11 @@ public class ConstraintTaskExample implements IWorker {
     return firstGraphBuilder.build();
   }
 
+  //TODO: Modify this mpi task with constraints
   private ComputeGraph buildSecondGraph(int parallelism, Config conf,
-                                        String dataInput, int dataSize) {
+                                        String dataInput, int dataSize, int dimension) {
     SecondSourceTask sourceTask = new SecondSourceTask(dataInput, dataSize);
-    SecondSinkTask sinkTask = new SecondSinkTask();
+    SecondSinkTask sinkTask = new SecondSinkTask(dimension);
 
     ComputeGraphBuilder secondGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     secondGraphBuilder.addSource("secondsource", sourceTask, parallelism);
@@ -225,7 +276,6 @@ public class ConstraintTaskExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-
       List<String> values = new ArrayList<>();
       while (((Iterator) message.getContent()).hasNext()) {
         values.add(String.valueOf(((Iterator) message.getContent()).next()));
@@ -238,7 +288,7 @@ public class ConstraintTaskExample implements IWorker {
         for (int j = 0; j < length; j++) {
           dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
         }
-        context.write(Context.TWISTER2_DIRECT_EDGE, dataPointsLocal);
+        //context.write(Context.TWISTER2_DIRECT_EDGE, dataPointsLocal);
       }
       /*List<double[]> values = new ArrayList<>();
       while (((Iterator) message.getContent()).hasNext()) {
@@ -252,22 +302,20 @@ public class ConstraintTaskExample implements IWorker {
     }
 
     @Override
-    public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
+    public DataPartition<double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
     }
 
     @Override
-    public DataPartition<double[]> get() {
-      return new EntityPartition<>(context.taskIndex(), datapoints);
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
     }
   }
 
-  private static class SecondSourceTask extends BaseSource implements Receptor {
+  private static class SecondSourceTask extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private double[] datapoints = null;
-    private int numPoints = 0;
-    private DataObject<?> dataPointsObject = null;
+    private DataSource<?, ?> source;
 
     private String dataDirectory;
     private int dataSize;
@@ -295,46 +343,67 @@ public class ConstraintTaskExample implements IWorker {
 
     @Override
     public void execute() {
-      int seedValue = 100;
-      datapoints = new double[numPoints];
-      Random r = new Random(seedValue);
-      for (int i = 0; i < numPoints; i++) {
-        double randomValue = r.nextDouble();
-        datapoints[i] = randomValue;
+      InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
+      while (inputSplit != null) {
+        try {
+          while (!inputSplit.reachedEnd()) {
+            Object value = inputSplit.nextRecord(null);
+            if (value != null) {
+              context.write(Context.TWISTER2_DIRECT_EDGE, value);
+            }
+          }
+          inputSplit = source.getNextSplit(context.taskIndex());
+        } catch (IOException e) {
+          LOG.log(Level.SEVERE, "Failed to read the input", e);
+        }
       }
-      context.writeEnd(Context.TWISTER2_DIRECT_EDGE, datapoints);
-    }
-
-    public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      numPoints = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+      context.end(Context.TWISTER2_DIRECT_EDGE);
     }
 
     @Override
-    public void add(String name, DataObject<?> data) {
-      if ("points".equals(name)) {
-        this.dataPointsObject = data;
-      }
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
+          ExecutorContext.TWISTER2_RUNTIME_OBJECT);
+      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
+          new Path(getDataDirectory()), context.getParallelism(), cfg));
     }
   }
 
-  private static class SecondSinkTask extends BaseSink {
+  private static class SecondSinkTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] datapoints;
+    private int length;
+    private double[][] dataPointsLocal;
 
-    SecondSinkTask() {
+    SecondSinkTask(int len) {
+      this.length = len;
     }
 
     @Override
     public boolean execute(IMessage message) {
-      List<double[]> values = new ArrayList<>();
+      /*List<double[]> values = new ArrayList<>();
       while (((Iterator) message.getContent()).hasNext()) {
         values.add((double[]) ((Iterator) message.getContent()).next());
       }
       datapoints = new double[values.size()];
       for (double[] value : values) {
         datapoints = value;
+      }*/
+      List<String> values = new ArrayList<>();
+      while (((Iterator) message.getContent()).hasNext()) {
+        values.add(String.valueOf(((Iterator) message.getContent()).next()));
+      }
+      dataPointsLocal = new double[values.size()][length];
+      String line;
+      for (int i = 0; i < values.size(); i++) {
+        line = values.get(i);
+        String[] data = line.split(",");
+        for (int j = 0; j < length; j++) {
+          dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
+        }
+        //context.write(Context.TWISTER2_DIRECT_EDGE, dataPointsLocal);
       }
       return true;
     }
@@ -343,55 +412,10 @@ public class ConstraintTaskExample implements IWorker {
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
     }
-  }
 
-  public static void main(String[] args) throws ParseException {
-    LOG.log(Level.INFO, "Constraint Task Graph Example");
-
-    // first load the configurations from command line and config files
-    Config config = ResourceAllocator.loadConfig(new HashMap<>());
-
-    // build JobConfig
-    HashMap<String, Object> configurations = new HashMap<>();
-    configurations.put(SchedulerContext.THREADS_PER_WORKER, 1);
-
-    Options options = new Options();
-    options.addOption(DataObjectConstants.WORKERS, true, "Workers");
-    options.addOption(DataObjectConstants.PARALLELISM_VALUE, true, "parallelism");
-    options.addOption(DataObjectConstants.DSIZE, true, "dsize");
-    options.addOption(DataObjectConstants.DIMENSIONS, true, "dim");
-    options.addOption(Utils.createOption(DataObjectConstants.DINPUT_DIRECTORY,
-        true, "Data points Input directory", true));
-
-    @SuppressWarnings("deprecation")
-    CommandLineParser commandLineParser = new DefaultParser();
-    CommandLine cmd = commandLineParser.parse(options, args);
-
-    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
-    int parallelismValue = Integer.parseInt(cmd.getOptionValue(
-        DataObjectConstants.PARALLELISM_VALUE));
-    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
-    int dimension = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DIMENSIONS));
-    String dinput = cmd.getOptionValue(DataObjectConstants.DINPUT_DIRECTORY);
-
-    // build JobConfig
-    configurations.put(DataObjectConstants.WORKERS, Integer.toString(workers));
-    configurations.put(DataObjectConstants.DSIZE, Integer.toString(dsize));
-    configurations.put(DataObjectConstants.DIMENSIONS, Integer.toString(dimension));
-    configurations.put(DataObjectConstants.PARALLELISM_VALUE, Integer.toString(parallelismValue));
-    configurations.put(DataObjectConstants.DINPUT_DIRECTORY, dinput);
-
-    // build JobConfig
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);
-
-    Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("Constraint-Example");
-    jobBuilder.setWorkerClass(ConstraintTaskExample.class.getName());
-    jobBuilder.addComputeResource(2, 2048, 1.0, workers);
-    jobBuilder.setConfig(jobConfig);
-
-    // now submit the job
-    Twister2Submitter.submitJob(jobBuilder.build(), config);
+    @Override
+    public DataPartition<double[][]> get() {
+      return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+    }
   }
 }
