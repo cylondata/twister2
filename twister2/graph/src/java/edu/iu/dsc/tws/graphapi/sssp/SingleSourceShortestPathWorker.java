@@ -11,13 +11,17 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.sssp;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
+
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -38,9 +42,10 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
+import edu.iu.dsc.tws.graphapi.partition.GraphDataSource;
+import edu.iu.dsc.tws.graphapi.vertex.DefaultEdge;
+import edu.iu.dsc.tws.graphapi.vertex.SsspDefaultVertex;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertexStatus;
-import edu.iu.dsc.tws.task.dataobjects.DataObjectSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
@@ -64,7 +69,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     String dataDirectory = ssspParameters.getDatapointDirectory();
     String soruceVertex = ssspParameters.getSourcevertex();
     sourceVertexGlobal = soruceVertex;
-    System.out.println(soruceVertex);
 
 
     /* First Graph to partition and read the partitioned adjacency list datas **/
@@ -113,8 +117,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     while (globaliterationStatus)  {
 
 
-
-
       taskExecutor.addInput(sssptaskgraph, plan,
           "ssspSource", "graphData", graphPartitionData);
 
@@ -130,19 +132,17 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
     taskExecutor.closeExecution(sssptaskgraph, plan);
 
-    System.out.println("Tatol iteration: " + itr);
-
-
-
+    if (workerId == 0) {
+      System.out.println("Tatol iteration: " + itr);
+    }
 
 
   }
-
   public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
                                                int parallelismValue, String soruceVertex,
                                                Config conf) {
-    DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
+    GraphDataSource dataObjectSource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory, dsize);
     GraphDataCompute graphDataCompute = new GraphDataCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
     GraphDataSink graphDataSink = new GraphDataSink();
@@ -179,8 +179,8 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
                                                 int parallelismValue, String soruceVertex,
                                                 Config conf) {
     //the second task graph for assign initial pagerank values for vertex.
-    DataObjectSource ssspInitialDatasource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory);
+    GraphDataSource ssspInitialDatasource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
+        dataDirectory, dsize);
     SsspInitialCompute ssspInitialCompute = new SsspInitialCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
     SsspInitialSink ssspInitialSink = new SsspInitialSink();
@@ -248,65 +248,65 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
   private static class SsspSource extends BaseSource implements Receptor {
 
-    private HashMap<String, SsspVertex> graphData;
-    private HashMap<String, SsspVertexStatus> graphSsspStatus;
     private DataObject<?> graphObject = null;
     private DataObject<?> graphObjectvalues = null;
-
     private int count = 0;
+
     @Override
     public void execute() {
-
       DataPartition<?> dataPartition = graphObject.getPartition(context.taskIndex());
-      graphData = (HashMap<String, SsspVertex>) dataPartition.getConsumer().next();
+      HashMap<String, SsspDefaultVertex> graphData = (HashMap<String, SsspDefaultVertex>)
+          dataPartition.getConsumer().next();
 
-      DataPartition<?> centroidPartition = graphObjectvalues.getPartition(context.taskIndex());
-      graphSsspStatus = (HashMap<String, SsspVertexStatus>) centroidPartition.getConsumer().next();
+      DataPartition<?> inizalationOfData = graphObjectvalues.getPartition(context.taskIndex());
+      AbstractMap<String, SsspVertexStatus> graphSsspStatus = (HashMap<String, SsspVertexStatus>)
+          inizalationOfData.getConsumer().next();
 
-      if (graphSsspStatus != null) {
+      if (graphSsspStatus.size() != 0) {
 
         if (count < graphData.size()) {
-
           for (int i = 0; i < graphData.size(); i++) {
-            Object key = graphData.keySet().toArray()[i];
-            if (!key.equals("")) {
-              SsspVertex ssspVertex = graphData.get(key);
-              SsspVertexStatus ssspVertexStatus = graphSsspStatus.get(key);
-              if (ssspVertexStatus != null) {
-
-                if (ssspVertexStatus.getValue() != Integer.MAX_VALUE) {
-                  if (ssspVertex.getId().equals(sourceVertexGlobal)) {
-                    HashMap<String, Integer> hashMap = ssspVertex.getHashMap();
-                    for (int j = 0; j < hashMap.size(); j++) {
-                      Object key1 = hashMap.keySet().toArray()[j];
-                      context.write("keyedreduce", key1, new int[]{hashMap.get(key1)});
-                    }
-
-                    ssspVertex.setStatus(true);
-                  } else {
-                    if (ssspVertex.getValue() > ssspVertexStatus.getValue()) {
-                      ssspVertex.setValue(ssspVertexStatus.getValue());
-                      HashMap<String, Integer> hashMap = ssspVertex.getHashMap();
-                      for (int j = 0; j < hashMap.size(); j++) {
-                        Object key1 = hashMap.keySet().toArray()[j];
-
-                        context.write("keyedreduce", key1, new int[]
-                            {hashMap.get(key1) + ssspVertex.getValue()});
-                      }
-
-                      ssspVertex.setStatus(true);
-                    }
-
+            String key = (String) graphData.keySet().toArray()[i];
+            SsspDefaultVertex ssspDefaultVertex = graphData.get(key);
+            SsspVertexStatus ssspVertexStatus = graphSsspStatus.get(key);
+            if (ssspVertexStatus != null) {
+              if (ssspVertexStatus.getValue() != Integer.MAX_VALUE) {
+                if (ssspDefaultVertex.getId().equals(sourceVertexGlobal)) {
+                  ArrayList<DefaultEdge> arrayList  = (ArrayList<DefaultEdge>)
+                      ssspDefaultVertex.getEdges();
+                  for (DefaultEdge defaultEdge : arrayList) {
+                    String key1 = defaultEdge.getTargetVertexId();
+                    Integer edgevalue = defaultEdge.getValue();
+                    context.write("keyedreduce", key1, new int[]{edgevalue});
                   }
-                }
 
+                } else {
+                  if (ssspDefaultVertex.getValue() > ssspVertexStatus.getValue()) {
+                    ssspDefaultVertex.setValue(ssspVertexStatus.getValue());
+                    ArrayList<DefaultEdge> arrayList  = (ArrayList<DefaultEdge>)
+                        ssspDefaultVertex.getEdges();
+                    System.out.println("key: " + key + " val: " + ssspDefaultVertex.getValue());
+                    for (DefaultEdge defaultEdge : arrayList) {
+                      String key1 = defaultEdge.getTargetVertexId();
+                      Integer edgevalue = defaultEdge.getValue();
+
+                      context.write("keyedreduce", key1, new int[]
+                          {edgevalue + ssspDefaultVertex.getValue()});
+
+                    }
+                  }
+
+                }
               }
-              count++;
+
             }
+            count++;
           }
         } else {
-          count = 0;
-          context.writeEnd("keyedreduce", "taskend", new int[]{10});
+          if (context.writeEnd("keyedreduce", "taskend", new int[]{10})) {
+            count = 0;
+
+          }
         }
       } else {
         globaliterationStatus = false;
@@ -314,13 +314,12 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
         while (it.hasNext()) {
           Map.Entry pair = (Map.Entry) it.next();
           String key = (String) pair.getKey();
-          SsspVertex ssspVertex = (SsspVertex) pair.getValue();
-          System.out.println("vertex: " + key + "value: " + ssspVertex.getValue());
+          SsspDefaultVertex ssspDefaultVertex = (SsspDefaultVertex) pair.getValue();
+          System.out.println("vertex: " + key + "value: " + ssspDefaultVertex.getValue());
 
         }
         context.end("keyedreduce");
       }
-
     }
 
     @Override
@@ -333,28 +332,36 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
       }
     }
 
+    @Override
+    public Set<String> getReceivableNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("graphData");
+      inputKeys.add("graphInitialValue");
+      return inputKeys;
+    }
   }
 
   private static class SsspKeyedReduce extends BaseCompute {
-    private HashMap<String, SsspVertexStatus> output = new HashMap<String, SsspVertexStatus>();
+
 
     @Override
     public boolean execute(IMessage content) {
+      HashMap<String, SsspVertexStatus> output = new HashMap<String, SsspVertexStatus>();
       Iterator<Object> it;
       if (content.getContent() instanceof Iterator) {
         it = (Iterator<Object>) content.getContent();
-
         while (it.hasNext()) {
           Object next = it.next();
           if (next instanceof Tuple) {
             Tuple kc = (Tuple) next;
             if (!kc.getKey().equals("taskend")) {
-
               SsspVertexStatus ssspVertexStatus = new SsspVertexStatus();
               ssspVertexStatus.setId((String) kc.getKey());
               ssspVertexStatus.setValue(((int[]) kc.getValue())[0]);
 
               output.put((String) kc.getKey(), ssspVertexStatus);
+              context.write("all-reduce", output);
+            } else {
               context.write("all-reduce", output);
             }
 
@@ -366,11 +373,12 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
       context.end("all-reduce");
       return true;
     }
+
   }
 
   private static class SsspSink extends BaseSink implements Collector {
     private DataObject<Object> datapoints = null;
-    private HashMap<String, SsspVertexStatus> finalout = new HashMap<String, SsspVertexStatus>();
+    private HashMap<String, SsspVertexStatus> finalout;
 
 
     @Override
@@ -382,6 +390,13 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     @Override
     public DataPartition<HashMap<String, SsspVertexStatus>> get() {
       return new EntityPartition<>(context.taskIndex(), finalout);
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add("graphInitialValue");
+      return inputKeys;
     }
 
     @Override

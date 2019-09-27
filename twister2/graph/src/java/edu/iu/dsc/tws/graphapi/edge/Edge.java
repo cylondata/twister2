@@ -33,4 +33,18 @@ public interface Edge<I, E> {
    * @return Edge value of this edge
    */
   E getValue();
+
+  /**
+   * Set the vertex data (immediately visible in the computation)
+   *
+   * @param id edge data to be set
+   */
+  void setId(I id);
+
+  /**
+   * Set the vertex data (immediately visible in the computation)
+   *
+   * @param value edge data to be set
+   */
+  void setValue(E value);
 }

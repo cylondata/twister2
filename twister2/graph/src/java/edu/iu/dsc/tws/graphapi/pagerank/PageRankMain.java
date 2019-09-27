@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
+import edu.iu.dsc.tws.graphapi.impl.Test;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 
@@ -88,7 +89,7 @@ public class PageRankMain {
 
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
     jobBuilder.setJobName("pagerank-job");
-    jobBuilder.setWorkerClass(PageRankWorker.class.getName());
+    jobBuilder.setWorkerClass(Test.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
 

@@ -21,7 +21,8 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
+import edu.iu.dsc.tws.graphapi.vertex.DefaultEdge;
+import edu.iu.dsc.tws.graphapi.vertex.SsspDefaultVertex;
 
 
 public class GraphDataCompute extends BaseCompute {
@@ -103,37 +104,39 @@ public class GraphDataCompute extends BaseCompute {
   @Override
   public boolean execute(IMessage message) {
     if (message.getContent() instanceof Iterator) {
-      HashMap<String, SsspVertex> hashMappartition = new HashMap<>();
+      HashMap<String, SsspDefaultVertex> hashMappartition = new HashMap<>();
 
       while (((Iterator) message.getContent()).hasNext()) {
-        SsspVertex ssspVertex = new SsspVertex();
-        HashMap<String, Integer> hashMap = new HashMap<>();
+
+        SsspDefaultVertex ssspDefaultVertex = new SsspDefaultVertex();
+        ArrayList<DefaultEdge> arrayList = new ArrayList<>();
         String val = String.valueOf(((Iterator) message.getContent()).next());
         String[] data = val.split("\\s+");
-        System.out.println(Arrays.toString(data));
-        if (data.length == 1 && data[0].equals("")) {
-          continue;
-        } else if (!data[0].equals("")) {
-          ssspVertex.setId(data[0]);
-          ArrayList<String> adjList = new ArrayList<String>(Arrays.asList(data));
-          adjList.remove(0);
-          for (int i = 0; i < (adjList.size()) / 2; i++) {
 
-            hashMap.put(adjList.get(2 * i), Integer.parseInt(adjList.get(2 * i + 1)));
-          }
+        ssspDefaultVertex.initialize(data[0], 0, arrayList);
 
-          ssspVertex.setHashMap(hashMap);
-          ssspVertex.setStatus(false);
-          if (sourceVertex.equals(data[0])) {
-            ssspVertex.setValue(0);
-          } else {
-            ssspVertex.setValue(Integer.MAX_VALUE);
-          }
-          hashMappartition.put(data[0], ssspVertex);
-          context.write(getEdgeName(), hashMappartition);
+        ArrayList<String> adjList = new ArrayList<String>(Arrays.asList(data));
+        adjList.remove(0);
+        for (int i = 0; i < (adjList.size()) / 2; i++) {
+          DefaultEdge defaultEdge = new DefaultEdge();
+          String adjVertex = adjList.get(2 * i);
+          int edgeValue = Integer.parseInt(adjList.get(2 * i + 1));
+          defaultEdge.setId(adjVertex);
+          defaultEdge.setValue(edgeValue);
+          ssspDefaultVertex.addEdge(defaultEdge);
         }
+
+
+        if (sourceVertex.equals(data[0])) {
+          ssspDefaultVertex.setValue(0);
+        } else {
+          ssspDefaultVertex.setValue(Integer.MAX_VALUE);
+        }
+        hashMappartition.put(data[0], ssspDefaultVertex);
+        context.write(getEdgeName(), hashMappartition);
       }
     }
+
     context.end(getEdgeName());
     return true;
   }

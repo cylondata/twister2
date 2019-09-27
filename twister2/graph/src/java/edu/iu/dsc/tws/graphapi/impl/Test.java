@@ -12,20 +12,48 @@
 package edu.iu.dsc.tws.graphapi.impl;
 
 
-import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.graphapi.api.ConstructDataStr;
+import java.io.Serializable;
+import java.util.ArrayList;
 
-public class Test extends ConstructDataStr {
-  public Test(String edgename, int dsize, int parallel) {
-    super(edgename, dsize, parallel);
-  }
 
-  public Test(String edgename, int size) {
-    super(edgename, size);
-  }
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.graphapi.api.BasicComputation;
+
+
+public class Test extends BasicComputation implements Serializable {
+
+  private PageRankSource pageRankSource = new Task1();
+  private PageRankKeyedReduce pageRankKeyedReduce = new Task2();
+
 
   @Override
-  public boolean execute(IMessage content) {
-    return false;
+  public ComputeGraph computation() {
+    return buildComputationTG(parallelism, config,
+        pageRankSource, pageRankKeyedReduce);
+
   }
+
+  public class Task1 extends PageRankSource {
+
+
+    @Override
+    public void sendmessage(String edgename, ArrayList<String> nearestVertex, double pageValue) {
+      int arraySize = nearestVertex.size();
+      for (int j = 0; j < arraySize; j++) {
+        Double dividedvalue = pageValue / arraySize;
+        writemessage(edgename, nearestVertex.get(j), dividedvalue);
+      }
+
+    }
+  }
+  public class Task2 extends PageRankKeyedReduce {
+
+    @Override
+    public double calculation(double sumedvalue) {
+      double pagerankValue  = (0.15 / graphsize) + (0.85 * sumedvalue);
+      return pagerankValue;
+    }
+  }
+
+
 }

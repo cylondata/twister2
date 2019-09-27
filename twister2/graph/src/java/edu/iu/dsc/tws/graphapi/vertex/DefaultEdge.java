@@ -11,50 +11,31 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.vertex;
 
+import edu.iu.dsc.tws.graphapi.edge.Edge;
 
-import java.util.HashMap;
-
-public class SsspVertex {
+public class DefaultEdge<I, V> implements Edge<String, Integer> {
 
   private String id;
-  private boolean status;
   private int value;
 
-  public void setValue(int value) {
-    this.value = value;
+
+  @Override
+  public String getTargetVertexId() {
+    return id;
   }
 
-  public int getValue() {
+  @Override
+  public Integer getValue() {
     return value;
   }
 
-  public void setStatus(boolean status) {
-    this.status = status;
-  }
-
-  public boolean isStatus() {
-    return status;
-  }
-
-  private HashMap<String, Integer> hashMap = new HashMap<>();
-
-  public void setHashMap(HashMap<String, Integer> hashMap) {
-    this.hashMap = hashMap;
-  }
-
-  public HashMap<String, Integer> getHashMap() {
-    return hashMap;
-  }
-
+  @Override
   public void setId(String id) {
     this.id = id;
   }
 
-
-
-  public String getId() {
-    return id;
+  @Override
+  public void setValue(Integer value) {
+    this.value = value;
   }
-
-
 }

@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.vertex;
 
-import edu.iu.dsc.tws.graphapi.edge.Edge;
 
 /**
  * Class which holds vertex id, data and edges.
@@ -30,7 +29,7 @@ public interface Vertex<I, V, E> {
    * @param value Vertex value
    * @param edges Iterable of edges
    */
-  void initialize(I id, V value, Iterable<Edge<I, E>> edges);
+  void initialize(I id, V value, Iterable<E> edges);
 
   /**
    * Initialize id and value. Vertex edges will be empty.
@@ -81,14 +80,14 @@ public interface Vertex<I, V, E> {
    *
    * @return the out edges (sort order determined by subclass implementation).
    */
-  Iterable<Edge<I, E>> getEdges();
+  Iterable<E> getEdges();
 
   /**
    * Set the outgoing edges for this vertex.
    *
    * @param edges Iterable of edges
    */
-  void setEdges(Iterable<Edge<I, E>> edges);
+  void setEdges(Iterable<E> edges);
 
 
   /**
@@ -101,7 +100,7 @@ public interface Vertex<I, V, E> {
    * @param targetVertexId Target vertex id
    * @return Edge value (or null if missing)
    */
-  E getEdgeValue(I targetVertexId);
+  V getEdgeValue(I targetVertexId);
 
   /**
    * If an edge to the target vertex exists, set it to the given edge value.
@@ -110,27 +109,15 @@ public interface Vertex<I, V, E> {
    * @param targetVertexId Target vertex id
    * @param edgeValue Edge value
    */
-  void setEdgeValue(I targetVertexId, E edgeValue);
+  void setEdgeValue(I targetVertexId, V edgeValue);
 
-  /**
-   * Get an iterable over the values of all edges with the given target
-   * vertex id. This only makes sense for multigraphs (i.e. graphs with
-   * parallel edges).
-   * Note: edge value objects returned by this method may be invalidated as
-   * soon as the next element is requested. Thus, keeping a reference to an
-   * edge value almost always leads to undesired behavior.
-   *
-   * @param targetVertexId Target vertex id
-   * @return Iterable of edge values
-   */
-  Iterable<E> getAllEdgeValues(final I targetVertexId);
 
   /**
    * Add an edge for this vertex (happens immediately)
    *
    * @param edge Edge to add
    */
-  void addEdge(Edge<I, E> edge);
+  void addEdge(E edge);
 
   /**
    * Removes all edges pointing to the given vertex id.

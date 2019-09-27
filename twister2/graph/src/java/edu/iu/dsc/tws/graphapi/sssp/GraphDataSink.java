@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.graphapi.vertex.SsspVertex;
+import edu.iu.dsc.tws.graphapi.vertex.SsspDefaultVertex;
 
 
 public class GraphDataSink extends BaseSink implements Collector {
@@ -33,7 +33,7 @@ public class GraphDataSink extends BaseSink implements Collector {
 
   private static final long serialVersionUID = -1L;
 
-  private HashMap<String, SsspVertex> dataPointsLocal;
+  private HashMap<String, SsspDefaultVertex> dataPointsLocal;
 
 
   /**
@@ -41,13 +41,13 @@ public class GraphDataSink extends BaseSink implements Collector {
    */
   @Override
   public boolean execute(IMessage message) {
-    List<HashMap<String, SsspVertex>> values = new ArrayList<>();
+    List<HashMap<String, SsspDefaultVertex>> values = new ArrayList<>();
     while (((Iterator) message.getContent()).hasNext()) {
-      values.add((HashMap<String, SsspVertex>) ((Iterator) message.getContent()).next());
+      values.add((HashMap<String, SsspDefaultVertex>) ((Iterator) message.getContent()).next());
 
     }
 
-    for (HashMap<String, SsspVertex> value : values) {
+    for (HashMap<String, SsspDefaultVertex> value : values) {
       dataPointsLocal = value;
     }
 
@@ -60,7 +60,7 @@ public class GraphDataSink extends BaseSink implements Collector {
   }
 
   @Override
-  public DataPartition<HashMap<String, SsspVertex>> get() {
+  public DataPartition<HashMap<String, SsspDefaultVertex>> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
   }
 }

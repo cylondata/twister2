@@ -11,29 +11,51 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.api;
 
-import java.util.Set;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 
 public class DataSInkTask extends BaseSink implements Collector {
+  private static final Logger LOG = Logger.getLogger(DataSInkTask.class.getName());
+
+  private static final long serialVersionUID = -1L;
+
+  private HashMap<String, ArrayList<String>> dataPointsLocal;
+
+
+  /**
+   * This method add the received message from the DataObject Source into the data objects.
+   */
   @Override
-  public boolean execute(IMessage content) {
-    return false;
+  public boolean execute(IMessage message) {
+    while (((Iterator) message.getContent()).hasNext()) {
+      dataPointsLocal = (HashMap<String, ArrayList<String>>)
+          ((Iterator) message.getContent()).next();
+
+    }
+
+    return true;
   }
 
-
   @Override
-  public DataPartition<?> get() {
-    return null;
+  public void prepare(Config cfg, TaskContext context) {
+    super.prepare(cfg, context);
   }
 
   @Override
-  public DataPartition<?> get(String name) {
-    return null;
+  public DataPartition<HashMap<String, ArrayList<String>>> get() {
+    return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
   }
 
 }

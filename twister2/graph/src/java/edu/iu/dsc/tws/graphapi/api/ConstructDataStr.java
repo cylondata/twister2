@@ -76,6 +76,8 @@ public abstract  class ConstructDataStr extends BaseCompute {
     this.edgeName = edgeName;
   }
 
+
+
   @Override
   public void prepare(Config cfg, TaskContext context) {
     super.prepare(cfg, context);
