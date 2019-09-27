@@ -41,7 +41,7 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterable
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 /**
- * doc.
+ * Twister2TranslationContext.
  */
 public class Twister2TranslationContext {
   private final Twister2PipelineOptions options;

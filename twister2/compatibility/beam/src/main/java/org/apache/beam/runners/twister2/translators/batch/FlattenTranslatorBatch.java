@@ -31,9 +31,9 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 
 /**
- * doc.
+ * Flatten translator.
  */
-public class FlatternTranslatorBatch<T>
+public class FlattenTranslatorBatch<T>
     implements BatchTransformTranslator<Flatten.PCollections<T>> {
   @Override
   public void translateNode(
@@ -42,7 +42,8 @@ public class FlatternTranslatorBatch<T>
     List<BBaseTSet<WindowedValue<T>>> tSets = new ArrayList<>();
     BBaseTSet<WindowedValue<T>> unionTSet = null;
     if (pcs.isEmpty()) {
-      // create dummy TSet
+      // TODO: create empty TSet
+      throw new UnsupportedOperationException("Operation not implemented yet");
     } else {
       for (PValue pc : pcs) {
         BBaseTSet<WindowedValue<T>> curr = context.getInputDataSet(pc);

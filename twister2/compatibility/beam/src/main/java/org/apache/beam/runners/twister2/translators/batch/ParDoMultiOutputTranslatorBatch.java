@@ -47,7 +47,7 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Maps;
 import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 /**
- * doc.
+ * ParDo translator.
  */
 public class ParDoMultiOutputTranslatorBatch<IT, OT>
     implements BatchTransformTranslator<ParDo.MultiOutput<IT, OT>> {
@@ -56,11 +56,7 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
   public void translateNode(
       ParDo.MultiOutput<IT, OT> transform, Twister2BatchTranslationContext context) {
     DoFn<IT, OT> doFn;
-    doFn = (DoFn<IT, OT>) transform.getFn();
-    //    checkState(
-    //        !DoFnSignatures.signatureForDoFn(doFn).processElement().isSplittable(),
-    //        "Not expected to directly translate splittable DoFn, should have been overridden: %s",
-    //        doFn);
+    doFn = transform.getFn();
     BBaseTSet<WindowedValue<IT>> inputTTSet =
         context.getInputDataSet(context.getInput(transform));
 
@@ -71,8 +67,6 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
     Map<TupleTag<?>, Coder<?>> outputCoders = context.getOutputCoders();
 
     DoFnSignature signature = DoFnSignatures.getSignature(transform.getFn().getClass());
-    boolean stateful =
-        signature.stateDeclarations().size() > 0 || signature.timerDeclarations().size() > 0;
     DoFnSchemaInformation doFnSchemaInformation;
     doFnSchemaInformation = ParDoTranslation.getSchemaInformation(context.getCurrentTransform());
     TupleTag<OT> mainOutput = transform.getMainOutputTag();
