@@ -67,7 +67,7 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
     Map<TupleTag<?>, Coder<?>> outputCoders = context.getOutputCoders();
 
     DoFnSignature signature = DoFnSignatures.getSignature(transform.getFn().getClass());
-        DoFnSchemaInformation doFnSchemaInformation;
+    DoFnSchemaInformation doFnSchemaInformation;
     doFnSchemaInformation = ParDoTranslation.getSchemaInformation(context.getCurrentTransform());
     TupleTag<OT> mainOutput = transform.getMainOutputTag();
     List<TupleTag<?>> additionalOutputTags = new ArrayList<>(outputs.size() - 1);
