@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.internal.batchscheduler;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
@@ -44,116 +47,145 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IVolatileVolume;
+import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
+import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
-import edu.iu.dsc.tws.task.impl.TaskWorker;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class BatchTaskSchedulerExample extends TaskWorker {
+public class BatchTaskSchedulerExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskSchedulerExample.class.getName());
 
-  private static int parallelismValue;
-  private static int workers;
-  private static int dsize;
-
-  public static ComputeGraph buildFirstGraph(int parallelism,
-                                             Config conf) {
+  private static ComputeGraph buildFirstGraph(int parallelism,
+                                              Config conf) {
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    SourceTask sourceTask = new SourceTask();
-    ComputeTask computeTask = new ComputeTask();
-    ReduceTask reduceTask = new ReduceTask("firstgraphpoints");
+    FirstSourceTask sourceTask = new FirstSourceTask();
+    FirstComputeTask computeTask = new FirstComputeTask();
+    FirstSinkTask sinkTask = new FirstSinkTask("firstgraphpoints");
 
     ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     firstGraphBuilder.addSource("firstsource", sourceTask, parallelism);
     ComputeConnection computeConnection = firstGraphBuilder.addCompute(
         "firstcompute", computeTask, parallelism);
     ComputeConnection sinkConnection = firstGraphBuilder.addSink(
-        "firstsink", reduceTask, parallelism);
+        "firstsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the second task graph
     computeConnection.direct("firstsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    sinkConnection.allreduce("firstcompute")
-        .viaEdge("all-reduce")
-        .withReductionFunction(new Aggregator())
+    sinkConnection.direct("firstcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
     firstGraphBuilder.setMode(OperationMode.BATCH);
     firstGraphBuilder.setTaskGraphName("firstTG");
-    //Build the first taskgraph
     return firstGraphBuilder.build();
   }
 
-  public static ComputeGraph buildSecondGraph(int parallelism,
-                                              Config conf) {
+  private static ComputeGraph buildSecondGraph(int parallelism,
+                                               Config conf) {
     //Add source, compute, and sink tasks to the task graph builder for the second task graph
-    SourceTask sourceTask = new SourceTask();
-    ComputeTask computeTask = new ComputeTask();
-    ReduceTask reduceTask = new ReduceTask("secondgraphpoints");
+    SecondSourceTask sourceTask = new SecondSourceTask();
+    SecondComputeTask computeTask = new SecondComputeTask();
+    SecondSinkTask sinkTask = new SecondSinkTask("secondgraphpoints");
 
-    ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
-    firstGraphBuilder.addSource("secondsource", sourceTask, parallelism);
-    ComputeConnection computeConnection = firstGraphBuilder.addCompute(
+    ComputeGraphBuilder secondGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    secondGraphBuilder.addSource("secondsource", sourceTask, parallelism);
+    ComputeConnection computeConnection = secondGraphBuilder.addCompute(
         "secondcompute", computeTask, parallelism);
-    ComputeConnection sinkConnection = firstGraphBuilder.addSink(
-        "secondsink", reduceTask, parallelism);
+    ComputeConnection sinkConnection = secondGraphBuilder.addSink(
+        "secondsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the second task graph
     computeConnection.direct("secondsource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    sinkConnection.allreduce("secondcompute")
-        .viaEdge("all-reduce")
-        .withReductionFunction(new Aggregator())
+    sinkConnection.direct("secondcompute")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-
-    firstGraphBuilder.setMode(OperationMode.BATCH);
-    firstGraphBuilder.setTaskGraphName("secondTG");
-    //Build the first taskgraph
-    return firstGraphBuilder.build();
+    secondGraphBuilder.setMode(OperationMode.BATCH);
+    secondGraphBuilder.setTaskGraphName("secondTG");
+    return secondGraphBuilder.build();
   }
 
-  public static ComputeGraph buildThirdGraph(int parallelism, Config conf) {
+  private static ComputeGraph buildThirdGraph(int parallelism, Config conf) {
 
     //Add source, compute, and sink tasks to the task graph builder for the third task graph
-    SourceTask sourceTask = new SourceTask();
-    ComputeTask computeTask = new ComputeTask();
-    ReduceTask reduceTask = new ReduceTask("thirdgraphpoints");
+    ThirdSourceTask sourceTask = new ThirdSourceTask();
+    ThirdSinkTask sinkTask = new ThirdSinkTask();
 
     ComputeGraphBuilder thirdGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     thirdGraphBuilder.addSource("thirdsource", sourceTask, parallelism);
-    ComputeConnection computeConnection = thirdGraphBuilder.addCompute(
-        "thirdcompute", computeTask, parallelism);
     ComputeConnection sinkConnection = thirdGraphBuilder.addSink(
-        "thirdsink", reduceTask, parallelism);
+        "thirdsink", sinkTask, parallelism);
 
     //Creating the communication edges between the tasks for the third task graph
-    computeConnection.direct("thirdsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-    sinkConnection.allreduce("thirdcompute")
+    sinkConnection.allreduce("thirdsource")
         .viaEdge("all-reduce")
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
-
     thirdGraphBuilder.setMode(OperationMode.BATCH);
     thirdGraphBuilder.setTaskGraphName("thirdTG");
-    //Build the first taskgraph
     return thirdGraphBuilder.build();
   }
 
-  public static class SourceTask extends BaseSource implements Receptor {
+  @Override
+  public void execute(Config config, int workerID, IWorkerController workerController,
+                      IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
+
+    long startTime = System.currentTimeMillis();
+
+    LOG.log(Level.FINE, "Task worker starting: " + workerID);
+
+    ComputeEnvironment cEnv = ComputeEnvironment.init(config, workerID, workerController,
+        persistentVolume, volatileVolume);
+    TaskExecutor taskExecutor = cEnv.getTaskExecutor();
+
+    ComputeGraph firstGraph = buildFirstGraph(2, config);
+    ComputeGraph secondGraph = buildSecondGraph(2, config);
+    ComputeGraph thirdGraph = buildThirdGraph(2, config);
+
+    //Get the execution plan for the first task graph
+    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
+    taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
+    DataObject<Object> firstGraphObject = taskExecutor.getOutput(
+        firstGraph, firstGraphExecutionPlan, "firstsink");
+
+    //Get the execution plan for the second task graph
+    ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
+    taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
+    DataObject<Object> secondGraphObject = taskExecutor.getOutput(
+        secondGraph, secondGraphExecutionPlan, "secondsink");
+
+    ExecutionPlan plan = taskExecutor.plan(thirdGraph);
+    taskExecutor.addInput(
+        thirdGraph, plan, "thirdsource", "firstgraphpoints", firstGraphObject);
+    taskExecutor.addInput(
+        thirdGraph, plan, "thirdsource", "secondgraphpoints", secondGraphObject);
+    taskExecutor.execute(thirdGraph, plan);
+
+    DataObject<Object> thirdGraphObject = taskExecutor.getOutput(thirdGraph, plan, "thirdsink");
+    LOG.info("%%%%%%%%% Third Graph Object:" + thirdGraphObject);
+    long endTime = System.currentTimeMillis();
+    LOG.info("Total Execution Time: " + (endTime - startTime));
+  }
+
+  private static class FirstSourceTask extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
     private double[] datapoints = null;
     private int numPoints = 0;
 
-    public SourceTask() {
+    FirstSourceTask() {
     }
 
     @Override
@@ -165,6 +197,114 @@ public class BatchTaskSchedulerExample extends TaskWorker {
         double randomValue = r.nextDouble();
         datapoints[i] = randomValue;
       }
+
+      double[] newPoints = new double[datapoints.length];
+      if (context.taskIndex() == 0) {
+        for (int i = 0; i < datapoints.length / 2; i++) {
+          newPoints[i] = datapoints[i];
+        }
+        context.writeEnd(Context.TWISTER2_DIRECT_EDGE, newPoints);
+      } else if (context.taskIndex() == 1) {
+        for (int i = datapoints.length / 2; i < datapoints.length / 2; i++) {
+          newPoints[i] = datapoints[i];
+        }
+        context.writeEnd(Context.TWISTER2_DIRECT_EDGE, newPoints);
+      }
+    }
+
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      numPoints = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+      LOG.info("Number of Points:" + numPoints);
+    }
+  }
+
+  private static class FirstComputeTask extends BaseCompute {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    FirstComputeTask() {
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.INFO, "Received Points: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          context.write(Context.TWISTER2_DIRECT_EDGE, it.next());
+        }
+      }
+      context.end(Context.TWISTER2_DIRECT_EDGE);
+      return true;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+  }
+
+  private static class FirstSinkTask extends BaseSink implements Collector {
+    private static final long serialVersionUID = -5190777711234234L;
+
+    private double[] datapoints;
+    private String inputKey;
+
+    FirstSinkTask(String inputkey) {
+      this.inputKey = inputkey;
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      List<double[]> values = new ArrayList<>();
+      while (((Iterator) message.getContent()).hasNext()) {
+        values.add((double[]) ((Iterator) message.getContent()).next());
+      }
+      datapoints = new double[values.size()];
+      for (double[] value : values) {
+        datapoints = value;
+      }
+      return true;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+
+    @Override
+    public DataPartition<double[]> get() {
+      return new EntityPartition<>(context.taskIndex(), datapoints);
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      return Collections.singleton(inputKey);
+    }
+  }
+
+
+  private static class SecondSourceTask extends BaseSource {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private double[] datapoints = null;
+    private int numPoints = 0;
+
+    SecondSourceTask() {
+    }
+
+    @Override
+    public void execute() {
+      int seedValue = 100;
+      datapoints = new double[numPoints];
+      Random r = new Random(seedValue);
+      for (int i = 0; i < numPoints; i++) {
+        double randomValue = r.nextDouble();
+        datapoints[i] = randomValue;
+      }
+
+
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, datapoints);
     }
 
@@ -172,11 +312,124 @@ public class BatchTaskSchedulerExample extends TaskWorker {
       super.prepare(cfg, context);
       numPoints = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
     }
+  }
+
+  private static class SecondComputeTask extends BaseCompute {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    SecondComputeTask() {
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      LOG.log(Level.INFO, "Received Points: " + context.getWorkerId()
+          + ":" + context.globalTaskId());
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          context.write(Context.TWISTER2_DIRECT_EDGE, it.next());
+        }
+      }
+      context.end(Context.TWISTER2_DIRECT_EDGE);
+      return true;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+  }
+
+  private static class SecondSinkTask extends BaseSink implements Collector {
+    private static final long serialVersionUID = -5190777711234234L;
+
+    private double[] datapoints;
+    private String inputKey;
+
+    SecondSinkTask(String inputkey) {
+      this.inputKey = inputkey;
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      List<double[]> values = new ArrayList<>();
+      while (((Iterator) message.getContent()).hasNext()) {
+        values.add((double[]) ((Iterator) message.getContent()).next());
+      }
+      datapoints = new double[values.size()];
+      for (double[] value : values) {
+        datapoints = value;
+      }
+      return true;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+
+    @Override
+    public DataPartition<double[]> get() {
+      return new EntityPartition<>(context.taskIndex(), datapoints);
+    }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      return Collections.singleton(inputKey);
+    }
+  }
+
+  private static class ThirdSourceTask extends BaseSource implements Receptor {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private double[] firstDatapoints = null;
+    private double[] secondDatapoints = null;
+    private double[] calculatedValues = null;
+
+    private DataObject<?> firstPointsObject = null;
+    private DataObject<?> secondPointsObject = null;
+
+    ThirdSourceTask() {
+    }
+
+    @Override
+    public void execute() {
+
+      DataPartition<?> firstDataPartition = firstPointsObject.getPartition(context.taskIndex());
+      firstDatapoints = (double[]) firstDataPartition.getConsumer().next();
+
+      DataPartition<?> secondDataPartition = secondPointsObject.getPartition(context.taskIndex());
+      secondDatapoints = (double[]) secondDataPartition.getConsumer().next();
+
+      calculatedValues = new double[firstDatapoints.length];
+
+      LOG.info("Context Task Index:" + context.taskIndex()
+          + "\tFirst data points length:" + firstDatapoints.length
+          + "\t\nSecond data points length:" + secondDatapoints.length);
+
+      for (int i = 0; i < firstDatapoints.length; i++) {
+        for (int j = 0; j < secondDatapoints.length; j++) {
+          calculatedValues[i] = firstDatapoints[i] + secondDatapoints[j];
+        }
+      }
+
+      LOG.info("Context Task Index:" + context.taskIndex()
+          + "\tCalculated Values Length:" + calculatedValues.length
+          + "\t\nCalculated Values:" + Arrays.toString(calculatedValues));
+      context.writeEnd("all-reduce", calculatedValues);
+    }
+
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
 
     @Override
     public void add(String name, DataObject<?> data) {
       if ("firstgraphpoints".equals(name)) {
-        LOG.info("points value:" + name);
+        this.firstPointsObject = data;
+      }
+      if ("secondgraphpoints".equals(name)) {
+        this.secondPointsObject = data;
       }
     }
 
@@ -189,41 +442,13 @@ public class BatchTaskSchedulerExample extends TaskWorker {
     }
   }
 
-  public static class ComputeTask extends BaseCompute  {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    private int count = 0;
-
-    public ComputeTask() {
-    }
-
-    @Override
-    public boolean execute(IMessage message) {
-      LOG.log(Level.FINE, "Received Points: " + context.getWorkerId()
-          + ":" + context.globalTaskId());
-      if (message.getContent() instanceof Iterator) {
-        Iterator it = (Iterator) message.getContent();
-        while (it.hasNext()) {
-          count += 1;
-          context.write("all-reduce", it.next());
-        }
-      }
-      context.end("all-reduce");
-      return true;
-    }
-  }
-
-  public static class ReduceTask extends BaseSink implements Collector {
+  private static class ThirdSinkTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] datapoints;
     private String inputKey;
 
-    public ReduceTask() {
-    }
-
-    public ReduceTask(String inputkey) {
-      this.inputKey = inputkey;
+    ThirdSinkTask() {
     }
 
     @Override
@@ -248,7 +473,7 @@ public class BatchTaskSchedulerExample extends TaskWorker {
     }
   }
 
-  public static class Aggregator implements IFunction {
+  private static class Aggregator implements IFunction {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -257,12 +482,18 @@ public class BatchTaskSchedulerExample extends TaskWorker {
       double[] object11 = (double[]) object1;
       double[] object21 = (double[]) object2;
 
+      LOG.info("object 1 and object 2:"
+          + Arrays.toString(object11) + "\t\n" + Arrays.toString(object21));
+
       double[] object31 = new double[object11.length];
 
       for (int j = 0; j < object11.length; j++) {
         double newVal = object11[j] + object21[j];
         object31[j] = newVal;
       }
+
+      LOG.info("Object 3 len:" + object31.length
+          + "\tObject 3:" + Arrays.toString(object31));
       return object31;
     }
   }
@@ -282,10 +513,10 @@ public class BatchTaskSchedulerExample extends TaskWorker {
     CommandLineParser commandLineParser = new DefaultParser();
     CommandLine cmd = commandLineParser.parse(options, args);
 
-    workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
-    parallelismValue = Integer.parseInt(cmd.getOptionValue(
+    int workers = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.WORKERS));
+    int parallelismValue = Integer.parseInt(cmd.getOptionValue(
         DataObjectConstants.PARALLELISM_VALUE));
-    dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
+    int dsize = Integer.parseInt(cmd.getOptionValue(DataObjectConstants.DSIZE));
 
     // build JobConfig
     JobConfig jobConfig = new JobConfig();
@@ -301,63 +532,5 @@ public class BatchTaskSchedulerExample extends TaskWorker {
 
     // now submit the job
     Twister2Submitter.submitJob(jobBuilder.build(), config);
-  }
-
-  @Override
-  public void execute() {
-
-    long startTime = System.currentTimeMillis();
-
-    ComputeGraph firstGraph = buildFirstGraph(parallelismValue, config);
-
-    //ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config);
-
-    //ComputeGraph thirdGraph = buildThirdGraph(parallelismValue, config);
-
-    //Get the execution plan for the dependent task graphs
-//    Map<String, ExecutionPlan> taskSchedulePlanMap = cEnv.build(
-//        firstGraph, secondGraph, thirdGraph);
-
-    //Get the execution plan for the first task graph
-    ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
-
-    //Using the map we can get the execution plan for the individual task graphs
-    //ExecutionPlan firstGraphExecutionPlan = taskSchedulePlanMap.get(firstGraph.getGraphName());
-
-    //Actual execution for the first taskgraph
-    taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
-
-    //Retrieve the output of the first task graph
-    /*DataObject<Object> firstGraphObject = taskExecutor.getOutput(
-        firstGraph, firstGraphExecutionPlan, "firstsink");*/
-
-    //Get the execution plan for the second task graph
-    //ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
-
-    //taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
-
-    //Retrieve the output of the first task graph
-    /*DataObject<Object> secondGraphObject = taskExecutor.getOutput(
-        secondGraph, secondGraphExecutionPlan, "secondsink");*/
-
-    long endTimeData = System.currentTimeMillis();
-
-    //Perform the iterations from 0 to 'n' number of iterations
-    //ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
-    //ExecutionPlan plan = taskExecutor.plan(thirdGraph);
-    /*taskExecutor.addInput(
-        thirdGraph, plan, "thirdsource", "firstgraphpoints", firstGraphObject);
-    taskExecutor.addInput(
-        thirdGraph, plan, "thirdsource", "secondgraphpoints", secondGraphObject);*/
-    //actual execution of the third task graph
-    //taskExecutor.execute(thirdGraph, plan);
-
-    //TODO:Retrieve the output of the graph
-
-    long endTime = System.currentTimeMillis();
-
-    LOG.info("Total Execution Time: " + (endTime - startTime)
-        + "\tData Load time : " + (endTimeData - startTime)
-        + "\tCompute Time : " + (endTime - endTimeData));
   }
 }
