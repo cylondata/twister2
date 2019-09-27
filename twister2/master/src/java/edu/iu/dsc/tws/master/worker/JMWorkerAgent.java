@@ -637,7 +637,7 @@ public final class JMWorkerAgent {
 
         // nothing to do
       } else if (message instanceof JobMasterAPI.WorkerMessageResponse) {
-        LOG.info("Received a WorkerMessageResponse from the master. \n" + message);
+        LOG.fine("Received a WorkerMessageResponse from the master. \n" + message);
 
       } else if (message instanceof JobMasterAPI.DriverMessage) {
 
