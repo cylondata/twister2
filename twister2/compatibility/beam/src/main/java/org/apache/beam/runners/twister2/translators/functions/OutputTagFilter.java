@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 /**
- * doc.
+ * Output tag filter.
  */
 public class OutputTagFilter<OT, IT>
     implements ComputeCollectorFunc<WindowedValue<OT>, Iterator<RawUnionValue>> {

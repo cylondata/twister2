@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 
 /**
- * doc.
+ * Map to tuple function.
  */
 public class MapToTupleFunction<K, V>
     implements MapFunc<Tuple<byte[], byte[]>, WindowedValue<KV<K, V>>> {

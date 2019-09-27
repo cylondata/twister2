@@ -32,7 +32,7 @@ import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
 /**
- * doc.
+ * Assign Window translator.
  */
 public class AssignWindowTranslatorBatch<T> implements BatchTransformTranslator<Window.Assign<T>> {
   @Override

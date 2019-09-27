@@ -31,7 +31,7 @@ import org.apache.beam.sdk.values.PCollection;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 /**
- * doc.
+ * PCollectionView translator.
  */
 public class PCollectionViewTranslatorBatch<ET, VT>
     implements BatchTransformTranslator<View.CreatePCollectionView<ET, VT>> {

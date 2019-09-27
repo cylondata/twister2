@@ -23,7 +23,7 @@ import org.apache.beam.sdk.values.PValue;
 import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 
 /**
- * doc.
+ * Twister2BatchTranslationContext.
  */
 public class Twister2BatchTranslationContext extends Twister2TranslationContext {
 

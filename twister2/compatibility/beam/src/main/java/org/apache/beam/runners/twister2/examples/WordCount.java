@@ -39,7 +39,7 @@ public final class WordCount {
     int workers = 1;
     System.out.println("Start");
     Twister2Job.Twister2JobBuilder jobBuilder = Twister2Job.newBuilder();
-    jobBuilder.setJobName("KMeans-job");
+    jobBuilder.setJobName("beam-test-job");
     jobBuilder.setWorkerClass(WordCountWorker.class.getName());
     jobBuilder.addComputeResource(2, 512, 1.0, workers);
     jobBuilder.setConfig(jobConfig);
