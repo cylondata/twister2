@@ -100,7 +100,7 @@ RUN if [ "$WITH_CUDA" = "true" ]; then \
 # install python
 # clear apt-get cache, no more apt usage after this point
 RUN apt-get update && \
-    apt-get install -y python && \
+    apt-get install -y python3 && \
     rm -rf /var/lib/apt/lists/*
 
 ###############################################################################
