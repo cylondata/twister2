@@ -11,23 +11,21 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 ##############################################################################
-# Install Java 8.
-# Based on:
-#    https://github.com/dockerfile/java/blob/master/oracle-java8/Dockerfile
-#    https://stackoverflow.com/questions/49914574/install-jdk-8-update-172-in-dockerfile-with-ubuntu-image
-#
+# Install OpenJDK-8
+RUN apt-get update && \
+    apt-get install -y openjdk-8-jdk && \
+    apt-get install -y ant && \
+    apt-get clean;
 
-RUN \
-   apt-get update && \
-   apt-get -y install software-properties-common && \
-   echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
-   add-apt-repository -y ppa:webupd8team/java && \
-   apt-get update && \
-   apt-get install -y oracle-java8-installer && \
-   rm -rf /var/cache/oracle-jdk8-installer
+# Fix certificate issues
+RUN apt-get update && \
+    apt-get install ca-certificates-java && \
+    apt-get clean && \
+    apt-get install -y curl && \
+    update-ca-certificates -f;
 
-# Define JAVA_HOME variable
-ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+# Setup JAVA_HOME -- useful for docker commandline
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 ###############################################################################
 # Install SSH and OpenMPI
