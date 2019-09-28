@@ -126,6 +126,11 @@ public final class MPIWorkerStarter {
 
     String podIP = localHost.getHostAddress();
     podName = localHost.getHostName();
+    // podName may be in the form of: t2-job-0-0.t2-srv-t2-job.default.svc.cluster.local
+    // get up to first dot: t2-job-0-0
+    if (podName.indexOf(".") > 0) {
+      podName = podName.substring(0, podName.indexOf("."));
+    }
 
     int workerPort = KubernetesContext.workerBasePort(config)
         + workerID * (SchedulerContext.numberOfAdditionalPorts(config) + 1);
@@ -142,7 +147,7 @@ public final class MPIWorkerStarter {
           : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, nodeIP);
     }
 
-    LOG.info("NodeInfoUtils for this worker: " + nodeInfo);
+    LOG.info(String.format("PodName: %s, NodeInfo for this worker: %s", podName, nodeInfo));
 
     computeResource = K8sWorkerUtils.getComputeResource(job, podName);
 
