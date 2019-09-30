@@ -14,9 +14,12 @@ package edu.iu.dsc.tws.examples.internal.batchscheduler;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +39,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
@@ -62,15 +66,13 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
+
+import mpi.MPI;
+import mpi.MPIException;
+
 public class ConstraintTaskExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(ConstraintTaskExample.class.getName());
-
- /* private int workers;
-  private int parallelismValue;
-  private int dsize;
-  private int dimension;
-  private String dinput;*/
 
   public static void main(String[] args) throws ParseException {
     LOG.log(Level.INFO, "Constraint Task Graph Example");
@@ -143,33 +145,32 @@ public class ConstraintTaskExample implements IWorker {
     DataGenerator dataGenerator = new DataGenerator(config, workerID);
     dataGenerator.generate(new Path(dinput), dsize, dimension);
 
-    ComputeGraph firstGraph = buildFirstGraph(parallelismValue, config, dinput, dsize, dimension);
-    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, dinput, dsize, dimension);
+    ComputeGraph firstGraph = buildFirstGraph(
+        parallelismValue, config, dinput, dsize, dimension, "firstgraphpoints");
+    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, "firstgraphpoints");
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
     taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
+
     DataObject<Object> firstGraphObject = taskExecutor.getOutput(
         firstGraph, firstGraphExecutionPlan, "firstsink");
-
-    LOG.info("First Task Graph Object:" + Arrays.deepToString(firstGraphObject.getPartitions()));
 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
     taskExecutor.addInput(secondGraph, secondGraphExecutionPlan,
-        "secondsource", "secondgraphpoints", firstGraphObject);
+        "secondsource", "firstgraphpoints", firstGraphObject);
     taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
-    DataObject<Object> secondGraphObject = taskExecutor.getOutput(
-        secondGraph, secondGraphExecutionPlan, "secondsink");
-    LOG.info("Second Graph Object:" + secondGraphObject);
+
     long endTime = System.currentTimeMillis();
     LOG.info("Total Execution Time: " + (endTime - startTime));
   }
 
   private ComputeGraph buildFirstGraph(int parallelism, Config conf,
-                                       String dataInput, int dataSize, int dimension) {
+                                       String dataInput, int dataSize,
+                                       int dimension, String inputKey) {
     FirstSourceTask sourceTask = new FirstSourceTask(dataInput, dataSize);
-    FirstSinkTask sinkTask = new FirstSinkTask(dimension);
+    FirstSinkTask sinkTask = new FirstSinkTask(dimension, inputKey);
 
     ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     firstGraphBuilder.addSource("firstsource", sourceTask, parallelism);
@@ -181,14 +182,13 @@ public class ConstraintTaskExample implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     firstGraphBuilder.setMode(OperationMode.BATCH);
     firstGraphBuilder.setTaskGraphName("firstTG");
+    firstGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1");
     return firstGraphBuilder.build();
   }
 
-  //TODO: Modify this mpi task with constraints
-  private ComputeGraph buildSecondGraph(int parallelism, Config conf,
-                                        String dataInput, int dataSize, int dimension) {
-    SecondSourceTask sourceTask = new SecondSourceTask(dataInput, dataSize);
-    SecondSinkTask sinkTask = new SecondSinkTask(dimension);
+  private ComputeGraph buildSecondGraph(int parallelism, Config conf, String inputKey) {
+    SecondSourceTask sourceTask = new SecondSourceTask(inputKey);
+    SecondSinkTask sinkTask = new SecondSinkTask();
 
     ComputeGraphBuilder secondGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     secondGraphBuilder.addSource("secondsource", sourceTask, parallelism);
@@ -200,16 +200,14 @@ public class ConstraintTaskExample implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     secondGraphBuilder.setMode(OperationMode.BATCH);
     secondGraphBuilder.setTaskGraphName("secondTG");
+    secondGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1");
     return secondGraphBuilder.build();
   }
 
   private static class FirstSourceTask extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private double[] datapoints = null;
-    private int numPoints = 0;
     private DataSource<?, ?> source;
-
     private String dataDirectory;
     private int dataSize;
 
@@ -266,12 +264,13 @@ public class ConstraintTaskExample implements IWorker {
   private static class FirstSinkTask extends BaseSink implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
-    private double[] datapoints;
     private int length;
+    private String inputKey;
     private double[][] dataPointsLocal;
 
-    FirstSinkTask(int len) {
+    FirstSinkTask(int len, String inputkey) {
       this.length = len;
+      this.inputKey = inputkey;
     }
 
     @Override
@@ -288,16 +287,7 @@ public class ConstraintTaskExample implements IWorker {
         for (int j = 0; j < length; j++) {
           dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
         }
-        //context.write(Context.TWISTER2_DIRECT_EDGE, dataPointsLocal);
       }
-      /*List<double[]> values = new ArrayList<>();
-      while (((Iterator) message.getContent()).hasNext()) {
-        values.add((double[]) ((Iterator) message.getContent()).next());
-      }
-      datapoints = new double[values.size()];
-      for (double[] value : values) {
-        datapoints = value;
-      }*/
       return true;
     }
 
@@ -310,112 +300,86 @@ public class ConstraintTaskExample implements IWorker {
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
     }
+
+    @Override
+    public Set<String> getCollectibleNames() {
+      return Collections.singleton(inputKey);
+    }
   }
 
-  private static class SecondSourceTask extends BaseSource {
+  private static class SecondSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
-    private DataSource<?, ?> source;
+    private DataObject<?> dataPointsObject = null;
+    private double[][] datapoints = null;
+    private String inputKey;
 
-    private String dataDirectory;
-    private int dataSize;
-
-    SecondSourceTask(String dataDirectory, int size) {
-      setDataDirectory(dataDirectory);
-      setDataSize(size);
-    }
-
-    public String getDataDirectory() {
-      return dataDirectory;
-    }
-
-    public void setDataDirectory(String dataDirectory) {
-      this.dataDirectory = dataDirectory;
-    }
-
-    public int getDataSize() {
-      return dataSize;
-    }
-
-    public void setDataSize(int dataSize) {
-      this.dataSize = dataSize;
+    SecondSourceTask(String inputkey) {
+      this.inputKey = inputkey;
     }
 
     @Override
     public void execute() {
-      InputSplit<?> inputSplit = source.getNextSplit(context.taskIndex());
-      while (inputSplit != null) {
-        try {
-          while (!inputSplit.reachedEnd()) {
-            Object value = inputSplit.nextRecord(null);
-            if (value != null) {
-              context.write(Context.TWISTER2_DIRECT_EDGE, value);
-            }
-          }
-          inputSplit = source.getNextSplit(context.taskIndex());
-        } catch (IOException e) {
-          LOG.log(Level.SEVERE, "Failed to read the input", e);
-        }
-      }
+      DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
+      datapoints = (double[][]) dataPartition.getConsumer().next();
+      LOG.info("Context Task Index:" + context.taskIndex() + "\t" + datapoints.length);
       context.end(Context.TWISTER2_DIRECT_EDGE);
     }
 
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-      ExecutionRuntime runtime = (ExecutionRuntime) cfg.get(
-          ExecutorContext.TWISTER2_RUNTIME_OBJECT);
-      this.source = runtime.createInput(cfg, context, new LocalTextInputPartitioner(
-          new Path(getDataDirectory()), context.getParallelism(), cfg));
-    }
-  }
-
-  private static class SecondSinkTask extends BaseSink implements Collector {
-    private static final long serialVersionUID = -5190777711234234L;
-
-    private double[] datapoints;
-    private int length;
-    private double[][] dataPointsLocal;
-
-    SecondSinkTask(int len) {
-      this.length = len;
+      super.prepare(config, context);
     }
 
     @Override
-    public boolean execute(IMessage message) {
-      /*List<double[]> values = new ArrayList<>();
-      while (((Iterator) message.getContent()).hasNext()) {
-        values.add((double[]) ((Iterator) message.getContent()).next());
+    public void add(String name, DataObject<?> data) {
+      LOG.log(Level.INFO, "Received input: " + name);
+      if (inputKey.equals(name)) {
+        this.dataPointsObject = data;
       }
-      datapoints = new double[values.size()];
-      for (double[] value : values) {
-        datapoints = value;
-      }*/
-      List<String> values = new ArrayList<>();
-      while (((Iterator) message.getContent()).hasNext()) {
-        values.add(String.valueOf(((Iterator) message.getContent()).next()));
-      }
-      dataPointsLocal = new double[values.size()][length];
-      String line;
-      for (int i = 0; i < values.size(); i++) {
-        line = values.get(i);
-        String[] data = line.split(",");
-        for (int j = 0; j < length; j++) {
-          dataPointsLocal[i][j] = Double.parseDouble(data[j].trim());
-        }
-        //context.write(Context.TWISTER2_DIRECT_EDGE, dataPointsLocal);
+    }
+
+    @Override
+    public Set<String> getReceivableNames() {
+      Set<String> inputKeys = new HashSet<>();
+      inputKeys.add(inputKey);
+      return inputKeys;
+    }
+  }
+
+  private static class SecondSinkTask extends BaseSink {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private static int worldRank = 0;
+    private static int worldSize = 0;
+
+    @Override
+    public boolean execute(IMessage content) {
+      LOG.info("Received message:" + content.getContent().toString());
+      try {
+        worldRank = MPI.COMM_WORLD.getRank();
+        worldSize = MPI.COMM_WORLD.getSize();
+        int[] res = {1, 2, 3, 4, 5, 6, 7, 8};
+        int[] globalSum = new int[res.length];
+        MPI.COMM_WORLD.reduce(res, globalSum, res.length, MPI.INT, MPI.SUM, 0);
+        //if (worldRank == 0) {
+        LOG.info(String.format("Rank[%d], Worker Id[%d] , After Reduce : "
+            + "Array = %s", worldRank, context.getWorkerId(), Arrays.toString(globalSum)));
+        //}
+      } catch (MPIException e) {
+        e.printStackTrace();
       }
       return true;
     }
 
+    /* @Override
+     public DataPartition<?> get() {
+       return null;
+     }
+ */
     @Override
     public void prepare(Config cfg, TaskContext context) {
-      super.prepare(cfg, context);
-    }
-
-    @Override
-    public DataPartition<double[][]> get() {
-      return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+      super.prepare(config, context);
     }
   }
 }

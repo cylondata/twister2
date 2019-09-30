@@ -90,10 +90,10 @@ public final class KMeansConnectedDataflowExample {
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
 
+      cdfwEnv.increaseWorkers(8);
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, parallelism, jobConfig);
+        DataFlowGraph job3 = generateThirdJob(config, 4, jobConfig);
         job3.setIterationNumber(i);
-        //cdfwEnv.increaseWorkers(8);
         cdfwEnv.executeDataFlowGraph(job3);
       }
     }

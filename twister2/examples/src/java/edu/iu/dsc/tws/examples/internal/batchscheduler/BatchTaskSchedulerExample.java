@@ -303,8 +303,6 @@ public class BatchTaskSchedulerExample implements IWorker {
         double randomValue = r.nextDouble();
         datapoints[i] = randomValue;
       }
-
-
       context.writeEnd(Context.TWISTER2_DIRECT_EDGE, datapoints);
     }
 
