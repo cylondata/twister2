@@ -362,10 +362,6 @@ public class ConstraintTaskExample implements IWorker {
         int[] res = {1, 2, 3, 4, 5, 6, 7, 8};
         int[] globalSum = new int[res.length];
         MPI.COMM_WORLD.reduce(res, globalSum, res.length, MPI.INT, MPI.SUM, 0);
-        //if (worldRank == 0) {
-        LOG.info(String.format("Rank[%d], Worker Id[%d] , After Reduce : "
-            + "Array = %s", worldRank, context.getWorkerId(), Arrays.toString(globalSum)));
-        //}
       } catch (MPIException e) {
         e.printStackTrace();
       }
