@@ -185,7 +185,7 @@ public final class ZKJobControllerExample {
   public static Config buildTestConfig(String zkAddresses) {
 
     config = Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddresses)
+        .put(ZKContext.SERVER_ADDRESSES, zkAddresses)
         .build();
 
     config = JobUtils.resolveJobId(config, jobName);

@@ -12,21 +12,21 @@
 
 package edu.iu.dsc.tws.rsched.zk;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 
 public final class ZKContext extends Context {
-  public static final Logger LOG = Logger.getLogger(ZKContext.class.getName());
+
+  public static final String ZK_BASED_GROUP_MANAGEMENT
+      = "twister2.zookeeper.based.group.management";
+  public static final boolean ZK_BASED_GROUP_MANAGEMENT_DEFAULT = false;
 
   public static final String ROOT_NODE = "twister2.resource.zookeeper.root.node.path";
   public static final String ROOT_NODE_DEFAULT = "/twister2";
 
   // comma separated ZooKeeper server IP:port pairs
   // example: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
-  public static final String ZOOKEEPER_SERVER_ADDRESSES
-      = "twister2.resource.zookeeper.server.addresses";
+  public static final String SERVER_ADDRESSES = "twister2.resource.zookeeper.server.addresses";
 
   private ZKContext() { }
 
@@ -35,7 +35,11 @@ public final class ZKContext extends Context {
   }
 
   public static String serverAddresses(Config cfg) {
-    return cfg.getStringValue(ZOOKEEPER_SERVER_ADDRESSES);
+    return cfg.getStringValue(SERVER_ADDRESSES);
+  }
+
+  public static boolean zkBasedGroupManagement(Config cfg) {
+    return cfg.getBooleanValue(ZK_BASED_GROUP_MANAGEMENT, ZK_BASED_GROUP_MANAGEMENT_DEFAULT);
   }
 
 }
