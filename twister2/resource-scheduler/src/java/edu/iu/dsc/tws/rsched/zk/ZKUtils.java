@@ -29,6 +29,7 @@ import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
@@ -51,7 +52,7 @@ public final class ZKUtils {
    * @return
    */
   public static CuratorFramework connectToServer(String zkServers) {
-    return connectToServer(zkServers, ZKContext.SESSION_TIMEOUT_DEFAULT);
+    return connectToServer(zkServers, FaultToleranceContext.FAILURE_TIMEOUT_DEFAULT);
   }
 
   /**

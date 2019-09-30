@@ -50,6 +50,7 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
@@ -168,7 +169,7 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
 
     try {
       String zkServerAddresses = ZKContext.serverAddresses(config);
-      int sessionTimeoutMs = ZKContext.sessionTimeout(config);
+      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
       client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
 
       String barrierPath = ZKUtils.constructBarrierPath(rootPath, jobName);

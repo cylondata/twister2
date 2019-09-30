@@ -28,12 +28,6 @@ public final class ZKContext extends Context {
   public static final String ZOOKEEPER_SERVER_ADDRESSES
       = "twister2.resource.zookeeper.server.addresses";
 
-  // SESSION_TIMEOUT determines worker failures.
-  // If workers do not send heartbeat messages for this many milli seconds,
-  // they are assumed failed
-  public static final String SESSION_TIMEOUT = "twister2.resource.zookeeper.session.timeout";
-  public static final int SESSION_TIMEOUT_DEFAULT = 10 * 1000;
-
   private ZKContext() { }
 
   public static String rootNode(Config cfg) {
@@ -42,10 +36,6 @@ public final class ZKContext extends Context {
 
   public static String serverAddresses(Config cfg) {
     return cfg.getStringValue(ZOOKEEPER_SERVER_ADDRESSES);
-  }
-
-  public static int sessionTimeout(Config cfg) {
-    return cfg.getIntegerValue(SESSION_TIMEOUT, SESSION_TIMEOUT_DEFAULT);
   }
 
 }
