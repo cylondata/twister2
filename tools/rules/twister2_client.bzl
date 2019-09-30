@@ -120,6 +120,7 @@ def twister2_client_lib_api_files():
         "//twister2/api/src/java/edu/iu/dsc/tws/api/data:data-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/scheduler:scheduler-api-java",

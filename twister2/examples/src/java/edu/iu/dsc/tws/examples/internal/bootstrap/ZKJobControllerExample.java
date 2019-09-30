@@ -195,13 +195,14 @@ public final class ZKJobControllerExample {
   public static void createJobZnode(JobAPI.Job job) {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+    String rootPath = ZKContext.rootNode(config);
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, job.getJobName(), config)) {
-      ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), job.getJobName());
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
     }
 
     try {
-      ZKJobZnodeUtil.createJobZNode(client, job, config);
+      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
 
       // test job znode content reading
       JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
@@ -218,7 +219,7 @@ public final class ZKJobControllerExample {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, jobName, config)) {
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, ZKContext.rootNode(config), jobName)) {
       ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
     }
 

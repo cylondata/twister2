@@ -80,7 +80,9 @@ public final class ZKUtils {
   }
 
   public static void closeClient() {
-    client.close();
+    if (client != null) {
+      client.close();
+    }
   }
 
   /**

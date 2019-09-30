@@ -100,7 +100,7 @@ public final class K8sWorkerStarter {
         ? KubernetesContext.getNodeInfo(config, hostIP)
         : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);
 
-    LOG.info("NodeInfo for this worker: " + nodeInfo);
+    LOG.info("PodName: " + podName + ", NodeInfo: " + nodeInfo);
 
     // set workerID
     workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);

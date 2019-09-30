@@ -13,18 +13,28 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.master;
 
 import java.util.ArrayList;
 
+import org.apache.curator.framework.CuratorFramework;
+
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
+import edu.iu.dsc.tws.rsched.zk.ZKContext;
+import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.rsched.zk.ZKUtils;
 
 public class JobTerminator implements IJobTerminator {
 
   private KubernetesController controller;
-  private String namespace;
+  private Config config;
 
-  public JobTerminator(String namespace) {
-    this.namespace = namespace;
+  public JobTerminator(Config config) {
+    this.config = config;
+
     controller = new KubernetesController();
+    String namespace = KubernetesContext.namespace(config);
     controller.init(namespace);
   }
 
@@ -49,10 +59,17 @@ public class JobTerminator implements IJobTerminator {
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean pvcDeleted = controller.deletePersistentVolumeClaim(pvcName);
 
-    // last delete the job master StatefulSet
+    // delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSet(jobMasterStatefulSetName);
+
+    if (FaultToleranceContext.faultTolerant(config)) {
+      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+      String rootPath = ZKContext.rootNode(config);
+      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
+      ZKUtils.closeClient();
+    }
 
     return ssForWorkersDeleted
         && serviceForWorkersDeleted

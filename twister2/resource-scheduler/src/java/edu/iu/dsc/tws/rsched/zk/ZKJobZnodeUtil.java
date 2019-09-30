@@ -32,11 +32,10 @@ public final class ZKJobZnodeUtil {
    * check whether there is an active job
    * if not, but there are znodes from previous sessions, those will be deleted
    */
-  public static boolean isThereJobZNodes(CuratorFramework client, String jobName, Config config) {
+  public static boolean isThereJobZNodes(CuratorFramework client, String rootPath, String jobName) {
 
     boolean jobZnodesExist = false;
     StringBuffer logMessage = new StringBuffer();
-    String rootPath = ZKContext.rootNode(config);
 
     try {
       // check whether the job node exists, if not, return false, nothing to do
@@ -70,10 +69,10 @@ public final class ZKJobZnodeUtil {
    * Assumes that there is no job znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
-  public static void createJobZNode(CuratorFramework client, JobAPI.Job job, Config config)
+  public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Exception {
 
-    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), job.getJobName());
+    String jobPath = ZKUtils.constructJobPath(rootPath, job.getJobName());
 
     try {
       client
@@ -85,8 +84,7 @@ public final class ZKJobZnodeUtil {
       LOG.info("JobZNode created: " + jobPath);
 
     } catch (Exception e) {
-      LOG.severe("Could not create job znode: " + e.getMessage());
-      throw e;
+      throw new Exception("JobZNode can not be created for the path: " + jobPath, e);
     }
   }
 
@@ -174,12 +172,12 @@ public final class ZKJobZnodeUtil {
         client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
         LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
       } else {
-        LOG.info("DistributedAtomicInteger for workerID not deleted from ZooKeeper: " + daiPath);
+        LOG.info("No DistributedAtomicInteger exists for the job at ZooKeeper: " + daiPath);
       }
 
       return true;
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "", e);
+      LOG.log(Level.WARNING, "", e);
       return false;
     }
   }

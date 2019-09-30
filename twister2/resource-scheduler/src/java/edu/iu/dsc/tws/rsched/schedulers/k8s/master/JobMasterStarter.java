@@ -87,7 +87,7 @@ public final class JobMasterStarter {
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
     String namespace = KubernetesContext.namespace(config);
-    JobTerminator jobTerminator = new JobTerminator(namespace);
+    JobTerminator jobTerminator = new JobTerminator(config);
 
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
