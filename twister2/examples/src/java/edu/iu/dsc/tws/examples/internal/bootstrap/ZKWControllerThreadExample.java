@@ -25,10 +25,14 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKJobController;
+import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 
-public final class ZKJobControllerThreadExample extends Thread {
-  public static final Logger LOG = Logger.getLogger(ZKJobControllerThreadExample.class.getName());
+/**
+ * ZKWorkerController threaded example
+ * This may be broken. Since the connection in ZKWorkerController is singleton now
+ */
+public final class ZKWControllerThreadExample extends Thread {
+  public static final Logger LOG = Logger.getLogger(ZKWControllerThreadExample.class.getName());
 
   public static String jobName;
   public static Config config;
@@ -36,7 +40,7 @@ public final class ZKJobControllerThreadExample extends Thread {
 
   private int workerID;
 
-  public ZKJobControllerThreadExample(int workerID) {
+  public ZKWControllerThreadExample(int workerID) {
     this.workerID = workerID;
   }
 
@@ -70,8 +74,8 @@ public final class ZKJobControllerThreadExample extends Thread {
 
     LOG.info("workerInfo at example: " + workerInfo.toString());
 
-    ZKJobController jobController =
-        new ZKJobController(config, jobName, numberOfWorkers, workerInfo);
+    ZKWorkerController jobController =
+        new ZKWorkerController(config, jobName, numberOfWorkers, workerInfo);
 
     jobController.initialize();
 
@@ -85,7 +89,7 @@ public final class ZKJobControllerThreadExample extends Thread {
 
     // test state change
     jobController.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
-    ZKJobControllerExample.sleeeep((long) (Math.random() * 10000));
+    ZKWControllerExample.sleeeep((long) (Math.random() * 10000));
 
     // test worker failure
     // assume this worker failed
@@ -106,7 +110,7 @@ public final class ZKJobControllerThreadExample extends Thread {
 
     // sleep some random amount of time before closing
     // this is to prevent all workers to close almost at the same time
-    ZKJobControllerExample.sleeeep((long) (Math.random() * 2000));
+    ZKWControllerExample.sleeeep((long) (Math.random() * 2000));
     jobController.close();
   }
 
@@ -139,7 +143,7 @@ public final class ZKJobControllerThreadExample extends Thread {
     numberOfWorkers = Integer.parseInt(args[1]);
     jobName = "test-job";
 
-    config = ZKJobControllerExample.buildTestConfig(zkAddress);
+    config = ZKWControllerExample.buildTestConfig(zkAddress);
 
 
     LoggingHelper.initTwisterFileLogHandler(numberOfWorkers + "", "logs", config);
@@ -151,10 +155,10 @@ public final class ZKJobControllerThreadExample extends Thread {
         .build();
     JobAPI.Job job = twister2Job.serialize();
 
-    ZKJobControllerExample.createJobZnode(job);
+    ZKWControllerExample.createJobZnode(job);
 
     for (int i = 0; i < numberOfWorkers; i++) {
-      new ZKJobControllerThreadExample(i).start();
+      new ZKWControllerThreadExample(i).start();
     }
 
   }

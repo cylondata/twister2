@@ -33,15 +33,19 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.zk.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKJobController;
 import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.rsched.zk.ZKUtils;
+import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 import static java.lang.Thread.sleep;
 
-public final class ZKJobControllerExample {
-  public static final Logger LOG = Logger.getLogger(ZKJobControllerExample.class.getName());
+/**
+ * ZKWorkerController example
+ */
 
-  private ZKJobControllerExample() { }
+public final class ZKWControllerExample {
+  public static final Logger LOG = Logger.getLogger(ZKWControllerExample.class.getName());
+
+  private ZKWControllerExample() { }
 
   public static String jobName;
   public static Config config;
@@ -58,7 +62,7 @@ public final class ZKJobControllerExample {
     String action = args[1];
     jobName = "test-job";
 
-    config = ZKJobControllerExample.buildTestConfig(zkAddress);
+    config = ZKWControllerExample.buildTestConfig(zkAddress);
 
     if ("delete".equalsIgnoreCase(action)) {
       deleteJobZnode();
@@ -103,8 +107,8 @@ public final class ZKJobControllerExample {
 
     LOG.info("workerInfo at example: " + workerInfo.toString());
 
-    ZKJobController jobController =
-        new ZKJobController(config, jobName, numberOfWorkers, workerInfo);
+    ZKWorkerController jobController =
+        new ZKWorkerController(config, jobName, numberOfWorkers, workerInfo);
 
     IWorkerController workerController = jobController;
     IWorkerStatusUpdater workerStatusUpdater = jobController;

@@ -91,8 +91,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKJobController implements IWorkerController, IWorkerStatusUpdater {
-  public static final Logger LOG = Logger.getLogger(ZKJobController.class.getName());
+public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdater {
+  public static final Logger LOG = Logger.getLogger(ZKWorkerController.class.getName());
 
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
@@ -142,10 +142,10 @@ public class ZKJobController implements IWorkerController, IWorkerStatusUpdater 
   // Inform when all workers joined the job
   private IAllJoinedListener allJoinedListener;
 
-  public ZKJobController(Config config,
-                         String jobName,
-                         int numberOfWorkers,
-                         WorkerInfo workerInfo) {
+  public ZKWorkerController(Config config,
+                            String jobName,
+                            int numberOfWorkers,
+                            WorkerInfo workerInfo) {
     this.config = config;
     this.rootPath = ZKContext.rootNode(config);
 
