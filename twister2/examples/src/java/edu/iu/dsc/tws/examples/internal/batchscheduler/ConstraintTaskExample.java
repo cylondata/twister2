@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.examples.internal.batchscheduler;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -65,7 +64,6 @@ import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-
 
 import mpi.MPI;
 import mpi.MPIException;
@@ -146,8 +144,8 @@ public class ConstraintTaskExample implements IWorker {
     dataGenerator.generate(new Path(dinput), dsize, dimension);
 
     ComputeGraph firstGraph = buildFirstGraph(
-        parallelismValue, config, dinput, dsize, dimension, "firstgraphpoints");
-    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, "firstgraphpoints");
+        parallelismValue, config, dinput, dsize, dimension, "firstgraphpoints", "1");
+    ComputeGraph secondGraph = buildSecondGraph(parallelismValue, config, "firstgraphpoints", "1");
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
@@ -168,7 +166,8 @@ public class ConstraintTaskExample implements IWorker {
 
   private ComputeGraph buildFirstGraph(int parallelism, Config conf,
                                        String dataInput, int dataSize,
-                                       int dimension, String inputKey) {
+                                       int dimension, String inputKey,
+                                       String constraint) {
     FirstSourceTask sourceTask = new FirstSourceTask(dataInput, dataSize);
     FirstSinkTask sinkTask = new FirstSinkTask(dimension, inputKey);
 
@@ -182,11 +181,13 @@ public class ConstraintTaskExample implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     firstGraphBuilder.setMode(OperationMode.BATCH);
     firstGraphBuilder.setTaskGraphName("firstTG");
-    firstGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1");
+    firstGraphBuilder.addGraphConstraints(
+        Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, constraint);
     return firstGraphBuilder.build();
   }
 
-  private ComputeGraph buildSecondGraph(int parallelism, Config conf, String inputKey) {
+  private ComputeGraph buildSecondGraph(int parallelism, Config conf,
+                                        String inputKey, String constraint) {
     SecondSourceTask sourceTask = new SecondSourceTask(inputKey);
     SecondSinkTask sinkTask = new SecondSinkTask();
 
@@ -200,7 +201,8 @@ public class ConstraintTaskExample implements IWorker {
         .withDataType(MessageTypes.OBJECT);
     secondGraphBuilder.setMode(OperationMode.BATCH);
     secondGraphBuilder.setTaskGraphName("secondTG");
-    secondGraphBuilder.addGraphConstraints(Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, "1");
+    secondGraphBuilder.addGraphConstraints(
+        Context.TWISTER2_MAX_TASK_INSTANCES_PER_WORKER, constraint);
     return secondGraphBuilder.build();
   }
 
@@ -323,7 +325,7 @@ public class ConstraintTaskExample implements IWorker {
       DataPartition<?> dataPartition = dataPointsObject.getPartition(context.taskIndex());
       datapoints = (double[][]) dataPartition.getConsumer().next();
       LOG.info("Context Task Index:" + context.taskIndex() + "\t" + datapoints.length);
-      context.end(Context.TWISTER2_DIRECT_EDGE);
+      context.writeEnd(Context.TWISTER2_DIRECT_EDGE, datapoints);
     }
 
     @Override
@@ -368,11 +370,6 @@ public class ConstraintTaskExample implements IWorker {
       return true;
     }
 
-    /* @Override
-     public DataPartition<?> get() {
-       return null;
-     }
- */
     @Override
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(config, context);
