@@ -64,7 +64,7 @@ public class JobTerminator implements IJobTerminator {
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSet(jobMasterStatefulSetName);
 
-    if (FaultToleranceContext.faultTolerant(config)) {
+    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
       ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
