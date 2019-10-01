@@ -34,8 +34,10 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import edu.iu.dsc.tws.rsched.zk.ZKContext;
+import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -162,7 +164,26 @@ public final class K8sWorkerStarter {
     // update worker status to COMPLETED
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
-    WorkerRuntime.close();
+    // if this is the first worker and worker statuses are propagated through ZooKeeper
+    // wait for all workers to complete and clean up job resources
+    if (workerInfo.getWorkerID() == 0 && workerStatusUpdater instanceof ZKWorkerController) {
+      ZKWorkerController zkWorkerController = (ZKWorkerController) workerController;
+      while (zkWorkerController.getCurrentWorkers().size() != 1) {
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+//          e.printStackTrace();
+        }
+      }
+
+      WorkerRuntime.close();
+      JobTerminator jobTerminator = new JobTerminator(config);
+      jobTerminator.terminateJob(job.getJobName());
+
+    } else {
+
+      WorkerRuntime.close();
+    }
   }
 
   /**
