@@ -165,7 +165,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * it will be updated as the status of worker changes from STARTING, RUNNING, COMPLETED
    * @return
    */
-  public boolean initialize() throws Exception {
+  public void initialize() throws Exception {
 
     try {
       String zkServerAddresses = ZKContext.serverAddresses(config);
@@ -193,9 +193,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       childrenCache.start();
 
       LOG.info("This worker: " + workerInfo.getWorkerID() + " initialized successfully.");
-      return true;
+
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when initializing ZKJobGroup", e);
+//      LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
       throw e;
     }
   }

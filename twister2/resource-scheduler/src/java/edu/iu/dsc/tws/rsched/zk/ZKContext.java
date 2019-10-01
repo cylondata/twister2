@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.rsched.zk;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 
 public final class ZKContext extends Context {
 
@@ -41,5 +42,21 @@ public final class ZKContext extends Context {
   public static boolean zkBasedGroupManagement(Config cfg) {
     return cfg.getBooleanValue(ZK_BASED_GROUP_MANAGEMENT, ZK_BASED_GROUP_MANAGEMENT_DEFAULT);
   }
+
+  /**
+   * return true if the job is fault tolerant or ZK based group management is used
+   * @param cfg
+   * @return
+   */
+  public static boolean isZooKeeperServerUsed(Config cfg) {
+
+    if (FaultToleranceContext.faultTolerant(cfg) || zkBasedGroupManagement(cfg)) {
+      return true;
+    }
+
+    return false;
+  }
+
+
 
 }

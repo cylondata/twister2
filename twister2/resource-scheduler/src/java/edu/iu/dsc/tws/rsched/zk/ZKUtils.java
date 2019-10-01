@@ -58,7 +58,8 @@ public final class ZKUtils {
   /**
    * connect to ZooKeeper server
    */
-  public static CuratorFramework connectToServer(String zkServers, int sessionTimeoutMs) {
+  public synchronized static CuratorFramework connectToServer(String zkServers,
+                                                              int sessionTimeoutMs) {
 
     if (client != null) {
       return client;

@@ -22,7 +22,6 @@ import java.util.logging.Logger;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -101,8 +100,8 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       return false;
     }
 
-    // create znodes at ZooKeeper server if fault tolerance is used
-    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
+    // create znodes at ZooKeeper server if ZK server is used
+    if (ZKContext.isZooKeeperServerUsed(config)) {
       boolean jobZnodeCreated = createJobZnode(job);
       if (!jobZnodeCreated) {
         // nothing to clear at this point, if the job znode is not created
@@ -372,7 +371,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // when fault tolerance is used, we check whether the znodes that will be created for this job
     // is available at ZooKeeper server
-    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework zkClient = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
       boolean jobZNodesExist = ZKJobZnodeUtil.isThereJobZNodes(zkClient, rootPath, jobName);
@@ -658,7 +657,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   public boolean terminateJob(String jobName) {
 
     // delete job znode from ZooWorker server if fault tolerant
-    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
       deleteJobZnode(jobName);
     }
 

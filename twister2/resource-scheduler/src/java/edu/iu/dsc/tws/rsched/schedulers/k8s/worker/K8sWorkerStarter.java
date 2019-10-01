@@ -14,16 +14,23 @@ package edu.iu.dsc.tws.rsched.schedulers.k8s.worker;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
@@ -32,7 +39,8 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
+import edu.iu.dsc.tws.rsched.zk.ZKContext;
+import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -42,7 +50,6 @@ public final class K8sWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static JMWorkerAgent jobMasterAgent;
   private static String jobName = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
@@ -72,7 +79,6 @@ public final class K8sWorkerStarter {
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
-    jobMasterIP = updateJobMasterIp(jobMasterIP);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
@@ -86,6 +92,13 @@ public final class K8sWorkerStarter {
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
     config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
+
+    // if there is no Driver in the job and ZK is used for group management,
+    // then, we don't need to connect to JM
+    // if there is a driver or ZK is not used for group management, then we need to connect to JM
+    if (!job.getDriverClassName().isEmpty() || !(ZKContext.isZooKeeperServerUsed(config))) {
+      jobMasterIP = updateJobMasterIp(jobMasterIP);
+    }
 
     // get podIP from localhost
     InetAddress localHost = null;
@@ -136,21 +149,80 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    // construct JMWorkerAgent
-    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+    /**
+     * Interfaces to interact with other workers and Job Master if there is any
+     */
+    IWorkerController workerController;
+    IWorkerStatusUpdater workerStatusUpdater;
+    ISenderToDriver senderToDriver;
 
-    // start JMWorkerAgent
-    jobMasterAgent.startThreaded();
+    // both of these, or one of them will be used
+    ZKWorkerController zkWorkerController = null;
+    JMWorkerAgent jobMasterAgent = null;
 
-    // we will be running the Worker, send running message
-    jobMasterAgent.sendWorkerRunningMessage();
+    // if there is a driver in the job, we need to start JMWorkerAgent
+    // We only have one implementation for ISenderToDriver that is through JMWorkerAgent.
+    if (!job.getDriverClassName().isEmpty()) {
+      // construct JMWorkerAgent
+      jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+
+      // start JMWorkerAgent
+      jobMasterAgent.startThreaded();
+
+      senderToDriver = new JMSenderToDriver(jobMasterAgent);
+    }
+
+    // if the job is fault tolerant or uses ZK for group management
+    // get IWorkerController and IWorkerStatusUpdater through ZKWorkerController
+    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
+      zkWorkerController =
+          new ZKWorkerController(config, jobName, job.getNumberOfWorkers(), workerInfo);
+      try {
+        zkWorkerController.initialize();
+      } catch (Exception e) {
+        LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
+        throw new RuntimeException(e);
+      }
+
+      workerController = zkWorkerController;
+      workerStatusUpdater = zkWorkerController;
+
+    // if ZK is not used for group management, use JobMaster
+    } else {
+
+      // if jobMasterAgent has not already been initialized, start it
+      if (jobMasterAgent == null) {
+
+        // construct JMWorkerAgent
+        jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
+            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+
+        // start JMWorkerAgent
+        jobMasterAgent.startThreaded();
+      }
+
+      workerController = jobMasterAgent.getJMWorkerController();
+      workerStatusUpdater = new JMWorkerStatusUpdater(jobMasterAgent);
+    }
+
+    // update worker status to RUNNING
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     // start the worker
-    startWorker(jobMasterAgent, pv);
+    startWorker(workerController, pv);
+
+    // update worker status to COMPLETED
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     // close the worker
-    closeWorker();
+    if (jobMasterAgent != null) {
+      jobMasterAgent.close();
+    }
+
+    if (zkWorkerController != null) {
+      zkWorkerController.close();
+    }
   }
 
   /**
@@ -195,7 +267,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(JMWorkerAgent jmWorkerAgent,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = job.getWorkerClassName();
@@ -214,18 +286,7 @@ public final class K8sWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
-  }
-
-  /**
-   * last method to call to close the worker
-   */
-  public static void closeWorker() {
-
-    // send worker completed message to the Job Master and finish
-    // Job master will delete the StatefulSet object
-    jobMasterAgent.sendWorkerCompletedMessage();
-    jobMasterAgent.close();
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
 
 }

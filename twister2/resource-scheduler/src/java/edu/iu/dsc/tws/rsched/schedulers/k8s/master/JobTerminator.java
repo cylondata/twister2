@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
@@ -64,7 +63,7 @@ public class JobTerminator implements IJobTerminator {
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSet(jobMasterStatefulSetName);
 
-    if (FaultToleranceContext.faultTolerant(config) || ZKContext.zkBasedGroupManagement(config)) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
       ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
