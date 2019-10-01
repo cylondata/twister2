@@ -73,7 +73,7 @@ public final class KMeansConnectedDataflowExample {
       Config config = cdfwEnv.getConfig();
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
       String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
 
       int parallelism =
@@ -83,23 +83,34 @@ public final class KMeansConnectedDataflowExample {
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
       int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
+      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
+
+      int parallelism = 2;
+      int instances = 2;
+      int iterations = 10;
+      int dimension = 2;
+      int dsize = 1000;
+      int csize = 4;
+
+      String dataDirectory = "/persistent/dinput";
+      String centroidDirectory = "/persistent/cinput";
 
       generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
 
-      DataFlowGraph job1 = generateFirstJob(config, parallelism, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, parallelism, jobConfig);
-
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory,
+          dimension, dsize, instances, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory,
+          dimension, dsize, instances, jobConfig);
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
-      cdfwEnv.increaseWorkers(workers);
+      cdfwEnv.increaseWorkers(instances);
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
         throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
       }
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, 2,  2, iterations, dimension, jobConfig);
+        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations, dimension, jobConfig);
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
@@ -118,6 +129,7 @@ public final class KMeansConnectedDataflowExample {
         throw new Twister2RuntimeException("Failed to create input data:", ioe);
       }
     }
+
   }
 
   public static void main(String[] args) throws ParseException {
@@ -194,12 +206,14 @@ public final class KMeansConnectedDataflowExample {
 
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
+                                                String dataDirectory, int dimension,
+                                                int dsize, int instances,
                                                 DafaFlowJobConfig jobConfig) {
 
-    String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+    /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
     int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
     int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-    int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
+    int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));*/
 
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
@@ -236,12 +250,14 @@ public final class KMeansConnectedDataflowExample {
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
+                                                 String centroidDirectory, int dimension,
+                                                 int csize, int instances,
                                                  DafaFlowJobConfig jobConfig) {
 
-    String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
+    /*String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
     int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
     int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
-    int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
+    int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
 
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);
