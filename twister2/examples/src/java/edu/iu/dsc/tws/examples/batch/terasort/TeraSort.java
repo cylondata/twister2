@@ -323,7 +323,6 @@ public class TeraSort implements IWorker {
 
     private boolean timingCondition = false;
     private BufferedOutputStream resultsWriter;
-    private int taskIndex = -1;
 
     @Override
     public void prepare(Config cfg, TaskContext ctx) {
@@ -334,7 +333,6 @@ public class TeraSort implements IWorker {
           .min(Comparator.comparingInt(o -> (Integer) o)).get();
       this.timingCondition = ctx.getWorkerId() == 0 && ctx.taskIndex() == lowestTaskIndex;
       String outFolder = cfg.getStringValue(ARG_OUTPUT_FOLDER);
-      this.taskIndex = ctx.taskIndex();
       if (outFolder != null) {
         try {
           File outFile = new File(outFolder, String.valueOf(ctx.taskIndex()));

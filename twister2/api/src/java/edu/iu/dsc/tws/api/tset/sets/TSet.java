@@ -87,6 +87,11 @@ public interface TSet<T> {
    */
   TLink<?, T> partition(PartitionFunc<T> partitionFn, int targetParallelism);
 
+  /**
+   * Partition with the same parallelism
+   * @param partitionFn function
+   * @return the link
+   */
   TLink<?, T> partition(PartitionFunc<T> partitionFn);
 
   /**
