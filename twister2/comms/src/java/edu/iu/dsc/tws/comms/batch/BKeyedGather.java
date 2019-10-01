@@ -102,6 +102,17 @@ public class BKeyedGather extends BaseOperation {
         useDisk, comparator, groupByKey, comm.nextEdge(), MessageSchema.noSchema());
   }
 
+  public BKeyedGather(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                      MessageType kType, MessageType dType, BulkReceiver rcvr,
+                      DestinationSelector destSelector,
+                      boolean useDisk,
+                      Comparator<Object> comparator,
+                      boolean groupByKey, MessageSchema schema) {
+    this(comm, logicalPlanBuilder.build(), logicalPlanBuilder.getSources(),
+        logicalPlanBuilder.getTargets(), kType, dType, rcvr, destSelector,
+        useDisk, comparator, groupByKey, comm.nextEdge(), schema);
+  }
+
   /**
    * Creates an instance of BKeyedGather with key comparator
    *
