@@ -46,6 +46,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
 public class BasicK8sWorker implements
     IWorker, IScalerListener, IReceiverFromDriver, IAllJoinedListener {
@@ -59,9 +60,9 @@ public class BasicK8sWorker implements
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    JMWorkerAgent.addScalerListener(this);
-    JMWorkerAgent.addReceiverFromDriver(this);
-    JMWorkerAgent.addAllJoinedListener(this);
+    WorkerRuntime.addScalerListener(this);
+    WorkerRuntime.addReceiverFromDriver(this);
+    WorkerRuntime.addAllJoinedListener(this);
 
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 

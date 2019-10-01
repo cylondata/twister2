@@ -616,10 +616,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     LOG.info("Will clear up any resources created during the job submission process.");
 
-    if (jobSubmissionStatus.isJobZNodeCreated()) {
-      deleteJobZnode(jobName);
-    }
-
     if (KubernetesContext.clientToPodsUploading(config) && uploader != null) {
       uploader.stopUploader();
     }
@@ -648,6 +644,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
       boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
     }
+
+    if (jobSubmissionStatus.isJobZNodeCreated()) {
+      deleteJobZnode(jobName);
+    }
   }
 
   /**
@@ -655,11 +655,6 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
    */
   @Override
   public boolean terminateJob(String jobName) {
-
-    // delete job znode from ZooWorker server if fault tolerant
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      deleteJobZnode(jobName);
-    }
 
     // delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
@@ -682,6 +677,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
+
+    // delete job znode from ZooWorker server if fault tolerant
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      deleteJobZnode(jobName);
+    }
 
     return true;
   }

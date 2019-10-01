@@ -349,6 +349,8 @@ public class ResourceAllocator {
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
     }
+
+    launcher.close();
   }
 
 }
