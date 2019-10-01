@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
 
-public class RecordSource implements Runnable {
+public class RecordSource {
   private static final Logger LOG = Logger.getLogger(RecordSource.class.getName());
 
   private BKeyedGather operation;
@@ -57,7 +57,6 @@ public class RecordSource implements Runnable {
     }
   }
 
-  @Override
   public void run() {
     int count = 0;
     for (int i = 0; i < toSend; i++) {
