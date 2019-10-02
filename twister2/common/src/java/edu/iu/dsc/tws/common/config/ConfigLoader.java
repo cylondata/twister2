@@ -24,13 +24,21 @@
 package edu.iu.dsc.tws.common.config;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 public final class ConfigLoader {
+
+  private static final Logger LOG = Logger.getLogger(ConfigLoader.class.getName());
+
   private ConfigLoader() {
   }
 
@@ -45,6 +53,7 @@ public final class ConfigLoader {
   }
 
   private static Config loadConfig(String file) {
+    System.out.println("Reading : " + file);
     Map<String, Object> readConfig = ConfigReader.loadFile(file);
     return addFromFile(readConfig);
   }
@@ -59,7 +68,7 @@ public final class ConfigLoader {
    * tokens.
    */
   private static Config loadConfig(String twister2Home,
-                                  String configPath) {
+                                   String configPath) {
     Config defaultConfig = loadDefaults(twister2Home, configPath);
     // to token-substitute the conf paths
     Config localConfig = Config.transform(defaultConfig);
@@ -76,6 +85,37 @@ public final class ConfigLoader {
 
     Config config = cb.build();
     return Config.transform(config);
+  }
+
+  public static Config loadTestConfig() {
+    //copying resources
+    File root = new File("twister2");
+    String[] filesList = new String[]{
+        "core.yaml",
+        "network.yaml",
+        "data.yaml",
+        "resource.yaml",
+        "task.yaml",
+        "logger.properties"
+    };
+    File commonConf = new File(root, "conf/common");
+    commonConf.mkdirs();
+    for (String configFile : filesList) {
+      try {
+        Files.copy(ConfigLoader.class.getResourceAsStream("/" + configFile), Paths.get(
+            commonConf.getAbsolutePath(),
+            configFile
+        ));
+      } catch (IOException e) {
+        LOG.log(Level.SEVERE, "Couldn't copy files", e);
+      }
+    }
+
+
+    String twister2Home = root.getAbsolutePath();
+    String configDir = commonConf.getParent();
+    String clusterType = "standalone";
+    return loadConfig(twister2Home, configDir, clusterType);
   }
 
   public static Config loadConfig(String twister2Home, String configPathRoot,

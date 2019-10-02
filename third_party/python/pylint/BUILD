@@ -9,7 +9,7 @@ pex_binary(
     srcs = ["main.py"],
     main = "main.py",
     reqs = [
-        "pylint==2.3.1",
+        "pylint==2.4.2",
         "astroid==2.3.1",
         "lazy-object-proxy==1.4.*",
     ],

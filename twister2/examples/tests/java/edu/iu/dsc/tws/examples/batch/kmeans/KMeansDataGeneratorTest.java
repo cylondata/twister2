@@ -177,12 +177,7 @@ public class KMeansDataGeneratorTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir = "/home/" + System.getProperty("user.dir")
-        + "/twister2/twister2/taskscheduler/tests/conf/";
-    String clusterType = "standalone";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
+    Config config = ConfigLoader.loadTestConfig();
     return Config.newBuilder().putAll(config).build();
   }
 }
