@@ -24,6 +24,7 @@ script:
   - echo " BAZEL BUILD START"
   - bazel build --config=ubuntu twister2/...
   - echo " BAZEL BUILD END"
+  - bazel test --config=ubuntu twister2/...
   - echo "BAZEL PACKAGE START"
   - bazel build --config=ubuntu //scripts/package:tarpkgs
   - echo "BAZEL PACKAGE END"

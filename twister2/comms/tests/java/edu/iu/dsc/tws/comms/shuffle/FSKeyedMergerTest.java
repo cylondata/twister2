@@ -27,6 +27,8 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -53,6 +55,7 @@ public class FSKeyedMergerTest {
         "fskeyedmerger", MessageTypes.INTEGER, MessageTypes.OBJECT);
     random = new Random();
     serializer = new KryoSerializer();
+    CommonThreadPool.init(Config.newBuilder().build());
   }
 
   @After
@@ -67,8 +70,7 @@ public class FSKeyedMergerTest {
       buffer.clear();
       buffer.putInt(i);
       byte[] serialize = serializer.serialize(i);
-      int[] val = {i};
-      fsMerger.add(val, serialize, serialize.length);
+      fsMerger.add(i, serialize, serialize.length);
       fsMerger.run();
     }
 
@@ -80,11 +82,11 @@ public class FSKeyedMergerTest {
     while (it.hasNext()) {
       LOG.info("Reading value: " + count);
       Tuple val = (Tuple) it.next();
-      int[] k = (int[]) val.getKey();
-      if (set.contains(k[0])) {
+      int k = (int) val.getKey();
+      if (set.contains(k)) {
         Assert.fail("Duplicate value");
       }
-      set.add(k[0]);
+      set.add(k);
       count++;
     }
     if (count != 1000) {

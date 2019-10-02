@@ -14,9 +14,7 @@ package edu.iu.dsc.tws.examples.batch.sortop;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,7 +26,6 @@ import org.apache.commons.cli.ParseException;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.config.Config;
@@ -38,7 +35,7 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.comms.batch.BKeyedGather;
-import edu.iu.dsc.tws.examples.Utils;
+import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import static edu.iu.dsc.tws.api.comms.CommunicationContext.SHUFFLE_MAX_BYTES_IN_MEMORY;
@@ -71,26 +68,17 @@ public class SortJob implements IWorker {
 
   private BKeyedGather gather;
 
-  private static final int NO_OF_TASKS = 4;
-
-  private int workerId;
-
-  private Set<Integer> sources;
-  private Set<Integer> destinations;
-  private LogicalPlan logicalPlan;
   private List<Integer> taskStages = new ArrayList<>();
-  private WorkerEnvironment workerEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
-    this.workerId = workerID;
 
     // create a worker environment & setup the network
-    this.workerEnv = WorkerEnvironment.init(cfg, workerID, workerController, persistentVolume,
-        volatileVolume);
+    WorkerEnvironment workerEnv = WorkerEnvironment.init(cfg, workerID, workerController,
+        persistentVolume, volatileVolume);
 
     int noOfSources = cfg.getIntegerValue(ARG_TASKS_SOURCES, 4);
     int noOfTargets = cfg.getIntegerValue(ARG_TASKS_SINKS, 4);
@@ -98,10 +86,8 @@ public class SortJob implements IWorker {
     taskStages.add(noOfTargets);
 
     // lets create the task plan
-    this.logicalPlan = Utils.createStageLogicalPlan(workerEnv, taskStages);
-
-    // set up the tasks
-    setupTasks(cfg);
+    LogicalPlanBuilder logicalPlanBuilder = LogicalPlanBuilder.plan(
+        taskStages.get(0), taskStages.get(1), workerEnv).withFairDistribution();
 
     int valueSize = cfg.getIntegerValue(SortJob.ARG_VALUE_SIZE, 90);
     int keySize = cfg.getIntegerValue(SortJob.ARG_KEY_SIZE, 10);
@@ -114,13 +100,12 @@ public class SortJob implements IWorker {
       schema = MessageSchema.ofSize(keySize + valueSize, keySize);
     }
 
-    gather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlan, sources, destinations,
+    gather = new BKeyedGather(workerEnv.getCommunicator(), logicalPlanBuilder,
         MessageTypes.BYTE_ARRAY, MessageTypes.BYTE_ARRAY,
         new RecordSave(), new ByteSelector(), true, new IntegerComparator(), true, schema);
 
-    Set<Integer> tasksOfExecutor = Utils.getTasksOfExecutor(workerId, logicalPlan, taskStages, 0);
-    int thisSource = tasksOfExecutor.iterator().next();
-    RecordSource source = new RecordSource(cfg, workerId, gather, thisSource);
+    int thisSource = logicalPlanBuilder.getSourcesOnThisWorker().iterator().next();
+    RecordSource source = new RecordSource(cfg, workerID, gather, thisSource);
     long start = System.currentTimeMillis();
     // run until we send
     source.run();
@@ -128,22 +113,6 @@ public class SortJob implements IWorker {
     // wait until we receive
     progress();
     LOG.info("Time: " + (System.currentTimeMillis() - start));
-  }
-
-  private void setupTasks(Config cfg) {
-    int noOfSources = cfg.getIntegerValue(SortJob.ARG_TASKS_SOURCES, 4);
-    int noOfTargets = cfg.getIntegerValue(SortJob.ARG_TASKS_SINKS, 4);
-
-    sources = new HashSet<>();
-    for (int i = 0; i < noOfSources; i++) {
-      sources.add(i);
-    }
-    destinations = new HashSet<>();
-    for (int i = 0; i < noOfTargets; i++) {
-      destinations.add(noOfSources + i);
-    }
-    LOG.fine(String.format("%d sources %s destinations %s",
-        logicalPlan.getThisWorker(), sources, destinations));
   }
 
   private class IntegerComparator implements Comparator<Object> {

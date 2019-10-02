@@ -38,7 +38,7 @@ public class TaskGraphBuildTest {
     ComputeGraph computeGraph = createGraph();
     Assert.assertNotNull(computeGraph);
     Assert.assertEquals(computeGraph.taskEdgeSet().iterator().next().getName(),
-        TaskConfigurations.DEFAULT_EDGE);
+        "source");
     Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
@@ -47,7 +47,7 @@ public class TaskGraphBuildTest {
     ComputeGraph computeGraph = createGraph();
 
     Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
-        TaskConfigurations.DEFAULT_EDGE);
+        "source");
     Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
