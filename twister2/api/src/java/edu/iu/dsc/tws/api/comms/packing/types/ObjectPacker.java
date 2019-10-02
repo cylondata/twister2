@@ -121,6 +121,6 @@ public final class ObjectPacker implements DataPacker<Object, byte[]> {
   public Object unpackFromBuffer(ByteBuffer byteBuffer, int byteLength) {
     byte[] bytes = new byte[byteLength];
     byteBuffer.get(bytes, 0, byteLength);
-    return null;
+    return serializer.get().deserialize(bytes);
   }
 }
