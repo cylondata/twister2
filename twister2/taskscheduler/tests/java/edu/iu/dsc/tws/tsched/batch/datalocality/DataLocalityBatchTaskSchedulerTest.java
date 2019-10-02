@@ -61,7 +61,7 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraph(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-    scheduler.initialize(config, 1);
+    scheduler.initialize(Config.newBuilder().build());
 
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
@@ -90,8 +90,8 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -112,8 +112,8 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -135,8 +135,8 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithMultipleComputeTaskAndConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -151,14 +151,13 @@ public class DataLocalityBatchTaskSchedulerTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir = "/home/" + System.getProperty("user.dir")
-        + "/twister2/twister2/taskscheduler/tests/conf/";
+    String twister2Home
+        = System.getProperty("user.dir") + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
+    String configDir
+        = System.getProperty("user.dir") + "/twister2/twister2/taskscheduler/tests/conf/";
+
     String clusterType = "standalone";
-
     Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
-
     JobConfig jobConfig = new JobConfig();
     jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
     jobConfig.put(DataObjectConstants.FILE_SYSTEM, "local");

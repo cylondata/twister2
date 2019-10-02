@@ -73,36 +73,28 @@ public final class KMeansConnectedDataflowExample {
       Config config = cdfwEnv.getConfig();
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
       String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
 
       int parallelism =
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
-      int workers = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
+      int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
       int iterations =
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
       int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
-
-      int parallelism = 2;
-      int instances = 2;
-      int iterations = 10;
-      int dimension = 2;
-      int dsize = 1000;
-      int csize = 4;
-
-      String dataDirectory = "/persistent/dinput";
-      String centroidDirectory = "/persistent/cinput";
+      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
 
       generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
 
-      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory,
-          dimension, dsize, instances, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory,
-          dimension, dsize, instances, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension, dsize,
+          instances, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
+          instances, jobConfig);
+
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
+
       cdfwEnv.increaseWorkers(instances);
       try {
         Thread.sleep(5000);
@@ -129,7 +121,6 @@ public final class KMeansConnectedDataflowExample {
         throw new Twister2RuntimeException("Failed to create input data:", ioe);
       }
     }
-
   }
 
   public static void main(String[] args) throws ParseException {
@@ -210,11 +201,6 @@ public final class KMeansConnectedDataflowExample {
                                                 int dsize, int instances,
                                                 DafaFlowJobConfig jobConfig) {
 
-    /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
-    int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
-    int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-    int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));*/
-
     DataObjectSource dataObjectSource = new DataObjectSource(Context.TWISTER2_DIRECT_EDGE,
         dataDirectory);
     KMeansDataObjectCompute dataObjectCompute = new KMeansDataObjectCompute(
@@ -253,11 +239,6 @@ public final class KMeansConnectedDataflowExample {
                                                  String centroidDirectory, int dimension,
                                                  int csize, int instances,
                                                  DafaFlowJobConfig jobConfig) {
-
-    /*String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
-    int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
-    int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
-    int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
 
     DataFileReplicatedReadSource dataFileReplicatedReadSource
         = new DataFileReplicatedReadSource(Context.TWISTER2_DIRECT_EDGE, centroidDirectory);

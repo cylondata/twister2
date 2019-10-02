@@ -18,7 +18,8 @@ import edu.iu.dsc.tws.api.config.TokenSub;
 public final class HdfsDataContext extends Context {
 
   private static final String TWISTER2_DATA_HDFS_URL = "twister2.data.hdfs.url";
-  private static final String TWISTER2_DATA_HDFS_URL_DEFAULT = "hostaname:9000//";
+  private static final String TWISTER2_DATA_HDFS_URL_DEFAULT
+      = "hdfs://hostname.domain.name:9000";
 
   public static final String TWISTER2_DATA_HADOOP_HOME = "twister2.data.hadoop.home";
   public static final String TWISTER2_DATA_HADOOP_HOME_DEFAULT = "${HADOOP_HOME}";
@@ -42,7 +43,7 @@ public final class HdfsDataContext extends Context {
        = "$HADOOP_HOME/etc/hadoop/hdfs-site.xml";
 
   private static final String TWISTER2_DATA_HDFS_NAMENODE = "twister2.data.hdfs.namenode";
-  private static final String TWISTER2_DATA_HDFS_NAMENODE_DEFAULT = "hostaname";
+  private static final String TWISTER2_DATA_HDFS_NAMENODE_DEFAULT = "hostname.domain.name";
 
   private static final String TWISTER2_DATA_HDFS_NAMENODE_PORT = "twister2.data.hdfs.namenode.port";
   private static final Integer TWISTER2_DATA_NAMENODE_PORT_DEFAULT = 9000;

@@ -45,7 +45,6 @@ public class TaskGraphBuildTest {
   @Test
   public void testUniqueSchedules2() {
     ComputeGraph computeGraph = createGraph();
-
     Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
         "source");
     Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);

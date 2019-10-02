@@ -65,14 +65,15 @@ public class BatchTaskSchedulerTest {
   @Test
   public void testUniqueSchedules2() {
 
-    int parallel = 256;
+    int parallel = 16;
+    int workers = 2;
     ComputeGraph graph = createGraph(parallel, "graph");
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
-    WorkerPlan workerPlan = createWorkPlan(parallel);
+    WorkerPlan workerPlan = createWorkPlan(workers);
 
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
-    WorkerPlan workerPlan2 = createWorkPlan2(parallel);
+    WorkerPlan workerPlan2 = createWorkPlan2(workers);
     for (int i = 0; i < 1000; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
@@ -154,8 +155,7 @@ public class BatchTaskSchedulerTest {
         Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         index++;
         if (index <= parallel) {
-          Assert.assertEquals(containerPlanTaskInstances.size(),
-              workers / parallel);
+          Assert.assertEquals(containerPlanTaskInstances.size(), workers / parallel);
         } else {
           Assert.assertEquals(containerPlanTaskInstances.size(), 0);
         }
@@ -188,8 +188,7 @@ public class BatchTaskSchedulerTest {
         Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         index++;
         if (index <= parallel) {
-          Assert.assertEquals(containerPlanTaskInstances.size(),
-              workers / parallel);
+          Assert.assertEquals(containerPlanTaskInstances.size(), workers / parallel);
         } else {
           Assert.assertEquals(containerPlanTaskInstances.size(), 0);
         }
@@ -213,8 +212,26 @@ public class BatchTaskSchedulerTest {
     return plan;
   }
 
-  private ComputeGraph createGraph(int parallel,
-                                        String graphName) {
+  private ComputeGraph createGraph(int parallel, String graphName) {
+
+    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
+
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
+    builder.addSource("source", testSource, parallel);
+    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+
+    sinkConnection.direct("source")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+
+    builder.setMode(OperationMode.BATCH);
+    ComputeGraph graph = builder.build();
+    graph.setGraphName(graphName);
+    return graph;
+  }
+
+  private ComputeGraph createGraphWithDifferentParallelism(int parallel, String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
@@ -233,28 +250,7 @@ public class BatchTaskSchedulerTest {
     return graph;
   }
 
-  private ComputeGraph createGraphWithDifferentParallelism(int parallel,
-                                        String graphName) {
-
-    TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
-    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
-
-    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
-    builder.addSource("source", testSource, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, 2);
-
-    sinkConnection.direct("source")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-    builder.setMode(OperationMode.BATCH);
-
-    ComputeGraph graph = builder.build();
-    graph.setGraphName(graphName);
-    return graph;
-  }
-
-  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel,
-                                                                     String graphName) {
+  private ComputeGraph createGraphWithComputeTaskAndConstraints(int parallel, String graphName) {
 
     TaskSchedulerClassTest.TestSource testSource = new TaskSchedulerClassTest.TestSource();
     TaskSchedulerClassTest.TestCompute testCompute = new TaskSchedulerClassTest.TestCompute();
