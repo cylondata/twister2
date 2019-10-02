@@ -11,12 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.driver;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.driver.IScaler;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.driver.NullScalar;
 import edu.iu.dsc.tws.master.server.WorkerMonitor;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class Scaler implements IScaler {
 
@@ -24,10 +27,18 @@ public class Scaler implements IScaler {
 
   private IScalerPerCluster clusterScaler;
   private WorkerMonitor workerMonitor;
+  private ZKJobUpdater zkJobUpdater;
+  private JobAPI.Job job;
 
-  public Scaler(IScalerPerCluster clusterScaler, WorkerMonitor workerMonitor) {
+  public Scaler(JobAPI.Job job,
+                IScalerPerCluster clusterScaler,
+                WorkerMonitor workerMonitor,
+                ZKJobUpdater zkJobUpdater) {
+
+    this.job = job;
     this.workerMonitor = workerMonitor;
     this.clusterScaler = clusterScaler;
+    this.zkJobUpdater = zkJobUpdater;
 
     if (this.clusterScaler == null) {
       this.clusterScaler = new NullScalar();
@@ -59,7 +70,9 @@ public class Scaler implements IScaler {
 
     workerMonitor.workersScaledUp(instancesToAdd);
 
-    return true;
+    // calculate numberOfWorkers in the job
+    int numberOfWorkers = job.getNumberOfWorkers() + instancesToAdd;
+    return updateJobInZK(numberOfWorkers);
   }
 
   @Override
@@ -82,6 +95,23 @@ public class Scaler implements IScaler {
 
     workerMonitor.workersScaledDown(instancesToRemove);
 
-    return true;
+    // calculate numberOfWorkers in the job
+    int numberOfWorkers = job.getNumberOfWorkers() - instancesToRemove;
+    return updateJobInZK(numberOfWorkers);
+  }
+
+  private boolean updateJobInZK(int numberOfWorkers) {
+
+    // update the job object
+    job = job.toBuilder().setNumberOfWorkers(numberOfWorkers).build();
+
+    // update the job in ZooKeeper if it is used
+    try {
+      zkJobUpdater.updateJob(job);
+      return true;
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
   }
 }

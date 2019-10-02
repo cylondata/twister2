@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.Scaler;
+import edu.iu.dsc.tws.master.driver.ZKJobUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -397,7 +398,8 @@ public class JobMaster {
 
     Thread driverThread = new Thread() {
       public void run() {
-        Scaler scaler = new Scaler(clusterScaler, workerMonitor);
+        ZKJobUpdater zkJobUpdater = new ZKJobUpdater(config);
+        Scaler scaler = new Scaler(job, clusterScaler, workerMonitor, zkJobUpdater);
         DriverMessenger driverMessenger = new DriverMessenger(workerMonitor);
         driver.execute(config, scaler, driverMessenger);
       }
