@@ -43,4 +43,4 @@ if [ "${16}" = "suppress_illegal_access_warn" ]; then
   illegal_access_warn="--illegal-access=deny"
 fi
 
-$JAVA_HOME/bin/java $illegal_access_warn $lib_path $debug $profile -Djava.util.logging.config.file=standalone/logger.properties -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp ${10} ${11} $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 --job_master_port ${12} --job_master_ip ${13} &
+$JAVA_HOME/bin/java $illegal_access_warn $lib_path $debug $profile -Djava.util.logging.config.file=common/logger.properties -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp ${10} ${11} $cp -cp $3 edu.iu.dsc.tws.rsched.schedulers.standalone.MPIWorker --container_class $4 --job_name $5 --twister2_home $6 --cluster_type standalone --config_dir $7 --job_master_port ${12} --job_master_ip ${13} &
