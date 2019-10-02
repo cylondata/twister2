@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.types.primitive.IntegerArrayPacker;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
@@ -49,11 +50,19 @@ public class FSKeyedSortedMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSKeyedSortedMerger2(1000, 100, "/tmp",
-        "fskeyedsortedmerger", MessageTypes.INTEGER, MessageTypes.OBJECT,
-        Comparator.comparingInt(i -> (Integer) i), 0, true, 2);
+    fsMerger = new FSKeyedSortedMerger2(10000000, 10000, "/tmp",
+        "fskeyedsortedmerger", MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
+        new IntComparator(), 0, true, 2);
     serializer = new KryoSerializer();
     CommonThreadPool.init(Config.newBuilder().build());
+  }
+
+  private class IntComparator implements Comparator<Integer> {
+
+    @Override
+    public int compare(Integer o1, Integer o2) {
+      return o1 - o2;
+    }
   }
 
   @After
@@ -73,16 +82,16 @@ public class FSKeyedSortedMergerTest {
   @Test
   public void testStart() throws Exception {
     int dataLength = 1024;
-    int noOfKeys = 1000000;
-    int dataForEachKey = 1;
+    int noOfKeys = 100;
+    int dataForEachKey = 10;
     int[] data = new int[dataLength];
     Arrays.fill(data, 1);
-    byte[] serializedData = serializer.serialize(data);
+    byte[] byteType = IntegerArrayPacker.getInstance().packToByteArray(data);
     for (int i = 0; i < noOfKeys; i++) {
       for (int j = 0; j < dataForEachKey; j++) {
-        fsMerger.add(i, serializedData, serializedData.length);
-        fsMerger.run();
+        fsMerger.add(i, byteType, byteType.length);
       }
+      fsMerger.run();
     }
 
     fsMerger.switchToReading();
