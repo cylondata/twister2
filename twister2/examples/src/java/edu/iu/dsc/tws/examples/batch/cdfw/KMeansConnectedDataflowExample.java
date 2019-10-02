@@ -105,7 +105,7 @@ public final class KMeansConnectedDataflowExample {
       cdfwEnv.executeDataFlowGraph(job2);
       cdfwEnv.increaseWorkers(instances);
       try {
-        Thread.sleep(1000);
+        Thread.sleep(5000);
       } catch (InterruptedException e) {
         throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
       }
