@@ -25,6 +25,10 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -32,10 +36,6 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
-import edu.iu.dsc.tws.rsched.zk.ZKUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 import static java.lang.Thread.sleep;
 
 /**

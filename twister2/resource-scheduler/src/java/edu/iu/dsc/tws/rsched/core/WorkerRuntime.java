@@ -22,14 +22,14 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.rsched.zk.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 
 public final class WorkerRuntime {
   private static final Logger LOG = Logger.getLogger(WorkerRuntime.class.getName());

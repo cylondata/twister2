@@ -25,6 +25,8 @@ import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -36,8 +38,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 

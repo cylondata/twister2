@@ -19,13 +19,13 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKWorkerController;
 
 /**
  * ZKWorkerController threaded example

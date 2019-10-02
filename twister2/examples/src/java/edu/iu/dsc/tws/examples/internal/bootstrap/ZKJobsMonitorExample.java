@@ -14,8 +14,8 @@ package edu.iu.dsc.tws.examples.internal.bootstrap;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.zk.ZKJobsMonitor;
 import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKJobsMonitor;
 
 public final class ZKJobsMonitorExample {
   public static final Logger LOG = Logger.getLogger(ZKJobsMonitorExample.class.getName());

@@ -16,13 +16,13 @@ import java.util.ArrayList;
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesUtils;
-import edu.iu.dsc.tws.rsched.zk.ZKContext;
-import edu.iu.dsc.tws.rsched.zk.ZKJobZnodeUtil;
-import edu.iu.dsc.tws.rsched.zk.ZKUtils;
 
 public class JobTerminator implements IJobTerminator {
 
