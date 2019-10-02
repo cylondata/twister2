@@ -50,19 +50,11 @@ public class FSKeyedSortedMergerTest {
 
   @Before
   public void before() throws Exception {
-    fsMerger = new FSKeyedSortedMerger2(10000000, 10000, "/tmp",
+    fsMerger = new FSKeyedSortedMerger2(100000, 10000, "/tmp",
         "fskeyedsortedmerger", MessageTypes.INTEGER, MessageTypes.INTEGER_ARRAY,
-        new IntComparator(), 0, true, 2);
+        Comparator.comparingInt(i -> (Integer) i), 0, true, 2);
     serializer = new KryoSerializer();
     CommonThreadPool.init(Config.newBuilder().build());
-  }
-
-  private class IntComparator implements Comparator<Integer> {
-
-    @Override
-    public int compare(Integer o1, Integer o2) {
-      return o1 - o2;
-    }
   }
 
   @After
@@ -70,19 +62,10 @@ public class FSKeyedSortedMergerTest {
     fsMerger.clean();
   }
 
-  private class KeyComparator implements Comparator<Object> {
-    @Override
-    public int compare(Object o1, Object o2) {
-      int[] val1 = (int[]) o1;
-      int[] val2 = (int[]) o2;
-      return Integer.compare(val1[0], val2[0]);
-    }
-  }
-
   @Test
   public void testStart() throws Exception {
     int dataLength = 1024;
-    int noOfKeys = 100;
+    int noOfKeys = 1000;
     int dataForEachKey = 10;
     int[] data = new int[dataLength];
     Arrays.fill(data, 1);
