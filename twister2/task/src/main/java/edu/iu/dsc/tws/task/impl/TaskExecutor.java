@@ -270,20 +270,21 @@ public class TaskExecutor {
   @Deprecated
   public void addInput(ComputeGraph graph, ExecutionPlan plan,
                        String taskName, String inputKey, DataObject<?> input) {
-    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
-    if (nodes == null) {
-      return;
-    }
-
-    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
-      INodeInstance node = e.getValue();
-      INode task = node.getNode();
-      if (task instanceof Receptor) {
-        ((Receptor) task).add(inputKey, input);
-      } else {
-        throw new RuntimeException("Cannot add input to non input instance: " + node);
-      }
-    }
+    return;
+//    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
+//    if (nodes == null) {
+//      return;
+//    }
+//
+//    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+//      INodeInstance node = e.getValue();
+//      INode task = node.getNode();
+//      if (task instanceof Receptor) {
+//        ((Receptor) task).add(inputKey, input);
+//      } else {
+//        throw new RuntimeException("Cannot add input to non input instance: " + node);
+//      }
+//    }
   }
 
   /**
@@ -293,7 +294,9 @@ public class TaskExecutor {
    * @param plan execution plan
    * @param inputKey inputkey
    * @param input input
+   * @deprecated Inputs are handled automatically now
    */
+  @Deprecated
   public void addSourceInput(ComputeGraph graph, ExecutionPlan plan,
                              String inputKey, DataObject<Object> input) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
