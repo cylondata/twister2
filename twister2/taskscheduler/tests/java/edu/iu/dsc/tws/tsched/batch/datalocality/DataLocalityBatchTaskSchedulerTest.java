@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
@@ -61,7 +60,7 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraph(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-    scheduler.initialize(Config.newBuilder().build());
+    scheduler.initialize(config);
 
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
@@ -151,17 +150,11 @@ public class DataLocalityBatchTaskSchedulerTest {
   }
 
   private Config getConfig() {
-    String twister2Home
-        = System.getProperty("user.dir") + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir
-        = System.getProperty("user.dir") + "/twister2/twister2/taskscheduler/tests/conf/";
-
-    String clusterType = "standalone";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
-    jobConfig.put(DataObjectConstants.FILE_SYSTEM, "local");
-    return Config.newBuilder().putAll(config).putAll(jobConfig).build();
+    Config config = ConfigLoader.loadTestConfig();
+    return Config.newBuilder()
+        .put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput")
+        .put(DataObjectConstants.FILE_SYSTEM, "local")
+        .putAll(config).build();
   }
 
   private WorkerPlan createWorkPlan(int workers) {

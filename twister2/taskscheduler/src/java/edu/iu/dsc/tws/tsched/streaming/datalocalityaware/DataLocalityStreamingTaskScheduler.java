@@ -318,7 +318,7 @@ public class DataLocalityStreamingTaskScheduler implements ITaskScheduler {
     if (config.get(DataObjectConstants.DINPUT_DIRECTORY) != null) {
       directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
     }
-    final Path path = new Path(directory + workerId);
+    final Path path = new Path(directory);
     final FileSystem fileSystem;
     try {
       fileSystem = FileSystemUtils.get(path);

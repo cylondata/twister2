@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.data.api.formatters.LocalFixedInputPartitioner;
+import edu.iu.dsc.tws.data.api.formatters.LocalCompleteTextInputPartitioner;
 import edu.iu.dsc.tws.data.api.formatters.LocalTextInputPartitioner;
 import edu.iu.dsc.tws.data.fs.io.InputSplit;
 import edu.iu.dsc.tws.data.utils.DataFileReader;
@@ -46,15 +46,16 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules1() throws IOException {
     Config config = getConfig();
 
+    String dinputDirectory = "/tmp/testdinput";
+
     int numFiles = 1;
     int dsize = 20;
     int dimension = 2;
-    String dinputDirectory = "/tmp/testdinput";
+    int parallelismValue = 2;
 
     KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
         numFiles, dsize, 100, dimension, config);
 
-    int parallelismValue = 1;
     ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
@@ -81,15 +82,17 @@ public class KMeansDataGeneratorTest {
   @Test
   public void testUniqueSchedules2() throws IOException {
     Config config = getConfig();
+
     String hostname = String.valueOf(config.get("twister2.data.hdfs.namenode"));
     String dinputDirectory = "hdfs://" + hostname + ":9000/tmp/testdinput";
+
     int numFiles = 1;
     int dsize = 20;
     int dimension = 2;
+    int parallelismValue = 2;
+
     KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
         numFiles, dsize, 100, dimension, config);
-
-    int parallelismValue = 2;
     ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
@@ -100,10 +103,12 @@ public class KMeansDataGeneratorTest {
     computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.BATCH);
 
-    LocalFixedInputPartitioner localFixedInputPartitioner = new
-        LocalFixedInputPartitioner(new Path(dinputDirectory), parallelismValue, config, dsize);
+    LocalCompleteTextInputPartitioner localCompleteTextInputPartitioner
+        = new LocalCompleteTextInputPartitioner(
+        new Path(dinputDirectory), parallelismValue, config);
+
     DataSource<String, ?> source
-        = new DataSource<>(config, localFixedInputPartitioner, parallelismValue);
+        = new DataSource<>(config, localCompleteTextInputPartitioner, parallelismValue);
     InputSplit<String> inputSplit;
     for (int i = 0; i < parallelismValue; i++) {
       inputSplit = source.getNextSplit(i);
@@ -116,6 +121,7 @@ public class KMeansDataGeneratorTest {
     Config config = getConfig();
 
     String cinputDirectory = "/tmp/testcinput";
+
     int numFiles = 1;
     int csize = 4;
     int dimension = 2;
@@ -166,7 +172,7 @@ public class KMeansDataGeneratorTest {
     ComputeGraph computeGraph = computeGraphBuilder.build();
 
     Path path = new Path(cinputDirectory);
-    final FileSystem fs = FileSystemUtils.get(path);
+    final FileSystem fs = FileSystemUtils.get(path, config);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     Assert.assertNotNull(pathFile);

@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
@@ -43,7 +42,7 @@ public class DataLocalityTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules1() {
-    int parallel = 4;
+    int parallel = 2;
     int workers = 2;
     ComputeGraph graph = createGraph(parallel);
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
@@ -56,9 +55,7 @@ public class DataLocalityTaskSchedulerTest {
     WorkerPlan workerPlan2 = createWorkPlan2(workers);
     for (int i = 0; i < 100; i++) {
       TaskSchedulePlan plan2 = scheduler.schedule(graph, workerPlan2);
-
       Assert.assertEquals(plan1.getContainers().size(), plan2.getContainers().size());
-
       Map<Integer, WorkerSchedulePlan> containersMap = plan2.getContainersMap();
       for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
         WorkerSchedulePlan workerSchedulePlan = entry.getValue();
@@ -122,18 +119,11 @@ public class DataLocalityTaskSchedulerTest {
   }
 
   private Config getConfig() {
-    String twister2Home
-        = System.getProperty("user.dir") + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir
-        = System.getProperty("user.dir") + "/twister2/twister2/taskscheduler/tests/conf/";
-    String clusterType = "standalone";
-
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
-
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
-    jobConfig.put(DataObjectConstants.FILE_SYSTEM, "local");
-    return Config.newBuilder().putAll(config).putAll(jobConfig).build();
+    Config config = ConfigLoader.loadTestConfig();
+    return Config.newBuilder()
+        .put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput")
+        .put(DataObjectConstants.FILE_SYSTEM, "local")
+        .putAll(config).build();
   }
 
   private WorkerPlan createWorkPlan(int workers) {
