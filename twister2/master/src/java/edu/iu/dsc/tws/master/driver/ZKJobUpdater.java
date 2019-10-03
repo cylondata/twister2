@@ -30,6 +30,7 @@ public class ZKJobUpdater {
 
   /**
    * update Job on ZooKeeper
+   * TODO: The connection to ZooKeeper should be alive during the job.
    * @param job
    * @return
    */

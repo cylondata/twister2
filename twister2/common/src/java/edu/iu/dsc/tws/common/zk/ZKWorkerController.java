@@ -595,14 +595,25 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
             break;
 
           case CHILD_REMOVED:
-            // need to distinguish between completed and failed workers
+            // need to distinguish between completed, scaled down and failed workers
             // if a worker completed before, it has left the job by completion
-            // it did not fail
+            // if the workerID of removed worker is higher than the number of workers in the job,
+            // it means that is a scaled down worker.
             // otherwise, the worker failed. We inform the failureListener.
             int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
 
-            if (getWorkerStatusForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
+            // this is the scaled down worker
+            if (removedWorkerID >= numberOfWorkers) {
+
+              LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
+
+            // removed event received for completed worker
+            } else if (
+                getWorkerStatusForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
+
               LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
+
+            // worker failed
             } else {
               LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
               if (failureListener != null) {

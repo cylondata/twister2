@@ -95,6 +95,7 @@ public final class ZKUtils {
   public static void closeClient() {
     if (client != null) {
       client.close();
+      client = null;
     }
   }
 

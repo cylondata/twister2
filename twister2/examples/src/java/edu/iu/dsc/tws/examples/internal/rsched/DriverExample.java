@@ -76,9 +76,10 @@ public class DriverExample implements IDriver {
   private void scalingExample(IScaler scaler) {
     LOG.info("Testing scaling up and down ............................. ");
 
+    long sleepDuration = 20 * 1000; //
     try {
-      LOG.info("Sleeping 10 seconds ....");
-      Thread.sleep(10000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -87,8 +88,8 @@ public class DriverExample implements IDriver {
     scaler.scaleUpWorkers(4);
 
     try {
-      LOG.info("Sleeping 10 seconds ....");
-      Thread.sleep(10000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -97,8 +98,8 @@ public class DriverExample implements IDriver {
     scaler.scaleDownWorkers(2);
 
     try {
-      LOG.info("Sleeping 10 seconds ....");
-      Thread.sleep(10000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -107,8 +108,8 @@ public class DriverExample implements IDriver {
     scaler.scaleUpWorkers(4);
 
     try {
-      LOG.info("Sleeping 10 seconds ....");
-      Thread.sleep(10000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
