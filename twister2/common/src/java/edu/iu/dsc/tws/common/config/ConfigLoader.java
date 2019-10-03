@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.common.config;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
@@ -102,10 +103,13 @@ public final class ConfigLoader {
     commonConf.mkdirs();
     for (String configFile : filesList) {
       try {
-        Files.copy(ConfigLoader.class.getResourceAsStream("/" + configFile), Paths.get(
+        Path configPath = Paths.get(
             commonConf.getAbsolutePath(),
             configFile
-        ));
+        );
+        if (!Files.exists(configPath)) {
+          Files.copy(ConfigLoader.class.getResourceAsStream("/" + configFile), configPath);
+        }
       } catch (IOException e) {
         LOG.log(Level.SEVERE, "Couldn't copy files", e);
       }
