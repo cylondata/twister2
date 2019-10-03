@@ -68,8 +68,8 @@ import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -146,7 +146,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private Object waitObject = new Object();
 
   // all workers in the job, including completed and failed ones
-  private HashMap<WorkerInfo, JobMasterAPI.WorkerState> jobWorkers;
+  private HashMap<WorkerInfo, WorkerState> jobWorkers;
 
   // Inform worker failure events
   private IWorkerFailureListener failureListener;
@@ -251,7 +251,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * @return
    */
   @Override
-  public boolean updateWorkerStatus(JobMasterAPI.WorkerState newStatus) {
+  public boolean updateWorkerStatus(WorkerState newStatus) {
 
     byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, newStatus.getNumber());
 
@@ -282,8 +282,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   @Override
-  public JobMasterAPI.WorkerState getWorkerStatusForID(int id) {
-    for (Map.Entry<WorkerInfo, JobMasterAPI.WorkerState> entry: jobWorkers.entrySet()) {
+  public WorkerState getWorkerStatusForID(int id) {
+    for (Map.Entry<WorkerInfo, WorkerState> entry: jobWorkers.entrySet()) {
       if (entry.getKey().getWorkerID() == id) {
         return entry.getValue();
       }
@@ -304,7 +304,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     String workerPath = ZKUtils.constructWorkerPath(jobPath, workerInfo.getWorkerID());
 
     // put WorkerInfo and its state into znode body
-    int initialState = JobMasterAPI.WorkerState.STARTING_VALUE;
+    int initialState = WorkerState.STARTING_VALUE;
     byte[] workerZnodeBody = ZKUtils.encodeWorkerInfo(workerInfo, initialState);
     workerZNode = ZKUtils.createPersistentEphemeralZnode(workerPath, workerZnodeBody);
     workerZNode.start();
@@ -376,10 +376,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private int countJoinedLiveWorkers() {
 
     int count = 0;
-    for (JobMasterAPI.WorkerState state: jobWorkers.values()) {
-      if (state == JobMasterAPI.WorkerState.STARTING
-          || state == JobMasterAPI.WorkerState.RUNNING
-          || state == JobMasterAPI.WorkerState.RESTARTING) {
+    for (WorkerState state: jobWorkers.values()) {
+      if (state == WorkerState.STARTING
+          || state == WorkerState.RUNNING
+          || state == WorkerState.RESTARTING) {
         count++;
       }
     }
@@ -544,86 +544,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
 
-        Pair<WorkerInfo, JobMasterAPI.WorkerState> pair;
-
         switch (event.getType()) {
           case CHILD_ADDED:
-            pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
-
-            // if there is an existing WorkerInfo for newly added worker
-            // and its previous status is FAILED, it means that this worker is coming from failure
-            // Inform the failure listener
-            int newWorkerID = pair.getKey().getWorkerID();
-            WorkerInfo existingWorkerInfo = getWorkerInfoForID(newWorkerID);
-            if (existingWorkerInfo != null
-                && getWorkerStatusForID(newWorkerID) == JobMasterAPI.WorkerState.FAILED
-                && failureListener != null) {
-
-              jobWorkers.put(pair.getKey(), pair.getValue());
-              failureListener.failedWorkerRejoined(pair.getKey());
-            } else {
-
-              jobWorkers.put(pair.getKey(), pair.getValue());
-            }
-
-            // if currently all workers exist in the job, let the workers know that all joined
-            // we don't check the size of jobWorkers,
-            // because some workers may have joined and failed.
-            // This shows currently existing workers in the job group
-            if (numberOfWorkers == countJoinedLiveWorkers() && !allJoined) {
-              allJoined = true;
-              synchronized (waitObject) {
-                waitObject.notify();
-              }
-
-              // inform the allJoinedListener
-              if (allJoinedListener != null) {
-                allJoinedListener.allWorkersJoined(getJoinedWorkers());
-              }
-            }
-            LOG.info(String.format("Worker[%s] added: ", newWorkerID));
+            childZnodeAdded(event);
             break;
 
           case CHILD_UPDATED:
-            pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
-
-            // update the worker state in the map
-            jobWorkers.put(pair.getKey(), pair.getValue());
-
-            LOG.info(String.format("Worker[%s] znode updated. New state: %s ",
-                pair.getKey().getWorkerID(), pair.getValue()));
+            childZnodeUpdated(event);
             break;
 
           case CHILD_REMOVED:
-            // need to distinguish between completed, scaled down and failed workers
-            // if a worker completed before, it has left the job by completion
-            // if the workerID of removed worker is higher than the number of workers in the job,
-            // it means that is a scaled down worker.
-            // otherwise, the worker failed. We inform the failureListener.
-            int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
-
-            // this is the scaled down worker
-            if (removedWorkerID >= numberOfWorkers) {
-
-              LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
-
-            // removed event received for completed worker
-            } else if (
-                getWorkerStatusForID(removedWorkerID) == JobMasterAPI.WorkerState.COMPLETED) {
-
-              LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
-
-            // worker failed
-            } else {
-              LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
-              if (failureListener != null) {
-                // first change worker state into failed in local list
-                WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
-                jobWorkers.put(failedWorker, JobMasterAPI.WorkerState.FAILED);
-                // inform the listener
-                failureListener.workerFailed(failedWorker);
-              }
-            }
+            childZnodeRemoved(event);
             break;
 
           default:
@@ -632,6 +563,110 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       }
     };
     cache.getListenable().addListener(listener);
+  }
+
+  /**
+   * when a new znode added to this job znode,
+   * take necessary actions
+   * @param event
+   */
+  private void childZnodeAdded(PathChildrenCacheEvent event) {
+
+    Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
+    int newWorkerID = pair.getKey().getWorkerID();
+
+    if (newWorkerID >= numberOfWorkers) {
+      LOG.severe(String.format(
+          "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
+              + "Not adding this worker to the list of workers in the job.",
+          newWorkerID, numberOfWorkers));
+      return;
+    }
+
+    // if there is an existing WorkerInfo for newly added worker
+    // and its previous status is FAILED, it means that this worker is coming from failure
+    // Inform the failure listener
+    WorkerInfo existingWorkerInfo = getWorkerInfoForID(newWorkerID);
+    if (existingWorkerInfo != null
+        && getWorkerStatusForID(newWorkerID) == WorkerState.FAILED
+        && failureListener != null) {
+
+      jobWorkers.put(pair.getKey(), pair.getValue());
+      failureListener.failedWorkerRejoined(pair.getKey());
+    } else {
+
+      jobWorkers.put(pair.getKey(), pair.getValue());
+    }
+
+    // if currently all workers exist in the job, let the workers know that all joined
+    // we don't check the size of jobWorkers,
+    // because some workers may have joined and failed.
+    // This shows currently existing workers in the job group
+    if (numberOfWorkers == countJoinedLiveWorkers() && !allJoined) {
+      allJoined = true;
+      synchronized (waitObject) {
+        waitObject.notify();
+      }
+
+      // inform the allJoinedListener
+      if (allJoinedListener != null) {
+        allJoinedListener.allWorkersJoined(getJoinedWorkers());
+      }
+    }
+    LOG.info(String.format("Worker[%s] added: ", newWorkerID));
+  }
+
+  /**
+   * when a child znode content is updated,
+   * take necessary actions
+   * @param event
+   */
+  private void childZnodeUpdated(PathChildrenCacheEvent event) {
+    Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
+
+    // update the worker state in the map
+    jobWorkers.put(pair.getKey(), pair.getValue());
+
+    LOG.info(String.format("Worker[%s] znode updated. New state: %s ",
+        pair.getKey().getWorkerID(), pair.getValue()));
+
+  }
+
+  /**
+   * when a znode is removed from this job znode,
+   * take necessary actions
+   * @param event
+   */
+  private void childZnodeRemoved(PathChildrenCacheEvent event) {
+
+    // need to distinguish between completed, scaled down and failed workers
+    // if a worker completed before, it has left the job by completion
+    // if the workerID of removed worker is higher than the number of workers in the job,
+    // it means that is a scaled down worker.
+    // otherwise, the worker failed. We inform the failureListener.
+    int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
+
+    // this is the scaled down worker
+    if (removedWorkerID >= numberOfWorkers) {
+
+      LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
+
+    // removed event received for completed worker
+    } else if (getWorkerStatusForID(removedWorkerID) == WorkerState.COMPLETED) {
+
+      LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
+
+    // worker failed
+    } else {
+      LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
+      if (failureListener != null) {
+        // first change worker state into failed in local list
+        WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
+        jobWorkers.put(failedWorker, WorkerState.FAILED);
+        // inform the listener
+        failureListener.workerFailed(failedWorker);
+      }
+    }
   }
 
   /**
