@@ -71,21 +71,8 @@ public final class HelloExample {
       ComputeGraph batchGraph = graphBuilderX.build();
 
       //Invoke CDFW Submitter and send the metagraph
-      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph)
-          .setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig)
-          .setGraphType("non-iterative");
-      execEnv.executeDataFlowGraph(job);
-      execEnv.increaseWorkers(4);
-      try {
-        LOG.info("I am sleeping for 1 minute and then exiting.");
-        Thread.sleep(60 * 1000);
-        LOG.info("I am done sleeping. Exiting.");
-      } catch (InterruptedException e) {
-        LOG.severe("Thread sleep interrupted.");
-      }
-      /*job = DataFlowGraph.newSubGraphJob("hello", batchGraph)
-          .setWorkers(8).addDataFlowJobConfig(dafaFlowJobConfig)
-          .setGraphType("non-iterative");*/
+      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
+          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
       execEnv.executeDataFlowGraph(job);
     }
   }
@@ -166,9 +153,9 @@ public final class HelloExample {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
         .setWorkerClass(CDFWWorker.class)
-        .setJobName("hello-example")
+        .setJobName(HelloExample.class.getName())
         .setDriverClass(HelloDriver.class.getName())
-        .addComputeResource(1, 512, instances, true)
+        .addComputeResource(1, 512, instances)
         .setConfig(jobConfig)
         .build();
     // now submit the job
