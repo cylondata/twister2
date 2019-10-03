@@ -94,7 +94,6 @@ public final class KMeansConnectedDataflowExample {
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
-
       cdfwEnv.increaseWorkers(instances);
       try {
         Thread.sleep(5000);
@@ -159,19 +158,6 @@ public final class KMeansConnectedDataflowExample {
     int iterations =
         Integer.parseInt(commandLine.getOptionValue(CDFConstants.ARGS_ITERATIONS));
 
-    /*configurations.put(CDFConstants.ARGS_WORKERS, Integer.toString(instances));
-    configurations.put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelism));
-    configurations.put(CDFConstants.ARGS_DIMENSIONS, Integer.toString(dimension));
-    configurations.put(CDFConstants.ARGS_CSIZE, Integer.toString(dsize));
-    configurations.put(CDFConstants.ARGS_DSIZE, Integer.toString(csize));
-    configurations.put(CDFConstants.ARGS_DINPUT, dataDirectory);
-    configurations.put(CDFConstants.ARGS_CINPUT, centroidDirectory);
-    configurations.put(CDFConstants.ARGS_ITERATIONS, iterations);
-
-    //build JobConfig
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.putAll(configurations);*/
-
     config = Config.newBuilder().putAll(config)
         .put(CDFConstants.ARGS_WORKERS, Integer.toString(instances))
         .put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelism))
@@ -189,7 +175,6 @@ public final class KMeansConnectedDataflowExample {
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(KMeansDriver.class.getName())
         .addComputeResource(1, 2048, instances, true)
-        //.setConfig(jobConfig)
         .build();
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);

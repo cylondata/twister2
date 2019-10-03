@@ -46,16 +46,15 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules1() throws IOException {
     Config config = getConfig();
 
+    int numFiles = 1;
+    int dsize = 20;
+    int dimension = 2;
     String dinputDirectory = "/tmp/testdinput";
 
-    int numFiles = 1;
-    int dsize = 100;
-    int dimension = 2;
+    KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
+        numFiles, dsize, 100, dimension, config);
+
     int parallelismValue = 1;
-
-    KMeansDataGenerator.generateData("txt", new Path(dinputDirectory), numFiles, dsize, 100,
-        dimension, config);
-
     ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
@@ -66,10 +65,12 @@ public class KMeansDataGeneratorTest {
     computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.BATCH);
 
-    LocalTextInputPartitioner localTextInputPartitioner = new LocalTextInputPartitioner(
-        new Path(dinputDirectory), parallelismValue, config);
+    LocalTextInputPartitioner localTextInputPartitioner = new
+        LocalTextInputPartitioner(new Path(dinputDirectory), parallelismValue, config);
+
     DataSource<String, ?> source
         = new DataSource<>(config, localTextInputPartitioner, parallelismValue);
+
     InputSplit<String> inputSplit;
     for (int i = 0; i < parallelismValue; i++) {
       inputSplit = source.getNextSplit(i);
@@ -80,19 +81,15 @@ public class KMeansDataGeneratorTest {
   @Test
   public void testUniqueSchedules2() throws IOException {
     Config config = getConfig();
-    //String hostname = String.valueOf(config.get("twister2.data.hdfs.namenode"));
-    //String dinputDirectory = "hdfs://" + hostname + ":9000/tmp/testdinput";
-    LOG.info("hdfs url:" + String.valueOf(config.get("twister2.data.hdfs.url")));
-    String dinputDirectory = "hdfs://kannan-Precision-5820-Tower-X-Series.iu.edu:9000/tmp/dinput";
-
+    String hostname = String.valueOf(config.get("twister2.data.hdfs.namenode"));
+    String dinputDirectory = "hdfs://" + hostname + ":9000/tmp/testdinput";
     int numFiles = 1;
-    int dsize = 100;
+    int dsize = 20;
     int dimension = 2;
-    int parallelismValue = 2;
-
     KMeansDataGenerator.generateData("txt", new Path(dinputDirectory),
         numFiles, dsize, 100, dimension, config);
 
+    int parallelismValue = 2;
     ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(config);
     computeGraphBuilder.setTaskGraphName("kmeans");
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
@@ -149,9 +146,8 @@ public class KMeansDataGeneratorTest {
   public void testUniqueSchedules4() throws IOException {
     Config config = getConfig();
 
-    String hname = String.valueOf(config.get("twister2.data.hdfs.namenode"));
-    String hostname = "kannan-Precision-5820-Tower-X-Series.iu.edu";
-    String cinputDirectory = "hdfs://kannan-Precision-5820-Tower-X-Series.iu.edu:9000/tmp/cinput";
+    String hostname = String.valueOf(config.get("twister2.data.hdfs.namenode"));
+    String cinputDirectory = "hdfs://" + hostname + ":9000/tmp/testcinput";
 
     int numFiles = 1;
     int csize = 4;
@@ -170,7 +166,7 @@ public class KMeansDataGeneratorTest {
     ComputeGraph computeGraph = computeGraphBuilder.build();
 
     Path path = new Path(cinputDirectory);
-    final FileSystem fs = FileSystemUtils.get(path, config);
+    final FileSystem fs = FileSystemUtils.get(path);
     final FileStatus pathFile = fs.getFileStatus(path);
 
     Assert.assertNotNull(pathFile);
@@ -181,16 +177,7 @@ public class KMeansDataGeneratorTest {
   }
 
   private Config getConfig() {
-    String twister2Home = System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    LOG.info("home dir:" + twister2Home);
-    /*String configDir = "/home/" + System.getProperty("user.dir")
-        + "/twister2/twister2/config/src/yaml/conf";*/
-    String configDir = System.getProperty("user.dir")
-        + "/twister2/twister2/taskscheduler/tests/conf/";
-    String clusterType = "standalone";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
-    //LOG.info("config object:" + config.toString());
+    Config config = ConfigLoader.loadTestConfig();
     return Config.newBuilder().putAll(config).build();
   }
 }

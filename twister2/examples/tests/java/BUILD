@@ -1,4 +1,5 @@
-load("//tools/rules:java_tests.bzl", "java_tests")
+load("//tools/rules:java_tests.bzl", "java_tests", "java_tests_debug")
+load("//tools/rules:twister2_client.bzl", "twister2_client_common_files")
 
 java_library(
     name = "examples-tests",
@@ -47,6 +48,7 @@ java_library(
 )
 
 java_tests(
+    classpath_resources = twister2_client_common_files(),
     test_classes = [
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",
@@ -58,6 +60,7 @@ java_tests(
 )
 
 java_tests_debug(
+    classpath_resources = twister2_client_common_files(),
     test_classes = [
         "edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGeneratorTest",
         "edu.iu.dsc.tws.examples.batch.kmeans.TaskGraphBuildTest",

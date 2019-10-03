@@ -2,7 +2,7 @@
 twister2.data.hadoop.home: "${HADOOP_HOME}"
 
 #Specify the URL of the namenode with port
-twister2.data.hdfs.url: "hdfs://namenode:9000"
+twister2.data.hdfs.url: "hdfs://kannan-Precision-5820-Tower-X-Series.iu.edu:9000"
 
 #specify the hdfs class
 twister2.data.hdfs.class: "org.apache.hadoop.hdfs.DistributedFileSystem"
@@ -14,10 +14,10 @@ twister2.data.hdfs.implementation.key: "fs.hdfs.impl"
 twister2.data.hdfs.config.directory: "${HADOOP_HOME}/etc/hadoop/core-site.xml"
 
 #Specify the data directory of the hdfs
-twister2.data.hdfs.data.directory: "/user/username/"
+twister2.data.hdfs.data.directory: "/user/kannan/"
 
 #Specify the name of the namenode
-twister2.data.hdfs.namenode: "namenode.domain.name"
+twister2.data.hdfs.namenode: "kannan-Precision-5820-Tower-X-Series.iu.edu"
 
 #Specify the namenode port
 twister2.data.hdfs.namenode.port: "9000"

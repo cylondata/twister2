@@ -177,7 +177,7 @@ public final class JobUtils {
       builder.put(Context.JOB_ID, jobId);
     }
 
-    LOG.severe("Job ID assigned : " + jobId);
+    LOG.info("Job ID assigned : " + jobId);
 
     return builder.build();
   }
