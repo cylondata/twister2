@@ -62,57 +62,6 @@ public final class ParallelDataFlowsExample {
   private ParallelDataFlowsExample() {
   }
 
-  public static class ParallelDataflowsDriver extends BaseDriver {
-
-    @Override
-    public void execute(CDFWEnv cdfwEnv) {
-
-      Config config = cdfwEnv.getConfig();
-
-      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
-
-      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
-
-      //todo: CDFWExecutor.executeCDFW(DataFlowGraph... graph) deprecated
-
-      cdfwEnv.executeDataFlowGraph(job1);
-      cdfwEnv.executeDataFlowGraph(job2);
-    }
-  }
-
-  private static class FirstSourceTask extends BaseSource implements Receptor {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    @Override
-    public void execute() {
-      context.writeEnd("partition", "Hello");
-    }
-
-    @Override
-    public void add(String name, DataObject<?> data) {
-      LOG.log(Level.FINE, "Received input: " + name);
-    }
-  }
-
-  /**
-   * This class aggregates the cluster centroid values and sum the new centroid values.
-   */
-  public static class Aggregator implements IFunction {
-    private static final long serialVersionUID = -254264120110286748L;
-
-    /**
-     * The actual message callback
-     *
-     * @param object1 the actual message
-     * @param object2 the actual message
-     */
-    @Override
-    public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
-      return object1.toString() + object2.toString();
-    }
-  }
-
   public static void main(String[] args) throws ParseException {
     // first load the configurations from command line and config files
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
@@ -154,7 +103,6 @@ public final class ParallelDataFlowsExample {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
-
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 DafaFlowJobConfig jobConfig) {
@@ -203,5 +151,53 @@ public final class ParallelDataFlowsExample {
         .addInput("first_graph", "first_out", "source1").setGraphType("non-iterative");
 
     return job;
+  }
+
+  public static class ParallelDataflowsDriver extends BaseDriver {
+
+    @Override
+    public void execute(CDFWEnv cdfwEnv) {
+
+      Config config = cdfwEnv.getConfig();
+
+      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
+
+      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+
+      cdfwEnv.executeDataFlowGraph(job1, job2);
+    }
+  }
+
+  private static class FirstSourceTask extends BaseSource implements Receptor {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    @Override
+    public void execute() {
+      context.writeEnd("partition", "Hello");
+    }
+
+    @Override
+    public void add(String name, DataObject<?> data) {
+      LOG.log(Level.FINE, "Received input: " + name);
+    }
+  }
+
+  /**
+   * This class aggregates the cluster centroid values and sum the new centroid values.
+   */
+  public static class Aggregator implements IFunction {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    /**
+     * The actual message callback
+     *
+     * @param object1 the actual message
+     * @param object2 the actual message
+     */
+    @Override
+    public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
+      return object1.toString() + object2.toString();
+    }
   }
 }

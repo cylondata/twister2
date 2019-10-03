@@ -65,7 +65,6 @@ public final class CDFWExecutor {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
-    LOG.info("Newly joined worker list:" + this.executionEnv.getWorkerInfoList());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
     submitGraph(graph, workerIDs);
@@ -74,7 +73,6 @@ public final class CDFWExecutor {
   /**
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the buildCDFWJob method to build the job object for the scheduled graphs.
-   * @param graph
    */
   public void executeCDFW(DataFlowGraph... graph) {
 
@@ -105,22 +103,6 @@ public final class CDFWExecutor {
   void close() {
     //send the close message
     sendCloseMessage();
-  }
-
-  private class CDFWExecutorTask implements Runnable {
-
-    private DataFlowGraph dataFlowGraph;
-    private Set<Integer> workerIDs;
-
-    CDFWExecutorTask(DataFlowGraph graph, Set<Integer> workerList) {
-      this.dataFlowGraph = graph;
-      this.workerIDs = workerList;
-    }
-
-    @Override
-    public void run() {
-      submitGraph(dataFlowGraph, workerIDs);
-    }
   }
 
   private void submitGraph(DataFlowGraph dataFlowgraph, Set<Integer> workerIDs) {
@@ -193,6 +175,22 @@ public final class CDFWExecutor {
       return event;
     } catch (InterruptedException e) {
       throw new Twister2RuntimeException("Failed to take event", e);
+    }
+  }
+
+  private class CDFWExecutorTask implements Runnable {
+
+    private DataFlowGraph dataFlowGraph;
+    private Set<Integer> workerIDs;
+
+    CDFWExecutorTask(DataFlowGraph graph, Set<Integer> workerList) {
+      this.dataFlowGraph = graph;
+      this.workerIDs = workerList;
+    }
+
+    @Override
+    public void run() {
+      submitGraph(dataFlowGraph, workerIDs);
     }
   }
 }

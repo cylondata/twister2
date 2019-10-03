@@ -28,12 +28,14 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.streaming.datalocalityaware.DataLocalityStreamingTaskScheduler;
+import edu.iu.dsc.tws.tsched.utils.DataGenerator;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class DataLocalityTaskSchedulerTest {
@@ -48,7 +50,7 @@ public class DataLocalityTaskSchedulerTest {
     DataLocalityStreamingTaskScheduler scheduler = new DataLocalityStreamingTaskScheduler();
     Config config = getConfig();
     scheduler.initialize(config, 1);
-
+    generateData(config);
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
 
@@ -76,12 +78,12 @@ public class DataLocalityTaskSchedulerTest {
     Config config = getConfig();
 
     scheduler.initialize(config, 1);
+    generateData(config);
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
 
     Map<Integer, WorkerSchedulePlan> containersMap = plan1.getContainersMap();
-
     for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
       WorkerSchedulePlan workerSchedulePlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
@@ -102,6 +104,7 @@ public class DataLocalityTaskSchedulerTest {
     Config config = getConfig();
 
     scheduler.initialize(config, 1);
+    generateData(config);
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -123,7 +126,17 @@ public class DataLocalityTaskSchedulerTest {
     return Config.newBuilder()
         .put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput")
         .put(DataObjectConstants.FILE_SYSTEM, "local")
+        .put(DataObjectConstants.DSIZE, "1000")
+        .put(DataObjectConstants.DIMENSIONS, "2")
         .putAll(config).build();
+  }
+
+  private void generateData(Config config) {
+    DataGenerator dataGenerator = new DataGenerator(config);
+    dataGenerator.generate(
+        new Path(String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY))),
+        Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DSIZE))),
+        Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DIMENSIONS))));
   }
 
   private WorkerPlan createWorkPlan(int workers) {

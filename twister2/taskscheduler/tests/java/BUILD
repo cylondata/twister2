@@ -60,18 +60,18 @@ java_tests(
         ":tsched-tests",
     ],
 )
-
-java_tests_debug(
-    classpath_resources = twister2_client_common_files(),
-    test_classes = [
-        "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskSchedulerTest",
-        "edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskSchedulerTest",
-    ],
-    runtime_deps = [
-        ":tsched-tests",
-    ],
-)
+#
+#java_tests_debug(
+#    classpath_resources = twister2_client_common_files(),
+#    test_classes = [
+#        "edu.iu.dsc.tws.tsched.batch.batchscheduler.BatchTaskSchedulerTest",
+#        "edu.iu.dsc.tws.tsched.taskscheduler.TaskSchedulerTest",
+#        "edu.iu.dsc.tws.tsched.streaming.roundrobin.RoundRobinTaskSchedulerTest",
+#        "edu.iu.dsc.tws.tsched.streaming.datalocality.DataLocalityTaskSchedulerTest",
+#        "edu.iu.dsc.tws.tsched.batch.roundrobin.RoundRobinBatchTaskSchedulerTest",
+#        "edu.iu.dsc.tws.tsched.batch.datalocality.DataLocalityBatchTaskSchedulerTest",
+#    ],
+#    runtime_deps = [
+#        ":tsched-tests",
+#    ],
+#)

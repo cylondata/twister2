@@ -23,7 +23,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-//import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
@@ -59,67 +58,13 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
+//import edu.iu.dsc.tws.api.JobConfig;
+
 public final class KMeansConnectedDataflowExample {
   private static final Logger LOG
       = Logger.getLogger(KMeansConnectedDataflowExample.class.getName());
 
   private KMeansConnectedDataflowExample() {
-  }
-
-  public static class KMeansDriver extends BaseDriver {
-
-    @Override
-    public void execute(CDFWEnv cdfwEnv) {
-      Config config = cdfwEnv.getConfig();
-      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
-
-      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
-      String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
-
-      int parallelism =
-          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
-      int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
-      int iterations =
-          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
-      int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
-      int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
-
-      generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
-
-      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension, dsize,
-          instances, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
-          instances, jobConfig);
-
-      cdfwEnv.executeDataFlowGraph(job1);
-      cdfwEnv.executeDataFlowGraph(job2);
-      cdfwEnv.increaseWorkers(instances);
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
-      }
-      for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations, dimension, jobConfig);
-        job3.setIterationNumber(i);
-        cdfwEnv.executeDataFlowGraph(job3);
-      }
-    }
-
-    public void generateData(Config config, String dataDirectory, String centroidDirectory,
-                             int dimension, int dsize, int csize) {
-      try {
-        int numOfFiles = 1;
-        int sizeMargin = 100;
-        KMeansDataGenerator.generateData("txt", new Path(dataDirectory), numOfFiles, dsize,
-            sizeMargin, dimension, config);
-        KMeansDataGenerator.generateData("txt", new Path(centroidDirectory), numOfFiles, csize,
-            sizeMargin, dimension, config);
-      } catch (IOException ioe) {
-        throw new Twister2RuntimeException("Failed to create input data:", ioe);
-      }
-    }
   }
 
   public static void main(String[] args) throws ParseException {
@@ -179,7 +124,6 @@ public final class KMeansConnectedDataflowExample {
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
-
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 String dataDirectory, int dimension,
@@ -259,7 +203,6 @@ public final class KMeansConnectedDataflowExample {
     return job;
   }
 
-
   private static DataFlowGraph generateThirdJob(Config config, int parallelismValue,
                                                 int instances, int iterations,
                                                 int dimension, DafaFlowJobConfig jobConfig) {
@@ -289,6 +232,61 @@ public final class KMeansConnectedDataflowExample {
         .setGraphType("iterative")
         .setIterations(iterations);
     return job;
+  }
+
+  public static class KMeansDriver extends BaseDriver {
+
+    @Override
+    public void execute(CDFWEnv cdfwEnv) {
+      Config config = cdfwEnv.getConfig();
+      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
+
+      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
+
+      int parallelism =
+          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
+      int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
+      int iterations =
+          Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
+      int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
+      int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
+      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
+
+      generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
+
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension, dsize,
+          instances, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
+          instances, jobConfig);
+
+      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.increaseWorkers(instances);
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
+      }
+      for (int i = 0; i < iterations; i++) {
+        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations, dimension, jobConfig);
+        job3.setIterationNumber(i);
+        cdfwEnv.executeDataFlowGraph(job3);
+      }
+    }
+
+    public void generateData(Config config, String dataDirectory, String centroidDirectory,
+                             int dimension, int dsize, int csize) {
+      try {
+        int numOfFiles = 1;
+        int sizeMargin = 100;
+        KMeansDataGenerator.generateData("txt", new Path(dataDirectory), numOfFiles, dsize,
+            sizeMargin, dimension, config);
+        KMeansDataGenerator.generateData("txt", new Path(centroidDirectory), numOfFiles, csize,
+            sizeMargin, dimension, config);
+      } catch (IOException ioe) {
+        throw new Twister2RuntimeException("Failed to create input data:", ioe);
+      }
+    }
   }
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {
