@@ -210,12 +210,20 @@ public class TaskExecutor {
    * @param plan the execution plan
    */
   public void itrExecute(ComputeGraph graph, ExecutionPlan plan) {
+    this.itrExecute(graph, plan, false);
+  }
+
+  public void itrExecute(ComputeGraph graph, ExecutionPlan plan, boolean finalIteration) {
     this.distributeData(plan);
     if (executor == null) {
       executor = new Executor(config, workerID, communicator.getChannel(),
           graph.getOperationMode());
     }
     executor.execute(plan);
+    if (finalIteration) {
+      executor.waitFor(plan);
+    }
+    this.collectData(plan);
   }
 
   /**
@@ -223,13 +231,14 @@ public class TaskExecutor {
    *
    * @param plan the dataflow graph
    * @param graph the task graph
+   * @deprecated This will be removed
    */
+  @Deprecated
   public void waitFor(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       throw new IllegalStateException("Cannot call waifor before calling execute");
     }
     executor.waitFor(plan);
-    this.collectData(plan);
   }
 
   /**
