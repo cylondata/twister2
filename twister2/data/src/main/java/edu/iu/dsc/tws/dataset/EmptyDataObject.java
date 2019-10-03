@@ -36,6 +36,11 @@ public final class EmptyDataObject<T> implements DataObject<T> {
     }
 
     @Override
+    public void setId(int id) {
+      // do nothing
+    }
+
+    @Override
     public int getPartitionId() {
       return 0;
     }

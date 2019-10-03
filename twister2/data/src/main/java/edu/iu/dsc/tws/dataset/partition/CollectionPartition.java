@@ -36,7 +36,20 @@ public class CollectionPartition<T> implements DataPartition<T> {
 
   private int id;
 
+  /**
+   * @deprecated use default constructor instead
+   */
+  @Deprecated
   public CollectionPartition(int id) {
+    this.id = id;
+  }
+
+  public CollectionPartition() {
+
+  }
+
+  @Override
+  public void setId(int id) {
     this.id = id;
   }
 

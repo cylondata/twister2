@@ -48,6 +48,8 @@ public interface DataPartition<T> extends Serializable {
     return getConsumer().next();
   }
 
+  void setId(int id);
+
   /**
    * Get the id of the partition
    *
