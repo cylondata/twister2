@@ -15,7 +15,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 
-def java_tests(test_classes, runtime_deps=[], resources=[], data=[], size="medium"):
+def java_tests(test_classes, runtime_deps = [], resources = [], data = [], size = "medium", classpath_resources = []):
     for test_class in test_classes:
         native.java_test(
             name = test_class.split(".")[-1],
@@ -24,17 +24,20 @@ def java_tests(test_classes, runtime_deps=[], resources=[], data=[], size="mediu
             test_class = test_class,
             resources = resources,
             data = data,
+            classpath_resources = classpath_resources,
         )
 
-def java_tests_debug(test_classes, runtime_deps=[], resources=[], data=[], size="medium"):
+def java_tests_debug(test_classes, runtime_deps = [], resources = [], data = [],
+                     size = "medium", classpath_resources = []):
     for test_class in test_classes:
         print(test_class.split(".")[-1] + "_debug")
         native.java_test(
             name = test_class.split(".")[-1] + "_debug",
-            jvm_flags=["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
+            jvm_flags = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"],
             runtime_deps = runtime_deps,
             size = size,
             test_class = test_class,
             resources = resources,
             data = data,
+            classpath_resources = classpath_resources
         )

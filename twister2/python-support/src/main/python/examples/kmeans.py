@@ -4,12 +4,13 @@ from twister2.TSetContext import TSetContext
 from twister2.Twister2Environment import Twister2Environment
 from twister2.tset.fn.SourceFunc import SourceFunc
 
-env = Twister2Environment(resources=[{"cpu": 4, "ram": 4096, "instances": 1}])
+env = Twister2Environment(resources=[{"cpu": 4, "ram": 512, "instances": 1}])
 
 
 class PointSource(SourceFunc):
 
     def __init__(self, size, count):
+        super().__init__()
         self.i = 0
         self.read = True
         self.size = size
@@ -25,15 +26,15 @@ class PointSource(SourceFunc):
         return arr
 
 
-data = env.create_source(PointSource(100, 10000), 10).cache()
-centers = env.create_source(PointSource(100, 200), 10).cache()
+data = env.create_source(PointSource(10, 1000), 2).cache()
+centers = env.create_source(PointSource(10, 20), 2).cache()
 
 
 def apply_kmeans(points, ctx: TSetContext):
     from sklearn.cluster import KMeans
     c = ctx.get_input("centroids")
     centers = c.get_partition(ctx.get_index()).consumer().__next__()
-    kmeans = KMeans(init=centers, n_clusters=200, n_init=1).fit(points)
+    kmeans = KMeans(init=centers, n_clusters=20, n_init=1).fit(points)
     return kmeans.cluster_centers_
 
 

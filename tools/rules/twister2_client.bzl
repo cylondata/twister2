@@ -8,7 +8,7 @@ def twister2_client_bin_files():
 
 def twister2_client_conf_files():
     return [
-        "//twister2/config/src/yaml:common-conf-yaml",
+        "//twister2/config/src/yaml:conf-common-yaml",
         "//twister2/config/src/yaml:conf-yaml",
         "//twister2/config/src/yaml:conf-local-yaml",
         "//twister2/config/src/yaml:conf-slurm-yaml",
