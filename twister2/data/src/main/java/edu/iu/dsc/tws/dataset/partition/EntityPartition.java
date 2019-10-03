@@ -33,6 +33,8 @@ public class EntityPartition<T> implements DataPartition<T> {
   private T value;
 
   /**
+   * This constructor is deprecated
+   *
    * @deprecated Use constructor without ID instead
    */
   @Deprecated

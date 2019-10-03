@@ -37,6 +37,8 @@ public class CollectionPartition<T> implements DataPartition<T> {
   private int id;
 
   /**
+   * This constructor is deprecated
+   *
    * @deprecated use default constructor instead
    */
   @Deprecated
