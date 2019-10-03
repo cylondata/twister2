@@ -270,6 +270,11 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     inParOps.put(edge, op);
   }
 
+  @Override
+  public int getIndex() {
+    return this.taskIndex;
+  }
+
   /**
    * Executing compute task
    */

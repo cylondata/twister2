@@ -35,6 +35,8 @@ public interface INodeInstance {
     return 0;
   }
 
+  int getIndex();
+
   /**
    * Execute
    * @return true if further execution is needed

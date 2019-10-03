@@ -199,6 +199,11 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     }
   }
 
+  @Override
+  public int getIndex() {
+    return this.streamingTaskIndex;
+  }
+
   public boolean execute() {
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();

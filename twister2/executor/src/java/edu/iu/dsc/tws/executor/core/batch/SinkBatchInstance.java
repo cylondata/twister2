@@ -205,6 +205,11 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   }
 
   @Override
+  public int getIndex() {
+    return this.batchTaskIndex;
+  }
+
+  @Override
   public INode getNode() {
     return batchTask;
   }

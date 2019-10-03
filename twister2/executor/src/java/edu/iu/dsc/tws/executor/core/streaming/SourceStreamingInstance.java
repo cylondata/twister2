@@ -212,6 +212,11 @@ public class SourceStreamingInstance implements INodeInstance {
     }
   }
 
+  @Override
+  public int getIndex() {
+    return this.streamingTaskIndex;
+  }
+
   /**
    * Execution Method calls the SourceTasks run method to get context
    **/
