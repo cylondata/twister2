@@ -33,7 +33,7 @@ public interface Receptor {
 
 
   default void add(String name, DataPartition<?> data) {
-
+    //todo remove default
   }
 
   /**
