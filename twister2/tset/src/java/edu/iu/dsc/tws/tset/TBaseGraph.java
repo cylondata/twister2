@@ -140,6 +140,17 @@ public class TBaseGraph {
   }
 
   /**
+   * Build the build sequence
+   */
+  private void buildSequence(Set<TBase> buildSeq) {
+    for (TBase node : buildSeq) {
+      // here, build seq is required for tlinks to filter out nodes that are relevant to this
+      // particular build sequence
+      ((Buildable) node).build(buildSeq);
+    }
+  }
+
+  /**
    * Builds the entire graph
    *
    * @return data flow graph to execute
@@ -147,6 +158,9 @@ public class TBaseGraph {
   public ComputeGraph build() {
     Set<TBase> buildSeq = conditionalBFS(sources, this::getSuccessors);
     LOG.info(() -> "Build order: " + buildSeq.toString());
+
+    // build it
+    buildSequence(buildSeq);
 
     ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
@@ -169,6 +183,8 @@ public class TBaseGraph {
     Set<TBase> buildSeq = conditionalBFS(leafTSet, this::getPredecessors);
 
     LOG.info(() -> "Build order: " + buildSeq.toString());
+    // build it
+    buildSequence(buildSeq);
 
     ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
     dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
@@ -226,10 +242,15 @@ public class TBaseGraph {
         }
 
         buildSequence.add(t);
+
+        // todo: this is wrong because, when running BFS on the subsequent roots, if there are
+        // join/ union edges, those tlinks have already been built. so, buildSquence needs to be
+        // built separately
+
         // here it is sufficient to pass the partial build sequence to build the links. Because the
         // above condition ensures that all the relevant nodes at both ends of a tlink are built,
         // before building the TLink.
-        ((Buildable) t).build(buildSequence);
+//        ((Buildable) t).build(buildSequence);
       }
     }
 

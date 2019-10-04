@@ -75,7 +75,7 @@ public abstract class TSetEnvironment {
    */
   protected TSetEnvironment() {
     this.isCDFW = true;
-    this.tsetGraph = new TSetGraph(this, getOperationMode());
+    this.tBaseGraph = new TBaseGraph(getOperationMode());
   }
 
   public abstract OperationMode getOperationMode();
