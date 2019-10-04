@@ -437,7 +437,13 @@ public class TaskExecutor {
    * task graphs, which are no longer required
    */
   public void clearData(String var) {
-    this.dataObjectMap.remove(var);
+    DataObject dataObject = this.dataObjectMap.remove(var);
+    if (dataObject != null) {
+      for (DataPartition partition : dataObject.getPartitions()) {
+        // in memory partitions will do nothing. Disk backed partitions will clear the files
+        partition.clear();
+      }
+    }
   }
 
   private WorkerPlan createWorkerPlan() {
