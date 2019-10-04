@@ -69,7 +69,7 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   @Override
   public DataPartition<double[][]> get() {
-    return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+    return new EntityPartition<>(dataPointsLocal);
   }
 
   @Override
