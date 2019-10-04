@@ -56,4 +56,8 @@ public interface DataPartition<T> extends Serializable {
    * @return the id of the partition
    */
   int getPartitionId();
+
+  default void clear() {
+
+  }
 }
