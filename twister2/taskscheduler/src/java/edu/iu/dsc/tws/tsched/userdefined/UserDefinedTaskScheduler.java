@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
@@ -212,7 +212,7 @@ public class UserDefinedTaskScheduler implements ITaskScheduler {
                 new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
             ++maxTaskInstancesPerContainer;
           } else {
-            throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+            throw new TaskSchedulerException("Task Scheduling couldn't be possible for the present"
                 + "configuration, please check the number of workers, "
                 + "maximum instances per worker");
           }

@@ -75,8 +75,6 @@ public class CDFWRuntime implements JobListener {
   private TaskExecutor taskExecutor;
 
 
-  private static int index = 0;
-
   /**
    * Connected dataflow runtime
    *
@@ -101,7 +99,6 @@ public class CDFWRuntime implements JobListener {
     while (true) {
       try {
         msg = executeMessageQueue.take();
-
         if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
           if (handleExecuteMessage(msg)) {
             return false;

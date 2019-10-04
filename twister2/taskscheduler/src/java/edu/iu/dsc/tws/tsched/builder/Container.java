@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.tsched.builder;
 
 import java.util.HashSet;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
 import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.schedule.elements.Resource;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
@@ -67,7 +66,7 @@ public class Container {
    */
   void add(TaskInstancePlan taskInstancePlan) throws TaskSchedulerException {
     if (this.taskInstances.contains(taskInstancePlan)) {
-      throw new ScheduleException(String.format(
+      throw new TaskSchedulerException(String.format(
           "Instance %s already exists in container %s", taskInstancePlan, toString()));
     }
     assertHasSpace(taskInstancePlan.getResource());

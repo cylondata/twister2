@@ -24,7 +24,7 @@ import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -169,7 +169,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           if (receivableNameSet.containsAll(collectibleNameSet)) {
             if (receptorParallelism != collectorParallelism) {
-              throw new RuntimeException("Specify the same parallelism value for "
+              throw new TaskSchedulerException("Specify the same parallelism value for "
                   + "the dependent task in the task graphs");
             }
           }
@@ -281,7 +281,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
    * the task in a round robin fashion.
    */
   private Map<Integer, List<TaskInstanceId>> batchSchedulingAlgorithm(
-      ComputeGraph graph, int numberOfContainers) throws ScheduleException {
+      ComputeGraph graph, int numberOfContainers) throws TaskSchedulerException {
 
     Set<Vertex> taskVertexSet = new LinkedHashSet<>(graph.getTaskVertexSet());
     TreeSet<Vertex> orderedTaskSet = new TreeSet<>(new VertexComparator());
@@ -322,7 +322,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
         if (receptorParallel != collectorParallelism) {
-          throw new RuntimeException("Specify the same parallelism value for "
+          throw new TaskSchedulerException("Specify the same parallelism value for "
               + "the dependent task in the task graphs");
         }
       }
@@ -373,7 +373,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
               add(new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
           ++maxTaskInstancesPerContainer;
         } else {
-          throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+          throw new TaskSchedulerException("Task Scheduling couldn't be possible for the present"
               + "configuration, please check the number of workers maximum instances per worker");
         }
       }
@@ -404,7 +404,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
               new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
           ++maxTaskInstancesPerContainer;
         } else {
-          throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+          throw new TaskSchedulerException("Task Scheduling couldn't be possible for the present"
               + "configuration, please check the number of workers, "
               + "maximum instances per worker");
         }
@@ -426,7 +426,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
       Vertex child = graph.childOfTask(vertex, e.getName());
       if (child.getTask() instanceof Collector) {
         if (child.getParallelism() != vertex.getParallelism()) {
-          throw new RuntimeException("Specify the same parallelism for parent and child tasks"
+          throw new TaskSchedulerException("Specify the same parallelism for parent and child tasks"
               + " which depends on the input from the parent in" + graph.getGraphName() + " graph");
         }
       }
