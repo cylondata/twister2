@@ -22,7 +22,11 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 /**
  * Test class for LocalFileSystem
  */
-public class TestLocalFileSystem {
+public final class TestLocalFileSystem {
+
+  private TestLocalFileSystem() {
+
+  }
 
   public static void main(String[] args) {
     Config.Builder builder = new Config.Builder();
