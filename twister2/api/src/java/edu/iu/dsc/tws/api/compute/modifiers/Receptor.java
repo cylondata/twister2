@@ -11,9 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.compute.modifiers;
 
-import java.util.Collections;
-import java.util.Set;
-
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 
@@ -47,7 +44,7 @@ public interface Receptor {
    *
    * @return get the set of names
    */
-  default Set<String> getReceivableNames() {
-    return Collections.emptySet();
+  default IONames getReceivableNames() {
+    return IONames.declare();
   }
 }
