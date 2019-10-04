@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.exceptions.ScheduleException;
+import edu.iu.dsc.tws.api.compute.exceptions.TaskSchedulerException;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.schedule.ITaskScheduler;
@@ -171,7 +171,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
    * the task in a round robin fashion.
    */
   private Map<Integer, List<TaskInstanceId>> roundRobinSchedulingAlgorithm(
-      ComputeGraph graph, int numberOfContainers) throws ScheduleException {
+      ComputeGraph graph, int numberOfContainers) throws TaskSchedulerException {
 
     Map<Integer, List<TaskInstanceId>> roundrobinAllocation = new LinkedHashMap<>();
     for (int i = 0; i < numberOfContainers; i++) {
@@ -204,7 +204,7 @@ public class RoundRobinTaskScheduler implements ITaskScheduler {
                 new TaskInstanceId(vertex.getName(), globalTaskIndex, i));
             ++maxTaskInstancesPerContainer;
           } else {
-            throw new ScheduleException("Task Scheduling couldn't be possible for the present"
+            throw new TaskSchedulerException("Task Scheduling couldn't be possible for the present"
                 + "configuration, please check the number of workers, "
                 + "maximum instances per worker");
           }

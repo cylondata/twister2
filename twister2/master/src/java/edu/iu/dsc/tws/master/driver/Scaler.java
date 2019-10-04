@@ -41,6 +41,7 @@ public class Scaler implements IScaler {
 
   @Override
   public boolean scaleUpWorkers(int instancesToAdd) {
+    LOG.info("Resources to be scaled:\t" + instancesToAdd);
     if (!isScalable()) {
       LOG.severe("Job is not scalable. Either ComputeResource is not scalable or "
           + "this is an OpenMPI job.");
