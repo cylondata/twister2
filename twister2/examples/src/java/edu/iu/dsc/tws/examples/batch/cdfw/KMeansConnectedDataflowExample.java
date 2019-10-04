@@ -13,8 +13,6 @@ package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -31,6 +29,7 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -334,11 +333,8 @@ public final class KMeansConnectedDataflowExample {
     }
 
     @Override
-    public Set<String> getReceivableNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("points");
-      inputKeys.add("centroids");
-      return inputKeys;
+    public IONames getReceivableNames() {
+      return IONames.declare("points", "centroids");
     }
 
     @Override
@@ -375,10 +371,8 @@ public final class KMeansConnectedDataflowExample {
     }
 
     @Override
-    public Set<String> getCollectibleNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("centroids");
-      return inputKeys;
+    public IONames getCollectibleNames() {
+      return IONames.declare("centroids");
     }
 
     @Override

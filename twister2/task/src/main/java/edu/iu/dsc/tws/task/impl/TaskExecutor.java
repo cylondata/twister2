@@ -367,6 +367,10 @@ public class TaskExecutor {
     return this.dataObjectMap.getOrDefault(dataName, new EmptyDataObject());
   }
 
+  public <T> DataObject<T> getOutput(String varName) {
+    return this.dataObjectMap.get(varName);
+  }
+
   /**
    * This method collects all the output from the provided {@link ExecutionPlan}.
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}

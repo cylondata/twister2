@@ -44,6 +44,35 @@ public interface DataObject<T> extends Serializable {
   DataPartition<T> getPartition(int partitionId);
 
   /**
+   * Return any of the available partitions
+   */
+  default DataPartition<T> getAnyPartition() {
+    if (this.getPartitionCount() > 0) {
+      return this.getPartitions()[0];
+    }
+    return null;
+  }
+
+  /**
+   * Returns the partition with the lowest ID, i.e partition from
+   * the lowest task index in this worker
+   */
+  default DataPartition<T> getLowestPartition() {
+    if (this.getPartitionCount() > 0) {
+      DataPartition<T> lowestPartition = null;
+      int lowestId = Integer.MAX_VALUE;
+      for (DataPartition<T> partition : this.getPartitions()) {
+        if (partition.getPartitionId() < lowestId) {
+          lowestId = partition.getPartitionId();
+          lowestPartition = partition;
+        }
+      }
+      return lowestPartition;
+    }
+    return null;
+  }
+
+  /**
    * Get the number of partitions currently in the DataObject
    *
    * @return the number of partitions
@@ -52,6 +81,7 @@ public interface DataObject<T> extends Serializable {
 
   /**
    * ID of the data object. The ID needs to be deterministic
+   *
    * @return ID
    */
   String getID();

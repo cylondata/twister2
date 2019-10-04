@@ -12,15 +12,14 @@
 package edu.iu.dsc.tws.examples.batch.kmeans;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -46,6 +45,7 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
 
   public KMeansDataObjectDirectSink() {
   }
+
   /**
    * This method add the received message from the DataObject Source into the data objects.
    */
@@ -73,7 +73,7 @@ public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector
   }
 
   @Override
-  public Set<String> getCollectibleNames() {
-    return Collections.singleton(inputKey);
+  public IONames getCollectibleNames() {
+    return IONames.declare(inputKey);
   }
 }
