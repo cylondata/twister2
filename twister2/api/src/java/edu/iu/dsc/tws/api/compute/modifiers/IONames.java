@@ -21,6 +21,6 @@ public final class IONames extends HashSet<String> {
   }
 
   public static IONames declare(String... variables) {
-    return new IONames();
+    return new IONames(variables);
   }
 }
