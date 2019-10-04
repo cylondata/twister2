@@ -67,7 +67,7 @@ public final class WorkerEnvironment {
   /**
    * The worker list we got from discovery
    */
-  private final List<JobMasterAPI.WorkerInfo> workerList;
+  private List<JobMasterAPI.WorkerInfo> workerList;
 
   /**
    * Singleton environment
@@ -141,6 +141,7 @@ public final class WorkerEnvironment {
   public void close() {
     this.communicator.close();
     this.channel.close();
+    workerEnv = null;
   }
 
   /**

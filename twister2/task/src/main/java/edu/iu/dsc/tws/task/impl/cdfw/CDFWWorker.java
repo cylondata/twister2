@@ -12,25 +12,26 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.protobuf.Any;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.Network;
+import edu.iu.dsc.tws.api.resource.JobListener;
+import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
  */
-public class CDFWWorker implements IWorker {
+public class CDFWWorker implements IWorker, JobListener {
   private static final Logger LOG = Logger.getLogger(CDFWWorker.class.getName());
 
   /**
@@ -73,6 +74,8 @@ public class CDFWWorker implements IWorker {
    */
   protected CDFWRuntime taskExecutor;
 
+  protected WorkerEnvironment env;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController wController, IPersistentVolume pVolume,
@@ -83,37 +86,17 @@ public class CDFWWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
-    try {
-      workerInfoList = wController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
-    String persistent = null;
-    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
-      persistent = vVolume.getWorkerDirPath();
-    }
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
+    this.env = WorkerEnvironment.init(cfg, workerID, wController, pVolume, vVolume);
     // create the executor
-    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
+    taskExecutor = new CDFWRuntime(cfg, workerID, env.getWorkerList(), env.getCommunicator());
     // register driver listener
-    JMWorkerAgent.addJobListener(taskExecutor);
+    JMWorkerAgent.addJobListener(this);
 
     // call execute
     execute();
-    // wait for the sync
-    try {
-      workerController.waitOnBarrier();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-    }
+
     // lets terminate the network
-    communicator.close();
+    env.close();
   }
 
   /**
@@ -121,5 +104,29 @@ public class CDFWWorker implements IWorker {
    */
   public void execute() {
     taskExecutor.execute();
+  }
+
+  @Override
+  public void workersScaledUp(int instancesAdded) {
+    env.close();
+    env = WorkerEnvironment.init(config, workerId, workerController,
+        persistentVolume, volatileVolume);
+  }
+
+  @Override
+  public void workersScaledDown(int instancesRemoved) {
+    env.close();
+    env = WorkerEnvironment.init(config, workerId, workerController,
+        persistentVolume, volatileVolume);
+  }
+
+  @Override
+  public void driverMessageReceived(Any anyMessage) {
+    taskExecutor.driverMessageReceived(anyMessage);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    taskExecutor.allWorkersJoined(workerList);
   }
 }
