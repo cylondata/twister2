@@ -341,6 +341,11 @@ public class TaskBatchInstance implements INodeInstance, ISync {
   }
 
   @Override
+  public int getIndex() {
+    return this.taskIndex;
+  }
+
+  @Override
   public INode getNode() {
     return task;
   }

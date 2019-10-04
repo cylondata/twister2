@@ -54,7 +54,6 @@ public final class ConfigLoader {
   }
 
   private static Config loadConfig(String file) {
-    System.out.println("Reading : " + file);
     Map<String, Object> readConfig = ConfigReader.loadFile(file);
     return addFromFile(readConfig);
   }
