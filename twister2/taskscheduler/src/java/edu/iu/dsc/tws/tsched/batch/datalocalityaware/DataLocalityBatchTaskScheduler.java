@@ -202,10 +202,10 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       WorkerSchedulePlan workerSchedulePlan = entry.getValue();
       Set<TaskInstancePlan> containerPlanTaskInstances
           = workerSchedulePlan.getTaskInstances();
-      LOG.info("Task Details for Container Id:" + integer + "\tsize:"
+      LOG.fine("Task Details for Container Id:" + integer + "\tsize:"
           + containerPlanTaskInstances.size());
       for (TaskInstancePlan ip : containerPlanTaskInstances) {
-        LOG.info("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
+        LOG.fine("TaskId:" + ip.getTaskId() + "\tTask Index" + ip.getTaskIndex()
             + "\tTask Name:" + ip.getTaskName());
       }
     }
@@ -325,7 +325,7 @@ public class DataLocalityBatchTaskScheduler implements ITaskScheduler {
       directory = String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY));
     }
 
-    final Path path = new Path(directory + workerId);
+    final Path path = new Path(directory);
     final FileSystem fileSystem;
     try {
       fileSystem = FileSystemUtils.get(path);

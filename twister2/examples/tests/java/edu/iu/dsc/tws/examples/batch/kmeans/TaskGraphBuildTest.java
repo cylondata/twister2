@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.task.impl.TaskConfigurations;
 
 public class TaskGraphBuildTest {
 
-  private static final Logger LOGGER = Logger.getLogger(TaskGraphBuildTest.class.getName());
+  private static final Logger LOG = Logger.getLogger(TaskGraphBuildTest.class.getName());
 
   @Test
   public void testUniqueSchedules1() {
@@ -44,10 +44,12 @@ public class TaskGraphBuildTest {
 
   @Test
   public void testUniqueSchedules2() {
-    ComputeGraph computeGraph = createGraph();
-
+    String edgeName = "partition";
+    ComputeGraph computeGraph = createGraphWithEdgeName(edgeName);
+    Assert.assertEquals(computeGraph.taskEdgeSet().iterator().next().getName(),
+        edgeName);
     Assert.assertEquals(computeGraph.getTaskVertexSet().iterator().next().getName(),
-        TaskConfigurations.DEFAULT_EDGE);
+        "source");
     Assert.assertEquals(computeGraph.taskEdgeSet().size(), 2);
   }
 
@@ -72,31 +74,38 @@ public class TaskGraphBuildTest {
     return graph;
   }
 
+  private ComputeGraph createGraphWithEdgeName(String edgeName) {
+    TestSource testSource = new TestSource();
+    TestSink1 testCompute = new TestSink1();
+    TestSink2 testSink = new TestSink2();
+
+    ComputeGraphBuilder computeGraphBuilder = ComputeGraphBuilder.newBuilder(getConfig());
+
+    computeGraphBuilder.addSource("source", testSource, 4);
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
+        "compute", testCompute, 4);
+    computeConnection.partition("source").viaEdge(edgeName)
+        .withDataType(MessageTypes.OBJECT);
+    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
+    rc.allreduce("compute")
+        .viaEdge(edgeName)
+        .withReductionFunction(new Aggregator())
+        .withDataType(MessageTypes.OBJECT);
+    ComputeGraph graph = computeGraphBuilder.build();
+    return graph;
+  }
+
   public class Aggregator implements IFunction {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
     public Object onMessage(Object object1, Object object2) throws ArrayIndexOutOfBoundsException {
-
-      double[] object11 = (double[]) object1;
-      double[] object21 = (double[]) object2;
-      double[] object31 = new double[object11.length];
-
-      for (int j = 0; j < object11.length; j++) {
-        double newVal = object11[j] + object21[j];
-        object31[j] = newVal;
-      }
-      return object31;
+      return null;
     }
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir = "/home/" + System.getProperty("user.dir")
-        + "/twister2/twister2/taskscheduler/tests/conf/";
-    String clusterType = "standalone";
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
+    Config config = ConfigLoader.loadTestConfig();
     return Config.newBuilder().putAll(config).build();
   }
 

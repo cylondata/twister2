@@ -13,9 +13,28 @@ package edu.iu.dsc.tws.examples.utils.bench;
 
 public final class BenchmarkConstants {
 
-  public static final String TIMING_MESSAGE_SEND = "M_SEND";
-  public static final String TIMING_MESSAGE_RECV = "M_RECV";
+  /**
+   * Sender should report M_SEND just before sending a message. For n messages, sender will
+   * report n times.
+   */
+  public static final String TIMING_MESSAGE_SEND = "MESSAGE_SEND";
+
+  /**
+   * Receiver will report M_RECV just after receiving a message. For n messages, receiver will
+   * report n times.
+   */
+  public static final String TIMING_MESSAGE_RECV = "MESSAGE_RECV";
+
+  /**
+   * Sender will report ALL_SEND just before it send very first message. For n message, sender will
+   * report only once.
+   */
   public static final String TIMING_ALL_SEND = "ALL_SEND";
+
+  /**
+   * Receiver will report ALL_RECV just after receiving the last message. For n messages, sender
+   * will report only once.
+   */
   public static final String TIMING_ALL_RECV = "ALL_RECV";
 
   public static final String COLUMN_TOTAL_TIME = "Total Time";

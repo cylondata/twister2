@@ -47,7 +47,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
 /**
- * doc.
+ * DoFn function.
  */
 public class DoFnFunction<OT, IT>
     implements ComputeCollectorFunc<RawUnionValue, Iterator<WindowedValue<IT>>> {

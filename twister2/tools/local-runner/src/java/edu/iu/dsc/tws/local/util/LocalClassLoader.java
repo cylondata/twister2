@@ -49,6 +49,8 @@ public class LocalClassLoader extends SecureClassLoader {
 
     // delegating following packages to parent class loader
     twsPackagesToExclude.add("edu.iu.dsc.tws.proto");
+    twsPackagesToExclude.add("jep"); // to support python debugging
+    twsPackagesToExclude.add("edu.iu.dsc.tws.python.processors.JepInstance");
   }
 
   public void addJobClass(String jobClass) {
@@ -75,7 +77,7 @@ public class LocalClassLoader extends SecureClassLoader {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
         int readBytes;
-        while ((readBytes = is.read(buffer)) > 1) {
+        while ((readBytes = is.read(buffer)) != -1) {
           baos.write(buffer, 0, readBytes);
         }
         byte[] bytes = baos.toByteArray();

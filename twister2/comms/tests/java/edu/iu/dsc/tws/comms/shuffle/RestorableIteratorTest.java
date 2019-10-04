@@ -28,7 +28,7 @@ public class RestorableIteratorTest {
   public void test() {
     FSKeyedSortedMerger2 fsk2 = new FSKeyedSortedMerger2(
         10,
-        100,
+        1000,
         "/tmp",
         "op-2-" + UUID.randomUUID().toString(),
         MessageTypes.INTEGER,

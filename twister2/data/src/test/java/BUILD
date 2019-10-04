@@ -1,8 +1,11 @@
 package(default_visibility = ["//visibility:public"])
 
-java_test(
-    name = "data-java-test",
-    srcs = glob(["*.java"]),
+java_tests(
+    test_classes = [
+    ],
+    runtime_deps = [
+        "//twister2/data/src/main/java:data-java",
+    ],
 )
 
 filegroup(

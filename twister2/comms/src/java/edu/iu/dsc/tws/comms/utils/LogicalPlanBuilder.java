@@ -53,16 +53,43 @@ import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 public final class LogicalPlanBuilder {
 
   private static AtomicInteger counter = new AtomicInteger(0);
-
+  /**
+   * The sources of the plan
+   */
   private Set<Integer> sources = new HashSet<>();
+  /**
+   * target ids of the plan
+   */
   private Set<Integer> targets = new HashSet<>();
 
+  /**
+   * Source to worker mapping
+   */
   private Map<Integer, Integer> sourceToWorker = new HashMap<>();
+
+  /**
+   * Target to worker mapping
+   */
   private Map<Integer, Integer> targetToWorker = new HashMap<>();
+
+  /**
+   * Weather sources are distributed
+   */
   private boolean sourcesDistributed;
+
+  /**
+   * Weather targets are distributed, we don't distribute after this
+   */
   private boolean targetsDistributed;
 
+  /**
+   * Worker environment
+   */
   private WorkerEnvironment workerEnvironment;
+
+  /**
+   * ALl workers ids
+   */
   private Set<Integer> allWorkers;
 
   private LogicalPlanBuilder(int sourcesCount,
@@ -81,16 +108,32 @@ public final class LogicalPlanBuilder {
         .map(JobMasterAPI.WorkerInfo::getWorkerID).collect(Collectors.toSet());
   }
 
+  /**
+   * Create the plan according the the configurations
+   *
+   * @param sources number of sources
+   * @param targets number of targets
+   * @param workerEnvironment the environment
+   * @return a configured <code>LogicalPlanBuilder</code>
+   */
   public static LogicalPlanBuilder plan(int sources,
                                         int targets,
                                         WorkerEnvironment workerEnvironment) {
     return new LogicalPlanBuilder(sources, targets, workerEnvironment);
   }
 
+  /**
+   * Get the source ids from this logical plan builder
+   * @return return the set of sources
+   */
   public Set<Integer> getSources() {
     return sources;
   }
 
+  /**
+   * Return the targets of this logical plan builder
+   * @return the set of targets
+   */
   public Set<Integer> getTargets() {
     return targets;
   }
@@ -188,12 +231,22 @@ public final class LogicalPlanBuilder {
     );
   }
 
+  /**
+   * Create plan with custom distribution
+   * @param distribution the distribution
+   * @return <code>LogicalPlanBuilder</code>
+   */
   public LogicalPlanBuilder withCustomSourceDistribution(Distribution distribution) {
     this.withCustomXDistribution(distribution, sources, sourceToWorker);
     this.sourcesDistributed = true;
     return this;
   }
 
+  /**
+   * Create plan with custom distribution
+   * @param distribution the distribution
+   * @return <code>LogicalPlanBuilder</code>
+   */
   public LogicalPlanBuilder withCustomTargetDistribution(Distribution distribution) {
     this.withCustomXDistribution(distribution, targets, targetToWorker);
     this.targetsDistributed = true;
@@ -202,6 +255,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will fairly distribute all sources and targets among the specified set of workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairDistribution(Set<Integer> groupOfWorkers) {
     this.withFairTargetDistribution(groupOfWorkers);
@@ -211,6 +265,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will fairly distribute all sources and targets among the available workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairDistribution() {
     this.withFairTargetDistribution();
@@ -220,6 +275,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will distribute sources fairly among the available set of workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairSourceDistribution() {
     this.withFairSourceDistribution(allWorkers);
@@ -228,6 +284,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will distribute targets fairly among the available set of workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairTargetDistribution() {
     this.withFairTargetDistribution(allWorkers);
@@ -236,6 +293,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will distribute targets fairly among the specified group of workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairSourceDistribution(Set<Integer> groupOfWorkers) {
     this.withFairXDistribution(sources, sourceToWorker, groupOfWorkers);
@@ -245,6 +303,7 @@ public final class LogicalPlanBuilder {
 
   /**
    * This method will distribute sources fairly among the specified group of workers
+   * @return <code>LogicalPlanBuilder</code>
    */
   public LogicalPlanBuilder withFairTargetDistribution(Set<Integer> groupOfWorkers) {
     this.withFairXDistribution(targets, targetToWorker, groupOfWorkers);

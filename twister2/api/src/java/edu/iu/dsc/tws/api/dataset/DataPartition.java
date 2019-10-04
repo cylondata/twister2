@@ -39,6 +39,17 @@ public interface DataPartition<T> extends Serializable {
    */
   DataPartitionConsumer<T> getConsumer();
 
+  default T firstOrDefault(T defaultValue) {
+    DataPartitionConsumer<T> consumer = this.getConsumer();
+    return consumer.hasNext() ? consumer.next() : defaultValue;
+  }
+
+  default T first() {
+    return getConsumer().next();
+  }
+
+  void setId(int id);
+
   /**
    * Get the id of the partition
    *

@@ -23,19 +23,55 @@ import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
+/**
+ * Worker environment encapsulating the details about the workers.
+ */
 public final class WorkerEnvironment {
   private static final Logger LOG = Logger.getLogger(WorkerEnvironment.class.getName());
 
+  /**
+   * Configuration of the worker
+   */
   private Config config;
+
+  /**
+   * Worker id
+   */
   private int workerId;
+
+  /**
+   * Worker controller
+   */
   private IWorkerController workerController;
+
+  /**
+   * Persistent storage
+   */
   private IPersistentVolume persistentVolume;
+
+  /**
+   * Volatile storage, this will be erased after job finished
+   */
   private IVolatileVolume volatileVolume;
 
+  /**
+   * The communication channel
+   */
   private Communicator communicator;
+
+  /**
+   * The underlying channel
+   */
   private TWSChannel channel;
+
+  /**
+   * The worker list we got from discovery
+   */
   private final List<JobMasterAPI.WorkerInfo> workerList;
 
+  /**
+   * Singleton environment
+   */
   private static volatile WorkerEnvironment workerEnv;
 
   private WorkerEnvironment(Config config, int workerId, IWorkerController workerController,
@@ -99,11 +135,24 @@ public final class WorkerEnvironment {
     return channel;
   }
 
+  /**
+   * Close the worker environment
+   */
   public void close() {
     this.communicator.close();
     this.channel.close();
   }
 
+  /**
+   * Initialize the worker environment, this is a singleton and every job should call this method
+   *
+   * @param config configuration
+   * @param workerId this worker id
+   * @param workerController worker controller
+   * @param persistentVolume persistent volume
+   * @param volatileVolume volatile volume
+   * @return the worker environment
+   */
   public static WorkerEnvironment init(Config config, int workerId,
                                        IWorkerController workerController,
                                        IPersistentVolume persistentVolume,

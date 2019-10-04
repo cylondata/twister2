@@ -95,7 +95,7 @@ spec:
           value: <dynamically calculated>
         - name: CONTAINER_NAME
           value: <name of this container>
-        - name: USER_JOB_JAR_FILE
+        - name: USER_JOB_FILE
           value: <jar file name provided by the user from command line>
         - name: POD_IP
           valueFrom:

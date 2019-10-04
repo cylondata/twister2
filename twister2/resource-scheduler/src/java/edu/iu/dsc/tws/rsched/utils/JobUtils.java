@@ -86,12 +86,28 @@ public final class JobUtils {
 
   public static String jobClassPath(Config cfg, JobAPI.Job job, String wd) {
     StringBuilder classPathBuilder = new StringBuilder();
-//    LOG.log(Level.INFO, "Job type: " + job.getJobFormat().getType());
-//    if (job.getJobFormat().getType() == JobAPI.JobFormatType.SHUFFLE) {
-    // Bundled jar
-    classPathBuilder.append(
-        Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
-//    }
+    if (job.getJobFormat().getType() == JobAPI.JobFormatType.JAR
+        || job.getJobFormat().getType() == JobAPI.JobFormatType.PYTHON) {
+      classPathBuilder.append(
+          Paths.get(wd, job.getJobName(), job.getJobFormat().getJobFile()).toString());
+    } else {
+      // now get the files
+      File jobLib = Paths.get(wd, job.getJobName(), "lib").toFile();
+      File[] listOfFiles = jobLib.listFiles();
+      if (listOfFiles != null) {
+        for (int i = 0; i < listOfFiles.length; i++) {
+          if (listOfFiles[i].isFile()) {
+            if (classPathBuilder.length() != 0) {
+              classPathBuilder.append(":").append(
+                  Paths.get(jobLib.getPath(), listOfFiles[i].getName()).toString());
+            } else {
+              classPathBuilder.append(Paths.get(
+                  jobLib.getPath(), listOfFiles[i].getName()).toString());
+            }
+          }
+        }
+      }
+    }
     return classPathBuilder.toString();
   }
 
@@ -116,10 +132,6 @@ public final class JobUtils {
     }
     return classPath;
   }
-
-  /**
-   * configs from job object will override the ones in config from files if any
-   */
 
   /**
    * [Deprecated Function]
@@ -165,7 +177,7 @@ public final class JobUtils {
       builder.put(Context.JOB_ID, jobId);
     }
 
-    LOG.severe("Job ID assigned : " + jobId);
+    LOG.info("Job ID assigned : " + jobId);
 
     return builder.build();
   }

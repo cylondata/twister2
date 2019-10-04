@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 
 /**
- * doc.
+ * Twister2PipelineOptions.
  */
 public interface Twister2PipelineOptions extends PipelineOptions, StreamingOptions {
   @Description("set unique application name for Twister2 runner")
@@ -49,16 +49,6 @@ public interface Twister2PipelineOptions extends PipelineOptions, StreamingOptio
 
   @JsonIgnore
   Map<String, String> getSerializers();
-
-  //  @Description("Twister2 batch execution context")
-  //  void setBatchExecutionContext(TwisterBatchContext tbc);
-  //
-  //  TwisterBatchContext getBatchExecutionContext();
-  //
-  //  @Description("Twister2 stream execution context")
-  //  void setStreamExecutionContext(TwisterStreamingContext tsc);
-  //
-  //  TwisterStreamingContext getStreamExecutionContext();
 
   @Description("Twister2 TSetEnvironment")
   void setTSetEnvironment(TSetEnvironment environment);

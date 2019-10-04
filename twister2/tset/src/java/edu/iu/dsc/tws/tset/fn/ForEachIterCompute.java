@@ -21,6 +21,9 @@ import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 public class ForEachIterCompute<T> implements ComputeFunc<Object, Iterator<T>> {
   private ApplyFunc<T> applyFn;
 
+  public ForEachIterCompute() {
+
+  }
   public ForEachIterCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }

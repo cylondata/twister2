@@ -66,7 +66,8 @@ public class ResourceAllocator {
     String configDir = System.getProperty(SchedulerContext.CONFIG_DIR);
     String clusterType = System.getProperty(SchedulerContext.CLUSTER_TYPE);
     // lets get the job jar file from system properties or environment
-    String jobJar = System.getProperty(SchedulerContext.USER_JOB_JAR_FILE);
+    String jobJar = System.getProperty(SchedulerContext.USER_JOB_FILE);
+    String jobType = System.getProperty(SchedulerContext.USER_JOB_TYPE);
 
     Boolean debug = Boolean.valueOf(System.getProperty(SchedulerContext.DEBUG));
 
@@ -85,8 +86,12 @@ public class ResourceAllocator {
       clusterType = (String) environmentProperties.get(SchedulerContext.CLUSTER_TYPE);
     }
 
-    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_JAR_FILE)) {
-      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_JAR_FILE);
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_FILE)) {
+      jobJar = (String) environmentProperties.get(SchedulerContext.USER_JOB_FILE);
+    }
+
+    if (environmentProperties.containsKey(SchedulerContext.USER_JOB_TYPE)) {
+      jobType = (String) environmentProperties.get(SchedulerContext.USER_JOB_TYPE);
     }
 
     if (configDir == null) {
@@ -119,7 +124,8 @@ public class ResourceAllocator {
         putAll(config).
         put(SchedulerContext.TWISTER2_HOME.getKey(), twister2Home).
         put(SchedulerContext.TWISTER2_CLUSTER_TYPE, clusterType).
-        put(SchedulerContext.USER_JOB_JAR_FILE, jobJar).
+        put(SchedulerContext.USER_JOB_FILE, jobJar).
+        put(SchedulerContext.USER_JOB_TYPE, jobType).
         put(SchedulerContext.UPLOADER_CLASS, uploaderClass).
         put(SchedulerContext.DEBUG, debug).
         putAll(environmentProperties).
@@ -190,7 +196,23 @@ public class ResourceAllocator {
     // get file name without directory
     String jobJarFileName = Paths.get(jobJarFile).getFileName().toString();
     JobAPI.JobFormat.Builder format = JobAPI.JobFormat.newBuilder();
-//    format.setType(JobAPI.JobFormatType.SHUFFLE);
+
+    // set the job type
+    boolean ziped = false;
+    String jobType = SchedulerContext.userJobType(config);
+    if ("jar".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.JAR);
+    } else if ("java_zip".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.JAVA_ZIP);
+      ziped = true;
+    } else if ("python".equals(jobType)) {
+      format.setType(JobAPI.JobFormatType.PYTHON);
+    } else if ("python_zip".equals(jobType)) {
+      ziped = true;
+      format.setType(JobAPI.JobFormatType.PYTHON_ZIP);
+    }
+
+    // set the job file
     format.setJobFile(jobJarFileName);
     updatedJob = JobAPI.Job.newBuilder(job).setJobFormat(format).build();
 
@@ -203,7 +225,11 @@ public class ResourceAllocator {
     }
 
     // add job jar file to the archive
-    added = packer.addFileToArchive(jobJarFile);
+    if (!ziped) {
+      added = packer.addFileToArchive(jobJarFile);
+    } else {
+      added = packer.addZipToArchive(jobJarFile);
+    }
     if (!added) {
       throw new RuntimeException("Failed to add the job jar file to the archive: " + jobJarFile);
     }
@@ -228,7 +254,7 @@ public class ResourceAllocator {
     // add the job description filename, userJobJar and conf directory to the config
     updatedConfig = Config.newBuilder()
         .putAll(config)
-        .put(SchedulerContext.USER_JOB_JAR_FILE, jobJarFileName)
+        .put(SchedulerContext.USER_JOB_FILE, jobJarFileName)
         .put(SchedulerContext.TEMPORARY_PACKAGES_PATH, tempDirPathString)
         .build();
 

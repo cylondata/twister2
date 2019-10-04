@@ -27,18 +27,35 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.consumer.EntityConsumer;
 
 public class EntityPartition<T> implements DataPartition<T> {
+
   private int id;
 
   private T value;
 
+  /**
+   * This constructor is deprecated
+   *
+   * @deprecated Use constructor without ID instead
+   */
+  @Deprecated
   public EntityPartition(int id, T val) {
     this.id = id;
+    this.value = val;
+  }
+
+
+  public EntityPartition(T val) {
     this.value = val;
   }
 
   @Override
   public EntityConsumer<T> getConsumer() {
     return new EntityConsumer<>(value);
+  }
+
+  @Override
+  public void setId(int id) {
+    this.id = id;
   }
 
   @Override

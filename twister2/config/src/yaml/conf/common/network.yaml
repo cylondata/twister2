@@ -47,7 +47,7 @@ twister2.network.partition.algorithm.stream: "simple"
 twister2.network.partition.algorithm.batch: "simple"
 
 # the partitioning algorithm
-twister2.network.partition.algorithm.batch.keyed_gather: "simple"
+twister2.network.partition.algorithm.batch.keyed_gather: "ring"
 
 # ring group worker
 ttwister2.network.partition.ring.group.workers: 2

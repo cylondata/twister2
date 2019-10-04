@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
@@ -41,12 +40,14 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.data.utils.DataObjectConstants;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.batch.datalocalityaware.DataLocalityBatchTaskScheduler;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
+import edu.iu.dsc.tws.tsched.utils.DataGenerator;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
 public class DataLocalityBatchTaskSchedulerTest {
@@ -58,10 +59,12 @@ public class DataLocalityBatchTaskSchedulerTest {
   public void testUniqueSchedules1() {
     int parallel = 4;
     int workers = 2;
+
     ComputeGraph graph = createGraph(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-    scheduler.initialize(config, 1);
+    scheduler.initialize(config);
+    generateData(config);
 
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
@@ -90,8 +93,13 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+    generateData(config);
+
+    DataGenerator dataGenerator = new DataGenerator(config);
+    dataGenerator.generate(new Path(String.valueOf(config.get(
+        DataObjectConstants.DINPUT_DIRECTORY))), 1000, 2);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -112,8 +120,13 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithComputeTaskAndConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+    generateData(config);
+
+    DataGenerator dataGenerator = new DataGenerator(config);
+    dataGenerator.generate(new Path(String.valueOf(config.get(
+        DataObjectConstants.DINPUT_DIRECTORY))), 1000, 2);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -135,8 +148,9 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraph graph = createGraphWithMultipleComputeTaskAndConstraints(parallel);
     DataLocalityBatchTaskScheduler scheduler = new DataLocalityBatchTaskScheduler();
     Config config = getConfig();
-
     scheduler.initialize(config, 1);
+    generateData(config);
+
     WorkerPlan workerPlan = createWorkPlan(workers);
     TaskSchedulePlan plan1 = scheduler.schedule(graph, workerPlan);
     Assert.assertNotNull(plan1);
@@ -151,18 +165,21 @@ public class DataLocalityBatchTaskSchedulerTest {
   }
 
   private Config getConfig() {
-    String twister2Home = "/home/" + System.getProperty("user.dir")
-        + "/twister2/bazel-bin/scripts/package/twister2-0.3.0";
-    String configDir = "/home/" + System.getProperty("user.dir")
-        + "/twister2/twister2/taskscheduler/tests/conf/";
-    String clusterType = "standalone";
+    Config config = ConfigLoader.loadTestConfig();
+    return Config.newBuilder()
+        .put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput")
+        .put(DataObjectConstants.FILE_SYSTEM, "local")
+        .put(DataObjectConstants.DSIZE, "1000")
+        .put(DataObjectConstants.DIMENSIONS, "2")
+        .putAll(config).build();
+  }
 
-    Config config = ConfigLoader.loadConfig(twister2Home, configDir, clusterType);
-
-    JobConfig jobConfig = new JobConfig();
-    jobConfig.put(DataObjectConstants.DINPUT_DIRECTORY, "/tmp/dinput");
-    jobConfig.put(DataObjectConstants.FILE_SYSTEM, "local");
-    return Config.newBuilder().putAll(config).putAll(jobConfig).build();
+  private void generateData(Config config) {
+    DataGenerator dataGenerator = new DataGenerator(config);
+    dataGenerator.generate(
+        new Path(String.valueOf(config.get(DataObjectConstants.DINPUT_DIRECTORY))),
+        Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DSIZE))),
+        Integer.parseInt(String.valueOf(config.get(DataObjectConstants.DIMENSIONS))));
   }
 
   private WorkerPlan createWorkPlan(int workers) {

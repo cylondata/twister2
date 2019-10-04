@@ -1,81 +1,59 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//tools:maven.bzl", "t2_java_lib", "t2_proto_java_lib")
-load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
-
-#JOB STATE
-#native.proto_library(
-#    name = "proto_job_state",
-#    srcs = ["job_state.proto"],
-#    proto_source_root = "twister2/proto",
-#)
-
-#native.java_proto_library(
-#    name = "proto_job_state_java",
-#    deps = [":proto_job_state"],
-#)
-
-#JOB
-#native.proto_library(
-#    name = "proto_job",
-#    srcs = ["job.proto"],
-#    proto_source_root = "twister2/proto",
-#)
-
-#native.java_proto_library(
-#    name = "proto_job_java",
-#    deps = [":proto_job"],
-#)
-
-#TASK SCHEDULE PLAN
-#native.proto_library(
-#    name = "proto_taskscheduleplan",
-#    srcs = ["taskscheduleplan.proto"],
-#    proto_source_root = "twister2/proto",
-#)
-
-#native.java_proto_library(
-#    name = "proto_taskscheduleplan_java",
-#    deps = [":proto_taskscheduleplan"],
-#)
-
-#JOB MASTER
-#native.proto_library(
-#    name = "proto_jobmaster",
-#    srcs = ["jobmaster.proto"],
-#    deps = [":proto_job"],
-#    proto_source_root = "twister2/proto",
-#)
-
-#native.java_proto_library(
-#    name = "proto_jobmaster_java",
-#    deps = [":proto_jobmaster"],
-#)
-
-#CHECKPOINT
-#native.proto_library(
-#    name = "proto_checkpoint",
-#    srcs = ["checkpoint.proto"],
-#    proto_source_root = "twister2/proto",
-#)
-
-#native.java_proto_library(
-#    name = "proto_checkpoint_java",
-#    deps = [":proto_checkpoint"],
-#)
+#load("@rules_proto//proto:defs.bzl", "proto_lang_toolchain", "proto_library")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 #UNIFIED JAR
+cc_proto_library(
+    name = "proto-cpp",
+    deps = [":proto"]
+)
+
 proto_library(
     name = "proto",
-    srcs = [
-        "checkpoint.proto",
-        "htgjob.proto",
-        "job.proto",
-        "job_state.proto",
-        "jobmaster.proto",
-        "taskscheduleplan.proto",
-    ],
-    proto_source_root = "twister2/proto",
+    deps = [
+      ":taskscheduleplan-proto",
+      ":htgjob-proto",
+      ":jobmaster-proto",
+      ":checkpoint-proto",
+      ":job-state-proto",
+      ":job-proto"
+    ]
+)
+
+proto_library(
+  name = "taskscheduleplan-proto",
+  srcs = ["taskscheduleplan.proto"]
+)
+
+proto_library(
+  name = "htgjob-proto",
+  srcs = ["htgjob.proto"],
+  deps= [":job-proto",":jobmaster-proto"]
+)
+
+proto_library(
+  name = "jobmaster-proto",
+  srcs = ["jobmaster.proto"],
+  deps= [":job-proto"]
+)
+
+proto_library(
+  name = "checkpoint-proto",
+  srcs = ["checkpoint.proto"]
+)
+
+proto_library(
+  name = "job-state-proto",
+  srcs = ["job_state.proto"]
+)
+
+proto_library(
+  name = "job-proto",
+  srcs = ["job.proto"]
 )
 
 t2_proto_java_lib(

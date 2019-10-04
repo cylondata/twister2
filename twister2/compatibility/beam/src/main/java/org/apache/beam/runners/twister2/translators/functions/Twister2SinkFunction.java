@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 public class Twister2SinkFunction<T> implements SinkFunc<T> {
   @Override
   public boolean add(T value) {
-    System.out.println(value.toString());
-    return false;
+    //TODO need to complete functionality if needed
+    return true;
   }
 
   @Override
@@ -42,6 +42,5 @@ public class Twister2SinkFunction<T> implements SinkFunc<T> {
 
   @Override
   public void prepare(TSetContext context) {
-    System.out.println("etsets");
   }
 }

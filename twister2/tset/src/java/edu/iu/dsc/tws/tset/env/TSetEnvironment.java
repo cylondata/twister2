@@ -55,6 +55,7 @@ public abstract class TSetEnvironment {
   private ComputeGraph itergraph;
   private ExecutionPlan iterexecutionPlan;
   private int defaultParallelism = 1;
+  private boolean isCDFW = false;
 
   private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
 
@@ -67,6 +68,14 @@ public abstract class TSetEnvironment {
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
+  }
+
+  /**
+   * Used to construct the TSet environment when in the connected data flow mode.
+   */
+  protected TSetEnvironment() {
+    this.isCDFW = true;
+    this.tsetGraph = new TSetGraph(this, getOperationMode());
   }
 
   public abstract OperationMode getOperationMode();
@@ -201,7 +210,7 @@ public abstract class TSetEnvironment {
    *
    * @param executionPlan the built execution plan
    */
-  private void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
+  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
     for (String taskName : tSetInputMap.keySet()) {
       Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
       for (String keyName : tempMap.keySet()) {

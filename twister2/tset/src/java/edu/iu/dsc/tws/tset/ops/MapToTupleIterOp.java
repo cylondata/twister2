@@ -11,7 +11,6 @@
 //  limitations under the License.
 
 
-
 package edu.iu.dsc.tws.tset.ops;
 
 import java.util.Iterator;
@@ -23,6 +22,10 @@ import edu.iu.dsc.tws.api.tset.fn.TFunction;
 
 public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
   private MapFunc<Tuple<K, O>, I> mapFunction;
+
+  public MapToTupleIterOp() {
+
+  }
 
   public MapToTupleIterOp(MapFunc<Tuple<K, O>, I> mapToTupFn) {
     this.mapFunction = mapToTupFn;

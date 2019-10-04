@@ -14,17 +14,28 @@ package edu.iu.dsc.tws.api.compute.exceptions;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
+/**
+ * This exception is used when an error happens in scheduling
+ */
 public class TaskSchedulerException extends Twister2RuntimeException {
 
   public static final long serialVersionUID = 6599628617518713638L;
 
+  /**
+   * Create a scheduler exception
+   * @param message message
+   */
   public TaskSchedulerException(String message) {
     super(message);
   }
 
+  /**
+   * Create a scheduler exception with message and the actual cause
+   * @param message
+   * @param cause
+   */
   public TaskSchedulerException(String message, Throwable cause) {
     super(message, cause);
   }
 
 }
-

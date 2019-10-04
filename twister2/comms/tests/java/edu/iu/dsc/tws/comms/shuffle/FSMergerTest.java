@@ -26,6 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 
 public class FSMergerTest {
@@ -64,7 +65,7 @@ public class FSMergerTest {
     for (int i = 0; i < 1000; i++) {
       buffer.clear();
       buffer.putInt(i);
-      byte[] serialize = serializer.serialize(i);
+      byte[] serialize = ObjectPacker.getInstance().packToByteArray(i);
       fsMerger.add(serialize, serialize.length);
       fsMerger.run();
     }

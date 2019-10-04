@@ -49,7 +49,7 @@ public class DataFileReader {
     double[][] datapoints = new double[datasize][dimension];
     final FileStatus pathFile;
     try {
-      final FileSystem fs = FileSystemUtils.get(path);
+      final FileSystem fs = FileSystemUtils.get(path, config);
       if ("hdfs".equals(fileSystem)) {
         pathFile = fs.getFileStatus(path);
         this.fdis = fs.open(pathFile.getPath());

@@ -56,6 +56,7 @@ public class Twister2LegacyRunner extends PipelineRunner<PipelineResult> {
     LOG.info("Translating pipeline to Twister2 program.");
     env.translate(pipeline);
     env.execute();
-    return null;
+    //Currently returning an empty result object since this is not supported yet
+    return new Twister2PiplineResult();
   }
 }

@@ -25,7 +25,7 @@ import org.apache.beam.runners.twister2.translators.Twister2StreamPipelineTransl
 import org.apache.beam.sdk.Pipeline;
 
 /**
- * doc.
+ * Twister2PiplineExecutionEnvironment.
  */
 public class Twister2PiplineExecutionEnvironment {
   private static final Logger LOG = Logger.getLogger(
@@ -51,20 +51,8 @@ public class Twister2PiplineExecutionEnvironment {
       options.setStreaming(true);
     }
 
-    // Staged files need to be set before initializing the execution environments
-    // prepareFilesToStageForRemoteClusterExecution(options);
-
     Twister2PipelineTranslator translator;
     if (options.isStreaming()) {
-      //            this.flinkStreamEnv =
-      //                    FlinkExecutionEnvironments.createStreamExecutionEnvironment(
-      //                            options, options.getFilesToStage());
-      //            if (hasUnboundedOutput &&
-      // !flinkStreamEnv.getCheckpointConfig().isCheckpointingEnabled()) {
-      //                LOG.warn(
-      //                        "UnboundedSources present which rely on checkpointing, but
-      // checkpointing is disabled.");
-      //            }
       twister2TranslationContext = new Twister2TranslationContext(options);
       translator = new Twister2StreamPipelineTranslator(options, twister2TranslationContext);
     } else {

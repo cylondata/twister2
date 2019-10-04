@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
  * Add input to a task graph
@@ -25,8 +26,15 @@ public interface Receptor {
    *
    * @param name name of the input
    * @param data input data
+   * @deprecated Use {@link Receptor#add(String, DataPartition)} instead
    */
+  @Deprecated
   void add(String name, DataObject<?> data);
+
+
+  default void add(String name, DataPartition<?> data) {
+    //todo remove default
+  }
 
   /**
    * This method should return a set of receivable names, that are expected by this receptor.
