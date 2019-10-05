@@ -12,9 +12,6 @@
 
 package edu.iu.dsc.tws.api.compute.modifiers;
 
-import java.util.Collections;
-import java.util.Set;
-
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 /**
@@ -50,7 +47,7 @@ public interface Collector {
    * @return set of names of collectbles
    */
 
-  default Set<String> getCollectibleNames() {
-    return Collections.emptySet();
+  default IONames getCollectibleNames() {
+    return IONames.declare();
   }
 }

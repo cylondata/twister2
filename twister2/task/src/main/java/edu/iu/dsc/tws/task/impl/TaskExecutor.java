@@ -367,6 +367,10 @@ public class TaskExecutor {
     return this.dataObjectMap.getOrDefault(dataName, new EmptyDataObject());
   }
 
+  public <T> DataObject<T> getOutput(String varName) {
+    return this.dataObjectMap.get(varName);
+  }
+
   /**
    * This method collects all the output from the provided {@link ExecutionPlan}.
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}
@@ -437,7 +441,13 @@ public class TaskExecutor {
    * task graphs, which are no longer required
    */
   public void clearData(String var) {
-    this.dataObjectMap.remove(var);
+    DataObject dataObject = this.dataObjectMap.remove(var);
+    if (dataObject != null) {
+      for (DataPartition partition : dataObject.getPartitions()) {
+        // in memory partitions will do nothing. Disk backed partitions will clear the files
+        partition.clear();
+      }
+    }
   }
 
   private WorkerPlan createWorkerPlan() {

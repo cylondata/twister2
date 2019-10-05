@@ -27,19 +27,24 @@ import edu.iu.dsc.tws.data.fs.io.InputSplitAssigner;
 /**
  * Test Class for Binary formatter
  */
-public class TestBinaryFileFormatter {
+public final class TestBinaryFileFormatter {
 
   private static final Logger LOG = Logger.getLogger(TestBinaryFileFormatter.class.getName());
+
+  private TestBinaryFileFormatter() {
+
+  }
 
   public static void main(String[] args) {
 
     Config.Builder builder = new Config.Builder();
     builder.put("input.file.path", "/tmp/2000.bin");
-    builder.put("RECORD_LENGTH", 1000* Short.BYTES);
+    builder.put("RECORD_LENGTH", 1000 * Short.BYTES);
     Config txtFileConf = builder.build();
 
     Path path = new Path("/tmp/2000.bin");
-    InputPartitioner binaryInputPartitioner = new BinaryInputPartitioner(path, 1000 * Short.BYTES);
+    InputPartitioner binaryInputPartitioner = new BinaryInputPartitioner(
+        path, 1000 * Short.BYTES);
     binaryInputPartitioner.configure(txtFileConf);
 
     int count = 0;
@@ -57,20 +62,21 @@ public class TestBinaryFileFormatter {
       byte[] line = new byte[2000];
       ByteBuffer byteBuffer = ByteBuffer.allocate(2000);
       byteBuffer.order(ByteOrder.BIG_ENDIAN);
-      while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost", 0)) != null) {
+      while ((currentSplit = inputSplitAssigner.getNextInputSplit("localhost", 0))
+          != null) {
         currentSplit.open(txtFileConf);
-          while (currentSplit.nextRecord(line) != null) {
-            byteBuffer.clear();
-            byteBuffer.put(line);
-            byteBuffer.flip();
-            buffer = byteBuffer.asShortBuffer();
-            short[] shortArray = new short[1000];
-            ((ShortBuffer) buffer).get(shortArray);
-            for (short i : shortArray) {
-              newSum += i;
-              count++;
-            }
+        while (currentSplit.nextRecord(line) != null) {
+          byteBuffer.clear();
+          byteBuffer.put(line);
+          byteBuffer.flip();
+          buffer = byteBuffer.asShortBuffer();
+          short[] shortArray = new short[1000];
+          ((ShortBuffer) buffer).get(shortArray);
+          for (short i : shortArray) {
+            newSum += i;
+            count++;
           }
+        }
       }
       LOG.info("Sum and count values are:" + newSum + "\t" + count);
     } catch (Exception e) {
