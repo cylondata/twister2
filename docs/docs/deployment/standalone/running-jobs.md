@@ -4,7 +4,7 @@ title: Standalone
 sidebar_label: Standalone
 ---
 
-The standalone mode of deployment is most easiest way to deploy a Twister2 application.
+The standalone mode of deployment is the easiest way to deploy a Twister2 application.
 
 ## Requirements
 
@@ -49,12 +49,26 @@ used by Twister2 for its standalone deployment by default.
 You can use your own OpenMPI installation when running the jobs. In order to do that, you
 need to change the following parameter found in ```conf/standalone/resource.yaml``` to point to your OpenMPI installation.
 
+### default configuration
 ```bash
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
 twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
 ```
+
+### configuration pointing to separate OpenMPI installation
+
+Note: ```mpirun``` command is in the ```PATH``` environment variable.
+
+```bash
+# mpi run file, this assumes a mpirun that is shipped with the product
+# change this to just mpirun if you are using a system wide installation of OpenMPI
+# or complete path of OpenMPI in case you have something custom
+twister2.resource.scheduler.mpi.mpirun.file: "mpirun"
+```
+
+Make sure to set the ```LD_LIBRARY_PATH``` variable to the ```lib``` directory of the OpenMPI installation as well.
 
 You can follow the [compiling document](../../compiling/compiling.md) to get instructions on how to install and configure OpenMPI.
 
