@@ -23,8 +23,8 @@ import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
+import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
@@ -54,7 +54,7 @@ public class SKeyedPartition extends BaseOperation {
     super(comm, true, CommunicationContext.KEYED_PARTITION);
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
-        new PartitionStreamingFinalReceiver(rcvr), new PartitionStreamingPartialReceiver(),
+        new PartitionStreamingFinalReceiver(rcvr), new TargetPartialReceiver(),
         dataType, keyType, messageSchema);
 
     partition.init(comm.getConfig(), dataType, plan, edgeId);
