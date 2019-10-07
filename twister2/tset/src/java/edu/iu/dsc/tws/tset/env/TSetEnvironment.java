@@ -127,15 +127,7 @@ public abstract class TSetEnvironment {
     return workerEnv.getWorkerId();
   }
 
-  /**
-   * Runs the entire TSet graph
-   */
-  public void run() {
-    ComputeGraph graph = tBaseGraph.build();
-    executeDataFlowGraph(graph, null, false);
-  }
-
-  protected TBaseGraph getTSetGraph() {
+  TBaseGraph getTSetGraph() {
     return tBaseGraph;
   }
 

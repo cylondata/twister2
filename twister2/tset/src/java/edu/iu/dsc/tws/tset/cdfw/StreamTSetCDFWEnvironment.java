@@ -35,11 +35,9 @@ public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
 
   @Override
   public void finishIter() {
-    return;
   }
 
   @Override
   protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    return;
   }
 }
