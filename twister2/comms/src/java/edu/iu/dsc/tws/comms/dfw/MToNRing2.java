@@ -814,8 +814,8 @@ public class MToNRing2 implements DataFlowOperation, ChannelReceiver {
         byte[] message = new byte[1];
         int flags = MessageFlags.SYNC_EMPTY;
         if (delegate.sendMessage(representSource, message, target, flags, parameters)) {
-          LOG.info("Sending sync from: " + thisWorker + " to w: " + worker
-              + " target: " + target);
+//          LOG.info("Sending sync from: " + thisWorker + " to w: " + worker
+//              + " target: " + target);
           sent = true;
           // advance the index
           targetIndex++;

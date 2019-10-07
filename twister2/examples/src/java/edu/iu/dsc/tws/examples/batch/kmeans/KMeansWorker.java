@@ -80,8 +80,8 @@ public class KMeansWorker implements IWorker {
     int csize = kMeansJobParameters.getCsize();
     int iterations = kMeansJobParameters.getIterations();
 
-    String dataDirectory = kMeansJobParameters.getDatapointDirectory();
-    String centroidDirectory = kMeansJobParameters.getCentroidDirectory();
+    String dataDirectory = kMeansJobParameters.getDatapointDirectory() + workerId;
+    String centroidDirectory = kMeansJobParameters.getCentroidDirectory() + workerId;
 
     workerUtils.generateDatapoints(dimension, numFiles, dsize, csize, dataDirectory,
         centroidDirectory);

@@ -79,7 +79,7 @@ public class IterativeJob implements IWorker {
       DataObject<Object> dataSet = taskExecutor.getOutput(graph, plan, "sink");
       DataPartition<Object>[] values = dataSet.getPartitions();
     }
-    taskExecutor.waitFor(graph, plan);
+    taskExecutor.closeExecution(graph, plan);
   }
 
   private static class IterativeSourceTask extends BaseSource implements Receptor {

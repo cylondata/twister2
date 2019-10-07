@@ -424,15 +424,15 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
   }
 
   /**
-   * Weather we have more data to complete
+   * Weather we have more data to complete, we only check the sends and
    */
   public boolean isComplete() {
-    for (Map.Entry<Integer, Queue<InMessage>> e
+    /*for (Map.Entry<Integer, Queue<InMessage>> e
         : pendingReceiveMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
         return false;
       }
-    }
+    }*/
 
     for (Map.Entry<Integer, ArrayBlockingQueue<OutMessage>> e
         : pendingSendMessagesPerSource.entrySet()) {
@@ -441,11 +441,11 @@ public class ControlledChannelOperation implements ChannelListener, ChannelMessa
       }
     }
 
-    for (Map.Entry<Integer, Queue<InMessage>> e : pendingReceiveDeSerializations.entrySet()) {
-      if (e.getValue().size() > 0) {
-        return false;
-      }
-    }
+//    for (Map.Entry<Integer, Queue<InMessage>> e : pendingReceiveDeSerializations.entrySet()) {
+//      if (e.getValue().size() > 0) {
+//        return false;
+//      }
+//    }
 
     return externalSendsPending.get() == 0;
   }

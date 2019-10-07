@@ -178,8 +178,8 @@ public abstract class TSetEnvironment {
   }
 
   public void finishIter() {
-    taskExecutor.waitFor(itergraph, iterexecutionPlan);
-    tBaseGraph.resetDfwGraphBuilder();
+    taskExecutor.closeExecution(itergraph, iterexecutionPlan);
+    tsetGraph.resetDfwGraphBuilder();
     itergraph = null;
     iterexecutionPlan = null;
   }
