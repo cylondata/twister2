@@ -186,7 +186,7 @@ public abstract class TSetEnvironment {
   }
 
   public void finishIter() {
-    taskExecutor.waitFor(itergraph, iterexecutionPlan);
+    taskExecutor.closeExecution(itergraph, iterexecutionPlan);
     tsetGraph.resetDfwGraphBuilder();
     itergraph = null;
     iterexecutionPlan = null;

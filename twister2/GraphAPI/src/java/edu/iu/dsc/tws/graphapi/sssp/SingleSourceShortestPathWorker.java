@@ -127,7 +127,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
     }
 
-    taskExecutor.waitFor(sssptaskgraph, plan);
+    taskExecutor.closeExecution(sssptaskgraph, plan);
 
     System.out.println("Tatol iteration: " + itr);
 

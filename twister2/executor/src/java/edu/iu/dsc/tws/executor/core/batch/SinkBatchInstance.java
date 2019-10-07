@@ -178,10 +178,10 @@ public class SinkBatchInstance implements INodeInstance, ISync {
       }
 
       // lets progress the communication
-      boolean needsFurther = progressCommunication();
+      boolean complete = isComplete();
 
       // we don't have incoming and our inqueue in empty
-      if (batchInQueue.isEmpty() && state.isSet(InstanceState.SYNCED)) {
+      if (batchInQueue.isEmpty() && state.isSet(InstanceState.SYNCED) && complete) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
@@ -240,6 +240,7 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   public boolean isComplete() {
     boolean complete = true;
     for (int i = 0; i < intOpArray.length; i++) {
+      intOpArray[i].progress();
       if (!intOpArray[i].isComplete()) {
         complete = false;
       }

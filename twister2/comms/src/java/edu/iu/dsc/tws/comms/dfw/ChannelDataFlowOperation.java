@@ -361,12 +361,12 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
    * Weather we have more data to complete
    */
   public boolean isComplete() {
-    for (Map.Entry<Integer, Queue<InMessage>> e
+    /*for (Map.Entry<Integer, Queue<InMessage>> e
         : pendingReceiveMessagesPerSource.entrySet()) {
       if (e.getValue().size() > 0) {
         return false;
       }
-    }
+    }*/
 
     for (Map.Entry<Integer, ArrayBlockingQueue<OutMessage>> e
         : pendingSendMessagesPerSource.entrySet()) {
@@ -375,11 +375,11 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
       }
     }
 
-    for (Map.Entry<Integer, Queue<InMessage>> e : pendingReceiveDeSerializations.entrySet()) {
-      if (e.getValue().size() > 0) {
-        return false;
-      }
-    }
+//    for (Map.Entry<Integer, Queue<InMessage>> e : pendingReceiveDeSerializations.entrySet()) {
+//      if (e.getValue().size() > 0) {
+//        return false;
+//      }
+//    }
 
     return externalSendsPending.get() == 0;
   }
@@ -671,7 +671,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     if (MessageDirection.IN == message.getMessageDirection()) {
       Queue<DataBuffer> list = receiveBuffers.get(id);
       for (DataBuffer buffer : message.getNormalBuffers()) {
-        // we need to reset the buffer so it can be used again
+        // we need to clean the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!list.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for target %d",
@@ -691,7 +691,7 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
     } else if (MessageDirection.OUT == message.getMessageDirection()) {
       ArrayBlockingQueue<DataBuffer> queue = (ArrayBlockingQueue<DataBuffer>) sendBuffers;
       for (DataBuffer buffer : message.getNormalBuffers()) {
-        // we need to reset the buffer so it can be used again
+        // we need to clean the buffer so it can be used again
         buffer.getByteBuffer().clear();
         if (!queue.offer(buffer)) {
           throw new RuntimeException(String.format("%d Buffer release failed for source %d %d %d",

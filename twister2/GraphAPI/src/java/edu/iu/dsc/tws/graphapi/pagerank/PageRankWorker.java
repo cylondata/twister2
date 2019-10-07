@@ -159,7 +159,7 @@ public class PageRankWorker extends TaskWorker {
           "pageranksink");
 
     }
-    taskExecutor.waitFor(pageranktaskgraph, plan);
+    taskExecutor.closeExecution(pageranktaskgraph, plan);
     long endTime = System.currentTimeMillis();
 
 
