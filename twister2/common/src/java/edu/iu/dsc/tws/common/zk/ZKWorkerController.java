@@ -77,28 +77,27 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * If a worker joins with an ID that already exists in the group,
  * we assume that the worker is coming from failure. It is the same worker.
  * It is very important that there is no worker ID collusion among different workers in the same job
- *
+ * <p>
  * We create a persistent znode for the job.
  * Job znode is created with submitting client.
  * We create an ephemeral znode for each worker under the job znode.
- *
+ * <p>
  * Each worker znode keeps two pieces of data:
- *    WorkerInfo object of the worker that created the ephemeral worker znode
- *    status of this worker. Worker status changes during job execution and this field is updated.
- *
+ * WorkerInfo object of the worker that created the ephemeral worker znode
+ * status of this worker. Worker status changes during job execution and this field is updated.
+ * <p>
  * When workers fail, and their znodes are deleted from ZooKeeper,
  * Their workerInfo objects will be also gone.
  * So, we keep a list of all joined workers in each worker locally.
  * When the worker comes back from a failure,
  * its WorkerInfo is updated in each local worker list.
- *
- * When the last worker leaves the job, It deletes persistent job resources.
- * However, sometimes persistent job znodes may not be deleted.
- * Two workers may leave simultaneously, they both think that they ar ethe last worker.
- * So they don't delete persistent job resources. Or, last worker may fail.
+ * <p>
+ * When the job completes, job terminator deletes persistent job znode.
+ * Sometimes, job terminator may not be invoked or it may fail before cleaning p job resources.
  * Therefore, when a job is submitted, it is important to check whether there is
- * any persistent job znodes from previous sessions in ZooKeeper.
- *
+ * any existing znode with the same name as the submitted job in ZooKeeper.
+ * If so, job submission will fail and first job termination should be invoked.
+ * <p>
  * we use a barrier to make all workers wait until the last worker arrives at the barrier point
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
@@ -175,7 +174,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * create an ephemeral znode for this worker
    * worker znode body has the state of this worker
    * it will be updated as the status of worker changes from STARTING, RUNNING, COMPLETED
-   * @return
    */
   public void initialize() throws Exception {
 
@@ -216,8 +214,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * add a single IWorkerFailureListener
    * if additional IWorkerFailureListener tried to be added,
    * do not add and return false
-   * @param iWorkerFailureListener
-   * @return
    */
   public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
     if (this.failureListener != null) {
@@ -240,15 +236,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * Update worker status with new state
    * return true if successful
-   *
+   * <p>
    * Initially worker status is set at STARTING.
    * Therefore, there is no need to call this method after starting this IWorkerController
    * This method should be called to change worker status to RUNNING, COMPLETED, etc.
    * FAILED status can not be set with this method because the worker already failed.
    * Other workers figure out failed worker when the worker looses its connection to ZK server
-   *
-   * @param newStatus
-   * @return
    */
   @Override
   public boolean updateWorkerStatus(WorkerState newStatus) {
@@ -272,7 +265,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public WorkerInfo getWorkerInfoForID(int id) {
-    for (WorkerInfo info: jobWorkers.keySet()) {
+    for (WorkerInfo info : jobWorkers.keySet()) {
       if (info.getWorkerID() == id) {
         return info;
       }
@@ -283,7 +276,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public WorkerState getWorkerStatusForID(int id) {
-    for (Map.Entry<WorkerInfo, WorkerState> entry: jobWorkers.entrySet()) {
+    for (Map.Entry<WorkerInfo, WorkerState> entry : jobWorkers.entrySet()) {
       if (entry.getKey().getWorkerID() == id) {
         return entry.getValue();
       }
@@ -328,7 +321,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     List<WorkerInfo> currentWorkers = new ArrayList<>();
 
-    for (ChildData child: childrenCache.getCurrentData()) {
+    for (ChildData child : childrenCache.getCurrentData()) {
       int id = ZKUtils.getWorkerIDFromPath(child.getPath());
       WorkerInfo worker = getWorkerInfoForID(id);
       if (worker != null) {
@@ -358,12 +351,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * create a mirror of jobWorkers
    * do not create clones of each WorkerInfo, since they are read only
-   * @return
    */
   private List<WorkerInfo> cloneJobWorkers() {
 
     List<WorkerInfo> clone = new LinkedList<>();
-    for (WorkerInfo info: jobWorkers.keySet()) {
+    for (WorkerInfo info : jobWorkers.keySet()) {
       clone.add(info);
     }
     return clone;
@@ -371,12 +363,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   /**
    * count joined and live workers
-   * @return
    */
   private int countJoinedLiveWorkers() {
 
     int count = 0;
-    for (WorkerState state: jobWorkers.values()) {
+    for (WorkerState state : jobWorkers.values()) {
       if (state == WorkerState.STARTING
           || state == WorkerState.RUNNING
           || state == WorkerState.RESTARTING) {
@@ -434,8 +425,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * try to increment the daiForBarrier
    * try 100 times if fails
-   * @param tryCount
-   * @return
    */
   private boolean incrementBarrierDAI(int tryCount, long timeLimitMilliSec) {
 
@@ -453,7 +442,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
           barrier.removeBarrier();
           return true;
 
-        // if this is not the last worker, set the barrier and wait
+          // if this is not the last worker, set the barrier and wait
         } else {
           barrier.setBarrier();
           return barrier.waitOnBarrier(timeLimitMilliSec, TimeUnit.MILLISECONDS);
@@ -472,30 +461,29 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * we use a DistributedAtomicInteger to count the number of workers
    * that have reached to the barrier point.
-   *
+   * <p>
    * Last worker to call this method increases the DistributedAtomicInteger,
    * removes the barrier and lets all previous waiting workers be released.
-   *
+   * <p>
    * Other workers to call this method increase the DistributedAtomicInteger,
    * enable the barrier by calling setBarrier method and wait.
-   *
+   * <p>
    * It is enough to call setBarrier method by only the first worker,
    * however, it does not harm calling by many workers.
-   *
+   * <p>
    * If we let only the first worker to set the barrier with setBarrier method,
    * then, the second worker may call this method after the dai is increased
    * but before the setBarrier method is called. To prevent this,
    * we may need to use a distributed InterProcessMutex.
    * So, instead of using a distributed InterProcessMutex, we call this method many times.
-   *
+   * <p>
    * DistributedAtomicInteger always increases.
    * We check whether it is a multiple of numberOfWorkers in a job
    * If so, all workers have reached the barrier.
-   *
+   * <p>
    * This method may be called many times during a computation.
-   *
+   * <p>
    * if timeout is reached, throws TimeoutException.
-   * @return
    */
   @Override
   public void waitOnBarrier() throws TimeoutException {
@@ -568,7 +556,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * when a new znode added to this job znode,
    * take necessary actions
-   * @param event
    */
   private void childZnodeAdded(PathChildrenCacheEvent event) {
 
@@ -619,7 +606,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * when a child znode content is updated,
    * take necessary actions
-   * @param event
    */
   private void childZnodeUpdated(PathChildrenCacheEvent event) {
     Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerInfo(event.getData().getData());
@@ -635,7 +621,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * when a znode is removed from this job znode,
    * take necessary actions
-   * @param event
    */
   private void childZnodeRemoved(PathChildrenCacheEvent event) {
 
@@ -651,12 +636,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
 
-    // removed event received for completed worker
+      // removed event received for completed worker
     } else if (getWorkerStatusForID(removedWorkerID) == WorkerState.COMPLETED) {
 
       LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
 
-    // worker failed
+      // worker failed
     } else {
       LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
       if (failureListener != null) {
@@ -673,25 +658,15 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * close the children cache
    * close persistent node for this worker
    * close the connection
-   *
-   * if this is the last worker to complete, delete all relevant znode for this job
    */
   public void close() {
-    if (client != null) {
-      try {
-        jobZnodeCache.close();
-        int noOfChildren =  childrenCache.getCurrentData().size();
-        workerZNode.close();
-        CloseableUtils.closeQuietly(childrenCache);
-        // if this is the last worker, delete znodes for the job
-        if (noOfChildren == 1) {
-          LOG.log(Level.INFO, "This is the last worker to finish. Deleting the job znodes.");
-          ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
-        }
-        CloseableUtils.closeQuietly(client);
-      } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Exception when closing", e);
-      }
+    try {
+      CloseableUtils.closeQuietly(workerZNode);
+      CloseableUtils.closeQuietly(jobZnodeCache);
+      CloseableUtils.closeQuietly(childrenCache);
+      CloseableUtils.closeQuietly(client);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Exception when closing", e);
     }
   }
 
