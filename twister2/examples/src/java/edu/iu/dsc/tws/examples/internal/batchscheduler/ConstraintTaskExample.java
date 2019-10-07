@@ -13,12 +13,9 @@ package edu.iu.dsc.tws.examples.internal.batchscheduler;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +35,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
@@ -64,7 +62,6 @@ import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-
 
 import mpi.MPI;
 import mpi.MPIException;
@@ -307,8 +304,8 @@ public class ConstraintTaskExample implements IWorker {
     }
 
     @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
+    public IONames getCollectibleNames() {
+      return IONames.declare(inputKey);
     }
   }
 
@@ -345,10 +342,8 @@ public class ConstraintTaskExample implements IWorker {
     }
 
     @Override
-    public Set<String> getReceivableNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add(inputKey);
-      return inputKeys;
+    public IONames getReceivableNames() {
+      return IONames.declare(inputKey);
     }
   }
 
@@ -382,6 +377,7 @@ public class ConstraintTaskExample implements IWorker {
         }
       }
 
+      //TODO: SEND THE RECEIVED DATA FOR THE COMPUTATION
       try {
         worldRank = MPI.COMM_WORLD.getRank();
         worldSize = MPI.COMM_WORLD.getSize();

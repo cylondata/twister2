@@ -81,6 +81,7 @@ public abstract class BaseDriver implements IDriver {
         throw new RuntimeException("Failed to insert the event", e);
       }
     }
+    LOG.info("received worker list:" + workerList);
   }
 
   private List<JobMasterAPI.WorkerInfo> waitForDriverInit() {

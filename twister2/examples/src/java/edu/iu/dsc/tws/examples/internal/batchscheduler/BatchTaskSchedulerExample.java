@@ -13,13 +13,10 @@ package edu.iu.dsc.tws.examples.internal.batchscheduler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +36,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -233,8 +231,8 @@ public class BatchTaskSchedulerExample implements IWorker {
     }
 
     @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
+    public IONames getCollectibleNames() {
+      return IONames.declare(inputKey);
     }
   }
 
@@ -266,10 +264,8 @@ public class BatchTaskSchedulerExample implements IWorker {
     }
 
     @Override
-    public Set<String> getReceivableNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("firstgraphpoints");
-      return inputKeys;
+    public IONames getReceivableNames() {
+      return IONames.declare("firstgraphpoints");
     }
   }
 
@@ -303,8 +299,8 @@ public class BatchTaskSchedulerExample implements IWorker {
     }
 
     @Override
-    public Set<String> getCollectibleNames() {
-      return Collections.singleton(inputKey);
+    public IONames getCollectibleNames() {
+      return IONames.declare(inputKey);
     }
   }
 
