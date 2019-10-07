@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
+import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingFinalReceiver;
-import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionStreamingPartialReceiver;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 
 /**
@@ -54,7 +54,7 @@ public class SPartition extends BaseOperation {
     this.destinationSelector = destSelector;
     MToNSimple partition = new MToNSimple(comm.getChannel(), sources, targets,
         new PartitionStreamingFinalReceiver(rcvr),
-        new PartitionStreamingPartialReceiver(), dataType, messageSchema);
+        new TargetPartialReceiver(), dataType, messageSchema);
     partition.init(comm.getConfig(), dataType, plan, edgeId);
     this.destinationSelector.prepare(comm, partition.getSources(), partition.getTargets());
     op = partition;

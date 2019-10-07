@@ -17,6 +17,7 @@ import java.util.Set;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -40,10 +41,8 @@ public class TaskSchedulerClassTest {
     }
 
     @Override
-    public Set<String> getReceivableNames() {
-      inputSet.add("points");
-      inputSet.add("centroids");
-      return inputSet;
+    public IONames getReceivableNames() {
+      return IONames.declare("points", "centroids");
     }
   }
 
@@ -68,8 +67,6 @@ public class TaskSchedulerClassTest {
   public static class TestSink extends BaseSink implements Collector {
     private static final long serialVersionUID = -254264903510284748L;
 
-    private Set<String> inputSet = new HashSet<>();
-
     @Override
     public boolean execute(IMessage message) {
       return false;
@@ -86,9 +83,8 @@ public class TaskSchedulerClassTest {
     }
 
     @Override
-    public Set<String> getCollectibleNames() {
-      inputSet.add("centroids");
-      return inputSet;
+    public IONames getCollectibleNames() {
+      return IONames.declare("centroids");
     }
   }
 

@@ -9,12 +9,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.comms.dfw.io.partition;
+package edu.iu.dsc.tws.api.compute.modifiers;
 
-import java.util.logging.Logger;
+import java.util.Arrays;
+import java.util.HashSet;
 
-import edu.iu.dsc.tws.comms.dfw.io.TargetPartialReceiver;
+public final class IONames extends HashSet<String> {
 
-public class PartitionStreamingPartialReceiver extends TargetPartialReceiver {
-  private static final Logger LOG = Logger.getLogger(PartitionPartialReceiver.class.getName());
+  private IONames(String... variables) {
+    this.addAll(Arrays.asList(variables));
+  }
+
+  public static IONames declare(String... variables) {
+    return new IONames(variables);
+  }
 }
