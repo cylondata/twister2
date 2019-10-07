@@ -379,7 +379,7 @@ public class SvmSgdIterativeRunner extends TaskWorker {
           iterativeSVMTrainingExecutionPlan,
           Constants.SimpleGraphConfig.ITERATIVE_SVM_REDUCE);
     }
-    taskExecutor.waitFor(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
+    taskExecutor.closeExecution(iterativeSVMTrainingTaskGraph, iterativeSVMTrainingExecutionPlan);
   }
 
   private ComputeGraph buildSvmSgdIterativeTrainingTG() {

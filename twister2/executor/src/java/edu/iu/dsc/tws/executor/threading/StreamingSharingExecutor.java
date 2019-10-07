@@ -126,7 +126,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public boolean waitFor(ExecutionPlan plan) {
+  public boolean closeExecution(ExecutionPlan plan) {
     return false;
   }
 

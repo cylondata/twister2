@@ -178,7 +178,7 @@ public class TaskExecutor {
           graph.getOperationMode());
     }
     executor.execute(plan);
-    executor.waitFor(plan);
+    executor.closeExecution(plan);
     this.collectData(plan);
   }
 
@@ -197,7 +197,7 @@ public class TaskExecutor {
           graph.getOperationMode());
     }
     executor.execute(plan);
-    executor.waitFor(plan);
+    executor.closeExecution(plan);
     this.collectData(plan);
   }
 
@@ -221,7 +221,7 @@ public class TaskExecutor {
     }
     executor.execute(plan);
     if (finalIteration) {
-      executor.waitFor(plan);
+      executor.closeExecution(plan);
     }
     this.collectData(plan);
   }
@@ -231,14 +231,12 @@ public class TaskExecutor {
    *
    * @param plan the dataflow graph
    * @param graph the task graph
-   * @deprecated This will be removed
    */
-  @Deprecated
-  public void waitFor(ComputeGraph graph, ExecutionPlan plan) {
+  public void closeExecution(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
       throw new IllegalStateException("Cannot call waifor before calling execute");
     }
-    executor.waitFor(plan);
+    executor.closeExecution(plan);
   }
 
   /**

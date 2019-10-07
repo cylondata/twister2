@@ -380,7 +380,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
       taskExecutor.itrExecute(graph, plan);
 
     }
-    taskExecutor.waitFor(graph, plan);
+    taskExecutor.closeExecution(graph, plan);
 
     LOG.info("Task Graph Executed !!! ");
     if (workerId == 0) {

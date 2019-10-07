@@ -195,7 +195,7 @@ public class BatchSharingExecutor2 implements IExecutor {
   }
 
   @Override
-  public boolean waitFor(ExecutionPlan plan) {
+  public boolean closeExecution(ExecutionPlan plan) {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
@@ -400,7 +400,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       cleanUp(executionPlan, nodeMap);
 
       // now wait for it
-      waitFor(executionPlan);
+      closeExecution(executionPlan);
       return true;
     }
 

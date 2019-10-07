@@ -217,6 +217,12 @@ public class LocalFileSystem extends FileSystem {
   }
 
   @Override
+  public boolean exists(Path path) throws IOException {
+    File f = new File(path.getPath());
+    return f.exists();
+  }
+
+  @Override
   public boolean rename(Path src, Path dst) throws IOException {
     return false;
   }

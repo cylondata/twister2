@@ -75,8 +75,8 @@ public class Executor implements IExecutor {
   }
 
   @Override
-  public boolean waitFor(ExecutionPlan executionPlan) {
-    return executor.waitFor(executionPlan);
+  public boolean closeExecution(ExecutionPlan executionPlan) {
+    return executor.closeExecution(executionPlan);
   }
 
   @Override

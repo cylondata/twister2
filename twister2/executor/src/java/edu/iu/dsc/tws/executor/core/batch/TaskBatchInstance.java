@@ -250,9 +250,9 @@ public class TaskBatchInstance implements INodeInstance, ISync {
       // for compute we don't have to have the context done as when the inputs finish and execution
       // is done, we are done executing
       // progress in communication
-      boolean needsFurther = progressCommunication(intOpArray);
+      boolean complete = isComplete(intOpArray);
       // if we no longer needs to progress comm and input is empty
-      if (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED)) {
+      if (inQueue.isEmpty() && state.isSet(InstanceState.SYNCED) && complete) {
         state.addState(InstanceState.EXECUTION_DONE);
       }
     }
@@ -285,9 +285,9 @@ public class TaskBatchInstance implements INodeInstance, ISync {
     }
 
     // lets progress the communication
-    boolean needsFurther = progressCommunication(outOpArray);
+    boolean complete = isComplete(outOpArray);
     // after we have put everything to communication and no progress is required, lets finish
-    if (state.isSet(InstanceState.OUT_COMPLETE)) {
+    if (state.isSet(InstanceState.OUT_COMPLETE) && complete) {
       state.addState(InstanceState.SENDING_DONE);
     }
     return !state.isSet(InstanceState.SENDING_DONE);
@@ -307,21 +307,22 @@ public class TaskBatchInstance implements INodeInstance, ISync {
    *
    * @return true if further progress is needed
    */
-  public boolean progressCommunication(IParallelOperation[] ops) {
+  private boolean isComplete(IParallelOperation[] ops) {
     boolean allDone = true;
     for (int i = 0; i < ops.length; i++) {
-      if (ops[i].progress()) {
+      ops[i].progress();
+      if (!ops[i].isComplete()) {
         allDone = false;
       }
     }
-    return !allDone;
+    return allDone;
   }
 
   @Override
   public boolean isComplete() {
     boolean complete = true;
     for (int i = 0; i < outOpArray.length; i++) {
-      if (outOpArray[i].progress()) {
+      if (!outOpArray[i].isComplete()) {
         complete = false;
       }
     }
