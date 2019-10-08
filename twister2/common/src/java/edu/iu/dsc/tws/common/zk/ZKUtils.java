@@ -24,6 +24,7 @@
 
 package edu.iu.dsc.tws.common.zk;
 
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,9 +40,8 @@ import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 
-import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
@@ -138,10 +138,10 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a worker path from the given job path and worker network info
+   * construct job master path for the given job path
    */
-  public static String constructJobMasterPath(Config config) {
-    return ZKContext.rootNode(config) + "-job-master/" + Context.jobName(config);
+  public static String constructJobMasterPath(String jobPath) {
+    return jobPath + "/jm";
   }
 
   /**
@@ -169,10 +169,10 @@ public final class ZKUtils {
 
   /**
    * decode the given binary encoded WorkerInfo object
-   * encoding assumed to be done by encodeWorkerInfo method
+   * encoding assumed to be done by encodeWorkerZnode method
    * first 4 bytes is the length. remaining bytes are encoded WorkerInfo bytes
    */
-  public static Pair<WorkerInfo, WorkerState> decodeWorkerInfo(byte[] encodedBytes) {
+  public static Pair<WorkerInfo, WorkerState> decodeWorkerZnode(byte[] encodedBytes) {
 
     if (encodedBytes == null) {
       return null;
@@ -194,15 +194,46 @@ public final class ZKUtils {
   }
 
   /**
+   * decode the given binary encoded job master znode
+   * encoding assumed to be done by encodeJobMasterZnode method
+   * first 4 bytes is the length. remaining bytes are encoded masterAddress
+   */
+  public static Pair<String, JobMasterState> decodeJobMasterZnode(byte[] encodedBytes) {
+
+    if (encodedBytes == null) {
+      return null;
+    }
+
+    // first 4 bytes is the length
+    int state = intFromBytes(encodedBytes, 0);
+    JobMasterState jmState = JobMasterState.forNumber(state);
+    String masterAddress =
+        new String(encodedBytes, 4, encodedBytes.length - 4, StandardCharsets.UTF_8);
+    return new ImmutablePair<>(masterAddress, jmState);
+  }
+
+  /**
    * encode the given WorkerInfo object as a byte array.
    * First put the worker state as a 4 byte array to the beginning
    * resulting byte array has the state bytes and workerInfo object after that
    */
-  public static byte[] encodeWorkerInfo(WorkerInfo workerInfo, int state) {
+  public static byte[] encodeWorkerZnode(WorkerInfo workerInfo, int state) {
     byte[] stateBytes = Ints.toByteArray(state);
     byte[] workerInfoBytes = workerInfo.toByteArray();
 
     return Bytes.concat(stateBytes, workerInfoBytes);
+  }
+
+  /**
+   * encode the given WorkerInfo object as a byte array.
+   * First put the worker state as a 4 byte array to the beginning
+   * resulting byte array has the state bytes and workerInfo object after that
+   */
+  public static byte[] encodeJobMasterZnode(String masterAddress, int state) {
+    byte[] stateBytes = Ints.toByteArray(state);
+    byte[] addressBytes = masterAddress.getBytes(StandardCharsets.UTF_8);
+
+    return Bytes.concat(stateBytes, addressBytes);
   }
 
   /**

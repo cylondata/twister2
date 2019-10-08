@@ -34,6 +34,16 @@ message Ping {
     string pingMessage = 3;
 }
 
+// job master can be any one of these states
+// job master does not go from STARTING to RUNNING, it just goes to STARTED
+// since enum types must be unique in a proto, I added JM as a prefix to this enum.
+enum JobMasterState {
+    JM_STARTED = 0;
+    JM_RESTARTED = 1;
+    JM_COMPLETED = 2;
+    JM_FAILED = 3;
+}
+
 // a worker can be any one of these states
 enum WorkerState {
     STARTING = 0;

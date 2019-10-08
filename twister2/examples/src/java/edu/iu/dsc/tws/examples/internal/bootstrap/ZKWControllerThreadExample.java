@@ -77,7 +77,7 @@ public final class ZKWControllerThreadExample extends Thread {
     ZKWorkerController jobController =
         new ZKWorkerController(config, jobName, numberOfWorkers, workerInfo);
 
-    jobController.initialize();
+    jobController.initialize(JobMasterAPI.WorkerState.STARTING);
 
     List<JobMasterAPI.WorkerInfo> workerList = jobController.getJoinedWorkers();
     LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));

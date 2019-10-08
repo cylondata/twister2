@@ -21,12 +21,14 @@ import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKMasterController;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
@@ -66,23 +68,28 @@ public final class ZKWControllerExample {
 
     if ("delete".equalsIgnoreCase(action)) {
       deleteJobZnode();
+      return;
+    }
 
-    } else if ("create".equalsIgnoreCase(action)) {
-      numberOfWorkers = Integer.parseInt(args[2]);
+    // get numberOfWorkers
+    numberOfWorkers = Integer.parseInt(args[2]);
+
+    if ("create".equalsIgnoreCase(action)) {
       JobAPI.Job job = buildJob();
       createJobZnode(job);
 
     } else if ("update".equalsIgnoreCase(action)) {
-      numberOfWorkers = Integer.parseInt(args[2]);
       JobAPI.Job job = buildJob();
       updateJobZnode(job);
 
     } else if ("join".equalsIgnoreCase(action)) {
-      numberOfWorkers = Integer.parseInt(args[2]);
       int workerID = Integer.parseInt(args[3]);
 
       LoggingHelper.initTwisterFileLogHandler(workerID + "", "logs", config);
       simulateWorker(workerID);
+
+    } else if ("join-jm".equalsIgnoreCase(action)) {
+      simulateJobMaster();
     }
 
   }
@@ -107,13 +114,13 @@ public final class ZKWControllerExample {
 
     LOG.info("workerInfo at example: " + workerInfo.toString());
 
-    ZKWorkerController jobController =
+    ZKWorkerController zkWorkerController =
         new ZKWorkerController(config, jobName, numberOfWorkers, workerInfo);
 
-    IWorkerController workerController = jobController;
-    IWorkerStatusUpdater workerStatusUpdater = jobController;
+    IWorkerController workerController = zkWorkerController;
+    IWorkerStatusUpdater workerStatusUpdater = zkWorkerController;
 
-    jobController.addFailureListener(new IWorkerFailureListener() {
+    zkWorkerController.addFailureListener(new IWorkerFailureListener() {
       @Override
       public void workerFailed(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] failed.......................................",
@@ -127,14 +134,31 @@ public final class ZKWControllerExample {
       }
     });
 
-    jobController.addAllJoinedListener(new IAllJoinedListener() {
+    zkWorkerController.addAllJoinedListener(new IAllJoinedListener() {
       @Override
       public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
         LOG.info("**************** All workers joined. Number of workers: " + workerList.size());
       }
     });
 
-    jobController.initialize();
+    zkWorkerController.addJobMasterListener(new IJobMasterListener() {
+      @Override
+      public void jobMasterJoined(String jobMasterAddress) {
+        LOG.info("jobMaster joined: " + jobMasterAddress);
+      }
+
+      @Override
+      public void jobMasterFailed() {
+        LOG.info("jobMaster failed................................... ");
+      }
+
+      @Override
+      public void jobMasterRejoined(String jobMasterAddress) {
+        LOG.info("jobMaster rejoined: " + jobMasterAddress);
+      }
+    });
+
+    zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTING);
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
@@ -146,7 +170,8 @@ public final class ZKWControllerExample {
 
     // test state change
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
-    sleeeep((long) (Math.random() * 100000));
+
+    sleeeep((long) (Math.random() * 100 * 1000));
 
     // test worker failure
     // assume this worker failed
@@ -155,7 +180,7 @@ public final class ZKWControllerExample {
 //      throw new RuntimeException();
 //    }
 
-    LOG.info("Waiting on the first barrier -------------------------- ");
+    LOG.info(workerID + ": Waiting on the first barrier -------------------------- ");
 
     workerController.waitOnBarrier();
     LOG.info("All workers reached the barrier. Proceeding.");
@@ -165,10 +190,65 @@ public final class ZKWControllerExample {
 
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
-    // sleep some random amount of time before closing
-    // this is to prevent all workers to close almost at the same time
-    sleeeep((long) (Math.random() * 2000));
-    jobController.close();
+    zkWorkerController.close();
+  }
+
+
+  /**
+   * an example usage of ZKMasterController class
+   */
+  public static void simulateJobMaster() throws Exception {
+
+    String masterAddress = "x.y.z.t";
+    LOG.info("job master address: " + masterAddress);
+
+    ZKMasterController zkMasterController =
+        new ZKMasterController(config, jobName, numberOfWorkers, masterAddress);
+
+    zkMasterController.addFailureListener(new IWorkerFailureListener() {
+      @Override
+      public void workerFailed(JobMasterAPI.WorkerInfo workerInfo) {
+        LOG.info(String.format("Worker[%s] failed.......................................",
+            workerInfo.getWorkerID()));
+      }
+
+      @Override
+      public void failedWorkerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+        LOG.info(String.format("Worker[%s] has come back from failure ......................",
+            workerInfo.getWorkerID()));
+      }
+    });
+
+    zkMasterController.addAllJoinedListener(new IAllJoinedListener() {
+      @Override
+      public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+        LOG.info("**************** All workers joined. Number of workers: " + workerList.size());
+      }
+    });
+
+    zkMasterController.initialize(JobMasterAPI.JobMasterState.JM_STARTED);
+
+    LOG.info("Waiting for all workers to join: ");
+    // wait until 100sec
+    List<JobMasterAPI.WorkerInfo> workerList = zkMasterController.getAllWorkers();
+    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
+
+    // test state change
+//    zkMasterController.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
+    sleeeep((long) (Math.random() * 20 * 1000));
+
+    // test worker failure
+    // assume this worker failed
+    // it does not send COMPLETE message, before leaving
+//    if (workerID == 1) {
+//      throw new RuntimeException();
+//    }
+
+
+
+//    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+
+    zkMasterController.close();
   }
 
   public static JobAPI.Job buildJob() {

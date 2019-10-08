@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.ISenderToDriver;
@@ -28,6 +29,7 @@ import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerStatusUpdater;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -59,7 +61,8 @@ public final class WorkerRuntime {
    */
   public static synchronized WorkerRuntime init(Config cnfg,
                                                 JobAPI.Job jb,
-                                                WorkerInfo wInfo) {
+                                                WorkerInfo wInfo,
+                                                JobMasterAPI.WorkerState initialState) {
     if (workerRuntime != null) {
       return workerRuntime;
     }
@@ -90,7 +93,7 @@ public final class WorkerRuntime {
       zkWorkerController =
           new ZKWorkerController(config, job.getJobName(), job.getNumberOfWorkers(), workerInfo);
       try {
-        zkWorkerController.initialize();
+        zkWorkerController.initialize(initialState);
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
         throw new RuntimeException(e);
@@ -214,6 +217,21 @@ public final class WorkerRuntime {
 
     if (jmWorkerAgent != null) {
       return JMWorkerAgent.addScalerListener(scalerListener);
+    }
+
+    return false;
+  }
+
+  /**
+   * add a IJobMasterListener
+   * Currently failure notification is only implemented with ZKWorkerController
+   * A listener can be only added when ZKWorkerController is used.
+   * @param jobMasterListener
+   * @return
+   */
+  public static boolean addJobMasterListener(IJobMasterListener jobMasterListener) {
+    if (zkWorkerController != null) {
+      return zkWorkerController.addJobMasterListener(jobMasterListener);
     }
 
     return false;
