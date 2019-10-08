@@ -17,6 +17,7 @@ import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -96,13 +97,17 @@ public class BGather extends BaseOperation {
   /**
    * Send a message to be gathered
    *
-   * @param source source
+   * @param src source
    * @param message message
    * @param flags message flag
    * @return true if the message is accepted
    */
-  public boolean gather(int source, Object message, int flags) {
-    Tuple tuple = new Tuple(source, message);
-    return op.send(source, tuple, flags);
+  public boolean gather(int src, Object message, int flags) {
+    if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      return op.send(src, message, flags);
+    } else {
+      Tuple tuple = new Tuple<>(src, message);
+      return op.send(src, tuple, flags);
+    }
   }
 }
