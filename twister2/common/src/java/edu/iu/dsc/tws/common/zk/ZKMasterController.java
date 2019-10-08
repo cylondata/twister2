@@ -88,6 +88,26 @@ public class ZKMasterController extends ZKBaseController {
   }
 
   /**
+   * Update job master status with new state
+   * return true if successful
+   */
+  public boolean updateJobMasterStatus(JobMasterState newStatus) {
+
+    byte[] jmZnodeBody = ZKUtils.encodeJobMasterZnode(masterAddress, newStatus.getNumber());
+
+    try {
+      client.setData().forPath(masterZNode.getActualPath(), jmZnodeBody);
+      return true;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not update job master status in znode: " + masterZNode.getActualPath(), e);
+      return false;
+    }
+  }
+
+
+
+  /**
    * close all local entities.
    */
   public void close() {
