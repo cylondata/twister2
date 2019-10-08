@@ -68,11 +68,11 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
   }
 
   @Override
-  public void build(Collection<? extends TBase> partialBuildSeq) {
+  public void build(Collection<? extends TBase> buildSequence) {
 
     // filter out the relevant sources out of the predecessors
     ArrayList<TBase> sources = new ArrayList<>(getTBaseGraph().getPredecessors(this));
-    sources.retainAll(partialBuildSeq);
+    sources.retainAll(buildSequence);
 
     if (sources.size() != 2) {
       throw new RuntimeException("Join TLink predecessor count should be 2: Received "
@@ -81,7 +81,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
 
     // filter out the relevant sources out of the successors
     HashSet<TBase> targets = new HashSet<>(getTBaseGraph().getSuccessors(this));
-    targets.retainAll(partialBuildSeq);
+    targets.retainAll(buildSequence);
 
     for (TBase target : targets) {
       // group name = left_right_join_target
