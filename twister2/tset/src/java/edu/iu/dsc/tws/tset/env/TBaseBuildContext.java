@@ -11,11 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.env;
 
-import java.util.List;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
@@ -30,9 +28,10 @@ public class TBaseBuildContext {
   private Set<BuildableTSet> rootTBases;
   private Set<TBase> buildSequence;
   private ComputeGraph computeGraph;
-  private List<DataObject> inputs, outputs;
+//  private List<DataObject> inputs, outputs;
 
-  public TBaseBuildContext(String bId, Set<BuildableTSet> roots, Set<TBase> buildSeq, ComputeGraph compGraph) {
+  public TBaseBuildContext(String bId, Set<BuildableTSet> roots, Set<TBase> buildSeq,
+                           ComputeGraph compGraph) {
     this.buildId = bId;
     this.rootTBases = roots;
     this.buildSequence = buildSeq;

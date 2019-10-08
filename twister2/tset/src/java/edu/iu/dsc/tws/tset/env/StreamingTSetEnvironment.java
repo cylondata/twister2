@@ -45,7 +45,7 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
    * Runs the entire TSet graph
    */
   public void run() {
-    ComputeGraph graph = getTSetGraph().build();
+    ComputeGraph graph = getTSetGraph().build().getComputeGraph();
     executeDataFlowGraph(graph, null, false);
   }
 

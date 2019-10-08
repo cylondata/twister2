@@ -37,6 +37,12 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   @Override
   <O> BatchTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
+  BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
+
+  BatchTSet<T1> lazySink(SinkFunc<T1> sinkFunction);
+
+//  BatchTSet<T0> lazyCache();
+
   /**
    * Runs the dataflow graph and caches data in memory
    *

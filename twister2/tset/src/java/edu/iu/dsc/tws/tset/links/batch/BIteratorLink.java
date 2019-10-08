@@ -56,11 +56,14 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, Iterator<T>> set = compute("foreach",
-        new ForEachIterCompute<>(applyFunction)
-    );
+    ComputeTSet<Object, Iterator<T>> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
+  }
+
+  @Override
+  public ComputeTSet<Object, Iterator<T>> lazyForEach(ApplyFunc<T> applyFunction) {
+    return compute("foreach", new ForEachIterCompute<>(applyFunction));
   }
 
   @Override

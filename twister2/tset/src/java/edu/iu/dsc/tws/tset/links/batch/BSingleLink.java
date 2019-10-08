@@ -65,9 +65,14 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = compute("foreach", new ForEachCompute<>(applyFunction));
+    ComputeTSet<Object, T> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
+  }
+
+  @Override
+  public ComputeTSet<Object, T> lazyForEach(ApplyFunc<T> applyFunction) {
+    return compute("foreach", new ForEachCompute<>(applyFunction));
   }
 
   @Override

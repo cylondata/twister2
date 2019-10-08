@@ -72,11 +72,15 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
+    ComputeTSet<Object, Iterator<Tuple<Integer, T>>> set = lazyForEach(applyFunction);
+//    addChildToGraph(foreach);
+    getTSetEnv().run(set);
+  }
+
+  @Override
+  public ComputeTSet<Object, Iterator<Tuple<Integer, T>>> lazyForEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
-    ComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
-        compute("foreach", comp);
-    addChildToGraph(foreach);
-    getTSetEnv().run(foreach);
+    return compute("foreach", comp);
   }
 
   @Override
