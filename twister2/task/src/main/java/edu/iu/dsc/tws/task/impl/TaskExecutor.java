@@ -268,21 +268,20 @@ public class TaskExecutor {
   @Deprecated
   public void addInput(ComputeGraph graph, ExecutionPlan plan,
                        String taskName, String inputKey, DataObject<?> input) {
-    return;
-//    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
-//    if (nodes == null) {
-//      return;
-//    }
-//
-//    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
-//      INodeInstance node = e.getValue();
-//      INode task = node.getNode();
-//      if (task instanceof Receptor) {
-//        ((Receptor) task).add(inputKey, input);
-//      } else {
-//        throw new RuntimeException("Cannot add input to non input instance: " + node);
-//      }
-//    }
+    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
+    if (nodes == null) {
+      return;
+    }
+
+    for (Map.Entry<Integer, INodeInstance> e : nodes.entrySet()) {
+      INodeInstance node = e.getValue();
+      INode task = node.getNode();
+      if (task instanceof Receptor) {
+        ((Receptor) task).add(inputKey, input);
+      } else {
+        throw new RuntimeException("Cannot add input to non input instance: " + node);
+      }
+    }
   }
 
   /**
