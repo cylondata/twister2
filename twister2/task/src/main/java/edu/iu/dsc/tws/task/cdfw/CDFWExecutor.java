@@ -65,6 +65,7 @@ public final class CDFWExecutor {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
+    LOG.info("Worker List Size:" + this.executionEnv.getWorkerInfoList().size());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
     submitGraph(graph, workerIDs);
@@ -80,7 +81,7 @@ public final class CDFWExecutor {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
-
+    LOG.info("Worker List Size:" + this.executionEnv.getWorkerInfoList().size());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(scheduleGraphMap.size());

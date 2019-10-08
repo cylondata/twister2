@@ -70,6 +70,7 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    LOG.info("joined worker info list:" + workerList);
     if (driverState != DriverState.WAIT_FOR_WORKERS_TO_START) {
       // if the driver is in the 'wait got workers' state, insert the events to the driver's queue
       this.executionEnv.allWorkersJoined(workerList);
@@ -81,16 +82,13 @@ public abstract class BaseDriver implements IDriver {
         throw new RuntimeException("Failed to insert the event", e);
       }
     }
-    LOG.info("received worker list:" + workerList);
   }
 
   private List<JobMasterAPI.WorkerInfo> waitForDriverInit() {
     // waiting till the workers join the cluster
     try {
       List<JobMasterAPI.WorkerInfo> workers = this.driverQueue.take();
-
       this.driverState = DriverState.INITIALIZE;
-
       return workers;
     } catch (InterruptedException e) {
       throw new RuntimeException("Failed to take events from the queue", e);

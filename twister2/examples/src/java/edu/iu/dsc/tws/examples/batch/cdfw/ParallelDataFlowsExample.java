@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -97,7 +98,7 @@ public final class ParallelDataFlowsExample {
         .setJobName(ParallelDataFlowsExample.class.getName())
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(ParallelDataflowsDriver.class.getName())
-        .addComputeResource(1, 512, instances)
+        .addComputeResource(1, 512, instances, true)
         .setConfig(jobConfig)
         .build();
     // now submit the job
@@ -164,6 +165,17 @@ public final class ParallelDataFlowsExample {
 
       DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+
+      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.increaseWorkers(4);
+
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) {
+        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
+      }
+      //DataFlowGraph job3 = generateFirstJob(config, 8, jobConfig);
+      //DataFlowGraph job4 = generateSecondJob(config, 8, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job1, job2);
     }

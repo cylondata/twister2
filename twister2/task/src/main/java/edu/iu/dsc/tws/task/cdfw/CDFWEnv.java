@@ -63,7 +63,6 @@ public class CDFWEnv {
   }
 
   public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
-    // this method could be problematic, if the worker list changes in the middle of the execution
     return workerInfoList;
   }
 
@@ -72,10 +71,6 @@ public class CDFWEnv {
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    // this is the only method which could change the
-    // might have to put these messages into a queue to accommodate scaling up/ down workers
-
-    // when all workers joined, update the worker info list
     this.workerInfoList = workerList;
   }
 

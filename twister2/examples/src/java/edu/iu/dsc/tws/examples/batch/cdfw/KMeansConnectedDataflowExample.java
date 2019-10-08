@@ -108,7 +108,7 @@ public final class KMeansConnectedDataflowExample {
         .put(CDFConstants.ARGS_DSIZE, Integer.toString(csize))
         .put(CDFConstants.ARGS_DINPUT, dataDirectory)
         .put(CDFConstants.ARGS_CINPUT, centroidDirectory)
-        .put(CDFConstants.ARGS_ITERATIONS, iterations)
+        .put(CDFConstants.ARGS_ITERATIONS, Integer.toString(iterations))
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
     Twister2Job twister2Job;
@@ -238,9 +238,18 @@ public final class KMeansConnectedDataflowExample {
       Config config = cdfwEnv.getConfig();
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
-      String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
+      String dataDirectory = config.getStringValue(CDFConstants.ARGS_DINPUT);
+      String centroidDirectory = config.getStringValue(CDFConstants.ARGS_CINPUT);
+      int parallelism
+          = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_PARALLELISM_VALUE));
+      int instances = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_WORKERS));
+      int iterations = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_ITERATIONS));
+      int dimension = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_DIMENSIONS));
+      int dsize = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_DSIZE));
+      int csize = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_CSIZE));
 
+      /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
       int parallelism =
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
       int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
@@ -248,7 +257,7 @@ public final class KMeansConnectedDataflowExample {
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
       int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
+      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
 
       generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
 
@@ -266,7 +275,8 @@ public final class KMeansConnectedDataflowExample {
       }
       LOG.info("Before Third Graph Execution :" + cdfwEnv.getWorkerInfoList());
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations, dimension, jobConfig);
+        DataFlowGraph job3 = generateThirdJob(config, parallelism, instances, iterations,
+            dimension, jobConfig);
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
@@ -323,7 +333,7 @@ public final class KMeansConnectedDataflowExample {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      //LOG.info("Received input: " + name);
+      LOG.info("Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }

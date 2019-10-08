@@ -27,6 +27,7 @@ import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -72,9 +73,11 @@ public class CDFWWorker implements IWorker, JobListener {
   /**
    * The task executor to be used
    */
-  protected CDFWRuntime taskExecutor;
+  protected CDFWRuntime cdfwRuntime;
 
   protected WorkerEnvironment env;
+
+  protected CDFWEnv cdfwEnv;
 
   @Override
   public void execute(Config cfg, int workerID,
@@ -88,7 +91,7 @@ public class CDFWWorker implements IWorker, JobListener {
 
     this.env = WorkerEnvironment.init(cfg, workerID, wController, pVolume, vVolume);
     // create the executor
-    taskExecutor = new CDFWRuntime(cfg, workerID, env.getWorkerList(), env.getCommunicator());
+    cdfwRuntime = new CDFWRuntime(cfg, workerID, env.getWorkerList(), env.getCommunicator());
     // register driver listener
     JMWorkerAgent.addJobListener(this);
 
@@ -103,7 +106,7 @@ public class CDFWWorker implements IWorker, JobListener {
    * A user needs to implement this method to create the task graph and execute it
    */
   public void execute() {
-    taskExecutor.execute();
+    cdfwRuntime.execute();
   }
 
   @Override
@@ -111,6 +114,9 @@ public class CDFWWorker implements IWorker, JobListener {
     env.close();
     env = WorkerEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
+    // create the executor
+    //cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
+    execute();
   }
 
   @Override
@@ -118,15 +124,18 @@ public class CDFWWorker implements IWorker, JobListener {
     env.close();
     env = WorkerEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
+    // create the executor
+    //cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
+    execute();
   }
 
   @Override
   public void driverMessageReceived(Any anyMessage) {
-    taskExecutor.driverMessageReceived(anyMessage);
+    cdfwRuntime.driverMessageReceived(anyMessage);
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    taskExecutor.allWorkersJoined(workerList);
+    cdfwRuntime.allWorkersJoined(workerList);
   }
 }

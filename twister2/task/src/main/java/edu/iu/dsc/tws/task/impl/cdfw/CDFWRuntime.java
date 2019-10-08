@@ -33,6 +33,7 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+//import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -40,7 +41,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class CDFWRuntime {
+public class CDFWRuntime  {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 
@@ -211,7 +212,6 @@ public class CDFWRuntime {
       }
     }
   }
-
 
   public void driverMessageReceived(Any anyMessage) {
     // put every message on the queue.

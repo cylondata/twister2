@@ -61,8 +61,8 @@ public class CDFWScheduler implements ICDFWScheduler {
         workerList = scheduleGraphs(graph);
         scheduledGraphMap.put(graph, workerList);
       }
-      LOG.info("Requirements:" + workerInfoList.size() + "\tSchedule Details:" + scheduledGraphMap);
     }
+    LOG.info("Requirements:" + workerInfoList.size() + "\tSchedule Details:" + scheduledGraphMap);
     return scheduledGraphMap;
   }
 
