@@ -45,11 +45,6 @@ public abstract  class ConstructDataStr extends BaseCompute {
     this.datasize = dsize;
   }
 
-  public ConstructDataStr(String edgename, int size) {
-    this.edgeName = edgename;
-    this.datasize = size;
-  }
-
   public int getDatasize() {
     return datasize;
   }

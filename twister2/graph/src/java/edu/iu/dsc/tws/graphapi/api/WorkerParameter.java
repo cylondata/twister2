@@ -66,6 +66,16 @@ public final class WorkerParameter {
    */
   private String filesystem;
 
+  public String getSourcevertex() {
+    return sourcevertex;
+  }
+
+  /**
+   * source vertex for sssp
+   */
+  private String sourcevertex;
+
+
   private WorkerParameter(int workers) {
     this.workers = workers;
   }
@@ -80,13 +90,20 @@ public final class WorkerParameter {
 
     int workers = Integer.parseInt(cfg.getStringValue(DataObjectConstants.WORKERS));
     int dsize = Integer.parseInt(cfg.getStringValue(DataObjectConstants.DSIZE));
+    int iterations;
+    if (cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS) == null) {
+      iterations = 0;
+    } else {
+      iterations = Integer.parseInt(
+          cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
+    }
+
     int parallelismVal = Integer.parseInt(
         cfg.getStringValue(DataObjectConstants.PARALLELISM_VALUE));
-    int iterations = Integer.parseInt(
-        cfg.getStringValue(DataObjectConstants.ARGS_ITERATIONS));
+
     int numFiles = Integer.parseInt(cfg.getStringValue(DataObjectConstants.NUMBER_OF_FILES));
     boolean shared = cfg.getBooleanValue(DataObjectConstants.SHARED_FILE_SYSTEM);
-
+    String sourceV = cfg.getStringValue("sourcev");
     WorkerParameter jobParameters = new WorkerParameter(workers);
 
     jobParameters.workers = workers;
@@ -97,6 +114,7 @@ public final class WorkerParameter {
     jobParameters.shared = shared;
     jobParameters.parallelismValue = parallelismVal;
     jobParameters.filesystem = fileSystem;
+    jobParameters.sourcevertex = sourceV;
 
     return jobParameters;
   }

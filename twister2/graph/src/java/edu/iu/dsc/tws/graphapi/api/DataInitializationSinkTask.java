@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.graphapi.api;
 
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -24,14 +23,15 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
+import edu.iu.dsc.tws.graphapi.vertex.VertexStatus;
 
 
-public class DataSInkTask extends BaseSink implements Collector {
-  private static final Logger LOG = Logger.getLogger(DataSInkTask.class.getName());
+public class DataInitializationSinkTask extends BaseSink implements Collector {
+  private static final Logger LOG = Logger.getLogger(DataInitializationSinkTask.class.getName());
 
   private static final long serialVersionUID = -1L;
 
-  private HashMap<String, ArrayList<String>> dataPointsLocal;
+  private HashMap<String, VertexStatus> dataPointsLocal;
 
 
   /**
@@ -40,7 +40,7 @@ public class DataSInkTask extends BaseSink implements Collector {
   @Override
   public boolean execute(IMessage message) {
     while (((Iterator) message.getContent()).hasNext()) {
-      dataPointsLocal = (HashMap<String, ArrayList<String>>)
+      dataPointsLocal = (HashMap<String, VertexStatus>)
           ((Iterator) message.getContent()).next();
 
     }
@@ -54,7 +54,7 @@ public class DataSInkTask extends BaseSink implements Collector {
   }
 
   @Override
-  public DataPartition<HashMap<String, ArrayList<String>>> get() {
+  public DataPartition<HashMap<String, VertexStatus>> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
   }
 

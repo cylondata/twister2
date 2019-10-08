@@ -107,7 +107,6 @@ public class SsspInitialCompute extends BaseCompute {
 
       while (((Iterator) message.getContent()).hasNext()) {
         SsspVertexStatus ssspVertexStatus = new SsspVertexStatus();
-        HashMap<String, Integer> hashMap = new HashMap<>();
         String val = String.valueOf(((Iterator) message.getContent()).next());
         String[] data = val.split("\\s+");
         if (data.length == 1 && data[0].equals("")) {

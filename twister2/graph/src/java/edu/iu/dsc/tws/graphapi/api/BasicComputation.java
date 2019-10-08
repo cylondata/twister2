@@ -11,16 +11,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.graphapi.api;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.comms.messaging.types.PrimitiveMessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
@@ -38,11 +36,9 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
-import edu.iu.dsc.tws.graphapi.pagerank.DataObjectCompute;
-import edu.iu.dsc.tws.graphapi.pagerank.DataObjectSink;
-import edu.iu.dsc.tws.graphapi.pagerank.PageRankValueHolderCompute;
-import edu.iu.dsc.tws.graphapi.pagerank.PageRankValueHolderSink;
 import edu.iu.dsc.tws.graphapi.partition.GraphDataSource;
+import edu.iu.dsc.tws.graphapi.vertex.DefaultVertex;
+import edu.iu.dsc.tws.graphapi.vertex.VertexStatus;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskWorker;
@@ -55,10 +51,16 @@ public abstract class BasicComputation extends TaskWorker {
   private static final Logger LOG = Logger.getLogger(BasicComputation.class.getName());
 
   public static int graphsize = 0;
-  public int parallelism = 0;
+  public static String dataDirectory;
+  public static int parallelism = 0;
+  public static String sourceVertexGlobal;
+  public static boolean globaliterationStatus = true;
+  public static int iterations = 0;
 
 
   public abstract ComputeGraph computation();
+  public abstract ComputeGraph graphInitialization();
+  public abstract ComputeGraph graphpartition();
 
 
   @Override
@@ -68,18 +70,14 @@ public abstract class BasicComputation extends TaskWorker {
     WorkerParameter workerParameter = WorkerParameter.build(config);
 
     parallelism = workerParameter.getParallelismValue();
-    int dsize = workerParameter.getDsize();
-    String dataDirectory = workerParameter.getDatapointDirectory();
-    int iterations = workerParameter.getIterations();
-    int numberofFiles = workerParameter.getNumFiles();
-    String filetype = workerParameter.getFilesystem();
-    boolean isshared = workerParameter.isShared();
+    graphsize = workerParameter.getDsize();
+    sourceVertexGlobal = workerParameter.getSourcevertex();
+    dataDirectory = workerParameter.getDatapointDirectory();
+    iterations = workerParameter.getIterations();
 
-    graphsize = dsize;
 
     /* First Graph to partition and read the partitioned data points **/
-    ComputeGraph graphpartitionTaskGraph = buildDataPointsTG(dataDirectory, dsize,
-        parallelism, config);
+    ComputeGraph graphpartitionTaskGraph = graphpartition();
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan = taskExecutor.plan(graphpartitionTaskGraph);
     //Actual execution for the first taskgraph
@@ -95,8 +93,7 @@ public abstract class BasicComputation extends TaskWorker {
 
     //the second task graph for assign initial pagerank values for vertex.
 
-    ComputeGraph graphInitializationTaskGraph = buildGraphInitialValueTG(dataDirectory, dsize,
-        parallelism, config);
+    ComputeGraph graphInitializationTaskGraph = graphInitialization();
     //Get the execution plan for the first task graph
     ExecutionPlan executionPlan1 = taskExecutor.plan(graphInitializationTaskGraph);
     //Actual execution for the first taskgraph
@@ -114,80 +111,67 @@ public abstract class BasicComputation extends TaskWorker {
 //third task graph for computations
     ComputeGraph computationTaskgraph = computation();
     ExecutionPlan plan = taskExecutor.plan(computationTaskgraph);
-    long startime = System.currentTimeMillis();
-    for (int i = 0; i < iterations; i++) {
-      taskExecutor.addInput(computationTaskgraph, plan,
-          "source", "graphData", graphPartitionData);
 
-      taskExecutor.addInput(computationTaskgraph, plan,
-          "source", "graphInitialPagerankValue", graphInitializationData);
+    if (iterations != 0) {
+      for (int i = 0; i < iterations; i++) {
+        taskExecutor.addInput(computationTaskgraph, plan,
+            "source", "graphData", graphPartitionData);
 
-      taskExecutor.itrExecute(computationTaskgraph, plan);
+        taskExecutor.addInput(computationTaskgraph, plan,
+            "source", "graphInitialValue", graphInitializationData);
+
+        taskExecutor.itrExecute(computationTaskgraph, plan);
 
 
-      graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
-          "pageranksink");
-    }
-
-    long endTime = System.currentTimeMillis();
-    taskExecutor.waitFor(computationTaskgraph, plan);
-
-    if (workerId == 0) {
-      DataPartition<?> finaloutput = graphInitializationData.getPartition(workerId);
-      HashMap<String, Double> finalone = (HashMap<String, Double>) finaloutput.getConsumer().next();
-      LOG.info("Final output After " + iterations + "iterations ");
-      Iterator it = finalone.entrySet().iterator();
-      Double recivedFinalDanglingValue = finalone.get("danglingvalues");
-
-      double cummulativepagerankvalue = 0.0;
-      int num = 0;
-      System.out.println(graphsize);
-      while (it.hasNext()) {
-        Map.Entry pair = (Map.Entry) it.next();
-        if (!pair.getKey().equals("danglingvalues")) {
-          double finalPagerankValue = (double) pair.getValue()
-              + ((0.85 * recivedFinalDanglingValue) / graphsize);
-          System.out.print("Vertex Id: " + pair.getKey());
-          System.out.printf(" and it's pagerank value: %.15f \n", finalPagerankValue);
-
-          cummulativepagerankvalue += finalPagerankValue;
-          num += 1;
-        }
-        it.remove(); // avoids a ConcurrentModificationException
+        graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
+            "sink");
       }
-      System.out.println(recivedFinalDanglingValue);
-      System.out.println(num);
-      System.out.println(cummulativepagerankvalue);
-      System.out.println(cummulativepagerankvalue
-          + ((graphsize - num) * ((((double) 1 / graphsize) * 0.15)
-          + (0.85 * (recivedFinalDanglingValue / graphsize)))));
 
-      System.out.println("computation time: " + (endTime - startime));
+      taskExecutor.waitFor(computationTaskgraph, plan);
 
+    } else {
+      int itr = 0;
+      while (globaliterationStatus) {
+
+
+        taskExecutor.addInput(computationTaskgraph, plan,
+            "source", "graphData", graphPartitionData);
+
+        taskExecutor.addInput(computationTaskgraph, plan,
+            "source", "graphInitialValue", graphInitializationData);
+        taskExecutor.itrExecute(computationTaskgraph, plan);
+
+        graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
+            "sink");
+        itr++;
+
+      }
+      System.out.println("total Iteration: " + itr);
+      taskExecutor.waitFor(computationTaskgraph, plan);
     }
+
 
 
   }
 
 
-  public static ComputeGraph buildDataPointsTG(String dataDirectory, int dsize,
+  protected ComputeGraph buildGraphPartitionTG(String path, int dsize,
                                                int parallelismValue,
-                                               Config conf) {
+                                               Config conf,
+                                               GraphPartiton graphPartiton) {
     GraphDataSource dataObjectSource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory, dsize);
-    DataObjectCompute dataObjectCompute = new DataObjectCompute(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue);
-    DataObjectSink dataObjectSink = new DataObjectSink();
+        path, dsize);
 
+    DataSinkTask dataSinkTask = new DataSinkTask();
     ComputeGraphBuilder graphPartitionTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     graphPartitionTaskGraphBuilder.addSource("Graphdatasource", dataObjectSource,
         parallelismValue);
     ComputeConnection datapointComputeConnection1 = graphPartitionTaskGraphBuilder.addCompute(
-        "Graphdatacompute", dataObjectCompute, parallelismValue);
+        "Graphdatacompute", graphPartiton, parallelismValue);
     ComputeConnection datapointComputeConnection2 = graphPartitionTaskGraphBuilder.addSink(
-        "GraphPartitionSink", dataObjectSink, parallelismValue);
+        "GraphPartitionSink", dataSinkTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
     datapointComputeConnection1.direct("Graphdatasource")
@@ -204,89 +188,145 @@ public abstract class BasicComputation extends TaskWorker {
     return graphPartitionTaskGraphBuilder.build();
   }
 
-  public  static ComputeGraph buildGraphInitialValueTG(String dataDirectory, int dsize,
-                                                       int parallelismValue,
-                                                       Config conf) {
-    GraphDataSource pageRankValueHolder = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
-        dataDirectory, dsize);
-    PageRankValueHolderCompute pageRankValueHolderCompute = new PageRankValueHolderCompute(
-        Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue);
-    PageRankValueHolderSink pageRankValueHolderSink = new PageRankValueHolderSink();
+  protected ComputeGraph buildGraphInitialaizationTG(String path, int dsize,
+                                                     int parallelismValue,
+                                                     Config conf,
+                                                     GraphInitialization graphInitialization) {
+    GraphDataSource initialaizatioSource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
+        path, dsize);
+    DataInitializationSinkTask dataInitializationSinkTask = new DataInitializationSinkTask();
 
-
-    ComputeGraphBuilder pagerankInitialationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder initialationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
-    pagerankInitialationTaskGraphBuilder.addSource("pageRankValueHolder", pageRankValueHolder,
+    initialationTaskGraphBuilder.addSource("initialaizatioSource", initialaizatioSource,
         parallelismValue);
-    ComputeConnection datapointComputeConnection = pagerankInitialationTaskGraphBuilder.addCompute(
-        "pageRankValueHolderCompute", pageRankValueHolderCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = pagerankInitialationTaskGraphBuilder.addSink(
-        "GraphInitializationSink", pageRankValueHolderSink, parallelismValue);
+    ComputeConnection datapointComputeConnection = initialationTaskGraphBuilder.addCompute(
+        "graphInitializationCompute", graphInitialization, parallelismValue);
+    ComputeConnection firstGraphComputeConnection = initialationTaskGraphBuilder.addSink(
+        "GraphInitializationSink", dataInitializationSinkTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
-    datapointComputeConnection.direct("pageRankValueHolder")
+    datapointComputeConnection.direct("initialaizatioSource")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    firstGraphComputeConnection.direct("pageRankValueHolderCompute")
+    firstGraphComputeConnection.direct("graphInitializationCompute")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    pagerankInitialationTaskGraphBuilder.setMode(OperationMode.BATCH);
+    initialationTaskGraphBuilder.setMode(OperationMode.BATCH);
 
-    pagerankInitialationTaskGraphBuilder.setTaskGraphName("GraphInitialValueTG");
+    initialationTaskGraphBuilder.setTaskGraphName("GraphInitialValueTG");
 
     //Build the first taskgraph
-    return pagerankInitialationTaskGraphBuilder.build();
+    return initialationTaskGraphBuilder.build();
 
   }
 
-  public  ComputeGraph buildComputationTG(int parallelismValue, Config conf,
-                                          PageRankSource pageRankSource,
-                                          PageRankKeyedReduce pageRankKeyedReduce) {
+  protected ComputeGraph buildComputationTG(int parallelismValue, Config conf,
+                                            SourceTask sourceTask,
+                                            ComputeTask computeTask,
+                                            ReductionFunction reductionFunction,
+                                            PrimitiveMessageTypes messageType) {
 
-    PagerankSink pagerankSink = new PagerankSink();
+    SinkTask sinkTask = new SinkTask();
 
-    ComputeGraphBuilder pagerankComputationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
+    ComputeGraphBuilder computationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
-    pagerankComputationTaskGraphBuilder.addSource("source",
-        pageRankSource, parallelismValue);
+    computationTaskGraphBuilder.addSource("source",
+        sourceTask, parallelismValue);
 
-    ComputeConnection computeConnectionKeyedReduce = pagerankComputationTaskGraphBuilder.addCompute(
-        "pagerankcompute", pageRankKeyedReduce, parallelismValue);
+    ComputeConnection computeConnectionKeyedReduce = computationTaskGraphBuilder.addCompute(
+        "compute", computeTask, parallelismValue);
 
-    ComputeConnection computeConnectionAllReduce = pagerankComputationTaskGraphBuilder.addSink(
-        "pageranksink", pagerankSink, parallelismValue);
+    ComputeConnection computeConnectionAllReduce = computationTaskGraphBuilder.addSink(
+        "sink", sinkTask, parallelismValue);
 
-    computeConnectionKeyedReduce.keyedReduce("source")
-        .viaEdge("keyedreduce")
-        .withReductionFunction(new ReduceFn(Op.SUM, MessageTypes.DOUBLE_ARRAY))
-        .withKeyType(MessageTypes.OBJECT)
-        .withDataType(MessageTypes.DOUBLE_ARRAY);
+    if (reductionFunction == null) {
 
-    computeConnectionAllReduce.allreduce("pagerankcompute")
+      computeConnectionKeyedReduce.keyedReduce("source")
+          .viaEdge("keyedreduce")
+          .withReductionFunction(new ReduceFn(Op.SUM, messageType))
+          .withKeyType(MessageTypes.OBJECT)
+          .withDataType(MessageTypes.DOUBLE_ARRAY);
+    } else {
+
+      computeConnectionKeyedReduce.keyedReduce("source")
+          .viaEdge("keyedreduce")
+          .withReductionFunction(reductionFunction)
+          .withKeyType(MessageTypes.OBJECT)
+          .withDataType(messageType);
+
+    }
+
+    computeConnectionAllReduce.allreduce("compute")
         .viaEdge("all-reduce")
         .withReductionFunction(new Aggregate())
         .withDataType(MessageTypes.OBJECT);
 
-    pagerankComputationTaskGraphBuilder.setMode(OperationMode.BATCH);
-    pagerankComputationTaskGraphBuilder.setTaskGraphName("buildComputationTG");
-    return pagerankComputationTaskGraphBuilder.build();
+    computationTaskGraphBuilder.setMode(OperationMode.BATCH);
+    computationTaskGraphBuilder.setTaskGraphName("buildComputationTG");
+    return computationTaskGraphBuilder.build();
+  }
+
+  public abstract class GraphPartiton extends ConstructDataStr {
+
+
+    public GraphPartiton(String edgename, int dsize, int parallel) {
+      super(edgename, dsize, parallel);
+    }
+
+    public abstract void constructDataStr(IMessage message);
+    public void writeMsgOnEdge(String edgeName, HashMap<String, DefaultVertex> hashMap) {
+      context.write(edgeName, hashMap);
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        constructDataStr(message);
+
+      }
+      context.end(getEdgeName());
+      return true;
+    }
+  }
+
+  public abstract class GraphInitialization extends ConstructDataStr {
+
+    public GraphInitialization(String edgename, int dsize, int parallel) {
+      super(edgename, dsize, parallel);
+    }
+
+    public abstract void constructDataStr(HashMap<String, VertexStatus> hashMap,
+                                          IMessage message);
+    public void writeMsgOnEdge(String edgeName, HashMap<String, VertexStatus> hashMap) {
+      context.write(edgeName, hashMap);
+    }
+
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        HashMap<String, VertexStatus> map = new HashMap<String, VertexStatus>();
+        constructDataStr(map, message);
+
+      }
+      context.end(getEdgeName());
+      return true;
+    }
   }
 
 
+// abstract source task class
 
-
-  public abstract class PageRankSource extends BaseSource implements Receptor {
+  public abstract class SourceTask extends BaseSource implements Receptor {
     private DataObject<?> graphObject = null;
     private DataObject<?> graphObjectvalues = null;
 
-    private int count = 0;
-    private double danglingValueLocal;
+    public int count = 0;
 
-
-
-    public abstract void sendmessage(String edgename, ArrayList<String> nearestVertex,
-                                     double pageValue);
+    public abstract void sendmessage(HashMap<String, DefaultVertex> hashMap1,
+                                     HashMap<String, VertexStatus> hashMap2);
 
 
     public void writemessage(String edgename, String destinationVertex, double value) {
@@ -296,69 +336,14 @@ public abstract class BasicComputation extends TaskWorker {
     @Override
     public void execute() {
       DataPartition<?> dataPartition = graphObject.getPartition(context.taskIndex());
-      HashMap<String, ArrayList<String>> graphData = (HashMap<String, ArrayList<String>>)
+      HashMap<String, DefaultVertex> graphData = (HashMap<String, DefaultVertex>)
           dataPartition.getConsumer().next();
 
       DataPartition<?> graphInizalationPartition = graphObjectvalues
           .getPartition(context.taskIndex());
-      HashMap<String, Double> graphPageRankValue = (HashMap<String, Double>)
+      HashMap<String, VertexStatus> graphInitialValue = (HashMap<String, VertexStatus>)
           graphInizalationPartition.getConsumer().next();
-
-
-      if (count < graphData.size()) {
-        for (int i = 0; i < graphData.size(); i++) {
-          Object key = graphData.keySet().toArray()[i];
-          if (!key.equals("")) {
-
-            Double value = graphPageRankValue.get(key);
-            Double recievedDanglingvalue = graphPageRankValue.get("danglingvalues");
-            ArrayList<String> arrayList = graphData.get(key);
-            Double valueAndDanglingValue = null;
-
-            //when dangling value recived
-            if (recievedDanglingvalue != null) {
-              if (value != null) {
-                valueAndDanglingValue = value + ((0.85 * recievedDanglingvalue) / graphsize);
-                sendmessage("keyedreduce", arrayList, valueAndDanglingValue);
-
-              } else {
-                valueAndDanglingValue = (((double) 1 / graphsize) * 0.15)
-                    + ((0.85 * recievedDanglingvalue) / graphsize);
-                if (arrayList.size() != 0) {
-                  sendmessage("keyedreduce", arrayList, valueAndDanglingValue);
-                }
-              }
-            } else {
-              if (value != null) {
-                valueAndDanglingValue = value;
-                sendmessage("keyedreduce", arrayList, valueAndDanglingValue);
-              } else {
-                valueAndDanglingValue = ((double) 1 / graphsize) * 0.15;
-                if (arrayList.size() != 0) {
-                  sendmessage("keyedreduce", arrayList, valueAndDanglingValue);
-                }
-              }
-            }
-
-            if (arrayList.size() == 0) {
-
-              danglingValueLocal += valueAndDanglingValue;
-            }
-          }
-          count++;
-
-
-        }
-      } else {
-        count = 0;
-        if (context.writeEnd("keyedreduce", "danglingvalues",
-            new double[]{danglingValueLocal})) {
-          danglingValueLocal = 0;
-        }
-
-      }
-
-
+      sendmessage(graphData, graphInitialValue);
 
     }
 
@@ -368,50 +353,29 @@ public abstract class BasicComputation extends TaskWorker {
       if ("graphData".equals(name)) {
         this.graphObject = data;
       }
-      if ("graphInitialPagerankValue".equals(name)) {
+      if ("graphInitialValue".equals(name)) {
         this.graphObjectvalues = data;
       }
     }
   }
 
+  //abstracted compute task class
+
+  public  abstract class ComputeTask extends BaseCompute {
 
 
-  public  abstract class PageRankKeyedReduce extends BaseCompute {
-    private HashMap<String, Double> output = new HashMap<String, Double>();
-
-    public abstract double calculation(double value);
+    public abstract void calculation(Iterator iterator, HashMap<String, VertexStatus> hashMap);
 
 
     @Override
     public boolean execute(IMessage content) {
-
+      HashMap<String, VertexStatus> output = new HashMap<String, VertexStatus>();
       Iterator<Object> it;
       if (content.getContent() instanceof Iterator) {
         it = (Iterator<Object>) content.getContent();
-
-        while (it.hasNext()) {
-          Object next = it.next();
-          if (next instanceof Tuple) {
-            Tuple kc = (Tuple) next;
-
-            if (!kc.getKey().equals("danglingvalues")) {
-              double value = ((double[]) kc.getValue())[0];
-              double pagerankValue  = calculation(value);
-
-              output.put((String) kc.getKey(), pagerankValue);
-
-              context.write("all-reduce", output);
-            } else {
-              double danglingValue = ((double[]) kc.getValue())[0];
-              output.put((String) kc.getKey(), danglingValue);
-              context.write("all-reduce", output);
-            }
-
-          }
-        }
+        calculation(it, output);
 
       }
-
       context.end("all-reduce");
       return true;
     }
@@ -423,19 +387,21 @@ public abstract class BasicComputation extends TaskWorker {
     }
   }
 
-  private static class PagerankSink extends BaseSink implements Collector {
+  //general Sink class
+
+  private static class SinkTask extends BaseSink implements Collector {
     private DataObject<Object> datapoints = null;
-    private HashMap<String, Double> finalout = new HashMap<String, Double>();
+    private HashMap<String, VertexStatus> finalout;
 
 
     @Override
     public boolean execute(IMessage content) {
-      finalout = (HashMap<String, Double>) content.getContent();
+      finalout = (HashMap<String, VertexStatus>) content.getContent();
       return true;
     }
 
     @Override
-    public DataPartition<HashMap<String, Double>> get() {
+    public DataPartition<HashMap<String, VertexStatus>> get() {
       return new EntityPartition<>(context.taskIndex(), finalout);
     }
 
@@ -446,6 +412,8 @@ public abstract class BasicComputation extends TaskWorker {
     }
 
   }
+
+  //general all-reduce function
 
   private static class Aggregate implements IFunction {
 
@@ -462,6 +430,12 @@ public abstract class BasicComputation extends TaskWorker {
 
 
     }
+  }
+
+  //this for edge function implemnentations like ked reduce function.
+
+  public  abstract class ReductionFunction implements IFunction {
+
   }
 
 
