@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.logging.Logger;
 
 import com.google.common.graph.ElementOrder;
@@ -43,12 +44,11 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
+import edu.iu.dsc.tws.tset.env.TBaseBuildContext;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class TBaseGraph {
   private static final Logger LOG = Logger.getLogger(TBaseGraph.class.getName());
-
-  private static int taskGraphCount = 0; // todo: this could be a problem for fault tolerance
 
   private MutableGraph<TBase> graph;
   private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
@@ -139,15 +139,23 @@ public class TBaseGraph {
     this.dfwGraphBuilder.operationMode(opMode);
   }
 
-  /**
-   * Build the build sequence
-   */
-  private void buildSequence(Set<TBase> buildSeq) {
+  private TBaseBuildContext doBuild(Set<BuildableTSet> roots, AdjNodesExtractor nodesExtractor) {
+    String buildId = generateBuildId(roots);
+
+    Set<TBase> buildSeq = conditionalBFS(roots, nodesExtractor);
+    LOG.info(() -> "Build order for build " + buildId + " : " + buildSeq.toString());
+
+    // building the individual TBases
     for (TBase node : buildSeq) {
       // here, build seq is required for tlinks to filter out nodes that are relevant to this
       // particular build sequence
       ((Buildable) node).build(buildSeq);
     }
+
+    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
+    dataflowGraph.setGraphName(buildId);
+
+    return new TBaseBuildContext(buildId, sources, buildSeq, dataflowGraph);
   }
 
   /**
@@ -155,22 +163,9 @@ public class TBaseGraph {
    *
    * @return data flow graph to execute
    */
-  public ComputeGraph build() {
-    Set<TBase> buildSeq = conditionalBFS(sources, this::getSuccessors);
-    LOG.info(() -> "Build order: " + buildSeq.toString());
-
-    // build it
-    buildSequence(buildSeq);
-
-    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
-    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
-
-    // clean the upstream of the cached tsets
-//    if (cleanUpstream(sets)) {
-//      LOG.fine("Some TSets have been cleaned up!");
-//    }
-
-    return dataflowGraph;
+  public TBaseBuildContext build() {
+    // when building the entire graph, we will be going top-down direction. Hence getSuccessors
+    return doBuild(sources, this::getSuccessors);
   }
 
   /**
@@ -179,22 +174,10 @@ public class TBaseGraph {
    * @param leafTSet leaf tset
    * @return data flow graph to execute the subgraph of TSets
    */
-  public ComputeGraph build(BuildableTSet leafTSet) {
-    Set<TBase> buildSeq = conditionalBFS(leafTSet, this::getPredecessors);
-
-    LOG.info(() -> "Build order: " + buildSeq.toString());
-    // build it
-    buildSequence(buildSeq);
-
-    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
-    dataflowGraph.setGraphName("taskgraph" + (++taskGraphCount));
-
-    // clean the upstream of the cached tsets
-//    if (cleanUpstream(sets)) {
-//      LOG.fine("Some TSets have been cleaned up!");
-//    }
-
-    return dataflowGraph;
+  public TBaseBuildContext build(BuildableTSet leafTSet) {
+    // when building a TSet related to an action, we will be going bottom-up direction.
+    // Hence getPredecessors
+    return doBuild(Collections.singleton(leafTSet), this::getPredecessors);
   }
 
   /**
@@ -243,7 +226,7 @@ public class TBaseGraph {
 
         buildSequence.add(t);
 
-        // todo: this is wrong because, when running BFS on the subsequent roots, if there are
+        // Following was wrong because, when running BFS on the subsequent roots, if there are
         // join/ union edges, those tlinks have already been built. so, buildSquence needs to be
         // built separately
 
@@ -290,5 +273,18 @@ public class TBaseGraph {
       }
     }
     return true;
+  }
+
+  private static String generateBuildId(Set<? extends TBase> roots) {
+    StringJoiner joiner = new StringJoiner("_");
+    joiner.add("build");
+    for (TBase t : roots) {
+      joiner.add(t.getId());
+    }
+    return joiner.toString();
+  }
+
+  private static String generateBuildId(TBase root) {
+    return "build_" + root.getId();
   }
 }

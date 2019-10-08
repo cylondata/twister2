@@ -31,6 +31,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   private BaseTSet cachedLeaf;
   private ComputeGraph cachedGraph;
 
+
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
   }
@@ -77,8 +78,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param leafTset leaf tset
    */
   public void run(BaseTSet leafTset) {
-    ComputeGraph dataflowGraph = getTSetGraph().build(leafTset);
-    executeDataFlowGraph(dataflowGraph, null, false);
+    TBaseBuildContext buildContext = getTSetGraph().build(leafTset);
+    executeDataFlowGraph(buildContext.getComputeGraph(), null, false);
   }
 
   /**
@@ -93,7 +94,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     if (isIterative && cachedLeaf != null && cachedLeaf == leafTset) {
       dataflowGraph = cachedGraph;
     } else {
-      dataflowGraph = getTSetGraph().build(leafTset);
+      TBaseBuildContext buildContext = getTSetGraph().build(leafTset);
+      dataflowGraph = buildContext.getComputeGraph();
       cachedGraph = dataflowGraph;
       cachedLeaf = leafTset;
     }
