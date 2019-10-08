@@ -25,15 +25,15 @@ public interface BuildableTLink extends TBase, Buildable {
   Edge getEdge();
 
   @Override
-  default void build(Collection<? extends TBase> partialBuildSeq) {
+  default void build(Collection<? extends TBase> buildSequence) {
 
     // filter out the relevant sources out of the predecessors
     HashSet<TBase> relevantSources = new HashSet<>(getTBaseGraph().getPredecessors(this));
-    relevantSources.retainAll(partialBuildSeq);
+    relevantSources.retainAll(buildSequence);
 
     // filter out the relevant sources out of the successors
     HashSet<TBase> relevantTargets = new HashSet<>(getTBaseGraph().getSuccessors(this));
-    relevantTargets.retainAll(partialBuildSeq);
+    relevantTargets.retainAll(buildSequence);
 
     for (TBase source : relevantSources) {
       for (TBase target : relevantTargets) {

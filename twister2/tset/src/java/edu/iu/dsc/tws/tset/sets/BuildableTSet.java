@@ -29,7 +29,7 @@ public interface BuildableTSet extends TBase, Buildable {
   INode getINode();
 
   @Override
-  default void build(Collection<? extends TBase> partialBuildSeq) {
+  default void build(Collection<? extends TBase> buildSequence) {
     GraphBuilder dfwGraphBuilder = getTBaseGraph().getDfwGraphBuilder();
 
     if (getINode() instanceof ICompute) {

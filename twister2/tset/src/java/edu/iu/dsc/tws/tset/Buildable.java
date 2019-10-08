@@ -24,10 +24,10 @@ public interface Buildable {
   /**
    * Builds the underlying node or edge
    *
-   * @param partialBuildSeq partial build sequence. i.e. the set of nodes and edges that have been
+   * @param buildSequence partial build sequence. i.e. the set of nodes and edges that have been
    *                        build so far, by traversing the tset subgraph
    */
-  void build(Collection<? extends TBase> partialBuildSeq);
+  void build(Collection<? extends TBase> buildSequence);
 
   /**
    * tset env
