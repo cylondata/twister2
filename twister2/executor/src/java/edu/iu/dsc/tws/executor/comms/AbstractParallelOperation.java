@@ -21,8 +21,10 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.compute.executor.ISync;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
+
   protected Config config;
 
   protected Communicator channel;
@@ -55,8 +57,33 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
     outMessages.put(targetTask, queue);
   }
 
+  public boolean sendBarrier(int src, long barrierId) {
+    return this.getOp().sendBarrier(src, barrierId);
+  }
+
+  @Override
+  public void close() {
+    this.getOp().close();
+  }
+
+  @Override
+  public void reset() {
+    this.getOp().reset();
+  }
+
+  @Override
+  public boolean isComplete() {
+    // first progress
+    this.progress();
+
+    // then check isComplete
+    return this.getOp().isComplete();
+  }
+
+  protected abstract BaseOperation getOp();
+
   @Override
   public boolean progress() {
-    return true;
+    return this.getOp().progress();
   }
 }
