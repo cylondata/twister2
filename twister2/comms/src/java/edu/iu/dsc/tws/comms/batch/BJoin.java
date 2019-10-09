@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.comms.batch;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +63,7 @@ public class BJoin extends BaseOperation {
   private TWSChannel channel;
 
   /*BARRIER RELATED FLAGS*/
-  private long currentBarrier = -1;
+  private byte[] currentBarrier = null;
   private boolean leftBarrierSent;
   private boolean rightBarrierSent;
   /*END OF BARRIER RELATED FLAGS*/
@@ -224,8 +225,8 @@ public class BJoin extends BaseOperation {
   }
 
   @Override
-  public boolean sendBarrier(int src, long barrierId) {
-    if (this.currentBarrier == barrierId) {
+  public boolean sendBarrier(int src, byte[] barrierId) {
+    if (Arrays.equals(this.currentBarrier, barrierId)) {
       // this is a retry
       if (!this.leftBarrierSent) {
         this.leftBarrierSent = partitionLeft.send(src, barrierId, MessageFlags.SYNC_BARRIER);
@@ -243,7 +244,7 @@ public class BJoin extends BaseOperation {
 
     if (bothBarriersSent) {
       //reset everything
-      this.currentBarrier = -1;
+      this.currentBarrier = null;
       this.leftBarrierSent = false;
       this.rightBarrierSent = false;
     } else {
