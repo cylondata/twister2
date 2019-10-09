@@ -79,6 +79,8 @@ public class CDFWWorker implements IWorker, JobListener {
 
   protected CDFWEnv cdfwEnv;
 
+  private static List<JobMasterAPI.WorkerInfo> workerInfoList;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController wController, IPersistentVolume pVolume,
@@ -90,8 +92,10 @@ public class CDFWWorker implements IWorker, JobListener {
     this.volatileVolume = vVolume;
 
     this.env = WorkerEnvironment.init(cfg, workerID, wController, pVolume, vVolume);
+
     // create the executor
     cdfwRuntime = new CDFWRuntime(cfg, workerID, env.getWorkerList(), env.getCommunicator());
+
     // register driver listener
     JMWorkerAgent.addJobListener(this);
 
@@ -111,22 +115,26 @@ public class CDFWWorker implements IWorker, JobListener {
 
   @Override
   public void workersScaledUp(int instancesAdded) {
+    LOG.info("I am getting called for the scale up request update");
     env.close();
     env = WorkerEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
     // create the executor
-    //cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
+    LOG.info("cdfw worker info list after scaling:" + env.getWorkerList());
+    cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
     execute();
+    env.close();
   }
 
   @Override
   public void workersScaledDown(int instancesRemoved) {
-    env.close();
+    //env.close();
     env = WorkerEnvironment.init(config, workerId, workerController,
         persistentVolume, volatileVolume);
     // create the executor
-    //cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
+    cdfwRuntime = new CDFWRuntime(config, workerId, env.getWorkerList(), env.getCommunicator());
     execute();
+    env.close();
   }
 
   @Override

@@ -238,17 +238,7 @@ public final class KMeansConnectedDataflowExample {
       Config config = cdfwEnv.getConfig();
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      String dataDirectory = config.getStringValue(CDFConstants.ARGS_DINPUT);
-      String centroidDirectory = config.getStringValue(CDFConstants.ARGS_CINPUT);
-      int parallelism
-          = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_PARALLELISM_VALUE));
-      int instances = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_WORKERS));
-      int iterations = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_ITERATIONS));
-      int dimension = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_DIMENSIONS));
-      int dsize = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_DSIZE));
-      int csize = Integer.parseInt(config.getStringValue(CDFConstants.ARGS_CSIZE));
-
-      /*String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
+      String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
       String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
       int parallelism =
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
@@ -257,7 +247,7 @@ public final class KMeansConnectedDataflowExample {
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_ITERATIONS)));
       int dimension = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DIMENSIONS)));
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
-      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));*/
+      int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
 
       generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
 

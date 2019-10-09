@@ -32,7 +32,7 @@ public class CDFWEnv {
   private Config config;
 
   // volatile because workerInfoList should be the same for all the threads
-  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+  private volatile List<JobMasterAPI.WorkerInfo> workerInfoList;
 
   public CDFWEnv(Config config, IScaler resourceScaler, IDriverMessenger driverMessenger,
                  List<JobMasterAPI.WorkerInfo> workers) {
