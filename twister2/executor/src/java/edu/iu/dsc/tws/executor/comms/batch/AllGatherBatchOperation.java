@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BAllGather;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class AllGatherBatchOperation extends AbstractParallelOperation {
@@ -53,18 +54,8 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
+  protected BaseOperation getOp() {
+    return this.op;
   }
 
   private class FinalGatherReceive implements BulkReceiver {
@@ -89,15 +80,5 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     public boolean sync(int target, byte[] message) {
       return syncs.get(target).sync(inEdge, message);
     }
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
   }
 }

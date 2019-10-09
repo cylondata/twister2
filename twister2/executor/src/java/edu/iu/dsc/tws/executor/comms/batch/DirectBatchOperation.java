@@ -24,9 +24,11 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BDirect;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class DirectBatchOperation extends AbstractParallelOperation {
+
   private BDirect op;
 
   public DirectBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -71,27 +73,7 @@ public class DirectBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

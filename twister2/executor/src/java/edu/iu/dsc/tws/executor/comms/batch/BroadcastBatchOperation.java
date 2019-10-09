@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -23,10 +22,11 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BBroadcast;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class BroadcastBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(BroadcastBatchOperation.class.getName());
+
   private BBroadcast op;
 
   public BroadcastBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -51,16 +51,6 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
     return op.bcast(source, message.getContent(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
   public class BcastReceiver implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
@@ -80,17 +70,7 @@ public class BroadcastBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

@@ -30,13 +30,12 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BKeyedReduce;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
-
-  private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
 
   private BKeyedReduce op;
 
@@ -106,22 +105,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

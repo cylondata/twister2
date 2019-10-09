@@ -24,11 +24,13 @@ import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.batch.BKeyedPartition;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
+
   private BKeyedPartition op;
 
   public KeyedPartitionBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -56,13 +58,8 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
+  protected BaseOperation getOp() {
+    return this.op;
   }
 
   public class PartitionReceiver implements BulkReceiver {
@@ -80,20 +77,5 @@ public class KeyedPartitionBatchOperation extends AbstractParallelOperation {
     public boolean sync(int target, byte[] message) {
       return syncs.get(target).sync(inEdge, message);
     }
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
   }
 }
