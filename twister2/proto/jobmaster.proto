@@ -100,13 +100,6 @@ message RegisterWorkerResponse {
     string reason = 3;
 }
 
-message Recover {
-    oneof idRequired {
-        int32 workerID = 1;
-    }
-}
-
-
 // a worker informs the master that its state has changed
 // this message is not sent for STARTING state, it is covered by RegisterWorker message
 // this message is sent for states: RUNNING and COMPLETED
