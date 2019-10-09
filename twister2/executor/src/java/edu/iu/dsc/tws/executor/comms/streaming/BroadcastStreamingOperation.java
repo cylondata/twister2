@@ -75,7 +75,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  protected BaseOperation getOp() {
+  public BaseOperation getOp() {
     return this.op;
   }
 }

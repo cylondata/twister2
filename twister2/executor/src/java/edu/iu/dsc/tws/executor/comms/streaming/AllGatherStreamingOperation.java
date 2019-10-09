@@ -73,7 +73,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  protected BaseOperation getOp() {
+  public BaseOperation getOp() {
     return this.op;
   }
 }

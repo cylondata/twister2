@@ -66,22 +66,7 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  protected BaseOperation getOp() {
+  public BaseOperation getOp() {
     return this.op;
   }
 }
