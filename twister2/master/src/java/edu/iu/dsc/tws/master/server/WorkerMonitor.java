@@ -57,7 +57,6 @@ public class WorkerMonitor implements MessageHandler {
   private DashboardClient dashClient;
   private IDriver driver;
 
-  // a flag to show whether allWorkersRegistered message is sent
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -249,76 +248,6 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  /**
-   * register message received after failure
-   */
-  private void reregisterWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
-
-    LOG.fine("RegisterWorker message received: \n" + message);
-    JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
-
-    // check whether the worker has a valid ID
-    // if the worker ID is not valid, registration fails
-    if (message.getWorkerID() < 0) {
-      // send the response message
-      String failMessage = "Registration failed. WorkerID = " + message.getWorkerID() + ". "
-          + "WorkerID has to be the previous valid workerID when coming from failure.";
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
-
-      LOG.warning("A worker tried to register after failure but did not have a valid workerID."
-          + " Provided workerID = " + message.getWorkerID());
-
-      return;
-    }
-
-    // whether this is a new registration, or re-registering failed one
-    boolean newRegistration = false;
-
-    WorkerWithState workerWithState = workers.get(message.getWorkerID());
-    // This worker should exist in workers list since it is coming from failure
-    // but, we still register it even if it did not register previously
-    // it may have failed in the starting phase and restarted
-    if (workerWithState == null) {
-      workerWithState = new WorkerWithState(workerInfo);
-      newRegistration = true;
-
-      LOG.warning("A worker registered after failure, but it did not register previously. "
-          + "workerID = " + message.getWorkerID());
-    }
-    workerWithState.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
-    workers.put(message.getWorkerID(), workerWithState);
-
-    // send success response message
-    sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
-
-    LOG.info("Worker[" + message.getWorkerID() + "] registered after failure.");
-
-    // send worker registration message to dashboard
-    // TODO: modify register message to Dashboard
-    //       add fromFailure field
-    if (dashClient != null) {
-      dashClient.registerWorker(workerInfo);
-    }
-
-    // if this is a new registration and all workers joined, inform all workers
-    if (newRegistration && allWorkersRegistered()) {
-      LOG.info("All " + workers.size() + " workers joined the job.");
-      sendListWorkersResponseToWaitList();
-      sendWorkersJoinedMessage();
-      return;
-    }
-
-
-    // if this is not a new registration and all workers joined, inform this worker only
-    if (!newRegistration && allWorkersRegistered()) {
-
-      JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
-      rrServer.sendMessage(joinedMessage, message.getWorkerID());
-      return;
-    }
-  }
-  //notify the worker when there was a worker coming from a failure.
-
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {
 
     // if this worker has not registered
@@ -452,37 +381,6 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-  public boolean broadcastRecoveryMessage(Message message) {
-
-    // if all workers are not registered,
-    // send a failure response message to the driver
-    // do not send the broadcast message to any workers
-    if (!allWorkersRegistered()) {
-      LOG.warning("Could not send the broadcast message to all workers, "
-          + "since they are not all registered.");
-      return false;
-    }
-
-    // deliver the broadcast message to all workers
-    for (int workerID : workers.keySet()) {
-      boolean queued = rrServer.sendMessage(message, workerID);
-
-      // if the message can not be queued, send a failure response
-      // this may deliver the broadcast message to some workers but not to all
-      // workers may be in an inconsistent state
-      // TODO: we may need to find a solution to this
-      if (!queued) {
-        LOG.warning("Broadcast message can not be sent to workerID: " + workerID);
-        return false;
-      }
-    }
-
-    // TODO: before successfully completing,
-    // we need to watch sendComplete events for the broadcast messages to the workers
-    // that will make sure that the broadcast message is delivered to all workers
-
-    return true;
-  }
   public boolean broadcastMessage(Message message) {
 
     JobMasterAPI.DriverMessage driverMessage =
