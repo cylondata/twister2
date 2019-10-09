@@ -277,6 +277,11 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                   = streamingSourceInstances.get(sourceTask, i);
               sourceStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
               found = true;
+            } else if (streamingSinkInstances.contains(sourceTask, i)) {
+              SinkStreamingInstance sinkStreamingInstance
+                  = streamingSinkInstances.get(sourceTask, i);
+              sinkStreamingInstance.registerInParallelOperation(c.getEdge(sIndex).getName(), op);
+              found = true;
             }
             if (!found) {
               throw new RuntimeException("Not found: " + c.getSourceTask());
@@ -319,6 +324,12 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
               SourceBatchInstance sourceBatchInstance
                   = batchSourceInstances.get(sourceTask, i);
               sourceBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
+              found = true;
+            } else if (batchSinkInstances.contains(sourceTask, i)) {
+              // for fault tolerance implementation, sink can become a source of
+              // the edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink
+              SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(sourceTask, i);
+              sinkBatchInstance.registerInParallelOperation(c.getEdge(sIndex).getName(), op);
               found = true;
             }
           }

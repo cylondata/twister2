@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.OutputCollection;
-import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -148,6 +147,8 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private String[] outEdgeArray;
 
+  private TaskContextImpl taskContext;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
@@ -180,7 +181,7 @@ public class SourceStreamingInstance implements INodeInstance {
 
   public void prepare(Config cfg) {
     outputStreamingCollection = new DefaultOutputCollection(outStreamingQueue);
-    TaskContextImpl taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
+    taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId,
         outputStreamingCollection, nodeConfigs, outEdges, taskSchedule, OperationMode.STREAMING);
     streamingTask.prepare(cfg, taskContext);
@@ -236,6 +237,7 @@ public class SourceStreamingInstance implements INodeInstance {
             this.checkpointingClient
         );
         this.scheduleBarriers(checkpointVersion++);
+        //taskContext.write("ft-gather-edge", checkpointVersion);
         this.snapshotQueue.add(this.snapshot.copy());
       }
     }
@@ -245,19 +247,19 @@ public class SourceStreamingInstance implements INodeInstance {
       if (message != null) {
         String edge = message.edge();
         IParallelOperation op = outStreamingParOps.get(edge);
+        boolean barrierMessage = (message.getFlag() & MessageFlags.SYNC_BARRIER)
+            == MessageFlags.SYNC_BARRIER;
         // if we successfully send remove message
-        if (op.send(globalTaskId, message, message.getFlag())) {
+        if (barrierMessage ? op.send(globalTaskId, message, message.getFlag())
+            : op.sendBarrier(globalTaskId, (Long) message.getContent())) {
           outStreamingQueue.poll();
 
-          if (this.checkpointable) {
-            if ((message.getFlag() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
-              barrierMessagesSent++;
-
-              if (barrierMessagesSent == outStreamingParOps.size()) {
-                barrierMessagesSent = 0;
-                ((CheckpointableTask) this.streamingTask)
-                    .onCheckpointPropagated(this.snapshotQueue.poll());
-              }
+          if (this.checkpointable && barrierMessage) {
+            barrierMessagesSent++;
+            if (barrierMessagesSent == outStreamingParOps.size()) {
+              barrierMessagesSent = 0;
+              ((CheckpointableTask) this.streamingTask)
+                  .onCheckpointPropagated(this.snapshotQueue.poll());
             }
           }
         } else {
@@ -296,8 +298,7 @@ public class SourceStreamingInstance implements INodeInstance {
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
     buffer.putLong(bid);
     for (String edge : outStreamingParOps.keySet()) {
-      this.outStreamingQueue.add(new TaskMessage<>(buffer.array(),
-          MessageFlags.SYNC_BARRIER, edge, this.globalTaskId));
+      taskContext.writeBarrier(edge, buffer.array());
     }
   }
 

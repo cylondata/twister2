@@ -122,6 +122,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    */
   private String[] inEdgeArray;
 
+  private TaskContextImpl taskContext;
+
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
@@ -157,9 +159,10 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    * @param cfg configuration
    */
   public void prepare(Config cfg) {
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+    taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan,
-        OperationMode.STREAMING));
+        OperationMode.STREAMING);
+    streamingTask.prepare(cfg, taskContext);
 
     /// we will use this array for iteration
     this.intOpArray = new IParallelOperation[streamingInParOps.size()];
@@ -219,6 +222,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     if (this.checkpointable && this.streamingInQueue.isEmpty()) {
       long checkpointedBarrierId = this.pendingCheckpoint.execute();
       if (checkpointedBarrierId != -1) {
+        //taskContext.write("ft-gather-edge", checkpointedBarrierId);
         ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
       }
     }

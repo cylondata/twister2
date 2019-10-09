@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -37,6 +38,7 @@ import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.task.window.api.IWindowedSink;
 
 /**
@@ -107,10 +109,7 @@ public final class ComputeGraphBuilder {
    * @return a compute connection, that can be used to connect this node to other nodes as a child
    */
   public ComputeConnection addSink(String name, ISink sink) {
-    Vertex vertex = new Vertex(name, sink, defaultParallelism);
-    nodes.put(name, vertex);
-
-    return createComputeConnection(name);
+    return this.addSink(name, sink, defaultParallelism);
   }
 
   /**
@@ -124,7 +123,7 @@ public final class ComputeGraphBuilder {
   public ComputeConnection addSink(String name, ISink sink, int parallel) {
     Vertex vertex = new Vertex(name, sink, parallel);
     nodes.put(name, vertex);
-
+    this.addFTGatherSink(name);
     return createComputeConnection(name);
   }
 
@@ -139,7 +138,7 @@ public final class ComputeGraphBuilder {
   public ComputeConnection addSink(String name, IWindowedSink sink, int parallel) {
     Vertex vertex = new Vertex(name, sink, parallel);
     nodes.put(name, vertex);
-
+    this.addFTGatherSink(name);
     return createComputeConnection(name);
   }
 
@@ -151,10 +150,7 @@ public final class ComputeGraphBuilder {
    * @return a compute connection, that can be used to connect this node to other nodes as a child
    */
   public ComputeConnection addCompute(String name, ICompute compute) {
-    Vertex vertex = new Vertex(name, compute, defaultParallelism);
-    nodes.put(name, vertex);
-
-    return createComputeConnection(name);
+    return this.addCompute(name, compute, defaultParallelism);
   }
 
   /**
@@ -168,7 +164,7 @@ public final class ComputeGraphBuilder {
   public ComputeConnection addCompute(String name, ICompute compute, int parallel) {
     Vertex vertex = new Vertex(name, compute, parallel);
     nodes.put(name, vertex);
-
+    this.addFTGatherSink(name);
     return createComputeConnection(name);
   }
 
@@ -192,10 +188,7 @@ public final class ComputeGraphBuilder {
    * @return a compute connection, that can be used to connect this node to other nodes as a child
    */
   public SourceConnection addSource(String name, ISource source) {
-    Vertex vertex = new Vertex(name, source, defaultParallelism);
-    nodes.put(name, vertex);
-
-    return createSourceConnection(name);
+    return this.addSource(name, source, defaultParallelism);
   }
 
   /**
@@ -209,7 +202,7 @@ public final class ComputeGraphBuilder {
   public SourceConnection addSource(String name, ISource source, int parallel) {
     Vertex vertex = new Vertex(name, source, parallel);
     nodes.put(name, vertex);
-
+    this.addFTGatherSink(name);
     return createSourceConnection(name);
   }
 
@@ -255,6 +248,15 @@ public final class ComputeGraphBuilder {
                                                              Map<String, String> nodeconstraints) {
     this.nodeConstraints.put(nodeName, nodeconstraints);
     return nodeConstraints;
+  }
+
+  private void addFTGatherSink(String sourceName) {
+    String ftTaskName = "ft-" + sourceName;
+    Vertex vertex = new Vertex(ftTaskName, new CheckpointingSGatherSink(), 1);
+    nodes.put(ftTaskName, vertex);
+    ComputeConnection computeConnection = this.createComputeConnection(ftTaskName);
+    computeConnection.gather(sourceName)
+        .withDataType(MessageTypes.LONG).viaEdge("ft-gather-edge");
   }
 
 

@@ -167,6 +167,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
   private String[] outEdgeArray;
   private PendingCheckpoint pendingCheckpoint;
 
+  private TaskContextImpl taskContext;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int taskId, int globalTaskId, int tIndex,
@@ -206,9 +208,11 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
    */
   public void prepare(Config cfg) {
     outputCollection = new DefaultOutputCollection(outQueue);
-    task.prepare(cfg, new TaskContextImpl(taskIndex, taskId, globalTaskId, taskName, parallelism,
+    taskContext = new TaskContextImpl(taskIndex, taskId, globalTaskId,
+        taskName, parallelism,
         workerId, outputCollection, nodeConfigs, inputEdges, outputEdges, taskSchedule,
-        OperationMode.STREAMING));
+        OperationMode.STREAMING);
+    task.prepare(cfg, taskContext);
 
     /// we will use this array for iteration
     this.outOpArray = new IParallelOperation[outParOps.size()];
@@ -317,6 +321,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       if (checkpointedBarrierId != -1) {
         this.scheduleBarriers(checkpointedBarrierId);
         ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
+
+        //taskContext.write("ft-gather-edge", checkpointedBarrierId);
       }
     }
 
