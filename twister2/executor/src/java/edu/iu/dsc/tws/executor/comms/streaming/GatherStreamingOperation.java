@@ -21,10 +21,12 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.stream.SGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class GatherStreamingOperation extends AbstractParallelOperation {
+
   private SGather op;
 
   public GatherStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -47,11 +49,6 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.gather(source, message.getContent(), flags);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress();
   }
 
 
@@ -81,5 +78,10 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean isComplete() {
     return op.isComplete();
+  }
+
+  @Override
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

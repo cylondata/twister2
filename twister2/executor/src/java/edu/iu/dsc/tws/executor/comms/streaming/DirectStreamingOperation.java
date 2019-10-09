@@ -23,10 +23,12 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.stream.SDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class DirectStreamingOperation extends AbstractParallelOperation {
+
   protected SDirect op;
 
   public DirectStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -74,22 +76,8 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  public boolean progress() {
-    return op.progress();
-  }
-
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
@@ -29,7 +30,6 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
  * The streaming operation.
  */
 public class PartitionStreamingOperation extends AbstractParallelOperation {
-  private boolean checkpointStarted = false;
 
   protected SPartition op;
 
@@ -69,22 +69,8 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  public boolean progress() {
-    return op.progress();
-  }
-
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }

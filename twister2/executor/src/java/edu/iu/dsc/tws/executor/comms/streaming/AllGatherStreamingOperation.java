@@ -22,10 +22,12 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.stream.SAllGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class AllGatherStreamingOperation extends AbstractParallelOperation {
+
   protected SAllGather op;
 
   public AllGatherStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -51,11 +53,6 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
     return op.gather(source, message.getContent(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress();
-  }
-
   private class FinalReduceReceive implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
@@ -76,17 +73,7 @@ public class AllGatherStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  protected BaseOperation getOp() {
+    return this.op;
   }
 }
