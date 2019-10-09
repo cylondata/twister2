@@ -129,6 +129,11 @@ public abstract class SourceReceiver implements MessageReceiver {
       return true;
     }
 
+    if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
+        || targetStates.get(target) == ReceiverState.SYNCED) {
+      return false;
+    }
+
     if (targetStates.get(target) == ReceiverState.INIT) {
       targetStates.put(target, ReceiverState.RECEIVING);
     }

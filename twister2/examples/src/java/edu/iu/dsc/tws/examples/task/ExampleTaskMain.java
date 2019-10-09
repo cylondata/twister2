@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.examples.comms.Constants;
 import edu.iu.dsc.tws.examples.task.batch.BTAllGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTAllReduceExample;
 import edu.iu.dsc.tws.examples.task.batch.BTBroadCastExample;
+import edu.iu.dsc.tws.examples.task.batch.BTDirectExample;
 import edu.iu.dsc.tws.examples.task.batch.BTGatherExample;
 import edu.iu.dsc.tws.examples.task.batch.BTJoinExample;
 import edu.iu.dsc.tws.examples.task.batch.BTKeyedGatherExample;
@@ -182,6 +183,9 @@ public class ExampleTaskMain {
           break;
         case "partition":
           submitJob(config, workers, jobConfig, BTPartitionExample.class.getName(), memory);
+          break;
+        case "direct":
+          submitJob(config, workers, jobConfig, BTDirectExample.class.getName(), memory);
           break;
         case "keyed-reduce":
           submitJob(config, workers, jobConfig, BTKeyedReduceExample.class.getName(), memory);

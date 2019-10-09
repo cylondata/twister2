@@ -54,7 +54,7 @@ public final class KMeansDataGenerator {
     } else if ("txt".equals(type)) {
       generateText(directory, numOfFiles, sizeOfFile, sizeMargin, dimension, cfg);
     } else {
-      throw new RuntimeException("Unsupported data gen type: " + type);
+      throw new IOException("Unsupported data gen type: " + type);
     }
   }
 
@@ -63,7 +63,9 @@ public final class KMeansDataGenerator {
       throws IOException {
     FileSystem fs = FileSystemUtils.get(directory.toUri(), config);
     if (fs.exists(directory)) {
-      fs.delete(directory, true);
+      if (!fs.delete(directory, true)) {
+        throw new IOException("Failed to delete the directory: " + directory.getPath());
+      }
     }
     for (int i = 0; i < numOfFiles; i++) {
       FSDataOutputStream outputStream = fs.create(new Path(directory,
@@ -73,6 +75,7 @@ public final class KMeansDataGenerator {
       pw.print(points);
       outputStream.sync();
       pw.close();
+      outputStream.close();
     }
   }
 

@@ -162,7 +162,7 @@ public class KMeansCheckpointingWorker implements IWorker {
       // at each iteration, commit the checkpoint.
       checkpointingEnv.commitSnapshot();
     }
-    taskExecutor.waitFor(kmeansTaskGraph, plan);
+    taskExecutor.closeExecution(kmeansTaskGraph, plan);
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();

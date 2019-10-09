@@ -44,7 +44,7 @@ public interface IExecutor {
    * @param plan the execution plan
    * @return true if successful
    */
-  boolean waitFor(ExecutionPlan plan);
+  boolean closeExecution(ExecutionPlan plan);
 
   /**
    * Terminate the executor
