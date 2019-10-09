@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 
 public abstract class BaseOperation {
   /**
@@ -82,6 +83,7 @@ public abstract class BaseOperation {
 
   /**
    * Progress the channel and the operation
+   *
    * @return true if further progress is required
    */
   public boolean progressChannel() {
@@ -89,5 +91,9 @@ public abstract class BaseOperation {
     channel.progress();
 
     return p;
+  }
+
+  public boolean sendBarrier(int src, long barrierId) {
+    return this.op.send(src, barrierId, MessageFlags.SYNC_BARRIER);
   }
 }
