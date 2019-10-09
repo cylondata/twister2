@@ -75,6 +75,7 @@ public class Pinger implements MessageHandler {
         .build();
 
     requestID = rrClient.sendRequest(ping);
+    LOG.fine("Sending Ping message: \n" + ping);
     this.pendingResponse = true;
 
     if (requestID == null) {
@@ -89,6 +90,8 @@ public class Pinger implements MessageHandler {
 
       if (!requestID.equals(id)) {
         LOG.severe("Ping Response message requestID does not match.");
+      } else {
+        LOG.fine("Ping Response message received: \n" + message);
       }
     } else {
       LOG.warning("Received message unrecognized. \n" + message);

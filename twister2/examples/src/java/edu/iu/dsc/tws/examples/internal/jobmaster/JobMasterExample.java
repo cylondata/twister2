@@ -31,7 +31,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -40,6 +42,7 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -71,6 +74,7 @@ public final class JobMasterExample {
         + configDir);
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
     String ip = null;
@@ -86,8 +90,9 @@ public final class JobMasterExample {
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+    IJobTerminator jobTerminator = null;
 
-    JobMaster jobMaster = new JobMaster(config, host, null, job, jobMasterNode, k8sScaler);
+    JobMaster jobMaster = new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler);
     jobMaster.startJobMasterThreaded();
 
     LOG.info("Threaded Job Master started:"
@@ -101,10 +106,11 @@ public final class JobMasterExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    return Config.newBuilder()
+    Config conf = Config.newBuilder()
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
+    return JobUtils.resolveJobId(conf, Context.jobName(conf));
   }
 
   public static void printUsage() {

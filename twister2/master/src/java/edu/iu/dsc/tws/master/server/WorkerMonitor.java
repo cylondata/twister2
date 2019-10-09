@@ -123,11 +123,7 @@ public class WorkerMonitor implements MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
-    if (message instanceof JobMasterAPI.Ping) {
-      JobMasterAPI.Ping ping = (JobMasterAPI.Ping) message;
-      pingMessageReceived(id, ping);
-
-    } else if (message instanceof JobMasterAPI.RegisterWorker) {
+    if (message instanceof JobMasterAPI.RegisterWorker) {
       JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
       registerWorkerMessageReceived(id, rwMessage);
     } else if (message instanceof JobMasterAPI.WorkerStateChange) {
@@ -147,31 +143,6 @@ public class WorkerMonitor implements MessageHandler {
     } else {
       LOG.log(Level.SEVERE, "Un-known message received: " + message);
     }
-  }
-
-  private void pingMessageReceived(RequestID id, JobMasterAPI.Ping ping) {
-
-    if (workers.containsKey(ping.getWorkerID())) {
-      LOG.fine("Ping message received from a worker: \n" + ping);
-      workers.get(ping.getWorkerID()).setPingTimestamp(System.currentTimeMillis());
-    } else {
-      LOG.warning("Ping message received from a worker that has not joined the job yet: " + ping);
-    }
-
-    JobMasterAPI.Ping pingResponse = JobMasterAPI.Ping.newBuilder()
-        .setWorkerID(ping.getWorkerID())
-        .setPingMessage("Ping Response From the Master to Worker")
-        .setMessageType(JobMasterAPI.Ping.MessageType.MASTER_TO_WORKER)
-        .build();
-
-    rrServer.sendResponse(id, pingResponse);
-    LOG.fine("Ping response sent to the worker: \n" + pingResponse);
-
-    // send Ping message to dashboard
-    if (dashClient != null) {
-      dashClient.workerHeartbeat(ping.getWorkerID());
-    }
-
   }
 
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {

@@ -148,6 +148,11 @@ public class JobMaster {
   private DashboardClient dashClient;
 
   /**
+   * PingMonitor object
+   */
+  private PingMonitor pingMonitor;
+
+  /**
    * BarrierMonitor object
    */
   private BarrierMonitor barrierMonitor;
@@ -243,6 +248,7 @@ public class JobMaster {
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver,
         JobMasterContext.jobMasterAssignsWorkerIDs(config));
 
+    pingMonitor = new PingMonitor(workerMonitor, rrServer, dashClient);
     barrierMonitor = new BarrierMonitor(workerMonitor, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
@@ -277,7 +283,7 @@ public class JobMaster {
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
-    rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(pingBuilder, pingMonitor);
 
     rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);

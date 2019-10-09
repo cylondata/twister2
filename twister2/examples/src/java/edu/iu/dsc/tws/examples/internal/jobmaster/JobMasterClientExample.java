@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
@@ -43,6 +44,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -73,6 +75,7 @@ public final class JobMasterClientExample {
     LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
     simulateClient(config, job);
@@ -107,7 +110,7 @@ public final class JobMasterClientExample {
     IWorkerController workerController = client.getJMWorkerController();
 
     // wait up to 2sec
-    sleeeep((long) (Math.random() * 2000));
+    sleeeep((long) (Math.random() * 2 * 1000));
 
     client.sendWorkerRunningMessage();
 
@@ -123,7 +126,7 @@ public final class JobMasterClientExample {
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
-    sleeeep((long) (Math.random() * 1000000));
+    sleeeep((long) (Math.random() * 10 * 1000));
     try {
       client.getJMWorkerController().waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
@@ -132,7 +135,7 @@ public final class JobMasterClientExample {
     }
 
     // wait up to 3sec
-    sleeeep((long) (Math.random() * 3000));
+    sleeeep((long) (Math.random() * 3 * 1000));
 
     client.sendWorkerCompletedMessage();
 
@@ -145,10 +148,11 @@ public final class JobMasterClientExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    return Config.newBuilder()
+    Config conf = Config.newBuilder()
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
         .build();
+    return JobUtils.resolveJobId(conf, Context.jobName(conf));
   }
 
   /**
