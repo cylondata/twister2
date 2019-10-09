@@ -64,11 +64,6 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
         taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
   private class ReduceFunctionImpl implements ReduceFunction {
     private IFunction fn;
 
@@ -105,7 +100,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  protected BaseOperation getOp() {
+  public BaseOperation getOp() {
     return this.op;
   }
 }
