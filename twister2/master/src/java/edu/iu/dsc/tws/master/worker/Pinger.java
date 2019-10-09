@@ -70,7 +70,6 @@ public class Pinger implements MessageHandler {
 
     JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(workerID)
-        .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();
 

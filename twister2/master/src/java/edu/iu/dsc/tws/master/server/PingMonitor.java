@@ -63,7 +63,6 @@ public class PingMonitor implements MessageHandler {
 
     JobMasterAPI.Ping pingResponse = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(ping.getWorkerID())
-        .setPingMessage("Ping Response From the Master to Worker")
         .setMessageType(JobMasterAPI.Ping.MessageType.MASTER_TO_WORKER)
         .build();
 

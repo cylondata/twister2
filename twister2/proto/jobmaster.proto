@@ -31,7 +31,6 @@ message Ping {
     oneof typeRequired {
         MessageType messageType = 2;
     }
-    string pingMessage = 3;
 }
 
 // job master can be any one of these states
