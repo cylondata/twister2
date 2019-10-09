@@ -83,6 +83,11 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   protected abstract BaseOperation getOp();
 
   @Override
+  public void finish(int source) {
+    this.getOp().finish(source);
+  }
+
+  @Override
   public boolean progress() {
     return this.getOp().progress();
   }
