@@ -24,10 +24,12 @@ import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.join.DJoinBatchFinalReceiver2;
 import edu.iu.dsc.tws.comms.dfw.io.join.JoinBatchFinalReceiver2;
@@ -38,7 +40,7 @@ import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 /**
  * Batch Join operation
  */
-public class BJoin {
+public class BJoin extends BaseOperation {
   /**
    * Left partition of the join
    */
@@ -59,6 +61,12 @@ public class BJoin {
    */
   private TWSChannel channel;
 
+  /*BARRIER RELATED FLAGS*/
+  private long currentBarrier = -1;
+  private boolean leftBarrierSent;
+  private boolean rightBarrierSent;
+  /*END OF BARRIER RELATED FLAGS*/
+
   /**
    * Construct a Batch partition operation
    *
@@ -77,6 +85,8 @@ public class BJoin {
                Comparator<Object> comparator, int leftEdgeId, int rightEdgeId,
                CommunicationContext.JoinType joinType,
                MessageSchema leftSchema, MessageSchema rightSchema) {
+    super(comm, false, CommunicationContext.JOIN);
+
     Map<String, Object> newConfigs = new HashMap<>();
     newConfigs.put(CommunicationContext.STREAMING, false);
     newConfigs.put(CommunicationContext.OPERATION_NAME, CommunicationContext.JOIN);
@@ -172,6 +182,7 @@ public class BJoin {
    *
    * @return true if there are messages pending
    */
+  @Override
   public boolean isComplete() {
     return partitionLeft.isComplete() && partitionRight.isComplete();
   }
@@ -181,6 +192,7 @@ public class BJoin {
    *
    * @param source the source that is ending
    */
+  @Override
   public void finish(int source) {
     partitionLeft.finish(source);
     partitionRight.finish(source);
@@ -191,10 +203,12 @@ public class BJoin {
    *
    * @return true if further progress is needed
    */
+  @Override
   public boolean progress() {
     return partitionLeft.progress() | partitionRight.progress();
   }
 
+  @Override
   public void close() {
     partitionLeft.close();
     partitionRight.close();
@@ -203,9 +217,40 @@ public class BJoin {
   /**
    * Clean the operation, this doesn't close it
    */
+  @Override
   public void reset() {
     partitionLeft.reset();
     partitionRight.reset();
+  }
+
+  @Override
+  public boolean sendBarrier(int src, long barrierId) {
+    if (this.currentBarrier == barrierId) {
+      // this is a retry
+      if (!this.leftBarrierSent) {
+        this.leftBarrierSent = partitionLeft.send(src, barrierId, MessageFlags.SYNC_BARRIER);
+      }
+
+      if (!this.rightBarrierSent) {
+        this.rightBarrierSent = partitionRight.send(src, barrierId, MessageFlags.SYNC_BARRIER);
+      }
+    } else {
+      this.leftBarrierSent = partitionLeft.send(src, barrierId, MessageFlags.SYNC_BARRIER);
+      this.rightBarrierSent = partitionRight.send(src, barrierId, MessageFlags.SYNC_BARRIER);
+    }
+
+    boolean bothBarriersSent = this.leftBarrierSent && this.rightBarrierSent;
+
+    if (bothBarriersSent) {
+      //reset everything
+      this.currentBarrier = -1;
+      this.leftBarrierSent = false;
+      this.rightBarrierSent = false;
+    } else {
+      this.currentBarrier = barrierId;
+    }
+
+    return bothBarriersSent;
   }
 
   /**
@@ -213,6 +258,7 @@ public class BJoin {
    *
    * @return true if further progress is required
    */
+  @Override
   public boolean progressChannel() {
     boolean p = progress();
     channel.progress();
