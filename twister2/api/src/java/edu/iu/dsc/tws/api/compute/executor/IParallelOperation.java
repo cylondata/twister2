@@ -100,7 +100,7 @@ public interface IParallelOperation {
     this.getOp().reset();
   }
 
-  default boolean sendBarrier(int src, long barrierId) {
+  default boolean sendBarrier(int src, byte[] barrierId) {
     return this.getOp().sendBarrier(src, barrierId);
   }
 

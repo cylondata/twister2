@@ -102,7 +102,7 @@ public abstract class BaseOperation {
     return p;
   }
 
-  public boolean sendBarrier(int src, long barrierId) {
+  public boolean sendBarrier(int src, byte[] barrierId) {
     return this.op.send(src, barrierId, MessageFlags.SYNC_BARRIER);
   }
 }
