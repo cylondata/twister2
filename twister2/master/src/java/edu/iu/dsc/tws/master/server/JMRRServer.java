@@ -29,9 +29,7 @@ import edu.iu.dsc.tws.common.net.tcp.ChannelHandler;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.TCPMessage;
 import edu.iu.dsc.tws.common.net.tcp.request.ByteUtils;
-import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * JMRRServer class is used by Job Master
@@ -175,15 +173,6 @@ public class JMRRServer extends RRServer {
     if (senderID == CLIENT_ID) {
       clientChannel = channel;
       LOG.info("Message received from submitting client. Channel set.");
-      return;
-    }
-
-    // if this is RegisterWorker message and JobMaster assigns workerIDs
-    // keep the channel in the variable
-    if (senderID == RRClient.WORKER_UNASSIGNED_ID
-        && message instanceof JobMasterAPI.RegisterWorker) {
-
-      this.workerChannelToRegister = channel;
       return;
     }
 

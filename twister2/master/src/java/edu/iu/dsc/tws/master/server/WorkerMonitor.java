@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 /**
  * This class monitors the workers in a job
@@ -64,24 +63,20 @@ public class WorkerMonitor implements MessageHandler {
    */
   private int numberOfWorkers;
 
-  // this is used to assign next ID to newly registering worker,
-  // when job master assigns workerIDs
-  private int nextWorkerID = 0;
-
-  private boolean jobMasterAssignsWorkerIDs;
-
   private TreeMap<Integer, WorkerWithState> workers;
   private HashMap<Integer, RequestID> waitList;
 
-  public WorkerMonitor(JobMaster jobMaster, JMRRServer rrServer, DashboardClient dashClient,
-                       JobAPI.Job job, IDriver driver, boolean jobMasterAssignsWorkerIDs) {
+  public WorkerMonitor(JobMaster jobMaster,
+                       JMRRServer rrServer,
+                       DashboardClient dashClient,
+                       JobAPI.Job job,
+                       IDriver driver) {
+
     this.jobMaster = jobMaster;
     this.rrServer = rrServer;
     this.dashClient = dashClient;
     this.driver = driver;
-
     this.numberOfWorkers = job.getNumberOfWorkers();
-    this.jobMasterAssignsWorkerIDs = jobMasterAssignsWorkerIDs;
 
     workers = new TreeMap<>();
     waitList = new HashMap<>();
@@ -89,17 +84,6 @@ public class WorkerMonitor implements MessageHandler {
 
   public int getNumberOfWorkers() {
     return numberOfWorkers;
-  }
-
-  /**
-   * assign next workerID
-   */
-  private int assignWorkerID() {
-
-    int id = nextWorkerID;
-    nextWorkerID++;
-
-    return id;
   }
 
   /**
@@ -169,14 +153,6 @@ public class WorkerMonitor implements MessageHandler {
       //  TO DO inform checkpoint master
       // what should be the message
       return;
-    }
-
-    // if job master assigns workerIDs, get new id and update it in WorkerInfo
-    // also set in RRServer
-    if (jobMasterAssignsWorkerIDs) {
-      int newWorkerID = assignWorkerID();
-      workerInfo = WorkerInfoUtils.updateWorkerID(workerInfo, newWorkerID);
-      rrServer.setWorkerChannel(newWorkerID);
     }
 
     // if it is not coming from failure but workerID already registered
@@ -289,11 +265,6 @@ public class WorkerMonitor implements MessageHandler {
         .setChange(0 - instancesRemoved)
         .setNumberOfWorkers(numberOfWorkers)
         .build();
-
-    // update nextWorkerID
-    // since we do not want gaps in workerID sequence,
-    // we reuse the deleted IDs
-    nextWorkerID = nextWorkerID - instancesRemoved;
 
     // construct killedWorkers list and remove those workers from workers list
     List<Integer> killedWorkers = new LinkedList<>();

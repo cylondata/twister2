@@ -34,7 +34,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.IJobTerminator;
-import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -106,11 +105,7 @@ public final class JobMasterExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    Config conf = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
-        .build();
-    return JobUtils.resolveJobId(conf, Context.jobName(conf));
+    return JobUtils.resolveJobId(config, Context.jobName(config));
   }
 
   public static void printUsage() {

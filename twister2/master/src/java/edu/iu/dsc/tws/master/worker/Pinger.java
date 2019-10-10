@@ -41,10 +41,6 @@ public class Pinger implements MessageHandler {
     this.interval = interval;
   }
 
-  public void setWorkerID(int workerID) {
-    this.workerID = workerID;
-  }
-
   public long timeToNextPing() {
 
     if (lastPingTime == -1) {

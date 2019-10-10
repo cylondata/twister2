@@ -67,6 +67,14 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
+    int workerID = -1;
+    if (args.length != 1) {
+      LOG.severe("Provide workerID as the parameter.");
+      return;
+    }
+
+    workerID = Integer.parseInt(args[0]);
+
     // we assume that the twister2Home is the current directory
     String configDir = "conf/kubernetes/";
     String twister2Home = Paths.get("").toAbsolutePath().toString();
@@ -78,27 +86,26 @@ public final class JobMasterClientExample {
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
-    simulateClient(config, job);
+    simulateClient(config, job, workerID);
   }
 
   /**
    * a method to simulate JMWorkerAgent running in workers
    */
-  public static void simulateClient(Config config, JobAPI.Job job) {
+  public static void simulateClient(Config config, JobAPI.Job job, int workerID) {
 
     String workerIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
     int workerPort = 10000 + (int) (Math.random() * 10000);
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
 
-    int workerTempID = 0;
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
     int numberOfWorkers = computeResource.getInstances() * computeResource.getWorkersPerPod();
 
     Map<String, Integer> additionalPorts = generateAdditionalPorts(config, workerPort);
 
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
-        workerTempID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
+        workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
     String jobMasterAddress = "localhost";
     int jobMasterPort = JobMasterContext.jobMasterPort(config);
@@ -148,11 +155,7 @@ public final class JobMasterClientExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    Config conf = Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
-        .build();
-    return JobUtils.resolveJobId(conf, Context.jobName(conf));
+    return JobUtils.resolveJobId(config, Context.jobName(config));
   }
 
   /**

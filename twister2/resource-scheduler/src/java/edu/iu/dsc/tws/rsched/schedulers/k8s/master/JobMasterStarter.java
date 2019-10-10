@@ -50,7 +50,6 @@ public final class JobMasterStarter {
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     Config config = K8sWorkerUtils.loadConfig(configDir);
-    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);

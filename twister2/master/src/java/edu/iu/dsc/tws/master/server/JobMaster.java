@@ -245,8 +245,7 @@ public class JobMaster {
     // this ha to be done before WorkerMonitor initialization
     initDriver();
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver,
-        JobMasterContext.jobMasterAssignsWorkerIDs(config));
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver);
 
     pingMonitor = new PingMonitor(workerMonitor, rrServer, dashClient);
     barrierMonitor = new BarrierMonitor(workerMonitor, rrServer);

@@ -88,7 +88,6 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
-    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // if there is no Driver in the job and ZK is used for group management,
     // then, we don't need to connect to JM

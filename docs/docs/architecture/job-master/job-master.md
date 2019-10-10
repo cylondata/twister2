@@ -214,22 +214,10 @@ All worker implementations can utilize this class for worker discovery.
 
 ### WorkerID Assignment
 
-Each worker in a job should have a unique ID. Worker IDs start from 0 and increase sequentially without any gaps in between. 
-We support two types of workerID assignments. The first option is that the Job Master assigns worker IDs. 
-It assigns workerIDs in the order of their registration with the Job Master with worker STARTING message. 
-It assigns the id 0 to the first worker to be registered. It assigns the id 1 to the second worker to be registered, so on.
-
-The second option for the worker ID assignment is that the underlying Twister2 implementation may assign unique IDs for the workers. 
-In this case, when workers register with the Job Master, they already have a valid unique ID. 
-So, the Job Master does not assign a new ID to them. It uses their IDs.
-
-Worker ID assignment method is controlled by a configuration parameter. The configuration parameter name is:
-
-```text
-twister2.job.master.assigns.worker.ids
-```
-
-If its value is true, Job Master assigns the worker IDs. If its value is false, underlying resource scheduler assigns worker IDs. By default, its value is true.
+Each worker in a job should have a unique ID. 
+Worker IDs start from 0 and increase sequentially without any gaps in between. 
+Underlying Twister2 implementation must assign unique IDs for all workers. 
+When workers register with the Job Master, they must already have a valid unique ID. 
 
 ### Waiting Workers on a Barrier
 
@@ -344,7 +332,6 @@ edu.iu.dsc.tws.master.JobMasterContext
 Users can specify the following configuration parameters. Their names are default values are shown:
 
 ```text
-twister2.job.master.assigns.worker.ids: true
 twister2.job.master.runs.in.client: false
 twister2.job.master.cpu: 0.2
 twister2.job.master.ram: 1024

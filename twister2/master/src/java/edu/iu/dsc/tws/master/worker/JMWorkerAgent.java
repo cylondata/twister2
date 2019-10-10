@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRClient;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 /**
  * JMWorkerAgent class
@@ -185,14 +184,9 @@ public final class JMWorkerAgent {
 
     ClientConnectHandler connectHandler = new ClientConnectHandler();
 
-    // if job master assigns worker IDs, first assign workerID as WORKER_UNASSIGNED_ID
-    if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-      rrClient = new RRClient(masterAddress, masterPort, null, looper,
-          RRClient.WORKER_UNASSIGNED_ID, connectHandler);
-    } else {
-      rrClient = new RRClient(masterAddress, masterPort, null, looper,
-          thisWorker.getWorkerID(), connectHandler);
-    }
+
+    rrClient = new RRClient(masterAddress, masterPort, null, looper,
+        thisWorker.getWorkerID(), connectHandler);
 
     long interval = JobMasterContext.pingInterval(config);
     pinger = new Pinger(thisWorker.getWorkerID(), rrClient, interval);
@@ -625,12 +619,6 @@ public final class JMWorkerAgent {
             (JobMasterAPI.RegisterWorkerResponse) message;
 
         registrationSucceeded = responseMessage.getResult();
-
-        if (JobMasterContext.jobMasterAssignsWorkerIDs(config)) {
-          thisWorker = WorkerInfoUtils.updateWorkerID(thisWorker, responseMessage.getWorkerID());
-          pinger.setWorkerID(responseMessage.getWorkerID());
-          rrClient.setWorkerID(responseMessage.getWorkerID());
-        }
 
       } else if (message instanceof JobMasterAPI.WorkerStateChangeResponse) {
         LOG.fine("Received a WorkerStateChange response from the master. \n" + message);
