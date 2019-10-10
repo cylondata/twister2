@@ -25,6 +25,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -33,7 +34,10 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-//import edu.iu.dsc.tws.api.resource.JobListener;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.JobListener;
+import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -41,7 +45,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class CDFWRuntime  {
+public class CDFWRuntime implements JobListener {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 
@@ -74,22 +78,43 @@ public class CDFWRuntime  {
    */
   private TaskExecutor taskExecutor;
 
-  private List<JobMasterAPI.WorkerInfo> workerList;
+  private Config config;
 
-  /**
-   * Connected dataflow runtime
-   *
-   * @param cfg configuration
-   * @param wId worker id
-   * @param workerInfoList worker information list
-   * @param net network
+  private IWorkerController controller;
+
+  private Communicator communicator;
+
+  private TWSChannel channel;
+
+
+  /** Connected Dataflow Runtime
+   * @param cfg
+   * @param wId
+   * @param controller
    */
-  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                     Communicator net) {
-    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
+  public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoSerializer();
+    this.controller = controller;
+    this.config = cfg;
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    LOG.info("execute method getting called:" + workerInfoList);
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, communicator, null);
   }
 
   /**
@@ -213,6 +238,56 @@ public class CDFWRuntime  {
     }
   }
 
+  @Override
+  public void workersScaledUp(int instancesAdded) {
+    LOG.log(Level.INFO, workerId + "Workers scaled up msg received. Instances added: "
+        + instancesAdded);
+    communicator.close();
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    LOG.info("execute method getting called:" + workerInfoList);
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+  }
+
+  @Override
+  public void workersScaledDown(int instancesRemoved) {
+    LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
+        + instancesRemoved);
+    communicator.close();
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+
+    LOG.info("execute method getting called:" + workerInfoList);
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+
+  }
+
+  @Override
   public void driverMessageReceived(Any anyMessage) {
     // put every message on the queue.
     try {
@@ -222,8 +297,8 @@ public class CDFWRuntime  {
     }
   }
 
-  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerlist) {
-    LOG.log(Level.INFO, workerId + "All workers joined msg received\t" + workerlist);
-    this.workerList = workerlist;
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+    LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
 }
