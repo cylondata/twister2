@@ -32,6 +32,17 @@ public final class ResourceSchedulerUtils {
       String corePackageName,
       String jobPackageURI,
       boolean isVerbose) {
+    return setupWorkingDirectory(jobName, workingDirectory,
+        corePackageName, jobPackageURI, isVerbose, true);
+  }
+
+  public static boolean setupWorkingDirectory(
+      String jobName,
+      String workingDirectory,
+      String corePackageName,
+      String jobPackageURI,
+      boolean isVerbose,
+      boolean copyCore) {
 
     String corePackagePath = Paths.get(jobPackageURI, corePackageName).toString();
     String corePackageDestination = Paths.get(workingDirectory,
@@ -46,7 +57,7 @@ public final class ResourceSchedulerUtils {
           + "uploaded place %s to working directory %s", jobPackageURI, dst));
     }
 
-    if (!extractPackage(
+    if (copyCore && !extractPackage(
         dst, corePackageDestination, true, isVerbose)) {
       LOG.severe(String.format("Failed to extract the core package %s to directory %s",
           corePackagePath, dst));

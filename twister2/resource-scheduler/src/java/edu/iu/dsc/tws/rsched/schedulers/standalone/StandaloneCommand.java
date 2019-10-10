@@ -53,7 +53,16 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add(twister2Home);
     mpiCommand.add(twister2Home);
     mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
-    mpiCommand.add(MPIContext.mpiRunFile(config));
+    String mpiRunFile = MPIContext.mpiRunFile(config);
+    if ("ompi/bin/mpirun".equals(mpiRunFile)) {
+      if (SchedulerContext.copySystemPackage(config)) {
+        mpiCommand.add("twister2-core" + "/" + mpiRunFile);
+      } else {
+        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
+      }
+    } else {
+      mpiCommand.add(mpiRunFile);
+    }
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
     mpiCommand.add(config.getIntegerValue("__job_master_port__", 0) + "");
@@ -79,6 +88,14 @@ public class StandaloneCommand extends MPICommand {
     } else {
       mpiCommand.add("allow_illegal_access_warn");
     }
+
+    // we are adding the submitting twister2 home at the end
+    if (SchedulerContext.copySystemPackage(config)) {
+      mpiCommand.add("twister2-core");
+    } else {
+      mpiCommand.add(SchedulerContext.twister2Home(config));
+    }
+
     return mpiCommand;
   }
 

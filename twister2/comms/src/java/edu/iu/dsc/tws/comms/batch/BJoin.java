@@ -195,6 +195,9 @@ public class BJoin {
     return partitionLeft.progress() | partitionRight.progress();
   }
 
+  /**
+   * Close the operation
+   */
   public void close() {
     partitionLeft.close();
     partitionRight.close();
