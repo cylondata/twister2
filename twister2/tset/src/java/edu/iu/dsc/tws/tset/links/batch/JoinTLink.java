@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
-import edu.iu.dsc.tws.tset.TBaseGraph;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
@@ -68,7 +68,7 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
   }
 
   @Override
-  public void build(Collection<? extends TBase> buildSequence) {
+  public void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
 
     // filter out the relevant sources out of the predecessors
     ArrayList<TBase> sources = new ArrayList<>(getTBaseGraph().getPredecessors(this));
@@ -89,14 +89,14 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
           + target.getId();
 
       // build left
-      buildJoin(getTBaseGraph(), leftTSet, target, 0, groupName);
+      buildJoin(graphBuilder, leftTSet, target, 0, groupName);
 
       // build right
-      buildJoin(getTBaseGraph(), rightTSet, target, 1, groupName);
+      buildJoin(graphBuilder, rightTSet, target, 1, groupName);
     }
   }
 
-  private void buildJoin(TBaseGraph tBaseGraph, TBase s, TBase t, int idx, String groupName) {
+  private void buildJoin(GraphBuilder graphBuilder, TBase s, TBase t, int idx, String groupName) {
     Edge e = getEdge();
     // override edge name with join_source_target
     e.setName(e.getName() + "_" + s.getId() + "_" + t.getId());
@@ -110,6 +110,6 @@ public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> 
     e.addProperty(CommunicationContext.KEY_COMPARATOR, keyComparator);
     e.addProperty(CommunicationContext.USE_DISK, false);
 
-    tBaseGraph.getDfwGraphBuilder().connect(s.getId(), t.getId(), e);
+    graphBuilder.connect(s.getId(), t.getId(), e);
   }
 }

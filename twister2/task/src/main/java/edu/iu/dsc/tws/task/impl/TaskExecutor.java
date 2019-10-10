@@ -325,25 +325,26 @@ public class TaskExecutor {
   @SuppressWarnings({"unchecked", "rawtypes"})
   @Deprecated
   public <T> DataObject<T> getOutput(ComputeGraph graph, ExecutionPlan plan, String taskName) {
-    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
-    if (nodes == null || nodes.isEmpty()) {
-      return new EmptyDataObject<>();
-    }
-
-    Map.Entry<Integer, INodeInstance> next = nodes.entrySet().iterator().next();
-    INode task = next.getValue().getNode();
-
-    if (task instanceof Collector) {
-      Set<String> collectibleNames = ((Collector) task).getCollectibleNames();
-      if (collectibleNames.isEmpty()) {
-        return new EmptyDataObject<>();
-      } else if (collectibleNames.size() == 1) {
-        return this.getOutput(graph, plan, taskName, collectibleNames.iterator().next());
-      } else {
-        throw new Twister2RuntimeException("The task " + taskName + " outputs more than one"
-            + " data object : " + collectibleNames);
-      }
-    }
+    // todo: fix this! this functionality is broken
+//    Map<Integer, INodeInstance> nodes = plan.getNodes(taskName);
+//    if (nodes == null || nodes.isEmpty()) {
+//      return new EmptyDataObject<>();
+//    }
+//
+//    Map.Entry<Integer, INodeInstance> next = nodes.entrySet().iterator().next();
+//    INode task = next.getValue().getNode();
+//
+//    if (task instanceof Collector) {
+//      Set<String> collectibleNames = ((Collector) task).getCollectibleNames();
+//      if (collectibleNames.isEmpty()) {
+//        return new EmptyDataObject<>();
+//      } else if (collectibleNames.size() == 1) {
+//        return this.getOutput(graph, plan, taskName, collectibleNames.iterator().next());
+//      } else {
+//        throw new Twister2RuntimeException("The task " + taskName + " outputs more than one"
+//            + " data object : " + collectibleNames);
+//      }
+//    }
     return new EmptyDataObject<>();
   }
 

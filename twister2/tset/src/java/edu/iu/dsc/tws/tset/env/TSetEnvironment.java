@@ -52,8 +52,8 @@ public abstract class TSetEnvironment {
   private WorkerEnvironment workerEnv;
   private TBaseGraph tBaseGraph;
   private TaskExecutor taskExecutor;
-  private ComputeGraph itergraph;
-  private ExecutionPlan iterexecutionPlan;
+  //  private ComputeGraph itergraph;
+//  private ExecutionPlan iterexecutionPlan;
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
 
@@ -135,53 +135,69 @@ public abstract class TSetEnvironment {
    * execute data flow graph
    *
    * @param <T> type of the output data object
-   * @param dataflowGraph data flow graph
+   * @param buildContext data flow graph
    * @param outputTset output tset. If null, then no output would be returned
    * @return output as a data object if outputTset is not null. Else null
    */
-  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
-                                                   BuildableTSet outputTset, boolean isIterative) {
-    ExecutionPlan executionPlan = null;
-    if (isIterative && iterexecutionPlan != null) {
-      executionPlan = iterexecutionPlan;
-    } else {
-      executionPlan = taskExecutor.plan(dataflowGraph);
-      if (isIterative) {
-        iterexecutionPlan = executionPlan;
-        itergraph = dataflowGraph;
-      }
-    }
+  protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
+                                                  BuildableTSet outputTset, boolean isIterative) {
+//    ExecutionPlan executionPlan = null;
+//    if (isIterative && iterexecutionPlan != null) {
+//      executionPlan = iterexecutionPlan;
+//    } else {
+//      executionPlan = taskExecutor.plan(dataflowGraph);
+//      if (isIterative) {
+//        iterexecutionPlan = executionPlan;
+//        itergraph = dataflowGraph;
+//      }
+//    }
 
-    LOG.fine(executionPlan::toString);
-    LOG.fine(() -> "edges: " + dataflowGraph.getDirectedEdgesSet());
-    LOG.fine(() -> "vertices: " + dataflowGraph.getTaskVertexSet());
+    // build the context which will create compute graph and execution plan
+    buildContext.build(taskExecutor);
 
-    pushInputsToFunctions(dataflowGraph, executionPlan);
-    if (isIterative) {
-      taskExecutor.itrExecute(dataflowGraph, executionPlan);
-    } else {
-      taskExecutor.execute(dataflowGraph, executionPlan);
+    LOG.fine(buildContext.getComputeGraph()::toString);
+    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
 
-      // once a graph is built and executed, reset the underlying builder!
-      tBaseGraph.resetDfwGraphBuilder();
-    }
+    taskExecutor.execute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
+
+//    pushInputsToFunctions(buildContext, buildContext.);
+//    if (isIterative) {
+//      taskExecutor.itrExecute(buildContext, executionPlan);
+//    } else {
+//      taskExecutor.execute(buildContext, executionPlan);
+//
+//      // once a graph is built and executed, reset the underlying builder!
+//      tBaseGraph.resetDfwGraphBuilder();
+//    }
 
     // output tset alone does not guarantees that there will be an output available.
     // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
     // executor 1 would have an output to get.
-    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getId())) {
-      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getId());
-    }
+//    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getId())) {
+//      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getId());
+//    }
 
     // if there is no output, an empty data object needs to be returned!
     return new EmptyDataObject<>();
   }
 
-  public void finishIter() {
-    taskExecutor.closeExecution(itergraph, iterexecutionPlan);
-    tBaseGraph.resetDfwGraphBuilder();
-    itergraph = null;
-    iterexecutionPlan = null;
+  protected <T> DataObject<T> evalBuildCtx(BuildContext buildContext) {
+    // build the context which will create compute graph and execution plan
+    buildContext.build(taskExecutor);
+
+    LOG.fine(buildContext.getComputeGraph()::toString);
+    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
+
+    taskExecutor.itrExecute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
+
+    return new EmptyDataObject<>();
+  }
+
+  protected void finishEval(BuildContext ctx) {
+    taskExecutor.;
+    taskExecutor.closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
   }
 
   /**
@@ -203,13 +219,14 @@ public abstract class TSetEnvironment {
    * @param executionPlan the built execution plan
    */
   protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    for (String taskName : tSetInputMap.keySet()) {
-      Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
-      for (String keyName : tempMap.keySet()) {
-        taskExecutor.addInput(graph, executionPlan, taskName,
-            keyName, tempMap.get(keyName).getDataObject());
-      }
-    }
+    // todo: fix this!
+//    for (String taskName : tSetInputMap.keySet()) {
+//      Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
+//      for (String keyName : tempMap.keySet()) {
+//        taskExecutor.addInput(graph, executionPlan, taskName,
+//            keyName, tempMap.get(keyName).getDataObject());
+//      }
+//    }
   }
 
   // TSetEnvironment singleton initialization

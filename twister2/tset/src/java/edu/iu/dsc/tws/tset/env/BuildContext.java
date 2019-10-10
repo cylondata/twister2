@@ -1,0 +1,97 @@
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+package edu.iu.dsc.tws.tset.env;
+
+import java.util.Set;
+
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
+import edu.iu.dsc.tws.tset.Buildable;
+import edu.iu.dsc.tws.tset.sets.BuildableTSet;
+
+/**
+ * TSet build context holds references for executed tset, build sequence of that tset, compute
+ * graph, inputs(?), output data obj (?)
+ */
+public class BuildContext {
+//  private static final long serialVersionUID = -3016894342731475383L;
+
+  private String buildId;
+  private Set<BuildableTSet> rootTBases;
+  private Set<TBase> buildSequence;
+  private OperationMode operationMode;
+
+  private ComputeGraph computeGraph;
+  private ExecutionPlan executionPlan;
+//  private List<DataObject> inputs, outputs;
+
+  public BuildContext(String bId, Set<BuildableTSet> roots, Set<TBase> buildSeq,
+                      OperationMode opMode) {
+    this.buildId = bId;
+    this.rootTBases = roots;
+    this.buildSequence = buildSeq;
+    this.operationMode = opMode;
+  }
+
+  public ComputeGraph getComputeGraph() {
+    if (computeGraph == null) {
+      throw new RuntimeException("Compute graph null. TBaseBuildContext is not built!");
+    }
+    return computeGraph;
+  }
+
+  public ExecutionPlan getExecutionPlan() {
+    if (executionPlan == null) {
+      throw new RuntimeException("Compute graph null. TBaseBuildContext is not built!");
+    }
+    return executionPlan;
+  }
+
+  public String getBuildId() {
+    return buildId;
+  }
+
+  public Set<BuildableTSet> getRoots() {
+    return rootTBases;
+  }
+
+  public Set<TBase> getBuildSequence() {
+    return buildSequence;
+  }
+
+  public boolean build(TaskExecutor taskExecutor) {
+    if (computeGraph == null || executionPlan == null) {
+      GraphBuilder graphBuilder = GraphBuilder.newBuilder();
+      graphBuilder.operationMode(operationMode);
+
+      // building the individual TBases
+      for (TBase node : buildSequence) {
+        // here, build seq is required for tlinks to filter out nodes that are relevant to this
+        // particular build sequence
+        ((Buildable) node).build(graphBuilder, buildSequence);
+      }
+
+      computeGraph = graphBuilder.build();
+      computeGraph.setGraphName(buildId);
+
+      executionPlan = taskExecutor.plan(computeGraph);
+
+      return true;
+    }
+    // BuildContext has already been built. Exiting!
+    return false;
+  }
+}

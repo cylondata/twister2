@@ -105,7 +105,8 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
     return cacheTSet;
   }
 
+  // todo: fix this!
   public void finishIter() {
-    getTSetEnv().finishIter();
+//    getTSetEnv().finishEval();
   }
 }

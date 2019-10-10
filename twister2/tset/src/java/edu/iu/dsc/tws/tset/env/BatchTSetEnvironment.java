@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.env;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
@@ -21,6 +24,7 @@ import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
@@ -31,6 +35,9 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   private BaseTSet cachedLeaf;
   private ComputeGraph cachedGraph;
 
+  // todo: make this fault tolerant. May be we can cache the buildContext along with the compute
+  // graphs and make build contexts serializable. So, that the state of these can be preserved.
+  private Map<String, BuildContext> buildCtxCache = new HashMap<>();
 
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
     super(wEnv);
@@ -78,8 +85,8 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param leafTset leaf tset
    */
   public void run(BaseTSet leafTset) {
-    TBaseBuildContext buildContext = getTSetGraph().build(leafTset);
-    executeDataFlowGraph(buildContext.getComputeGraph(), null, false);
+    BuildContext buildContext = getTSetGraph().build(leafTset);
+    executeBuildContext(buildContext, null, false);
   }
 
   /**
@@ -90,16 +97,39 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @return output result as a data object
    */
   public <T> DataObject<T> runAndGet(BaseTSet leafTset, boolean isIterative) {
-    ComputeGraph dataflowGraph;
-    if (isIterative && cachedLeaf != null && cachedLeaf == leafTset) {
-      dataflowGraph = cachedGraph;
+//    ComputeGraph dataflowGraph;
+//    if (isIterative && cachedLeaf != null && cachedLeaf == leafTset) {
+//      dataflowGraph = cachedGraph;
+//    } else {
+//      TBaseBuildContext buildContext = getTSetGraph().build(leafTset);
+//      dataflowGraph = buildContext.getComputeGraph();
+//      cachedGraph = dataflowGraph;
+//      cachedLeaf = leafTset;
+//    }
+    BuildContext buildContext = getTSetGraph().build(leafTset);
+    return executeBuildContext(buildContext, leafTset, isIterative);
+  }
+
+  public void eval(BaseTSet leafTSet) {
+    BuildContext buildCtx;
+    String buildId = TSetUtils.generateBuildId(leafTSet);
+    if (buildCtxCache.containsKey(buildId)) {
+      buildCtx = buildCtxCache.get(buildId);
     } else {
-      TBaseBuildContext buildContext = getTSetGraph().build(leafTset);
-      dataflowGraph = buildContext.getComputeGraph();
-      cachedGraph = dataflowGraph;
-      cachedLeaf = leafTset;
+      buildCtx = getTSetGraph().build(leafTSet);
+      buildCtxCache.put(buildId, buildCtx);
     }
-    return executeDataFlowGraph(dataflowGraph, leafTset, isIterative);
+
+    evalBuildCtx(buildCtx);
+  }
+
+  public void finishEval(BaseTSet leafTset) {
+    BuildContext ctx = buildCtxCache.remove(TSetUtils.generateBuildId(leafTset));
+    finishEval(ctx);
+  }
+
+  public <T> DataObject<T> evaluateAndGet(BaseTSet leafTset) {
+    return null;
   }
 
   public <T> DataObject<T> runAndGet(BaseTSet leafTset) {

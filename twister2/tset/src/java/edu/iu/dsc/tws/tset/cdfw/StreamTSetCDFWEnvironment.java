@@ -15,6 +15,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.tset.env.BuildContext;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
@@ -28,13 +29,9 @@ public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
   }
 
   @Override
-  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
-                                                   BuildableTSet outputTset, boolean isIterative) {
-    return super.executeDataFlowGraph(dataflowGraph, outputTset, isIterative);
-  }
-
-  @Override
-  public void finishIter() {
+  protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
+                                                  BuildableTSet outputTset, boolean isIterative) {
+    return super.executeBuildContext(buildContext, outputTset, isIterative);
   }
 
   @Override

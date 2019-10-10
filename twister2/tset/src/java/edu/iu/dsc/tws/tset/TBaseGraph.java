@@ -32,26 +32,24 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.logging.Logger;
 
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
-import edu.iu.dsc.tws.tset.env.TBaseBuildContext;
+import edu.iu.dsc.tws.tset.env.BuildContext;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class TBaseGraph {
   private static final Logger LOG = Logger.getLogger(TBaseGraph.class.getName());
 
   private MutableGraph<TBase> graph;
-  private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
+  //  private edu.iu.dsc.tws.task.graph.GraphBuilder dfwGraphBuilder;
   private OperationMode opMode;
 
   private Set<BuildableTSet> sources;
@@ -67,7 +65,7 @@ public class TBaseGraph {
 
     this.sources = new HashSet<>();
 
-    resetDfwGraphBuilder();
+//    resetDfwGraphBuilder();
   }
 
   /**
@@ -130,32 +128,22 @@ public class TBaseGraph {
     return this.graph.nodes();
   }
 
-  public edu.iu.dsc.tws.task.graph.GraphBuilder getDfwGraphBuilder() {
-    return dfwGraphBuilder;
-  }
+//  public edu.iu.dsc.tws.task.graph.GraphBuilder getDfwGraphBuilder() {
+//    return dfwGraphBuilder;
+//  }
 
-  public void resetDfwGraphBuilder() {
-    this.dfwGraphBuilder = edu.iu.dsc.tws.task.graph.GraphBuilder.newBuilder();
-    this.dfwGraphBuilder.operationMode(opMode);
-  }
+//  public void resetDfwGraphBuilder() {
+//    this.dfwGraphBuilder = edu.iu.dsc.tws.task.graph.GraphBuilder.newBuilder();
+//    this.dfwGraphBuilder.operationMode(opMode);
+//  }
 
-  private TBaseBuildContext doBuild(Set<BuildableTSet> roots, AdjNodesExtractor nodesExtractor) {
-    String buildId = generateBuildId(roots);
+  private BuildContext doBuild(Set<BuildableTSet> roots, AdjNodesExtractor nodesExtractor) {
+    String buildId = TSetUtils.generateBuildId(roots);
 
     Set<TBase> buildSeq = conditionalBFS(roots, nodesExtractor);
     LOG.info(() -> "Build order for build " + buildId + " : " + buildSeq.toString());
 
-    // building the individual TBases
-    for (TBase node : buildSeq) {
-      // here, build seq is required for tlinks to filter out nodes that are relevant to this
-      // particular build sequence
-      ((Buildable) node).build(buildSeq);
-    }
-
-    ComputeGraph dataflowGraph = getDfwGraphBuilder().build();
-    dataflowGraph.setGraphName(buildId);
-
-    return new TBaseBuildContext(buildId, sources, buildSeq, dataflowGraph);
+    return new BuildContext(buildId, sources, buildSeq, opMode);
   }
 
   /**
@@ -163,7 +151,7 @@ public class TBaseGraph {
    *
    * @return data flow graph to execute
    */
-  public TBaseBuildContext build() {
+  public BuildContext build() {
     // when building the entire graph, we will be going top-down direction. Hence getSuccessors
     return doBuild(sources, this::getSuccessors);
   }
@@ -174,7 +162,7 @@ public class TBaseGraph {
    * @param leafTSet leaf tset
    * @return data flow graph to execute the subgraph of TSets
    */
-  public TBaseBuildContext build(BuildableTSet leafTSet) {
+  public BuildContext build(BuildableTSet leafTSet) {
     // when building a TSet related to an action, we will be going bottom-up direction.
     // Hence getPredecessors
     return doBuild(Collections.singleton(leafTSet), this::getPredecessors);
@@ -273,18 +261,5 @@ public class TBaseGraph {
       }
     }
     return true;
-  }
-
-  private static String generateBuildId(Set<? extends TBase> roots) {
-    StringJoiner joiner = new StringJoiner("_");
-    joiner.add("build");
-    for (TBase t : roots) {
-      joiner.add(t.getId());
-    }
-    return joiner.toString();
-  }
-
-  private static String generateBuildId(TBase root) {
-    return "build_" + root.getId();
   }
 }

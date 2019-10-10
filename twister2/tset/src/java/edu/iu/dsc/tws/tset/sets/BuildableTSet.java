@@ -29,15 +29,13 @@ public interface BuildableTSet extends TBase, Buildable {
   INode getINode();
 
   @Override
-  default void build(Collection<? extends TBase> buildSequence) {
-    GraphBuilder dfwGraphBuilder = getTBaseGraph().getDfwGraphBuilder();
-
+  default void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
     if (getINode() instanceof ICompute) {
-      dfwGraphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
+      graphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
     } else if (getINode() instanceof ISource) {
-      dfwGraphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
+      graphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
     } else if (getINode() instanceof ISink) {
-      dfwGraphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
+      graphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
     } else {
       throw new RuntimeException("Unknown INode " + getINode());
     }

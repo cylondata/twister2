@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.tset;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
 /**
@@ -24,10 +25,10 @@ public interface Buildable {
   /**
    * Builds the underlying node or edge
    *
+   * @param graphBuilder Dataflow graph builder
    * @param buildSequence partial build sequence. i.e. the set of nodes and edges that have been
-   *                        build so far, by traversing the tset subgraph
    */
-  void build(Collection<? extends TBase> buildSequence);
+  void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence);
 
   /**
    * tset env

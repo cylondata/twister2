@@ -55,6 +55,27 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel);
   }
 
+  SourceTSet<Integer> dummyReplayableSource(BatchTSetEnvironment env, int count, int parallel) {
+    return env.createSource(new SourceFunc<Integer>() {
+      private int c = 0;
+
+      @Override
+      public boolean hasNext() {
+        if (c == count) {
+          c = 0;
+          return false;
+        }
+        return c < count;
+      }
+
+      @Override
+      public Integer next() {
+        return c++;
+      }
+    }, parallel);
+  }
+
+
   SourceTSet<Integer> dummySourceOther(BatchTSetEnvironment env, int count, int parallel) {
     return env.createSource(new SourceFunc<Integer>() {
       private int c = 25;
@@ -81,5 +102,6 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     // now submit the job
     Twister2Submitter.submitJob(twister2Job, config);
   }
+
 
 }

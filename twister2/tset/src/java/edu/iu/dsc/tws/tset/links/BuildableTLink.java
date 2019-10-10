@@ -18,6 +18,7 @@ import java.util.HashSet;
 
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.task.graph.GraphBuilder;
 import edu.iu.dsc.tws.tset.Buildable;
 
 public interface BuildableTLink extends TBase, Buildable {
@@ -25,7 +26,7 @@ public interface BuildableTLink extends TBase, Buildable {
   Edge getEdge();
 
   @Override
-  default void build(Collection<? extends TBase> buildSequence) {
+  default void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
 
     // filter out the relevant sources out of the predecessors
     HashSet<TBase> relevantSources = new HashSet<>(getTBaseGraph().getPredecessors(this));
@@ -43,7 +44,7 @@ public interface BuildableTLink extends TBase, Buildable {
         Edge edge = getEdge();
         edge.setName(edge.getName() + "_" + s + "_" + t);
 
-        getTBaseGraph().getDfwGraphBuilder().connect(s, t, edge);
+        graphBuilder.connect(s, t, edge);
       }
     }
 

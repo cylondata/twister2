@@ -12,7 +12,6 @@
 
 package edu.iu.dsc.tws.tset.env;
 
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
@@ -45,8 +44,8 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
    * Runs the entire TSet graph
    */
   public void run() {
-    ComputeGraph graph = getTSetGraph().build().getComputeGraph();
-    executeDataFlowGraph(graph, null, false);
+    BuildContext buildCtx = getTSetGraph().build();
+    executeBuildContext(buildCtx, null, false);
   }
 
 }
