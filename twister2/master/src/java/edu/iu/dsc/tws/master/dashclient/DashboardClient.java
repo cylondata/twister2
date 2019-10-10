@@ -143,10 +143,12 @@ public class DashboardClient {
 
   /**
    * send RegisterWorker message to Dashboard
+   * initialState must be either STARTING or RESTARTING
    */
-  public boolean registerWorker(JobMasterAPI.WorkerInfo workerInfo) {
+  public boolean registerWorker(JobMasterAPI.WorkerInfo workerInfo,
+                                JobMasterAPI.WorkerState initialState) {
 
-    RegisterWorker registerWorker = new RegisterWorker(jobID, workerInfo);
+    RegisterWorker registerWorker = new RegisterWorker(jobID, workerInfo, initialState);
     String path = "workers/";
 
     Response response = ClientBuilder.newClient()

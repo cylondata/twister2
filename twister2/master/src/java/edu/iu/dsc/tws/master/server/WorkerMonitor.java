@@ -87,24 +87,6 @@ public class WorkerMonitor implements MessageHandler {
     return numberOfWorkers;
   }
 
-  /**
-   * if this worker already registered with IP and port
-   * return the id, otherwise, return -1
-   * if a worker is already registered and trying to register again,
-   * it means that it is coming from failure
-   * <p>
-   * we assume that IP:port pair does not change after failure
-   */
-  private int getRegisteredWorkerID(String workerIP, int port) {
-    for (WorkerWithState workerWithState : workers.values()) {
-      if (workerIP.equals(workerWithState.getIp()) && port == workerWithState.getPort()) {
-        return workerWithState.getWorkerID();
-      }
-    }
-
-    return -1;
-  }
-
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
@@ -137,22 +119,24 @@ public class WorkerMonitor implements MessageHandler {
 
     // if it is coming from failure
     // update the worker status and return
-
-    int registeredWorkerID = getRegisteredWorkerID(workerInfo.getWorkerIP(), workerInfo.getPort());
-    if (registeredWorkerID >= 0) {
-      // update the worker status in the worker list
-      workers.get(registeredWorkerID).addWorkerState(JobMasterAPI.WorkerState.STARTING);
-      LOG.info("WorkerID: " + registeredWorkerID + " joined from failure.");
+    if (message.getFromFailure()) {
+      // update workerInfo and its status in the worker list
+      WorkerWithState worker = new WorkerWithState(workerInfo);
+      worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
+      workers.put(worker.getWorkerID(), worker);
+      LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
 
       // send the response message
       sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
 
       // send worker registration message to dashboard
       if (dashClient != null) {
-        dashClient.registerWorker(workerInfo);
+        dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
       }
-      //  TO DO inform checkpoint master
+
+      // TODO inform checkpoint master
       // what should be the message
+
       return;
     }
 
@@ -184,7 +168,7 @@ public class WorkerMonitor implements MessageHandler {
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo);
+      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTING);
     }
 
     // if all workers registered, inform all workers
