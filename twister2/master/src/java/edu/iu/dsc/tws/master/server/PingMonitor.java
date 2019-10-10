@@ -18,6 +18,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -28,11 +29,11 @@ public class PingMonitor implements MessageHandler {
   private HashMap<Integer, Long> lastTimeStamps;
 
   private WorkerMonitor workerMonitor;
-  private JMRRServer rrServer;
+  private RRServer rrServer;
   private DashboardClient dashClient;
 
   public PingMonitor(WorkerMonitor workerMonitor,
-                     JMRRServer rrServer,
+                     RRServer rrServer,
                      DashboardClient dashClient) {
 
     this.workerMonitor = workerMonitor;

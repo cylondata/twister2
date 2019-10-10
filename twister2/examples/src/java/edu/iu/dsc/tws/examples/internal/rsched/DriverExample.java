@@ -34,9 +34,9 @@ public class DriverExample implements IDriver {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-//    broadcastExample(messenger);
+    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
-    scalingExample(scaler);
+//    scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
   }
@@ -167,6 +167,10 @@ public class DriverExample implements IDriver {
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
+    } else {
+      LOG.info("Received WorkerMessage from worker: " + senderID
+          + ". Message: " + anyMessage);
+
     }
   }
 }

@@ -32,6 +32,7 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -47,9 +48,9 @@ public class BarrierMonitor implements MessageHandler {
   private WorkerMonitor workerMonitor;
   private int numberOfWorkersOnBarrier;
   private HashMap<Integer, RequestID> waitList;
-  private JMRRServer rrServer;
+  private RRServer rrServer;
 
-  public BarrierMonitor(WorkerMonitor workerMonitor, JMRRServer rrServer) {
+  public BarrierMonitor(WorkerMonitor workerMonitor, RRServer rrServer) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     waitList = new HashMap<>();

@@ -30,20 +30,25 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.Any;
+
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterClientExample {
@@ -107,19 +112,26 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
-    String jobMasterAddress = "localhost";
-    int jobMasterPort = JobMasterContext.jobMasterPort(config);
-    JMWorkerAgent client = JMWorkerAgent.createJMWorkerAgent(
-        config, workerInfo, jobMasterAddress, jobMasterPort, numberOfWorkers);
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    WorkerRuntime.init(config, job, workerInfo, initialState);
 
-    client.startThreaded();
+    IWorkerStatusUpdater statusUpdater = WorkerRuntime.getWorkerStatusUpdater();
+    IWorkerController workerController = WorkerRuntime.getWorkerController();
+    ISenderToDriver senderToDriver = WorkerRuntime.getSenderToDriver();
 
-    IWorkerController workerController = client.getJMWorkerController();
+    WorkerRuntime.addReceiverFromDriver(new IReceiverFromDriver() {
+      @Override
+      public void driverMessageReceived(Any anyMessage) {
+        LOG.info("Received message from IDriver: \n" + anyMessage);
+
+        senderToDriver.sendToDriver(anyMessage);
+      }
+    });
 
     // wait up to 2sec
     sleeeep((long) (Math.random() * 2 * 1000));
 
-    client.sendWorkerRunningMessage();
+    statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
@@ -133,20 +145,19 @@ public final class JobMasterClientExample {
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
-    sleeeep((long) (Math.random() * 10 * 1000));
     try {
-      client.getJMWorkerController().waitOnBarrier();
+      workerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.");
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     // wait up to 3sec
-    sleeeep((long) (Math.random() * 3 * 1000));
+    sleeeep((long) (Math.random() * 100 * 1000));
 
-    client.sendWorkerCompletedMessage();
+    statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
-    client.close();
+    WorkerRuntime.close();
 
     System.out.println("Client has finished the computation. Client exiting.");
   }
@@ -155,7 +166,12 @@ public final class JobMasterClientExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    return JobUtils.resolveJobId(config, Context.jobName(config));
+    String jmIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
+    Config cnfg = Config.newBuilder()
+        .putAll(config)
+        .put(JobMasterContext.JOB_MASTER_IP, jmIP)
+        .build();
+    return JobUtils.resolveJobId(cnfg, Context.jobName(cnfg));
   }
 
   /**

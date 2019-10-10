@@ -38,6 +38,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.driver.IDriver;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
@@ -52,7 +53,7 @@ public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
   private JobMaster jobMaster;
-  private JMRRServer rrServer;
+  private RRServer rrServer;
   private DashboardClient dashClient;
   private IDriver driver;
 
@@ -67,7 +68,7 @@ public class WorkerMonitor implements MessageHandler {
   private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(JobMaster jobMaster,
-                       JMRRServer rrServer,
+                       RRServer rrServer,
                        DashboardClient dashClient,
                        JobAPI.Job job,
                        IDriver driver) {
