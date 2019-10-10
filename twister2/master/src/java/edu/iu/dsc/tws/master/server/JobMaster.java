@@ -149,14 +149,19 @@ public class JobMaster {
   private DashboardClient dashClient;
 
   /**
-   * PingMonitor object
+   * WorkerHandler object to communicate with workers
    */
-  private PingMonitor pingMonitor;
+  private WorkerHandler workerHandler;
 
   /**
-   * BarrierMonitor object
+   * PingHandler object
    */
-  private BarrierMonitor barrierMonitor;
+  private PingHandler pingHandler;
+
+  /**
+   * BarrierHandler object
+   */
+  private BarrierHandler barrierHandler;
 
   /**
    * a variable that shows whether JobMaster will run jobTerminate
@@ -248,8 +253,9 @@ public class JobMaster {
 
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver);
 
-    pingMonitor = new PingMonitor(workerMonitor, rrServer, dashClient);
-    barrierMonitor = new BarrierMonitor(workerMonitor, rrServer);
+    workerHandler = new WorkerHandler(workerMonitor, rrServer);
+    pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
+    barrierHandler = new BarrierHandler(workerMonitor, rrServer);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -283,10 +289,10 @@ public class JobMaster {
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
-    rrServer.registerRequestHandler(pingBuilder, pingMonitor);
+    rrServer.registerRequestHandler(pingBuilder, pingHandler);
 
-    rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
-    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
+    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);
 
     rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
@@ -294,8 +300,8 @@ public class JobMaster {
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
 
-    rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
-    rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(barrierRequestBuilder, barrierHandler);
+    rrServer.registerRequestHandler(barrierResponseBuilder, barrierHandler);
 
     rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
     rrServer.registerRequestHandler(driverMessageBuilder, workerMonitor);

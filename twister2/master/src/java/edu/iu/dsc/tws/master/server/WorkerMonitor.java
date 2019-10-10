@@ -90,10 +90,7 @@ public class WorkerMonitor implements MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
-    if (message instanceof JobMasterAPI.RegisterWorker) {
-      JobMasterAPI.RegisterWorker rwMessage = (JobMasterAPI.RegisterWorker) message;
-      registerWorkerMessageReceived(id, rwMessage);
-    } else if (message instanceof JobMasterAPI.WorkerStateChange) {
+    if (message instanceof JobMasterAPI.WorkerStateChange) {
       JobMasterAPI.WorkerStateChange wscMessage = (JobMasterAPI.WorkerStateChange) message;
       stateChangeMessageReceived(id, wscMessage);
 
@@ -112,22 +109,25 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
-
-    LOG.fine("RegisterWorker message received: \n" + message);
-    JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
+  /**
+   * new worker joins
+   * it can be for the first time or ir can be coming from failure
+   * It returns FailMessage. If returned object is false,
+   * it means join succeeded.
+   * @param workerInfo
+   * @param initialState
+   */
+  public String joinWorker(JobMasterAPI.WorkerInfo workerInfo,
+                          JobMasterAPI.WorkerState initialState) {
 
     // if it is coming from failure
     // update the worker status and return
-    if (message.getFromFailure()) {
+    if (initialState == JobMasterAPI.WorkerState.RESTARTING) {
       // update workerInfo and its status in the worker list
       WorkerWithState worker = new WorkerWithState(workerInfo);
       worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
       workers.put(worker.getWorkerID(), worker);
       LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
-
-      // send the response message
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
 
       // send worker registration message to dashboard
       if (dashClient != null) {
@@ -137,34 +137,28 @@ public class WorkerMonitor implements MessageHandler {
       // TODO inform checkpoint master
       // what should be the message
 
-      return;
+      return null;
     }
 
     // if it is not coming from failure but workerID already registered
     // something wrong
     if (workers.containsKey(workerInfo.getWorkerID())) {
-      LOG.severe("Second RegisterWorker message received for workerID: " + workerInfo.getWorkerID()
-          + "\nIgnoring this RegisterWorker message. "
-          + "\nReceived Message: " + message
-          + "\nPrevious Worker with that workerID: " + workers.get(workerInfo.getWorkerID()));
+      LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join for the second time. "
+          + "\nIgnoring this join attemp. "
+          + "\nReceived WorkerInfo: " + workerInfo
+          + "\nExisting WorkerInfo: " + workers.get(workerInfo.getWorkerID()));
 
-      // send the response message
       String failMessage = "Previously a worker registered with workerID: "
           + workerInfo.getWorkerID();
 
-      // send fail response message
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
-
-      return;
+      return failMessage;
     }
 
+    // if it is a regular join event
     // add the worker to worker list
     WorkerWithState worker = new WorkerWithState(workerInfo);
     worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
     workers.put(worker.getWorkerID(), worker);
-
-    // send success response message
-    sendRegisterWorkerResponse(id, worker.getWorkerID(), true, null);
 
     // send worker registration message to dashboard
     if (dashClient != null) {
@@ -172,12 +166,15 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     // if all workers registered, inform all workers
+    // TODO: move to WorkerHandler
     if (allWorkersRegistered()) {
       LOG.info("All " + workers.size() + " workers joined the job.");
       sendListWorkersResponseToWaitList();
 
       sendWorkersJoinedMessage();
     }
+
+    return null;
   }
 
   private void stateChangeMessageReceived(RequestID id, JobMasterAPI.WorkerStateChange message) {

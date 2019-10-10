@@ -22,8 +22,8 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class PingMonitor implements MessageHandler {
-  private static final Logger LOG = Logger.getLogger(PingMonitor.class.getName());
+public class PingHandler implements MessageHandler {
+  private static final Logger LOG = Logger.getLogger(PingHandler.class.getName());
 
   // keep the timing of last heartbeat messages
   private HashMap<Integer, Long> lastTimeStamps;
@@ -32,7 +32,7 @@ public class PingMonitor implements MessageHandler {
   private RRServer rrServer;
   private DashboardClient dashClient;
 
-  public PingMonitor(WorkerMonitor workerMonitor,
+  public PingHandler(WorkerMonitor workerMonitor,
                      RRServer rrServer,
                      DashboardClient dashClient) {
 
@@ -46,7 +46,7 @@ public class PingMonitor implements MessageHandler {
   public void onMessage(RequestID id, int workerId, Message message) {
 
     if (!(message instanceof JobMasterAPI.Ping)) {
-      LOG.warning("A message received on PingMonitor but it is not JobMasterAPI.Ping message."
+      LOG.warning("A message received on PingHandler but it is not JobMasterAPI.Ping message."
           + "Something not right. Ignoring the message: " + message);
       return;
     }

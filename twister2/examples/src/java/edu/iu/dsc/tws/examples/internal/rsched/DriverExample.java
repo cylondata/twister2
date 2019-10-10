@@ -31,8 +31,21 @@ import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 public class DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
+  private Object waitObject = new Object();
+
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
+
+    // wait for all workers to join the job
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join ... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
 
     broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
@@ -44,6 +57,11 @@ public class DriverExample implements IDriver {
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
+
   }
 
   private void scalingExampleCLI(IScaler scaler) {
@@ -119,12 +137,6 @@ public class DriverExample implements IDriver {
   private void broadcastExample(IDriverMessenger messenger) {
 
     LOG.info("Testing broadcasting  ............................. ");
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
 
     // construct an example protocol buffer message and broadcast it to all workers
     JobMasterAPI.NodeInfo nodeInfo =
@@ -145,6 +157,13 @@ public class DriverExample implements IDriver {
 
     LOG.info("Broadcasting an example ComputeResource protocol buffer message: " + computeResource);
     messenger.broadcastToAllWorkers(computeResource);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
