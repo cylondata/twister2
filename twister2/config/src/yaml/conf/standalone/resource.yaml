@@ -49,6 +49,3 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.Local
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
 twister2.resource.uploader.download.method: "HTTP"
-
-## Weather we have a requirement to copy the system package
-twister2.resource.systempackage.copy: false
