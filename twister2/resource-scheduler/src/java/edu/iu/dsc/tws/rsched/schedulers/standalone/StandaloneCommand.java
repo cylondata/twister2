@@ -54,18 +54,14 @@ public class StandaloneCommand extends MPICommand {
     mpiCommand.add(twister2Home);
     mpiCommand.add(Paths.get(configDirectoryName, nodesFileName).toString());
     String mpiRunFile = MPIContext.mpiRunFile(config);
-    if (SchedulerContext.copySystemPackage(config)) {
-      if ("ompi/bin/mpirun".equals(mpiRunFile)) {
+    if ("ompi/bin/mpirun".equals(mpiRunFile)) {
+      if (SchedulerContext.copySystemPackage(config)) {
         mpiCommand.add("twister2-core" + "/" + mpiRunFile);
       } else {
-        mpiCommand.add(mpiRunFile);
+        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
       }
     } else {
-      if ("ompi/bin/mpirun".equals(mpiRunFile)) {
-        mpiCommand.add(SchedulerContext.twister2Home(config) + "/" + mpiRunFile);
-      } else {
-        mpiCommand.add(mpiRunFile);
-      }
+      mpiCommand.add(mpiRunFile);
     }
     mpiCommand.add("-Xmx" + getMemory(job) + "m");
     mpiCommand.add("-Xms" + getMemory(job) + "m");
