@@ -46,17 +46,16 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 /**
  * This class monitors upto date list of workers in a job with their status
  * It handles worker state changes:
- *   worker join,
- *   worker running,
- *   worker completion,
- *   worker failure
- *
+ * worker join,
+ * worker running,
+ * worker completion,
+ * worker failure
+ * <p>
  * It gets worker state changes either from workers directly with protocol messages
  * or from ZooKeeper server
- *
+ * <p>
  * It handles Job Master to Dashboard communications
  * It handles Job Master to Driver interactions
- *
  */
 public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
@@ -100,7 +99,6 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * get the size of workers list
-   * @return
    */
   public int getWorkersListSize() {
     return workers.size();
@@ -108,7 +106,6 @@ public class WorkerMonitor implements MessageHandler {
 
   /**
    * get the list of currently registered workers
-   * @return
    */
   public Collection<WorkerWithState> getWorkerList() {
     return workers.values();
@@ -142,47 +139,9 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   /**
-   * new worker joins
-   * it can be for the first time or ir can be coming from failure
-   * It returns FailMessage. If returned object is false,
-   * it means join succeeded.
+   * new worker joins for the first
    */
-  public String joinWorker(JobMasterAPI.WorkerInfo workerInfo,
-                           JobMasterAPI.WorkerState initialState) {
-
-    // if it is coming from failure
-    // update the worker status and return
-    if (initialState == JobMasterAPI.WorkerState.RESTARTING) {
-      // update workerInfo and its status in the worker list
-      WorkerWithState worker = new WorkerWithState(workerInfo);
-      worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
-      workers.put(worker.getWorkerID(), worker);
-      LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
-
-      // send worker registration message to dashboard
-      if (dashClient != null) {
-        dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
-      }
-
-      // TODO inform checkpoint master
-      // what should be the message
-
-      return null;
-    }
-
-    // if it is not coming from failure but workerID already registered
-    // something wrong
-    if (workers.containsKey(workerInfo.getWorkerID())) {
-      LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join for the second time. "
-          + "\nIgnoring this join attemp. "
-          + "\nReceived WorkerInfo: " + workerInfo
-          + "\nExisting WorkerInfo: " + workers.get(workerInfo.getWorkerID()));
-
-      String failMessage = "Previously a worker registered with workerID: "
-          + workerInfo.getWorkerID();
-
-      return failMessage;
-    }
+  public void joined(JobMasterAPI.WorkerInfo workerInfo) {
 
     // if it is a regular join event
     // add the worker to worker list
@@ -195,8 +154,25 @@ public class WorkerMonitor implements MessageHandler {
     if (dashClient != null) {
       dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTING);
     }
+  }
 
-    return null;
+  /**
+   * if the worker is coming from failure
+   */
+  public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
+
+    // update workerInfo and its status in the worker list
+    WorkerWithState worker = new WorkerWithState(workerInfo);
+    worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
+    workers.put(worker.getWorkerID(), worker);
+    LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
+
+    // send worker registration message to dashboard
+    if (dashClient != null) {
+      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
+    }
+
+    // TODO inform checkpoint master
   }
 
   /**

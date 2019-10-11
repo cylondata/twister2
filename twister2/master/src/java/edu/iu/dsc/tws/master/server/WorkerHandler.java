@@ -26,10 +26,10 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 /**
  * Handles JobMaster to worker messaging
  * It handles following message types:
- *  JobMasterAPI.RegisterWorker
- *  JobMasterAPI.WorkerStateChange
- *  JobMasterAPI.ListWorkersRequest
- *
+ * JobMasterAPI.RegisterWorker
+ * JobMasterAPI.WorkerStateChange
+ * JobMasterAPI.ListWorkersRequest
+ * <p>
  * It gets request messages from workers and talks to WorkerMonitor
  * It sends response messages back to workers
  */
@@ -79,29 +79,46 @@ public class WorkerHandler implements MessageHandler {
 
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+
 
     if (message.getFromFailure()) {
-      initialState = JobMasterAPI.WorkerState.RESTARTING;
-    }
-
-    String failMessage = workerMonitor.joinWorker(workerInfo, initialState);
-
-    if (failMessage == null) {
-      // send a success response
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
-
-      // if all workers registered, inform all workers
-      if (workerMonitor.allWorkersRegistered()) {
-        LOG.info("All " + workerMonitor.getWorkerList() + " workers joined the job.");
-        sendListWorkersResponseToWaitList();
-
-        workerMonitor.sendWorkersJoinedMessage();
-      }
+      // if it is coming from failure
+      workerMonitor.rejoined(workerInfo);
 
     } else {
-      // send a failure response
-      sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
+
+      // if it is not coming from failure
+
+      // if there is a worker with the same ID already,
+      // return a fail message
+      // something wrong
+      if (workerMonitor.existWorker(workerInfo.getWorkerID())) {
+        LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join for the second time. "
+            + "\nIgnoring this join attempt. "
+            + "\nReceived WorkerInfo: " + workerInfo
+            + "\nExisting WorkerInfo: "
+            + workerMonitor.getWorkerWithState(workerInfo.getWorkerID()));
+
+        String failMessage = "Previously a worker registered with workerID: "
+            + workerInfo.getWorkerID();
+
+        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
+        return;
+      }
+
+      // if the worker does not exist in the worker list, join the job
+      workerMonitor.joined(workerInfo);
+    }
+
+    // send a success response
+    sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+
+    // if all workers registered, inform all workers
+    if (workerMonitor.allWorkersRegistered()) {
+      LOG.info("All " + workerMonitor.getWorkerList() + " workers joined the job.");
+      sendListWorkersResponseToWaitList();
+
+      workerMonitor.sendWorkersJoinedMessage();
     }
 
   }
