@@ -25,6 +25,13 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * Handles JobMaster to worker messaging
+ * It handles following message types:
+ *  JobMasterAPI.RegisterWorker
+ *  JobMasterAPI.WorkerStateChange
+ *  JobMasterAPI.ListWorkersRequest
+ *
+ * It gets request messages from workers and talks to WorkerMonitor
+ * It sends response messages back to workers
  */
 
 public class WorkerHandler implements MessageHandler {
