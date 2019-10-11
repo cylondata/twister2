@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
@@ -251,7 +252,8 @@ public class JobMaster {
     // this ha to be done before WorkerMonitor initialization
     initDriver();
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver);
+    boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver, faultTolerant);
 
     workerHandler = new WorkerHandler(workerMonitor, rrServer);
     pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
@@ -294,8 +296,8 @@ public class JobMaster {
     rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
     rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);
 
-    rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
-    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeBuilder, workerHandler);
+    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerHandler);
 
     rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
     rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
@@ -438,15 +440,13 @@ public class JobMaster {
    * It is executed when the worker completed message received from all workers or
    * When JobMaster is killed with shutdown hook
    */
-  public void completeJob() {
+  public void completeJob(JobState jobFinalState) {
 
     // if Dashboard is used, tell it that the job has completed or killed
     if (dashClient != null) {
-      dashClient.jobStateChange(JobState.COMPLETED);
+      dashClient.jobStateChange(jobFinalState);
     }
 
-    LOG.info("All " + workerMonitor.getNumberOfWorkers()
-        + " workers have completed. JobMaster is stopping.");
     jobCompleted = true;
     looper.wakeup();
 
