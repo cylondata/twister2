@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,10 +88,8 @@ public class CDFWRuntime implements JobListener {
   private TWSChannel channel;
 
 
-  /** Connected Dataflow Runtime
-   * @param cfg
-   * @param wId
-   * @param controller
+  /**
+   * Connected Dataflow Runtime
    */
   public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
     this.executeMessageQueue = new LinkedBlockingQueue<>();
@@ -117,30 +116,56 @@ public class CDFWRuntime implements JobListener {
     taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, communicator, null);
   }
 
+
   /**
    * execute
    */
   public boolean execute() {
     Any msg;
     while (true) {
-      try {
-        msg = executeMessageQueue.take();
-        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
-          if (handleExecuteMessage(msg)) {
-            return false;
+      msg = executeMessageQueue.peek();
+      if (msg == null) {
+        if (scaleUpRequest.get()) {
+          communicator.close();
+
+          List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+          try {
+            workerInfoList = controller.getAllWorkers();
+          } catch (TimeoutException timeoutException) {
+            LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
           }
-        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
-          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
-              + "loop");
-          break;
-        } else {
-          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
+
+          LOG.info("execute method getting called:" + workerInfoList);
+          // create the channel
+          channel = Network.initializeChannel(config, controller);
+          String persistent = null;
+
+          // create the communicator
+          communicator = new Communicator(config, channel, persistent);
+          taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
-      } catch (InterruptedException e) {
-        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+        scaleUpRequest.set(false);
+        try {
+          controller.waitOnBarrier();
+        } catch (TimeoutException e) {
+          throw new RuntimeException(e);
+        }
+        continue;
+        //scale up msgs
+        //scalewup
+        //barrier
+      }
+      msg = executeMessageQueue.poll();
+      if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
+        if (handleExecuteMessage(msg)) {
+          return false;
+        }
+      } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+        LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
+            + "loop");
+        break;
       }
     }
-
     LOG.log(Level.INFO, workerId + " Execution Completed");
     return true;
   }
@@ -238,28 +263,13 @@ public class CDFWRuntime implements JobListener {
     }
   }
 
+  private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
+
   @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.log(Level.INFO, workerId + "Workers scaled up msg received. Instances added: "
         + instancesAdded);
-    communicator.close();
-
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
-    try {
-      workerInfoList = controller.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    LOG.info("execute method getting called:" + workerInfoList);
-    // create the channel
-    channel = Network.initializeChannel(config, controller);
-    String persistent = null;
-
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+    scaleUpRequest.set(true);
   }
 
   @Override
