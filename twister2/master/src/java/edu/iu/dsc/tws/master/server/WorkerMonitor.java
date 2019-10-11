@@ -510,34 +510,6 @@ public class WorkerMonitor implements MessageHandler {
     return true;
   }
 
-  private void sendRegisterWorkerResponse(RequestID id, int workerID, boolean result,
-                                          String reason) {
-
-    JobMasterAPI.RegisterWorkerResponse response =
-        JobMasterAPI.RegisterWorkerResponse.newBuilder()
-            .setWorkerID(workerID)
-            .setResult(result)
-            .setReason(reason == null ? "" : reason)
-            .build();
-
-    rrServer.sendResponse(id, response);
-    LOG.fine("RegisterWorkerResponse sent:\n" + response);
-  }
-
-  private void sendWorkerStateChangeResponse(RequestID id, int workerID,
-                                             JobMasterAPI.WorkerState sentState) {
-
-    JobMasterAPI.WorkerStateChangeResponse response =
-        JobMasterAPI.WorkerStateChangeResponse.newBuilder()
-            .setWorkerID(workerID)
-            .setState(sentState)
-            .build();
-
-    rrServer.sendResponse(id, response);
-    LOG.fine("WorkerStateChangeResponse sent:\n" + response);
-
-  }
-
   /**
    * send WorkersJoined message to all workers and the driver
    */
