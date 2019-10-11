@@ -256,21 +256,20 @@ public final class KMeansConnectedDataflowExample {
       DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
           instances, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
       //cdfwEnv.increaseWorkers(instances);
       try {
         Thread.sleep(5000);
       } catch (InterruptedException e) {
         throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
       }
-      LOG.info("Before Third Graph Execution :" + cdfwEnv.getWorkerInfoList());
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, parallelism, instances, iterations,
+        DataFlowGraph job3 = generateThirdJob(config, 4, instances, iterations,
             dimension, jobConfig);
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
-      LOG.info("worker info list:" + cdfwEnv.getWorkerInfoList());
     }
 
     public void generateData(Config config, String dataDirectory, String centroidDirectory,
@@ -416,6 +415,7 @@ public final class KMeansConnectedDataflowExample {
           newCentroids[j][k] = newVal;
         }
       }
+      //LOG.info("New Centroids:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }
