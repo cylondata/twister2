@@ -44,8 +44,19 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
- * This class monitors the workers in a job
- * It keeps the worker list and provides to list requests
+ * This class monitors upto date list of workers in a job with their status
+ * It handles worker state changes:
+ *   worker join,
+ *   worker running,
+ *   worker completion,
+ *   worker failure
+ *
+ * It gets worker state changes either from workers directly with protocol messages
+ * or from ZooKeeper server
+ *
+ * It handles Job Master to Dashboard communications
+ * It handles Job Master to Driver interactions
+ *
  */
 public class WorkerMonitor implements MessageHandler {
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
@@ -54,7 +65,7 @@ public class WorkerMonitor implements MessageHandler {
   private RRServer rrServer;
   private DashboardClient dashClient;
   private IDriver driver;
-  // whether this is a fault tolerantj ob
+  // whether this is a fault tolerant job
   private boolean faultTolerant;
 
   /**
