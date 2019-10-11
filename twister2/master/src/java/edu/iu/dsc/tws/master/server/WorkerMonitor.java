@@ -23,10 +23,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,8 +41,6 @@ import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
@@ -68,7 +65,6 @@ public class WorkerMonitor implements MessageHandler {
   private int numberOfWorkers;
 
   private TreeMap<Integer, WorkerWithState> workers;
-  private HashMap<Integer, RequestID> waitList;
 
   public WorkerMonitor(JobMaster jobMaster,
                        RRServer rrServer,
@@ -85,11 +81,26 @@ public class WorkerMonitor implements MessageHandler {
     this.faultTolerant = faultTolerant;
 
     workers = new TreeMap<>();
-    waitList = new HashMap<>();
   }
 
   public int getNumberOfWorkers() {
     return numberOfWorkers;
+  }
+
+  /**
+   * get the size of workers list
+   * @return
+   */
+  public int getWorkersListSize() {
+    return workers.size();
+  }
+
+  /**
+   * get the list of currently registered workers
+   * @return
+   */
+  public Collection<WorkerWithState> getWorkerList() {
+    return workers.values();
   }
 
   /**
@@ -109,12 +120,7 @@ public class WorkerMonitor implements MessageHandler {
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
-    if (message instanceof JobMasterAPI.ListWorkersRequest) {
-      LOG.log(Level.FINE, "ListWorkersRequest received: " + message.toString());
-      JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
-      listWorkersMessageReceived(id, listMessage);
-
-    } else if (message instanceof JobMasterAPI.WorkerMessage) {
+    if (message instanceof JobMasterAPI.WorkerMessage) {
       LOG.log(Level.FINE, "WorkerMessage received: " + message.toString());
       JobMasterAPI.WorkerMessage workerMessage = (JobMasterAPI.WorkerMessage) message;
       workerMessageReceived(id, workerMessage);
@@ -177,15 +183,6 @@ public class WorkerMonitor implements MessageHandler {
     // send worker registration message to dashboard
     if (dashClient != null) {
       dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTING);
-    }
-
-    // if all workers registered, inform all workers
-    // TODO: move to WorkerHandler
-    if (allWorkersRegistered()) {
-      LOG.info("All " + workers.size() + " workers joined the job.");
-      sendListWorkersResponseToWaitList();
-
-      sendWorkersJoinedMessage();
     }
 
     return null;
@@ -438,7 +435,7 @@ public class WorkerMonitor implements MessageHandler {
    * make sure that
    * all workers registered and their state may be anything
    */
-  private boolean allWorkersRegistered() {
+  public boolean allWorkersRegistered() {
 
     // if numberOfWorkers does not match the number of registered workers,
     // return false
@@ -541,56 +538,10 @@ public class WorkerMonitor implements MessageHandler {
 
   }
 
-  private void listWorkersMessageReceived(RequestID id, ListWorkersRequest listMessage) {
-
-    if (listMessage.getRequestType() == ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
-
-      sendListWorkersResponse(listMessage.getWorkerID(), id);
-      LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
-          numberOfWorkers, workers.size()));
-    } else if (listMessage.getRequestType()
-        == JobMasterAPI.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
-
-      // if all workers have already joined, send the current list
-      if (workers.size() == numberOfWorkers) {
-        sendListWorkersResponse(listMessage.getWorkerID(), id);
-
-        // if some workers have not joined yet, put this worker into the wait list
-      } else {
-        waitList.put(listMessage.getWorkerID(), id);
-      }
-
-      LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
-          numberOfWorkers, workers.size()));
-    }
-  }
-
-  private void sendListWorkersResponse(int workerID, RequestID requestID) {
-
-    JobMasterAPI.ListWorkersResponse.Builder responseBuilder = ListWorkersResponse.newBuilder()
-        .setWorkerID(workerID);
-
-    for (WorkerWithState worker : workers.values()) {
-      responseBuilder.addWorker(worker.getWorkerInfo());
-    }
-
-    JobMasterAPI.ListWorkersResponse response = responseBuilder.build();
-    rrServer.sendResponse(requestID, response);
-    LOG.fine("ListWorkersResponse sent:\n" + response);
-  }
-
-  private void sendListWorkersResponseToWaitList() {
-    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
-      sendListWorkersResponse(entry.getKey(), entry.getValue());
-    }
-
-    waitList.clear();
-  }
-
   /**
    * send WorkersJoined message to all workers and the driver
    */
-  private void sendWorkersJoinedMessage() {
+  public void sendWorkersJoinedMessage() {
 
     LOG.info("Sending WorkersJoined messages ...");
 

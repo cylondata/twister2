@@ -11,6 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.protobuf.Message;
@@ -31,9 +34,14 @@ public class WorkerHandler implements MessageHandler {
   private WorkerMonitor workerMonitor;
   private RRServer rrServer;
 
+  private HashMap<Integer, RequestID> waitList;
+
+
   public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
+
+    waitList = new HashMap<>();
   }
 
   @Override
@@ -49,6 +57,13 @@ public class WorkerHandler implements MessageHandler {
       JobMasterAPI.WorkerStateChange scMessage = (JobMasterAPI.WorkerStateChange) message;
       stateChangeMessageReceived(id, scMessage);
 
+    } else if (message instanceof JobMasterAPI.ListWorkersRequest) {
+      LOG.log(Level.FINE, "ListWorkersRequest received: " + message.toString());
+      JobMasterAPI.ListWorkersRequest listMessage = (JobMasterAPI.ListWorkersRequest) message;
+      listWorkersMessageReceived(id, listMessage);
+
+    } else {
+      LOG.log(Level.SEVERE, "Un-known message type received: " + message);
     }
 
   }
@@ -68,6 +83,15 @@ public class WorkerHandler implements MessageHandler {
     if (failMessage == null) {
       // send a success response
       sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+
+      // if all workers registered, inform all workers
+      if (workerMonitor.allWorkersRegistered()) {
+        LOG.info("All " + workerMonitor.getWorkerList() + " workers joined the job.");
+        sendListWorkersResponseToWaitList();
+
+        workerMonitor.sendWorkersJoinedMessage();
+      }
+
     } else {
       // send a failure response
       sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
@@ -125,6 +149,56 @@ public class WorkerHandler implements MessageHandler {
       // send the response message
       sendWorkerStateChangeResponse(id, message.getWorkerID(), message.getState());
     }
+  }
+
+  private void listWorkersMessageReceived(RequestID id,
+                                          JobMasterAPI.ListWorkersRequest listMessage) {
+
+    if (listMessage.getRequestType()
+        == JobMasterAPI.ListWorkersRequest.RequestType.IMMEDIATE_RESPONSE) {
+
+      sendListWorkersResponse(listMessage.getWorkerID(), id);
+      LOG.fine(String.format("Expecting %d workers, %d joined",
+          workerMonitor.getNumberOfWorkers(), workerMonitor.getWorkersListSize()));
+
+    } else if (listMessage.getRequestType()
+        == JobMasterAPI.ListWorkersRequest.RequestType.RESPONSE_AFTER_ALL_JOINED) {
+
+      // if all workers have already joined, send the current list
+      if (workerMonitor.getWorkersListSize() == workerMonitor.getNumberOfWorkers()) {
+        sendListWorkersResponse(listMessage.getWorkerID(), id);
+
+        // if some workers have not joined yet, put this worker into the wait list
+      } else {
+        waitList.put(listMessage.getWorkerID(), id);
+      }
+
+      LOG.log(Level.FINE, String.format("Expecting %d workers, %d joined",
+          workerMonitor.getNumberOfWorkers(), workerMonitor.getWorkersListSize()));
+    }
+  }
+
+  private void sendListWorkersResponse(int workerID, RequestID requestID) {
+
+    JobMasterAPI.ListWorkersResponse.Builder responseBuilder =
+        JobMasterAPI.ListWorkersResponse.newBuilder()
+            .setWorkerID(workerID);
+
+    for (WorkerWithState worker : workerMonitor.getWorkerList()) {
+      responseBuilder.addWorker(worker.getWorkerInfo());
+    }
+
+    JobMasterAPI.ListWorkersResponse response = responseBuilder.build();
+    rrServer.sendResponse(requestID, response);
+    LOG.fine("ListWorkersResponse sent:\n" + response);
+  }
+
+  private void sendListWorkersResponseToWaitList() {
+    for (Map.Entry<Integer, RequestID> entry : waitList.entrySet()) {
+      sendListWorkersResponse(entry.getKey(), entry.getValue());
+    }
+
+    waitList.clear();
   }
 
 

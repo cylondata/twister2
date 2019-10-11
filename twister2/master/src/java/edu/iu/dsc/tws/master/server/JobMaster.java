@@ -299,8 +299,8 @@ public class JobMaster {
     rrServer.registerRequestHandler(stateChangeBuilder, workerHandler);
     rrServer.registerRequestHandler(stateChangeResponseBuilder, workerHandler);
 
-    rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
-    rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listWorkersBuilder, workerHandler);
+    rrServer.registerRequestHandler(listResponseBuilder, workerHandler);
 
     rrServer.registerRequestHandler(barrierRequestBuilder, barrierHandler);
     rrServer.registerRequestHandler(barrierResponseBuilder, barrierHandler);
