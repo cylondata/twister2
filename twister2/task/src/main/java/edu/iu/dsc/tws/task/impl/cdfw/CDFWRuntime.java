@@ -106,7 +106,7 @@ public class CDFWRuntime implements JobListener {
       return;
     }
 
-    LOG.info("execute method getting called:" + workerInfoList);
+    //LOG.info("execute method getting called:" + workerInfoList);
     // create the channel
     channel = Network.initializeChannel(config, controller);
     String persistent = null;
@@ -127,7 +127,6 @@ public class CDFWRuntime implements JobListener {
       if (msg == null) {
         if (scaleUpRequest.get()) {
           communicator.close();
-
           List<JobMasterAPI.WorkerInfo> workerInfoList = null;
           try {
             workerInfoList = controller.getAllWorkers();
@@ -135,7 +134,7 @@ public class CDFWRuntime implements JobListener {
             LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
           }
 
-          LOG.info("execute method getting called:" + workerInfoList);
+          //LOG.info("execute method getting called:" + workerInfoList);
           // create the channel
           channel = Network.initializeChannel(config, controller);
           String persistent = null;
@@ -145,11 +144,11 @@ public class CDFWRuntime implements JobListener {
           taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
         scaleUpRequest.set(false);
-        try {
+        /*try {
           controller.waitOnBarrier();
         } catch (TimeoutException e) {
           throw new RuntimeException(e);
-        }
+        }*/
         continue;
         //scale up msgs
         //scalewup
@@ -167,6 +166,26 @@ public class CDFWRuntime implements JobListener {
       }
     }
     LOG.log(Level.INFO, workerId + " Execution Completed");
+    return true;
+  }
+
+  private boolean reinitialize() {
+    communicator.close();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+
+    //LOG.info("Reinitialize Method Getting Called:" + workerInfoList);
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
     return true;
   }
 
@@ -201,7 +220,7 @@ public class CDFWRuntime implements JobListener {
             throw new RuntimeException("We cannot find the input: " + inputName);
           }
           DataObject<Object> outPutObject = outsPerGraph.get(inputName);
-          taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
+          //taskExecutor.addSourceInput(taskGraph, executionPlan, inputName, outPutObject);
         }
       }
 
@@ -209,10 +228,10 @@ public class CDFWRuntime implements JobListener {
         List<CDFWJobAPI.Input> inputs1 = subGraph.getInputsList();
         for (CDFWJobAPI.Input in : inputs1) {
           for (String key : iterativeOutPuts.keySet()) {
-            taskExecutor.addSourceInput(taskGraph, executionPlan, key, iterativeOutPuts.get(key));
+            //taskExecutor.addSourceInput(taskGraph, executionPlan, key, iterativeOutPuts.get(key));
             if (!in.getName().equals(key)) {
               DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-              taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+              //taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
             }
           }
         }
@@ -223,9 +242,11 @@ public class CDFWRuntime implements JobListener {
       } else {
         taskExecutor.execute(taskGraph, executionPlan);
       }
+
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
+
       Map<String, DataObject<Object>> outs = new HashMap<>();
       if (subGraph.getOutputsList().size() != 0) {
         List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
@@ -286,7 +307,6 @@ public class CDFWRuntime implements JobListener {
       return;
     }
 
-    LOG.info("execute method getting called:" + workerInfoList);
     // create the channel
     channel = Network.initializeChannel(config, controller);
     String persistent = null;
@@ -294,7 +314,6 @@ public class CDFWRuntime implements JobListener {
     // create the communicator
     communicator = new Communicator(config, channel, persistent);
     taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
-
   }
 
   @Override

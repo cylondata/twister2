@@ -120,7 +120,6 @@ public class KMeansWorker implements IWorker {
       //actual execution of the third task graph
       taskExecutor.itrExecute(kmeansTaskGraph, plan, i == iterations - 1);
     }
-
     cEnv.close();
 
     DataPartition<?> centroidPartition = taskExecutor.getOutput("centroids")
