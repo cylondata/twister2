@@ -13,10 +13,13 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.Collector;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
@@ -29,10 +32,10 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
   private ComputeCollectorFunc<O, I> computeFunction;
 
   public ComputeCollectorOp() {
-
   }
 
-  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction) {
+  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin, Set<String> receivables) {
+    super(origin, receivables);
     this.computeFunction = computeFunction;
   }
 

@@ -11,37 +11,45 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.executor.core.Runtime;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Receptor {
+/**
+ * Creates a sink using {@link SinkFunc}. Can produce a single {@link DataPartition} from the
+ * ID of the origin {@link BaseTSet}
+ *
+ * @param <T> data type
+ */
+public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, Collector {
   private static final long serialVersionUID = -9398832570L;
 
   private SinkFunc<T> sink;
-
-  private TSetContext tSetContext;
+  private IONames collectible; // key of the data partition this op produces
 
   public SinkOp() {
-
   }
 
-  public SinkOp(SinkFunc<T> sink) {
+  public SinkOp(SinkFunc<T> sink, BaseTSet origin, Set<String> receivableNames) {
+    super(origin, receivableNames);
     this.sink = sink;
+    this.collectible = IONames.declare(origin.getId());
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    tSetContext = new TSetContext(cfg, ctx);
-    sink.prepare(tSetContext);
+    this.updateTSetContext(cfg, ctx);
+    sink.prepare(gettSetContext());
   }
 
   @Override
@@ -55,13 +63,19 @@ public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Recep
     sink.close();
   }
 
+  /**
+   * returns the collected data partition only when it matches the provided name
+   */
   @Override
-  public DataPartition<?> get() {
-    return sink.get();
+  public DataPartition<?> get(String name) {
+    if (collectible.size() == 1 && name.equals(collectible.iterator().next())) {
+      return sink.get();
+    }
+    throw new RuntimeException("Unable to get the partition with key: " + name);
   }
 
   @Override
-  public void add(String name, DataObject<?> data) {
-    tSetContext.addInput(name, data);
+  public IONames getCollectibleNames() {
+    return collectible;
   }
 }

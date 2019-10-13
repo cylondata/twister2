@@ -13,19 +13,25 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public class MapToTupleOp<K, O, I> extends BaseComputeOp<I> {
-  private MapFunc<Tuple<K, O>, I> mapFunction;
+  private MapCompute<Tuple<K, O>, I> mapFunction;
 
   public MapToTupleOp() {
 
   }
 
-  public MapToTupleOp(MapFunc<Tuple<K, O>, I> mapToTupFn) {
+  public MapToTupleOp(MapCompute<Tuple<K, O>, I> mapToTupFn, BaseTSet origin,
+                      Set<String> receivables) {
+    super(origin, receivables);
     this.mapFunction = mapToTupFn;
   }
 
@@ -36,7 +42,7 @@ public class MapToTupleOp<K, O, I> extends BaseComputeOp<I> {
 
   @Override
   public boolean execute(IMessage<I> content) {
-    Tuple<K, O> tuple = mapFunction.map(content.getContent());
+    Tuple<K, O> tuple = mapFunction.compute(content.getContent());
     keyedWriteToEdges(tuple.getKey(), tuple.getValue());
     writeEndToEdges();
     return false;

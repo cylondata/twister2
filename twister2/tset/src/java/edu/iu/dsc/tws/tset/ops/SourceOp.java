@@ -11,26 +11,24 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Set;
+
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SourceOp<T> implements ISource, Receptor {
-  private static final long serialVersionUID = -2400242961L;
-
-  private TaskContext context;
-  private TSetContext tSetContext;
+public class SourceOp<T> extends BaseOp implements ISource {
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
-
   private SourceFunc<T> source;
 
   public SourceOp() {
+
   }
-  public SourceOp(SourceFunc<T> src) {
+
+  public SourceOp(SourceFunc<T> src, BaseTSet originTSet, Set<String> receivables) {
+    super(originTSet, receivables);
     this.source = src;
   }
 
@@ -45,15 +43,10 @@ public class SourceOp<T> implements ISource, Receptor {
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    this.context = ctx;
     this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
-    this.tSetContext = new TSetContext(cfg, ctx);
 
-    this.source.prepare(tSetContext);
-  }
+    this.updateTSetContext(cfg, ctx);
 
-  @Override
-  public void add(String name, DataObject<?> data) {
-    this.tSetContext.addInput(name, data);
+    this.source.prepare(gettSetContext());
   }
 }
