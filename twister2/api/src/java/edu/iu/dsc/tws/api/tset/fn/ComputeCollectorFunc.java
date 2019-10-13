@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.api.tset.fn;
 
 import edu.iu.dsc.tws.api.tset.Collector;
 
-public interface ComputeCollectorFunc<O, I> extends TFunction {
+public interface ComputeCollectorFunc<O, I> extends TFunction<O, I> {
 
   void compute(I input, Collector<O> output);
 }

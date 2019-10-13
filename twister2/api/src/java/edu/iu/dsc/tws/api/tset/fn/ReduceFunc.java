@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 /**
  * Reduce function
  */
-public interface ReduceFunc<T> extends TFunction, IFunction<T> {
+public interface ReduceFunc<T> extends TFunction<T, T>, IFunction<T> {
   /**
    * Reduce the t1 and t2 into a single value
    *

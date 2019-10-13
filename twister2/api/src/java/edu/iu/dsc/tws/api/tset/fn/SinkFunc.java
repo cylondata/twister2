@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
  *
  * @param <T> input type of sink
  */
-public interface SinkFunc<T> extends TFunction {
+public interface SinkFunc<T> extends TFunction<T, T> {
   /**
    * Add a value
    *
