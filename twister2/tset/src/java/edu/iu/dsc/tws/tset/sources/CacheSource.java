@@ -11,15 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sources;
 
-import java.util.logging.Logger;
-
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 
 public class CacheSource<T> extends BaseSourceFunc<T> {
-  private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
+//  private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
   private int end;
   private int current;
@@ -44,9 +42,7 @@ public class CacheSource<T> extends BaseSourceFunc<T> {
     return ret;
   }
 
-  /*
-  check if the consumer has reached the end. if its at the end, attach the next consumer.
-   */
+  //  check if the consumer has reached the end. if its at the end, attach the next consumer.
   private void updateConsumer() {
     if (!currentConsumer.hasNext() && (++current < end)) {
       currentConsumer = data.getPartitions()[current].getConsumer();
@@ -57,20 +53,7 @@ public class CacheSource<T> extends BaseSourceFunc<T> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
 
+    // set the current consumer to the partition at idx 0 of the partition array
     this.currentConsumer = data.getPartitions()[0].getConsumer();
   }
-
-  /*  private List<T> getData() {
-    if (data == null) {
-      LOG.fine("Data has not been added to the data object");
-      return new ArrayList<>();
-    }
-    DataPartition<T>[] parts = data.getPartitions();
-    List<T> results = new ArrayList();
-    for (DataPartition<T> part : parts) {
-      results.add(part.getConsumer().next());
-    }
-    return results;
-  }*/
-
 }
