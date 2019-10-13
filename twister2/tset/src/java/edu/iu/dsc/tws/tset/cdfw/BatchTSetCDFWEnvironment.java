@@ -40,8 +40,8 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
     return null;
   }
 
-  @Override
-  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    return;
-  }
+//  @Override
+//  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
+//    return;
+//  }
 }

@@ -34,7 +34,7 @@ public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
     return super.executeBuildContext(buildContext, outputTset, isIterative);
   }
 
-  @Override
-  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-  }
+//  @Override
+//  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
+//  }
 }
