@@ -33,20 +33,26 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
+import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.JobListener;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class BasicK8sWorker implements IWorker, JobListener {
+public class BasicK8sWorker
+    implements IWorker, IAllJoinedListener, IScalerListener, IReceiverFromDriver {
+
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
+
+  private ISenderToDriver senderToDriver;
 
   private Object waitObject = new Object();
 
@@ -60,7 +66,12 @@ public class BasicK8sWorker implements IWorker, JobListener {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    JMWorkerAgent.addJobListener(this);
+    WorkerRuntime.addAllJoinedListener(this);
+    WorkerRuntime.addReceiverFromDriver(this);
+    WorkerRuntime.addScalerListener(this);
+
+    senderToDriver = WorkerRuntime.getSenderToDriver();
+
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -162,8 +173,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
         JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
         LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
 
-        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-        workerMessenger.sendToDriver(nodeInfo);
+        senderToDriver.sendToDriver(nodeInfo);
 
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
@@ -173,8 +183,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
         JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
         LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
 
-        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-        workerMessenger.sendToDriver(computeResource);
+        senderToDriver.sendToDriver(computeResource);
 
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);

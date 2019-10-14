@@ -90,8 +90,8 @@ public class WorkerHandler implements MessageHandler {
       // if it is not coming from failure
 
       // if there is a worker with the same ID already,
-      // return a fail message
-      // something wrong
+      // return a fail message something wrong
+      // TODO: this must behave the same as ZKBaseController. Need to change.
       if (workerMonitor.existWorker(workerInfo.getWorkerID())) {
         LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join for the second time. "
             + "\nIgnoring this join attempt. "

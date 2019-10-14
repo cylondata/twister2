@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
@@ -77,6 +78,9 @@ public class ZKBaseController {
 
   // Inform worker failure events
   protected IWorkerFailureListener failureListener;
+
+  // Inform worker events
+  protected IWorkerStatusListener workerStatusListener;
 
   // Inform when all workers joined the job
   protected IAllJoinedListener allJoinedListener;
@@ -200,6 +204,20 @@ public class ZKBaseController {
     jobWorkers.keySet().removeIf(wInfo -> wInfo.getWorkerID() == workerID);
   }
 
+
+  /**
+   * add a single IWorkerStatusListener
+   * if an additional IWorkerStatusListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addWorkerStatusListener(IWorkerStatusListener iWorkerStatusListener) {
+    if (this.workerStatusListener != null) {
+      return false;
+    }
+
+    this.workerStatusListener = iWorkerStatusListener;
+    return true;
+  }
 
   /**
    * add a single IWorkerFailureListener
@@ -383,7 +401,7 @@ public class ZKBaseController {
       jobWorkers.put(pair.getKey(), pair.getValue());
 
       if (failureListener != null) {
-        failureListener.failedWorkerRejoined(pair.getKey());
+        failureListener.workerRejoined(pair.getKey());
       }
 
       LOG.info("A worker rejoined the job with ID: " + newWorkerID);
@@ -403,6 +421,11 @@ public class ZKBaseController {
       }
 
       jobWorkers.put(pair.getKey(), pair.getValue());
+
+      // inform worker status listener
+      if (workerStatusListener != null) {
+        workerStatusListener.joined(pair.getKey());
+      }
     }
 
     // if currently all workers exist in the job, let the workers know that all joined
@@ -488,6 +511,11 @@ public class ZKBaseController {
     LOG.info(String.format("Worker[%s] status changed to: %s ",
         pair.getKey().getWorkerID(), pair.getValue()));
 
+    // inform the listener if the worker becomes RUNNING
+    if (workerStatusListener != null && pair.getValue() == WorkerState.RUNNING) {
+      workerStatusListener.running(pair.getKey().getWorkerID());
+    }
+
   }
 
   /**
@@ -530,6 +558,10 @@ public class ZKBaseController {
 
       LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
 
+      if (workerStatusListener != null) {
+        workerStatusListener.completed(removedWorkerID);
+      }
+
       // worker failed
     } else {
       LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
@@ -538,7 +570,7 @@ public class ZKBaseController {
         WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
         jobWorkers.put(failedWorker, WorkerState.FAILED);
         // inform the listener
-        failureListener.workerFailed(failedWorker);
+        failureListener.workerFailed(failedWorker.getWorkerID());
       }
     }
   }

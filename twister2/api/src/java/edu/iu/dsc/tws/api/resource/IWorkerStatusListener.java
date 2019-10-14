@@ -13,20 +13,11 @@ package edu.iu.dsc.tws.api.resource;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-/**
- * An interface to receive worker failures in Twister2 jobs
- */
-public interface IWorkerFailureListener {
+public interface IWorkerStatusListener {
 
-  /**
-   * let the listener know that a worker failed
-   * @param workerID
-   */
-  void workerFailed(int workerID);
+  void joined(JobMasterAPI.WorkerInfo workerInfo);
 
-  /**
-   * let the listener know that previously failed worker rejoined the job
-   * @param workerInfo
-   */
-  void workerRejoined(JobMasterAPI.WorkerInfo workerInfo);
+  void running(int workerID);
+
+  void completed(int workerID);
 }

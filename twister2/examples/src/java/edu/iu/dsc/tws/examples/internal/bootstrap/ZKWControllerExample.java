@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -120,15 +121,32 @@ public final class ZKWControllerExample {
     IWorkerController workerController = zkWorkerController;
     IWorkerStatusUpdater workerStatusUpdater = zkWorkerController;
 
-    zkWorkerController.addFailureListener(new IWorkerFailureListener() {
+    zkWorkerController.addWorkerStatusListener(new IWorkerStatusListener() {
       @Override
-      public void workerFailed(JobMasterAPI.WorkerInfo workerInfo) {
-        LOG.info(String.format("Worker[%s] failed.......................................",
-            workerInfo.getWorkerID()));
+      public void joined(JobMasterAPI.WorkerInfo wInfo) {
+        LOG.info("worker: " + wInfo.getWorkerID() + " JOINED. ********************* ");
       }
 
       @Override
-      public void failedWorkerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void running(int workerID) {
+        LOG.info("worker: " + workerID + " became RUNNING. ********************* ");
+      }
+
+      @Override
+      public void completed(int workerID) {
+        LOG.info("worker: " + workerID + " COMPLETED. ********************* ");
+      }
+    });
+
+    zkWorkerController.addFailureListener(new IWorkerFailureListener() {
+      @Override
+      public void workerFailed(int workerID) {
+        LOG.info(String.format("Worker[%s] failed.......................................",
+            workerID));
+      }
+
+      @Override
+      public void workerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }
@@ -171,7 +189,7 @@ public final class ZKWControllerExample {
     // test state change
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
-    sleeeep((long) (Math.random() * 100 * 1000));
+    sleeeep((long) (Math.random() * 10 * 1000));
 
     // test worker failure
     // assume this worker failed
@@ -207,13 +225,13 @@ public final class ZKWControllerExample {
 
     zkMasterController.addFailureListener(new IWorkerFailureListener() {
       @Override
-      public void workerFailed(JobMasterAPI.WorkerInfo workerInfo) {
+      public void workerFailed(int workerID) {
         LOG.info(String.format("Worker[%s] failed.......................................",
-            workerInfo.getWorkerID()));
+            workerID));
       }
 
       @Override
-      public void failedWorkerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void workerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }
