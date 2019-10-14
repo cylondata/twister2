@@ -39,6 +39,8 @@ import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
+import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.task.window.api.IWindowedSink;
 
 /**
@@ -66,6 +68,7 @@ public final class ComputeGraphBuilder {
    * Default parallelism read from a configuration parameter
    */
   private int defaultParallelism;
+  private Config cfg;
 
   /**
    * The execution mode
@@ -86,6 +89,7 @@ public final class ComputeGraphBuilder {
 
   private ComputeGraphBuilder(Config cfg) {
     this.defaultParallelism = TaskConfigurations.getDefaultParallelism(cfg, 1);
+    this.cfg = cfg;
   }
 
   /**
@@ -251,8 +255,11 @@ public final class ComputeGraphBuilder {
   }
 
   private void addFTGatherSink(String sourceName) {
+    if (!CheckpointingConfigurations.isCheckpointingEnabled(cfg)) {
+      return;
+    }
     String ftTaskName = "ft-" + sourceName;
-    Vertex vertex = new Vertex(ftTaskName, new CheckpointingSGatherSink(), 1);
+    Vertex vertex = new Vertex(ftTaskName, new CheckpointingSGatherSink(sourceName), 1);
     nodes.put(ftTaskName, vertex);
     ComputeConnection computeConnection = this.createComputeConnection(ftTaskName);
     computeConnection.gather(sourceName)
