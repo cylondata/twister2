@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
@@ -98,15 +97,20 @@ public class CDFWRuntime implements JobListener {
     this.controller = controller;
     this.config = cfg;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
-    try {
+    List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+
+    /*try {
       workerInfoList = controller.getAllWorkers();
+      LOG.info("worker info list @ cons:" + workerInfoList);
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
+    }*/
+
+    if (workerInfoList == null) {
+      return;
     }
 
-    //LOG.info("execute method getting called:" + workerInfoList);
     // create the channel
     channel = Network.initializeChannel(config, controller);
     String persistent = null;
@@ -117,6 +121,36 @@ public class CDFWRuntime implements JobListener {
   }
 
 
+  private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
+    // wait all workers to join the job
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+      LOG.info("worker info list @ cons:" + workerList);
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return null;
+    }
+
+    LOG.info(workerList.size() + " workers joined. ");
+
+    // syncs with all workers
+    LOG.info("Waiting on a barrier ........................ ");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+
+    LOG.info("Proceeded through the barrier ........................ ");
+    return workerList;
+  }
+
   /**
    * execute
    */
@@ -126,16 +160,22 @@ public class CDFWRuntime implements JobListener {
       msg = executeMessageQueue.peek();
       if (msg == null) {
         if (scaleUpRequest.get()) {
-          communicator.close();
-          List<JobMasterAPI.WorkerInfo> workerInfoList = null;
-          try {
-            workerInfoList = controller.getAllWorkers();
-          } catch (TimeoutException timeoutException) {
-            LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-          }
 
-          //LOG.info("execute method getting called:" + workerInfoList);
+//          List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+//          try {
+//            workerInfoList = controller.getAllWorkers();
+//            LOG.info("worker info list @ execute:" + workerInfoList);
+//          } catch (TimeoutException timeoutException) {
+//            LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+//          }
+
+          communicator.close();
+          List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+          LOG.info("worker info list @ execute:" + workerInfoList);
+
+
           // create the channel
+          LOG.info("Existing workers calling barrier");
           channel = Network.initializeChannel(config, controller);
           String persistent = null;
 
@@ -144,15 +184,7 @@ public class CDFWRuntime implements JobListener {
           taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
         scaleUpRequest.set(false);
-        /*try {
-          controller.waitOnBarrier();
-        } catch (TimeoutException e) {
-          throw new RuntimeException(e);
-        }*/
         continue;
-        //scale up msgs
-        //scalewup
-        //barrier
       }
       msg = executeMessageQueue.poll();
       if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
@@ -224,24 +256,25 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
-        List<CDFWJobAPI.Input> inputs1 = subGraph.getInputsList();
-        for (CDFWJobAPI.Input in : inputs1) {
-          for (String key : iterativeOutPuts.keySet()) {
-            //taskExecutor.addSourceInput(taskGraph, executionPlan, key, iterativeOutPuts.get(key));
-            if (!in.getName().equals(key)) {
-              DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
-              //taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
-            }
-          }
-        }
-      }
+//      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+//        List<CDFWJobAPI.Input> inputs1 = subGraph.getInputsList();
+//        for (CDFWJobAPI.Input in : inputs1) {
+//          for (String key : iterativeOutPuts.keySet()) {
+//            taskExecutor.addSourceInput(taskGraph, executionPlan, key, iterativeOutPuts.get(key));
+//            if (!in.getName().equals(key)) {
+//              DataObject<Object> dataSet = outPuts.get(in.getParentGraph()).get(in.getName());
+//              taskExecutor.addSourceInput(taskGraph, executionPlan, in.getName(), dataSet);
+//            }
+//          }
+//        }
+//      }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
-        taskExecutor.itrExecute(taskGraph, executionPlan);
-      } else {
-        taskExecutor.execute(taskGraph, executionPlan);
-      }
+//      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+//        taskExecutor.itrExecute(taskGraph, executionPlan);
+//      } else {
+//        taskExecutor.execute(taskGraph, executionPlan);
+//      }
+      taskExecutor.execute(taskGraph, executionPlan);
 
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
@@ -258,9 +291,9 @@ public class CDFWRuntime implements JobListener {
         outPuts.put(subGraph.getName(), outs);
       }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+      /*if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
         processIterativeOuput(taskGraph, executionPlan);
-      }
+      }*/
 
       if (!workerMessenger.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);

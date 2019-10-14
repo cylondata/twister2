@@ -294,8 +294,12 @@ public final class KMeansConnectedDataflowExample {
     private double[][] datapoints = null;
 
     private KMeansCalculator kMeansCalculator = null;
+
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
+
+    /*private DataPartition<?> dataPartition = null;
+    private DataPartition<?> centroidPartition = null;*/
 
     private int dimension = 0;
 
@@ -318,6 +322,16 @@ public final class KMeansConnectedDataflowExample {
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
     }
+
+    /*@Override
+    public void execute() {
+      datapoints = (double[][]) dataPartition.first();
+      centroid = (double[][]) centroidPartition.first();
+      LOG.info("Centroid Values:" + Arrays.deepToString(centroid));
+      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dimension);
+      double[][] kMeansCenters = kMeansCalculator.calculate();
+      context.writeEnd("all-reduce", kMeansCenters);
+    }*/
 
     @SuppressWarnings("unchecked")
     @Override
@@ -415,7 +429,6 @@ public final class KMeansConnectedDataflowExample {
           newCentroids[j][k] = newVal;
         }
       }
-      //LOG.info("New Centroids:" + Arrays.deepToString(newCentroids));
       return newCentroids;
     }
   }
