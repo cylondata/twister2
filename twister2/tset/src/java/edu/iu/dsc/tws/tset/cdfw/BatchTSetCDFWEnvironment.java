@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.cdfw;
 
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
@@ -32,7 +30,7 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
 
   @Override
   protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
-                                                  BuildableTSet outputTset, boolean isIterative) {
+                                                  BuildableTSet outputTSet) {
     DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", buildContext.getComputeGraph()).
         setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig).setGraphType("non-iterative");
