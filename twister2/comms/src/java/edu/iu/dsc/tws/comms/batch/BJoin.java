@@ -210,6 +210,9 @@ public class BJoin extends BaseOperation {
   }
 
   @Override
+  /**
+   * Close the operation
+   */
   public void close() {
     partitionLeft.close();
     partitionRight.close();

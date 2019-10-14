@@ -210,6 +210,21 @@ public class TWSMPIChannel implements TWSChannel {
         || !this.pendingSends.isEmpty() || !this.waitForCompletionSends.isEmpty()) {
       this.progress();
     }
+
+    for (int i = 0; i < registeredReceives.size(); i++) {
+      MPIReceiveRequests receiveRequests = registeredReceives.get(i);
+      try {
+        IterativeLinkedList.ILLIterator requestIterator
+            = receiveRequests.pendingRequests.iterator();
+        while (requestIterator.hasNext()) {
+          MPIRequest r = (MPIRequest) requestIterator.next();
+          r.request.cancel();
+        }
+      } catch (MPIException e) {
+        LOG.log(Level.SEVERE, "Twister2Network failure", e);
+        throw new RuntimeException("Twister2Network failure", e);
+      }
+    }
   }
 
   @Override
@@ -404,9 +419,13 @@ public class TWSMPIChannel implements TWSChannel {
     }
   }
 
+  private List<ByteBuffer> buffers = new ArrayList<>();
+
   @Override
   public ByteBuffer createBuffer(int capacity) {
-    return MPI.newByteBuffer(capacity);
+    ByteBuffer byteBuffer = MPI.newByteBuffer(capacity);
+    buffers.add(byteBuffer);
+    return byteBuffer;
   }
 
   /**

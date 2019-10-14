@@ -265,6 +265,7 @@ public class MPILauncher implements ILauncher {
         jobWorkingDirectory,
         corePackage,
         jobPackageURI,
-        Context.verbose(config));
+        Context.verbose(config),
+        SchedulerContext.copySystemPackage(config));
   }
 }

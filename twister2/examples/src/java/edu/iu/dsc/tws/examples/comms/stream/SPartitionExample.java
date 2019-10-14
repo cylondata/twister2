@@ -23,8 +23,13 @@ import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.comms.stream.SPartition;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;
 import edu.iu.dsc.tws.examples.comms.BenchWorker;
+import edu.iu.dsc.tws.examples.utils.bench.BenchmarkUtils;
+import edu.iu.dsc.tws.examples.utils.bench.Timing;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
+
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_RECV;
+import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_RECV;
 
 /**
  * todo add timing, and terminating conditions
@@ -37,6 +42,8 @@ public class SPartitionExample extends BenchWorker {
   private boolean partitionDone = false;
 
   private ResultsVerifier<int[], int[]> resultsVerifier;
+
+  private int recvrInWorker0 = -1;
 
   @Override
   protected void execute(WorkerEnvironment workerEnv) {
@@ -52,6 +59,12 @@ public class SPartitionExample extends BenchWorker {
 
     this.resultsVerifier = new ResultsVerifier<>(inputDataArray,
         (ints, args) -> ints, IntArrayComparator.getInstance());
+
+    logicalPlanBuilder.getTargetsOnThisWorker().forEach(t -> {
+      if (workerId == 0) {
+        recvrInWorker0 = t;
+      }
+    });
 
     Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     // now initialize the workers
@@ -85,12 +98,17 @@ public class SPartitionExample extends BenchWorker {
 
     private int count = 0;
     private int expected;
+    private int expectedWarmups;
 
     @Override
     public void init(Config cfg, Set<Integer> targets) {
-      expected = (jobParameters.getIterations() * jobParameters.getTaskStages().get(0)
+      expected = (jobParameters.getTotalIterations() * jobParameters.getTaskStages().get(0)
           / jobParameters.getTaskStages().get(1)) * targets.size();
       //roughly, could be more than this
+
+      expectedWarmups = (jobParameters.getWarmupIterations()
+          * jobParameters.getTaskStages().get(0)
+          / jobParameters.getTaskStages().get(1)) * targets.size();
     }
 
     @Override
@@ -101,7 +119,16 @@ public class SPartitionExample extends BenchWorker {
       //Since this is a streaming example we will simply stop after a number of messages are
       // received
       if (count >= expected) {
+        Timing.mark(TIMING_ALL_RECV, workerId == 0
+            && target == recvrInWorker0);
+        BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
+            && target == recvrInWorker0);
+        resultsRecorder.writeToCSV();
         partitionDone = true;
+      }
+
+      if (count >= expectedWarmups) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == recvrInWorker0);
       }
 
       verifyResults(resultsVerifier, it, null);
