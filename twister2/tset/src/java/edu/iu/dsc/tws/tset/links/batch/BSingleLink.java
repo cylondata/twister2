@@ -84,14 +84,24 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
   }
 
   @Override
-  public CachedTSet<T> cache() {
+  public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 
+//    getTSetEnv().run(cacheTSet);
+//    cacheTSet.setData(output);
+
+    return cacheTSet;
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    CachedTSet<T> cacheTSet = lazyCache();
     getTSetEnv().run(cacheTSet);
 //    cacheTSet.setData(output);
 
     return cacheTSet;
   }
+
 }

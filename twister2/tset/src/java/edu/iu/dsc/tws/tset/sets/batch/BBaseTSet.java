@@ -187,7 +187,12 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     return direct().cache();
   }
 
-//  @Override
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return direct().lazyCache();
+  }
+
+  //  @Override
 //  public boolean addInput(Cacheable<?> input) {
 //    getTSetEnv().addInput(getId(), key, input);
 //    return true;

@@ -41,7 +41,6 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
   BatchTSet<T1> lazySink(SinkFunc<T1> sinkFunction);
 
-//  BatchTSet<T0> lazyCache();
 
 //  /**
 //   * Runs the dataflow graph and caches data in memory
@@ -60,6 +59,10 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   default BatchTSet<T0> cache() {
     throw new UnsupportedOperationException("Operation not implemented");
 //    return cache(false);
+  }
+
+  default BatchTSet<T0> lazyCache() {
+    throw new UnsupportedOperationException("Operation not implemented");
   }
 
   @Override

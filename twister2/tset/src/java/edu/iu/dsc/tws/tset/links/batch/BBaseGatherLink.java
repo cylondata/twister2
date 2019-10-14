@@ -16,7 +16,6 @@ package edu.iu.dsc.tws.tset.links.batch;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -85,14 +84,24 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
 
   @Override
   public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new GatherCacheSink<T>(),
-        getTargetParallelism());
-    addChildToGraph(cacheTSet);
-
+    CachedTSet<T> cacheTSet = lazyCache();
     getTSetEnv().run(cacheTSet);
 //    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
 //    cacheTSet.setData(output);
 
     return cacheTSet;
   }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new GatherCacheSink<T>(),
+        getTargetParallelism());
+    addChildToGraph(cacheTSet);
+
+//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
+//    cacheTSet.setData(output);
+
+    return cacheTSet;
+  }
+
 }

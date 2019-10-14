@@ -73,4 +73,6 @@ public interface BatchTSet<T> extends TSet<T> {
 //  BatchTSet<T> cache(boolean isIterative);
 
   BatchTSet<T> cache();
+
+  BatchTSet<T> lazyCache();
 }
