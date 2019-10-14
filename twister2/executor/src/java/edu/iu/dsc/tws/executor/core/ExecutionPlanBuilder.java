@@ -47,6 +47,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
@@ -139,8 +140,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         globalTasks = containersMap.values().stream()
             .flatMap(containerPlan -> containerPlan.getTaskInstances().stream())
             .filter(ip -> taskGraph.vertex(ip.getTaskName())
-                .getTask() instanceof CheckpointableTask)
-            .map(ip -> taskIdGenerator.generateGlobalTaskId(ip.getTaskId(), ip.getTaskIndex()))
+                .getTask() instanceof CheckpointableTask
+                && !(taskGraph.vertex(ip.getTaskName())
+                .getTask() instanceof CheckpointingSGatherSink))
+            .map(TaskInstancePlan::getTaskId)
             .collect(Collectors.toSet());
       }
 
@@ -454,24 +457,25 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       if (newInstance instanceof ICompute) {
-        if (newInstance instanceof ISink) {
-          SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-              ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-              vertex.getConfig().toMap(), inEdges, taskSchedule,
-              this.checkpointingClient, taskGraphName, tasksVersion);
-          streamingSinkInstances.put(vertex.getName(), taskId, v);
-          return v;
-        } else {
-          TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(),
-              new LinkedBlockingQueue<>(), cfg,
-              vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
-              outEdges, taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
-          streamingTaskInstances.put(vertex.getName(), taskId, v);
-          return v;
-        }
+        // todo remove commented parts if nothing breaks with ths change
+//        if (newInstance instanceof ISink) {
+//          SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
+//              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
+//              ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
+//              vertex.getConfig().toMap(), inEdges, taskSchedule,
+//              this.checkpointingClient, taskGraphName, tasksVersion);
+//          streamingSinkInstances.put(vertex.getName(), taskId, v);
+//          return v;
+//        } else {
+        TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
+            new LinkedBlockingQueue<>(),
+            new LinkedBlockingQueue<>(), cfg,
+            vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(), inEdges,
+            outEdges, taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
+        streamingTaskInstances.put(vertex.getName(), taskId, v);
+        return v;
+//        }
       } else if (newInstance instanceof ISource) {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
