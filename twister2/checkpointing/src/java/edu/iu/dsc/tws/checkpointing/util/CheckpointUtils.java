@@ -33,13 +33,17 @@ public final class CheckpointUtils {
                                  SnapshotImpl snapshot,
                                  CheckpointingClient checkpointingClient,
                                  MessageHandler messageHandler) throws IOException {
-    stateStore.put(Long.toString(snapshot.getVersion()), snapshot.pack());
+    saveState(stateStore, snapshot);
     checkpointingClient.sendVersionUpdate(
         family,
         componentIndex,
         snapshot.getVersion(),
         messageHandler
     );
+  }
+
+  public static void saveState(StateStore stateStore, SnapshotImpl snapshot) throws IOException {
+    stateStore.put(Long.toString(snapshot.getVersion()), snapshot.pack());
   }
 
   public static void restoreSnapshot(StateStore stateStore,
