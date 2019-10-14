@@ -34,6 +34,7 @@ def create_parser(subparsers):
 
     args.add_cluster_role_env(parser)
     args.add_job_id(parser)
+    args.add_debug(parser)
 
     parser.set_defaults(subcommand='restart')
     return parser

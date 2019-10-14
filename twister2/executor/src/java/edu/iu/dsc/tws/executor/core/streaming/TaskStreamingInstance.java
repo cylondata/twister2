@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
@@ -23,7 +24,6 @@ import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.OutputCollection;
-import edu.iu.dsc.tws.api.compute.TaskMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
@@ -170,6 +170,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
 
   private TaskContextImpl taskContext;
 
+  private boolean ftGatherTask;
+  private CheckpointingSGatherSink checkpointingSGatherSink;
+
   public TaskStreamingInstance(ICompute task, BlockingQueue<IMessage> inQueue,
                                BlockingQueue<IMessage> outQueue, Config config, String tName,
                                int taskId, int globalTaskId, int tIndex,
@@ -199,6 +202,10 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     this.tasksVersion = tasksVersion;
     this.checkpointable = this.task instanceof CheckpointableTask
         && CheckpointingConfigurations.isCheckpointingEnabled(config);
+    this.ftGatherTask = this.task instanceof CheckpointingSGatherSink;
+    if (this.ftGatherTask) {
+      this.checkpointingSGatherSink = (CheckpointingSGatherSink) this.task;
+    }
     this.snapshot = new SnapshotImpl();
   }
 
@@ -324,9 +331,9 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     if (this.checkpointable && this.inQueue.isEmpty() && this.outQueue.isEmpty()) {
       long checkpointedBarrierId = this.pendingCheckpoint.execute();
       if (checkpointedBarrierId != -1) {
-        this.scheduleBarriers(checkpointedBarrierId);
         ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
+        this.scheduleBarriers(checkpointedBarrierId);
       }
     }
 
@@ -337,8 +344,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
     buffer.putLong(bid);
     for (String edge : outEdgeArray) {
-      this.outQueue.add(new TaskMessage<>(buffer.array(),
-          MessageFlags.SYNC_BARRIER, edge, this.globalTaskId));
+      this.taskContext.writeBarrier(edge, buffer.array());
     }
   }
 
@@ -358,15 +364,33 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     return inQueue;
   }
 
+  private long extractSyncId(byte[] value) {
+    ByteBuffer wrap = ByteBuffer.wrap(value);
+    return wrap.getLong();
+  }
+
   @Override
   public boolean sync(String edge, byte[] value) {
     if (this.checkpointable) {
-      ByteBuffer wrap = ByteBuffer.wrap(value);
-      long barrierId = wrap.getLong();
+      long barrierId = this.extractSyncId(value);
 
       LOG.fine(() -> "Barrier received to " + this.globalTaskId
           + " with id " + barrierId + " from " + edge);
       this.pendingCheckpoint.schedule(edge, barrierId);
+    } else {
+      if (ftGatherTask) {
+        long barrierId = this.extractSyncId(value);
+        this.checkpointingClient.sendVersionUpdate(
+            this.taskGraphName,
+            this.checkpointingSGatherSink.getParentTaskId(),
+            barrierId,
+            (id, wid, msg) -> {
+              LOG.log(Level.FINE, "Checkpoint of " + globalTaskId
+                  + " committed with version : " + barrierId);
+            }
+        );
+      }
+      inParOps.get(edge).reset();
     }
     return true;
   }

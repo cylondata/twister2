@@ -259,6 +259,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       LOG.fine(() -> "Barrier received to " + this.globalTaskId
           + " with id " + barrierId + " from " + edge);
       this.pendingCheckpoint.schedule(edge, barrierId);
+    } else {
+      streamingInParOps.get(edge).reset();
     }
     return true;
   }

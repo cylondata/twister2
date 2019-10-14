@@ -214,6 +214,8 @@ public class SourceStreamingInstance implements INodeInstance {
           globalTaskId
       );
 
+      this.checkpointVersion = this.tasksVersion + 1;
+
       this.pendingCheckpoint = new PendingCheckpoint(taskGraphName,
           (CheckpointableTask) this.streamingTask, globalTaskId, outOpArray, outEdges.size(),
           checkpointingClient, stateStore, snapshot);
@@ -235,7 +237,7 @@ public class SourceStreamingInstance implements INodeInstance {
       streamingTask.execute();
 
       if (this.checkpointable && (executions++ % this.checkPointingFrequency) == 0) {
-        this.scheduleBarriers(checkpointVersion++);
+        this.scheduleCheckpoint(checkpointVersion++);
       }
     }
     // now check the output queue
@@ -268,6 +270,7 @@ public class SourceStreamingInstance implements INodeInstance {
       if (barrier != -1) {
         ((CheckpointableTask) this.streamingTask)
             .onCheckpointPropagated(this.snapshot);
+        this.scheduleBarriers(barrier);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, barrier);
       }
     }
@@ -290,12 +293,17 @@ public class SourceStreamingInstance implements INodeInstance {
     return outStreamingQueue;
   }
 
+  public void scheduleCheckpoint(Long bid) {
+    for (String edge : outStreamingParOps.keySet()) {
+      this.pendingCheckpoint.schedule(edge, bid);
+    }
+  }
+
   public void scheduleBarriers(Long bid) {
     ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
     buffer.putLong(bid);
     for (String edge : outStreamingParOps.keySet()) {
       taskContext.writeBarrier(edge, buffer.array());
-      this.pendingCheckpoint.schedule(edge, bid);
     }
   }
 
