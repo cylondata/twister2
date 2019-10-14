@@ -36,20 +36,9 @@ public class DriverExample implements IDriver {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-    // wait for all workers to join the job
-    synchronized (waitObject) {
-      try {
-        LOG.info("Waiting for all workers to join ... ");
-        waitObject.wait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        return;
-      }
-    }
-
-    broadcastExample(messenger);
+//    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
-//    scalingExample(scaler);
+    scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
   }
@@ -60,6 +49,23 @@ public class DriverExample implements IDriver {
 
     synchronized (waitObject) {
       waitObject.notify();
+    }
+
+  }
+
+  /**
+   * wait for all workers to join the job
+   * this can be used for waiting initial worker joins or joins after scaling up the job
+   */
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
     }
 
   }
@@ -94,7 +100,9 @@ public class DriverExample implements IDriver {
   private void scalingExample(IScaler scaler) {
     LOG.info("Testing scaling up and down ............................. ");
 
-    long sleepDuration = 20 * 1000; //
+    waitAllWorkersToJoin();
+
+    long sleepDuration = 10 * 1000; //
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
       Thread.sleep(sleepDuration);
@@ -104,6 +112,8 @@ public class DriverExample implements IDriver {
 
     LOG.info("Adding 4 new workers.");
     scaler.scaleUpWorkers(4);
+
+    waitAllWorkersToJoin();
 
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
@@ -124,6 +134,8 @@ public class DriverExample implements IDriver {
 
     LOG.info("Adding 4 new workers.");
     scaler.scaleUpWorkers(4);
+
+    waitAllWorkersToJoin();
 
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));

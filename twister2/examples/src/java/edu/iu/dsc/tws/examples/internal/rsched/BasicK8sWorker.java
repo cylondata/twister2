@@ -33,25 +33,25 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
-import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
+import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
+import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
-import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class BasicK8sWorker implements
-    IWorker, IScalerListener, IReceiverFromDriver, IAllJoinedListener {
-
+public class BasicK8sWorker implements IWorker, JobListener {
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
+
+  private Object waitObject = new Object();
+
+  // set this flag to true after getting scaledUp event
+  private boolean scaledUp = false;
 
   @Override
   public void execute(Config config,
@@ -60,10 +60,7 @@ public class BasicK8sWorker implements
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    WorkerRuntime.addScalerListener(this);
-    WorkerRuntime.addReceiverFromDriver(this);
-    WorkerRuntime.addAllJoinedListener(this);
-
+    JMWorkerAgent.addJobListener(this);
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -77,37 +74,79 @@ public class BasicK8sWorker implements
       LOG.info("Persistent Volume Directory: " + persVolumePath);
     }
 
-    // wait for all workers in this job to join
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+    List<JobMasterAPI.WorkerInfo> workerList = initSynch(workerController);
     if (workerList == null) {
-      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return;
     }
-
-    LOG.info(workerList.size() + " workers joined. Current time: " + System.currentTimeMillis());
 
     Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
+    testScaling(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
-    echoServer(workerController.getWorkerInfo());
+//    echoServer(workerController.getWorkerInfo());
+  }
+
+  private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
+    // wait all workers to join the job
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return null;
+    }
+
+    LOG.info(workerList.size() + " workers joined. ");
+
+    // syncs with all workers
+    LOG.info("Waiting on a barrier ........................ ");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+
+    LOG.info("Proceeded through the barrier ........................ ");
+    return workerList;
+  }
+
+  /**
+   * wait for all workers to join the job
+   * this can be used for waiting initial worker joins or joins after scaling up the job
+   */
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
   }
 
   @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.info("Workers scaled up. Instances added: " + instancesAdded);
+
+    scaledUp = true;
   }
 
   @Override
@@ -123,7 +162,7 @@ public class BasicK8sWorker implements
         JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
         LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
 
-        JMSenderToDriver workerMessenger = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
         workerMessenger.sendToDriver(nodeInfo);
 
       } catch (InvalidProtocolBufferException e) {
@@ -134,7 +173,7 @@ public class BasicK8sWorker implements
         JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
         LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
 
-        JMSenderToDriver workerMessenger = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
+        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
         workerMessenger.sendToDriver(computeResource);
 
       } catch (InvalidProtocolBufferException e) {
@@ -205,6 +244,20 @@ public class BasicK8sWorker implements
     }
   }
 
+  /**
+   * a test method to make the worker wait some time
+   */
+  public void sleepRandomTime(long maxTimeMS) {
+    try {
+      long sleepTime = (long) (Math.random() * maxTimeMS);
+//      LOG.info("BasicK8sWorker will sleep: " + sleepTime + " ms.");
+      Thread.sleep(sleepTime);
+//      LOG.info("BasicK8sWorker sleep completed.");
+    } catch (InterruptedException e) {
+      LOG.log(Level.WARNING, "Thread sleep interrupted.", e);
+    }
+  }
+
   public void printWorkersPerNode(Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode) {
 
     StringBuffer toPrint = new StringBuffer();
@@ -228,7 +281,7 @@ public class BasicK8sWorker implements
     LOG.info("************************************ Will list hdfs directory: " + directory);
 
     System.setProperty("HADOOP_USER_NAME", "hadoop");
-    String hdfsPath = "hdfs://149.165.150.81:9000";
+    String hdfsPath = "hdfs://<ip>:9000";
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", hdfsPath);
     conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
@@ -252,5 +305,35 @@ public class BasicK8sWorker implements
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * test scaling up and down workers in the job
+   * after each scaleup event, all workers wait in a barrier
+   */
+  private void testScaling(IWorkerController workerController) {
+
+    // we assume the worker is doing some computation
+    // we simulate the computation by sleeping the worker for some time
+
+    while (true) {
+
+      // do some computation
+      sleepRandomTime(300);
+
+      // check for scaled up event
+      if (scaledUp) {
+        // reset the flag
+        scaledUp = false;
+
+        List<JobMasterAPI.WorkerInfo> workerList = initSynch(workerController);
+        if (workerList == null) {
+          return;
+        }
+
+      }
+
+    }
+
   }
 }
