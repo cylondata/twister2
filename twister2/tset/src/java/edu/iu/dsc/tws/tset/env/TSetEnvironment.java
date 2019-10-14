@@ -28,8 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
@@ -46,7 +44,7 @@ import edu.iu.dsc.tws.tset.sets.BuildableTSet;
  * Entry point to tset operations. This is a singleton which initializes as
  * {@link BatchTSetEnvironment} or {@link StreamingTSetEnvironment}
  */
-public abstract class TSetEnvironment {
+public abstract class  TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
@@ -81,6 +79,8 @@ public abstract class TSetEnvironment {
   public abstract OperationMode getOperationMode();
 
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
+
+  public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
 
   /**
    * Returns the tset graph
@@ -131,16 +131,20 @@ public abstract class TSetEnvironment {
     return tBaseGraph;
   }
 
+  TaskExecutor getTaskExecutor() {
+    return taskExecutor;
+  }
+
   /**
    * execute data flow graph
    *
    * @param <T> type of the output data object
    * @param buildContext data flow graph
-   * @param outputTset output tset. If null, then no output would be returned
+   * @param outputTSet output tset. If null, then no output would be returned
    * @return output as a data object if outputTset is not null. Else null
    */
   protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
-                                                  BuildableTSet outputTset, boolean isIterative) {
+                                                  BuildableTSet outputTSet) {
 //    ExecutionPlan executionPlan = null;
 //    if (isIterative && iterexecutionPlan != null) {
 //      executionPlan = iterexecutionPlan;
@@ -174,52 +178,33 @@ public abstract class TSetEnvironment {
     // output tset alone does not guarantees that there will be an output available.
     // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
     // executor 1 would have an output to get.
-//    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getId())) {
-//      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getId());
-//    }
+    if (outputTSet != null && buildContext.getExecutionPlan().isNodeAvailable(outputTSet.getId())) {
+      return this.taskExecutor.getOutput(outputTSet.getId());
+    }
 
     // if there is no output, an empty data object needs to be returned!
     return new EmptyDataObject<>();
   }
 
-  protected <T> DataObject<T> evalBuildCtx(BuildContext buildContext) {
-    // build the context which will create compute graph and execution plan
-    buildContext.build(taskExecutor);
+//  /**
+//   * Adds inputs to tasks
+//   *
+//   * @param taskName task name
+//   * @param key identifier/ key for the input
+//   * @param input a cacheable object which returns a {@link DataObject}
+//   */
+//  public void addInput(String taskName, String key, Cacheable<?> input) {
+//    Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
+//    temp.put(key, input);
+//    tSetInputMap.put(taskName, temp);
+//  }
 
-    LOG.fine(buildContext.getComputeGraph()::toString);
-    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
-    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
-
-    taskExecutor.itrExecute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
-
-    return new EmptyDataObject<>();
-  }
-
-  protected void finishEval(BuildContext ctx) {
-    taskExecutor.;
-    taskExecutor.closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
-  }
-
-  /**
-   * Adds inputs to tasks
-   *
-   * @param taskName task name
-   * @param key identifier/ key for the input
-   * @param input a cacheable object which returns a {@link DataObject}
-   */
-  public void addInput(String taskName, String key, Cacheable<?> input) {
-    Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
-    temp.put(key, input);
-    tSetInputMap.put(taskName, temp);
-  }
-
-  /**
-   * pushes the inputs into each task before the task execution is done
-   *
-   * @param executionPlan the built execution plan
-   */
-  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    // todo: fix this!
+//  /**
+//   * pushes the inputs into each task before the task execution is done
+//   *
+//   * @param executionPlan the built execution plan
+//   */
+//  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
 //    for (String taskName : tSetInputMap.keySet()) {
 //      Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
 //      for (String keyName : tempMap.keySet()) {
@@ -227,7 +212,7 @@ public abstract class TSetEnvironment {
 //            keyName, tempMap.get(keyName).getDataObject());
 //      }
 //    }
-  }
+//  }
 
   // TSetEnvironment singleton initialization
   private static TSetEnvironment init(WorkerEnvironment wEnv, OperationMode opMode) {

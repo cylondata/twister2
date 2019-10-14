@@ -13,12 +13,12 @@ package edu.iu.dsc.tws.tset.env;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
@@ -31,12 +31,13 @@ import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
 
 public class BatchTSetEnvironment extends TSetEnvironment {
+  private static final Logger LOG = Logger.getLogger(BatchTSetEnvironment.class.getName());
 
-  private BaseTSet cachedLeaf;
-  private ComputeGraph cachedGraph;
+//  private BaseTSet cachedLeaf;
+//  private ComputeGraph cachedGraph;
 
   // todo: make this fault tolerant. May be we can cache the buildContext along with the compute
-  // graphs and make build contexts serializable. So, that the state of these can be preserved.
+  //  graphs and make build contexts serializable. So, that the state of these can be preserved.
   private Map<String, BuildContext> buildCtxCache = new HashMap<>();
 
   public BatchTSetEnvironment(WorkerEnvironment wEnv) {
@@ -55,6 +56,14 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   @Override
   public <T> SourceTSet<T> createSource(SourceFunc<T> source, int parallelism) {
     SourceTSet<T> sourceT = new SourceTSet<>(this, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
+  @Override
+  public <T> SourceTSet<T> createSource(String name, SourceFunc<T> source, int parallelism) {
+    SourceTSet<T> sourceT = new SourceTSet<>(this, name, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
@@ -86,7 +95,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    */
   public void run(BaseTSet leafTset) {
     BuildContext buildContext = getTSetGraph().build(leafTset);
-    executeBuildContext(buildContext, null, false);
+    executeBuildContext(buildContext, null);
   }
 
   /**
@@ -96,7 +105,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * @param <T> type of the output data object
    * @return output result as a data object
    */
-  public <T> DataObject<T> runAndGet(BaseTSet leafTset, boolean isIterative) {
+  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
 //    ComputeGraph dataflowGraph;
 //    if (isIterative && cachedLeaf != null && cachedLeaf == leafTset) {
 //      dataflowGraph = cachedGraph;
@@ -107,7 +116,20 @@ public class BatchTSetEnvironment extends TSetEnvironment {
 //      cachedLeaf = leafTset;
 //    }
     BuildContext buildContext = getTSetGraph().build(leafTset);
-    return executeBuildContext(buildContext, leafTset, isIterative);
+    return executeBuildContext(buildContext, leafTset);
+  }
+
+  // adds the data into the task executor
+  public void addData(String key, DataObject data) {
+    getTaskExecutor().addInput(key, data);
+  }
+
+  public <T> DataObject<T> getData(String key) {
+    return getTaskExecutor().getOutput(key);
+  }
+
+  public boolean isDataAvailable(String key) {
+    return getTaskExecutor().isOutputAvailable(key);
   }
 
   public void eval(BaseTSet leafTSet) {
@@ -120,19 +142,26 @@ public class BatchTSetEnvironment extends TSetEnvironment {
       buildCtxCache.put(buildId, buildCtx);
     }
 
-    evalBuildCtx(buildCtx);
+    // build the context which will create compute graph and execution plan
+    buildCtx.build(getTaskExecutor());
+
+    LOG.fine(buildCtx.getComputeGraph()::toString);
+    LOG.fine(() -> "edges: " + buildCtx.getComputeGraph().getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + buildCtx.getComputeGraph().getTaskVertexSet());
+
+    getTaskExecutor().itrExecute(buildCtx.getComputeGraph(), buildCtx.getExecutionPlan());
   }
 
   public void finishEval(BaseTSet leafTset) {
     BuildContext ctx = buildCtxCache.remove(TSetUtils.generateBuildId(leafTset));
-    finishEval(ctx);
+    getTaskExecutor().closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
   }
 
   public <T> DataObject<T> evaluateAndGet(BaseTSet leafTset) {
     return null;
   }
 
-  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-    return runAndGet(leafTset, false);
-  }
+//  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
+//    return runAndGet(leafTset, false);
+//  }
 }

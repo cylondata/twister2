@@ -34,13 +34,17 @@ public class SourceTSet<T> extends BBaseTSet<T> {
   private SourceFunc<T> source;
 
   public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, "source", parallelism);
+    this(tSetEnv, "source", src, parallelism);
+  }
+
+  public SourceTSet(BatchTSetEnvironment tSetEnv, String name, SourceFunc<T> src, int parallelism) {
+    super(tSetEnv, name, parallelism);
     this.source = src;
   }
 
   @Override
   public INode getINode() {
-    return new SourceOp<>(source);
+    return new SourceOp<>(source, this, getInputs());
   }
 
   @Override
@@ -48,5 +52,4 @@ public class SourceTSet<T> extends BBaseTSet<T> {
     rename(name);
     return this;
   }
-
 }

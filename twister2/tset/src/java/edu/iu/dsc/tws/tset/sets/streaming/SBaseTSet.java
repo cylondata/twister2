@@ -169,8 +169,9 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
 
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getId(), key, input);
-    return true;
+    // todo fix this
+    //    getTSetEnv().addInput(getId(), key, input);
+    return false;
   }
 
 }

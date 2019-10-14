@@ -18,9 +18,6 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
-import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.tset.ops.ComputeOp;
-import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
@@ -39,11 +36,9 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
   public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, new ComputeOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), new ComputeOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
     }
     addChildToGraph(set);
 
@@ -53,11 +48,9 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
   public  <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, new ComputeCollectorOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), new ComputeCollectorOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
     }
     addChildToGraph(set);
 
@@ -77,8 +70,7 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
 
   @Override
   public SinkTSet<T1> lazySink(SinkFunc<T1> sinkFunction) {
-    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), new SinkOp<>(sinkFunction),
-        getTargetParallelism());
+    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
 
     return sinkTSet;

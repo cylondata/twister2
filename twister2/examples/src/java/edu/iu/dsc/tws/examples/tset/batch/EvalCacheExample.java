@@ -25,22 +25,41 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
-public class DirectIterExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(DirectIterExample.class.getName());
+public class EvalCacheExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(EvalCacheExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
-    LOG.info("test direct iteration");
-    ComputeTSet<Integer, Iterator<Integer>> testmap = src.direct().map(input -> input);
-    CachedTSet<Integer> cached = testmap.cache();
-    for (int i = 0; i < 4; i++) {
-      env.eval(cached);
-    }
-    env.finishEval(cached);
 
-    LOG.info("out: " + cached.getDataObject().getPartitions().length);
+    CachedTSet<Integer> cache0 = src.direct().cache();
+    CachedTSet<Integer> cache1 = src.direct().map(i -> i * 10).direct().cache();
+
+    cache0.addInput("cacheIn", cache1);
+
+    LOG.info("test foreach");
+    ComputeTSet<Object, Iterator<Integer>> tset1 =
+        cache0.direct().lazyForEach(i -> LOG.info("foreach: " + i));
+
+    LOG.info("test map");
+    ComputeTSet<Object, Iterator<String>> tset2 =
+        cache0.direct().map(i -> i.toString() + "$$").setName("map")
+            .direct()
+            .lazyForEach(s -> LOG.info("map: " + s));
+
+//    for (int i = 0; i < 4; i++) {
+//      LOG.info("iter " + i);
+//      env.eval(tset1);
+//      try {
+//        Thread.sleep(1000);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
+////      env.eval(tset2);
+//    }
+
+    env.finishEval(tset1);
   }
 
 
@@ -48,6 +67,6 @@ public class DirectIterExample extends BatchTsetExample {
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
-    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, DirectIterExample.class.getName());
+    BatchTsetExample.submitJob(config, PARALLELISM, jobConfig, EvalCacheExample.class.getName());
   }
 }

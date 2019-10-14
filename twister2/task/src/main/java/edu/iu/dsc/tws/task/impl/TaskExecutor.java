@@ -370,6 +370,14 @@ public class TaskExecutor {
     return this.dataObjectMap.get(varName);
   }
 
+  public boolean isOutputAvailable(String name){
+    return this.dataObjectMap.containsKey(name);
+  }
+
+  public void addInput(String name, DataObject dataObject){
+    this.dataObjectMap.put(name, dataObject);
+  }
+
   /**
    * This method collects all the output from the provided {@link ExecutionPlan}.
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}

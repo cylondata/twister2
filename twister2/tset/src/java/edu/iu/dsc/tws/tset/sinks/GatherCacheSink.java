@@ -27,7 +27,7 @@ public class GatherCacheSink<T> extends BaseSinkFunc<Iterator<Tuple<Integer, T>>
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
 
-    this.partition = new CollectionPartition<>(getTSetContext().getIndex());
+    this.partition = new CollectionPartition<>();
   }
 
   @Override

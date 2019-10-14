@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
-public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
+public interface BatchTSet<T> extends TSet<T> {
   @Override
   BatchTSet<T> setName(String name);
 
@@ -70,8 +70,7 @@ public interface BatchTSet<T> extends TSet<T>, CacheableTSet<T> {
   @Override
   BatchTSet<T> union(Collection<TSet<T>> tSets);
 
-  BatchTSet<T> cache(boolean isIterative);
+//  BatchTSet<T> cache(boolean isIterative);
 
-  @Override
   BatchTSet<T> cache();
 }

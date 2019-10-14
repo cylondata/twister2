@@ -10,38 +10,39 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
 public class ComputeTSet<O, I> extends BBaseTSet<O> {
-  private BaseComputeOp<I> computeOp;
+  private TFunction<O, I> computeFunc;
 
-  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFn,
                      int parallelism) {
-    this(tSetEnv, "compute", computeFunction, parallelism);
+    this(tSetEnv, "compute", computeFn, parallelism);
   }
 
-  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> computeFn,
                      int parallelism) {
-    this(tSetEnv, "computec", compOp, parallelism);
+    this(tSetEnv, "computec", computeFn, parallelism);
   }
 
-  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeOp<O, I> computeFunction,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeFunc<O, I> computeFn,
                      int parallelism) {
     super(tSetEnv, name, parallelism);
-    this.computeOp = computeFunction;
+    this.computeFunc = computeFn;
   }
 
-  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeCollectorOp<O, I> compOp,
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeCollectorFunc<O, I> computeFn,
                      int parallelism) {
     super(tSetEnv, name, parallelism);
-    this.computeOp = compOp;
+    this.computeFunc = computeFn;
   }
 
   @Override
@@ -53,6 +54,14 @@ public class ComputeTSet<O, I> extends BBaseTSet<O> {
 
   @Override
   public ICompute<I> getINode() {
-    return computeOp;
+
+    if (computeFunc instanceof ComputeFunc) {
+      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this, getInputs());
+    } else if (computeFunc instanceof ComputeCollectorFunc) {
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
+          getInputs());
+    }
+
+    throw new RuntimeException("Unknown function type for compute: " + computeFunc);
   }
 }

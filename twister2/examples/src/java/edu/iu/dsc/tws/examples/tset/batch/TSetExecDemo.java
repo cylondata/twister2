@@ -80,7 +80,7 @@ public class TSetExecDemo implements IWorker, Serializable {
       public Integer next() {
         return c++;
       }
-    }), PARALLELISM);
+    }, , ), PARALLELISM);
 
 
     graph.addTask("compute",
@@ -92,12 +92,12 @@ public class TSetExecDemo implements IWorker, Serializable {
               }
               LOG.info("####" + sum);
               return "sum=" + sum;
-            }), 1);
+            }, , ), 1);
 
     graph.connect("src", "compute", "e1", OperationNames.GATHER);
 
     graph.addTask("foreach",
-        new ComputeOp<>(new ForEachIterCompute<>(s -> LOG.info("compute: " + s))), 1);
+        new ComputeOp<>(new ForEachIterCompute<>(s -> LOG.info("compute: " + s)), , ), 1);
 
     graph.connect("compute", "foreach", "e2", OperationNames.DIRECT);
 

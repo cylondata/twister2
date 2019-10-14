@@ -13,6 +13,8 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import java.util.Collections;
+
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
@@ -47,6 +49,6 @@ public class SSourceTSet<T> extends SBaseTSet<T> {
 
   @Override
   public INode getINode() {
-    return new SourceOp<>(source);
+    return new SourceOp<>(source, this, Collections.emptySet());
   }
 }

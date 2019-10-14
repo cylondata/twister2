@@ -213,40 +213,31 @@ public class TBaseGraph {
         }
 
         buildSequence.add(t);
-
-        // Following was wrong because, when running BFS on the subsequent roots, if there are
-        // join/ union edges, those tlinks have already been built. so, buildSquence needs to be
-        // built separately
-
-        // here it is sufficient to pass the partial build sequence to build the links. Because the
-        // above condition ensures that all the relevant nodes at both ends of a tlink are built,
-        // before building the TLink.
-//        ((Buildable) t).build(buildSequence);
       }
     }
 
     return buildSequence;
   }
 
-  // todo: this functionality is broken!!
-  private boolean cleanUpstream(Collection<BuildableTSet> tSets) {
-    Set<TBase> toRemove = new HashSet<>();
-
-    boolean changed = false;
-
-    // todo: need to clean up the entire upstream! not just the precessesor of cacheable!!
-    for (BuildableTSet tset : tSets) {
-      if (tset instanceof Cacheable) {
-        toRemove.addAll(getPredecessors(tset));
-      }
-    }
-
-    for (TBase tset : toRemove) {
-      changed = changed || removeNode(tset);
-    }
-
-    return changed;
-  }
+//  // todo: this functionality is broken!!
+//  private boolean cleanUpstream(Collection<BuildableTSet> tSets) {
+//    Set<TBase> toRemove = new HashSet<>();
+//
+//    boolean changed = false;
+//
+//    // todo: need to clean up the entire upstream! not just the precessesor of cacheable!!
+//    for (BuildableTSet tset : tSets) {
+//      if (tset instanceof Cacheable) {
+//        toRemove.addAll(getPredecessors(tset));
+//      }
+//    }
+//
+//    for (TBase tset : toRemove) {
+//      changed = changed || removeNode(tset);
+//    }
+//
+//    return changed;
+//  }
 
   interface AdjNodesExtractor {
     Set<TBase> extract(TBase node);

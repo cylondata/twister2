@@ -13,12 +13,15 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import java.util.Collections;
+
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 
 public class SSinkTSet<T> extends SBaseTSet<T> {
-  private SinkOp<T> sink;
+  private SinkFunc<T> sink;
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
@@ -26,7 +29,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * @param tSetEnv The TSetEnv used for execution
    * @param s The Sink function to be used
    */
-  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkOp<T> s) {
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s) {
     this(tSetEnv, s, 1);
   }
 
@@ -37,14 +40,14 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * @param s The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
+  public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s, int parallelism) {
     super(tSetEnv, "ssink", parallelism);
     this.sink = s;
   }
 
   @Override
   public ICompute getINode() {
-    return sink;
+    return new SinkOp<>(sink, this, Collections.emptySet());
   }
 
   @Override

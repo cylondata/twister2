@@ -13,12 +13,17 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import java.util.Collections;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.fn.MapCompute;
+import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
-import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
 import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -30,18 +35,18 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <V> data (value) type
  */
 public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<K, V> {
-  private BaseComputeOp<?> mapToTupleOp;
+  private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
 
-  public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
-                    MapToTupleIterOp<K, V, ?> genTupleOp, int parallelism) {
+  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, MapCompute<Tuple<K, V>, ?> mapFn,
+                    int parallelism) {
     super(tSetEnv, "skeyed", parallelism);
-    this.mapToTupleOp = genTupleOp;
+    this.mapToTupleFunc = mapFn;
   }
 
-  public SKeyedTSet(StreamingTSetEnvironment tSetEnv,
-                    MapToTupleOp<K, V, ?> genTupleOp, int parallelism) {
+  public SKeyedTSet(StreamingTSetEnvironment tSetEnv, MapIterCompute<Tuple<K, V>, ?> mapFn,
+                    int parallelism) {
     super(tSetEnv, "skeyed", parallelism);
-    this.mapToTupleOp = genTupleOp;
+    this.mapToTupleFunc = mapFn;
   }
 
   @Override
@@ -65,6 +70,16 @@ public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<
 
   @Override
   public ICompute getINode() {
-    return mapToTupleOp;
+
+    if (mapToTupleFunc instanceof MapCompute) {
+      return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+          Collections.emptySet());
+    } else if (mapToTupleFunc instanceof MapIterCompute) {
+      return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
+          Collections.emptySet());
+    }
+
+    throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);
+
   }
 }

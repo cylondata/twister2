@@ -23,7 +23,10 @@ public interface Collector {
    *
    * @return get the default output
    */
-  DataPartition<?> get();
+  @Deprecated
+  default DataPartition<?> get() {
+    return null;
+  }
 
   /**
    * get the collected valued

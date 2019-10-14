@@ -43,14 +43,14 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
 //  BatchTSet<T0> lazyCache();
 
-  /**
-   * Runs the dataflow graph and caches data in memory
-   *
-   * @return output TSet
-   */
-  default BatchTSet<T0> cache(boolean isIterative) {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
+//  /**
+//   * Runs the dataflow graph and caches data in memory
+//   *
+//   * @return output TSet
+//   */
+//  default BatchTSet<T0> cache(boolean isIterative) {
+//    throw new UnsupportedOperationException("Operation not implemented");
+//  }
 
   /**
    * Runs the dataflow graph and caches data in memory
@@ -58,7 +58,8 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
    * @return output TSet
    */
   default BatchTSet<T0> cache() {
-    return cache(false);
+    throw new UnsupportedOperationException("Operation not implemented");
+//    return cache(false);
   }
 
   @Override

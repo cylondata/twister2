@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
  * This interface defines the methods that other classes can use to
  * access the cached data
  */
-public interface Cacheable<T> extends Serializable {
+public interface Cacheable<T> extends TBase, Serializable {
 
   /**
    * retrieve data saved in the TSet

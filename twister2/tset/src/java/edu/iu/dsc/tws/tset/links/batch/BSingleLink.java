@@ -27,7 +27,6 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -36,7 +35,6 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
@@ -77,7 +75,7 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
 
   @Override
   public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
         getTargetParallelism());
 
     addChildToGraph(set);
@@ -91,8 +89,8 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 
-    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-    cacheTSet.setData(output);
+    getTSetEnv().run(cacheTSet);
+//    cacheTSet.setData(output);
 
     return cacheTSet;
   }

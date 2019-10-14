@@ -12,11 +12,17 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -35,7 +41,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
-  private DirectTLink<T> iterdirect = null;
+  private Set<String> inputs = new HashSet<>();
 
   BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
@@ -158,33 +164,58 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     return cloneTSet;
   }
 
-  @Override
-  public CachedTSet<T> cache(boolean isIterative) {
-    if (isIterative && iterdirect != null) {
-      return iterdirect.cache(isIterative);
-    } else if (isIterative) {
-      iterdirect = direct();
-      return iterdirect.cache(isIterative);
-    } else {
-      return direct().cache(isIterative);
-    }
-  }
+//  @Override
+//  public CachedTSet<T> cache(boolean isIterative) {
+//    if (isIterative && iterdirect != null) {
+//      return iterdirect.cache(isIterative);
+//    } else if (isIterative) {
+//      iterdirect = direct();
+//      return iterdirect.cache(isIterative);
+//    } else {
+//      return direct().cache(isIterative);
+//    }
+//  }
+//
+//  @Override
+//  public CachedTSet<T> cache() {
+//    return cache(false);
+//  }
 
   @Override
   public CachedTSet<T> cache() {
-    return cache(false);
+    // todo remove this direct and plug it into the underlying tset op
+    return direct().cache();
   }
+
+//  @Override
+//  public boolean addInput(Cacheable<?> input) {
+//    getTSetEnv().addInput(getId(), key, input);
+//    return true;
+//  }
+
 
   @Override
   public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getId(), key, input);
-    return true;
+    // get the data object corresponding to the input Tset and add a new mapping with the user
+    // provided key
+    this.inputs.add(input.getId());
+    if (getTSetEnv().isDataAvailable(key)){
+      DataObject data = getTSetEnv().getData(input.getId());
+      getTSetEnv().addData(key, data);
+      return true;
+    }
+
+    throw new RuntimeException("No data available for tset: " + input.toString());
   }
 
-  public void finishIter() {
-    if (iterdirect == null) {
-      throw new IllegalStateException("cache with iter needs to be called first");
-    }
-    iterdirect.finishIter();
+  Set<String> getInputs() {
+    return inputs;
   }
+
+//  public void finishIter() {
+//    if (iterdirect == null) {
+//      throw new IllegalStateException("cache with iter needs to be called first");
+//    }
+//    iterdirect.finishIter();
+//  }
 }

@@ -89,8 +89,9 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 
-    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-    cacheTSet.setData(output);
+    getTSetEnv().run(cacheTSet);
+//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
+//    cacheTSet.setData(output);
 
     return cacheTSet;
   }

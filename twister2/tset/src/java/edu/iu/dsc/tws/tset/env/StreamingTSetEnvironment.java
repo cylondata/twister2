@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.env;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 public class StreamingTSetEnvironment extends TSetEnvironment {
@@ -40,12 +41,17 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
     return sourceT;
   }
 
+  @Override
+  public <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism) {
+    return null;
+  }
+
   /**
    * Runs the entire TSet graph
    */
   public void run() {
     BuildContext buildCtx = getTSetGraph().build();
-    executeBuildContext(buildCtx, null, false);
+    executeBuildContext(buildCtx, null);
   }
 
 }
