@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
@@ -297,10 +298,14 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       if (message != null) {
         String edge = message.edge();
 
+        boolean barrierMessage = (message.getFlag() & MessageFlags.SYNC_BARRIER)
+            == MessageFlags.SYNC_BARRIER;
+
         // invoke the communication operation
         IParallelOperation op = outParOps.get(edge);
         // if we successfully send remove
-        if (op.send(globalTaskId, message, message.getFlag())) {
+        if (barrierMessage ? op.sendBarrier(globalTaskId, (byte[]) message.getContent())
+            : op.send(globalTaskId, message, message.getFlag())) {
           outQueue.poll();
         } else {
           break;
@@ -321,8 +326,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       if (checkpointedBarrierId != -1) {
         this.scheduleBarriers(checkpointedBarrierId);
         ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
-
-        //taskContext.write("ft-gather-edge", checkpointedBarrierId);
+        taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
       }
     }
 

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 
 public abstract class SourceReceiver implements MessageReceiver {
@@ -125,7 +126,12 @@ public abstract class SourceReceiver implements MessageReceiver {
         targetStates.put(target, ReceiverState.ALL_SYNCS_RECEIVED);
       }
       syncState = SyncState.BARRIER_SYNC;
-      barriers.put(target, (byte[]) object);
+
+      if (object instanceof Tuple) {
+        barriers.put(target, (byte[]) ((Tuple) object).getValue());
+      } else {
+        barriers.put(target, (byte[]) object);
+      }
       return true;
     }
 

@@ -14,6 +14,8 @@ package edu.iu.dsc.tws.comms.dfw.io;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
@@ -40,10 +42,22 @@ public class KeyedDataSerializer extends BaseSerializer {
    */
   public boolean serializeSingleMessage(Object payload,
                                         OutMessage sendMessage, DataBuffer targetBuffer) {
-    Tuple tuple = (Tuple) payload;
-    return serializeKeyedData(tuple.getValue(), tuple.getKey(),
-        sendMessage.getDataType().getDataPacker(),
-        sendMessage.getKeyType().getDataPacker(),
+    Object value = null;
+    Object key = new byte[0];
+    DataPacker keyPacker = sendMessage.getKeyType().getDataPacker();
+    DataPacker valuePacker = sendMessage.getDataType().getDataPacker();
+    if ((sendMessage.getFlags() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      value = payload;
+      keyPacker = MessageTypes.BYTE_ARRAY.getDataPacker();
+      valuePacker = MessageTypes.BYTE_ARRAY.getDataPacker();
+    } else {
+      Tuple tuple = (Tuple) payload;
+      value = tuple.getValue();
+      key = tuple.getKey();
+    }
+    return serializeKeyedData(value, key,
+        valuePacker,
+        keyPacker,
         sendMessage.getSerializationState(), targetBuffer);
   }
 
@@ -57,9 +71,9 @@ public class KeyedDataSerializer extends BaseSerializer {
    * @return true if the body was built and copied to the targetBuffer successfully,false otherwise.
    */
   protected boolean serializeKeyedData(Object payload, Object key,
-                                     DataPacker dataPacker, DataPacker keyPacker,
-                                     SerializeState state,
-                                     DataBuffer targetBuffer) {
+                                       DataPacker dataPacker, DataPacker keyPacker,
+                                       SerializeState state,
+                                       DataBuffer targetBuffer) {
     ByteBuffer byteBuffer = targetBuffer.getByteBuffer();
     // okay we need to serialize the header
     if (state.getPart() == SerializeState.Part.INIT) {

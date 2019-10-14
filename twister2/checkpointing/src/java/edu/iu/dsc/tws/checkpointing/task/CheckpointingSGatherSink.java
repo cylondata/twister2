@@ -25,6 +25,8 @@ public class CheckpointingSGatherSink implements ISink, ICompute<Iterator<Tuple<
 
   private static final Logger LOG = Logger.getLogger(CheckpointingSGatherSink.class.getName());
 
+  public static final String FT_GATHER_EDGE = "ft-gather-edge";
+
   @Override
   public void prepare(Config cfg, TaskContext context) {
     LOG.info("Preparing : " + context.taskName());

@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
@@ -222,8 +223,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     if (this.checkpointable && this.streamingInQueue.isEmpty()) {
       long checkpointedBarrierId = this.pendingCheckpoint.execute();
       if (checkpointedBarrierId != -1) {
-        //taskContext.write("ft-gather-edge", checkpointedBarrierId);
         ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
+        taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
       }
     }
 

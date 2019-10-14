@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.executor.core.DefaultOutputCollection;
@@ -149,6 +150,8 @@ public class SourceStreamingInstance implements INodeInstance {
 
   private TaskContextImpl taskContext;
 
+  private PendingCheckpoint pendingCheckpoint;
+
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
                                  Config config, String tName, int taskId,
                                  int globalTaskId, int tIndex, int parallel,
@@ -210,6 +213,10 @@ public class SourceStreamingInstance implements INodeInstance {
           this.tasksVersion,
           globalTaskId
       );
+
+      this.pendingCheckpoint = new PendingCheckpoint(taskGraphName,
+          (CheckpointableTask) this.streamingTask, globalTaskId, outOpArray, outEdges.size(),
+          checkpointingClient, stateStore, snapshot);
     }
   }
 
@@ -222,23 +229,13 @@ public class SourceStreamingInstance implements INodeInstance {
    * Execution Method calls the SourceTasks run method to get context
    **/
   public boolean execute() {
-    if (outStreamingQueue.size() < lowWaterMark) {
+    if (outStreamingQueue.size() < lowWaterMark
+        && !(this.checkpointable && this.pendingCheckpoint.isPending())) {
       // lets execute the task
       streamingTask.execute();
 
-      if (this.checkpointable && executions++ % this.checkPointingFrequency == 0) {
-        TaskCheckpointUtils.checkpoint(
-            checkpointVersion,
-            (CheckpointableTask) this.streamingTask,
-            this.snapshot,
-            this.stateStore,
-            this.taskGraphName,
-            this.globalTaskId,
-            this.checkpointingClient
-        );
+      if (this.checkpointable && (executions++ % this.checkPointingFrequency) == 0) {
         this.scheduleBarriers(checkpointVersion++);
-        //taskContext.write("ft-gather-edge", checkpointVersion);
-        this.snapshotQueue.add(this.snapshot.copy());
       }
     }
     // now check the output queue
@@ -250,18 +247,9 @@ public class SourceStreamingInstance implements INodeInstance {
         boolean barrierMessage = (message.getFlag() & MessageFlags.SYNC_BARRIER)
             == MessageFlags.SYNC_BARRIER;
         // if we successfully send remove message
-        if (barrierMessage ? op.send(globalTaskId, message, message.getFlag())
-            : op.sendBarrier(globalTaskId, (Long) message.getContent())) {
+        if (barrierMessage ? op.sendBarrier(globalTaskId, (byte[]) message.getContent())
+            : op.send(globalTaskId, message, message.getFlag())) {
           outStreamingQueue.poll();
-
-          if (this.checkpointable && barrierMessage) {
-            barrierMessagesSent++;
-            if (barrierMessagesSent == outStreamingParOps.size()) {
-              barrierMessagesSent = 0;
-              ((CheckpointableTask) this.streamingTask)
-                  .onCheckpointPropagated(this.snapshotQueue.poll());
-            }
-          }
         } else {
           // we need to break
           break;
@@ -275,6 +263,14 @@ public class SourceStreamingInstance implements INodeInstance {
       outOpArray[i].progress();
     }
 
+    if (this.checkpointable && outStreamingQueue.isEmpty() && this.pendingCheckpoint.isPending()) {
+      long barrier = this.pendingCheckpoint.execute();
+      if (barrier != -1) {
+        ((CheckpointableTask) this.streamingTask)
+            .onCheckpointPropagated(this.snapshot);
+        taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, barrier);
+      }
+    }
     return true;
   }
 
@@ -299,6 +295,7 @@ public class SourceStreamingInstance implements INodeInstance {
     buffer.putLong(bid);
     for (String edge : outStreamingParOps.keySet()) {
       taskContext.writeBarrier(edge, buffer.array());
+      this.pendingCheckpoint.schedule(edge, bid);
     }
   }
 

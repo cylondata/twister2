@@ -256,7 +256,7 @@ public final class ComputeGraphBuilder {
     nodes.put(ftTaskName, vertex);
     ComputeConnection computeConnection = this.createComputeConnection(ftTaskName);
     computeConnection.gather(sourceName)
-        .withDataType(MessageTypes.LONG).viaEdge("ft-gather-edge");
+        .withDataType(MessageTypes.LONG).viaEdge(CheckpointingSGatherSink.FT_GATHER_EDGE);
   }
 
 
