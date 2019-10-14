@@ -63,6 +63,11 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
       TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(inEdge, message);
+    }
   }
 
   @Override
