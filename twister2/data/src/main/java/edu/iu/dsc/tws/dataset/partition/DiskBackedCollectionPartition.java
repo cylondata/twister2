@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset.partition;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +20,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
@@ -34,6 +38,18 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
   private List<Path> filesList = new ArrayList<>();
   private Path tempDirectory;
 
+  private Queue<byte[]> buffers = new LinkedList<>();
+  private long bufferedBytes = 0;
+  private long maxBufferedBytes = 10000000; // 10mb
+
+  /**
+   * Create a disk based partition with default buffer size(10MB) and without a {@link MessageType}
+   * If {@link MessageType} is not defined, it will assume as
+   * {@link edu.iu.dsc.tws.api.comms.messaging.types.ObjectType}. This will
+   * make serialization and deserialization inefficient.
+   *
+   * @param maxFramesInMemory No of frames(elements) to keep in memory
+   */
   public DiskBackedCollectionPartition(int maxFramesInMemory) {
     super();
     this.maxFramesInMemory = maxFramesInMemory;
@@ -45,9 +61,40 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
     }
   }
 
+  /**
+   * Creates an instance with default bugger size 10MB
+   *
+   * @param maxFramesInMemory No of frames(elements) to keep in memory
+   * @param dataType {@link MessageType} of data frames
+   */
   public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType) {
     this(maxFramesInMemory);
     this.dataType = dataType;
+  }
+
+  /**
+   * Creates an instance of {@link DiskBackedCollectionPartition}
+   *
+   * @param maxFramesInMemory No of frames(elements) to keep in memory
+   * @param dataType {@link MessageType} of data frames
+   * @param bufferedBytes amount to buffer in memory before writing to the disk
+   */
+  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
+                                       int bufferedBytes) {
+    this(maxFramesInMemory, dataType);
+    this.bufferedBytes = bufferedBytes;
+  }
+
+  /**
+   * Creates an 100% disk based instance. This mode will not keep any data frame in memory
+   *
+   * @param dataType {@link MessageType} of data frames
+   * @param bufferedBytes amount to buffer in memory before writing to the disk
+   */
+  public DiskBackedCollectionPartition(MessageType dataType,
+                                       int bufferedBytes) {
+    this(0, dataType);
+    this.bufferedBytes = bufferedBytes;
   }
 
   @Override
@@ -55,14 +102,14 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
     if (this.dataList.size() < this.maxFramesInMemory) {
       super.add(val);
     } else {
-      //write to disk
+      // write to buffer
       byte[] bytes = dataType.getDataPacker().packToByteArray(val);
-      try {
-        Path write = Files.write(
-            Paths.get(tempDirectory.toString(), UUID.randomUUID().toString()), bytes);
-        this.filesList.add(write);
-      } catch (IOException e) {
-        throw new Twister2RuntimeException("Failed to add data to the partition", e);
+      this.buffers.add(bytes);
+      this.bufferedBytes += bytes.length;
+
+      // flush to disk
+      if (this.bufferedBytes > this.maxBufferedBytes) {
+        this.flush();
       }
     }
   }
@@ -76,28 +123,47 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
 
   @Override
   public DataPartitionConsumer<T> getConsumer() {
+
     final Iterator<T> inMemoryIterator = this.dataList.iterator();
     final Iterator<Path> fileIterator = this.filesList.iterator();
+    final Iterator<byte[]> buffersIterator = this.buffers.iterator();
+
     return new DataPartitionConsumer<T>() {
+
+      private Queue<byte[]> bufferFromDisk = new LinkedList<>();
+
       @Override
       public boolean hasNext() {
-        return inMemoryIterator.hasNext() || fileIterator.hasNext();
+        return inMemoryIterator.hasNext()
+            || fileIterator.hasNext() || buffersIterator.hasNext() || !bufferFromDisk.isEmpty();
       }
 
       @Override
       public T next() {
-        if (inMemoryIterator.hasNext()) {
+        if (!this.bufferFromDisk.isEmpty()) {
+          return (T) dataType.getDataPacker().unpackFromByteArray(this.bufferFromDisk.poll());
+        } else if (inMemoryIterator.hasNext()) {
           return inMemoryIterator.next();
-        } else {
+        } else if (fileIterator.hasNext()) {
           Path nextFile = fileIterator.next();
           try {
-            byte[] bytes = Files.readAllBytes(nextFile);
-            return (T) dataType.getDataPacker().unpackFromByteArray(bytes);
+            DataInputStream reader = new DataInputStream(Files.newInputStream(nextFile));
+            int noOfFrames = reader.readInt();
+            for (int i = 0; i < noOfFrames; i++) {
+              int size = reader.readInt();
+              byte[] data = new byte[size];
+              reader.read(data);
+              this.bufferFromDisk.add(data);
+            }
+            return next();
           } catch (IOException e) {
             throw new Twister2RuntimeException(
                 "Failed to read value from the temp file : " + nextFile.toString(), e);
           }
+        } else if (buffersIterator.hasNext()) {
+          return (T) dataType.getDataPacker().unpackFromByteArray(buffersIterator.next());
         }
+        throw new Twister2RuntimeException("No more frames available in this partition");
       }
     };
   }
@@ -113,5 +179,21 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
             "Failed to delete the temporary file : " + path.toString(), e);
       }
     }
+  }
+
+  public void flush() {
+    Path filePath = Paths.get(tempDirectory.toString(), UUID.randomUUID().toString());
+    try (DataOutputStream outputStream = new DataOutputStream(Files.newOutputStream(filePath))) {
+      outputStream.writeInt(this.buffers.size());
+      while (!this.buffers.isEmpty()) {
+        byte[] next = this.buffers.poll();
+        outputStream.writeInt(next.length);
+        outputStream.write(next);
+      }
+    } catch (IOException e) {
+      throw new Twister2RuntimeException("Couldn't flush partitions to the disk", e);
+    }
+    this.filesList.add(filePath);
+    this.bufferedBytes = 0;
   }
 }

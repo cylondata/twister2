@@ -27,12 +27,12 @@ public class DiskBackedCollectionPartitionTest {
   @Test
   public void testIO() {
     DiskBackedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
-        10, MessageTypes.INTEGER
+        10, MessageTypes.INTEGER, 10000
     );
 
     List<Integer> rawData = new ArrayList<>();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
       rawData.add(i);
       dbp.add(i);
     }
