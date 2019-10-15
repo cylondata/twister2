@@ -60,16 +60,8 @@ public final class TaskCheckpointUtils {
       //update the new version
       snapshot.setVersion(checkpointID);
 
-      CheckpointUtils.commitState(stateStore,
-          family,
-          globalTaskId,
-          snapshot,
-          checkpointingClient,
-          (id, wid, msg) -> {
-            LOG.log(Level.FINE, "Checkpoint of " + globalTaskId
-                + " committed with version : " + checkpointID);
-          }
-      );
+      CheckpointUtils.saveState(stateStore, snapshot);
+
       checkpointableTask.onSnapshotPersisted(snapshot);
     } catch (IOException e) {
       throw new RuntimeException("Failed to write checkpoint of " + globalTaskId, e);

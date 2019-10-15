@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
@@ -30,6 +31,7 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
+
   private SKeyedGather op;
 
   public KeyedGatherStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -55,11 +57,6 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
         taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress();
-  }
-
   private class GatherRecvrImpl implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
@@ -78,17 +75,7 @@ public class KeyedGatherStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

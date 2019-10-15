@@ -293,7 +293,7 @@ public class TaskContextImpl implements TaskContext {
 
   @Override
   public boolean writeBarrier(String edge, Object message) {
-    return collection.collect(edge, new TaskMessage(message,
+    return collection.collect(edge, new TaskMessage<>(message,
         MessageFlags.SYNC_BARRIER, edge, globalTaskId));
   }
 

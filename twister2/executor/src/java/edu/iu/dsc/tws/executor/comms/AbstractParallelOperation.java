@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.compute.executor.ISync;
 import edu.iu.dsc.tws.api.config.Config;
 
 public abstract class AbstractParallelOperation implements IParallelOperation {
+
   protected Config config;
 
   protected Communicator channel;
@@ -56,7 +57,31 @@ public abstract class AbstractParallelOperation implements IParallelOperation {
   }
 
   @Override
+  public void close() {
+    this.getOp().close();
+  }
+
+  @Override
+  public void reset() {
+    this.getOp().reset();
+  }
+
+  @Override
+  public boolean isComplete() {
+    // first progress
+    this.progress();
+
+    // then check isComplete
+    return this.getOp().isComplete();
+  }
+
+  @Override
+  public void finish(int source) {
+    this.getOp().finish(source);
+  }
+
+  @Override
   public boolean progress() {
-    return true;
+    return this.getOp().progress();
   }
 }

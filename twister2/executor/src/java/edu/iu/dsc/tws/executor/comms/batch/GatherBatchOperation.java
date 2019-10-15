@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -26,7 +26,7 @@ import edu.iu.dsc.tws.comms.batch.BGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class GatherBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(GatherBatchOperation.class.getName());
+
   private BGather op;
 
   public GatherBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -53,16 +53,6 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     return op.gather(source, message.getContent(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
   private class FinalGatherReceiver implements BulkReceiver {
     // lets keep track of the messages
     // for each task we need to keep track of incoming messages
@@ -84,17 +74,7 @@ public class GatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

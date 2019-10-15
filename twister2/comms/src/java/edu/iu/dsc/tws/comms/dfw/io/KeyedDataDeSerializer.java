@@ -17,8 +17,10 @@ import java.util.Queue;
 
 import edu.iu.dsc.tws.api.comms.messaging.ChannelMessage;
 import edu.iu.dsc.tws.api.comms.messaging.MessageDirection;
+import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.MessageHeader;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.DataBuffer;
 import edu.iu.dsc.tws.api.comms.packing.DataPacker;
 import edu.iu.dsc.tws.api.comms.packing.MessageDeSerializer;
@@ -49,6 +51,13 @@ public class KeyedDataDeSerializer implements MessageDeSerializer {
 
     if (header == null) {
       throw new RuntimeException("Header must be built before the message");
+    }
+
+    if ((header.getFlags() & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
+      keyType = MessageTypes.BYTE_ARRAY;
+      keyPacker = MessageTypes.BYTE_ARRAY.getDataPacker();
+
+      dataPacker = keyPacker;
     }
 
     List<DataBuffer> builtBuffers = new ArrayList<>();

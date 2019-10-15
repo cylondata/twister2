@@ -13,8 +13,8 @@ package edu.iu.dsc.tws.executor.comms.batch;
 
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.comms.selectors.LoadBalanceSelector;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class PartitionBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(PartitionBatchOperation.class.getName());
 
   protected BPartition op;
 
@@ -77,27 +76,7 @@ public class PartitionBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

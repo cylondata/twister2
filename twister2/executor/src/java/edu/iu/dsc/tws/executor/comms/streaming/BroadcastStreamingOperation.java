@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.comms.stream.SBroadCast;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class BroadcastStreamingOperation extends AbstractParallelOperation {
+
   private SBroadCast op;
 
   public BroadcastStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -50,11 +52,6 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
     return op.bcast(source, message.getContent(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress();
-  }
-
   public class BcastReceiver implements SingularReceiver {
     @Override
     public void init(Config cfg, Set<Integer> targets) {
@@ -78,17 +75,7 @@ public class BroadcastStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }
