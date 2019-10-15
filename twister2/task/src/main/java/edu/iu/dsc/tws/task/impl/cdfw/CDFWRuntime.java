@@ -275,7 +275,7 @@ public class CDFWRuntime implements JobListener {
       } else {
         taskExecutor.execute(taskGraph, executionPlan);
       }
-     
+
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
