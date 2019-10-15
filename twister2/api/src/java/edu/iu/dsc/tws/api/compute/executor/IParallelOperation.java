@@ -37,6 +37,7 @@ package edu.iu.dsc.tws.api.compute.executor;
 
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.compute.IMessage;
 
 /**
@@ -45,6 +46,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 public interface IParallelOperation {
   /**
    * Send a message over the operation
+   *
    * @param source source
    * @param message the message
    */
@@ -52,13 +54,12 @@ public interface IParallelOperation {
 
   /**
    * Register a queue for receiving message
-   * @param targetTask
-   * @param queue
    */
   void register(int targetTask, BlockingQueue<IMessage> queue);
 
   /**
    * Register a callback to notify when a sync happens
+   *
    * @param targetTask the target
    * @param sync sync
    */
@@ -71,26 +72,37 @@ public interface IParallelOperation {
 
   /**
    * Check weather the operation is complete
+   *
    * @return true if the operation is complete
    */
   boolean isComplete();
 
   /**
    * Indicate the end of the operation
+   *
    * @param source the source
    */
   default void finish(int source) {
+    this.getOp().finish(source);
   }
 
   /**
    * Close the parallel operation
    */
   default void close() {
+    this.getOp().close();
   }
 
   /**
    * Refresh the operation to start from beginning
    */
   default void reset() {
+    this.getOp().reset();
   }
+
+  default boolean sendBarrier(int src, byte[] barrierId) {
+    return this.getOp().sendBarrier(src, barrierId);
+  }
+
+  BaseOperation getOp();
 }

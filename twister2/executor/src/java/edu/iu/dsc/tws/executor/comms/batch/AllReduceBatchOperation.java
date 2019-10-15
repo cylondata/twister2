@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -29,6 +30,7 @@ import edu.iu.dsc.tws.comms.batch.BAllReduce;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class AllReduceBatchOperation extends AbstractParallelOperation {
+
   protected BAllReduce op;
 
   public AllReduceBatchOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -44,16 +46,6 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.reduce(source, message.getContent(), flags);
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
   }
 
   public static class ReduceFnImpl implements ReduceFunction {
@@ -91,17 +83,7 @@ public class AllReduceBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

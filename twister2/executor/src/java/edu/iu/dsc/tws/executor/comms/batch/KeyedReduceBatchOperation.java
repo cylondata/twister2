@@ -15,8 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -35,8 +35,6 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedReduceBatchOperation extends AbstractParallelOperation {
-
-  private static final Logger LOG = Logger.getLogger(KeyedReduceBatchOperation.class.getName());
 
   private BKeyedReduce op;
 
@@ -63,11 +61,6 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
     TaskMessage<Tuple> taskMessage = (TaskMessage) message;
     return op.reduce(source,
         taskMessage.getContent().getKey(), taskMessage.getContent().getValue(), flags);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
   }
 
   private class ReduceFunctionImpl implements ReduceFunction {
@@ -106,22 +99,7 @@ public class KeyedReduceBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }
