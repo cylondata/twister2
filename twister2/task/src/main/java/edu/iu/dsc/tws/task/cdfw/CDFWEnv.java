@@ -54,8 +54,10 @@ public class CDFWEnv {
     this.cdfwExecutor.executeCDFW(dataFlowGraph);
   }
 
-  public void increaseWorkers(int workers) {
+  public boolean increaseWorkers(int workers) {
     this.resourceScaler.scaleUpWorkers(workers);
+    waitAllWorkersToJoin();
+    return true;
   }
 
   public void decreaseWorkers(int workers) {
@@ -72,10 +74,27 @@ public class CDFWEnv {
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     this.workerInfoList = workerList;
+    LOG.info("this.worker info list:" + workerInfoList);
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
   }
 
   public void close() {
     this.cdfwExecutor.close();
   }
 
+  private Object waitObject = new Object();
+
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
+  }
 }
