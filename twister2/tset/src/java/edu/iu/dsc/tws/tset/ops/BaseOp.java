@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * Every tset op is a Receptor. This class handles that. This also takes care of creating/updating
  * {@link edu.iu.dsc.tws.api.tset.TSetContext}.
  */
-public abstract class BaseOp implements Receptor {
+public abstract class BaseOp implements Receptor, Serializable {
   private TSetContext tSetContext = new TSetContext();
   // keys of the data partitions this op receives
   private IONames receivables;
@@ -64,5 +65,9 @@ public abstract class BaseOp implements Receptor {
 
   TSetContext gettSetContext() {
     return tSetContext;
+  }
+
+  IONames getReceivables() {
+    return receivables;
   }
 }
