@@ -155,7 +155,7 @@ public final class ZKWControllerThreadExample extends Thread {
         .build();
     JobAPI.Job job = twister2Job.serialize();
 
-    ZKWControllerExample.createJobZnode(job);
+    ZKWControllerExample.createJobZnode(config, job);
 
     for (int i = 0; i < numberOfWorkers; i++) {
       new ZKWControllerThreadExample(i).start();

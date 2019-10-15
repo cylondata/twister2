@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
-import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
@@ -154,7 +153,6 @@ public final class K8sWorkerStarter {
      */
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
-    ISenderToDriver senderToDriver = WorkerRuntime.getSenderToDriver();
 
     // update worker status to RUNNING
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);

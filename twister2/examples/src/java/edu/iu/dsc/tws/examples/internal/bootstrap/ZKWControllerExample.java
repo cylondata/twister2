@@ -77,7 +77,7 @@ public final class ZKWControllerExample {
 
     if ("create".equalsIgnoreCase(action)) {
       JobAPI.Job job = buildJob();
-      createJobZnode(job);
+      createJobZnode(config, job);
 
     } else if ("update".equalsIgnoreCase(action)) {
       JobAPI.Job job = buildJob();
@@ -140,13 +140,13 @@ public final class ZKWControllerExample {
 
     zkWorkerController.addFailureListener(new IWorkerFailureListener() {
       @Override
-      public void workerFailed(int workerID) {
+      public void failed(int workerID) {
         LOG.info(String.format("Worker[%s] failed.......................................",
             workerID));
       }
 
       @Override
-      public void workerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }
@@ -225,13 +225,13 @@ public final class ZKWControllerExample {
 
     zkMasterController.addFailureListener(new IWorkerFailureListener() {
       @Override
-      public void workerFailed(int workerID) {
+      public void failed(int workerID) {
         LOG.info(String.format("Worker[%s] failed.......................................",
             workerID));
       }
 
       @Override
-      public void workerRejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }
@@ -294,10 +294,10 @@ public final class ZKWControllerExample {
     return config;
   }
 
-  public static void createJobZnode(JobAPI.Job job) {
+  public static void createJobZnode(Config conf, JobAPI.Job job) {
 
-    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String rootPath = ZKContext.rootNode(config);
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
+    String rootPath = ZKContext.rootNode(conf);
 
     if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
       ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
@@ -307,7 +307,7 @@ public final class ZKWControllerExample {
       ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
 
       // test job znode content reading
-      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
       LOG.info("JobZNode content: " + readJob);
 
     } catch (Exception e) {

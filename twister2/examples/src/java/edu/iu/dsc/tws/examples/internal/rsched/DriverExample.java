@@ -36,7 +36,9 @@ public class DriverExample implements IDriver {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
-//    broadcastExample(messenger);
+    waitAllWorkersToJoin();
+
+    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
     scalingExample(scaler);
 
@@ -99,8 +101,6 @@ public class DriverExample implements IDriver {
 
   private void scalingExample(IScaler scaler) {
     LOG.info("Testing scaling up and down ............................. ");
-
-    waitAllWorkersToJoin();
 
     long sleepDuration = 10 * 1000; //
     try {

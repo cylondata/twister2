@@ -36,6 +36,8 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -57,7 +59,9 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * It handles Job Master to Dashboard communications
  * It handles Job Master to Driver interactions
  */
-public class WorkerMonitor implements MessageHandler {
+public class WorkerMonitor
+    implements MessageHandler, IWorkerStatusListener, IWorkerFailureListener {
+
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
   private JobMaster jobMaster;
@@ -209,7 +213,7 @@ public class WorkerMonitor implements MessageHandler {
     // check whether all workers completed
     // if so, stop the job master
     // if all workers have completed, no need to send the response message back to the client
-    if (haveAllWorkersCompleted()) {
+    if (allWorkersCompleted()) {
       LOG.info("All " + numberOfWorkers + " workers COMPLETED. Terminating the job.");
       jobMaster.completeJob(JobState.COMPLETED);
     }
@@ -421,6 +425,7 @@ public class WorkerMonitor implements MessageHandler {
   /**
    * make sure that
    * all workers registered and their state may be anything
+   * TODO: check the status of all workers. They have to be either STARTING or RUNNING.
    */
   public boolean allWorkersRegistered() {
 
@@ -483,7 +488,7 @@ public class WorkerMonitor implements MessageHandler {
   /**
    * worker COMPLETED message received from all workers
    */
-  private boolean haveAllWorkersCompleted() {
+  private boolean allWorkersCompleted() {
     if (numberOfWorkers != workers.size()) {
       return false;
     }

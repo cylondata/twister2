@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 public final class WorkerRuntime {
   private static final Logger LOG = Logger.getLogger(WorkerRuntime.class.getName());
 
-  private static WorkerRuntime workerRuntime;
+  private static boolean initialized = false;
 
   private static Config config;
   private static JobAPI.Job job;
@@ -54,17 +54,13 @@ public final class WorkerRuntime {
 
   /**
    * Initialize connections to Job Master or ZooKeeper
-   * @param cnfg
-   * @param jb
-   * @param wInfo
-   * @return
    */
-  public static synchronized WorkerRuntime init(Config cnfg,
-                                                JobAPI.Job jb,
-                                                WorkerInfo wInfo,
-                                                JobMasterAPI.WorkerState initialState) {
-    if (workerRuntime != null) {
-      return workerRuntime;
+  public static synchronized boolean init(Config cnfg,
+                                          JobAPI.Job jb,
+                                          WorkerInfo wInfo,
+                                          JobMasterAPI.WorkerState initialState) {
+    if (initialized) {
+      return false;
     }
 
     config = cnfg;
@@ -120,13 +116,12 @@ public final class WorkerRuntime {
       workerStatusUpdater = new JMWorkerStatusUpdater(jmWorkerAgent);
     }
 
-    workerRuntime = new WorkerRuntime();
-    return workerRuntime;
+    initialized = true;
+    return true;
   }
 
   /**
    * get IWorkerController
-   * @return
    */
   public static IWorkerController getWorkerController() {
     return workerController;
@@ -134,7 +129,6 @@ public final class WorkerRuntime {
 
   /**
    * get IWorkerStatusUpdater
-   * @return
    */
   public static IWorkerStatusUpdater getWorkerStatusUpdater() {
     return workerStatusUpdater;
@@ -142,7 +136,6 @@ public final class WorkerRuntime {
 
   /**
    * ISenderToDriver may be null, if there is no Driver in the job
-   * @return
    */
   public static synchronized ISenderToDriver getSenderToDriver() {
     return senderToDriver;
@@ -152,8 +145,6 @@ public final class WorkerRuntime {
    * add a IWorkerFailureListener
    * Currently failure notification is only implemented with ZKWorkerController
    * A listener can be only added when ZKWorkerController is used.
-   * @param workerFailureListener
-   * @return
    */
   public static boolean addWorkerFailureListener(IWorkerFailureListener workerFailureListener) {
     if (zkWorkerController != null) {
@@ -166,8 +157,6 @@ public final class WorkerRuntime {
   /**
    * Add IAllJoinedListener
    * It may return false, if a listener already added
-   * @param allJoinedListener
-   * @return
    */
   public static boolean addAllJoinedListener(IAllJoinedListener allJoinedListener) {
 
@@ -186,8 +175,6 @@ public final class WorkerRuntime {
    * Add IReceiverFromDriver
    * It may return false, if a listener already added or
    * if there is no Driver in the job
-   * @param receiverFromDriver
-   * @return
    */
   public static boolean addReceiverFromDriver(IReceiverFromDriver receiverFromDriver) {
 
@@ -206,8 +193,6 @@ public final class WorkerRuntime {
    * Add IScalerListener
    * It may return false, if a listener already added or
    * if there is no Driver in the job
-   * @param scalerListener
-   * @return
    */
   public static boolean addScalerListener(IScalerListener scalerListener) {
 
@@ -226,8 +211,6 @@ public final class WorkerRuntime {
    * add a IJobMasterListener
    * Currently failure notification is only implemented with ZKWorkerController
    * A listener can be only added when ZKWorkerController is used.
-   * @param jobMasterListener
-   * @return
    */
   public static boolean addJobMasterListener(IJobMasterListener jobMasterListener) {
     if (zkWorkerController != null) {

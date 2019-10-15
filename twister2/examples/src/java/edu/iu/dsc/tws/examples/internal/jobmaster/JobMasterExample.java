@@ -29,10 +29,15 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -41,6 +46,7 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterExample {
@@ -76,6 +82,8 @@ public final class JobMasterExample {
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
 
+    createJobZnode(config, job);
+
     String ip = null;
     try {
       ip = Inet4Address.getLocalHost().getHostAddress();
@@ -89,7 +97,7 @@ public final class JobMasterExample {
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    IJobTerminator jobTerminator = null;
+    IJobTerminator jobTerminator = new JobTerminator(config);
 
     JobMaster jobMaster = new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler);
     jobMaster.startJobMasterThreaded();
@@ -112,5 +120,29 @@ public final class JobMasterExample {
     LOG.info("Usage:\n"
         + "java JobMasterExample");
   }
+
+  public static void createJobZnode(Config conf, JobAPI.Job job) {
+
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
+    String rootPath = ZKContext.rootNode(conf);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
+    }
+
+    try {
+      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
+
+      // test job znode content reading
+      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
+      LOG.info("JobZNode content: " + readJob);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+//    ZKUtils.closeClient();
+  }
+
 
 }

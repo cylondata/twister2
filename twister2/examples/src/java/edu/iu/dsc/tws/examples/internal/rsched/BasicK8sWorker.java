@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -55,6 +57,8 @@ public class BasicK8sWorker
   private ISenderToDriver senderToDriver;
 
   private Object waitObject = new Object();
+
+  private List<Any> messages = Collections.synchronizedList(new LinkedList<>());
 
   // set this flag to true after getting scaledUp event
   private boolean scaledUp = false;
@@ -94,7 +98,7 @@ public class BasicK8sWorker
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    testScaling(workerController);
+    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -173,8 +177,6 @@ public class BasicK8sWorker
         JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
         LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
 
-        senderToDriver.sendToDriver(nodeInfo);
-
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
@@ -183,12 +185,13 @@ public class BasicK8sWorker
         JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
         LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
 
-        senderToDriver.sendToDriver(computeResource);
-
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
     }
+
+    // put received message to message buffer
+    messages.add(anyMessage);
 
   }
 
@@ -320,7 +323,7 @@ public class BasicK8sWorker
    * test scaling up and down workers in the job
    * after each scaleup event, all workers wait in a barrier
    */
-  private void testScaling(IWorkerController workerController) {
+  private void testScalingMessaging(IWorkerController workerController) {
 
     // we assume the worker is doing some computation
     // we simulate the computation by sleeping the worker for some time
@@ -329,6 +332,11 @@ public class BasicK8sWorker
 
       // do some computation
       sleepRandomTime(300);
+
+      // if received some messages, send the same messages back to the driver
+      while (messages.size() != 0) {
+        senderToDriver.sendToDriver(messages.remove(0));
+      }
 
       // check for scaled up event
       if (scaledUp) {

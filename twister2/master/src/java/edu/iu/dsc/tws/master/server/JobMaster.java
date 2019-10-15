@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
@@ -30,6 +31,8 @@ import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKMasterController;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -165,6 +168,12 @@ public class JobMaster {
   private BarrierHandler barrierHandler;
 
   /**
+   * JobMaster to ZooKeeper connection
+   * TODO: need to close zk connection, need to integrate with zk-con in scaler, job terminator.
+   */
+  private ZKMasterController zkMasterController;
+
+  /**
    * a variable that shows whether JobMaster will run jobTerminate
    * when it is killed with a shutdown hook
    */
@@ -258,6 +267,9 @@ public class JobMaster {
     workerHandler = new WorkerHandler(workerMonitor, rrServer);
     pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
+
+    // if ZoKeeper server is used for this job, initialize that
+    initZKMasterController(workerMonitor);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -422,6 +434,27 @@ public class JobMaster {
     driverThread.start();
 
     return driverThread;
+  }
+
+  /**
+   * initialize ZKMasterController if ZooKeeper used
+   */
+  private void initZKMasterController(WorkerMonitor wMonitor) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      zkMasterController = new ZKMasterController(config, job.getJobName(),
+          job.getNumberOfWorkers(), ZKContext.serverAddresses(config));
+
+      // TODO: need to check whether it is restarting
+      try {
+        zkMasterController.initialize(JobMasterAPI.JobMasterState.JM_STARTED);
+      } catch (Exception e) {
+        throw new Twister2RuntimeException(e);
+      }
+
+      zkMasterController.addFailureListener(wMonitor);
+      zkMasterController.addWorkerStatusListener(wMonitor);
+    }
+
   }
 
   /**

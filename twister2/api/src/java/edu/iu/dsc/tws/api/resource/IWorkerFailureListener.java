@@ -22,11 +22,11 @@ public interface IWorkerFailureListener {
    * let the listener know that a worker failed
    * @param workerID
    */
-  void workerFailed(int workerID);
+  void failed(int workerID);
 
   /**
    * let the listener know that previously failed worker rejoined the job
    * @param workerInfo
    */
-  void workerRejoined(JobMasterAPI.WorkerInfo workerInfo);
+  void rejoined(JobMasterAPI.WorkerInfo workerInfo);
 }

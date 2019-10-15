@@ -39,6 +39,14 @@ public class JobTerminator implements IJobTerminator {
 
   @Override
   public boolean terminateJob(String jobName) {
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+      String rootPath = ZKContext.rootNode(config);
+      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
+      ZKUtils.closeClient();
+    }
+
     // delete the StatefulSets for workers
     ArrayList<String> ssNameLists = controller.getStatefulSetsForJobWorkers(jobName);
     boolean ssForWorkersDeleted = true;
@@ -62,13 +70,6 @@ public class JobTerminator implements IJobTerminator {
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean ssForJobMasterDeleted =
         controller.deleteStatefulSet(jobMasterStatefulSetName);
-
-    if (ZKContext.isZooKeeperServerUsed(config)) {
-      CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-      String rootPath = ZKContext.rootNode(config);
-      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
-      ZKUtils.closeClient();
-    }
 
     return ssForWorkersDeleted
         && serviceForWorkersDeleted

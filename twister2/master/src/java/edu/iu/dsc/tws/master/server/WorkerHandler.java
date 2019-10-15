@@ -90,19 +90,18 @@ public class WorkerHandler implements MessageHandler {
       // if it is not coming from failure
 
       // if there is a worker with the same ID already,
-      // return a fail message something wrong
-      // TODO: this must behave the same as ZKBaseController. Need to change.
+      // ignore this message.
+      // when zk is used, currently workers are joining from both tools.
+      // so, we ignore this repeated join request.
+      // TODO: we may need to reconsider this. We may require workers to join from one tool only.
       if (workerMonitor.existWorker(workerInfo.getWorkerID())) {
-        LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join for the second time. "
-            + "\nIgnoring this join attempt. "
-            + "\nReceived WorkerInfo: " + workerInfo
-            + "\nExisting WorkerInfo: "
-            + workerMonitor.getWorkerWithState(workerInfo.getWorkerID()));
+        LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join, but already joined. "
+            + "Ignoring this join attempt. ");
 
         String failMessage = "Previously a worker registered with workerID: "
             + workerInfo.getWorkerID();
 
-        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
+        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
         return;
       }
 

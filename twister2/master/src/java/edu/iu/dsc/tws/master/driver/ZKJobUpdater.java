@@ -30,7 +30,6 @@ public class ZKJobUpdater {
 
   /**
    * update Job on ZooKeeper
-   * TODO: The connection to ZooKeeper should be alive during the job.
    * @param job
    * @return
    */
@@ -47,8 +46,6 @@ public class ZKJobUpdater {
       ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
     } catch (Exception e) {
       throw new Twister2Exception("Could not update job znode", e);
-    } finally {
-      ZKUtils.closeClient();
     }
 
   }

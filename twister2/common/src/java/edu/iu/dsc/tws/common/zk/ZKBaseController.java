@@ -401,7 +401,7 @@ public class ZKBaseController {
       jobWorkers.put(pair.getKey(), pair.getValue());
 
       if (failureListener != null) {
-        failureListener.workerRejoined(pair.getKey());
+        failureListener.rejoined(pair.getKey());
       }
 
       LOG.info("A worker rejoined the job with ID: " + newWorkerID);
@@ -570,7 +570,7 @@ public class ZKBaseController {
         WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
         jobWorkers.put(failedWorker, WorkerState.FAILED);
         // inform the listener
-        failureListener.workerFailed(failedWorker.getWorkerID());
+        failureListener.failed(failedWorker.getWorkerID());
       }
     }
   }
