@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.dataset.partition;
 
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 
-public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
+public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> implements Closeable {
 
   private int maxFramesInMemory;
   private MessageType dataType = MessageTypes.OBJECT;
@@ -179,6 +180,11 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
             "Failed to delete the temporary file : " + path.toString(), e);
       }
     }
+
+    //cleanup memory
+    this.filesList.clear();
+    this.buffers.clear();
+    this.bufferedBytes = 0;
   }
 
   public void flush() {
@@ -195,5 +201,10 @@ public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
     }
     this.filesList.add(filePath);
     this.bufferedBytes = 0;
+  }
+
+  @Override
+  public void close() {
+    this.flush();
   }
 }

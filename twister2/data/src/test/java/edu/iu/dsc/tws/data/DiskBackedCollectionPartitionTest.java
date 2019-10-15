@@ -26,22 +26,23 @@ public class DiskBackedCollectionPartitionTest {
 
   @Test
   public void testIO() {
-    DiskBackedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
+    try (DiskBackedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
         10, MessageTypes.INTEGER, 10000
-    );
+    )) {
 
-    List<Integer> rawData = new ArrayList<>();
+      List<Integer> rawData = new ArrayList<>();
 
-    for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
-      rawData.add(i);
-      dbp.add(i);
+      for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
+        rawData.add(i);
+        dbp.add(i);
+      }
+
+      DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
+      Iterator<Integer> rawIterator = rawData.iterator();
+      while (consumer.hasNext()) {
+        Assert.assertEquals(consumer.next(), rawIterator.next());
+      }
+      dbp.clear();
     }
-
-    DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
-    Iterator<Integer> rawIterator = rawData.iterator();
-    while (consumer.hasNext()) {
-      Assert.assertEquals(consumer.next(), rawIterator.next());
-    }
-    dbp.clear();
   }
 }
