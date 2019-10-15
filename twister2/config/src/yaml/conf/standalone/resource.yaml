@@ -22,7 +22,7 @@ twister2.resource.class.launcher: "edu.iu.dsc.tws.rsched.schedulers.standalone.M
 # mpi run file, this assumes a mpirun that is shipped with the product
 # change this to just mpirun if you are using a system wide installation of OpenMPI
 # or complete path of OpenMPI in case you have something custom
-twister2.resource.scheduler.mpi.mpirun.file: "twister2-core/ompi/bin/mpirun"
+twister2.resource.scheduler.mpi.mpirun.file: "ompi/bin/mpirun"
 
 # mpi scheduling policy. Two possible options are node and slot.
 # read more at https://www.open-mpi.org/faq/?category=running#mpirun-scheduling
@@ -33,7 +33,7 @@ twister2.resource.scheduler.mpi.mapby: "node"
 twister2.resource.scheduler.mpi.mapby.use-pe: false
 
 # Indicates whether bootstrap process needs to be run and distribute job file and core
-# between MPI nodes. Twister2 assumes job file is accessible to all nodes if this property is set
+# between nodes. Twister2 assumes job file is accessible to all nodes if this property is set
 # to true, else it will run the bootstrap process
 twister2.resource.sharedfs: true
 
@@ -49,5 +49,3 @@ twister2.resource.class.uploader: "edu.iu.dsc.tws.rsched.uploaders.localfs.Local
 # this is the method that workers use to download the core and job packages
 # it could be  HTTP, HDFS, ..
 twister2.resource.uploader.download.method: "HTTP"
-
-
