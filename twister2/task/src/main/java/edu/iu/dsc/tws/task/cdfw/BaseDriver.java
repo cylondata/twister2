@@ -70,7 +70,7 @@ public abstract class BaseDriver implements IDriver {
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("joined worker info list:" + workerList);
+    LOG.fine("joined worker info list:" + workerList);
     if (driverState != DriverState.WAIT_FOR_WORKERS_TO_START) {
       // if the driver is in the 'wait got workers' state, insert the events to the driver's queue
       this.executionEnv.allWorkersJoined(workerList);

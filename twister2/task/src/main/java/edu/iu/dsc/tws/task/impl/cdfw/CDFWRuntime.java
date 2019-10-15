@@ -99,15 +99,6 @@ public class CDFWRuntime implements JobListener {
     this.config = cfg;
 
     List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
-
-    /*try {
-      workerInfoList = controller.getAllWorkers();
-      LOG.info("worker info list @ cons:" + workerInfoList);
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }*/
-
     if (workerInfoList == null) {
       return;
     }
@@ -127,7 +118,7 @@ public class CDFWRuntime implements JobListener {
     List<JobMasterAPI.WorkerInfo> workerList = null;
     try {
       workerList = workerController.getAllWorkers();
-      LOG.info("worker info list @ cons:" + workerList);
+      LOG.info("worker info list size @ cons:" + workerList.size());
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return null;
@@ -161,19 +152,8 @@ public class CDFWRuntime implements JobListener {
       msg = executeMessageQueue.peek();
       if (msg == null) {
         if (scaleUpRequest.get()) {
-
-//          List<JobMasterAPI.WorkerInfo> workerInfoList = null;
-//          try {
-//            workerInfoList = controller.getAllWorkers();
-//            LOG.info("worker info list @ execute:" + workerInfoList);
-//          } catch (TimeoutException timeoutException) {
-//            LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-//          }
-
           communicator.close();
           List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
-          LOG.info("worker info list @ execute:" + workerInfoList);
-
 
           // create the channel
           LOG.info("Existing workers calling barrier");
@@ -185,6 +165,7 @@ public class CDFWRuntime implements JobListener {
           taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
         scaleUpRequest.set(false);
+        //scaleDownRequest.set(false);
         continue;
       }
       msg = executeMessageQueue.poll();
@@ -270,11 +251,13 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+      taskExecutor.execute(taskGraph, executionPlan);
+
+      /*if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
         taskExecutor.itrExecute(taskGraph, executionPlan);
       } else {
         taskExecutor.execute(taskGraph, executionPlan);
-      }
+      }*/
 
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
@@ -318,6 +301,7 @@ public class CDFWRuntime implements JobListener {
   }
 
   private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
+  private AtomicBoolean scaleDownRequest = new AtomicBoolean(false);
 
   @Override
   public void workersScaledUp(int instancesAdded) {
@@ -330,23 +314,7 @@ public class CDFWRuntime implements JobListener {
   public void workersScaledDown(int instancesRemoved) {
     LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
         + instancesRemoved);
-    communicator.close();
-
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
-    try {
-      workerInfoList = controller.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, controller);
-    String persistent = null;
-
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+    scaleDownRequest.set(true);
   }
 
   @Override

@@ -258,18 +258,24 @@ public final class KMeansConnectedDataflowExample {
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
-      //cdfwEnv.increaseWorkers(instances);
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
-      }
+
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, 4, instances, iterations,
+        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations,
             dimension, jobConfig);
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
+
+      //Kubernetes scale up
+      /*if (cdfwEnv.increaseWorkers(instances)) {
+        for (int i = 0; i < iterations; i++) {
+          DataFlowGraph job3 = generateThirdJob(config, 4, instances, iterations,
+              dimension, jobConfig);
+          job3.setIterationNumber(i);
+          cdfwEnv.executeDataFlowGraph(job3);
+        }
+      }*/
+      cdfwEnv.close();
     }
 
     public void generateData(Config config, String dataDirectory, String centroidDirectory,
@@ -322,16 +328,6 @@ public final class KMeansConnectedDataflowExample {
       double[][] kMeansCenters = kMeansCalculator.calculate();
       context.writeEnd("all-reduce", kMeansCenters);
     }
-
-    /*@Override
-    public void execute() {
-      datapoints = (double[][]) dataPartition.first();
-      centroid = (double[][]) centroidPartition.first();
-      LOG.info("Centroid Values:" + Arrays.deepToString(centroid));
-      kMeansCalculator = new KMeansCalculator(datapoints, centroid, dimension);
-      double[][] kMeansCenters = kMeansCalculator.calculate();
-      context.writeEnd("all-reduce", kMeansCenters);
-    }*/
 
     @SuppressWarnings("unchecked")
     @Override

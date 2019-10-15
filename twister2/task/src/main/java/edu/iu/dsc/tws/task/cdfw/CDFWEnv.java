@@ -60,8 +60,9 @@ public class CDFWEnv {
     return true;
   }
 
-  public void decreaseWorkers(int workers) {
+  public boolean decreaseWorkers(int workers) {
     this.resourceScaler.scaleDownWorkers(workers);
+    return true;
   }
 
   public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
@@ -74,7 +75,6 @@ public class CDFWEnv {
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     this.workerInfoList = workerList;
-    LOG.info("this.worker info list:" + workerInfoList);
     synchronized (waitObject) {
       waitObject.notify();
     }

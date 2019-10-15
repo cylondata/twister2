@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
@@ -106,7 +105,7 @@ public final class ParallelDataFlowsExample {
   }
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                DafaFlowJobConfig jobConfig) {
+                                                int workers, DafaFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
@@ -123,14 +122,14 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
         .addOutput("first_out", "sink1").setGraphType("non-iterative");
 
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 DafaFlowJobConfig jobConfig) {
+                                                 int workers, DafaFlowJobConfig jobConfig) {
 
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
@@ -148,8 +147,9 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out", "source1").setGraphType("non-iterative");
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .addInput("first_graph", "first_out", "source1")
+        .setGraphType("non-iterative");
 
     return job;
   }
@@ -163,21 +163,21 @@ public final class ParallelDataFlowsExample {
 
       DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, 2, 2, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, 2, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
-      cdfwEnv.increaseWorkers(4);
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
 
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
+
+      if (cdfwEnv.increaseWorkers(2)) {
+        DataFlowGraph job3 = generateFirstJob(config, 4, 4, jobConfig);
+        DataFlowGraph job4 = generateSecondJob(config, 4, 4, jobConfig);
+
+        cdfwEnv.executeDataFlowGraph(job3);
+        cdfwEnv.executeDataFlowGraph(job4);
       }
-      //DataFlowGraph job3 = generateFirstJob(config, 8, jobConfig);
-      //DataFlowGraph job4 = generateSecondJob(config, 8, jobConfig);
-
-      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.close();
     }
   }
 
