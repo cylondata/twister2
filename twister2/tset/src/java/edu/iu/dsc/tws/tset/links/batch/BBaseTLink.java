@@ -45,7 +45,7 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return set;
   }
 
-  public  <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
       set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());

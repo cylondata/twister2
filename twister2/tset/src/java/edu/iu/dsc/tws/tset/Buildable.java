@@ -25,7 +25,7 @@ public interface Buildable {
   /**
    * Builds the underlying node or edge
    *
-   * @param graphBuilder Dataflow graph builder
+   * @param graphBuilder  Dataflow graph builder
    * @param buildSequence partial build sequence. i.e. the set of nodes and edges that have been
    */
   void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence);

@@ -39,8 +39,8 @@ public class ComputeTSet<O, I> extends BBaseTSet<O> {
     this.computeFunc = computeFn;
   }
 
-  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name, ComputeCollectorFunc<O, I> computeFn,
-                     int parallelism) {
+  public ComputeTSet(BatchTSetEnvironment tSetEnv, String name,
+                     ComputeCollectorFunc<O, I> computeFn, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.computeFunc = computeFn;
   }

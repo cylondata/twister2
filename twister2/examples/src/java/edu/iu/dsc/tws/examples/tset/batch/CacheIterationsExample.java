@@ -31,20 +31,23 @@ public class CacheIterationsExample extends BatchTsetExample {
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    SourceTSet<Integer> src1 = dummySourceOther(env, COUNT, PARALLELISM);
+//    SourceTSet<Integer> src1 = dummySourceOther(env, COUNT, PARALLELISM);
 
+    // todo fix this example
 
     boolean isIter = false;
 
     // test direct().cache() which has IterLink semantics
-    CachedTSet<Integer> cache = src.direct().cache(isIter);
-    CachedTSet<Integer> cache1 = src1.direct().cache(isIter);
+    CachedTSet<Integer> cache = src.direct().cache();
+//    CachedTSet<Integer> cache1 = src1.direct().lazyCache();
 
 
 //    ComputeTSet<Integer, Iterator<Integer>> map = cache.direct().map(k -> k + 1);
 
+    cache = cache.direct().map(k -> k + 1).lazyCache();
+
     for (int i = 0; i < 10; i++) {
-      cache = cache.direct().map(k -> k + 1).cache(isIter);
+      env.eval(cache);
     }
 
     cache.direct().forEach(l -> LOG.info(l.toString()));

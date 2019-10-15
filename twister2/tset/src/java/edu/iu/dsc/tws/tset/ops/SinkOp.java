@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
-import edu.iu.dsc.tws.executor.core.Runtime;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**

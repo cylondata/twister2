@@ -23,8 +23,9 @@ public class SinkTSet<T> extends BBaseTSet<T> {
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
-   *  @param tSetEnv The TSetEnv used for execution
-   * @param s The Sink function to be used
+   *
+   * @param tSetEnv The TSetEnv used for execution
+   * @param s       The Sink function to be used
    */
   public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s) {
     this(tSetEnv, s, 1);
@@ -32,8 +33,9 @@ public class SinkTSet<T> extends BBaseTSet<T> {
 
   /**
    * Creates SinkTSet with the given parameters
-   *  @param tSetEnv The TSetEnv used for execution
-   * @param sinkFn The Sink function to be used
+   *
+   * @param tSetEnv     The TSetEnv used for execution
+   * @param sinkFn      The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
   public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism) {

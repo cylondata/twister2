@@ -11,7 +11,6 @@
 //  limitations under the License.
 
 
-
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
@@ -39,7 +38,6 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.link.TLink;
 import edu.iu.dsc.tws.tset.env.BuildContext;

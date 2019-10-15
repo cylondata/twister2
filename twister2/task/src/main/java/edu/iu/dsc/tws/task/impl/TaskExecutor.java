@@ -370,11 +370,11 @@ public class TaskExecutor {
     return this.dataObjectMap.get(varName);
   }
 
-  public boolean isOutputAvailable(String name){
+  public boolean isOutputAvailable(String name) {
     return this.dataObjectMap.containsKey(name);
   }
 
-  public void addInput(String name, DataObject dataObject){
+  public void addInput(String name, DataObject dataObject) {
     this.dataObjectMap.put(name, dataObject);
   }
 

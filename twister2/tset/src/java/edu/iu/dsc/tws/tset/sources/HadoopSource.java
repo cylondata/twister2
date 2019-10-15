@@ -95,8 +95,8 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
     jconf = new JobConf(hadoopConf);
     try {
       format = inputClazz.newInstance();
-      JobContext jobContext = new JobContextImpl(hadoopConf, new JobID(context.getName(),
-          context.getId()));
+      JobContext jobContext = new JobContextImpl(hadoopConf, new JobID(context.getId(),
+          context.getIndex()));
       List<InputSplit> splits = format.getSplits(jobContext);
 
       for (int i = 0; i < splits.size(); i++) {
@@ -106,9 +106,9 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
       }
 
       if (assignedSplits.size() > 0) {
-        TaskID taskID = new TaskID(context.getName(), context.getId(),
+        TaskID taskID = new TaskID(context.getId(), context.getIndex(),
             TaskType.MAP, context.getIndex());
-        TaskAttemptID taskAttemptID = new TaskAttemptID(taskID, context.getId());
+        TaskAttemptID taskAttemptID = new TaskAttemptID(taskID, context.getIndex());
         TaskAttemptContextImpl taskAttemptContext =
             new TaskAttemptContextImpl(jconf, taskAttemptID);
         currentReader = format.createRecordReader(assignedSplits.get(consumingSplit),
@@ -127,9 +127,9 @@ public class HadoopSource<K, V, F extends InputFormat<K, V>>
       try {
         boolean current = currentReader.nextKeyValue();
         while (!current && consumingSplit < assignedSplits.size() - 1) {
-          TaskID taskID = new TaskID(context.getName(), context.getId(),
+          TaskID taskID = new TaskID(context.getId(), context.getIndex(),
               TaskType.MAP, context.getIndex());
-          TaskAttemptID taskAttemptID = new TaskAttemptID(taskID, context.getId());
+          TaskAttemptID taskAttemptID = new TaskAttemptID(taskID, context.getIndex());
           consumingSplit++;
           TaskAttemptContextImpl taskAttemptContext =
               new TaskAttemptContextImpl(jconf, taskAttemptID);

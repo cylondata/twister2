@@ -27,7 +27,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
    *
    * @param tSetEnv The TSetEnv used for execution
-   * @param s The Sink function to be used
+   * @param s       The Sink function to be used
    */
   public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s) {
     this(tSetEnv, s, 1);
@@ -36,8 +36,8 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
   /**
    * Creates SinkTSet with the given parameters
    *
-   * @param tSetEnv The TSetEnv used for execution
-   * @param s The Sink function to be used
+   * @param tSetEnv     The TSetEnv used for execution
+   * @param s           The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
   public SSinkTSet(StreamingTSetEnvironment tSetEnv, SinkFunc<T> s, int parallelism) {

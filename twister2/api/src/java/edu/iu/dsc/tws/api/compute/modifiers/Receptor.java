@@ -26,7 +26,7 @@ public interface Receptor {
    * @deprecated Use {@link Receptor#add(String, DataPartition)} instead
    */
   @Deprecated
-  default void add(String name, DataObject<?> data){
+  default void add(String name, DataObject<?> data) {
     //todo remove default
   }
 

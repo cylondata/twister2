@@ -17,7 +17,6 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;

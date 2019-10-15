@@ -56,7 +56,7 @@ import edu.iu.dsc.tws.tset.sources.CacheSource;
 public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   private SinkFunc<?> cacheSinkFunc;
 
-  private String cacheSourcePrefix; 
+  private String cacheSourcePrefix;
 
   /*
   Sink function type is unknown as we need to preserve the output datao bject type to T. In doing

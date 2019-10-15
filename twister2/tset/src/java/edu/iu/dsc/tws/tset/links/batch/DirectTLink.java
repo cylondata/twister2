@@ -11,7 +11,6 @@
 //  limitations under the License.
 
 
-
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;

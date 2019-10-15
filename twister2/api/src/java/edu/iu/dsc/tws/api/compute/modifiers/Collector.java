@@ -18,10 +18,12 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
  * Special task for collecting the output from tasks
  */
 public interface Collector {
+
   /**
    * get the collected valued
    *
    * @return get the default output
+   * @deprecated use the data partition
    */
   @Deprecated
   default DataPartition<?> get() {

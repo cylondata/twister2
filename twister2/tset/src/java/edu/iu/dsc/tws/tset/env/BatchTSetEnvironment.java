@@ -102,7 +102,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * Runs a subgraph of TSets from the specified TSet and output results as a tset
    *
    * @param leafTset leaf tset
-   * @param <T> type of the output data object
+   * @param <T>      type of the output data object
    * @return output result as a data object
    */
   public <T> DataObject<T> runAndGet(BaseTSet leafTset) {

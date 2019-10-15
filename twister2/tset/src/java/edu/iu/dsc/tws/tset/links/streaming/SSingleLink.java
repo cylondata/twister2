@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 

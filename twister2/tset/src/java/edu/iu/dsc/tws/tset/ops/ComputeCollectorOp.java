@@ -34,7 +34,8 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
   public ComputeCollectorOp() {
   }
 
-  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin, Set<String> receivables) {
+  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin,
+                            Set<String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }

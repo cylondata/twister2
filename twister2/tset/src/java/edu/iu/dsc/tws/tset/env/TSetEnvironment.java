@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.tset.sets.BuildableTSet;
  * Entry point to tset operations. This is a singleton which initializes as
  * {@link BatchTSetEnvironment} or {@link StreamingTSetEnvironment}
  */
-public abstract class  TSetEnvironment {
+public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
@@ -138,9 +138,9 @@ public abstract class  TSetEnvironment {
   /**
    * execute data flow graph
    *
-   * @param <T> type of the output data object
+   * @param <T>          type of the output data object
    * @param buildContext data flow graph
-   * @param outputTSet output tset. If null, then no output would be returned
+   * @param outputTSet   output tset. If null, then no output would be returned
    * @return output as a data object if outputTset is not null. Else null
    */
   protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
