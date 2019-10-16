@@ -43,9 +43,11 @@ public abstract class BaseOp implements Receptor, Serializable {
   BaseOp(BaseTSet originTSet, Set<String> receivablesNames) {
     this.receivables = IONames.declare(receivablesNames);
 
-    this.tSetContext.settSetId(originTSet.getId());
-    this.tSetContext.settSetName(originTSet.getName());
-    this.tSetContext.setParallelism(originTSet.getParallelism());
+    if (originTSet != null) {
+      this.tSetContext.settSetId(originTSet.getId());
+      this.tSetContext.settSetName(originTSet.getName());
+      this.tSetContext.setParallelism(originTSet.getParallelism());
+    }
   }
 
   @Override

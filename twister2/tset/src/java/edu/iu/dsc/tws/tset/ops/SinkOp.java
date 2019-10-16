@@ -67,10 +67,7 @@ public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, C
    */
   @Override
   public DataPartition<?> get(String name) {
-    if (collectible.size() == 1 && name.equals(collectible.iterator().next())) {
-      return sink.get();
-    }
-    throw new RuntimeException("Unable to get the partition with key: " + name);
+    return sink.get();
   }
 
   @Override
