@@ -70,14 +70,14 @@ public class SKeyedReduce extends BaseOperation {
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
           keyType, keyType, edgeId, messageSchema);
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
