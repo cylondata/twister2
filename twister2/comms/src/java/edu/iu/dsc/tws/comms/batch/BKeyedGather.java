@@ -143,14 +143,14 @@ public class BKeyedGather extends BaseOperation {
           rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
           keyType, keyType, edgeId, messageSchema);
       this.simple = true;
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
