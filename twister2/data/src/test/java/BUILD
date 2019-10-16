@@ -22,7 +22,7 @@ java_library(
     ],
 )
 
-java_tests_debug(
+java_tests(
     classpath_resources = twister2_client_common_files(),
     test_classes = [
         "edu.iu.dsc.tws.data.DiskBackedCollectionPartitionTest",
