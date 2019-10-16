@@ -96,5 +96,8 @@ public final class JobMasterStarter {
     JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler);
     jobMaster.addShutdownHook(false);
     jobMaster.startJobMasterBlocking();
+
+    // wait to be deleted by K8s master
+    K8sWorkerUtils.waitIndefinitely();
   }
 }

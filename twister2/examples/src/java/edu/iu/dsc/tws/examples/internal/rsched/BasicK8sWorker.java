@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -45,7 +46,6 @@ import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
@@ -98,7 +98,8 @@ public class BasicK8sWorker
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    testScalingMessaging(workerController);
+    waitAndComplete();
+//    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -118,7 +119,11 @@ public class BasicK8sWorker
       return null;
     }
 
-    LOG.info(workerList.size() + " workers joined. ");
+    List<Integer> ids = workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .collect(Collectors.toList());
+
+    LOG.info("All workers joined. Worker IDs: " + ids);
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
@@ -131,6 +136,17 @@ public class BasicK8sWorker
 
     LOG.info("Proceeded through the barrier ........................ ");
     return workerList;
+  }
+
+  private void waitAndComplete() {
+
+    long duration = 60;
+    try {
+      LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
+      Thread.sleep(duration * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -150,7 +166,7 @@ public class BasicK8sWorker
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+    LOG.info("allWorkersJoined event received. Number of workers: " + workerList.size());
 
     synchronized (waitObject) {
       waitObject.notify();

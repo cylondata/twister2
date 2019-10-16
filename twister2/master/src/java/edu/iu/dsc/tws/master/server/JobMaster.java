@@ -392,6 +392,14 @@ public class JobMaster {
 
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
+
+    if (zkMasterController != null) {
+      zkMasterController.close();
+    }
+
+    if (jobTerminator != null) {
+      jobTerminator.terminateJob(job.getJobName());
+    }
   }
 
   private void initDriver() {
@@ -470,8 +478,7 @@ public class JobMaster {
 
   /**
    * this method finishes the job
-   * It is executed when the worker completed message received from all workers or
-   * When JobMaster is killed with shutdown hook
+   * It is executed when the worker completed message received from all workers
    */
   public void completeJob(JobState jobFinalState) {
 
@@ -482,10 +489,6 @@ public class JobMaster {
 
     jobCompleted = true;
     looper.wakeup();
-
-    if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobName());
-    }
   }
 
   /**
@@ -525,6 +528,10 @@ public class JobMaster {
         if (clearResourcesWhenKilled) {
           jobCompleted = true;
           looper.wakeup();
+
+          if (zkMasterController != null) {
+            zkMasterController.close();
+          }
 
           if (jobTerminator != null) {
             jobTerminator.terminateJob(job.getJobName());

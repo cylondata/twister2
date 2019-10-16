@@ -114,7 +114,7 @@ public class WorkerHandler implements MessageHandler {
 
     // if all workers registered, inform all workers
     if (workerMonitor.allWorkersRegistered()) {
-      LOG.info("All " + workerMonitor.getWorkerList() + " workers joined the job.");
+      LOG.info("All workers joined the job. Worker IDs: " + workerMonitor.getWorkerIDs());
       sendListWorkersResponseToWaitList();
 
       workerMonitor.sendWorkersJoinedMessage();

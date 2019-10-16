@@ -25,7 +25,6 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -35,7 +34,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
-import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
@@ -163,26 +161,10 @@ public final class K8sWorkerStarter {
     // update worker status to COMPLETED
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
-    // if this is the first worker and worker statuses are propagated through ZooKeeper
-    // wait for all workers to complete and clean up job resources
-    if (workerInfo.getWorkerID() == 0 && workerStatusUpdater instanceof ZKWorkerController) {
-      ZKWorkerController zkWorkerController = (ZKWorkerController) workerController;
-      while (zkWorkerController.getCurrentWorkers().size() != 1) {
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-//          e.printStackTrace();
-        }
-      }
+    WorkerRuntime.close();
 
-      WorkerRuntime.close();
-      JobTerminator jobTerminator = new JobTerminator(config);
-      jobTerminator.terminateJob(job.getJobName());
-
-    } else {
-
-      WorkerRuntime.close();
-    }
+    // wait to be deleted by Job master
+    K8sWorkerUtils.waitIndefinitely();
   }
 
   /**

@@ -25,7 +25,6 @@ import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
-import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -580,9 +579,8 @@ public class ZKBaseController {
    */
   public void close() {
     try {
-      CloseableUtils.closeQuietly(jobZnodeCache);
-      CloseableUtils.closeQuietly(childrenCache);
-      CloseableUtils.closeQuietly(client);
+      jobZnodeCache.close();
+      childrenCache.close();
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Exception when closing", e);
     }

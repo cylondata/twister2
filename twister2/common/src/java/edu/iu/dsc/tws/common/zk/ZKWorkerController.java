@@ -48,7 +48,6 @@ import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -313,8 +312,8 @@ public class ZKWorkerController extends ZKBaseController
    */
   public void close() {
     try {
-      CloseableUtils.closeQuietly(workerZNode);
       super.close();
+      workerZNode.close();
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Exception when closing", e);
     }

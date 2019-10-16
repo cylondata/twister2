@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.rsched;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -26,7 +27,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
 public class DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
@@ -38,16 +38,21 @@ public class DriverExample implements IDriver {
 
     waitAllWorkersToJoin();
 
-    broadcastExample(messenger);
+//    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
-    scalingExample(scaler);
+//    scalingExample(scaler);
 
     LOG.info("Driver has finished execution.");
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+//    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+    List<Integer> ids = workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .collect(Collectors.toList());
+
+    LOG.info("All workers joined. Worker IDs: " + ids);
 
     synchronized (waitObject) {
       waitObject.notify();

@@ -16,7 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
-import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
@@ -112,8 +111,8 @@ public class ZKMasterController extends ZKBaseController {
    */
   public void close() {
     try {
-      CloseableUtils.closeQuietly(masterZNode);
       super.close();
+      masterZNode.close();
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Exception when closing", e);
     }

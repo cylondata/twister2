@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -113,6 +114,18 @@ public class WorkerMonitor
    */
   public Collection<WorkerWithState> getWorkerList() {
     return workers.values();
+  }
+
+  /**
+   * get the list of workerIDs
+   * @return
+   */
+  public List<Integer> getWorkerIDs() {
+    return workers
+        .values()
+        .stream()
+        .map(wws -> wws.getWorkerID())
+        .collect(Collectors.toList());
   }
 
   /**
