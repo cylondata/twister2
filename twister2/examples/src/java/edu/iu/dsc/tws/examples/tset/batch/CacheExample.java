@@ -71,7 +71,7 @@ public class CacheExample extends BatchTsetExample {
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
+    LOG.info("test flatmap");
     cache.direct()
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()

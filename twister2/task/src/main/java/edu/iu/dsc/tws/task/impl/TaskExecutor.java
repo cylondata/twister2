@@ -47,10 +47,10 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
-import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
 import edu.iu.dsc.tws.executor.threading.Executor;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -166,8 +166,8 @@ public class TaskExecutor {
    * the execution is done.
    *
    * @param taskConfig the user configuration to be passed to the task instances
-   * @param graph the dataflow graph
-   * @param plan the execution plan
+   * @param graph      the dataflow graph
+   * @param plan       the execution plan
    */
   public void execute(Config taskConfig, ComputeGraph graph, ExecutionPlan plan) {
     this.distributeData(plan);
@@ -188,7 +188,7 @@ public class TaskExecutor {
    * the execution is done.
    *
    * @param graph the dataflow graph
-   * @param plan the execution plan
+   * @param plan  the execution plan
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
     this.distributeData(plan);
@@ -207,7 +207,7 @@ public class TaskExecutor {
    * the execution is done.
    *
    * @param graph the dataflow graph
-   * @param plan the execution plan
+   * @param plan  the execution plan
    */
   public void itrExecute(ComputeGraph graph, ExecutionPlan plan) {
     this.itrExecute(graph, plan, false);
@@ -229,7 +229,7 @@ public class TaskExecutor {
   /**
    * Wait for the execution to complete
    *
-   * @param plan the dataflow graph
+   * @param plan  the dataflow graph
    * @param graph the task graph
    */
   public void closeExecution(ComputeGraph graph, ExecutionPlan plan) {
@@ -245,7 +245,7 @@ public class TaskExecutor {
    * the execution is done.
    *
    * @param graph the dataflow graph
-   * @param plan the execution plan
+   * @param plan  the execution plan
    */
   public IExecution iExecute(ComputeGraph graph, ExecutionPlan plan) {
     if (executor == null) {
@@ -258,11 +258,11 @@ public class TaskExecutor {
   /**
    * Add input to the the task instances
    *
-   * @param graph task graph
-   * @param plan execution plan
+   * @param graph    task graph
+   * @param plan     execution plan
    * @param taskName task name
    * @param inputKey inputkey
-   * @param input input
+   * @param input    input
    * @deprecated Inputs are automatically handled now
    */
   @Deprecated
@@ -288,10 +288,10 @@ public class TaskExecutor {
   /**
    * Add input to the the task instances
    *
-   * @param graph task graph
-   * @param plan execution plan
+   * @param graph    task graph
+   * @param plan     execution plan
    * @param inputKey inputkey
-   * @param input input
+   * @param input    input
    * @deprecated Inputs are handled automatically now
    */
   @Deprecated
@@ -315,8 +315,8 @@ public class TaskExecutor {
   /**
    * Extract output from a task graph
    *
-   * @param graph the graph
-   * @param plan plan created from the graph
+   * @param graph    the graph
+   * @param plan     plan created from the graph
    * @param taskName name of the output to retrieve
    * @return a DataObjectImpl with set of partitions from each task in this executor
    * @deprecated There is no need of using this method anymore.
@@ -345,14 +345,14 @@ public class TaskExecutor {
 //            + " data object : " + collectibleNames);
 //      }
 //    }
-    return new EmptyDataObject<>();
+    return EmptyDataObject.getInstance();
   }
 
   /**
    * Extract output from a task graph
    *
-   * @param graph the graph
-   * @param plan plan created from the graph
+   * @param graph    the graph
+   * @param plan     plan created from the graph
    * @param taskName name of the output to retrieve
    * @param dataName name of the data set
    * @return a DataObjectImpl with set of partitions from each task in this executor
@@ -363,7 +363,7 @@ public class TaskExecutor {
   @Deprecated
   public <T> DataObject<T> getOutput(ComputeGraph graph, ExecutionPlan plan,
                                      String taskName, String dataName) {
-    return this.dataObjectMap.getOrDefault(dataName, new EmptyDataObject());
+    return this.dataObjectMap.getOrDefault(dataName, EmptyDataObject.getInstance());
   }
 
   public <T> DataObject<T> getOutput(String varName) {

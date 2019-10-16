@@ -21,6 +21,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
@@ -125,7 +126,12 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   public <T> DataObject<T> getData(String key) {
-    return getTaskExecutor().getOutput(key);
+    DataObject<T> result = getTaskExecutor().getOutput(key);
+    if (result != null) {
+      return result;
+    } else {
+      return EmptyDataObject.getInstance();
+    }
   }
 
   public boolean isDataAvailable(String key) {

@@ -31,10 +31,10 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -183,7 +183,7 @@ public abstract class TSetEnvironment {
     }
 
     // if there is no output, an empty data object needs to be returned!
-    return new EmptyDataObject<>();
+    return EmptyDataObject.getInstance();
   }
 
 //  /**
