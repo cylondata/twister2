@@ -69,14 +69,14 @@ public class SKeyedGather extends BaseOperation {
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KGatherStreamingFinalReceiver(rcvr, 100),
           new KGatherStreamingPartialReceiver(0, 100, 1), dataType, dataType,
           keyType, keyType, edgeId, messageSchema);
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KGatherStreamingFinalReceiver(rcvr, 100),
