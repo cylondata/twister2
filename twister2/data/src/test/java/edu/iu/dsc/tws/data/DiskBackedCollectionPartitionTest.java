@@ -20,15 +20,18 @@ import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.common.config.ConfigLoader;
+import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
 public class DiskBackedCollectionPartitionTest {
 
   @Test
   public void testIO() {
-    try (DiskBackedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
-        10, MessageTypes.INTEGER, 10000
-    )) {
+
+    try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
+        10, MessageTypes.INTEGER, 1000,
+        ConfigLoader.loadTestConfig())) {
 
       List<Integer> rawData = new ArrayList<>();
 

@@ -219,4 +219,14 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   public void close() {
     this.flush();
   }
+
+  @Override
+  public String getReference() {
+    return this.rootPath.getName();
+  }
+
+  @Override
+  public void loadFromReference(String reference) {
+
+  }
 }
