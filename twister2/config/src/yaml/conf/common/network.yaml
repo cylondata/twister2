@@ -1,3 +1,7 @@
+### DEFAULT CONFIGURATION FOR ALL OPERATIONS, THESE ARE OVERRIDDEN AT THE BOTTOM for specific
+### operations
+#############################################################################################
+
 # the buffer size to be used
 twister2.network.buffer.size: 1024000
 
@@ -14,14 +18,14 @@ twister2.network.channel.pending.size: 2048
 twister2.network.send.pending.max: 4
 
 # group up to 8 ~ 16 messages
-twister2.network.partition.message.group.low_water_mark: 8000
+twister2.network.message.group.low_water_mark: 8
 
 # this is the max number of messages to group
-twister2.network.partition.message.group.high_water_mark: 16000
+twister2.network.message.group.high_water_mark: 16
 
 # in batch partition operations, this value will be used to create mini batches
 # within partial receivers
-twister2.network.partition.batch.grouping.size: 10000
+twister2.network.message.grouping.size: 10
 
 # For disk based operations, this directory list will be used to persist incoming messages.
 # This can be used to balance the load between multiple devices, by specifying directory locations
@@ -41,13 +45,140 @@ twister2.network.shuffle.file.bytes.max: 10000000
 twister2.network.shuffle.parallel.io: 2
 
 # the partitioning algorithm
-twister2.network.partition.algorithm.stream: "simple"
+twister2.network.alltoall.algorithm.batch: "simple"
+
+##### streaming operations ###########
+######################################
+
+## Reduce operation ####
+# the buffer size to be used
+twister2.network.buffer.size.stream.reduce: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.stream.reduce: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.strea.reduce: 2
+
+## Gather operation ##
+# the buffer size to be used
+twister2.network.buffer.size.stream.gather: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.stream.gather: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.stream.gather: 2
+
+## Bcast operation ##
+# the buffer size to be used
+twister2.network.buffer.size.stream.bcast: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.stream.bcast: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.stream.bcast: 2
+
+## Partition operation ##
+# the partitioning algorithm
+twister2.network.alltoall.algorithm.stream.partition: "simple"
+
+# the buffer size to be used
+twister2.network.buffer.size.stream.partition: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.stream.partition: 4
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.stream.partition: 4
+
+##### batch operations #######
+##############################
+
+## Reduce operation ####
+# the buffer size to be used
+twister2.network.buffer.size.batch.reduce: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.reduce: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.reduce: 2
+
+## Gather operation ##
+# the buffer size to be used
+twister2.network.buffer.size.batch.gather: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.gather: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.gather: 2
+
+## Bcast operation ##
+# the buffer size to be used
+twister2.network.buffer.size.batch.bcast: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.bcast: 2
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.bcast: 2
+
+## Partition operation ##
 
 # the partitioning algorithm
-twister2.network.partition.algorithm.batch: "simple"
+twister2.network.alltoall.algorithm.batch.partition: "simple"
 
+# the buffer size to be used
+twister2.network.buffer.size.batch.partition: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.partition: 4
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.partition: 4
+
+## Keyed Gather ##
 # the partitioning algorithm
-twister2.network.partition.algorithm.batch.keyed_gather: "ring"
+twister2.network.alltoall.algorithm.batch.keyed_gather: "ring"
 
 # ring group worker
-ttwister2.network.partition.ring.group.workers: 2
+ttwister2.network.partition.ring.group.workers.batch.keyed_gather: 2
+
+# the buffer size to be used
+twister2.network.buffer.size.batch.keyed_gather: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.keyed_gather: 4
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.keyed_gather: 4
+
+# group up to 8 ~ 16 messages
+twister2.network.message.group.low_water_mark.batch.keyed_gather: 8000
+
+# this is the max number of messages to group
+twister2.network.message.group.high_water_mark.batch.keyed_gather: 16000
+
+# in batch partition operations, this value will be used to create mini batches
+# within partial receivers
+twister2.network.message.grouping.size.batch.keyed_gather: 10000
+
+## Keyed Reduce ##
+# the partitioning algorithm
+twister2.network.alltoall.algorithm.batch.keyed_reduce: "ring"
+
+# ring group worker
+ttwister2.network.partition.ring.group.workers.batch.keyed_reduce: 2
+
+# the buffer size to be used
+twister2.network.buffer.size.batch.keyed_reduce: 1024000
+
+# number of send buffers to be used
+twister2.network.sendBuffer.count.batch.keyed_reduce: 4
+
+# number of receive buffers to be used
+twister2.network.receiveBuffer.count.batch.keyed_reduce: 4
+

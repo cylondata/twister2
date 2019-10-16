@@ -40,10 +40,10 @@ public class CommunicationContext extends Context {
   public static final String PERSISTENT_DIRECTORIES = "twister2.network.ops.persistent.dirs";
   public static final String PERSISTENT_DIRECTORY_DEFAULT_VALUE = "${TWISTER2_HOME}/persistent/";
 
-  public static final String PARTITION_ALGO_KEY =
-      "twister2.network.partition.algorithm";
-  public static final String PARTITION_ALGO_SIMPLE = "simple";
-  public static final String PARTITION_ALGO_RING = "ring";
+  public static final String ALLTOALL_ALGO_KEY =
+      "twister2.network.alltoall.algorithm";
+  public static final String ALLTOALL_ALGO_SIMPLE = "simple";
+  public static final String ALLTOALL_ALGO_RING = "ring";
 
   public static final String BUFFER_SIZE = "twister2.network.buffer.size";
 
@@ -52,13 +52,13 @@ public class CommunicationContext extends Context {
   public static final String SEND_PENDING_MAX = "twister2.network.send.pending.max";
   public static final String CHANNEL_PENDING_SIZE
       = "twister2.network.channel.pending.size";
-  public static final String PARTITION_MESSAGE_GROUP_LOW_WATERMARK =
-      "twister2.network.partition.message.group.low_water_mark";
-  public static final String PARTITION_MESSAGE_GROUP_HIGH_WATERMARK =
-      "twister2.network.partition.message.group.high_water_mark";
+  public static final String MESSAGE_GROUP_LOW_WATERMARK =
+      "twister2.network.message.group.low_water_mark";
+  public static final String MESSAGE_GROUP_HIGH_WATERMARK =
+      "twister2.network.message.group.high_water_mark";
 
-  public static final String PARTITION_BATCH_GROUPING_SIZE
-      = "twister2.network.partition.batch.grouping.size";
+  public static final String MESSAGE_GROUPING_SIZE
+      = "twister2.network.message.grouping.size";
 
   public static final String SHUFFLE_MAX_BYTES_IN_MEMORY =
       "twister2.network.shuffle.memory.bytes.max";
@@ -130,7 +130,7 @@ public class CommunicationContext extends Context {
   }
 
   public static String partitionAlgorithm(Config cfg) {
-    return getStringPropertyValue(cfg, PARTITION_ALGO_KEY, PARTITION_ALGO_RING);
+    return getStringPropertyValue(cfg, ALLTOALL_ALGO_KEY, ALLTOALL_ALGO_RING);
   }
 
   public static int bufferSize(Config cfg) {
@@ -154,11 +154,11 @@ public class CommunicationContext extends Context {
   }
 
   public static int getNetworkPartitionMessageGroupLowWaterMark(Config cfg) {
-    return getIntPropertyValue(cfg, PARTITION_MESSAGE_GROUP_LOW_WATERMARK, 8);
+    return getIntPropertyValue(cfg, MESSAGE_GROUP_LOW_WATERMARK, 8);
   }
 
   public static int getNetworkPartitionMessageGroupHighWaterMark(Config cfg) {
-    return getIntPropertyValue(cfg, PARTITION_MESSAGE_GROUP_HIGH_WATERMARK, 16);
+    return getIntPropertyValue(cfg, MESSAGE_GROUP_HIGH_WATERMARK, 16);
   }
 
   public static long getShuffleMaxRecordsInMemory(Config cfg) {
@@ -170,7 +170,7 @@ public class CommunicationContext extends Context {
   }
 
   public static int getNetworkPartitionBatchGroupingSize(Config cfg) {
-    return getIntPropertyValue(cfg, PARTITION_BATCH_GROUPING_SIZE, 100);
+    return getIntPropertyValue(cfg, MESSAGE_GROUPING_SIZE, 100);
   }
 
   public static long getShuffleFileSize(Config cfg) {
