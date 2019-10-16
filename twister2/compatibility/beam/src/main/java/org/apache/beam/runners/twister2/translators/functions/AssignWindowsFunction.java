@@ -26,7 +26,7 @@ import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.transforms.windowing.WindowFn;
 import org.apache.beam.sdk.util.WindowedValue;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
@@ -44,7 +44,7 @@ public class AssignWindowsFunction<T>
   }
 
   @Override
-  public void compute(Iterator<WindowedValue<T>> input, Collector<WindowedValue<T>> output) {
+  public void compute(Iterator<WindowedValue<T>> input, RecordCollector<WindowedValue<T>> output) {
     WindowedValue<T> element;
     try {
       while (input.hasNext()) {

@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.api.tset;
  *
  * @param <T> input type
  */
-public interface Collector<T> {
+public interface RecordCollector<T> {
   /**
    * Collect the record
    *

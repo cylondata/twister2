@@ -18,7 +18,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -44,7 +44,7 @@ public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
   public boolean execute(IMessage<Iterator<I>> content) {
     Iterator<I> input = content.getContent();
 
-    mapFunction.compute(input, new Collector<Tuple<K, O>>() {
+    mapFunction.compute(input, new RecordCollector<Tuple<K, O>>() {
       @Override
       public void collect(Tuple<K, O> record) {
         keyedWriteToEdges(record.getKey(), record.getValue());

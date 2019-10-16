@@ -23,7 +23,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 
 /**
  * Flat map function interface
@@ -33,5 +33,5 @@ import edu.iu.dsc.tws.api.tset.Collector;
  */
 public interface FlatMapFunc<O, I> extends TFunction<O, I> {
 
-  void flatMap(I input, Collector<O> collector);
+  void flatMap(I input, RecordCollector<O> collector);
 }

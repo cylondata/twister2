@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Set;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -42,7 +42,7 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
 
   @Override
   public boolean execute(IMessage<I> content) {
-    computeFunction.compute(content.getContent(), new Collector<O>() {
+    computeFunction.compute(content.getContent(), new RecordCollector<O>() {
       @Override
       public void collect(O record) {
         writeToEdges(record);
