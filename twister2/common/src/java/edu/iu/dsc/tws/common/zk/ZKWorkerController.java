@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
@@ -172,6 +173,19 @@ public class ZKWorkerController extends ZKBaseController
 
     try {
       client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
+
+      // when we do not getData after setData,
+      // sometimes the data may not be changed immediately
+      // this seems to be working
+      workerZnodeBody = client.getData().forPath(workerZNode.getActualPath());
+      Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerZnode(workerZnodeBody);
+      if (pair.getValue() != newStatus) {
+        LOG.severe("Could not set worker status. Tried to set it to: " + newStatus
+            + ". But worker status is " + pair.getValue());
+        return false;
+      }
+
+      LOG.info("Worker status changed to: " + newStatus);
       return true;
     } catch (Exception e) {
       LOG.log(Level.SEVERE,

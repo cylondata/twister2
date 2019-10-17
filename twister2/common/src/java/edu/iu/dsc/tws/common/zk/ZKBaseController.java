@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -139,23 +140,24 @@ public class ZKBaseController {
   }
 
   public WorkerInfo getWorkerInfoForID(int id) {
-    for (WorkerInfo info : jobWorkers.keySet()) {
-      if (info.getWorkerID() == id) {
-        return info;
-      }
-    }
 
-    return null;
+    Optional<WorkerInfo> found = jobWorkers
+        .keySet()
+        .stream()
+        .filter(wInfo -> wInfo.getWorkerID() == id)
+        .findFirst();
+
+    return found.isPresent() ? found.get() : null;
   }
 
   public WorkerState getWorkerStatusForID(int id) {
-    for (Map.Entry<WorkerInfo, WorkerState> entry : jobWorkers.entrySet()) {
-      if (entry.getKey().getWorkerID() == id) {
-        return entry.getValue();
-      }
-    }
+    Optional<Map.Entry<WorkerInfo, WorkerState>> pair = jobWorkers
+        .entrySet()
+        .stream()
+        .filter(entry -> entry.getKey().getWorkerID() == id)
+        .findFirst();
 
-    return null;
+    return pair.isPresent() ? pair.get().getValue() : null;
   }
 
   /**
@@ -197,7 +199,6 @@ public class ZKBaseController {
 
   /**
    * remove the workerInfo for the given ID if it exists
-   * @param workerID
    */
   protected void removeWorkerInfo(int workerID) {
     jobWorkers.keySet().removeIf(wInfo -> wInfo.getWorkerID() == workerID);
@@ -405,9 +406,9 @@ public class ZKBaseController {
 
       LOG.info("A worker rejoined the job with ID: " + newWorkerID);
 
-    // if the status of joining worker is not RESTARTING,
-    // it can be STARTING, or already RUNNING, or COMPLETED,
-    // add it to the list
+      // if the status of joining worker is not RESTARTING,
+      // it can be STARTING, or already RUNNING, or COMPLETED,
+      // add it to the list
     } else {
       // there should not be any existing workerInfo, if any, overwrite it
       WorkerInfo existingWorkerInfo = getWorkerInfoForID(newWorkerID);
@@ -446,7 +447,6 @@ public class ZKBaseController {
 
   /**
    * take necessary actions when a job master znode added
-   * @param event
    */
   private void jobMasterZNodeAdded(PathChildrenCacheEvent event) {
     Pair<String, JobMasterState> pair = ZKUtils.decodeJobMasterZnode(event.getData().getData());
@@ -513,6 +513,10 @@ public class ZKBaseController {
     // inform the listener if the worker becomes RUNNING
     if (workerStatusListener != null && pair.getValue() == WorkerState.RUNNING) {
       workerStatusListener.running(pair.getKey().getWorkerID());
+
+      // inform the listener if the worker becomes COMPLETED
+    } else if (workerStatusListener != null && pair.getValue() == WorkerState.COMPLETED) {
+      workerStatusListener.completed(pair.getKey().getWorkerID());
     }
 
   }
@@ -540,30 +544,29 @@ public class ZKBaseController {
       return;
     }
 
+    Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerZnode(event.getData().getData());
+
     // need to distinguish between completed, scaled down and failed workers
     // if a worker completed before, it has left the job by completion
     // if the workerID of removed worker is higher than the number of workers in the job,
     // it means that is a scaled down worker.
     // otherwise, the worker failed. We inform the failureListener.
-    int removedWorkerID = ZKUtils.getWorkerIDFromPath(event.getData().getPath());
+    int removedWorkerID = pair.getKey().getWorkerID();
 
     // this is the scaled down worker
     if (removedWorkerID >= numberOfWorkers) {
 
       LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
 
-      // removed event received for completed worker
-    } else if (getWorkerStatusForID(removedWorkerID) == WorkerState.COMPLETED) {
+    } else if (pair.getValue() == WorkerState.COMPLETED) {
 
-      LOG.info(String.format("Worker[%s] completed: ", removedWorkerID));
+      // removed event received for completed worker, nothing to do
 
-      if (workerStatusListener != null) {
-        workerStatusListener.completed(removedWorkerID);
-      }
-
-      // worker failed
     } else {
-      LOG.info(String.format("Worker[%s] failed: ", removedWorkerID));
+      // worker failed
+      LOG.info(String.format("Worker[%s] FAILED. Worker last status: %s",
+          removedWorkerID, pair.getValue()));
+
       if (failureListener != null) {
         // first change worker state into failed in local list
         WorkerInfo failedWorker = getWorkerInfoForID(removedWorkerID);
