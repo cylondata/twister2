@@ -11,21 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl.cdfw;
 
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * This is an implementation of IWorker to support easy deployment of task graphs.
@@ -33,25 +28,6 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class CDFWWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(CDFWWorker.class.getName());
 
-  /**
-   * The channel
-   */
-  protected TWSChannel channel;
-
-  /**
-   * Communicator
-   */
-  protected Communicator communicator;
-
-  /**
-   * This id
-   */
-  protected int workerId;
-
-  /**
-   * Controller
-   */
-  protected IWorkerController workerController;
 
   /**
    * Persistent volume
@@ -78,48 +54,20 @@ public class CDFWWorker implements IWorker {
                       IWorkerController wController, IPersistentVolume pVolume,
                       IVolatileVolume vVolume) {
     this.config = cfg;
-    this.workerId = workerID;
-    this.workerController = wController;
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
-
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
-    try {
-      workerInfoList = wController.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
-    String persistent = null;
-    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
-      persistent = vVolume.getWorkerDirPath();
-    }
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
     // create the executor
-    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
+    taskExecutor = new CDFWRuntime(config, workerID, wController);
     // register driver listener
     JMWorkerAgent.addJobListener(taskExecutor);
 
     // call execute
-    execute();
+    taskExecutor.execute();
     // wait for the sync
     try {
-      workerController.waitOnBarrier();
+      wController.waitOnBarrier();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
-    // lets terminate the network
-    communicator.close();
-  }
-
-  /**
-   * A user needs to implement this method to create the task graph and execute it
-   */
-  public void execute() {
-    taskExecutor.execute();
   }
 }

@@ -48,7 +48,6 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
@@ -160,7 +159,7 @@ public final class ParallelDataFlowsExample {
 
       Config config = cdfwEnv.getConfig();
 
-      DafaFlowJobConfig jobConfig = new DafaFlowJobConfig();
+      DataFlowJobConfig jobConfig = new DataFlowJobConfig();
 
       DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
