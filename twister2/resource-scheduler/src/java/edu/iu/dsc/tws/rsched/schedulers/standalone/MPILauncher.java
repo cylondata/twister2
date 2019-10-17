@@ -98,7 +98,11 @@ public class MPILauncher implements ILauncher {
     String coreFileMD5 = "NA";
     String coreFilePath = "NA";
 
-    boolean copyCore = SchedulerContext.copySystemPackage(config);
+    /**
+     * Not copying core in bootstrap. ResourceAllocator will do this instead.
+     * todo remove additional if/else if copyCore = false seems okay
+     */
+    boolean copyCore = false; //SchedulerContext.copySystemPackage(config);
 
     if (copyCore) {
       //finding twister2 core
