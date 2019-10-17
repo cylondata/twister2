@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.dataset.partition;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.UUID;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
@@ -29,8 +28,8 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
   private static final String HDFS_PROTO = "hdfs://";
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
-                                       int bufferedBytes, Config config) {
-    super(maxFramesInMemory, dataType, bufferedBytes, config);
+                                       int bufferedBytes, Config config, String reference) {
+    super(maxFramesInMemory, dataType, bufferedBytes, config, reference);
   }
 
   public HDFSBackedCollectionPartition(int maxFramesInMemory, Config config) {
@@ -45,10 +44,15 @@ public class HDFSBackedCollectionPartition<T> extends BufferedCollectionPartitio
     super(dataType, bufferedBytes, config);
   }
 
+  public HDFSBackedCollectionPartition(MessageType dataType, int bufferedBytes,
+                                       Config config, String reference) {
+    super(dataType, bufferedBytes, config, reference);
+  }
+
   protected String getRootPathStr(Config config) {
     return HDFS_PROTO + String.join(File.separator,
         config.getStringValue(CONFIG_HDFS_ROOT), String.join(File.separator,
-            UUID.randomUUID().toString()));
+            this.getReference()));
   }
 
   @Override

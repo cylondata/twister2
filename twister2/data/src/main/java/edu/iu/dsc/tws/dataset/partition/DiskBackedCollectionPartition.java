@@ -15,7 +15,6 @@ package edu.iu.dsc.tws.dataset.partition;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.UUID;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
@@ -28,11 +27,10 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
 
   private static final String CONFIG_FS_ROOT = "twister2.data.fs.root";
   private static final String FS_PROTO = "file://";
-  private String rootPath;
 
   public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
-                                       int bufferedBytes, Config config) {
-    super(maxFramesInMemory, dataType, bufferedBytes, config);
+                                       int bufferedBytes, Config config, String reference) {
+    super(maxFramesInMemory, dataType, bufferedBytes, config, reference);
   }
 
   public DiskBackedCollectionPartition(int maxFramesInMemory, Config config) {
@@ -47,13 +45,15 @@ public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartitio
     super(dataType, bufferedBytes, config);
   }
 
+  public DiskBackedCollectionPartition(MessageType dataType, int bufferedBytes,
+                                       Config config, String reference) {
+    super(dataType, bufferedBytes, config, reference);
+  }
+
   protected String getRootPathStr(Config config) {
-    if (this.rootPath == null) {
-      this.rootPath = FS_PROTO + String.join(File.separator,
-          config.getStringValue(CONFIG_FS_ROOT), String.join(File.separator,
-              UUID.randomUUID().toString()));
-    }
-    return rootPath;
+    return FS_PROTO + String.join(File.separator,
+        config.getStringValue(CONFIG_FS_ROOT), String.join(File.separator,
+            this.getReference()));
   }
 
   @Override

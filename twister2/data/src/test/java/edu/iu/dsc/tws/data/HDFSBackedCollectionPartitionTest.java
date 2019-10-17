@@ -31,13 +31,13 @@ public class HDFSBackedCollectionPartitionTest {
   public void testIO() {
 
     try (BufferedCollectionPartition<Integer> dbp = new HDFSBackedCollectionPartition<>(
-        10, MessageTypes.INTEGER, 1000,
+        MessageTypes.INTEGER, 100,
         ConfigLoader.loadTestConfig()
     )) {
 
       List<Integer> rawData = new ArrayList<>();
 
-      for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
+      for (int i = 0; i < 10000 / Integer.BYTES; i++) {
         rawData.add(i);
         dbp.add(i);
       }

@@ -29,11 +29,14 @@ public class DiskBackedCollectionPartitionTest {
   @Test
   public void testIO() {
 
+    List<Integer> rawData = new ArrayList<>();
+
+    String reference;
+
     try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
-        10, MessageTypes.INTEGER, 1000,
+        MessageTypes.INTEGER, 1000,
         ConfigLoader.loadTestConfig())) {
 
-      List<Integer> rawData = new ArrayList<>();
 
       for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
         rawData.add(i);
@@ -42,10 +45,23 @@ public class DiskBackedCollectionPartitionTest {
 
       DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
       Iterator<Integer> rawIterator = rawData.iterator();
-      while (consumer.hasNext()) {
-        Assert.assertEquals(consumer.next(), rawIterator.next());
-      }
-      dbp.clear();
+      this.verify(consumer, rawIterator);
+
+      reference = dbp.getReference();
+    }
+
+    // reload and re verify
+    try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
+        MessageTypes.INTEGER, 1000, ConfigLoader.loadTestConfig(), reference)) {
+      DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
+      Iterator<Integer> rawIterator = rawData.iterator();
+      this.verify(consumer, rawIterator);
+    }
+  }
+
+  private void verify(DataPartitionConsumer<Integer> consumer, Iterator<Integer> rawIterator) {
+    while (rawIterator.hasNext()) {
+      Assert.assertEquals(consumer.next(), rawIterator.next());
     }
   }
 }

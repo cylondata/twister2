@@ -65,11 +65,4 @@ public interface DataPartition<T> extends Serializable {
   default String getReference() {
     return DEFAULT_REF;
   }
-
-  /**
-   * Partitions that can be persisted to disk/hdfs should implement this method
-   */
-  default void loadFromReference(String reference) {
-    // do nothing by default
-  }
 }

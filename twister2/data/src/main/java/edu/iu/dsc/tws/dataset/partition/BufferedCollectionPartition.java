@@ -16,16 +16,20 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FileStatus;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
@@ -37,10 +41,13 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   private static final int DEFAULT_MAX_BUFFERED_BYTES = 10000000;
   private static final MessageType DEFAULT_DATA_TYPE = MessageTypes.OBJECT;
 
+  private static final String EXTENSION = ".pbck";
+
   private int maxFramesInMemory;
   private MessageType dataType;
 
   private List<Path> filesList = new ArrayList<>();
+  private long fileCounter;
 
   private Queue<byte[]> buffers = new LinkedList<>();
   private long bufferedBytes = 0;
@@ -48,6 +55,8 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
 
   private FileSystem fileSystem;
   private Path rootPath;
+
+  private String reference;
 
   /**
    * Creates an instance of {@link BufferedCollectionPartition}
@@ -57,8 +66,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param bufferedBytes amount to buffer in memory before writing to the disk
    */
   public BufferedCollectionPartition(int maxFramesInMemory, MessageType dataType,
-                                     int bufferedBytes, Config config) {
+                                     int bufferedBytes, Config config, String reference) {
     super();
+    this.reference = reference;
     this.maxFramesInMemory = maxFramesInMemory;
     this.maxBufferedBytes = bufferedBytes;
     this.dataType = dataType;
@@ -81,7 +91,8 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param maxFramesInMemory No of frames(elements) to keep in memory
    */
   public BufferedCollectionPartition(int maxFramesInMemory, Config config) {
-    this(maxFramesInMemory, DEFAULT_DATA_TYPE, DEFAULT_MAX_BUFFERED_BYTES, config);
+    this(maxFramesInMemory, DEFAULT_DATA_TYPE, DEFAULT_MAX_BUFFERED_BYTES,
+        config, UUID.randomUUID().toString());
   }
 
   /**
@@ -92,7 +103,8 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    */
   public BufferedCollectionPartition(int maxFramesInMemory,
                                      MessageType dataType, Config config) {
-    this(maxFramesInMemory, dataType, DEFAULT_MAX_BUFFERED_BYTES, config);
+    this(maxFramesInMemory, dataType, DEFAULT_MAX_BUFFERED_BYTES, config,
+        UUID.randomUUID().toString());
   }
 
   /**
@@ -103,12 +115,43 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    */
   public BufferedCollectionPartition(MessageType dataType,
                                      int bufferedBytes, Config config) {
-    this(0, dataType, bufferedBytes, config);
+    this(0, dataType, bufferedBytes, config, UUID.randomUUID().toString());
+  }
+
+  /**
+   * Loads an disk based partition from file system.
+   * This mode will not keep any data frame in memory.
+   *
+   * @param dataType {@link MessageType} of data frames
+   * @param bufferedBytes amount to buffer in memory before writing to the disk
+   * @param reference Partition reference
+   */
+  public BufferedCollectionPartition(MessageType dataType,
+                                     int bufferedBytes, Config config, String reference) {
+    this(0, dataType, bufferedBytes, config, reference);
+    this.loadFromFS();
   }
 
   protected abstract FileSystem getFileSystem(Config config) throws IOException;
 
   protected abstract Path getRootPath(Config config);
+
+  /**
+   * This method loads existing frames on disk
+   */
+  private void loadFromFS() {
+    try {
+      FileStatus[] fileStatuses = this.fileSystem.listFiles(this.rootPath);
+      this.filesList = Arrays.stream(fileStatuses).map(FileStatus::getPath)
+          .filter(p -> p.getName().contains(EXTENSION))
+          .sorted(Comparator.comparingLong(path ->
+              Long.parseLong(path.getName().replace(EXTENSION, ""))))
+          .collect(Collectors.toList());
+      this.fileCounter = fileStatuses.length;
+    } catch (IOException e) {
+      throw new Twister2RuntimeException("Failed to load frames from file system", e);
+    }
+  }
 
   @Override
   public void add(T val) {
@@ -197,10 +240,11 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
     this.filesList.clear();
     this.buffers.clear();
     this.bufferedBytes = 0;
+    this.fileCounter = 0;
   }
 
   public void flush() {
-    Path filePath = new Path(this.rootPath, UUID.randomUUID().toString());
+    Path filePath = new Path(this.rootPath, String.valueOf(this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
       outputStream.writeInt(this.buffers.size());
       while (!this.buffers.isEmpty()) {
@@ -222,11 +266,6 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
 
   @Override
   public String getReference() {
-    return this.rootPath.getName();
-  }
-
-  @Override
-  public void loadFromReference(String reference) {
-
+    return this.reference;
   }
 }
