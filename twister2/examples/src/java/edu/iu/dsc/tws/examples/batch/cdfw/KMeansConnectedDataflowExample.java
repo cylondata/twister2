@@ -56,8 +56,6 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
 
-//import edu.iu.dsc.tws.api.JobConfig;
-
 public final class KMeansConnectedDataflowExample {
   private static final Logger LOG
       = Logger.getLogger(KMeansConnectedDataflowExample.class.getName());
@@ -109,7 +107,7 @@ public final class KMeansConnectedDataflowExample {
         .put(CDFConstants.ARGS_DSIZE, Integer.toString(csize))
         .put(CDFConstants.ARGS_DINPUT, dataDirectory)
         .put(CDFConstants.ARGS_CINPUT, centroidDirectory)
-        .put(CDFConstants.ARGS_ITERATIONS, iterations)
+        .put(CDFConstants.ARGS_ITERATIONS, Integer.toString(iterations))
         .put(SchedulerContext.DRIVER_CLASS, null).build();
 
     Twister2Job twister2Job;
@@ -241,7 +239,6 @@ public final class KMeansConnectedDataflowExample {
 
       String dataDirectory = String.valueOf(config.get(CDFConstants.ARGS_DINPUT));
       String centroidDirectory = String.valueOf(config.get(CDFConstants.ARGS_CINPUT));
-
       int parallelism =
           Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_PARALLELISM_VALUE)));
       int instances = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_WORKERS)));
@@ -258,18 +255,26 @@ public final class KMeansConnectedDataflowExample {
       DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
           instances, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
-      cdfwEnv.increaseWorkers(instances);
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        throw new Twister2RuntimeException("Interrupted Exception Occured:", e);
-      }
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
+
       for (int i = 0; i < iterations; i++) {
-        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations, dimension, jobConfig);
+        DataFlowGraph job3 = generateThirdJob(config, 4, 4, iterations,
+            dimension, jobConfig);
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
+
+      //Kubernetes scale up
+      /*if (cdfwEnv.increaseWorkers(instances)) {
+        for (int i = 0; i < iterations; i++) {
+          DataFlowGraph job3 = generateThirdJob(config, 4, instances, iterations,
+              dimension, jobConfig);
+          job3.setIterationNumber(i);
+          cdfwEnv.executeDataFlowGraph(job3);
+        }
+      }*/
+      cdfwEnv.close();
     }
 
     public void generateData(Config config, String dataDirectory, String centroidDirectory,
@@ -294,8 +299,12 @@ public final class KMeansConnectedDataflowExample {
     private double[][] datapoints = null;
 
     private KMeansCalculator kMeansCalculator = null;
+
     private DataObject<?> dataPointsObject = null;
     private DataObject<?> centroidsObject = null;
+
+    /*private DataPartition<?> dataPartition = null;
+    private DataPartition<?> centroidPartition = null;*/
 
     private int dimension = 0;
 
@@ -322,7 +331,7 @@ public final class KMeansConnectedDataflowExample {
     @SuppressWarnings("unchecked")
     @Override
     public void add(String name, DataObject<?> data) {
-      //LOG.info("Received input: " + name);
+      LOG.info("Received input: " + name);
       if ("points".equals(name)) {
         this.dataPointsObject = data;
       }

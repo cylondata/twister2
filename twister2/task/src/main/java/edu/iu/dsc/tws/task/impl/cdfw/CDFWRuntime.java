@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +26,7 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
@@ -33,7 +35,10 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.JobListener;
+import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
@@ -74,21 +79,68 @@ public class CDFWRuntime implements JobListener {
    */
   private TaskExecutor taskExecutor;
 
+  private Config config;
+
+  private IWorkerController controller;
+
+  private Communicator communicator;
+
+  private TWSChannel channel;
+
 
   /**
-   * Connected dataflow runtime
-   *
-   * @param cfg configuration
-   * @param wId worker id
-   * @param workerInfoList worker information list
-   * @param net network
+   * Connected Dataflow Runtime
    */
-  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                     Communicator net) {
-    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
+  public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoSerializer();
+    this.controller = controller;
+    this.config = cfg;
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+    if (workerInfoList == null) {
+      return;
+    }
+
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, communicator, null);
+  }
+
+
+  private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
+    // wait all workers to join the job
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+      LOG.info("worker info list size @ cons:" + workerList.size());
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return null;
+    }
+
+    LOG.info(workerList.size() + " workers joined. ");
+
+    // syncs with all workers
+    LOG.info("Waiting on a barrier ........................ ");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+
+    LOG.info("Proceeded through the barrier ........................ ");
+    return workerList;
   }
 
   /**
@@ -97,25 +149,57 @@ public class CDFWRuntime implements JobListener {
   public boolean execute() {
     Any msg;
     while (true) {
-      try {
-        msg = executeMessageQueue.take();
-        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
-          if (handleExecuteMessage(msg)) {
-            return false;
-          }
-        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
-          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
-              + "loop");
-          break;
-        } else {
-          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
+      msg = executeMessageQueue.peek();
+      if (msg == null) {
+        if (scaleUpRequest.get()) {
+          communicator.close();
+          List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+
+          // create the channel
+          LOG.info("Existing workers calling barrier");
+          channel = Network.initializeChannel(config, controller);
+          String persistent = null;
+
+          // create the communicator
+          communicator = new Communicator(config, channel, persistent);
+          taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
-      } catch (InterruptedException e) {
-        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+        scaleUpRequest.set(false);
+        //scaleDownRequest.set(false);
+        continue;
+      }
+      msg = executeMessageQueue.poll();
+      if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
+        if (handleExecuteMessage(msg)) {
+          return false;
+        }
+      } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+        LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
+            + "loop");
+        break;
       }
     }
-
     LOG.log(Level.INFO, workerId + " Execution Completed");
+    return true;
+  }
+
+  private boolean reinitialize() {
+    communicator.close();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+
+    //LOG.info("Reinitialize Method Getting Called:" + workerInfoList);
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
     return true;
   }
 
@@ -167,14 +251,18 @@ public class CDFWRuntime implements JobListener {
         }
       }
 
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+      taskExecutor.execute(taskGraph, executionPlan);
+
+      /*if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
         taskExecutor.itrExecute(taskGraph, executionPlan);
       } else {
         taskExecutor.execute(taskGraph, executionPlan);
-      }
+      }*/
+
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
+
       Map<String, DataObject<Object>> outs = new HashMap<>();
       if (subGraph.getOutputsList().size() != 0) {
         List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
@@ -212,16 +300,21 @@ public class CDFWRuntime implements JobListener {
     }
   }
 
+  private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
+  private AtomicBoolean scaleDownRequest = new AtomicBoolean(false);
+
   @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.log(Level.INFO, workerId + "Workers scaled up msg received. Instances added: "
         + instancesAdded);
+    scaleUpRequest.set(true);
   }
 
   @Override
   public void workersScaledDown(int instancesRemoved) {
     LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
         + instancesRemoved);
+    scaleDownRequest.set(true);
   }
 
   @Override
@@ -239,3 +332,4 @@ public class CDFWRuntime implements JobListener {
     LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
 }
+

@@ -96,7 +96,7 @@ public final class ParallelDataFlowsExample {
         .setJobName(ParallelDataFlowsExample.class.getName())
         .setWorkerClass(CDFWWorker.class)
         .setDriverClass(ParallelDataflowsDriver.class.getName())
-        .addComputeResource(1, 512, instances)
+        .addComputeResource(1, 512, instances, true)
         .setConfig(jobConfig)
         .build();
     // now submit the job
@@ -104,7 +104,7 @@ public final class ParallelDataFlowsExample {
   }
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                DafaFlowJobConfig jobConfig) {
+                                                int workers, DafaFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
@@ -121,14 +121,14 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
         .addOutput("first_out", "sink1").setGraphType("non-iterative");
 
     return job;
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 DafaFlowJobConfig jobConfig) {
+                                                 int workers, DafaFlowJobConfig jobConfig) {
 
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();
@@ -146,8 +146,9 @@ public final class ParallelDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
-        .addInput("first_graph", "first_out", "source1").setGraphType("non-iterative");
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .addInput("first_graph", "first_out", "source1")
+        .setGraphType("non-iterative");
 
     return job;
   }
@@ -161,10 +162,21 @@ public final class ParallelDataFlowsExample {
 
       DataFlowJobConfig jobConfig = new DataFlowJobConfig();
 
-      DataFlowGraph job1 = generateFirstJob(config, 4, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, 4, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, 2, 2, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, 2, 2, jobConfig);
 
-      cdfwEnv.executeDataFlowGraph(job1, job2);
+      cdfwEnv.executeDataFlowGraph(job1);
+      cdfwEnv.executeDataFlowGraph(job2);
+
+
+      if (cdfwEnv.increaseWorkers(2)) {
+        DataFlowGraph job3 = generateFirstJob(config, 4, 4, jobConfig);
+        DataFlowGraph job4 = generateSecondJob(config, 4, 4, jobConfig);
+
+        cdfwEnv.executeDataFlowGraph(job3);
+        cdfwEnv.executeDataFlowGraph(job4);
+      }
+      cdfwEnv.close();
     }
   }
 

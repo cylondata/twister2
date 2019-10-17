@@ -55,7 +55,7 @@ public final class CDFWExecutor {
     this.executionEnv = executionEnv;
   }
 
-  /**
+  /**submitJob
    * The executeCDFW method first call the schedule method to get the schedule list of the CDFW.
    * Then, it invokes the build CDFW Job object to build the cdfw job object for the scheduled graphs.
    */
@@ -65,6 +65,7 @@ public final class CDFWExecutor {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
+    LOG.info("Worker List Size(first exec):" + this.executionEnv.getWorkerInfoList().size());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Set<Integer> workerIDs = cdfwScheduler.schedule(graph);
     submitGraph(graph, workerIDs);
@@ -80,17 +81,15 @@ public final class CDFWExecutor {
       // now we need to send messages
       throw new RuntimeException("Invalid state to execute a job: " + driverState);
     }
-
+    LOG.info("Worker List Size(second exec):" + this.executionEnv.getWorkerInfoList().size());
     CDFWScheduler cdfwScheduler = new CDFWScheduler(this.executionEnv.getWorkerInfoList());
     Map<DataFlowGraph, Set<Integer>> scheduleGraphMap = cdfwScheduler.schedule(graph);
 
     ScheduledExecutorService executor = Executors.newScheduledThreadPool(scheduleGraphMap.size());
-
     for (Map.Entry<DataFlowGraph, Set<Integer>> entry : scheduleGraphMap.entrySet()) {
       CDFWExecutorTask cdfwSchedulerTask = new CDFWExecutorTask(entry.getKey(), entry.getValue());
       executor.submit(cdfwSchedulerTask);
     }
-
     try {
       executor.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
@@ -106,6 +105,7 @@ public final class CDFWExecutor {
   }
 
   private void submitGraph(DataFlowGraph dataFlowgraph, Set<Integer> workerIDs) {
+    LOG.info("%%% Set of Worker IDs:%%%%" + workerIDs);
     if (driverState == DriverState.INITIALIZE || driverState == DriverState.JOB_FINISHED) {
       try {
         //build the schedule plan for the dataflow graph
@@ -190,6 +190,7 @@ public final class CDFWExecutor {
 
     @Override
     public void run() {
+      LOG.info("I am getting called for the dataflow graph execution:" + workerIDs);
       submitGraph(dataFlowGraph, workerIDs);
     }
   }

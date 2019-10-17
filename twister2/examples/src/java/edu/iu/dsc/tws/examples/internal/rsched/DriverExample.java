@@ -28,8 +28,10 @@ import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
-public class  DriverExample implements IDriver {
+public class DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
+
+  private Object waitObject = new Object();
 
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
@@ -44,6 +46,28 @@ public class  DriverExample implements IDriver {
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
+
+  }
+
+  /**
+   * wait for all workers to join the job
+   * this can be used for waiting initial worker joins or joins after scaling up the job
+   */
+  private void waitAllWorkersToJoin() {
+    synchronized (waitObject) {
+      try {
+        LOG.info("Waiting for all workers to join the job... ");
+        waitObject.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        return;
+      }
+    }
+
   }
 
   private void scalingExampleCLI(IScaler scaler) {
@@ -76,9 +100,12 @@ public class  DriverExample implements IDriver {
   private void scalingExample(IScaler scaler) {
     LOG.info("Testing scaling up and down ............................. ");
 
+    waitAllWorkersToJoin();
+
+    long sleepDuration = 10 * 1000; //
     try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -86,9 +113,11 @@ public class  DriverExample implements IDriver {
     LOG.info("Adding 4 new workers.");
     scaler.scaleUpWorkers(4);
 
+    waitAllWorkersToJoin();
+
     try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -97,8 +126,8 @@ public class  DriverExample implements IDriver {
     scaler.scaleDownWorkers(2);
 
     try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -106,9 +135,11 @@ public class  DriverExample implements IDriver {
     LOG.info("Adding 4 new workers.");
     scaler.scaleUpWorkers(4);
 
+    waitAllWorkersToJoin();
+
     try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -118,12 +149,6 @@ public class  DriverExample implements IDriver {
   private void broadcastExample(IDriverMessenger messenger) {
 
     LOG.info("Testing broadcasting  ............................. ");
-    try {
-      LOG.info("Sleeping 5 seconds ....");
-      Thread.sleep(5000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
 
     // construct an example protocol buffer message and broadcast it to all workers
     JobMasterAPI.NodeInfo nodeInfo =
@@ -144,6 +169,13 @@ public class  DriverExample implements IDriver {
 
     LOG.info("Broadcasting an example ComputeResource protocol buffer message: " + computeResource);
     messenger.broadcastToAllWorkers(computeResource);
+
+    try {
+      LOG.info("Sleeping 5 seconds ....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -166,6 +198,10 @@ public class  DriverExample implements IDriver {
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
+    } else {
+      LOG.info("Received WorkerMessage from worker: " + senderID
+          + ". Message: " + anyMessage);
+
     }
   }
 }
