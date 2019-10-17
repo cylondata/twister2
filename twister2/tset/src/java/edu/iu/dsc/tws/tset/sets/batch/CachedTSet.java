@@ -181,6 +181,11 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
+  public CachedTSet<T> addInput(String key, Cacheable<?> input) {
+    return (CachedTSet<T>) super.addInput(key, input);
+  }
+
+  @Override
   public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
     throw new UnsupportedOperationException("Union on CachedTSet is not supported");
   }

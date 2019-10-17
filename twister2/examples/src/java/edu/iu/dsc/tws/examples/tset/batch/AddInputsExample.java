@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -27,8 +26,8 @@ import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
-public class CacheIterationsExample extends BatchTsetExample {
-  private static final Logger LOG = Logger.getLogger(CacheIterationsExample.class.getName());
+public class AddInputsExample extends BatchTsetExample {
+  private static final Logger LOG = Logger.getLogger(AddInputsExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
   @Override
@@ -37,15 +36,8 @@ public class CacheIterationsExample extends BatchTsetExample {
 
     SourceTSet<Integer> src1 = dummySourceOther(env, COUNT, PARALLELISM);
 
-    // todo fix this example
-
-    boolean isIter = false;
-
-    // test direct().cache() which has IterLink semantics
-    CachedTSet<Integer> cache = src.direct().cache();
     CachedTSet<Integer> cache1 = src1.direct().cache();
-
-//    ComputeTSet<Integer, Iterator<Integer>> map = cache.direct().map(k -> k + 1);
+    CachedTSet<Integer> cache = src.direct().cache().addInput("foo", cache1);
 
     CachedTSet<Integer> out = cache.direct().compute(
         new BaseComputeFunc<Integer, Iterator<Integer>>() {
@@ -77,6 +69,6 @@ public class CacheIterationsExample extends BatchTsetExample {
 
     JobConfig jobConfig = new JobConfig();
     BatchTsetExample.submitJob(config, PARALLELISM, jobConfig,
-        CacheIterationsExample.class.getName());
+        AddInputsExample.class.getName());
   }
 }

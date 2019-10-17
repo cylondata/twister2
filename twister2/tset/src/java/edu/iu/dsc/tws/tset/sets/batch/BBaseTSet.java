@@ -197,14 +197,15 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
 
   @Override
-  public boolean addInput(String key, Cacheable<?> input) {
+  public BBaseTSet<T> addInput(String key, Cacheable<?> input) {
     // get the data object corresponding to the input Tset and add a new mapping with the user
     // provided key
     this.inputs.add(input.getId());
-    if (getTSetEnv().isDataAvailable(key)) {
+
+    if (getTSetEnv().isDataAvailable(input.getId())) {
       DataObject data = getTSetEnv().getData(input.getId());
       getTSetEnv().addData(key, data);
-      return true;
+      return this;
     }
 
     throw new RuntimeException("No data available for tset: " + input.toString());
