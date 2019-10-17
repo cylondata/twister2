@@ -90,25 +90,37 @@ public class MPILauncher implements ILauncher {
         "twister2-job.tar.gz"
     );
 
-    //finding twister2 core
-    FileFilter fileFilter = new WildcardFileFilter("twister2-core-*.*.*.tar.gz");
-    File[] files = localSourceRoot.listFiles(fileFilter);
-
-    if (files == null || files.length == 0) {
-      throw new RuntimeException("Couldn't find twister2 core at "
-          + localSourceRoot.getAbsolutePath());
-    }
-
-    File coreFile = files[0];
+    LOG.info(String.format("Found Job file : %s", jobFile.getAbsolutePath()));
 
     String jobFileMD5 = FileUtils.md5(jobFile);
-    String coreFileMD5 = FileUtils.md5(coreFile);
+    String jobFilePath = jobFile.getAbsolutePath();
 
-    LOG.info(String.format("Found Job file : %s", jobFile.getAbsolutePath()));
-    LOG.info(String.format("Found Core file : %s", coreFile.getAbsolutePath()));
+    String coreFileMD5 = "NA";
+    String coreFilePath = "NA";
+
+    boolean copyCore = SchedulerContext.copySystemPackage(config);
+
+    if (copyCore) {
+      //finding twister2 core
+      FileFilter fileFilter = new WildcardFileFilter("twister2-core-*.*.*.tar.gz");
+      File[] files = localSourceRoot.listFiles(fileFilter);
+
+      if (files == null || files.length == 0) {
+        throw new RuntimeException("Couldn't find twister2 core at "
+            + localSourceRoot.getAbsolutePath());
+      }
+
+      File coreFile = files[0];
+
+      LOG.info(String.format("Found Core file : %s", coreFile.getAbsolutePath()));
+
+      coreFilePath = coreFile.getAbsolutePath();
+    }
 
     Path tempHotsFile = Files.createTempFile("hosts-" + job.getJobName(), "");
     int np = this.createOneSlotPerNodeFile(tempHotsFile);
+
+    String mpiRunFile = MPIContext.mpiRunFile(config);
 
     StringBuilder stringBuilder = new StringBuilder();
     int status = ProcessUtils.runSyncProcess(
@@ -119,10 +131,13 @@ public class MPILauncher implements ILauncher {
             tempHotsFile.toAbsolutePath().toString(),
             job.getJobName(),
             this.jobWorkingDirectory,
-            jobFile.getAbsolutePath(),
+            jobFilePath,
             jobFileMD5,
-            coreFile.getAbsolutePath(),
-            coreFileMD5
+            Boolean.toString(copyCore),
+            coreFilePath,
+            coreFileMD5,
+            mpiRunFile,
+            SchedulerContext.twister2Home(config)
         },
         stringBuilder,
         new File("."),
