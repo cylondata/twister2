@@ -9,6 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.data;
 
 import java.util.ArrayList;
@@ -22,46 +23,31 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
-import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.HDFSBackedCollectionPartition;
 
-public class DiskBackedCollectionPartitionTest {
+public class HDFSBackedCollectionPartitionTest {
 
   @Test
   public void testIO() {
 
-    List<Integer> rawData = new ArrayList<>();
+    try (BufferedCollectionPartition<Integer> dbp = new HDFSBackedCollectionPartition<>(
+        MessageTypes.INTEGER, 100,
+        ConfigLoader.loadTestConfig()
+    )) {
 
-    String reference;
+      List<Integer> rawData = new ArrayList<>();
 
-    try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
-        MessageTypes.INTEGER, 1000,
-        ConfigLoader.loadTestConfig())) {
-
-
-      for (int i = 0; i < 1000000 / Integer.BYTES; i++) {
+      for (int i = 0; i < 10000 / Integer.BYTES; i++) {
         rawData.add(i);
         dbp.add(i);
       }
 
       DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
       Iterator<Integer> rawIterator = rawData.iterator();
-      this.verify(consumer, rawIterator);
-
-      reference = dbp.getReference();
-    }
-
-    // reload and re verify
-    try (BufferedCollectionPartition<Integer> dbp = new DiskBackedCollectionPartition<>(
-        MessageTypes.INTEGER, 1000, ConfigLoader.loadTestConfig(), reference)) {
-      DataPartitionConsumer<Integer> consumer = dbp.getConsumer();
-      Iterator<Integer> rawIterator = rawData.iterator();
-      this.verify(consumer, rawIterator);
-    }
-  }
-
-  private void verify(DataPartitionConsumer<Integer> consumer, Iterator<Integer> rawIterator) {
-    while (rawIterator.hasNext()) {
-      Assert.assertEquals(consumer.next(), rawIterator.next());
+      while (consumer.hasNext()) {
+        Assert.assertEquals(consumer.next(), rawIterator.next());
+      }
+      dbp.clear();
     }
   }
 }

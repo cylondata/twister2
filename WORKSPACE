@@ -18,8 +18,6 @@ PYTEST_WHEEL = "https://pypi.python.org/packages/fd/3e/d326a05d083481746a769fc05
 
 PY_WHEEL = "https://pypi.python.org/packages/53/67/9620edf7803ab867b175e4fd23c7b8bd8eba11cb761514dcd2e726ef07da/py-1.4.34-py2.py3-none-any.whl"
 
-
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -39,8 +37,8 @@ http_file(
 http_file(
     name = "wheel_src",
     downloaded_file_path = "wheel-0.29.0.tar.gz",
+    sha256 = "1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648",
     urls = [WHEEL_SRC],
-    sha256 = "1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648"
 )
 
 http_file(
@@ -63,8 +61,6 @@ http_file(
 
 http_archive(
     name = "virtualenv",
-    urls = [VIRTUALENV_SRC],
-    strip_prefix = VIRTUALENV_PREFIX,
     build_file_content = "\n".join([
         "py_binary(",
         "    name = 'virtualenv',",
@@ -74,8 +70,9 @@ http_archive(
         ")",
     ]),
     sha256 = "02f8102c2436bb03b3ee6dede1919d1dac8a427541652e5ec95171ec8adbc93a",
+    strip_prefix = VIRTUALENV_PREFIX,
+    urls = [VIRTUALENV_SRC],
 )
-
 
 # for nomad repo
 #http_archive(
@@ -91,17 +88,17 @@ http_archive(
 #)
 
 http_archive(
-   name = "nomad_mac",
-   urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_darwin_amd64.zip"],
-   build_file = "@//:third_party/nomad/nomad.BUILD",
-   sha256 = "53452f5bb27131f1fe5a5f9178324511bcbc54e4fef5bec4e25b049ac38e0632",
+    name = "nomad_mac",
+    build_file = "@//:third_party/nomad/nomad.BUILD",
+    sha256 = "53452f5bb27131f1fe5a5f9178324511bcbc54e4fef5bec4e25b049ac38e0632",
+    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_darwin_amd64.zip"],
 )
 
 http_archive(
-   name = "nomad_linux",
-   urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
-   build_file = "@//:third_party/nomad/nomad.BUILD",
-   sha256 = "b3b78dccbdbd54ddc7a5ffdad29bce2d745cac93ea9e45f94e078f57b756f511",
+    name = "nomad_linux",
+    build_file = "@//:third_party/nomad/nomad.BUILD",
+    urls = ["https://releases.hashicorp.com/nomad/0.7.0/nomad_0.7.0_linux_amd64.zip"],
+    #sha256 = "b3b78dccbdbd54ddc7a5ffdad29bce2d745cac93ea9e45f94e078f57b756f511",
 )
 
 http_archive(
@@ -145,7 +142,6 @@ npm_install(
 )
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
-
 
 ##################################
 #    PROTOCOL BUFFER RULES       #
@@ -195,14 +191,19 @@ http_archive(
 )
 
 load("@rules_cc//cc:repositories.bzl", "rules_cc_dependencies")
+
 rules_cc_dependencies()
 
 load("@rules_java//java:repositories.bzl", "rules_java_dependencies", "rules_java_toolchains")
+
 rules_java_dependencies()
+
 rules_java_toolchains()
 
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
 rules_proto_dependencies()
+
 rules_proto_toolchains()
 
 ##################################

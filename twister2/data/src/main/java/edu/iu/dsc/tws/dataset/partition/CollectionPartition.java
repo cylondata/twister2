@@ -70,6 +70,11 @@ public class CollectionPartition<T> implements DataPartition<T> {
   }
 
   @Override
+  public void clear() {
+    this.dataList.clear();
+  }
+
+  @Override
   public int getPartitionId() {
     return id;
   }
