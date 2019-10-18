@@ -164,16 +164,6 @@ public class BasicK8sWorker
         return;
       }
     }
-
-//    LOG.info(workerList + " workers joined. Current time: " + System.currentTimeMillis());
-//
-//    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
-//        WorkerResourceUtils.getWorkersPerNode(workerList);
-//    printWorkersPerNode(workersPerNode);
-//
-////    listHdfsDir();
-////    sleepSomeTime(50);
-//    echoServer(workerController.getWorkerInfo());
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
@@ -187,6 +177,8 @@ public class BasicK8sWorker
   @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.info("Workers scaled up. Instances added: " + instancesAdded);
+
+    scaledUp = true;
   }
 
   @Override
@@ -318,7 +310,7 @@ public class BasicK8sWorker
     LOG.info("************************************ Will list hdfs directory: " + directory);
 
     System.setProperty("HADOOP_USER_NAME", "hadoop");
-    String hdfsPath = "hdfs://149.165.150.81:9000";
+    String hdfsPath = "hdfs://<ip>:9000";
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", hdfsPath);
     conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());

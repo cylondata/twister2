@@ -321,10 +321,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
-        if (receptorParallel != collectorParallelism) {
-          throw new TaskSchedulerException("Specify the same parallelism value for "
-              + "the dependent task in the task graphs");
-        }
+//        if (receptorParallel != collectorParallelism) {
+//          throw new TaskSchedulerException("Specify the same parallelism value for "
+//              + "the dependent task in the task graphs");
+//        }
       }
     }
   }
