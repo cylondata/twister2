@@ -104,21 +104,28 @@ public final class ZKUtils {
    * construct a job path from the given job name
    */
   public static String constructJobPath(String rootPath, String jobName) {
-    return rootPath + "/" + jobName;
+    return rootPath + "/jobs/" + jobName;
+  }
+
+  /**
+   * construct a job path from the given job name
+   */
+  public static String constructJobRestartCheckPath(String rootPath, String jobName) {
+    return rootPath + "/restart-check/" + jobName;
   }
 
   /**
    * construct a distributed atomic integer path for barrier
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return rootPath + "-dai-for-barrier/" + jobName;
+    return rootPath + "/dai-for-barrier/" + jobName;
   }
 
   /**
    * construct a distributed barrier path
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
-    return rootPath + "-barrier/" + jobName;
+    return rootPath + "/barrier/" + jobName;
   }
 
   /**
@@ -126,6 +133,13 @@ public final class ZKUtils {
    */
   public static String constructWorkerPath(String jobPath, int workerID) {
     return jobPath + "/" + workerID;
+  }
+
+  /**
+   * construct a worker path from the given job restart check path and worker ID
+   */
+  public static String constructWorkerRestartCheckPath(String jobCheckPath, int workerID) {
+    return jobCheckPath + "/" + workerID;
   }
 
   /**

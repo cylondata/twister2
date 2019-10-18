@@ -95,9 +95,18 @@ public class Scaler implements IScaler {
 
     workerMonitor.workersScaledDown(instancesToRemove);
 
+    // min and max of workers that will be killed by scale down
+    int minID = job.getNumberOfWorkers() - instancesToRemove;
+    int maxID = job.getNumberOfWorkers();
+
     // calculate numberOfWorkers in the job
     int numberOfWorkers = job.getNumberOfWorkers() - instancesToRemove;
-    return updateJobInZK(numberOfWorkers);
+
+    boolean updatedJobInZK = updateJobInZK(numberOfWorkers);
+    boolean checkZNodesDeleted =
+        zkJobUpdater.removeRestartCheckZNodes(job.getJobName(), minID, maxID);
+
+    return updatedJobInZK && checkZNodesDeleted;
   }
 
   private boolean updateJobInZK(int numberOfWorkers) {

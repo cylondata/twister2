@@ -11,16 +11,21 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.driver;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public class ZKJobUpdater {
+  private static final Logger LOG = Logger.getLogger(ZKJobUpdater.class.getName());
 
   private Config config;
 
@@ -49,4 +54,27 @@ public class ZKJobUpdater {
     }
 
   }
+
+  /**
+   * remove RestartCheck worker znodes after scaling down
+   * @return
+   */
+  public boolean removeRestartCheckZNodes(String jobName, int minWorkerID, int maxWorkerID) {
+
+    // if ZooKeeper server is not used, return. Nothing to be done.
+    if (!ZKContext.isZooKeeperServerUsed(config)) {
+      return true;
+    }
+
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+    String rootPath = ZKContext.rootNode(config);
+    try {
+      ZKRestartCheck.removeScaledDownZNodes(client, rootPath, jobName, minWorkerID, maxWorkerID);
+      return true;
+    } catch (Twister2Exception e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return false;
+    }
+  }
+
 }
