@@ -11,6 +11,16 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -33,11 +43,6 @@ import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
-import org.apache.commons.cli.*;
-
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class TwoDataFlowsExample {
   private static final Logger LOG = Logger.getLogger(TwoDataFlowsExample.class.getName());

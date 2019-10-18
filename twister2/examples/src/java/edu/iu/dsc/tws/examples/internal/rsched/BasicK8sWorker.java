@@ -112,7 +112,7 @@ public class BasicK8sWorker
       workerList = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
+      return null;
     }
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
@@ -165,15 +165,15 @@ public class BasicK8sWorker
       }
     }
 
-    LOG.info(workerList.size() + " workers joined. Current time: " + System.currentTimeMillis());
-
-    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
-        WorkerResourceUtils.getWorkersPerNode(workerList);
-    printWorkersPerNode(workersPerNode);
-
-//    listHdfsDir();
-//    sleepSomeTime(50);
-    echoServer(workerController.getWorkerInfo());
+//    LOG.info(workerList + " workers joined. Current time: " + System.currentTimeMillis());
+//
+//    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
+//        WorkerResourceUtils.getWorkersPerNode(workerList);
+//    printWorkersPerNode(workersPerNode);
+//
+////    listHdfsDir();
+////    sleepSomeTime(50);
+//    echoServer(workerController.getWorkerInfo());
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {

@@ -11,14 +11,15 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.cdfw;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.protobuf.ByteString;
+
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class DataFlowGraph {
   // the data flow graph

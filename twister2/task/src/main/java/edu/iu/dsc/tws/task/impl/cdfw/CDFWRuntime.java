@@ -11,21 +11,32 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl.cdfw;
 
+import java.util.HashMap;
+//import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+//import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import edu.iu.dsc.tws.api.comms.Communicator;
-import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+//import edu.iu.dsc.tws.api.compute.graph.Vertex;
+//import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+//import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
+//import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
-import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.JobListener;
-import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -34,16 +45,6 @@ import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJoinedListener {
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-public class CDFWRuntime implements JobListener {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 
@@ -76,14 +77,6 @@ public class CDFWRuntime implements JobListener {
    */
   private TaskExecutor taskExecutor;
 
-  private Config config;
-
-  private IWorkerController controller;
-
-  private Communicator communicator;
-
-  private TWSChannel channel;
-
 
   /**
    * Connected dataflow runtime
@@ -93,56 +86,12 @@ public class CDFWRuntime implements JobListener {
    * @param workerInfoList worker information list
    * @param net network
    */
-  public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
+  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
+                     Communicator net) {
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoSerializer();
-    this.controller = controller;
-    this.config = cfg;
-
-    List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
-    if (workerInfoList == null) {
-      return;
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, controller);
-    String persistent = null;
-
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, communicator, null);
-  }
-
-
-  private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
-    // wait all workers to join the job
-    List<JobMasterAPI.WorkerInfo> workerList = null;
-    try {
-      workerList = workerController.getAllWorkers();
-      LOG.info("worker info list size @ cons:" + workerList.size());
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return null;
-    }
-    if (workerList == null) {
-      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
-      return null;
-    }
-
-    LOG.info(workerList.size() + " workers joined. ");
-
-    // syncs with all workers
-    LOG.info("Waiting on a barrier ........................ ");
-    try {
-      workerController.waitOnBarrier();
-    } catch (TimeoutException e) {
-      LOG.log(Level.SEVERE, e.getMessage(), e);
-      return null;
-    }
-
-    LOG.info("Proceeded through the barrier ........................ ");
-    return workerList;
   }
 
   /**
@@ -151,57 +100,25 @@ public class CDFWRuntime implements JobListener {
   public boolean execute() {
     Any msg;
     while (true) {
-      msg = executeMessageQueue.peek();
-      if (msg == null) {
-        if (scaleUpRequest.get()) {
-          communicator.close();
-          List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
-
-          // create the channel
-          LOG.info("Existing workers calling barrier");
-          channel = Network.initializeChannel(config, controller);
-          String persistent = null;
-
-          // create the communicator
-          communicator = new Communicator(config, channel, persistent);
-          taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+      try {
+        msg = executeMessageQueue.take();
+        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
+          if (handleExecuteMessage(msg)) {
+            return false;
+          }
+        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
+              + "loop");
+          break;
+        } else {
+          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
         }
-        scaleUpRequest.set(false);
-        //scaleDownRequest.set(false);
-        continue;
-      }
-      msg = executeMessageQueue.poll();
-      if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
-        if (handleExecuteMessage(msg)) {
-          return false;
-        }
-      } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
-        LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
-            + "loop");
-        break;
+      } catch (InterruptedException e) {
+        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
       }
     }
 
     LOG.log(Level.INFO, workerId + " Execution Completed");
-    return true;
-  }
-
-  private boolean reinitialize() {
-    communicator.close();
-    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
-    try {
-      workerInfoList = controller.getAllWorkers();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-    }
-
-    // create the channel
-    channel = Network.initializeChannel(config, controller);
-    String persistent = null;
-
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
     return true;
   }
 
@@ -228,20 +145,6 @@ public class CDFWRuntime implements JobListener {
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
-      Map<String, DataObject<Object>> outs = new HashMap<>();
-      if (subGraph.getOutputsList().size() != 0) {
-        List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
-        for (CDFWJobAPI.Output outputs : outPutNames) {
-          DataObject<Object> outPut = taskExecutor.getOutput(
-              taskGraph, executionPlan, outputs.getTaskname());
-          outs.put(outputs.getName(), outPut);
-        }
-        outPuts.put(subGraph.getName(), outs);
-      }
-
-      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
-        processIterativeOuput(taskGraph, executionPlan);
-      }
 
       if (!senderToDriver.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
@@ -283,4 +186,23 @@ public class CDFWRuntime implements JobListener {
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
+
+  /*private boolean reinitialize() {
+    communicator.close();
+    List<JobMasterAPI.WorkerInfo> workerInfoList = null;
+    try {
+      workerInfoList = controller.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+    }
+
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
+    return true;
+  }*/
 }
