@@ -48,6 +48,11 @@ public final class K8sWorkerStarter {
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
 
+  // whether the worker shuts down properly
+  // if the worker is forcefully shutdown such as by scaling down
+  // we use shut down hook to clear some resources
+  private static boolean properShutDown = false;
+
   private K8sWorkerStarter() { }
 
   public static void main(String[] args) {
@@ -155,6 +160,9 @@ public final class K8sWorkerStarter {
     // update worker status to RUNNING
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
+    // add shut down hook
+    addShutdownHook();
+
     // start the worker
     startWorker(workerController, pv);
 
@@ -162,6 +170,7 @@ public final class K8sWorkerStarter {
     workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     WorkerRuntime.close();
+    properShutDown = true;
 
     // wait to be deleted by Job master
     K8sWorkerUtils.waitIndefinitely();
@@ -229,6 +238,28 @@ public final class K8sWorkerStarter {
     }
 
     worker.execute(config, workerID, workerController, pv, volatileVolume);
+  }
+
+  /**
+   * if the worker is killed by scaling down,
+   * we need to let ZooKeeper know about it and delete worker znode
+   * if zookeeper is used
+   */
+  public static void addShutdownHook() {
+
+    Thread hookThread = new Thread() {
+      public void run() {
+
+        // if thw worker shuts down properly, do nothing
+        if (properShutDown) {
+          return;
+        }
+
+        WorkerRuntime.close();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
   }
 
 }
