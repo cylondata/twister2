@@ -11,16 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -37,12 +27,17 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
+import org.apache.commons.cli.*;
+
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class HelloExample {
   private static final Logger LOG = Logger.getLogger(HelloExample.class.getName());
@@ -55,7 +50,7 @@ public final class HelloExample {
     @Override
     public void execute(CDFWEnv execEnv) {
       // build JobConfig
-      DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+      DataFlowJobConfig dataFlowJobConfig = new DataFlowJobConfig();
       FirstSource firstSource = new FirstSource();
       SecondSink secondSink = new SecondSink();
       ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(execEnv.getConfig());
@@ -72,7 +67,7 @@ public final class HelloExample {
 
       //Invoke CDFW Submitter and send the metagraph
       DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addDataFlowJobConfig(dafaFlowJobConfig);
+          setWorkers(4).addDataFlowJobConfig(dataFlowJobConfig);
       execEnv.executeDataFlowGraph(job);
     }
   }

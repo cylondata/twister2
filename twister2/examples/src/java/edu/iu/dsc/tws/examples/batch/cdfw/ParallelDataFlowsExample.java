@@ -23,16 +23,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -49,11 +39,17 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSink;
 import edu.iu.dsc.tws.task.cdfw.task.ConnectedSource;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.cdfw.CDFWWorker;
+import org.apache.commons.cli.*;
+
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class ParallelDataFlowsExample {
   private static final Logger LOG = Logger.getLogger(ParallelDataFlowsExample.class.getName());
@@ -104,7 +100,7 @@ public final class ParallelDataFlowsExample {
   }
 
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
-                                                int workers, DafaFlowJobConfig jobConfig) {
+                                                int workers, DataFlowJobConfig jobConfig) {
 
     FirstSourceTask firstSourceTask = new FirstSourceTask();
     ConnectedSink connectedSink = new ConnectedSink("first_out");
@@ -128,7 +124,7 @@ public final class ParallelDataFlowsExample {
   }
 
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
-                                                 int workers, DafaFlowJobConfig jobConfig) {
+                                                 int workers, DataFlowJobConfig jobConfig) {
 
     ConnectedSource connectedSource = new ConnectedSource("reduce");
     ConnectedSink connectedSink = new ConnectedSink();

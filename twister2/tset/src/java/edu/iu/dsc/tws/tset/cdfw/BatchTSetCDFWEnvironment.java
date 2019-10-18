@@ -15,8 +15,8 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
@@ -32,9 +32,9 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
   @Override
   protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
                                                    BuildableTSet outputTset, boolean isIterative) {
-    DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+    DataFlowJobConfig dataFlowJobConfig = new DataFlowJobConfig();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", dataflowGraph).
-        setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig).setGraphType("non-iterative");
+        setWorkers(2).addDataFlowJobConfig(dataFlowJobConfig).setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);
     return null;
   }
