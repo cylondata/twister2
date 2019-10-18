@@ -4,7 +4,7 @@
 
 # A flag to enable/disable fault tolerance in Twister2
 # By default, it is disabled
-twister2.fault.tolerant: true
+twister2.fault.tolerant: false
 
 # a timeout value to determine whether a worker failed
 # If a worker does not send heartbeat messages for this duration in milli seconds,
@@ -98,6 +98,6 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
-# twister2.dashboard.host: "http://149.165.150.81:8080"
+# twister2.dashboard.host: "http://<ip-or-host>:<port>"
 # if dashboard is running as a statefulset in the cluster
 twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"
