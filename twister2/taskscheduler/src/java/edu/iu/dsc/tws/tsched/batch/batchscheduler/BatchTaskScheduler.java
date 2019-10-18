@@ -168,10 +168,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
           int collectorParallelism = vertex.getParallelism();
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           if (receivableNameSet.containsAll(collectibleNameSet)) {
-            if (receptorParallelism != collectorParallelism) {
+            /*if (receptorParallelism != collectorParallelism) {
               throw new TaskSchedulerException("Specify the same parallelism value for "
                   + "the dependent task in the task graphs");
-            }
+            }*/
           }
         }
       }
