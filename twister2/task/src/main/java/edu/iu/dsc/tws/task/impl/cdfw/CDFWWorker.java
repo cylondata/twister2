@@ -57,6 +57,11 @@ public class CDFWWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
     // create the executor
+    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
+    // register message receiver and job listener
+    JMWorkerAgent.addReceiverFromDriver(taskExecutor);
+    JMWorkerAgent.addScalerListener(taskExecutor);
+    JMWorkerAgent.addAllJoinedListener(taskExecutor);
     taskExecutor = new CDFWRuntime(config, workerID, wController);
     // register driver listener
     JMWorkerAgent.addJobListener(taskExecutor);

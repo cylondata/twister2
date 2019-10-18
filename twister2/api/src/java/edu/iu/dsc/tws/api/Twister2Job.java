@@ -46,6 +46,11 @@ public final class Twister2Job {
   private String jobName;
 
   /**
+   * Name of the job
+   */
+  private String jobID;
+
+  /**
    * IWorker class name
    */
   private String workerClass;
@@ -92,6 +97,7 @@ public final class Twister2Job {
 
     jobBuilder.setConfig(configBuilder);
     jobBuilder.setJobName(jobName);
+    jobBuilder.setJobId(jobID);
     jobBuilder.setWorkerClassName(workerClass);
 
     // driverClass is optional, set it if specified
@@ -202,6 +208,13 @@ public final class Twister2Job {
     this.jobName = jobName;
   }
 
+  /**
+   * we only allow job jobName to be updated through this interface
+   */
+  public void setJobID(String id) {
+    this.jobID = id;
+  }
+
   public String getJobName() {
     return jobName;
   }
@@ -258,6 +271,11 @@ public final class Twister2Job {
 
     public Twister2JobBuilder setJobName(String name) {
       twister2Job.jobName = name;
+      return this;
+    }
+
+    public Twister2JobBuilder setJobID(String id) {
+      twister2Job.jobID = id;
       return this;
     }
 

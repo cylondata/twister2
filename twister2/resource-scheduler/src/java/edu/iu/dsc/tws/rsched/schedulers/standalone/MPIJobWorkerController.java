@@ -72,4 +72,5 @@ public class MPIJobWorkerController implements IWorkerController {
   public CheckpointingClient getCheckpointingClient() {
     return this.delegate.getCheckpointingClient();
   }
+
 }

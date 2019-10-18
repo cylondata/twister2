@@ -45,16 +45,17 @@ public class RegisterWorker {
 
   public RegisterWorker() { }
 
-  public RegisterWorker(String jobID, JobMasterAPI.WorkerInfo workerInfo) {
+  public RegisterWorker(String jobID,
+                        JobMasterAPI.WorkerInfo workerInfo,
+                        JobMasterAPI.WorkerState initialState) {
     this.jobID = jobID;
     this.workerID = workerInfo.getWorkerID();
     this.workerIP = workerInfo.getWorkerIP();
     this.workerPort = workerInfo.getPort();
     this.computeResourceIndex = workerInfo.getComputeResource().getIndex();
     this.node = new Node(workerInfo.getNodeInfo());
-    this.state = JobMasterAPI.WorkerState.STARTING.name();
+    this.state = initialState.name();
     this.additionalPorts = workerInfo.getAdditionalPortMap();
-
   }
 
   // Getter Methods

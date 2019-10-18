@@ -29,10 +29,16 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
-import edu.iu.dsc.tws.master.JobMasterContext;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
+import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -40,6 +46,8 @@ import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
+import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
+import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -71,7 +79,10 @@ public final class JobMasterExample {
         + configDir);
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
+    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
     JobAPI.Job job = twister2Job.serialize();
+
+    createJobZnode(config, job);
 
     String ip = null;
     try {
@@ -86,8 +97,9 @@ public final class JobMasterExample {
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
+    IJobTerminator jobTerminator = new JobTerminator(config);
 
-    JobMaster jobMaster = new JobMaster(config, host, null, job, jobMasterNode, k8sScaler);
+    JobMaster jobMaster = new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler);
     jobMaster.startJobMasterThreaded();
 
     LOG.info("Threaded Job Master started:"
@@ -101,15 +113,36 @@ public final class JobMasterExample {
    * construct a Config object
    */
   public static Config updateConfig(Config config) {
-    return Config.newBuilder()
-        .putAll(config)
-        .put(JobMasterContext.JOB_MASTER_ASSIGNS_WORKER_IDS, true)
-        .build();
+    return JobUtils.resolveJobId(config, Context.jobName(config));
   }
 
   public static void printUsage() {
     LOG.info("Usage:\n"
         + "java JobMasterExample");
   }
+
+  public static void createJobZnode(Config conf, JobAPI.Job job) {
+
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
+    String rootPath = ZKContext.rootNode(conf);
+
+    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
+    }
+
+    try {
+      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
+
+      // test job znode content reading
+      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
+      LOG.info("JobZNode content: " + readJob);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+//    ZKUtils.closeClient();
+  }
+
 
 }

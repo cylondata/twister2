@@ -19,17 +19,21 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
+import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.JobListener;
 import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
+public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJoinedListener {
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +86,12 @@ public class CDFWRuntime implements JobListener {
 
 
   /**
-   * Connected Dataflow Runtime
+   * Connected dataflow runtime
+   *
+   * @param cfg configuration
+   * @param wId worker id
+   * @param workerInfoList worker information list
+   * @param net network
    */
   public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
     this.executeMessageQueue = new LinkedBlockingQueue<>();
@@ -172,6 +181,7 @@ public class CDFWRuntime implements JobListener {
         break;
       }
     }
+
     LOG.log(Level.INFO, workerId + " Execution Completed");
     return true;
   }
@@ -196,7 +206,7 @@ public class CDFWRuntime implements JobListener {
   }
 
   private boolean handleExecuteMessage(Any msg) {
-    JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
+    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
     CDFWJobAPI.ExecuteMessage executeMessage;
     ExecutionPlan executionPlan;
     CDFWJobAPI.ExecuteCompletedMessage completedMessage = null;
@@ -218,8 +228,22 @@ public class CDFWRuntime implements JobListener {
       //reuse the task executor execute
       completedMessage = CDFWJobAPI.ExecuteCompletedMessage.newBuilder()
           .setSubgraphName(subGraph.getName()).build();
+      Map<String, DataObject<Object>> outs = new HashMap<>();
+      if (subGraph.getOutputsList().size() != 0) {
+        List<CDFWJobAPI.Output> outPutNames = subGraph.getOutputsList();
+        for (CDFWJobAPI.Output outputs : outPutNames) {
+          DataObject<Object> outPut = taskExecutor.getOutput(
+              taskGraph, executionPlan, outputs.getTaskname());
+          outs.put(outputs.getName(), outPut);
+        }
+        outPuts.put(subGraph.getName(), outs);
+      }
 
-      if (!workerMessenger.sendToDriver(completedMessage)) {
+      if (subGraph.getGraphType().equals(Context.GRAPH_TYPE)) {
+        processIterativeOuput(taskGraph, executionPlan);
+      }
+
+      if (!senderToDriver.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
       }
     } catch (InvalidProtocolBufferException e) {
@@ -230,6 +254,16 @@ public class CDFWRuntime implements JobListener {
 
   private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
   private AtomicBoolean scaleDownRequest = new AtomicBoolean(false);
+
+  @Override
+  public void driverMessageReceived(Any anyMessage) {
+    // put every message on the queue.
+    try {
+      this.executeMessageQueue.put(anyMessage);
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+    }
+  }
 
   @Override
   public void workersScaledUp(int instancesAdded) {
@@ -246,18 +280,7 @@ public class CDFWRuntime implements JobListener {
   }
 
   @Override
-  public void driverMessageReceived(Any anyMessage) {
-    // put every message on the queue.
-    try {
-      this.executeMessageQueue.put(anyMessage);
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-    }
-  }
-
-  @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
     LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
 }
-

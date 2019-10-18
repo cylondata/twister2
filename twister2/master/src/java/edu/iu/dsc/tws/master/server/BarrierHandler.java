@@ -32,24 +32,25 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
  * all workers in a job may wait on a barrier point
- * BarrierMonitor will get barrier requests from all workers
+ * BarrierHandler will get barrier requests from all workers
  * It will send response message to all workers,
  * when it gets the request from the last worker in a job
  */
 
-public class BarrierMonitor implements MessageHandler {
-  private static final Logger LOG = Logger.getLogger(BarrierMonitor.class.getName());
+public class BarrierHandler implements MessageHandler {
+  private static final Logger LOG = Logger.getLogger(BarrierHandler.class.getName());
 
   private WorkerMonitor workerMonitor;
   private int numberOfWorkersOnBarrier;
   private HashMap<Integer, RequestID> waitList;
-  private JMRRServer rrServer;
+  private RRServer rrServer;
 
-  public BarrierMonitor(WorkerMonitor workerMonitor, JMRRServer rrServer) {
+  public BarrierHandler(WorkerMonitor workerMonitor, RRServer rrServer) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
     waitList = new HashMap<>();

@@ -64,7 +64,7 @@ public final class Twister2Submitter {
     String jobId = configCopy.getStringValue(Context.JOB_ID);
 
     // save the job to transfer to workers
-    twister2Job.getConfig().put(Context.JOB_ID, jobId);
+    twister2Job.setJobID(jobId);
     JobAPI.Job job = twister2Job.serialize();
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
@@ -99,7 +99,6 @@ public final class Twister2Submitter {
         throw new RuntimeException(e);
       }
     }
-
 
     LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
 

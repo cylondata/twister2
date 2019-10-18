@@ -108,13 +108,6 @@ public class RRServer {
   protected ConnectHandler connectHandler;
 
   /**
-   * when register message is received from a worker that will get its workerID from Job Master
-   * we keep its channel on this variable
-   * then WorkerMonitor calls setWorkerChannel method and set the id of that channel
-   */
-  protected SocketChannel workerChannelToRegister;
-
-  /**
    * The loop that executes the selector
    */
   protected Progress loop;
@@ -347,22 +340,6 @@ public class RRServer {
   }
 
   /**
-   * add the channel that newly got its register message and its workerID assigned
-   * @param workerID
-   */
-  public void setWorkerChannel(int workerID) {
-
-    // if there is another channel for this worker already, replace it with this one
-    if (workerChannels.inverse().containsKey(workerID)) {
-      LOG.warning(String.format("While the channel for workerID[%d] connected, "
-          + "another channel connected from the same worker. Replacing older one. ", workerID));
-    }
-
-    workerChannels.forcePut(workerChannelToRegister, workerID);
-    workerChannelToRegister = null;
-  }
-
-  /**
    * remove the channel when the worker is removed
    * @param workerID
    */
@@ -399,15 +376,6 @@ public class RRServer {
     if (senderID == CLIENT_ID) {
       clientChannel = channel;
       LOG.info("Message received from submitting client. Channel set.");
-      return;
-    }
-
-    // if this is RegisterWorker message and JobMaster assigns workerIDs
-    // keep the channel in the variable
-    if (senderID == RRClient.WORKER_UNASSIGNED_ID) {
-//        && message instanceof JobMasterAPI.RegisterWorker) {
-
-      this.workerChannelToRegister = channel;
       return;
     }
 

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.examples.internal.rsched;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -26,9 +27,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 
-public class DriverExample implements IDriver {
+public class  DriverExample implements IDriver {
   private static final Logger LOG = Logger.getLogger(DriverExample.class.getName());
 
   private Object waitObject = new Object();
@@ -36,16 +36,23 @@ public class DriverExample implements IDriver {
   @Override
   public void execute(Config config, IScaler scaler, IDriverMessenger messenger) {
 
+    waitAllWorkersToJoin();
+
 //    broadcastExample(messenger);
 //    scalingExampleCLI(scaler);
-    scalingExample(scaler);
+    scalingExample(scaler, messenger);
 
     LOG.info("Driver has finished execution.");
   }
 
   @Override
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+//    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+    List<Integer> ids = workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .collect(Collectors.toList());
+
+    LOG.info("All workers joined. Worker IDs: " + ids);
 
     synchronized (waitObject) {
       waitObject.notify();
@@ -97,12 +104,10 @@ public class DriverExample implements IDriver {
     }
   }
 
-  private void scalingExample(IScaler scaler) {
+  private void scalingExample(IScaler scaler, IDriverMessenger messenger) {
     LOG.info("Testing scaling up and down ............................. ");
 
-    waitAllWorkersToJoin();
-
-    long sleepDuration = 10 * 1000; //
+    long sleepDuration = 20 * 1000; //
     try {
       LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
       Thread.sleep(sleepDuration);
@@ -110,30 +115,9 @@ public class DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-    LOG.info("Adding 4 new workers.");
-    scaler.scaleUpWorkers(4);
-
-    waitAllWorkersToJoin();
-
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("removing 2 workers.");
-    scaler.scaleDownWorkers(2);
-
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-
-    LOG.info("Adding 4 new workers.");
-    scaler.scaleUpWorkers(4);
+    int toAdd = 10;
+    LOG.info("Adding " + toAdd + " new workers.");
+    scaler.scaleUpWorkers(toAdd);
 
     waitAllWorkersToJoin();
 
@@ -144,6 +128,35 @@ public class DriverExample implements IDriver {
       e.printStackTrace();
     }
 
+//    int toRemove = 5;
+//    LOG.info("removing " + toRemove + " workers.");
+//    scaler.scaleDownWorkers(toRemove);
+//
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
+
+    LOG.info("Adding " + toAdd + " new workers.");
+    scaler.scaleUpWorkers(toAdd);
+
+    waitAllWorkersToJoin();
+
+    try {
+      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+      Thread.sleep(sleepDuration);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    JobMasterAPI.WorkerStateChange stateChange = JobMasterAPI.WorkerStateChange.newBuilder()
+        .setState(JobMasterAPI.WorkerState.COMPLETED)
+        .build();
+
+    LOG.info("Broadcasting the message: " + stateChange);
+    messenger.broadcastToAllWorkers(stateChange);
   }
 
   private void broadcastExample(IDriverMessenger messenger) {

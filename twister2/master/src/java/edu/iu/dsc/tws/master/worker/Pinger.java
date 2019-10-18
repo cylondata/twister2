@@ -41,10 +41,6 @@ public class Pinger implements MessageHandler {
     this.interval = interval;
   }
 
-  public void setWorkerID(int workerID) {
-    this.workerID = workerID;
-  }
-
   public long timeToNextPing() {
 
     if (lastPingTime == -1) {
@@ -70,11 +66,11 @@ public class Pinger implements MessageHandler {
 
     JobMasterAPI.Ping ping = JobMasterAPI.Ping.newBuilder()
         .setWorkerID(workerID)
-        .setPingMessage("Ping Message From the Worker to the Job Master")
         .setMessageType(JobMasterAPI.Ping.MessageType.WORKER_TO_MASTER)
         .build();
 
     requestID = rrClient.sendRequest(ping);
+    LOG.fine("Sending Ping message: \n" + ping);
     this.pendingResponse = true;
 
     if (requestID == null) {
@@ -89,6 +85,8 @@ public class Pinger implements MessageHandler {
 
       if (!requestID.equals(id)) {
         LOG.severe("Ping Response message requestID does not match.");
+      } else {
+        LOG.fine("Ping Response message received: \n" + message);
       }
     } else {
       LOG.warning("Received message unrecognized. \n" + message);

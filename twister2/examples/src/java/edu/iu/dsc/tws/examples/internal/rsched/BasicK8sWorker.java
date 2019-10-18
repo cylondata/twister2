@@ -18,10 +18,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -33,22 +36,29 @@ import org.apache.hadoop.fs.Path;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
+import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.JobListener;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
-import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class BasicK8sWorker implements IWorker, JobListener {
+public class BasicK8sWorker
+    implements IWorker, IAllJoinedListener, IScalerListener, IReceiverFromDriver {
+
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
+  private ISenderToDriver senderToDriver;
+
   private Object waitObject = new Object();
+
+  private List<Any> messages = Collections.synchronizedList(new LinkedList<>());
 
   // set this flag to true after getting scaledUp event
   private boolean scaledUp = false;
@@ -60,7 +70,12 @@ public class BasicK8sWorker implements IWorker, JobListener {
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
 
-    JMWorkerAgent.addJobListener(this);
+    WorkerRuntime.addAllJoinedListener(this);
+    WorkerRuntime.addReceiverFromDriver(this);
+    WorkerRuntime.addScalerListener(this);
+
+    senderToDriver = WorkerRuntime.getSenderToDriver();
+
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
     if (volatileVolume != null) {
@@ -83,7 +98,8 @@ public class BasicK8sWorker implements IWorker, JobListener {
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    testScaling(workerController);
+//    waitAndComplete();
+    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -96,14 +112,19 @@ public class BasicK8sWorker implements IWorker, JobListener {
       workerList = workerController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return null;
+      return;
     }
     if (workerList == null) {
       LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
       return null;
     }
 
-    LOG.info(workerList.size() + " workers joined. ");
+    List<Integer> ids = workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .sorted()
+        .collect(Collectors.toList());
+
+    LOG.info("All workers joined. Worker IDs: " + ids);
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
@@ -116,6 +137,17 @@ public class BasicK8sWorker implements IWorker, JobListener {
 
     LOG.info("Proceeded through the barrier ........................ ");
     return workerList;
+  }
+
+  private void waitAndComplete() {
+
+    long duration = 60;
+    try {
+      LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
+      Thread.sleep(duration * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -132,10 +164,20 @@ public class BasicK8sWorker implements IWorker, JobListener {
         return;
       }
     }
+
+    LOG.info(workerList.size() + " workers joined. Current time: " + System.currentTimeMillis());
+
+    Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
+        WorkerResourceUtils.getWorkersPerNode(workerList);
+    printWorkersPerNode(workersPerNode);
+
+//    listHdfsDir();
+//    sleepSomeTime(50);
+    echoServer(workerController.getWorkerInfo());
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("All workers joined: " + WorkerInfoUtils.workerListAsString(workerList));
+    LOG.info("allWorkersJoined event received. Number of workers: " + workerList.size());
 
     synchronized (waitObject) {
       waitObject.notify();
@@ -145,8 +187,6 @@ public class BasicK8sWorker implements IWorker, JobListener {
   @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.info("Workers scaled up. Instances added: " + instancesAdded);
-
-    scaledUp = true;
   }
 
   @Override
@@ -162,9 +202,6 @@ public class BasicK8sWorker implements IWorker, JobListener {
         JobMasterAPI.NodeInfo nodeInfo = anyMessage.unpack(JobMasterAPI.NodeInfo.class);
         LOG.info("Received Broadcast message. NodeInfo: " + nodeInfo);
 
-        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-        workerMessenger.sendToDriver(nodeInfo);
-
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
@@ -173,13 +210,13 @@ public class BasicK8sWorker implements IWorker, JobListener {
         JobAPI.ComputeResource computeResource = anyMessage.unpack(JobAPI.ComputeResource.class);
         LOG.info("Received Broadcast message. ComputeResource: " + computeResource);
 
-        JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
-        workerMessenger.sendToDriver(computeResource);
-
       } catch (InvalidProtocolBufferException e) {
         LOG.log(Level.SEVERE, "Unable to unpack received protocol buffer message as broadcast", e);
       }
     }
+
+    // put received message to message buffer
+    messages.add(anyMessage);
 
   }
 
@@ -249,7 +286,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
    */
   public void sleepRandomTime(long maxTimeMS) {
     try {
-      long sleepTime = (long) (Math.random() * maxTimeMS);
+      long sleepTime = 100 + (long) (Math.random() * (maxTimeMS - 100));
 //      LOG.info("BasicK8sWorker will sleep: " + sleepTime + " ms.");
       Thread.sleep(sleepTime);
 //      LOG.info("BasicK8sWorker sleep completed.");
@@ -281,7 +318,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
     LOG.info("************************************ Will list hdfs directory: " + directory);
 
     System.setProperty("HADOOP_USER_NAME", "hadoop");
-    String hdfsPath = "hdfs://<ip>:9000";
+    String hdfsPath = "hdfs://149.165.150.81:9000";
     Configuration conf = new Configuration();
     conf.set("fs.defaultFS", hdfsPath);
     conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
@@ -311,7 +348,7 @@ public class BasicK8sWorker implements IWorker, JobListener {
    * test scaling up and down workers in the job
    * after each scaleup event, all workers wait in a barrier
    */
-  private void testScaling(IWorkerController workerController) {
+  private void testScalingMessaging(IWorkerController workerController) {
 
     // we assume the worker is doing some computation
     // we simulate the computation by sleeping the worker for some time
@@ -330,7 +367,19 @@ public class BasicK8sWorker implements IWorker, JobListener {
         if (workerList == null) {
           return;
         }
+      }
 
+      // if received some messages, send the same messages back to the driver
+      while (messages.size() != 0) {
+
+        Any anyMessage = messages.remove(0);
+        if (anyMessage.is(JobMasterAPI.WorkerStateChange.class)) {
+          // finish execution
+          LOG.info("Received following message. Finishing execution: " + anyMessage);
+          return;
+        } else {
+          senderToDriver.sendToDriver(anyMessage);
+        }
       }
 
     }
