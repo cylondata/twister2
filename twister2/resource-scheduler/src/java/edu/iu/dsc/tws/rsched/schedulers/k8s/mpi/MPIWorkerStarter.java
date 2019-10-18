@@ -19,16 +19,18 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
+import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
-import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
@@ -49,7 +51,6 @@ public final class MPIWorkerStarter {
   private static int workerID = -1; // -1 means, not initialized
   private static int numberOfWorkers = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static JMWorkerAgent jobMasterAgent;
   private static String jobName = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
@@ -114,7 +115,6 @@ public final class MPIWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
-    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     InetAddress localHost = null;
     String podName = null;
@@ -165,18 +165,25 @@ public final class MPIWorkerStarter {
         + "HOSTNAME(podname): " + podName
     );
 
-    // construct JMWorkerAgent
-    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+    // TODO: get initialState from checkpoint manager or from starting script
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    WorkerRuntime.init(config, job, workerInfo, initialState);
 
-    // start JMWorkerAgent
-    jobMasterAgent.startThreaded();
+    /**
+     * Interfaces to interact with other workers and Job Master if there is any
+     */
+    IWorkerController workerController = WorkerRuntime.getWorkerController();
+    IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
+    ISenderToDriver senderToDriver = WorkerRuntime.getSenderToDriver();
 
-    // we will be running the Worker, send running message
-    jobMasterAgent.sendWorkerRunningMessage();
+    // update worker status to RUNNING
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     // start the worker
-    startWorker(jobMasterAgent, pv, podName);
+    startWorker(workerController, pv, podName);
+
+    // update worker status to COMPLETED
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     // finalize MPI
     try {
@@ -184,14 +191,13 @@ public final class MPIWorkerStarter {
     } catch (MPIException ignore) {
     }
 
-    // close the worker
-    closeWorker();
+    WorkerRuntime.close();
   }
 
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(JMWorkerAgent jmWorkerAgent,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv, String podName) {
     String workerClass = SchedulerContext.workerClass(config);
     IWorker worker;
@@ -209,18 +215,6 @@ public final class MPIWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
-
-  /**
-   * last method to call to close the worker
-   */
-  public static void closeWorker() {
-
-    // send worker completed message to the Job Master and finish
-    // Job master will delete the StatefulSet object
-    jobMasterAgent.sendWorkerCompletedMessage();
-    jobMasterAgent.close();
-  }
-
 }

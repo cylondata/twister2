@@ -39,12 +39,10 @@ public class WorkerWithState {
 
   private JobMasterAPI.WorkerInfo workerInfo;
   private ArrayList<JobMasterAPI.WorkerState> states;
-  private long pingTimestamp;
 
   public WorkerWithState(JobMasterAPI.WorkerInfo workerInfo) {
     this.workerInfo = workerInfo;
     states = new ArrayList<>();
-    pingTimestamp = -1;
   }
 
   public void addWorkerState(JobMasterAPI.WorkerState workerState) {
@@ -97,13 +95,6 @@ public class WorkerWithState {
 
   public void setWorkerInfo(JobMasterAPI.WorkerInfo workerInfo) {
     this.workerInfo = workerInfo;
-  }
-  public void setPingTimestamp(long pingTimestamp) {
-    this.pingTimestamp = pingTimestamp;
-  }
-
-  public long getPingTimestamp() {
-    return pingTimestamp;
   }
 
   /**

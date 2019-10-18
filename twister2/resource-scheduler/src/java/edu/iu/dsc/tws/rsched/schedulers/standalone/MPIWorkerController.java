@@ -75,4 +75,5 @@ public class MPIWorkerController implements IWorkerController {
   public CheckpointingClient getCheckpointingClient() {
     return null;
   }
+
 }

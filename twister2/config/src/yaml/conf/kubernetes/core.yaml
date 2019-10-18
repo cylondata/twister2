@@ -1,4 +1,18 @@
 ###################################################################
+# Fault Tolerance configurations
+###################################################################
+
+# A flag to enable/disable fault tolerance in Twister2
+# By default, it is disabled
+twister2.fault.tolerant: false
+
+# a timeout value to determine whether a worker failed
+# If a worker does not send heartbeat messages for this duration in milli seconds,
+# It is assumed failed
+twister2.fault.tolerance.failure.timeout: 10000
+
+
+###################################################################
 # Logging related settings for Twister2 workers
 ###################################################################
 
@@ -34,12 +48,6 @@ twister2.logging.maximum.files: 5
 # this client has to be submitting the job from a machine in the cluster
 # getLocalHost must return a reachable IP address to the job master
 twister2.job.master.runs.in.client: false
-
-# if true, job master assigns the worker IDs,
-# if false, workers have their IDs when registering with the job master
-# it is always false in Kubernetes
-# setting it to true does not make any difference
-twister2.job.master.assigns.worker.ids: false
 
 # ping message intervals from workers to the job master in milliseconds
 # default value is 10seconds = 10000
@@ -90,6 +98,6 @@ twister2.worker.controller.max.wait.time.on.barrier: 100000
 
 # Dashboard server host address and port
 # if this parameter is not specified, then job master will not try to connect to Dashboard
-# twister2.dashboard.host: "http://149.165.150.81:8080"
+# twister2.dashboard.host: "http://<ip-or-host>:<port>"
 # if dashboard is running as a statefulset in the cluster
 twister2.dashboard.host: "http://twister2-dashboard.default.svc.cluster.local"

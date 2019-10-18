@@ -98,7 +98,8 @@ public final class DashboardClientExample {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, "123.456.789", 9009, nodeInfo, computeResource);
 
-    dashClient.registerWorker(workerInfo);
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    dashClient.registerWorker(workerInfo, initialState);
   }
 
   public static boolean testScalingUp(DashboardClient dashClient, JobAPI.Job job) {
