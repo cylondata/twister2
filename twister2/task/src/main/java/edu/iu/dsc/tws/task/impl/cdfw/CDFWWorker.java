@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.Network;
+//import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -73,6 +73,8 @@ public class CDFWWorker implements IWorker {
    */
   protected CDFWRuntime taskExecutor;
 
+  private List<JobMasterAPI.WorkerInfo> workerInfoList;
+
   @Override
   public void execute(Config cfg, int workerID,
                       IWorkerController wController, IPersistentVolume pVolume,
@@ -83,7 +85,17 @@ public class CDFWWorker implements IWorker {
     this.persistentVolume = pVolume;
     this.volatileVolume = vVolume;
 
-    List<JobMasterAPI.WorkerInfo> workerInfoList;
+    // create the executor
+    taskExecutor = new CDFWRuntime(config, workerID, wController);
+
+    // register driver listener
+    JMWorkerAgent.addReceiverFromDriver(taskExecutor);
+    JMWorkerAgent.addScalerListener(taskExecutor);
+    JMWorkerAgent.addAllJoinedListener(taskExecutor);
+
+    // call execute
+    taskExecutor.execute();
+    // wait for the sync
     try {
       workerInfoList = wController.getAllWorkers();
     } catch (TimeoutException timeoutException) {
@@ -91,37 +103,37 @@ public class CDFWWorker implements IWorker {
       return;
     }
 
-    // create the channel
-    channel = Network.initializeChannel(config, workerController);
-    String persistent = null;
-    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
-      persistent = vVolume.getWorkerDirPath();
-    }
-    // create the communicator
-    communicator = new Communicator(config, channel, persistent);
-    // create the executor
-    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
-    // register message receiver and job listener
-    JMWorkerAgent.addReceiverFromDriver(taskExecutor);
-    JMWorkerAgent.addScalerListener(taskExecutor);
-    JMWorkerAgent.addAllJoinedListener(taskExecutor);
-
-    // call execute
-    execute();
-    // wait for the sync
-    try {
-      workerController.waitOnBarrier();
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-    }
-    // lets terminate the network
-    communicator.close();
+//    // create the channel
+//    channel = Network.initializeChannel(config, workerController);
+//    String persistent = null;
+//    if (vVolume != null && vVolume.getWorkerDirPath() != null) {
+//      persistent = vVolume.getWorkerDirPath();
+//    }
+//    // create the communicator
+//    communicator = new Communicator(config, channel, persistent);
+//    // create the executor
+//    taskExecutor = new CDFWRuntime(config, workerId, workerInfoList, communicator);
+//    // register message receiver and job listener
+//    JMWorkerAgent.addReceiverFromDriver(taskExecutor);
+//    JMWorkerAgent.addScalerListener(taskExecutor);
+//    JMWorkerAgent.addAllJoinedListener(taskExecutor);
+//
+//    // call execute
+//    execute();
+//    // wait for the sync
+//    try {
+//      workerController.waitOnBarrier();
+//    } catch (TimeoutException timeoutException) {
+//      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+//    }
+//    // lets terminate the network
+//    communicator.close();
   }
 
   /**
    * A user needs to implement this method to create the task graph and execute it
    */
-  public void execute() {
+  /*public void execute() {
     taskExecutor.execute();
-  }
+  }*/
 }

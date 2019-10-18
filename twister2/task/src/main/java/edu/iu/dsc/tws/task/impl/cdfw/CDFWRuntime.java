@@ -12,10 +12,8 @@
 package edu.iu.dsc.tws.task.impl.cdfw;
 
 import java.util.HashMap;
-//import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-//import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,17 +24,17 @@ import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-//import edu.iu.dsc.tws.api.compute.graph.Vertex;
-//import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-//import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
-//import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
 import edu.iu.dsc.tws.api.resource.IScalerListener;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
 import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
@@ -68,8 +66,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
    * [graph, [output name, data set]]
    */
   private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
-
-
   private Map<String, DataObject<Object>> iterativeOutPuts = new HashMap<>();
 
   /**
@@ -77,6 +73,13 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
    */
   private TaskExecutor taskExecutor;
 
+  private Config config;
+
+  private IWorkerController controller;
+
+  private Communicator communicator;
+
+  private TWSChannel channel;
 
   /**
    * Connected dataflow runtime
@@ -86,12 +89,65 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
    * @param workerInfoList worker information list
    * @param net network
    */
-  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
+/*  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
                      Communicator net) {
     taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
+    this.executeMessageQueue = new LinkedBlockingQueue<Any>();
+    this.workerId = wId;
+    this.serializer = new KryoSerializer();
+  }*/
+
+  /**
+   * Connected Dataflow Runtime
+   */
+  public CDFWRuntime(Config cfg, int wId, IWorkerController controller) {
     this.executeMessageQueue = new LinkedBlockingQueue<>();
     this.workerId = wId;
     this.serializer = new KryoSerializer();
+    this.controller = controller;
+    this.config = cfg;
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+    if (workerInfoList == null) {
+      return;
+    }
+
+    // create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, communicator, null);
+  }
+
+  private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
+    // wait all workers to join the job
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+      LOG.info("worker info list size @ cons:" + workerList.size());
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return null;
+    }
+    if (workerList == null) {
+      LOG.severe("Can not get all workers to join. Something wrong. Exiting ....................");
+      return null;
+    }
+
+    LOG.info(workerList.size() + " workers joined. ");
+
+    // syncs with all workers
+    LOG.info("Waiting on a barrier ........................ ");
+    try {
+      workerController.waitOnBarrier();
+    } catch (TimeoutException e) {
+      LOG.log(Level.SEVERE, e.getMessage(), e);
+      return null;
+    }
+    LOG.info("Proceeded through the barrier ........................ ");
+    return workerList;
   }
 
   /**
@@ -100,27 +156,67 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
   public boolean execute() {
     Any msg;
     while (true) {
-      try {
-        msg = executeMessageQueue.take();
-        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
-          if (handleExecuteMessage(msg)) {
-            return false;
-          }
-        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
-          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
-              + "loop");
-          break;
-        } else {
-          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
+      msg = executeMessageQueue.peek();
+      if (msg == null) {
+        if (scaleUpRequest.get()) {
+          communicator.close();
+          List<JobMasterAPI.WorkerInfo> workerInfoList = initSynch(controller);
+
+          // create the channel
+          LOG.info("Existing workers calling barrier");
+          channel = Network.initializeChannel(config, controller);
+          String persistent = null;
+
+          // create the communicator
+          communicator = new Communicator(config, channel, persistent);
+          taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
         }
-      } catch (InterruptedException e) {
-        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+        scaleUpRequest.set(false);
+        //scaleDownRequest.set(false);
+        continue;
+      }
+      msg = executeMessageQueue.poll();
+      if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
+        if (handleExecuteMessage(msg)) {
+          return false;
+        }
+      } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+        LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
+            + "loop");
+        break;
       }
     }
-
     LOG.log(Level.INFO, workerId + " Execution Completed");
     return true;
   }
+
+//  /**
+//   * execute
+//   */
+//  public boolean execute() {
+//    Any msg;
+//    while (true) {
+//      try {
+//        msg = executeMessageQueue.take();
+//        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
+//          if (handleExecuteMessage(msg)) {
+//            return false;
+//          }
+//        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
+//          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
+//              + "loop");
+//          break;
+//        } else {
+//          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
+//        }
+//      } catch (InterruptedException e) {
+//        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+//      }
+//    }
+//
+//    LOG.log(Level.INFO, workerId + " Execution Completed");
+//    return true;
+//  }
 
   private boolean handleExecuteMessage(Any msg) {
     JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
@@ -187,7 +283,7 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     LOG.log(Level.INFO, workerId + "All workers joined msg received");
   }
 
-  /*private boolean reinitialize() {
+  private boolean reinitialize() {
     communicator.close();
     List<JobMasterAPI.WorkerInfo> workerInfoList = null;
     try {
@@ -204,5 +300,5 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     communicator = new Communicator(config, channel, persistent);
     taskExecutor = new TaskExecutor(config, workerId, workerInfoList, communicator, null);
     return true;
-  }*/
+  }
 }
