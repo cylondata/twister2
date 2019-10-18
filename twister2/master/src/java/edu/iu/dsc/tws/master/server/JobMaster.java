@@ -500,7 +500,7 @@ public class JobMaster {
    * not all workers successfully complete in this case.
    * JobMaster does not get COMPLETED message from all workers.
    * So completeJob() method is not called.
-   * Instead, the JobMaster pod or the JobMaster process in the submitting is deleted.
+   * Instead, the JobMaster pod or the JobMaster process in the submitting client is deleted.
    * ShutDown Hook gets executed.
    * <p>
    * In this case, it can either clear job resources or just send a message to Dashboard

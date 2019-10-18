@@ -263,8 +263,10 @@ public class ZKWorkerController extends ZKBaseController
         LOG.fine("DistributedAtomicInteger for Barrier increased to: " + incremented.postValue());
 
         // if this is the last worker to enter, remove the barrier and let all workers be released
-        if (incremented.postValue() % numberOfWorkers == 0) {
+        if (incremented.postValue() == numberOfWorkers) {
           barrier.removeBarrier();
+          // clear the value to zero, so that new barrier can be used
+          daiForBarrier.forceSet(0);
           return true;
 
           // if this is not the last worker, set the barrier and wait
@@ -302,11 +304,13 @@ public class ZKWorkerController extends ZKBaseController
    * we may need to use a distributed InterProcessMutex.
    * So, instead of using a distributed InterProcessMutex, we call this method many times.
    * <p>
-   * DistributedAtomicInteger always increases.
-   * We check whether it is a multiple of numberOfWorkers in a job
-   * If so, all workers have reached the barrier.
+   * We reset the value of DistributedAtomicInteger to zero after all workers reached the barrier
+   * This lets barrier to be used again even if the job is scaled up/down
    * <p>
    * This method may be called many times during a computation.
+   * <p>
+   * If the job is scaled during some workers are waiting on a barrier,
+   * The barrier does not work, since the numberOfWorkers changes
    * <p>
    * if timeout is reached, throws TimeoutException.
    */
@@ -315,6 +319,14 @@ public class ZKWorkerController extends ZKBaseController
 
     boolean allArrived = incrementBarrierDAI(0, ControllerContext.maxWaitTimeOnBarrier(config));
     if (!allArrived) {
+
+      // clear the value to zero, so that new barrier can be used
+      try {
+        daiForBarrier.forceSet(0);
+      } catch (Exception e) {
+        LOG.severe("DistributedAtomicInteger value can not be set to zero.");
+      }
+
       throw new TimeoutException("All workers have not arrived at the barrier on the time limit: "
           + ControllerContext.maxWaitTimeOnBarrier(config) + "ms.");
     }

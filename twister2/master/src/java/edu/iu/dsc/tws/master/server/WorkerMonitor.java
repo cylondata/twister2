@@ -117,7 +117,7 @@ public class WorkerMonitor
   }
 
   /**
-   * get the list of workerIDs
+   * get the list of workerIDs sorted
    * @return
    */
   public List<Integer> getWorkerIDs() {
@@ -125,6 +125,7 @@ public class WorkerMonitor
         .values()
         .stream()
         .map(wws -> wws.getWorkerID())
+        .sorted()
         .collect(Collectors.toList());
   }
 

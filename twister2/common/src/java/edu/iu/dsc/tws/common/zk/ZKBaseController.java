@@ -14,8 +14,6 @@ package edu.iu.dsc.tws.common.zk;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -92,6 +90,11 @@ public class ZKBaseController {
   protected String jmAddress;
   protected JobMasterState jmState;
 
+  // list of scaled down workers
+  // when the job scaled down, we populate this list
+  // we remove each ID when we received worker znode removed event
+  private List<Integer> scaledDownWorkers = new LinkedList<>();
+
   protected ZKBaseController(Config config,
                              String jobName,
                              int numberOfWorkers) {
@@ -119,6 +122,11 @@ public class ZKBaseController {
       int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
       client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
 
+      // update numberOfWorkers from jobZnode
+      // with scaling up/down, it may have been changed
+      JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      numberOfWorkers = job.getNumberOfWorkers();
+
       // cache jobZnode data, and watch that node for changes
       jobZnodeCache = new NodeCache(client, jobPath);
       addJobNodeListener();
@@ -140,24 +148,22 @@ public class ZKBaseController {
   }
 
   public WorkerInfo getWorkerInfoForID(int id) {
-
-    Optional<WorkerInfo> found = jobWorkers
+    return jobWorkers
         .keySet()
         .stream()
         .filter(wInfo -> wInfo.getWorkerID() == id)
-        .findFirst();
-
-    return found.isPresent() ? found.get() : null;
+        .findFirst()
+        .orElse(null);
   }
 
   public WorkerState getWorkerStatusForID(int id) {
-    Optional<Map.Entry<WorkerInfo, WorkerState>> pair = jobWorkers
+    return jobWorkers
         .entrySet()
         .stream()
         .filter(entry -> entry.getKey().getWorkerID() == id)
-        .findFirst();
-
-    return pair.isPresent() ? pair.get().getValue() : null;
+        .findFirst()
+        .map(entry -> entry.getValue())
+        .orElse(null);
   }
 
   /**
@@ -326,6 +332,11 @@ public class ZKBaseController {
           allJoined = false;
         } else {
           // the job is scaled down
+          // add removed workers to scaled down list
+          for (int i = job.getNumberOfWorkers(); i < numberOfWorkers; i++) {
+            scaledDownWorkers.add(i);
+          }
+          LOG.info("Scaled down workers: " + scaledDownWorkers);
           // update numberOfWorkers
           numberOfWorkers = job.getNumberOfWorkers();
           // remove scaled down workers from worker list
@@ -554,9 +565,10 @@ public class ZKBaseController {
     int removedWorkerID = pair.getKey().getWorkerID();
 
     // this is the scaled down worker
-    if (removedWorkerID >= numberOfWorkers) {
+    if (scaledDownWorkers.contains(removedWorkerID)) {
 
-      LOG.info(String.format("Scaled down worker[%s] removed: ", removedWorkerID));
+      scaledDownWorkers.remove(Integer.valueOf(removedWorkerID));
+      LOG.info("Removed scaled down worker: " + removedWorkerID);
 
     } else if (pair.getValue() == WorkerState.COMPLETED) {
 

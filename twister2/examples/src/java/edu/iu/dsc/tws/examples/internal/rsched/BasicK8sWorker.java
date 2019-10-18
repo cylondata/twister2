@@ -98,8 +98,8 @@ public class BasicK8sWorker
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
 
-    waitAndComplete();
-//    testScalingMessaging(workerController);
+//    waitAndComplete();
+    testScalingMessaging(workerController);
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
@@ -121,6 +121,7 @@ public class BasicK8sWorker
 
     List<Integer> ids = workerList.stream()
         .map(wi -> wi.getWorkerID())
+        .sorted()
         .collect(Collectors.toList());
 
     LOG.info("All workers joined. Worker IDs: " + ids);
@@ -277,7 +278,7 @@ public class BasicK8sWorker
    */
   public void sleepRandomTime(long maxTimeMS) {
     try {
-      long sleepTime = (long) (Math.random() * maxTimeMS);
+      long sleepTime = 100 + (long) (Math.random() * (maxTimeMS - 100));
 //      LOG.info("BasicK8sWorker will sleep: " + sleepTime + " ms.");
       Thread.sleep(sleepTime);
 //      LOG.info("BasicK8sWorker sleep completed.");
@@ -349,11 +350,6 @@ public class BasicK8sWorker
       // do some computation
       sleepRandomTime(300);
 
-      // if received some messages, send the same messages back to the driver
-      while (messages.size() != 0) {
-        senderToDriver.sendToDriver(messages.remove(0));
-      }
-
       // check for scaled up event
       if (scaledUp) {
         // reset the flag
@@ -363,7 +359,19 @@ public class BasicK8sWorker
         if (workerList == null) {
           return;
         }
+      }
 
+      // if received some messages, send the same messages back to the driver
+      while (messages.size() != 0) {
+
+        Any anyMessage = messages.remove(0);
+        if (anyMessage.is(JobMasterAPI.WorkerStateChange.class)) {
+          // finish execution
+          LOG.info("Received following message. Finishing execution: " + anyMessage);
+          return;
+        } else {
+          senderToDriver.sendToDriver(anyMessage);
+        }
       }
 
     }
