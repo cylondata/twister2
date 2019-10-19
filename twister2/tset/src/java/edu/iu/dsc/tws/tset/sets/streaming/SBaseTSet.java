@@ -28,7 +28,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -168,7 +168,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public TSet<T> addInput(String key, Cacheable<?> input) {
+  public TSet<T> addInput(String key, Storable<?> input) {
     // todo fix this
     //    getTSetEnv().addInput(getId(), key, input);
     return this;

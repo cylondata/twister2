@@ -19,7 +19,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -197,7 +197,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
 
   @Override
-  public BBaseTSet<T> addInput(String key, Cacheable<?> input) {
+  public BBaseTSet<T> addInput(String key, Storable<?> input) {
     // get the data object corresponding to the input Tset and add a new mapping with the user
     // provided key
 //    this.inputs.add(input.getId());

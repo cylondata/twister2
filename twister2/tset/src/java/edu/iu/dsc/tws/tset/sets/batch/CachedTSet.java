@@ -31,7 +31,7 @@ import java.util.Iterator;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -53,7 +53,7 @@ import edu.iu.dsc.tws.tset.sources.CacheSource;
  *
  * @param <T> base type of the tset
  */
-public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
+public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   private SinkFunc<?> cacheSinkFunc;
 
   private String cacheSourcePrefix;
@@ -181,7 +181,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Cacheable<T> {
   }
 
   @Override
-  public CachedTSet<T> addInput(String key, Cacheable<?> input) {
+  public CachedTSet<T> addInput(String key, Storable<?> input) {
     return (CachedTSet<T>) super.addInput(key, input);
   }
 

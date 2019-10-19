@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
@@ -55,7 +55,7 @@ public abstract class TSetEnvironment {
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
 
-  private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
+  private Map<String, Map<String, Storable<?>>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
 

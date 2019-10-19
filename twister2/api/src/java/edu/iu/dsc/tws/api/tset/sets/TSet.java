@@ -38,7 +38,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -130,7 +130,7 @@ public interface TSet<T> {
    * @param input the TSet to be added as an input
    * @return true if the input was added successfully or false otherwise
    */
-  TSet<T> addInput(String key, Cacheable<?> input);
+  TSet<T> addInput(String key, Storable<?> input);
 
   /**
    * Union operation which results in a single TSet, In order for this to work both TSet's should
