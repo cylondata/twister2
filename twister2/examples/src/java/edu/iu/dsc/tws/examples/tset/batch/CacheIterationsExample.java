@@ -64,7 +64,7 @@ public class CacheIterationsExample extends BatchTsetExample {
     ).addInput("foo", cache1).lazyCache();
 
     for (int i = 0; i < 4; i++) {
-      cache1 = env.evaluateAndGet(out);
+      env.eval(out);
     }
     env.finishEval(out);
 
