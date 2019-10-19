@@ -13,7 +13,6 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -21,7 +20,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -32,15 +30,24 @@ public class DirectIterExample extends BatchTsetExample {
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+
+    // cache the src input (first task graph will be created and executed)
+    CachedTSet<Integer> cachedInput = src.direct().cache();
+
     LOG.info("test direct iteration");
-    ComputeTSet<Integer, Iterator<Integer>> testmap = src.direct().map(input -> input);
-    CachedTSet<Integer> cached = testmap.cache();
+    CachedTSet<Object> cached = cachedInput.direct().map(
+        input -> {
+          LOG.info("##" + input.toString());
+          return null;
+        })
+        .lazyCache();
+
+    // eval the lazyCached tset for 4 times (second task graph will be created once but
+    // will be executed 4 times)
     for (int i = 0; i < 4; i++) {
       env.eval(cached);
     }
     env.finishEval(cached);
-
-    LOG.info("out: " + cached.getDataObject().getPartitions().length);
   }
 
 
