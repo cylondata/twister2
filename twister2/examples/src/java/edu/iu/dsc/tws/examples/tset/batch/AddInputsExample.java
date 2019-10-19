@@ -19,7 +19,8 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
-import edu.iu.dsc.tws.api.tset.fn.BaseComputeFunc;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
+import edu.iu.dsc.tws.api.tset.fn.BaseComputeCollectorFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
@@ -32,25 +33,26 @@ public class AddInputsExample extends BatchTsetExample {
 
   @Override
   public void execute(BatchTSetEnvironment env) {
+    // source with 25..29
+    SourceTSet<Integer> baseSrc = dummySourceOther(env, COUNT, PARALLELISM);
+    // source with 0..4
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
 
-    SourceTSet<Integer> src1 = dummySourceOther(env, COUNT, PARALLELISM);
+    CachedTSet<Integer> srcCache = src.direct().cache().setName("src");
 
-    CachedTSet<Integer> cache1 = src1.direct().cache();
-    CachedTSet<Integer> cache = src.direct().cache().addInput("foo", cache1);
+    // make src an input of baseSrc
+    CachedTSet<Integer> baseSrcCache = baseSrc.direct().cache().setName("baseSrc")
+        .addInput("src-input", srcCache);
 
-    CachedTSet<Integer> out = cache.direct().compute(
-        new BaseComputeFunc<Integer, Iterator<Integer>>() {
+    CachedTSet<Integer> out = baseSrcCache.direct().compute(
+        new BaseComputeCollectorFunc<Integer, Iterator<Integer>>() {
           @Override
-          public Integer compute(Iterator<Integer> input) {
-            DataPartitionConsumer<?> c1 = getTSetContext().getInput("foo").getConsumer();
+          public void compute(Iterator<Integer> input, RecordCollector<Integer> collector) {
+            DataPartitionConsumer<?> c1 = getTSetContext().getInput("src-input").getConsumer();
 
-            int out = 0;
             while (input.hasNext() && c1.hasNext()) {
-              out += input.next() + (Integer) (c1.next());
+              collector.collect(input.next() + (Integer) (c1.next()));
             }
-
-            return out;
           }
         }
     ).lazyCache();
