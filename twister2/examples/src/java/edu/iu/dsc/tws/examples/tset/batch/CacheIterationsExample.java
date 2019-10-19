@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.fn.BaseComputeFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -54,18 +53,20 @@ public class CacheIterationsExample extends BatchTsetExample {
             DataPartitionConsumer<?> c1 = getTSetContext().getInput("foo").getConsumer();
 
             int out = 0;
-            while (input.hasNext() && c1.hasNext()){
-              out+= input.next() + (Integer)(c1.next());
+            while (input.hasNext() && c1.hasNext()) {
+              out += input.next() + (Integer) (c1.next());
             }
 
+            LOG.info(getTSetContext().getWorkerId() + " " + out);
             return out;
           }
         }
-    ).lazyCache();
+    ).addInput("foo", cache1).lazyCache();
 
     for (int i = 0; i < 4; i++) {
-      env.eval(out);
+      cache1 = env.evaluateAndGet(out);
     }
+    env.finishEval(out);
 
     out.direct().forEach(l -> LOG.info(l.toString()));
 

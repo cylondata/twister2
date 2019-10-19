@@ -46,8 +46,8 @@ public class AddInputsExample extends BatchTsetExample {
             DataPartitionConsumer<?> c1 = getTSetContext().getInput("foo").getConsumer();
 
             int out = 0;
-            while (input.hasNext() && c1.hasNext()){
-              out+= input.next() + (Integer)(c1.next());
+            while (input.hasNext() && c1.hasNext()) {
+              out += input.next() + (Integer) (c1.next());
             }
 
             return out;

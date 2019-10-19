@@ -68,8 +68,4 @@ public abstract class BaseOp implements Receptor, Serializable {
   TSetContext gettSetContext() {
     return tSetContext;
   }
-
-  IONames getReceivables() {
-    return receivables;
-  }
 }
