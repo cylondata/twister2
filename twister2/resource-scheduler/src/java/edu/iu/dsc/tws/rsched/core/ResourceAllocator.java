@@ -170,10 +170,8 @@ public class ResourceAllocator {
 
     // copy the core dist package to temp directory
     // do not copy if its a kubernetes cluster
-    String clusterType = SchedulerContext.clusterType(config);
-    if ("kubernetes".equalsIgnoreCase(clusterType)) {
-      LOG.log(Level.INFO, "This is a kubernetes cluster, not moving twister2 core package to temp");
-
+    if (!SchedulerContext.copySystemPackage(config)) {
+      LOG.log(Level.INFO, "No need to copy the systems package");
     } else {
       String twister2CorePackage = SchedulerContext.systemPackageUrl(config);
       if (twister2CorePackage == null) {
@@ -325,6 +323,8 @@ public class ResourceAllocator {
 
     launcher.launch(updatedJob);
 
+    launcher.close();
+
     clearTemporaryFiles(jobDirectory);
   }
 
@@ -373,6 +373,8 @@ public class ResourceAllocator {
     if (!terminated) {
       LOG.log(Level.SEVERE, "Could not terminate the job");
     }
+
+    launcher.close();
   }
 
 }

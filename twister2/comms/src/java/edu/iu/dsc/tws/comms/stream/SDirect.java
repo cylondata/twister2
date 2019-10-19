@@ -14,13 +14,13 @@ package edu.iu.dsc.tws.comms.stream;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
-import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectStreamingFinalReceiver;
 import edu.iu.dsc.tws.comms.utils.LogicalPlanBuilder;

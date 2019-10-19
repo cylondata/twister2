@@ -34,8 +34,8 @@ fi
 
 # set the lib path to bundled mpi, if that mpirun is used
 lib_path="-Djava.library.path=${LD_LIBRARY_PATH}"
-if [ "$9" = "twister2-core/ompi/bin/mpirun" ]; then
-  lib_path="${lib_path}:twister2-core/ompi/lib"
+if [ "$9" = "${17}/ompi/bin/mpirun" ]; then
+  lib_path="${lib_path}:${17}/ompi/lib"
 fi
 
 illegal_access_warn=

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.Comparator;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -24,7 +25,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing2;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
@@ -143,14 +143,14 @@ public class BKeyedGather extends BaseOperation {
           rcvr, true, comm.getPersistentDirectories(), comparator, groupByKey);
     }
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations,
           finalReceiver, partialReceiver, dataType, receiveDataType,
           keyType, keyType, edgeId, messageSchema);
       this.simple = true;
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       op = new MToNRing2(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,

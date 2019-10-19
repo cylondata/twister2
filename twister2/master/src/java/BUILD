@@ -10,6 +10,7 @@ t2_java_lib(
         "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/net:network-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",
         "//twister2/checkpointing/src/java:checkpointing-java",
@@ -18,5 +19,6 @@ t2_java_lib(
         "//twister2/proto/utils:proto-utils-java",
         "@com_google_protobuf_protobuf_java//jar",
         "@javax_ws_rs_javax_ws_rs_api//jar",
+        "@org_apache_curator_curator_framework//jar",
     ],
 )

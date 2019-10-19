@@ -43,6 +43,7 @@ public final class MPIBootstrap {
   }
 
   public static void main(String[] args) throws MPIException, IOException {
+    Thread.currentThread().setName("bootstrap");
     LOG.info("Initializing bootstrap procedure...");
     MPI.Init(args);
     int rank = MPI.COMM_WORLD.getRank();
@@ -51,14 +52,27 @@ public final class MPIBootstrap {
     String jobWorkingDirectory = args[1];
 
     File jobFile = new File(args[2]);
-    File coreFile = new File(args[4]);
 
+    boolean copyCore = Boolean.parseBoolean(args[4]);
+
+    File coreFile = new File(args[5]);
+
+    LOG.info("Twister2 core will be copied : " + copyCore);
     LOG.info(String.format("[%d] Starting process of copying %s & %s of %s to %s",
         rank, jobFile.getAbsolutePath(), coreFile.getAbsolutePath(), jobName, jobWorkingDirectory));
 
     //Determining the resource provider
-    File[] srcFiles = {jobFile, coreFile}; //job file, core file
-    String[] md5s = {args[3], args[5]};
+    File[] srcFiles;
+    String[] md5s = {args[3], args[6]};
+
+    if (copyCore) {
+      srcFiles = new File[]{jobFile, coreFile};
+      md5s = new String[]{args[3], args[6]};
+    } else {
+      srcFiles = new File[]{jobFile};
+      md5s = new String[]{args[3]};
+    }
+
     boolean[] resourceAvailability = new boolean[MPI.COMM_WORLD.getSize()];
     resourceAvailability[rank] = allFilesExists(srcFiles, md5s);
 
@@ -82,7 +96,7 @@ public final class MPIBootstrap {
     //Don't proceed if all are true : All nodes has already have the file
     if (allHaveFile) {
       LOG.info("All members have the file. Exiting bootstrap procedure");
-      setupWorkingDirectory(jobName, jobWorkingDirectory, coreFile, jobFile);
+      setupWorkingDirectory(jobName, jobWorkingDirectory, coreFile, jobFile, copyCore);
       MPI.Finalize();
       return;
     }
@@ -114,21 +128,22 @@ public final class MPIBootstrap {
       }
     }
 
-    setupWorkingDirectory(jobName, jobWorkingDirectory, coreFile, jobFile);
+    setupWorkingDirectory(jobName, jobWorkingDirectory, coreFile, jobFile, copyCore);
 
     LOG.info("Broadcasting completed");
     MPI.Finalize();
   }
 
   private static void setupWorkingDirectory(String jobName, String jobWorkingDirectory,
-                                            File coreFile, File jobFile) {
+                                            File coreFile, File jobFile, boolean copyCore) {
     //Setup working directory
     ResourceSchedulerUtils.setupWorkingDirectory(
         jobName,
         jobWorkingDirectory,
         coreFile.getName(),
         jobFile.getParentFile().getAbsolutePath(),
-        true
+        true,
+        copyCore
     );
   }
 }

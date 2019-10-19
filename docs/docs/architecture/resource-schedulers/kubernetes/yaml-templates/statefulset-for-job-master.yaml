@@ -72,8 +72,6 @@ spec:
           value: <twister2.job.master.persistent.volume.size>
         - name: twister2.worker.instances
           value: <twister2.worker.instances>
-        - name: twister2.job.master.assigns.worker.ids
-          value: <true or false>
         - name: twister2.worker.ping.interval
           value: <twister2.worker.ping.interval>
         - name: persistent.logging.requested

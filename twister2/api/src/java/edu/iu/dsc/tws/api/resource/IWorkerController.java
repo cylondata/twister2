@@ -41,7 +41,7 @@ public interface IWorkerController {
 
   /**
    * get all joined workers in this job, including the ones finished execution
-   * some workers that has not joined yet, may not be included in this list.
+   * if there are some workers that have not joined yet, they may not be included in this list.
    * users can compare the total number of workers to the size of this list and
    * understand whether there are non-joined workers
    */

@@ -15,8 +15,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 import edu.iu.dsc.tws.executor.comms.DefaultDestinationSelector;
 
 public class KeyedGatherBatchOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(KeyedGatherBatchOperation.class.getName());
 
   protected BKeyedGather op;
 
@@ -72,11 +71,6 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
         taskMessage.getContent().getValue(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
   private class GatherRecvrImpl implements BulkReceiver {
     @Override
     public void init(Config cfg, Set<Integer> expectedIds) {
@@ -100,22 +94,7 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void finish(int source) {
-    op.finish(source);
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

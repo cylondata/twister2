@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.comms.batch;
 import java.util.List;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
@@ -22,7 +23,6 @@ import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
-import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
@@ -67,13 +67,13 @@ public class BPartition extends BaseOperation {
       finalRcvr = new PartitionBatchFinalReceiver(rcvr);
     }
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       MToNSimple p = new MToNSimple(comm.getChannel(), sources, targets,
           finalRcvr, new PartitionPartialReceiver(), dataType, messageSchema);
       p.init(comm.getConfig(), dataType, plan, edgeId);
       this.op = p;
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, finalRcvr, new PartitionPartialReceiver(),

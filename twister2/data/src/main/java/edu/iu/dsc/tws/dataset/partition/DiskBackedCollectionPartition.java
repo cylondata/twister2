@@ -9,109 +9,64 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.dataset.partition;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.net.URI;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
-import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
-import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.data.FileSystem;
+import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.data.utils.FileSystemUtils;
 
-public class DiskBackedCollectionPartition<T> extends CollectionPartition<T> {
+public class DiskBackedCollectionPartition<T> extends BufferedCollectionPartition<T> {
 
-  private int maxFramesInMemory;
-  private MessageType dataType = MessageTypes.OBJECT;
+  private static final String CONFIG_FS_ROOT = "twister2.data.fs.root";
+  private static final String FS_PROTO = "file://";
 
-  private List<Path> filesList = new ArrayList<>();
-  private Path tempDirectory;
+  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType,
+                                       int bufferedBytes, Config config, String reference) {
+    super(maxFramesInMemory, dataType, bufferedBytes, config, reference);
+  }
 
-  public DiskBackedCollectionPartition(int maxFramesInMemory) {
-    super();
-    this.maxFramesInMemory = maxFramesInMemory;
+  public DiskBackedCollectionPartition(int maxFramesInMemory, Config config) {
+    super(maxFramesInMemory, config);
+  }
+
+  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType, Config config) {
+    super(maxFramesInMemory, dataType, config);
+  }
+
+  public DiskBackedCollectionPartition(MessageType dataType, int bufferedBytes, Config config) {
+    super(dataType, bufferedBytes, config);
+  }
+
+  public DiskBackedCollectionPartition(MessageType dataType, int bufferedBytes,
+                                       Config config, String reference) {
+    super(dataType, bufferedBytes, config, reference);
+  }
+
+  protected String getRootPathStr(Config config) {
+    return FS_PROTO + String.join(File.separator,
+        config.getStringValue(CONFIG_FS_ROOT), String.join(File.separator,
+            this.getReference()));
+  }
+
+  @Override
+  protected FileSystem getFileSystem(Config config) {
     try {
-      this.tempDirectory = Files.createTempDirectory(UUID.randomUUID().toString());
+      return FileSystemUtils.get(URI.create(getRootPathStr(config)), config);
     } catch (IOException e) {
-      throw new Twister2RuntimeException(
-          "Failed to create a temp directory to hold the partition", e);
-    }
-  }
-
-  public DiskBackedCollectionPartition(int maxFramesInMemory, MessageType dataType) {
-    this(maxFramesInMemory);
-    this.dataType = dataType;
-  }
-
-  @Override
-  public void add(T val) {
-    if (this.dataList.size() < this.maxFramesInMemory) {
-      super.add(val);
-    } else {
-      //write to disk
-      byte[] bytes = dataType.getDataPacker().packToByteArray(val);
-      try {
-        Path write = Files.write(
-            Paths.get(tempDirectory.toString(), UUID.randomUUID().toString()), bytes);
-        this.filesList.add(write);
-      } catch (IOException e) {
-        throw new Twister2RuntimeException("Failed to add data to the partition", e);
-      }
+      throw new Twister2RuntimeException("Error in connecting to file system", e);
     }
   }
 
   @Override
-  public void addAll(Collection<T> vals) {
-    for (T val : vals) {
-      this.add(val);
-    }
-  }
-
-  @Override
-  public DataPartitionConsumer<T> getConsumer() {
-    final Iterator<T> inMemoryIterator = this.dataList.iterator();
-    final Iterator<Path> fileIterator = this.filesList.iterator();
-    return new DataPartitionConsumer<T>() {
-      @Override
-      public boolean hasNext() {
-        return inMemoryIterator.hasNext() || fileIterator.hasNext();
-      }
-
-      @Override
-      public T next() {
-        if (inMemoryIterator.hasNext()) {
-          return inMemoryIterator.next();
-        } else {
-          Path nextFile = fileIterator.next();
-          try {
-            byte[] bytes = Files.readAllBytes(nextFile);
-            return (T) dataType.getDataPacker().unpackFromByteArray(bytes);
-          } catch (IOException e) {
-            throw new Twister2RuntimeException(
-                "Failed to read value from the temp file : " + nextFile.toString(), e);
-          }
-        }
-      }
-    };
-  }
-
-  @Override
-  public void clear() {
-    // cleanup files
-    for (Path path : this.filesList) {
-      try {
-        Files.deleteIfExists(path);
-      } catch (IOException e) {
-        throw new Twister2RuntimeException(
-            "Failed to delete the temporary file : " + path.toString(), e);
-      }
-    }
+  protected Path getRootPath(Config config) {
+    return new Path(getRootPathStr(config));
   }
 }

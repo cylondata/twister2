@@ -33,15 +33,17 @@ import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.resource.JobListener;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
+import edu.iu.dsc.tws.api.resource.IScalerListener;
 import edu.iu.dsc.tws.api.util.KryoSerializer;
+import edu.iu.dsc.tws.master.worker.JMSenderToDriver;
 import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
-import edu.iu.dsc.tws.master.worker.JMWorkerMessenger;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.CDFWJobAPI;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
-public class CDFWRuntime implements JobListener {
+public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJoinedListener {
 
   private static final Logger LOG = Logger.getLogger(CDFWRuntime.class.getName());
 
@@ -120,7 +122,7 @@ public class CDFWRuntime implements JobListener {
   }
 
   private boolean handleExecuteMessage(Any msg) {
-    JMWorkerMessenger workerMessenger = JMWorkerAgent.getJMWorkerAgent().getJMWorkerMessenger();
+    JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
     CDFWJobAPI.ExecuteMessage executeMessage;
     ExecutionPlan executionPlan;
     CDFWJobAPI.ExecuteCompletedMessage completedMessage = null;
@@ -190,7 +192,7 @@ public class CDFWRuntime implements JobListener {
         processIterativeOuput(taskGraph, executionPlan);
       }
 
-      if (!workerMessenger.sendToDriver(completedMessage)) {
+      if (!senderToDriver.sendToDriver(completedMessage)) {
         LOG.severe("Unable to send the subgraph completed message :" + completedMessage);
       }
     } catch (InvalidProtocolBufferException e) {
@@ -213,6 +215,16 @@ public class CDFWRuntime implements JobListener {
   }
 
   @Override
+  public void driverMessageReceived(Any anyMessage) {
+    // put every message on the queue.
+    try {
+      this.executeMessageQueue.put(anyMessage);
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
+    }
+  }
+
+  @Override
   public void workersScaledUp(int instancesAdded) {
     LOG.log(Level.INFO, workerId + "Workers scaled up msg received. Instances added: "
         + instancesAdded);
@@ -222,16 +234,6 @@ public class CDFWRuntime implements JobListener {
   public void workersScaledDown(int instancesRemoved) {
     LOG.log(Level.INFO, workerId + "Workers scaled down msg received. Instances removed: "
         + instancesRemoved);
-  }
-
-  @Override
-  public void driverMessageReceived(Any anyMessage) {
-    // put every message on the queue.
-    try {
-      this.executeMessageQueue.put(anyMessage);
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-    }
   }
 
   @Override

@@ -83,6 +83,8 @@ public class SchedulerContext extends Context {
 
   public static final String DOWNLOAD_METHOD = "twister2.resource.uploader.download.method";
 
+  public static final String COPY_SYSTEM_PACKAGE = "twister2.resource.systempackage.copy";
+
   public static String uploaderClass(Config cfg) {
     return cfg.getStringValue(UPLOADER_CLASS);
   }
@@ -153,6 +155,10 @@ public class SchedulerContext extends Context {
 
   public static double persistentVolumePerWorker(Config cfg) {
     return cfg.getDoubleValue(PERSISTENT_VOLUME_PER_WORKER, PERSISTENT_VOLUME_PER_WORKER_DEFAULT);
+  }
+
+  public static boolean copySystemPackage(Config cfg) {
+    return cfg.getBooleanValue(COPY_SYSTEM_PACKAGE, true);
   }
 
   /**

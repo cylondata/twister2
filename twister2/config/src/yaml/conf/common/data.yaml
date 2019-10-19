@@ -21,3 +21,7 @@ twister2.data.hdfs.namenode: "hostname.domain.name"
 
 #Specify the namenode port
 twister2.data.hdfs.namenode.port: "9000"
+
+twister2.data.fs.root: "${TWISTER2_HOME}/persistent/data"
+
+twister2.data.hdfs.root: "/twister2/persistent/data"

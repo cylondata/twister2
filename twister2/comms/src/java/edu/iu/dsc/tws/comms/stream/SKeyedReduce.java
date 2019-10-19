@@ -13,6 +13,7 @@ package edu.iu.dsc.tws.comms.stream;
 
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
@@ -22,7 +23,6 @@ import edu.iu.dsc.tws.api.comms.SingularReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.comms.dfw.BaseOperation;
 import edu.iu.dsc.tws.comms.dfw.MToNRing;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchPartialReceiver;
@@ -70,14 +70,14 @@ public class SKeyedReduce extends BaseOperation {
     this.keyType = kType;
     this.dataType = dType;
 
-    if (CommunicationContext.PARTITION_ALGO_SIMPLE.equals(
+    if (CommunicationContext.ALLTOALL_ALGO_SIMPLE.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNSimple(comm.getConfig(), comm.getChannel(),
           plan, sources, targets,
           new KReduceStreamingFinalReceiver(fnc, rcvr, 100),
           new KReduceBatchPartialReceiver(0, fnc), dataType, dataType,
           keyType, keyType, edgeId, messageSchema);
-    } else if (CommunicationContext.PARTITION_ALGO_RING.equals(
+    } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
       this.op = new MToNRing(comm.getConfig(), comm.getChannel(),
           plan, sources, targets, new KReduceStreamingFinalReceiver(fnc, rcvr, 100),

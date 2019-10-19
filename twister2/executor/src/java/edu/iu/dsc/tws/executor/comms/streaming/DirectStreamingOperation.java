@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -27,6 +28,7 @@ import edu.iu.dsc.tws.comms.stream.SDirect;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class DirectStreamingOperation extends AbstractParallelOperation {
+
   protected SDirect op;
 
   public DirectStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -74,22 +76,8 @@ public class DirectStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  public boolean progress() {
-    return op.progress();
-  }
-
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

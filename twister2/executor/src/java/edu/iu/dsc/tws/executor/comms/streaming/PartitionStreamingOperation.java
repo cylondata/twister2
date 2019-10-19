@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -29,7 +30,6 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
  * The streaming operation.
  */
 public class PartitionStreamingOperation extends AbstractParallelOperation {
-  private boolean checkpointStarted = false;
 
   protected SPartition op;
 
@@ -69,22 +69,8 @@ public class PartitionStreamingOperation extends AbstractParallelOperation {
     }
   }
 
-  public boolean progress() {
-    return op.progress();
-  }
-
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

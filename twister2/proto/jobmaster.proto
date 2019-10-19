@@ -31,7 +31,16 @@ message Ping {
     oneof typeRequired {
         MessageType messageType = 2;
     }
-    string pingMessage = 3;
+}
+
+// job master can be any one of these states
+// job master does not go from STARTING to RUNNING, it just goes to STARTED
+// since enum types must be unique in a proto, I added JM as a prefix to this enum.
+enum JobMasterState {
+    JM_STARTED = 0;
+    JM_RESTARTED = 1;
+    JM_COMPLETED = 2;
+    JM_FAILED = 3;
 }
 
 // a worker can be any one of these states
@@ -40,8 +49,9 @@ enum WorkerState {
     RESTARTING = 1;
     RUNNING = 2;
     COMPLETED = 3;
-    ERROR = 4;
-    UNASSIGNED = 5;
+    FAILED = 4;
+    ERROR = 5;
+    UNASSIGNED = 6;
 }
 
 message NodeInfo {
@@ -89,13 +99,6 @@ message RegisterWorkerResponse {
     }
     string reason = 3;
 }
-
-message Recover {
-    oneof idRequired {
-        int32 workerID = 1;
-    }
-}
-
 
 // a worker informs the master that its state has changed
 // this message is not sent for STARTING state, it is covered by RegisterWorker message

@@ -14,6 +14,7 @@ package edu.iu.dsc.tws.executor.comms.streaming;
 import java.util.Iterator;
 import java.util.Set;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -25,6 +26,7 @@ import edu.iu.dsc.tws.comms.stream.SGather;
 import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
 
 public class GatherStreamingOperation extends AbstractParallelOperation {
+
   private SGather op;
 
   public GatherStreamingOperation(Config config, Communicator network, LogicalPlan tPlan,
@@ -49,11 +51,6 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
     return op.gather(source, message.getContent(), flags);
   }
 
-  @Override
-  public boolean progress() {
-    return op.progress();
-  }
-
 
   private class GatherRcvr implements BulkReceiver {
     @Override
@@ -66,20 +63,15 @@ public class GatherStreamingOperation extends AbstractParallelOperation {
       TaskMessage msg = new TaskMessage<>(it, inEdge, target);
       return outMessages.get(target).offer(msg);
     }
+
+    @Override
+    public boolean sync(int target, byte[] message) {
+      return syncs.get(target).sync(inEdge, message);
+    }
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public BaseOperation getOp() {
+    return this.op;
   }
 }

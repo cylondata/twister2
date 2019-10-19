@@ -25,11 +25,6 @@ public class JobMasterContext extends Context {
   public static final boolean JOB_MASTER_RUNS_IN_CLIENT_DEFAULT = false;
   public static final String JOB_MASTER_RUNS_IN_CLIENT = "twister2.job.master.runs.in.client";
 
-  // if true, the job master runs in the submitting client
-  public static final boolean JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT = true;
-  public static final String JOB_MASTER_ASSIGNS_WORKER_IDS =
-      "twister2.job.master.assigns.worker.ids";
-
   // worker to master ping interval in milliseconds
   public static final long PING_INTERVAL_DEFAULT = 30000;
   public static final String PING_INTERVAL = "twister2.worker.ping.interval";
@@ -61,11 +56,6 @@ public class JobMasterContext extends Context {
   // job master volatile disk size in GB
   public static final double PERSISTENT_VOLUME_DEFAULT = 1.0;
   public static final String PERSISTENT_VOLUME = "twister2.job.master.persistent.volume.size";
-
-  public static boolean jobMasterAssignsWorkerIDs(Config cfg) {
-    return cfg.getBooleanValue(JOB_MASTER_ASSIGNS_WORKER_IDS,
-        JOB_MASTER_ASSIGNS_WORKER_IDS_DEFAULT);
-  }
 
   public static boolean jobMasterRunsInClient(Config cfg) {
     return cfg.getBooleanValue(JOB_MASTER_RUNS_IN_CLIENT, JOB_MASTER_RUNS_IN_CLIENT_DEFAULT);

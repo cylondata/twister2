@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -34,7 +33,6 @@ import edu.iu.dsc.tws.executor.comms.AbstractParallelOperation;
  * Connecting to the reduce operation
  */
 public class ReduceStreamingOperation extends AbstractParallelOperation {
-  private static final Logger LOG = Logger.getLogger(ReduceStreamingOperation.class.getName());
 
   protected SReduce op;
 
@@ -66,11 +64,6 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   @Override
   public boolean send(int source, IMessage message, int flags) {
     return op.reduce(source, message.getContent(), flags);
-  }
-
-  @Override
-  public boolean progress() {
-    return op.progress();
   }
 
   private class ReduceFunctionImpl implements ReduceFunction {
@@ -110,17 +103,7 @@ public class ReduceStreamingOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
+  public SReduce getOp() {
+    return op;
   }
 }

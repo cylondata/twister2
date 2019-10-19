@@ -41,12 +41,6 @@ public class RRClient {
   private static final Logger LOG = Logger.getLogger(RRClient.class.getName());
 
   /**
-   * Workers use this ID in their first message
-   * when they request ID from Job Master
-   */
-  public static final int WORKER_UNASSIGNED_ID = -1000;
-
-  /**
    * The underlying client
    */
   private Client client;
@@ -90,10 +84,6 @@ public class RRClient {
     this.workerID = wId;
     this.loop = looper;
     client = new Client(host, port, cfg, looper, new Handler(), false);
-  }
-
-  public void setWorkerID(int workerID) {
-    this.workerID = workerID;
   }
 
   public boolean connect() {

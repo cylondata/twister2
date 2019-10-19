@@ -21,6 +21,8 @@ import java.io.Serializable;
  */
 public interface DataPartition<T> extends Serializable {
 
+  String DEFAULT_REF = "default-ref";
+
   /**
    * Get the data consumer
    *
@@ -55,5 +57,12 @@ public interface DataPartition<T> extends Serializable {
 
   default void clear() {
 
+  }
+
+  /**
+   * Reference can be used to load a persisted partition from disk of hdfs
+   */
+  default String getReference() {
+    return DEFAULT_REF;
   }
 }

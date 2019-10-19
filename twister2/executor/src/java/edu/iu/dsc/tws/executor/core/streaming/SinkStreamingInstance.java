@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.checkpointing.api.SnapshotImpl;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
+import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointUtils;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.executor.core.TaskCheckpointUtils;
@@ -122,6 +123,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    */
   private String[] inEdgeArray;
 
+  private TaskContextImpl taskContext;
+
 
   public SinkStreamingInstance(ICompute streamingTask, BlockingQueue<IMessage> streamingInQueue,
                                Config config, String tName, int taskId,
@@ -157,9 +160,10 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
    * @param cfg configuration
    */
   public void prepare(Config cfg) {
-    streamingTask.prepare(cfg, new TaskContextImpl(streamingTaskIndex, taskId,
+    taskContext = new TaskContextImpl(streamingTaskIndex, taskId,
         globalTaskId, taskName, parallelism, workerId, nodeConfigs, inEdges, taskSchedulePlan,
-        OperationMode.STREAMING));
+        OperationMode.STREAMING);
+    streamingTask.prepare(cfg, taskContext);
 
     /// we will use this array for iteration
     this.intOpArray = new IParallelOperation[streamingInParOps.size()];
@@ -220,6 +224,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       long checkpointedBarrierId = this.pendingCheckpoint.execute();
       if (checkpointedBarrierId != -1) {
         ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
+        taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
       }
     }
 
@@ -254,6 +259,8 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       LOG.fine(() -> "Barrier received to " + this.globalTaskId
           + " with id " + barrierId + " from " + edge);
       this.pendingCheckpoint.schedule(edge, barrierId);
+    } else {
+      streamingInParOps.get(edge).reset();
     }
     return true;
   }

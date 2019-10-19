@@ -1,2 +1,5 @@
 # use this property to debug the client submitting the job
 # twister2.client.debug: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5006'
+
+# Weather we have a requirement to copy the system package
+twister2.resource.systempackage.copy: false

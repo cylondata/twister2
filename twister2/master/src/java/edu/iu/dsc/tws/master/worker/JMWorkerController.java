@@ -216,4 +216,5 @@ public class JMWorkerController implements IWorkerController, MessageHandler {
   public CheckpointingClient getCheckpointingClient() {
     return this.checkpointingClient;
   }
+
 }

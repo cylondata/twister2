@@ -19,9 +19,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -90,9 +95,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     JobMasterRequestObject.init(config, job.getJobName(), jobFileSize);
 
     // check all relevant entities on Kubernetes master
-    boolean allEntitiesOK = checkEntitiesOnKubernetesMaster(job);
+    boolean allEntitiesOK = checkEntitiesForJob(job);
     if (!allEntitiesOK) {
       return false;
+    }
+
+    // create znodes at ZooKeeper server if ZK server is used
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      boolean jobZnodeCreated = createJobZnode(job);
+      if (!jobZnodeCreated) {
+        // nothing to clear at this point, if the job znode is not created
+        return false;
+      }
     }
 
     // start job package transfer threads to watch pods to starting
@@ -168,6 +182,29 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     }
     return true;
   }
+
+  /**
+   * create a znode on ZooKeeper server
+   * @param job
+   * @return
+   */
+  public boolean createJobZnode(JobAPI.Job job) {
+
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+    String rootPath = ZKContext.rootNode(config);
+
+    try {
+      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
+      jobSubmissionStatus.setJobZNodeCreated(true);
+      return true;
+
+    } catch (Exception e) {
+      LOG.severe(e.getMessage()
+          + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+      return false;
+    }
+  }
+
 
   private String getJobMasterIP(JobAPI.Job job) {
     if (JobMasterContext.jobMasterRunsInClient(config)) {
@@ -252,15 +289,18 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   /**
-   * check whether there are any entities with the same name on Kubernetes master
+   * check whether there are any entities with the same name on Kubernetes master or ZooKeeper
    * check the existence of all entities that will be created for this job
    * if any one of them exist, return false,
    * otherwise return true
    * <p>
    * for OpenMPI enabled jobs, check whether the Secret object exist on Kubernetes master
    * if it does not exist, return false
+   * <p>
+   * for fault tolerant jobs, check whether job znode exist in ZooKeeper server
+   * if it exists, return false
    */
-  private boolean checkEntitiesOnKubernetesMaster(JobAPI.Job job) {
+  private boolean checkEntitiesForJob(JobAPI.Job job) {
 
     String jobName = job.getJobName();
 
@@ -324,6 +364,22 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       if (!secretExists) {
         LOG.severe("No Secret object is available in the cluster with the name: " + secretName
             + "\nFirst create this object or make that object created by your cluster admin."
+            + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
+        return false;
+      }
+    }
+
+    // when fault tolerance is used, we check whether the znodes that will be created for this job
+    // is available at ZooKeeper server
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      CuratorFramework zkClient = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+      String rootPath = ZKContext.rootNode(config);
+      boolean jobZNodesExist = ZKJobZnodeUtil.isThereJobZNodes(zkClient, rootPath, jobName);
+
+      if (jobZNodesExist) {
+        LOG.severe("Some znodes already exist in ZooKeeper that will be used for this job. "
+            + "\nFirst terminate the previously running job with the same name or "
+            + "submit the job with a different job name. "
             + "\n++++++++++++++++++ Aborting submission ++++++++++++++++++");
         return false;
       }
@@ -529,10 +585,26 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   /**
+   * delete job znodes on ZooKeeper server
+   * @param jobName
+   * @return
+   */
+  public boolean deleteJobZnode(String jobName) {
+
+    CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
+    String rootPath = ZKContext.rootNode(config);
+    return ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
+  }
+
+  /**
    * Close up any resources
    */
   @Override
   public void close() {
+
+    // if ZK Client is initialized close that
+    // if not, it does nothing
+    ZKUtils.closeClient();
   }
 
   /**
@@ -572,6 +644,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
       boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
     }
+
+    if (jobSubmissionStatus.isJobZNodeCreated()) {
+      deleteJobZnode(jobName);
+    }
   }
 
   /**
@@ -580,7 +656,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   @Override
   public boolean terminateJob(String jobName) {
 
-    // first delete the job master StatefulSet
+    // delete the job master StatefulSet
     String jobMasterStatefulSetName = KubernetesUtils.createJobMasterStatefulSetName(jobName);
     boolean deleted = controller.deleteStatefulSet(jobMasterStatefulSetName);
 
@@ -601,6 +677,11 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     // delete the persistent volume claim
     String pvcName = KubernetesUtils.createPersistentVolumeClaimName(jobName);
     boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
+
+    // delete job znode from ZooWorker server if fault tolerant
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      deleteJobZnode(jobName);
+    }
 
     return true;
   }

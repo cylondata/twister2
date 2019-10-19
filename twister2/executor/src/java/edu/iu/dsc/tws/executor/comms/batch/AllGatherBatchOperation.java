@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
+import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -53,18 +54,8 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
   }
 
   @Override
-  public boolean progress() {
-    return op.progress() || !op.isComplete();
-  }
-
-  @Override
-  public boolean isComplete() {
-    return op.isComplete();
-  }
-
-  @Override
-  public void finish(int source) {
-    op.finish(source);
+  public BaseOperation getOp() {
+    return this.op;
   }
 
   private class FinalGatherReceive implements BulkReceiver {
@@ -89,15 +80,5 @@ public class AllGatherBatchOperation extends AbstractParallelOperation {
     public boolean sync(int target, byte[] message) {
       return syncs.get(target).sync(inEdge, message);
     }
-  }
-
-  @Override
-  public void close() {
-    op.close();
-  }
-
-  @Override
-  public void reset() {
-    op.reset();
   }
 }
