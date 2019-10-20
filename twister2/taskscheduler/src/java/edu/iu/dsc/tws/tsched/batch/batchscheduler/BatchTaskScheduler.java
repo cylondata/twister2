@@ -82,8 +82,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
 
-  private static Set<String> receivableNameSet = new HashSet<>();
-  private static Set<String> collectibleNameSet = new HashSet<>();
+  // todo: changed these from static to instance. Are these really need to be static?
+  private Set<String> receivableNameSet = new HashSet<>();
+  private Set<String> collectibleNameSet = new HashSet<>();
+  private Map<String, Integer> dependentGraphParallelismMap = new HashMap<>();
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -319,6 +321,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   private void validateDependentGraphParallelism(int receptorParallel) {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
+      // todo: This logic seems to have some issues. Do we really need to go through the entire map
+      //  here?
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
         if (receptorParallel != collectorParallelism) {
@@ -328,8 +332,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
       }
     }
   }
-
-  private static Map<String, Integer> dependentGraphParallelismMap = new HashMap<>();
 
   private void storeDependentGraphParallelism(String taskName, int parallel) {
     dependentGraphParallelismMap.put(taskName, parallel);
