@@ -47,7 +47,7 @@ public class SSinkTSet<T> extends SBaseTSet<T> {
 
   @Override
   public ICompute getINode() {
-    return new SinkOp<>(sink, this, Collections.emptySet());
+    return new SinkOp<>(sink, this, Collections.emptyMap());
   }
 
   @Override

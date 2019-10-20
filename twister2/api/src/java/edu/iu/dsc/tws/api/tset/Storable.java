@@ -77,9 +77,9 @@ public interface Storable<T> extends TBase, Serializable {
 //  /**
 //   * Add Data to the data object
 //   *
-//   * @param value value to be added
+//   * @param data value to be added
 //   * @return true if the data was added successfully or false otherwise
 //   */
-//  boolean addData(T value);
+//  boolean updateDataObject(DataObject<T> data);
 
 }

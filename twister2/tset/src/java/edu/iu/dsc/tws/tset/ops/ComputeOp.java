@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -29,7 +29,8 @@ public class ComputeOp<O, I> extends BaseComputeOp<I> {
   public ComputeOp() {
   }
 
-  public ComputeOp(ComputeFunc<O, I> computeFunction, BaseTSet origin, Set<String> receivables) {
+  public ComputeOp(ComputeFunc<O, I> computeFunction, BaseTSet origin,
+                   Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }

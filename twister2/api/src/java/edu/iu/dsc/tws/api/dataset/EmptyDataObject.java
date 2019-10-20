@@ -46,7 +46,7 @@ public final class EmptyDataObject implements DataObject {
     private static final EmptyDataObject INSTANCE = new EmptyDataObject();
   }
 
-  public static EmptyDataObject getInstance() {
+  public static DataObject getInstance() {
     return EmptyDataObject.BillPughSingleton.INSTANCE;
   }
 }

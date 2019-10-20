@@ -41,10 +41,10 @@ public final class EmptyDataPartition implements DataPartition {
   }
 
   private static class BillPughSingleton {
-    private static final EmptyDataPartition INSTANCE = new EmptyDataPartition();
+    private static final DataPartition INSTANCE = new EmptyDataPartition();
   }
 
-  public static EmptyDataPartition getInstance() {
+  public static DataPartition getInstance() {
     return BillPughSingleton.INSTANCE;
   }
 }

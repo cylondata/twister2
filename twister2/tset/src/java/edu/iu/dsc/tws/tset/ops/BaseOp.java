@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tset.ops;
 
 import java.io.Serializable;
 import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
@@ -33,15 +33,19 @@ public abstract class BaseOp implements Receptor, Serializable {
   // keys of the data partitions this op receives
   private IONames receivables;
 
+  // map (TSetID --> input Name)
+  private Map<String, String> rcvTSets;
+
   BaseOp() {
   }
 
   BaseOp(BaseTSet originTSet) {
-    this(originTSet, Collections.emptySet());
+    this(originTSet, Collections.emptyMap());
   }
 
-  BaseOp(BaseTSet originTSet, Set<String> receivablesNames) {
-    this.receivables = IONames.declare(receivablesNames);
+  BaseOp(BaseTSet originTSet, Map<String, String> receivableTSets) {
+    this.receivables = IONames.declare(receivableTSets.keySet());
+    this.rcvTSets = receivableTSets;
 
     if (originTSet != null) {
       this.tSetContext.settSetId(originTSet.getId());
@@ -51,8 +55,10 @@ public abstract class BaseOp implements Receptor, Serializable {
   }
 
   @Override
-  public void add(String name, DataPartition<?> data) {
-    this.tSetContext.addInput(name, data);
+  public void add(String key, DataPartition<?> data) {
+    // when it is sent to the tset context, users would not know about the key here. Therefore,
+    // translate it to the user specified key
+    this.tSetContext.addInput(rcvTSets.get(key), data);
   }
 
   @Override

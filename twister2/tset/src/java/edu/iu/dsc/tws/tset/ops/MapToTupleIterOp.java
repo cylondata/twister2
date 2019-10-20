@@ -14,7 +14,7 @@
 package edu.iu.dsc.tws.tset.ops;
 
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -30,7 +30,7 @@ public class MapToTupleIterOp<K, O, I> extends BaseComputeOp<Iterator<I>> {
   }
 
   public MapToTupleIterOp(MapIterCompute<Tuple<K, O>, I> mapToTupFn, BaseTSet origin,
-                          Set<String> receivables) {
+                          Map<String, String> receivables) {
     super(origin, receivables);
     this.mapFunction = mapToTupFn;
   }

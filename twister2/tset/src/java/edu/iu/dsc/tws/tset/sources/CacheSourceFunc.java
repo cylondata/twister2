@@ -11,23 +11,19 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.sources;
 
-import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 
-public class CacheSource<T> extends BaseSourceFunc<T> {
+public class CacheSourceFunc<T> extends BaseSourceFunc<T> {
 //  private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
-  private int end;
-  private int current;
-  private DataObject<T> data;
+  private String cachedKey;
   private transient DataPartitionConsumer<T> currentConsumer;
 
-  public CacheSource(DataObject<T> datapoints) {
-    this.data = datapoints;
-    this.end = datapoints.getPartitionCount();
-    this.current = 0;
+  public CacheSourceFunc(String cachedDataKey) {
+    this.cachedKey = cachedDataKey;
   }
 
   @Override
@@ -37,23 +33,35 @@ public class CacheSource<T> extends BaseSourceFunc<T> {
 
   @Override
   public T next() {
-    T ret = currentConsumer.next();
-    updateConsumer();
-    return ret;
+//    T ret = currentConsumer.next();
+//    updateConsumer();
+//    return ret;
+    return currentConsumer.next();
   }
 
-  //  check if the consumer has reached the end. if its at the end, attach the next consumer.
-  private void updateConsumer() {
-    if (!currentConsumer.hasNext() && (++current < end)) {
-      currentConsumer = data.getPartitions()[current].getConsumer();
-    }
-  }
+//  //  check if the consumer has reached the end. if its at the end, attach the next consumer.
+//  private void updateConsumer() {
+//    if (!currentConsumer.hasNext() && (++current < end)) {
+//      currentConsumer = data.getPartitions()[current].getConsumer();
+//    }
+//  }
 
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
 
+    // get the data from the ctx
+    //  private int end;
+    //  private int current = 0;
+    DataPartition<T> data = (DataPartition<T>) ctx.getInput(cachedKey);
+//    this.end = data.getPartitionCount();
     // set the current consumer to the partition at idx 0 of the partition array
-    this.currentConsumer = data.getPartitions()[0].getConsumer();
+    this.currentConsumer = data.getConsumer();
   }
+
+//  public void setData(DataObject<T> data) {
+//    this.data = data;
+//    this.end = data.getPartitionCount();
+//    this.current = 0;
+//  }
 }

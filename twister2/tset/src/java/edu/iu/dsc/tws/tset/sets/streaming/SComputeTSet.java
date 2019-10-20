@@ -56,11 +56,12 @@ public class SComputeTSet<O, I> extends SBaseTSet<O> {
 
   @Override
   public ICompute<I> getINode() {
+    // todo: fix empty map
     if (computeFunc instanceof ComputeFunc) {
-      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this, Collections.emptySet());
+      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this, Collections.emptyMap());
     } else if (computeFunc instanceof ComputeCollectorFunc) {
       return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
-          Collections.emptySet());
+          Collections.emptyMap());
     }
 
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);

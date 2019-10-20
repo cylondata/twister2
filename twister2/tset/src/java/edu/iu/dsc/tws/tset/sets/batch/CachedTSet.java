@@ -46,7 +46,7 @@ import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
-import edu.iu.dsc.tws.tset.sources.CacheSource;
+import edu.iu.dsc.tws.tset.sources.CacheSourceFunc;
 
 /**
  * Cached tset
@@ -55,8 +55,8 @@ import edu.iu.dsc.tws.tset.sources.CacheSource;
  */
 public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   private SinkFunc<?> cacheSinkFunc;
-
   private String cacheSourcePrefix;
+  private SourceTSet<T> cacheSource;
 
   /*
   Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
@@ -65,7 +65,6 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
    */
   public CachedTSet(BatchTSetEnvironment tSetEnv, SinkFunc<?> sinkFunc, int parallelism) {
     super(tSetEnv, "cached", parallelism);
-
     this.cacheSinkFunc = sinkFunc;
     this.cacheSourcePrefix = "csource(" + getId() + ")";
   }
@@ -77,23 +76,17 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
 
   @Override
   public DirectTLink<T> direct() {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.direct();
+    return getCacheSource().direct();
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.reduce(reduceFn);
+    return getCacheSource().reduce(reduceFn);
   }
 
   @Override
   public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.partition(partitionFn, targetParallelism);
+    return getCacheSource().partition(partitionFn, targetParallelism);
   }
 
   @Override
@@ -103,43 +96,32 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
 
   @Override
   public GatherTLink<T> gather() {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.gather();
+    return getCacheSource().gather();
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.allReduce(reduceFn);
+    return getCacheSource().allReduce(reduceFn);
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.allGather();
+    return getCacheSource().allGather();
   }
 
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(new CacheSource<>(getDataObject()),
-        getParallelism()).setName(cacheSourcePrefix);
-    return cacheSource.mapToTuple(generateTuple);
+    return getCacheSource().mapToTuple(generateTuple);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
-    SourceTSet<T> cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-        new CacheSource<>(getDataObject()), getParallelism());
-    return cacheSource.replicate(replications);
+    return getCacheSource().replicate(replications);
   }
 
   @Override
   public CachedTSet<T> cache() {
     return this;
-//    throw new IllegalStateException("Calling Cache on an already cached Object");
   }
 
   /**
@@ -154,6 +136,22 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   public DataObject<T> getDataObject() {
     return getTSetEnv().getData(getId());
   }
+
+  private SourceTSet<T> getCacheSource() {
+    if (this.cacheSource == null) {
+      this.cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
+          new CacheSourceFunc<T>(cacheSourcePrefix), getParallelism());
+      this.cacheSource.addInput(cacheSourcePrefix, this);
+    }
+
+    return this.cacheSource;
+  }
+
+//  @Override
+//  public boolean updateDataObject(DataObject<T> data) {
+//
+//    return false;
+//  }
 
   /*  @Override
   public T getPartitionData(int partitionId) {

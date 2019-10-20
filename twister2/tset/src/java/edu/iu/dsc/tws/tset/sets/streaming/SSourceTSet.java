@@ -49,6 +49,6 @@ public class SSourceTSet<T> extends SBaseTSet<T> {
 
   @Override
   public INode getINode() {
-    return new SourceOp<>(source, this, Collections.emptySet());
+    return new SourceOp<>(source, this, Collections.emptyMap());
   }
 }

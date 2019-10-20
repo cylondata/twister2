@@ -33,7 +33,6 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
@@ -55,7 +54,8 @@ public abstract class TSetEnvironment {
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
 
-  private Map<String, Map<String, Storable<?>>> tSetInputMap = new HashMap<>();
+  // map (tsetID --> ( map ( input tset id --> input key)))
+  private Map<String, Map<String, String>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
 
@@ -186,18 +186,26 @@ public abstract class TSetEnvironment {
     return EmptyDataObject.getInstance();
   }
 
-//  /**
-//   * Adds inputs to tasks
-//   *
-//   * @param taskName task name
-//   * @param key identifier/ key for the input
-//   * @param input a cacheable object which returns a {@link DataObject}
-//   */
-//  public void addInput(String taskName, String key, Cacheable<?> input) {
-//    Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
-//    temp.put(key, input);
-//    tSetInputMap.put(taskName, temp);
-//  }
+  /**
+   * Adds inputs to tasks
+   *
+   * @param tSetID      task name
+   * @param inputTSetID identifier/ inputTSetID for the inputKey
+   * @param inputKey    a cacheable object which returns a {@link DataObject}
+   */
+  public void addInput(String tSetID, String inputTSetID, String inputKey) {
+    if (tSetInputMap.containsKey(tSetID)) {
+      tSetInputMap.get(tSetID).put(inputTSetID, inputKey);
+    } else {
+      Map<String, String> temp = new HashMap<>();
+      temp.put(inputTSetID, inputKey);
+      tSetInputMap.put(tSetID, temp);
+    }
+  }
+
+  public Map<String, String> getInputs(String tSetID) {
+    return tSetInputMap.getOrDefault(tSetID, new HashMap<>());
+  }
 
 //  /**
 //   * pushes the inputs into each task before the task execution is done

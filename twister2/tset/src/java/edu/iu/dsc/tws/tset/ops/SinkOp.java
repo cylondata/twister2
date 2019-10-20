@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
@@ -39,10 +39,10 @@ public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, C
   public SinkOp() {
   }
 
-  public SinkOp(SinkFunc<T> sink, BaseTSet origin, Set<String> receivableNames) {
-    super(origin, receivableNames);
+  public SinkOp(SinkFunc<T> sink, BaseTSet originTSet, Map<String, String> receivableTSets) {
+    super(originTSet, receivableTSets);
     this.sink = sink;
-    this.collectible = IONames.declare(origin.getId());
+    this.collectible = IONames.declare(originTSet.getId());
   }
 
   @Override

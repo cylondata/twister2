@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
@@ -30,8 +30,8 @@ public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
   BaseComputeOp() {
   }
 
-  BaseComputeOp(BaseTSet originTSet, Set<String> receivablesNames) {
-    super(originTSet, receivablesNames);
+  BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
+    super(originTSet, receivablesTSets);
   }
 
   @Override

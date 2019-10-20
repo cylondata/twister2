@@ -73,10 +73,10 @@ public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<
 
     if (mapToTupleFunc instanceof MapCompute) {
       return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
-          Collections.emptySet());
+          Collections.emptyMap());
     } else if (mapToTupleFunc instanceof MapIterCompute) {
       return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
-          Collections.emptySet());
+          Collections.emptyMap());
     }
 
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);

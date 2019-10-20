@@ -173,8 +173,4 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     // update the data mapping for targetTSet
     addData(updateTSet.getId(), data);
   }
-
-//  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {
-//    return runAndGet(leafTset, false);
-//  }
 }

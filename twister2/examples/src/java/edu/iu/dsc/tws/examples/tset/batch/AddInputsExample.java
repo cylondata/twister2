@@ -57,10 +57,10 @@ public class AddInputsExample extends BatchTsetExample {
     ).addInput("src-input", srcCache).lazyCache();
 
     for (int i = 0; i < 4; i++) {
-      env.evalAndUpdate(out, srcCache);
+      env.evalAndUpdate(out, baseSrcCache);
     }
 
-    srcCache.direct().forEach(l -> LOG.info(l.toString()));
+    baseSrcCache.direct().forEach(l -> LOG.info(l.toString()));
 
   }
 

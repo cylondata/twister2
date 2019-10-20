@@ -13,7 +13,7 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.RecordCollector;
@@ -35,7 +35,7 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
   }
 
   public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin,
-                            Set<String> receivables) {
+                            Map<String, String> receivables) {
     super(origin, receivables);
     this.computeFunction = computeFunction;
   }

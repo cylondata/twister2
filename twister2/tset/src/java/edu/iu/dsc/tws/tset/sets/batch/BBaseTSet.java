@@ -13,12 +13,10 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -37,8 +35,6 @@ import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
-
-  private Set<String> inputs = new HashSet<>();
 
   BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
@@ -189,31 +185,20 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     return direct().lazyCache();
   }
 
-  //  @Override
-//  public boolean addInput(Cacheable<?> input) {
-//    getTSetEnv().addInput(getId(), key, input);
-//    return true;
-//  }
-
-
   @Override
   public BBaseTSet<T> addInput(String key, Storable<T> input) {
-    // get the data object corresponding to the input Tset and add a new mapping with the user
-    // provided key
-//    this.inputs.add(input.getId());
-    this.inputs.add(key);
+//    if (getTSetEnv().isDataAvailable(input.getId())) {
+//      getTSetEnv().addInput(getId(), input.getId(), key);
+//      return this;
+//    }
 
-    if (getTSetEnv().isDataAvailable(input.getId())) {
-      DataObject<T> data = getTSetEnv().getData(input.getId());
-      getTSetEnv().addData(key, data);
-      return this;
-    }
-
-    throw new RuntimeException("No data available for tset: " + input.toString());
+//    throw new RuntimeException("No data available for tset: " + input.toString());
+    getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
   }
 
-  Set<String> getInputs() {
-    return inputs;
+  Map<String, String> getInputs() {
+    return getTSetEnv().getInputs(getId());
   }
 
 //  public void finishIter() {

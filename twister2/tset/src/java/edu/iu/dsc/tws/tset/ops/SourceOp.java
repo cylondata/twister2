@@ -11,7 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.Set;
+import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
@@ -27,7 +27,7 @@ public class SourceOp<T> extends BaseOp implements ISource {
 
   }
 
-  public SourceOp(SourceFunc<T> src, BaseTSet originTSet, Set<String> receivables) {
+  public SourceOp(SourceFunc<T> src, BaseTSet originTSet, Map<String, String> receivables) {
     super(originTSet, receivables);
     this.source = src;
   }
