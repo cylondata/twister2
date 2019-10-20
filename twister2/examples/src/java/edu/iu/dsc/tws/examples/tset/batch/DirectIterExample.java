@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -20,6 +21,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -35,19 +37,17 @@ public class DirectIterExample extends BatchTsetExample {
     CachedTSet<Integer> cachedInput = src.direct().cache();
 
     LOG.info("test direct iteration");
-    CachedTSet<Object> cached = cachedInput.direct().map(
+    ComputeTSet<Object, Iterator<Integer>> lazyForEach = cachedInput.direct().lazyForEach(
         input -> {
           LOG.info("##" + input.toString());
-          return null;
-        })
-        .lazyCache();
+        });
 
     // eval the lazyCached tset for 4 times (second task graph will be created once but
     // will be executed 4 times)
     for (int i = 0; i < 4; i++) {
-      env.eval(cached);
+      env.eval(lazyForEach);
     }
-    env.finishEval(cached);
+    env.finishEval(lazyForEach);
   }
 
 
