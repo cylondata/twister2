@@ -13,6 +13,7 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
@@ -51,6 +52,10 @@ public class ComputeTSet<O, I> extends BBaseTSet<O> {
     return this;
   }
 
+  @Override
+  public ComputeTSet<O, I> addInput(String key, Storable<O> input) {
+    return (ComputeTSet<O, I>) super.addInput(key, input);
+  }
 
   @Override
   public ICompute<I> getINode() {

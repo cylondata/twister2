@@ -197,14 +197,14 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
 
   @Override
-  public BBaseTSet<T> addInput(String key, Storable<?> input) {
+  public BBaseTSet<T> addInput(String key, Storable<T> input) {
     // get the data object corresponding to the input Tset and add a new mapping with the user
     // provided key
 //    this.inputs.add(input.getId());
     this.inputs.add(key);
 
     if (getTSetEnv().isDataAvailable(input.getId())) {
-      DataObject data = getTSetEnv().getData(input.getId());
+      DataObject<T> data = getTSetEnv().getData(input.getId());
       getTSetEnv().addData(key, data);
       return this;
     }

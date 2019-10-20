@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.EmptyDataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.TSetUtils;
@@ -121,7 +122,7 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   }
 
   // adds the data into the task executor
-  public void addData(String key, DataObject data) {
+  public <T> void addData(String key, DataObject<T> data) {
     getTaskExecutor().addInput(key, data);
   }
 
@@ -163,8 +164,14 @@ public class BatchTSetEnvironment extends TSetEnvironment {
     getTaskExecutor().closeExecution(ctx.getComputeGraph(), ctx.getExecutionPlan());
   }
 
-  public <T> DataObject<T> evaluateAndGet(BaseTSet leafTset) {
-    return null;
+  public <T, ST extends BaseTSet<T> & Storable<T>> void evalAndUpdate(ST evalTSet, ST updateTSet) {
+    eval(evalTSet);
+
+    // get the data from the evaluation
+    DataObject<T> data = getData(evalTSet.getId());
+
+    // update the data mapping for targetTSet
+    addData(updateTSet.getId(), data);
   }
 
 //  public <T> DataObject<T> runAndGet(BaseTSet leafTset) {

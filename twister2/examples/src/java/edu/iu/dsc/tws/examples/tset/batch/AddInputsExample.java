@@ -41,8 +41,7 @@ public class AddInputsExample extends BatchTsetExample {
     CachedTSet<Integer> srcCache = src.direct().cache().setName("src");
 
     // make src an input of baseSrc
-    CachedTSet<Integer> baseSrcCache = baseSrc.direct().cache().setName("baseSrc")
-        .addInput("src-input", srcCache);
+    CachedTSet<Integer> baseSrcCache = baseSrc.direct().cache().setName("baseSrc");
 
     CachedTSet<Integer> out = baseSrcCache.direct().compute(
         new BaseComputeCollectorFunc<Integer, Iterator<Integer>>() {
@@ -55,13 +54,13 @@ public class AddInputsExample extends BatchTsetExample {
             }
           }
         }
-    ).lazyCache();
+    ).addInput("src-input", srcCache).lazyCache();
 
     for (int i = 0; i < 4; i++) {
-      env.eval(out);
+      env.evalAndUpdate(out, srcCache);
     }
 
-    out.direct().forEach(l -> LOG.info(l.toString()));
+    srcCache.direct().forEach(l -> LOG.info(l.toString()));
 
   }
 

@@ -155,7 +155,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
     return getTSetEnv().getData(getId());
   }
 
-/*  @Override
+  /*  @Override
   public T getPartitionData(int partitionId) {
     return null;
   }
@@ -181,7 +181,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   }
 
   @Override
-  public CachedTSet<T> addInput(String key, Storable<?> input) {
+  public CachedTSet<T> addInput(String key, Storable<T> input) {
     return (CachedTSet<T>) super.addInput(key, input);
   }
 

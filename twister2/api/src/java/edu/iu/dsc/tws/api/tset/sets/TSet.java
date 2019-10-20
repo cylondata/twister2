@@ -130,7 +130,7 @@ public interface TSet<T> {
    * @param input the TSet to be added as an input
    * @return true if the input was added successfully or false otherwise
    */
-  TSet<T> addInput(String key, Storable<?> input);
+  TSet<T> addInput(String key, Storable<T> input);
 
   /**
    * Union operation which results in a single TSet, In order for this to work both TSet's should
