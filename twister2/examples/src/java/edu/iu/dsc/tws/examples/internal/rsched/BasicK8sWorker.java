@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,16 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import edu.iu.dsc.tws.api.comms.Communicator;
+import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.compute.graph.OperationMode;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
@@ -44,10 +55,14 @@ import edu.iu.dsc.tws.api.resource.ISenderToDriver;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.Network;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerResourceUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
+import edu.iu.dsc.tws.task.impl.ComputeConnection;
+import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
+import edu.iu.dsc.tws.task.impl.TaskExecutor;
 
 public class BasicK8sWorker
     implements IWorker, IAllJoinedListener, IScalerListener, IReceiverFromDriver {
@@ -63,12 +78,28 @@ public class BasicK8sWorker
   // set this flag to true after getting scaledUp event
   private boolean scaledUp = false;
 
+  /**
+   * Task executor
+   */
+  private TaskExecutor taskExecutor;
+
+  private Config config;
+
+  private IWorkerController controller;
+
+  private Communicator communicator;
+
+  private TWSChannel channel;
+
   @Override
-  public void execute(Config config,
+  public void execute(Config cfg,
                       int workerID,
                       IWorkerController workerController,
                       IPersistentVolume persistentVolume,
                       IVolatileVolume volatileVolume) {
+
+    this.config = cfg;
+    this.controller = workerController;
 
     WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
@@ -94,6 +125,19 @@ public class BasicK8sWorker
       return;
     }
 
+    //For testing
+    //create the channel
+    channel = Network.initializeChannel(config, controller);
+    String persistent = null;
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerID, workerList, communicator, null);
+
+    ComputeGraph graph = generateGraph();
+    ExecutionPlan plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
+
     Map<String, List<JobMasterAPI.WorkerInfo>> workersPerNode =
         WorkerResourceUtils.getWorkersPerNode(workerList);
     printWorkersPerNode(workersPerNode);
@@ -103,6 +147,98 @@ public class BasicK8sWorker
 //    listHdfsDir();
 //    sleepSomeTime(50);
 //    echoServer(workerController.getWorkerInfo());
+
+    //For testing, recreate the channel
+    LOG.info("After the scale up operation");
+    communicator.close();
+    channel = Network.initializeChannel(config, controller);
+
+    // create the communicator
+    communicator = new Communicator(config, channel, persistent);
+    taskExecutor = new TaskExecutor(config, workerID, workerList, communicator, null);
+
+    graph = generateGraph();
+    plan = taskExecutor.plan(graph);
+    taskExecutor.execute(graph, plan);
+
+    workersPerNode = WorkerResourceUtils.getWorkersPerNode(workerList);
+    printWorkersPerNode(workersPerNode);
+  }
+
+  private ComputeGraph generateGraph() {
+    GeneratorTask g = new GeneratorTask();
+    ReduceTask rt = new ReduceTask();
+    PartitionTask r = new PartitionTask();
+
+    ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
+    builder.addSource("source", g, 4);
+    ComputeConnection pc = builder.addCompute("compute", r, 4);
+    pc.partition("source")
+        .viaEdge("partition-edge")
+        .withDataType(MessageTypes.OBJECT);
+    ComputeConnection rc = builder.addSink("sink", rt, 1);
+    rc.reduce("compute")
+        .viaEdge("compute-edge")
+        .withReductionFunction((object1, object2) -> object1);
+
+    builder.setMode(OperationMode.BATCH);
+
+    ComputeGraph graph = builder.build();
+    graph.setGraphName("MultiTaskGraph");
+    return graph;
+  }
+
+  private static class GeneratorTask extends BaseSource {
+    private static final long serialVersionUID = -254264903510284748L;
+
+    private int count = 0;
+
+    @Override
+    public void execute() {
+      if (count == 999) {
+        if (context.writeEnd("partition-edge", "Hello")) {
+          count++;
+        }
+      } else if (count < 999) {
+        if (context.write("partition-edge", "Hello")) {
+          count++;
+        }
+      }
+    }
+  }
+
+  private static class ReduceTask extends BaseSink {
+    private static final long serialVersionUID = -254264903510284791L;
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      count++;
+      LOG.info(String.format("%d %d Reduce received count: %d", context.getWorkerId(),
+          context.globalTaskId(), count));
+      return true;
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static class PartitionTask extends BaseCompute {
+    private static final long serialVersionUID = -254264903510284798L;
+
+    private int count = 0;
+
+    @Override
+    public boolean execute(IMessage message) {
+      if (message.getContent() instanceof Iterator) {
+        Iterator it = (Iterator) message.getContent();
+        while (it.hasNext()) {
+          count += 1;
+          context.write("compute-edge", it.next());
+        }
+      }
+      LOG.info(String.format("%d %d Partition Received count: %d", context.getWorkerId(),
+          context.globalTaskId(), count));
+      return true;
+    }
   }
 
   private List<JobMasterAPI.WorkerInfo> initSynch(IWorkerController workerController) {
