@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -26,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
  * @param <T1> Type output from the communication layer for the corresponding edge
  * @param <T0> Base type of the edge
  */
-public interface TLink<T1, T0> {
+public interface TLink<T1, T0> extends TBase {
 
   /**
    * Name of the TSet and return the same tlink
@@ -34,6 +35,7 @@ public interface TLink<T1, T0> {
    * @param name name
    * @return same TLink
    */
+  @Override
   TLink<T1, T0> setName(String name);
 
   /**

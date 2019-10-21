@@ -39,6 +39,7 @@ import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Storable;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -49,10 +50,11 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
  *
  * @param <T> type of the data set
  */
-public interface TSet<T> {
+public interface TSet<T> extends TBase {
   /**
    * Name of the tset
    */
+  @Override
   TSet<T> setName(String name);
 
   /**
@@ -127,8 +129,8 @@ public interface TSet<T> {
    * Allows users to pass in other TSets as inputs for a TSet
    *
    * @param key the key used to store the given TSet
-   * @param input the TSet to be added as an input
-   * @return true if the input was added successfully or false otherwise
+   * @param input a @{@link Storable} TSet to be added as an input
+   * @return this TSet
    */
   TSet<T> addInput(String key, Storable<?> input);
 
