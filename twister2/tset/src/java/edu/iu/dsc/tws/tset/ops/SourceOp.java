@@ -14,12 +14,13 @@ package edu.iu.dsc.tws.tset.ops;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SourceOp<T> extends BaseOp implements ISource {
+public class SourceOp<T> extends BaseOp implements ISource, Closable {
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
   private SourceFunc<T> source;
 
@@ -46,5 +47,10 @@ public class SourceOp<T> extends BaseOp implements ISource {
     } else {
       multiEdgeOpAdapter.writeEndToEdges();
     }
+  }
+
+  @Override
+  public void close() {
+    source.close();
   }
 }

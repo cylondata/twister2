@@ -23,12 +23,14 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import edu.iu.dsc.tws.api.compute.modifiers.Closable;
+
 /**
  * Represents a source producing values
  *
  * @param <T> type of values produced by source
  */
-public interface SourceFunc<T> extends TFunction<T, T> {
+public interface SourceFunc<T> extends TFunction<T, T>, Closable {
   /**
    * Weather we have more data
    *
@@ -42,4 +44,9 @@ public interface SourceFunc<T> extends TFunction<T, T> {
    * @return the next value
    */
   T next();
+
+  @Override
+  default void close() {
+
+  }
 }
