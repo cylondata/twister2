@@ -15,9 +15,16 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -85,19 +92,52 @@ public final class JobMasterStarter {
 
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
-    String namespace = KubernetesContext.namespace(config);
     JobTerminator jobTerminator = new JobTerminator(config);
 
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
 
+    JobMasterAPI.JobMasterState initialState = determineInitialState(config, jobName);
+
     // start JobMaster
-    JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler);
+    JobMaster jobMaster =
+        new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(false);
     jobMaster.startJobMasterBlocking();
 
     // wait to be deleted by K8s master
     K8sWorkerUtils.waitIndefinitely();
   }
+
+  /**
+   * Job Master is either starting for the first time, or it is coming from failure
+   * We return either JobMasterState.JM_STARTED or JobMasterState.JM_RESTARTED
+   * TODO: If ZooKeeper is not used,
+   *   currently we just return JM_STARTED. We do not determine real initial status.
+   * @return
+   */
+  public static JobMasterAPI.JobMasterState determineInitialState(Config config, String jobName) {
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      String zkServerAddresses = ZKContext.serverAddresses(config);
+      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
+      CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+      String rootPath = ZKContext.rootNode(config);
+
+      try {
+        if (ZKRestartCheck.isJobMasterRestarting(client, rootPath, jobName)) {
+          return JobMasterAPI.JobMasterState.JM_RESTARTED;
+        }
+
+        return JobMasterAPI.JobMasterState.JM_STARTED;
+
+      } catch (Exception e) {
+        throw new Twister2RuntimeException(e);
+      }
+    }
+
+    return JobMasterAPI.JobMasterState.JM_STARTED;
+  }
+
 }

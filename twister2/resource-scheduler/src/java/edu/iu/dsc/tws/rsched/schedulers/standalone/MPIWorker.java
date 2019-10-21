@@ -376,8 +376,11 @@ public final class MPIWorker {
       LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
       IScalerPerCluster clusterScaler = null;
+      JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+      NomadTerminator nt = new NomadTerminator();
+
       JobMaster jobMaster = new JobMaster(
-          cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+          cfg, hostAddress, port, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
       jobMaster.addShutdownHook(false);
       Thread jmThread = jobMaster.startJobMasterThreaded();
 

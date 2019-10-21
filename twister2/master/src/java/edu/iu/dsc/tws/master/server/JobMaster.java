@@ -181,6 +181,8 @@ public class JobMaster {
 
   private CheckpointManager checkpointManager;
 
+  private JobMasterAPI.JobMasterState initialState;
+
   /**
    * JobMaster constructor
    *
@@ -197,7 +199,8 @@ public class JobMaster {
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
                    JobMasterAPI.NodeInfo nodeInfo,
-                   IScalerPerCluster clusterScaler) {
+                   IScalerPerCluster clusterScaler,
+                   JobMasterAPI.JobMasterState initialState) {
     this.config = config;
     this.masterAddress = masterAddress;
     this.jobTerminator = jobTerminator;
@@ -205,6 +208,7 @@ public class JobMaster {
     this.nodeInfo = nodeInfo;
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
+    this.initialState = initialState;
 
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
@@ -230,10 +234,11 @@ public class JobMaster {
                    IJobTerminator jobTerminator,
                    JobAPI.Job job,
                    JobMasterAPI.NodeInfo nodeInfo,
-                   IScalerPerCluster clusterScaler) {
+                   IScalerPerCluster clusterScaler,
+                   JobMasterAPI.JobMasterState initialState) {
 
     this(config, masterAddress, JobMasterContext.jobMasterPort(config),
-        jobTerminator, job, nodeInfo, clusterScaler);
+        jobTerminator, job, nodeInfo, clusterScaler, initialState);
   }
 
 
@@ -452,9 +457,8 @@ public class JobMaster {
       zkMasterController = new ZKMasterController(config, job.getJobName(),
           job.getNumberOfWorkers(), ZKContext.serverAddresses(config));
 
-      // TODO: need to check whether it is restarting
       try {
-        zkMasterController.initialize(JobMasterAPI.JobMasterState.JM_STARTED);
+        zkMasterController.initialize(initialState);
       } catch (Exception e) {
         throw new Twister2RuntimeException(e);
       }

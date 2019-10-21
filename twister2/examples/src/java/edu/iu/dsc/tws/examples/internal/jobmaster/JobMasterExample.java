@@ -98,8 +98,10 @@ public final class JobMasterExample {
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
     IJobTerminator jobTerminator = new JobTerminator(config);
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
 
-    JobMaster jobMaster = new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler);
+    JobMaster jobMaster =
+        new JobMaster(config, host, jobTerminator, job, jobMasterNode, k8sScaler, initialState);
     jobMaster.startJobMasterThreaded();
 
     LOG.info("Threaded Job Master started:"

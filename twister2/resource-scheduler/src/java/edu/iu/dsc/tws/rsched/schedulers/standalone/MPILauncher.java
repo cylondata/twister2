@@ -207,9 +207,11 @@ public class MPILauncher implements ILauncher {
             "default", "default");
 
         IScalerPerCluster nullScaler = new NullScalar();
+        JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+        NomadTerminator nt = new NomadTerminator();
 
         jobMaster = new JobMaster(
-            config, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo, nullScaler);
+            config, hostAddress, port, nt, job, jobMasterNodeInfo, nullScaler, initialState);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
         ResourceRuntime.getInstance().setJobMasterHostPort(hostAddress, port);

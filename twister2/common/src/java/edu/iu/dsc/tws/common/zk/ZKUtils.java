@@ -139,7 +139,15 @@ public final class ZKUtils {
    * construct a worker path from the given job restart check path and worker ID
    */
   public static String constructWorkerRestartCheckPath(String jobCheckPath, int workerID) {
-    return jobCheckPath + "/" + workerID;
+    return constructRestartCheckPath(jobCheckPath, workerID + "");
+  }
+
+  /**
+   * construct a worker path from the given job restart check path and entityID
+   * entityID can be "jm" for job master and workerID for workers
+   */
+  public static String constructRestartCheckPath(String jobCheckPath, String entityID) {
+    return jobCheckPath + "/" + entityID;
   }
 
   /**
