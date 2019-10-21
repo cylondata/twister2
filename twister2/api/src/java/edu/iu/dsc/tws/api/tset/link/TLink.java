@@ -87,5 +87,5 @@ public interface TLink<T1, T0> extends TBase {
    * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
    *                     return any TSet
    */
-  void sink(SinkFunc<T1> sinkFunction);
+  TBase sink(SinkFunc<T1> sinkFunction);
 }

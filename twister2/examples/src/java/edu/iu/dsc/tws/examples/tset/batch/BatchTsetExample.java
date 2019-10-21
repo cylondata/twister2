@@ -79,6 +79,7 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       }
     }, parallel);
   }
+
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()

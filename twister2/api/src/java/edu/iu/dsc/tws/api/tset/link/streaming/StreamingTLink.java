@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link.streaming;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -40,5 +41,5 @@ public interface StreamingTLink<T1, T0> extends TLink<T1, T0> {
   void forEach(ApplyFunc<T0> applyFunction);
 
   @Override
-  void sink(SinkFunc<T1> sinkFunction);
+  TBase sink(SinkFunc<T1> sinkFunction);
 }

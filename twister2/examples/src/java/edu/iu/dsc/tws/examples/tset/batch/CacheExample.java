@@ -36,6 +36,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -49,18 +50,18 @@ public class CacheExample extends BatchTsetExample {
 
     // test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();
-    runOps(cache);
+    runOps(env, cache);
 
     // test reduce().cache() which has SingleLink semantics
     CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
-    runOps(cache1);
+    runOps(env, cache1);
 
     // test gather.cache() which has TupleValueIterLink
     CachedTSet<Integer> cache2 = src.gather().cache();
-    runOps(cache2);
+    runOps(env, cache2);
   }
 
-  private void runOps(CachedTSet<Integer> cTset) {
+  private void runOps(BatchTSetEnvironment env, CachedTSet<Integer> cTset) {
     LOG.info("test foreach");
     cTset.direct()
         .forEach(i -> LOG.info("foreach: " + i));
@@ -103,13 +104,14 @@ public class CacheExample extends BatchTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    cTset.direct()
+    SinkTSet<Iterator<Integer>> sink = cTset.direct()
         .sink((SinkFunc<Iterator<Integer>>) value -> {
           while (value.hasNext()) {
             LOG.info("val =" + value.next());
           }
           return true;
         });
+    env.run(sink);
   }
 
 

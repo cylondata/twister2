@@ -70,8 +70,10 @@ public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
 
 
   @Override
-  public void sink(SinkFunc<T1> sinkFunction) {
+  public SSinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
     SSinkTSet<T1> sinkTSet = new SSinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
+
+    return sinkTSet;
   }
 }

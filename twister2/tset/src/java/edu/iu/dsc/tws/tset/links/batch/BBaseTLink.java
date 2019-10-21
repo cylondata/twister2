@@ -68,16 +68,10 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
   }
 
   @Override
-  public SinkTSet<T1> lazySink(SinkFunc<T1> sinkFunction) {
+  public SinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
     SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
 
     return sinkTSet;
-  }
-
-  @Override
-  public void sink(SinkFunc<T1> sinkFunction) {
-    SinkTSet<T1> sinkTSet = lazySink(sinkFunction);
-    getTSetEnv().run(sinkTSet);
   }
 }

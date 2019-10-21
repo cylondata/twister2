@@ -40,7 +40,8 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
   BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
 
-  TBase lazySink(SinkFunc<T1> sinkFunction);
+  @Override
+  TBase sink(SinkFunc<T1> sinkFunction);
 
 //  /**
 //   * Runs the dataflow graph and caches data in memory
@@ -66,7 +67,4 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);
-
-  @Override
-  void sink(SinkFunc<T1> sinkFunction);
 }
