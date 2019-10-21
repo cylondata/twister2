@@ -160,10 +160,9 @@ deploy_library \
   twister2/checkpointing/src/java/libcheckpointing-java.jar \
   twister2/checkpointing/src/java/pom.xml
 
-#deploy_proto_library \
-#  twister2/proto/proto-java \
-#  twister2/proto/pom.xml \
-#  twister2/proto/libproto-speed.jar
+deploy_library \
+  twister2/proto/libjproto-java.jar \
+  twister2/proto/pom.xml
 
 deploy_library \
   twister2/proto/utils/libproto-utils-java.jar \
@@ -180,4 +179,3 @@ deploy_library \
 deploy_library \
   twister2/tset/src/java/libtset-java.jar \
   twister2/tset/src/java/pom.xml
-
