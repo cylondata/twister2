@@ -16,10 +16,8 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
-import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
-import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -64,11 +62,6 @@ public abstract class BaseOp implements Receptor, Serializable {
   @Override
   public IONames getReceivableNames() {
     return receivables;
-  }
-
-  void updateTSetContext(Config cfg, TaskContext taskCtx) {
-    this.tSetContext.setConfig(cfg);
-    this.tSetContext.settSetIndex(taskCtx.taskIndex());
   }
 
   TSetContext gettSetContext() {

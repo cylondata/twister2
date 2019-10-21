@@ -47,7 +47,7 @@ public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, C
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    this.updateTSetContext(cfg, ctx);
+    gettSetContext().update(cfg, ctx);
     sink.prepare(gettSetContext());
   }
 

@@ -33,20 +33,18 @@ public class SourceOp<T> extends BaseOp implements ISource {
   }
 
   @Override
+  public void prepare(Config cfg, TaskContext ctx) {
+    gettSetContext().update(cfg, ctx);
+    this.source.prepare(gettSetContext());
+    this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
+  }
+
+  @Override
   public void execute() {
     if (source.hasNext()) {
       multiEdgeOpAdapter.writeToEdges(source.next());
     } else {
       multiEdgeOpAdapter.writeEndToEdges();
     }
-  }
-
-  @Override
-  public void prepare(Config cfg, TaskContext ctx) {
-    this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
-
-    this.updateTSetContext(cfg, ctx);
-
-    this.source.prepare(gettSetContext());
   }
 }

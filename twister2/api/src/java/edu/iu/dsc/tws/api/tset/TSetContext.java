@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 
@@ -63,13 +64,13 @@ public class TSetContext implements Serializable {
   /**
    * TSet context
    *
-   * @param cfg configuration
-   * @param tSetIndex index
-   * @param tSetId id
-   * @param tSetName name
+   * @param cfg         configuration
+   * @param tSetIndex   index
+   * @param tSetId      id
+   * @param tSetName    name
    * @param parallelism parallelism
-   * @param wId worker id
-   * @param configs configuration
+   * @param wId         worker id
+   * @param configs     configuration
    */
   public TSetContext(Config cfg, int tSetIndex, String tSetId, String tSetName,
                      int parallelism, int wId, Map<String, Object> configs) {
@@ -198,7 +199,7 @@ public class TSetContext implements Serializable {
   /**
    * Adds a input object into the map
    *
-   * @param key the key to be associated with the input object
+   * @param key  the key to be associated with the input object
    * @param data the input object
    */
   public void addInput(String key, DataPartition<?> data) {
@@ -231,5 +232,11 @@ public class TSetContext implements Serializable {
 
   public void setConfig(Config config) {
     this.config = config;
+  }
+
+  public void update(Config conf, TaskContext taskCtx) {
+    setConfig(conf);
+    settSetIndex(taskCtx.taskIndex());
+    setWorkerId(taskCtx.getWorkerId());
   }
 }
