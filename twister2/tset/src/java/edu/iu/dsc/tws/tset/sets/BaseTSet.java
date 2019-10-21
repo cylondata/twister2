@@ -12,14 +12,17 @@
 
 package edu.iu.dsc.tws.tset.sets;
 
+import java.util.Map;
 import java.util.Objects;
 
 import com.google.common.reflect.TypeToken;
 
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
+import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 
-public abstract class BaseTSet<T> implements BuildableTSet {
+public abstract class BaseTSet<T> implements BuildableTSet, AcceptingData<T> {
 
   /**
    * The TSet Env to use for runtime operations of the Tset
@@ -101,8 +104,18 @@ public abstract class BaseTSet<T> implements BuildableTSet {
     return parallelism;
   }
 
+  @Override
+  public BaseTSet<T> addInput(String key, Storable<?> input) {
+    tSetEnv.addInput(getId(), input.getId(), key);
+    return this;
+  }
+
   public TSetEnvironment getTSetEnv() {
     return tSetEnv;
+  }
+
+  protected Map<String, String> getInputs() {
+    return tSetEnv.getInputs(getId());
   }
 
   public boolean isMutable() {

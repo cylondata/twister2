@@ -21,43 +21,18 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.fn;
+package edu.iu.dsc.tws.api.tset.sets;
 
-import java.io.Serializable;
-import java.util.Set;
+import edu.iu.dsc.tws.api.tset.Storable;
+import edu.iu.dsc.tws.api.tset.TBase;
 
-import edu.iu.dsc.tws.api.compute.TaskPartitioner;
-// todo: remove task partitioner and partition function duplicate interfaces! check destination
-//  selector
-
-/**
- * Given a data, give the partition index
- *
- * @param <T> the type of data
- */
-public interface PartitionFunc<T> extends Serializable, TaskPartitioner<T> {
-
+public interface AcceptingData<T> {
   /**
-   * Prepare the function
+   * Allows users to pass in other TSets as inputs for a TSet
    *
-   * @param sources      source
-   * @param destinations destinations
+   * @param key   the key used to store the given TSet
+   * @param input a @{@link Storable} TSet to be added as an input
+   * @return this TSet
    */
-  void prepare(Set<Integer> sources, Set<Integer> destinations);
-
-  /**
-   * Computes the partition for the given key.
-   *
-   * @param val value.
-   * @return The partition index.
-   */
-  int partition(int sourceIndex, T val);
-
-  /**
-   * Commit the partition
-   *
-   * @param source    the source
-   * @param partition partition
-   */
-  void commit(int source, int partition);
+  TBase addInput(String key, Storable<?> input);
 }

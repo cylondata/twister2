@@ -38,7 +38,6 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -83,7 +82,7 @@ public interface TSet<T> extends TBase {
   /**
    * Partition the data according the to partition function
    *
-   * @param partitionFn partition function
+   * @param partitionFn       partition function
    * @param targetParallelism target parallelism
    * @return this set
    */
@@ -91,6 +90,7 @@ public interface TSet<T> extends TBase {
 
   /**
    * Partition with the same parallelism
+   *
    * @param partitionFn function
    * @return the link
    */
@@ -125,18 +125,19 @@ public interface TSet<T> extends TBase {
    */
   TLink<?, T> replicate(int replications);
 
-  /**
-   * Allows users to pass in other TSets as inputs for a TSet
-   *
-   * @param key the key used to store the given TSet
-   * @param input a @{@link Storable} TSet to be added as an input
-   * @return this TSet
-   */
-  TSet<T> addInput(String key, Storable<?> input);
+//  /**
+//   * Allows users to pass in other TSets as inputs for a TSet
+//   *
+//   * @param key the key used to store the given TSet
+//   * @param input a @{@link Storable} TSet to be added as an input
+//   * @return this TSet
+//   */
+//  TSet<T> addInput(String key, Storable<?> input);
 
   /**
    * Union operation which results in a single TSet, In order for this to work both TSet's should
    * have the same type
+   *
    * @param unionTSet TSet to union with
    * @return A TSet that is a union of the two TSets
    */
@@ -145,6 +146,7 @@ public interface TSet<T> extends TBase {
   /**
    * Union operation which results in a single TSet, In order for this to work all TSet's should
    * have the same type
+   *
    * @param tSets a collection of TSet's to union with
    * @return A TSet that is a union of all the TSets
    */

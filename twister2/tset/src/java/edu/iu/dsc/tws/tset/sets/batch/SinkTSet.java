@@ -14,11 +14,14 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SinkTSet<T> extends BBaseTSet<T> {
+public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
   private SinkFunc<T> sinkFunc;
 
   /**
@@ -54,5 +57,10 @@ public class SinkTSet<T> extends BBaseTSet<T> {
   public SinkTSet<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public SinkTSet<T> addInput(String key, Storable<?> input) {
+    return (SinkTSet<T>) super.addInput(key, input);
   }
 }

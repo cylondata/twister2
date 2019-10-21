@@ -14,10 +14,8 @@ package edu.iu.dsc.tws.tset.sets.batch;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -113,7 +111,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     // this -- directThis -- unionTSet
 
     DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph((BBaseTSet) other, directOther);
+    addChildToGraph(other, directOther);
     addChildToGraph(directOther, unionTSet);
     // now the following relationship is created
     // this __ directThis __ unionTSet
@@ -136,7 +134,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
             + "perform a union operation");
       }
       DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph((BBaseTSet) tSet, directOther);
+      addChildToGraph(tSet, directOther);
       addChildToGraph(directOther, unionTSet);
       // now the following relationship is created
       // this __ directThis __ unionTSet
@@ -166,15 +164,5 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public CachedTSet<T> lazyCache() {
     return direct().lazyCache();
-  }
-
-  @Override
-  public BBaseTSet<T> addInput(String key, Storable<?> input) {
-    getTSetEnv().addInput(getId(), input.getId(), key);
-    return this;
-  }
-
-  Map<String, String> getInputs() {
-    return getTSetEnv().getInputs(getId());
   }
 }

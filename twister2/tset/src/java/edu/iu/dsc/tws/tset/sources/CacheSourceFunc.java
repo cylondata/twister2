@@ -33,35 +33,14 @@ public class CacheSourceFunc<T> extends BaseSourceFunc<T> {
 
   @Override
   public T next() {
-//    T ret = currentConsumer.next();
-//    updateConsumer();
-//    return ret;
     return currentConsumer.next();
   }
-
-//  //  check if the consumer has reached the end. if its at the end, attach the next consumer.
-//  private void updateConsumer() {
-//    if (!currentConsumer.hasNext() && (++current < end)) {
-//      currentConsumer = data.getPartitions()[current].getConsumer();
-//    }
-//  }
 
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-
-    // get the data from the ctx
-    //  private int end;
-    //  private int current = 0;
+    // retrieve the partition from the context
     DataPartition<T> data = (DataPartition<T>) ctx.getInput(cachedKey);
-//    this.end = data.getPartitionCount();
-    // set the current consumer to the partition at idx 0 of the partition array
     this.currentConsumer = data.getConsumer();
   }
-
-//  public void setData(DataObject<T> data) {
-//    this.data = data;
-//    this.end = data.getPartitionCount();
-//    this.current = 0;
-//  }
 }

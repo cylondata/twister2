@@ -70,7 +70,8 @@ public interface BatchTSet<T> extends TSet<T> {
   @Override
   BatchTSet<T> union(Collection<TSet<T>> tSets);
 
-//  BatchTSet<T> cache(boolean isIterative);
+//  @Override
+//  BatchTSet<T> addInput(String key, Storable<?> input);
 
   BatchTSet<T> cache();
 

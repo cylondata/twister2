@@ -244,7 +244,7 @@ public class TBaseGraph {
   private boolean allAdjNodesTraversed(TLink node, Set<TBase> buildSeq,
                                        AdjNodesExtractor adjNodesExtractor) {
     // all adj nodes needs to be in the build sequence
-    for (TBase adj : adjNodesExtractor.extract((TBase) node)) {
+    for (TBase adj : adjNodesExtractor.extract(node)) {
       if (!buildSeq.contains(adj)) {
         return false;
       }

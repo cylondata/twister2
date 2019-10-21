@@ -28,7 +28,6 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -120,7 +119,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
     // this -- directThis -- unionTSet
 
     SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph((SBaseTSet) other, directOther);
+    addChildToGraph(other, directOther);
     addChildToGraph(directOther, union);
     // now the following relationship is created
     // this __ directThis __ unionTSet
@@ -142,7 +141,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
             + "perform a union operation");
       }
       SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph((SBaseTSet) other, directOther);
+      addChildToGraph(other, directOther);
       addChildToGraph(directOther, union);
     }
     return union;
@@ -166,12 +165,4 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
     addChildToGraph(cloneTSet);
     return cloneTSet;
   }
-
-  @Override
-  public TSet<T> addInput(String key, Storable<?> input) {
-    // todo fix this
-    //    getTSetEnv().addInput(getId(), key, input);
-    return this;
-  }
-
 }

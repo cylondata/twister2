@@ -42,7 +42,7 @@ public interface TLink<T1, T0> extends TBase {
    * Base compute implementation
    *
    * @param computeFunction comp function. Takes in T0 type object and map to the output type O
-   * @param <O> output tset base type
+   * @param <O>             output tset base type
    * @return output TSet
    */
   <O> TSet<O> compute(ComputeFunc<O, T1> computeFunction);
@@ -51,7 +51,7 @@ public interface TLink<T1, T0> extends TBase {
    * Base compute implementation which would take in a Collector<O>
    *
    * @param computeFunction compute function with collector
-   * @param <O> output type (Collector type)
+   * @param <O>             output type (Collector type)
    * @return output TSet
    */
   <O> TSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
@@ -60,7 +60,7 @@ public interface TLink<T1, T0> extends TBase {
    * Elementwise map operation
    *
    * @param mapFn map function T0 to O
-   * @param <O> output type
+   * @param <O>   output type
    * @return output TSet
    */
   <O> TSet<O> map(MapFunc<O, T0> mapFn);
@@ -69,7 +69,7 @@ public interface TLink<T1, T0> extends TBase {
    * Flatmap operation
    *
    * @param mapFn map function which can produce multiple elements for a single <T0> element
-   * @param <O> map function to T0 to multiple elements of <O>
+   * @param <O>   map function to T0 to multiple elements of <O>
    * @return output TSet
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
@@ -85,7 +85,7 @@ public interface TLink<T1, T0> extends TBase {
    * Sink function
    *
    * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
-   * return any TSet
+   *                     return any TSet
    */
   void sink(SinkFunc<T1> sinkFunction);
 }

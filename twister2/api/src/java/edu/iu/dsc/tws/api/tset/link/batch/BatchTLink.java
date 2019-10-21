@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.link.batch;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -39,8 +40,7 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
 
   BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
 
-  BatchTSet<T1> lazySink(SinkFunc<T1> sinkFunction);
-
+  TBase lazySink(SinkFunc<T1> sinkFunction);
 
 //  /**
 //   * Runs the dataflow graph and caches data in memory
@@ -58,7 +58,6 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
    */
   default BatchTSet<T0> cache() {
     throw new UnsupportedOperationException("Operation not implemented");
-//    return cache(false);
   }
 
   default BatchTSet<T0> lazyCache() {

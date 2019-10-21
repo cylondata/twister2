@@ -17,12 +17,14 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
 
 /**
  * TSet with a key and a value
+ *
  * @param <K> key type
  * @param <V> value type
  */
 public interface TupleTSet<K, V> extends TBase {
   /**
    * Set the name of the set
+   *
    * @param name name
    * @return this set
    */
@@ -30,6 +32,7 @@ public interface TupleTSet<K, V> extends TBase {
 
   /**
    * Do a partition
+   *
    * @param partitionFn function to choose the partition
    * @return partition link
    */
