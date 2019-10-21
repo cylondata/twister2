@@ -50,7 +50,6 @@ public final class JobMasterStarter {
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     Config config = K8sWorkerUtils.loadConfig(configDir);
-    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
@@ -87,7 +86,7 @@ public final class JobMasterStarter {
     LOG.info("NodeInfo for JobMaster: " + nodeInfo);
 
     String namespace = KubernetesContext.namespace(config);
-    JobTerminator jobTerminator = new JobTerminator(namespace);
+    JobTerminator jobTerminator = new JobTerminator(config);
 
     KubernetesController controller = new KubernetesController();
     controller.init(KubernetesContext.namespace(config));
@@ -97,5 +96,8 @@ public final class JobMasterStarter {
     JobMaster jobMaster = new JobMaster(config, podIP, jobTerminator, job, nodeInfo, k8sScaler);
     jobMaster.addShutdownHook(false);
     jobMaster.startJobMasterBlocking();
+
+    // wait to be deleted by K8s master
+    K8sWorkerUtils.waitIndefinitely();
   }
 }

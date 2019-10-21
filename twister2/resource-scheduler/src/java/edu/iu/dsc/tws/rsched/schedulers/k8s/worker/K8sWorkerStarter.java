@@ -19,20 +19,22 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
+import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.master.worker.JMWorkerAgent;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.K8sEnvVariables;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.PodWatchUtils;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
-
 import static edu.iu.dsc.tws.api.config.Context.JOB_ARCHIVE_DIRECTORY;
 import static edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesConstants.POD_MEMORY_VOLUME;
 
@@ -42,10 +44,14 @@ public final class K8sWorkerStarter {
   private static Config config = null;
   private static int workerID = -1; // -1 means, not initialized
   private static JobMasterAPI.WorkerInfo workerInfo;
-  private static JMWorkerAgent jobMasterAgent;
   private static String jobName = null;
   private static JobAPI.Job job = null;
   private static JobAPI.ComputeResource computeResource = null;
+
+  // whether the worker shuts down properly
+  // if the worker is forcefully shutdown such as by scaling down
+  // we use shut down hook to clear some resources
+  private static boolean properShutDown = false;
 
   private K8sWorkerStarter() { }
 
@@ -72,7 +78,6 @@ public final class K8sWorkerStarter {
     String configDir = POD_MEMORY_VOLUME + "/" + JOB_ARCHIVE_DIRECTORY;
 
     config = K8sWorkerUtils.loadConfig(configDir);
-    jobMasterIP = updateJobMasterIp(jobMasterIP);
 
     // read job description file
     String jobDescFileName = SchedulerContext.createJobDescriptionFileName(jobName);
@@ -85,7 +90,13 @@ public final class K8sWorkerStarter {
     // job file configurations will override
     config = JobUtils.overrideConfigs(job, config);
     config = JobUtils.updateConfigs(job, config);
-    config = K8sWorkerUtils.unsetWorkerIDAssigment(config);
+
+    // if there is no Driver in the job and ZK is used for group management,
+    // then, we don't need to connect to JM
+    // if there is a driver or ZK is not used for group management, then we need to connect to JM
+    if (!job.getDriverClassName().isEmpty() || !(ZKContext.isZooKeeperServerUsed(config))) {
+      jobMasterIP = updateJobMasterIp(jobMasterIP);
+    }
 
     // get podIP from localhost
     InetAddress localHost = null;
@@ -100,7 +111,7 @@ public final class K8sWorkerStarter {
         ? KubernetesContext.getNodeInfo(config, hostIP)
         : K8sWorkerUtils.getNodeInfoFromEncodedStr(encodedNodeInfoList, hostIP);
 
-    LOG.info("NodeInfo for this worker: " + nodeInfo);
+    LOG.info("PodName: " + podName + ", NodeInfo: " + nodeInfo);
 
     // set workerID
     workerID = K8sWorkerUtils.calculateWorkerID(job, podName, containerName);
@@ -136,21 +147,33 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    // construct JMWorkerAgent
-    jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+    // TODO: get initialState from checkpoint manager or from starting script
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    WorkerRuntime.init(config, job, workerInfo, initialState);
 
-    // start JMWorkerAgent
-    jobMasterAgent.startThreaded();
+    /**
+     * Interfaces to interact with other workers and Job Master if there is any
+     */
+    IWorkerController workerController = WorkerRuntime.getWorkerController();
+    IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
-    // we will be running the Worker, send running message
-    jobMasterAgent.sendWorkerRunningMessage();
+    // update worker status to RUNNING
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
+
+    // add shut down hook
+    addShutdownHook();
 
     // start the worker
-    startWorker(jobMasterAgent, pv);
+    startWorker(workerController, pv);
 
-    // close the worker
-    closeWorker();
+    // update worker status to COMPLETED
+    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
+
+    WorkerRuntime.close();
+    properShutDown = true;
+
+    // wait to be deleted by Job master
+    K8sWorkerUtils.waitIndefinitely();
   }
 
   /**
@@ -195,7 +218,7 @@ public final class K8sWorkerStarter {
   /**
    * start the Worker class specified in conf files
    */
-  public static void startWorker(JMWorkerAgent jmWorkerAgent,
+  public static void startWorker(IWorkerController workerController,
                                  IPersistentVolume pv) {
 
     String workerClass = job.getWorkerClassName();
@@ -214,18 +237,29 @@ public final class K8sWorkerStarter {
       volatileVolume = new K8sVolatileVolume(jobName, workerID);
     }
 
-    worker.execute(config, workerID, jmWorkerAgent.getJMWorkerController(), pv, volatileVolume);
+    worker.execute(config, workerID, workerController, pv, volatileVolume);
   }
 
   /**
-   * last method to call to close the worker
+   * if the worker is killed by scaling down,
+   * we need to let ZooKeeper know about it and delete worker znode
+   * if zookeeper is used
    */
-  public static void closeWorker() {
+  public static void addShutdownHook() {
 
-    // send worker completed message to the Job Master and finish
-    // Job master will delete the StatefulSet object
-    jobMasterAgent.sendWorkerCompletedMessage();
-    jobMasterAgent.close();
+    Thread hookThread = new Thread() {
+      public void run() {
+
+        // if thw worker shuts down properly, do nothing
+        if (properShutDown) {
+          return;
+        }
+
+        WorkerRuntime.close();
+      }
+    };
+
+    Runtime.getRuntime().addShutdownHook(hookThread);
   }
 
 }

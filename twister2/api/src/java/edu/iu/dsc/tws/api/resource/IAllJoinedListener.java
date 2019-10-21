@@ -9,22 +9,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.master.worker;
+package edu.iu.dsc.tws.api.resource;
 
-import com.google.protobuf.Message;
+import java.util.List;
 
-import edu.iu.dsc.tws.api.resource.IWorkerMessenger;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
-public class JMWorkerMessenger implements IWorkerMessenger {
+/**
+ * Workers can be informed when all workers joined the job
+ */
 
-  private JMWorkerAgent workerAgent;
+public interface IAllJoinedListener {
 
-  public JMWorkerMessenger(JMWorkerAgent workerAgent) {
-    this.workerAgent = workerAgent;
-  }
-
-  @Override
-  public boolean sendToDriver(Message message) {
-    return workerAgent.sendWorkerToDriverMessage(message);
-  }
+  /**
+   * this method is invoked when all workers joined the job initially
+   * and also, after each scale up operation, when all new workers joined the job, it is invoked
+   * @param workerList
+   */
+  void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList);
 }

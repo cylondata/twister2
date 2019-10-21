@@ -28,7 +28,7 @@ import com.google.protobuf.Message;
 /**
  * A messenger interface to send messages from a worker to the driver in a job
  */
-public interface IWorkerMessenger {
+public interface ISenderToDriver {
 
   /**
    * send a protocol buffer message to the driver in the job

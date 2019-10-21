@@ -19,7 +19,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.checkpointing.StateStore;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.net.StatusCode;
 import edu.iu.dsc.tws.api.net.request.ConnectHandler;
 import edu.iu.dsc.tws.checkpointing.master.CheckpointManager;
@@ -28,13 +29,17 @@ import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.driver.IScalerPerCluster;
 import edu.iu.dsc.tws.common.net.tcp.Progress;
+import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKMasterController;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.master.driver.DriverMessenger;
 import edu.iu.dsc.tws.master.driver.Scaler;
+import edu.iu.dsc.tws.master.driver.ZKJobUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersRequest;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.ListWorkersResponse;
@@ -100,7 +105,7 @@ public class JobMaster {
   /**
    * the network object to receive and send messages
    */
-  private JMRRServer rrServer;
+  private RRServer rrServer;
 
   /**
    * the object to monitor workers
@@ -130,17 +135,10 @@ public class JobMaster {
    */
   private IScalerPerCluster clusterScaler;
 
-
   /**
    * the driver object
    */
   private IDriver driver;
-
-  /**
-   * a UUID generated for each job
-   * it is primarily used when communicating with Dashboard
-   */
-  private String jobID;
 
   /**
    * host address of Dashboard server
@@ -155,9 +153,25 @@ public class JobMaster {
   private DashboardClient dashClient;
 
   /**
-   * BarrierMonitor object
+   * WorkerHandler object to communicate with workers
    */
-  private BarrierMonitor barrierMonitor;
+  private WorkerHandler workerHandler;
+
+  /**
+   * PingHandler object
+   */
+  private PingHandler pingHandler;
+
+  /**
+   * BarrierHandler object
+   */
+  private BarrierHandler barrierHandler;
+
+  /**
+   * JobMaster to ZooKeeper connection
+   * TODO: need to close zk connection, need to integrate with zk-con in scaler, job terminator.
+   */
+  private ZKMasterController zkMasterController;
 
   /**
    * a variable that shows whether JobMaster will run jobTerminate
@@ -192,17 +206,12 @@ public class JobMaster {
     this.masterPort = port;
     this.clusterScaler = clusterScaler;
 
-    this.jobID = config.getStringValue(Context.JOB_ID);
-
-    if (this.jobID == null) {
-      throw new RuntimeException("Job ID not specified in the config.");
-    }
     this.dashboardHost = JobMasterContext.dashboardHost(config);
     if (dashboardHost == null) {
       LOG.warning("Dashboard host address is null. Not connecting to Dashboard");
       this.dashClient = null;
     } else {
-      this.dashClient = new DashboardClient(dashboardHost, jobID);
+      this.dashClient = new DashboardClient(dashboardHost, job.getJobId());
     }
   }
 
@@ -246,16 +255,21 @@ public class JobMaster {
 
     ServerConnectHandler connectHandler = new ServerConnectHandler();
     rrServer =
-        new JMRRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
+        new RRServer(config, masterAddress, masterPort, looper, JOB_MASTER_ID, connectHandler);
 
     // init Driver if it exists
     // this ha to be done before WorkerMonitor initialization
     initDriver();
 
-    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver,
-        JobMasterContext.jobMasterAssignsWorkerIDs(config));
+    boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
+    workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver, faultTolerant);
 
-    barrierMonitor = new BarrierMonitor(workerMonitor, rrServer);
+    workerHandler = new WorkerHandler(workerMonitor, rrServer);
+    pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
+    barrierHandler = new BarrierHandler(workerMonitor, rrServer);
+
+    // if ZoKeeper server is used for this job, initialize that
+    initZKMasterController(workerMonitor);
 
     JobMasterAPI.Ping.Builder pingBuilder = JobMasterAPI.Ping.newBuilder();
 
@@ -289,19 +303,19 @@ public class JobMaster {
 
     JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder();
 
-    rrServer.registerRequestHandler(pingBuilder, workerMonitor);
+    rrServer.registerRequestHandler(pingBuilder, pingHandler);
 
-    rrServer.registerRequestHandler(registerWorkerBuilder, workerMonitor);
-    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(registerWorkerBuilder, workerHandler);
+    rrServer.registerRequestHandler(registerWorkerResponseBuilder, workerHandler);
 
-    rrServer.registerRequestHandler(stateChangeBuilder, workerMonitor);
-    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(stateChangeBuilder, workerHandler);
+    rrServer.registerRequestHandler(stateChangeResponseBuilder, workerHandler);
 
-    rrServer.registerRequestHandler(listWorkersBuilder, workerMonitor);
-    rrServer.registerRequestHandler(listResponseBuilder, workerMonitor);
+    rrServer.registerRequestHandler(listWorkersBuilder, workerHandler);
+    rrServer.registerRequestHandler(listResponseBuilder, workerHandler);
 
-    rrServer.registerRequestHandler(barrierRequestBuilder, barrierMonitor);
-    rrServer.registerRequestHandler(barrierResponseBuilder, barrierMonitor);
+    rrServer.registerRequestHandler(barrierRequestBuilder, barrierHandler);
+    rrServer.registerRequestHandler(barrierResponseBuilder, barrierHandler);
 
     rrServer.registerRequestHandler(scaledMessageBuilder, workerMonitor);
     rrServer.registerRequestHandler(driverMessageBuilder, workerMonitor);
@@ -314,11 +328,11 @@ public class JobMaster {
     //initialize checkpoint manager
     if (CheckpointingConfigurations.isCheckpointingEnabled(config)) {
       StateStore stateStore = CheckpointUtils.getStateStore(config);
-      stateStore.init(config, this.jobID);
+      stateStore.init(config, job.getJobId());
       this.checkpointManager = new CheckpointManager(
           this.rrServer,
           stateStore,
-          this.jobID
+          job.getJobId()
       );
       LOG.info("Checkpoint manager initialized");
       this.checkpointManager.init();
@@ -378,6 +392,14 @@ public class JobMaster {
 
     // send the remaining messages if any and stop
     rrServer.stopGraceFully(2000);
+
+    if (zkMasterController != null) {
+      zkMasterController.close();
+    }
+
+    if (jobTerminator != null) {
+      jobTerminator.terminateJob(job.getJobName());
+    }
   }
 
   private void initDriver() {
@@ -410,7 +432,8 @@ public class JobMaster {
 
     Thread driverThread = new Thread() {
       public void run() {
-        Scaler scaler = new Scaler(clusterScaler, workerMonitor);
+        ZKJobUpdater zkJobUpdater = new ZKJobUpdater(config);
+        Scaler scaler = new Scaler(job, clusterScaler, workerMonitor, zkJobUpdater);
         DriverMessenger driverMessenger = new DriverMessenger(workerMonitor);
         driver.execute(config, scaler, driverMessenger);
       }
@@ -419,6 +442,27 @@ public class JobMaster {
     driverThread.start();
 
     return driverThread;
+  }
+
+  /**
+   * initialize ZKMasterController if ZooKeeper used
+   */
+  private void initZKMasterController(WorkerMonitor wMonitor) {
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      zkMasterController = new ZKMasterController(config, job.getJobName(),
+          job.getNumberOfWorkers(), ZKContext.serverAddresses(config));
+
+      // TODO: need to check whether it is restarting
+      try {
+        zkMasterController.initialize(JobMasterAPI.JobMasterState.JM_STARTED);
+      } catch (Exception e) {
+        throw new Twister2RuntimeException(e);
+      }
+
+      zkMasterController.addFailureListener(wMonitor);
+      zkMasterController.addWorkerStatusListener(wMonitor);
+    }
+
   }
 
   /**
@@ -434,24 +478,17 @@ public class JobMaster {
 
   /**
    * this method finishes the job
-   * It is executed when the worker completed message received from all workers or
-   * When JobMaster is killed with shutdown hook
+   * It is executed when the worker completed message received from all workers
    */
-  public void completeJob() {
+  public void completeJob(JobState jobFinalState) {
 
     // if Dashboard is used, tell it that the job has completed or killed
     if (dashClient != null) {
-      dashClient.jobStateChange(JobState.COMPLETED);
+      dashClient.jobStateChange(jobFinalState);
     }
 
-    LOG.info("All " + workerMonitor.getNumberOfWorkers()
-        + " workers have completed. JobMaster is stopping.");
     jobCompleted = true;
     looper.wakeup();
-
-    if (jobTerminator != null) {
-      jobTerminator.terminateJob(job.getJobName());
-    }
   }
 
   /**
@@ -463,7 +500,7 @@ public class JobMaster {
    * not all workers successfully complete in this case.
    * JobMaster does not get COMPLETED message from all workers.
    * So completeJob() method is not called.
-   * Instead, the JobMaster pod or the JobMaster process in the submitting is deleted.
+   * Instead, the JobMaster pod or the JobMaster process in the submitting client is deleted.
    * ShutDown Hook gets executed.
    * <p>
    * In this case, it can either clear job resources or just send a message to Dashboard
@@ -491,6 +528,10 @@ public class JobMaster {
         if (clearResourcesWhenKilled) {
           jobCompleted = true;
           looper.wakeup();
+
+          if (zkMasterController != null) {
+            zkMasterController.close();
+          }
 
           if (jobTerminator != null) {
             jobTerminator.terminateJob(job.getJobName());

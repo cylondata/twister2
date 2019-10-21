@@ -76,12 +76,7 @@ public final class WorkerInfoUtils {
 
   public static WorkerInfo updateWorkerID(WorkerInfo workerInfo, int workerID) {
 
-    return createWorkerInfo(workerID,
-        workerInfo.getWorkerIP(),
-        workerInfo.getPort(),
-        workerInfo.getNodeInfo(),
-        workerInfo.getComputeResource(),
-        workerInfo.getAdditionalPortMap());
+    return workerInfo.toBuilder().setWorkerID(workerID).build();
   }
 
   /**
