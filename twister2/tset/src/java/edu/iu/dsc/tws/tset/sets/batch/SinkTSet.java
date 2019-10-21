@@ -45,8 +45,8 @@ public class SinkTSet<T> extends BBaseTSet<T> {
 
   @Override
   public ICompute getINode() {
-    // todo If a sink function is producing a data object/ partition, it will be identified by the
-    //  tset ID. Essentially, only one data object can be created by a tset
+    // If a sink function is producing a data object/ partition, it will be identified by the
+    // TSet ID. Essentially, only one data object can be created by a TSet
     return new SinkOp<>(sinkFunc, this, getInputs());
   }
 

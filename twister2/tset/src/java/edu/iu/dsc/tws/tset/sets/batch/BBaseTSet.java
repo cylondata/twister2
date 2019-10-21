@@ -157,23 +157,6 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     return cloneTSet;
   }
 
-//  @Override
-//  public CachedTSet<T> cache(boolean isIterative) {
-//    if (isIterative && iterdirect != null) {
-//      return iterdirect.cache(isIterative);
-//    } else if (isIterative) {
-//      iterdirect = direct();
-//      return iterdirect.cache(isIterative);
-//    } else {
-//      return direct().cache(isIterative);
-//    }
-//  }
-//
-//  @Override
-//  public CachedTSet<T> cache() {
-//    return cache(false);
-//  }
-
   @Override
   public CachedTSet<T> cache() {
     // todo remove this direct and plug it into the underlying tset op
@@ -187,12 +170,6 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
 
   @Override
   public BBaseTSet<T> addInput(String key, Storable<?> input) {
-//    if (getTSetEnv().isDataAvailable(input.getId())) {
-//      getTSetEnv().addInput(getId(), input.getId(), key);
-//      return this;
-//    }
-
-//    throw new RuntimeException("No data available for tset: " + input.toString());
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }
@@ -200,11 +177,4 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   Map<String, String> getInputs() {
     return getTSetEnv().getInputs(getId());
   }
-
-//  public void finishIter() {
-//    if (iterdirect == null) {
-//      throw new IllegalStateException("cache with iter needs to be called first");
-//    }
-//    iterdirect.finishIter();
-//  }
 }
