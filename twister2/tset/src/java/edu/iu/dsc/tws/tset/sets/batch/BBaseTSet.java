@@ -186,7 +186,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public BBaseTSet<T> addInput(String key, Storable<T> input) {
+  public BBaseTSet<T> addInput(String key, Storable<?> input) {
 //    if (getTSetEnv().isDataAvailable(input.getId())) {
 //      getTSetEnv().addInput(getId(), input.getId(), key);
 //      return this;

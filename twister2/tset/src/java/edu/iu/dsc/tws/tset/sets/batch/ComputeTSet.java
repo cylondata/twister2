@@ -53,7 +53,7 @@ public class ComputeTSet<O, I> extends BBaseTSet<O> {
   }
 
   @Override
-  public ComputeTSet<O, I> addInput(String key, Storable<O> input) {
+  public ComputeTSet<O, I> addInput(String key, Storable<?> input) {
     return (ComputeTSet<O, I>) super.addInput(key, input);
   }
 

@@ -179,7 +179,7 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   }
 
   @Override
-  public CachedTSet<T> addInput(String key, Storable<T> input) {
+  public CachedTSet<T> addInput(String key, Storable<?> input) {
     return (CachedTSet<T>) super.addInput(key, input);
   }
 

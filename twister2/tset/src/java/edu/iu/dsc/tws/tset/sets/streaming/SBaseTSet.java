@@ -168,7 +168,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   }
 
   @Override
-  public TSet<T> addInput(String key, Storable<T> input) {
+  public TSet<T> addInput(String key, Storable<?> input) {
     // todo fix this
     //    getTSetEnv().addInput(getId(), key, input);
     return this;

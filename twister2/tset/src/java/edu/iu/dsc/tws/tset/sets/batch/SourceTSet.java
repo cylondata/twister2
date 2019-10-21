@@ -44,7 +44,7 @@ public class SourceTSet<T> extends BBaseTSet<T> {
   }
 
   @Override
-  public SourceTSet<T> addInput(String key, Storable<T> input) {
+  public SourceTSet<T> addInput(String key, Storable<?> input) {
     return (SourceTSet<T>) super.addInput(key, input);
   }
 
