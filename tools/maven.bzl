@@ -24,7 +24,13 @@ def pom_file(name, targets, artifact_name, artifact_id, packaging = None, **kwar
 def mvn_tag(group_id, artifact_id, version):
     return ["maven_coordinates=" + group_id + ":" + artifact_id + ":" + version]
 
-def t2_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_pom = True, resource_jars = []):
+def t2_java_lib(
+        name,
+        srcs = [],
+        deps = [],
+        artifact_name = "",
+        generate_pom = True,
+        resource_jars = []):
     native.java_library(
         name = name,
         srcs = srcs,
@@ -49,5 +55,18 @@ def t2_proto_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_p
         tags = mvn_tag("org.twister2", name, T2_VERSION),
     )
 
-    # generate java library
-    t2_java_lib("j%s" % name, srcs, [name], artifact_name, generate_pom, [name])
+    native.java_library(
+        name = "j%s" % name,
+        srcs = srcs,
+        deps = [":%s" % name],
+        tags = mvn_tag("org.twister2", name, T2_VERSION),
+        resource_jars = [":%s" % name],
+    )
+
+    if (generate_pom):
+        pom_file(
+            name = "pom",
+            artifact_id = name,
+            artifact_name = artifact_name,
+            targets = [":j%s" % name],
+        )
