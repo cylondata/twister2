@@ -28,7 +28,7 @@ public class Twister2StreamingTranslationContext extends Twister2TranslationCont
 
   public Twister2StreamingTranslationContext(
       Twister2PipelineOptions options, TwisterStreamingContext streamExecutionContext) {
-    super(options);
+    super(options, twister2RuntimeContext);
     this.twisterStreamingContext = streamExecutionContext;
   }
 }

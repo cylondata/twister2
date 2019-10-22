@@ -32,6 +32,7 @@ import org.apache.beam.runners.core.InMemoryStateInternals;
 import org.apache.beam.runners.core.SideInputHandler;
 import org.apache.beam.runners.core.StepContext;
 import org.apache.beam.runners.twister2.utils.NoOpStepContext;
+import org.apache.beam.runners.twister2.utils.Twister2SideInputReader;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -95,7 +96,7 @@ public class DoFnFunction<OT, IT>
 
   @Override
   public void prepare(TSetContext context) {
-    sideInputReader = new SideInputHandler(sideInputs, InMemoryStateInternals.<Void>forKey(null));
+    sideInputReader = new Twister2SideInputReader(sideInputs, InMemoryStateInternals.<Void>forKey(null));
     outputManager.setup(mainOutput, sideOutputs);
 
     doFnRunner =

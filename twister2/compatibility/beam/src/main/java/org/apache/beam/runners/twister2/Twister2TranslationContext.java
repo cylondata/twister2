@@ -40,6 +40,7 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterable
 
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
+
 /**
  * Twister2TranslationContext.
  */
@@ -50,17 +51,19 @@ public class Twister2TranslationContext {
   private final Map<PCollectionView<?>, TSet<?>> sideInputDataSets;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
+  private final Twister2RuntimeContext runtimeContext;
   private final SerializablePipelineOptions serializableOptions;
 
   public SerializablePipelineOptions getSerializableOptions() {
     return serializableOptions;
   }
 
-  public Twister2TranslationContext(Twister2PipelineOptions options) {
+  public Twister2TranslationContext(Twister2PipelineOptions options, Twister2RuntimeContext twister2RuntimeContext) {
     this.options = options;
     this.environment = options.getTSetEnvironment();
     this.sideInputDataSets = new HashMap<>();
     this.serializableOptions = new SerializablePipelineOptions(options);
+    this.runtimeContext = twister2RuntimeContext;
   }
 
   @SuppressWarnings("unchecked")
@@ -116,6 +119,9 @@ public class Twister2TranslationContext {
   }
 
   public void execute() {
+    for (TSet sides : sideInputDataSets.values()) {
+      sides.direct().sink(new Twister2SinkFunction());
+    }
     for (TSet leaf : leaves) {
       leaf.direct().sink(new Twister2SinkFunction());
     }

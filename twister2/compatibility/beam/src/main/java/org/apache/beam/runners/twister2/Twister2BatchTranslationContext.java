@@ -27,8 +27,8 @@ import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
  */
 public class Twister2BatchTranslationContext extends Twister2TranslationContext {
 
-  public Twister2BatchTranslationContext(Twister2PipelineOptions options) {
-    super(options);
+  public Twister2BatchTranslationContext(Twister2PipelineOptions options, Twister2RuntimeContext twister2RuntimeContext) {
+    super(options, twister2RuntimeContext);
   }
 
   @Override
