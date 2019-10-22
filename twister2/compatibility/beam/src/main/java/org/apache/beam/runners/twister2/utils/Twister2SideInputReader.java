@@ -30,44 +30,44 @@ import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Prec
 
 public class Twister2SideInputReader implements SideInputReader {
 
-    private final Twister2RuntimeContext runtimeContext;
-    private final Map<TupleTag<?>, WindowingStrategy<?, ?>> sideInputs;
+  private final Twister2RuntimeContext runtimeContext;
+  private final Map<TupleTag<?>, WindowingStrategy<?, ?>> sideInputs;
 
-    public Twister2SideInputReader(Map<PCollectionView<?>, WindowingStrategy<?, ?>> indexByView, Twister2RuntimeContext context) {
-        this.sideInputs = new HashMap<>();
+  public Twister2SideInputReader(Map<PCollectionView<?>, WindowingStrategy<?, ?>> indexByView, Twister2RuntimeContext context) {
+    this.sideInputs = new HashMap<>();
 
-        for (PCollectionView<?> view : indexByView.keySet()) {
-            checkArgument(
-                    Materializations.MULTIMAP_MATERIALIZATION_URN.equals(
-                            view.getViewFn().getMaterialization().getUrn()),
-                    "This handler is only capable of dealing with %s materializations "
-                            + "but was asked to handle %s for PCollectionView with tag %s.",
-                    Materializations.MULTIMAP_MATERIALIZATION_URN,
-                    view.getViewFn().getMaterialization().getUrn(),
-                    view.getTagInternal().getId());
-        }
-        for (Map.Entry<PCollectionView<?>, WindowingStrategy<?, ?>> entry : indexByView.entrySet()) {
-            sideInputs.put(entry.getKey().getTagInternal(), entry.getValue());
-        }
-        this.runtimeContext = context;
+    for (PCollectionView<?> view : indexByView.keySet()) {
+      checkArgument(
+          Materializations.MULTIMAP_MATERIALIZATION_URN.equals(
+              view.getViewFn().getMaterialization().getUrn()),
+          "This handler is only capable of dealing with %s materializations "
+              + "but was asked to handle %s for PCollectionView with tag %s.",
+          Materializations.MULTIMAP_MATERIALIZATION_URN,
+          view.getViewFn().getMaterialization().getUrn(),
+          view.getTagInternal().getId());
     }
-
-    @Nullable
-    @Override
-    public <T> T get(PCollectionView<T> view, BoundedWindow window) {
-        checkNotNull(view, "View passed to sideInput cannot be null");
-        TupleTag<?> tag = view.getTagInternal();
-        checkNotNull(sideInputs.get(tag), "Side input for " + view + " not available.");
-        return runtimeContext.<T>getSideInput(window);
+    for (Map.Entry<PCollectionView<?>, WindowingStrategy<?, ?>> entry : indexByView.entrySet()) {
+      sideInputs.put(entry.getKey().getTagInternal(), entry.getValue());
     }
+    this.runtimeContext = context;
+  }
 
-    @Override
-    public <T> boolean contains(PCollectionView<T> view) {
-        return false;
-    }
+  @Nullable
+  @Override
+  public <T> T get(PCollectionView<T> view, BoundedWindow window) {
+    checkNotNull(view, "View passed to sideInput cannot be null");
+    TupleTag<?> tag = view.getTagInternal();
+    checkNotNull(sideInputs.get(tag), "Side input for " + view + " not available.");
+    return runtimeContext.<T>getSideInput(window);
+  }
 
-    @Override
-    public boolean isEmpty() {
-        return false;
-    }
+  @Override
+  public <T> boolean contains(PCollectionView<T> view) {
+    return false;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return false;
+  }
 }

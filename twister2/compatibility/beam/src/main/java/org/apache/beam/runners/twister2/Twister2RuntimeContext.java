@@ -23,22 +23,22 @@ import java.util.Map;
  */
 public class Twister2RuntimeContext {
 
-    private Map<BoundedWindow, PCollectionView<?>> sideInputs;
+  private Map<BoundedWindow, PCollectionView<?>> sideInputs;
 
-    public Twister2RuntimeContext() {
-        sideInputs = new HashMap<>();
-    }
+  public Twister2RuntimeContext() {
+    sideInputs = new HashMap<>();
+  }
 
-    public <T> T getSideInput(BoundedWindow window) {
-        if (sideInputs.containsKey(window)) {
-            return (T)sideInputs.get(window);
-        }
-        return null;
+  public <T> T getSideInput(BoundedWindow window) {
+    if (sideInputs.containsKey(window)) {
+      return (T) sideInputs.get(window);
     }
+    return null;
+  }
 
-    public void addSideInput(BoundedWindow window, PCollectionView<?> sideInput) {
-        if (!sideInputs.containsKey(window)) {
-            sideInputs.put(window, sideInput);
-        }
+  public void addSideInput(BoundedWindow window, PCollectionView<?> sideInput) {
+    if (!sideInputs.containsKey(window)) {
+      sideInputs.put(window, sideInput);
     }
+  }
 }

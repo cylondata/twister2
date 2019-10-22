@@ -74,16 +74,16 @@ public class DoFnFunction<OT, IT>
   private final Twister2RuntimeContext runtimeContext;
 
   public DoFnFunction(
-          Twister2TranslationContext context,
-          DoFn<IT, OT> doFn,
-          Coder<IT> inputCoder,
-          Map<TupleTag<?>, Coder<?>> outputCoders,
-          List<TupleTag<?>> sideOutputs,
-          WindowingStrategy<?, ?> windowingStrategy,
-          Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs,
-          TupleTag<OT> mainOutput,
-          DoFnSchemaInformation doFnSchemaInformation,
-          Map<TupleTag<?>, Integer> outputMap) {
+      Twister2TranslationContext context,
+      DoFn<IT, OT> doFn,
+      Coder<IT> inputCoder,
+      Map<TupleTag<?>, Coder<?>> outputCoders,
+      List<TupleTag<?>> sideOutputs,
+      WindowingStrategy<?, ?> windowingStrategy,
+      Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs,
+      TupleTag<OT> mainOutput,
+      DoFnSchemaInformation doFnSchemaInformation,
+      Map<TupleTag<?>, Integer> outputMap) {
     this.doFn = doFn;
     this.pipelineOptions = context.getOptions();
     this.runtimeContext = context.getRuntimeContext();
