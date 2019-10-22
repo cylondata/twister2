@@ -220,9 +220,9 @@ public class BatchTaskSchedulerTest {
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
 
-    TaskSchedulePlan taskSchedulePlan = scheduler.schedule(graph[0], workerPlan);
+    //TaskSchedulePlan taskSchedulePlan = scheduler.schedule(graph[0], workerPlan);
     Map<String, TaskSchedulePlan> plan1
-        = scheduler.schedule(workerPlan, graph[1], graph[2]);
+        = scheduler.schedule(workerPlan, graph[0], graph[1], graph[2]);
 
     for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry : plan1.entrySet()) {
       TaskSchedulePlan plan2 = taskSchedulePlanEntry.getValue();

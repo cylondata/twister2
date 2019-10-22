@@ -128,17 +128,10 @@ public class BatchTaskSchedulerExample implements IWorker {
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
     taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
-    DataObject<Object> firstGraphObject = taskExecutor.getOutput(
-        firstGraph, firstGraphExecutionPlan, "firstsink");
 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
-    taskExecutor.addInput(secondGraph, secondGraphExecutionPlan, "secondsource",
-        "firstgraphpoints", firstGraphObject);
     taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
-    DataObject<Object> secondGraphObject = taskExecutor.getOutput(
-        secondGraph, secondGraphExecutionPlan, "secondsink");
-    LOG.info("%%%%%%%%% Second Graph Object:" + secondGraphObject);
     long endTime = System.currentTimeMillis();
     LOG.info("Total Execution Time: " + (endTime - startTime));
   }
@@ -227,7 +220,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public DataPartition<double[]> get() {
-      return new EntityPartition<>(context.taskIndex(), datapoints);
+      return new EntityPartition<>(datapoints);
     }
 
     @Override
@@ -242,13 +235,14 @@ public class BatchTaskSchedulerExample implements IWorker {
     private double[] datapoints = null;
     private DataObject<?> dataPointsObject = null;
 
+    private DataPartition<?> dataPartition = null;
+
     SecondSourceTask() {
     }
 
     @Override
     public void execute() {
-      DataPartition<?> firstDataPartition = dataPointsObject.getPartition(context.taskIndex());
-      datapoints = (double[]) firstDataPartition.getConsumer().next();
+      datapoints = (double[]) dataPartition.first();
       context.writeEnd("all-reduce", datapoints);
     }
 
@@ -258,8 +252,12 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public void add(String name, DataObject<?> data) {
+    }
+
+    @Override
+    public void add(String name, DataPartition<?> data) {
       if ("firstgraphpoints".equals(name)) {
-        this.dataPointsObject = data;
+        this.dataPartition = data;
       }
     }
 
@@ -290,12 +288,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public DataPartition<double[]> get() {
-      return new EntityPartition<>(context.taskIndex(), datapoints);
-    }
-
-    @Override
-    public DataPartition<double[]> get(String name) {
-      return null;
+      return new EntityPartition<>(datapoints);
     }
 
     @Override
