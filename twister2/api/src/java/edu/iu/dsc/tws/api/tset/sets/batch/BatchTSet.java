@@ -27,13 +27,16 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.Storable;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
+import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 
-public interface BatchTSet<T> extends TSet<T> {
+public interface BatchTSet<T> extends TSet<T>, AcceptingData<T> {
   @Override
   BatchTSet<T> setName(String name);
 
@@ -70,8 +73,8 @@ public interface BatchTSet<T> extends TSet<T> {
   @Override
   BatchTSet<T> union(Collection<TSet<T>> tSets);
 
-//  @Override
-//  BatchTSet<T> addInput(String key, Storable<?> input);
+  @Override
+  TBase addInput(String key, Storable<?> input);
 
   BatchTSet<T> cache();
 

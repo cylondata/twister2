@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -164,5 +165,11 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public CachedTSet<T> lazyCache() {
     return direct().lazyCache();
+  }
+
+  @Override
+  public BBaseTSet<T> addInput(String key, Storable<?> input) {
+    getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
   }
 }
