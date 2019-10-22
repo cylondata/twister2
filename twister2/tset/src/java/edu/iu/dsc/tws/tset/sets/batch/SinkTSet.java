@@ -61,6 +61,7 @@ public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
 
   @Override
   public SinkTSet<T> addInput(String key, Storable<?> input) {
-    return (SinkTSet<T>) super.addInput(key, input);
+    getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
   }
 }
