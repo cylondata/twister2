@@ -68,5 +68,5 @@ def t2_proto_java_lib(name, srcs = [], deps = [], artifact_name = "", generate_p
             name = "pom",
             artifact_id = name,
             artifact_name = artifact_name,
-            targets = [":%s" % name],
+            targets = [":j%s" % name],
         )
