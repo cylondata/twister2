@@ -11,13 +11,34 @@
 //  limitations under the License.
 package org.apache.beam.runners.twister2;
 
+import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
+import org.apache.beam.sdk.values.PCollectionView;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Keeps runtime information which includes results from sideinputs so they
  * can be accessed when needed
  */
 public class Twister2RuntimeContext {
 
-  public Twister2RuntimeContext(){
+    private Map<BoundedWindow, PCollectionView<?>> sideInputs;
 
-  }
+    public Twister2RuntimeContext() {
+        sideInputs = new HashMap<>();
+    }
+
+    public <T> T getSideInput(BoundedWindow window) {
+        if (sideInputs.containsKey(window)) {
+            return (T)sideInputs.get(window);
+        }
+        return null;
+    }
+
+    public void addSideInput(BoundedWindow window, PCollectionView<?> sideInput) {
+        if (!sideInputs.containsKey(window)) {
+            sideInputs.put(window, sideInput);
+        }
+    }
 }

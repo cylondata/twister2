@@ -31,6 +31,9 @@ import org.apache.beam.runners.core.DoFnRunners;
 import org.apache.beam.runners.core.InMemoryStateInternals;
 import org.apache.beam.runners.core.SideInputHandler;
 import org.apache.beam.runners.core.StepContext;
+import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
+import org.apache.beam.runners.twister2.Twister2RuntimeContext;
+import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.runners.twister2.utils.NoOpStepContext;
 import org.apache.beam.runners.twister2.utils.Twister2SideInputReader;
 import org.apache.beam.sdk.coders.Coder;
@@ -59,29 +62,31 @@ public class DoFnFunction<OT, IT>
   private final Coder<IT> inputCoder;
   private final Map<TupleTag<?>, Coder<?>> outputCoders;
   private final WindowingStrategy<?, ?> windowingStrategy;
-  private final Collection<PCollectionView<?>> sideInputs;
+  private final Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs;
   private final TupleTag<OT> mainOutput;
-  private transient SideInputHandler sideInputReader;
+  private transient Twister2SideInputReader sideInputReader;
   private transient DoFnRunner<IT, OT> doFnRunner;
   private final DoFnOutputManager outputManager;
   private final List<TupleTag<?>> sideOutputs;
   private StepContext stepcontext;
   private final DoFnSchemaInformation doFnSchemaInformation;
   private final Map<TupleTag<?>, Integer> outputMap;
+  private final Twister2RuntimeContext runtimeContext;
 
   public DoFnFunction(
-      PipelineOptions pipelineOptions,
-      DoFn<IT, OT> doFn,
-      Coder<IT> inputCoder,
-      Map<TupleTag<?>, Coder<?>> outputCoders,
-      List<TupleTag<?>> sideOutputs,
-      WindowingStrategy<?, ?> windowingStrategy,
-      Collection<PCollectionView<?>> sideInputs,
-      TupleTag<OT> mainOutput,
-      DoFnSchemaInformation doFnSchemaInformation,
-      Map<TupleTag<?>, Integer> outputMap) {
+          Twister2TranslationContext context,
+          DoFn<IT, OT> doFn,
+          Coder<IT> inputCoder,
+          Map<TupleTag<?>, Coder<?>> outputCoders,
+          List<TupleTag<?>> sideOutputs,
+          WindowingStrategy<?, ?> windowingStrategy,
+          Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs,
+          TupleTag<OT> mainOutput,
+          DoFnSchemaInformation doFnSchemaInformation,
+          Map<TupleTag<?>, Integer> outputMap) {
     this.doFn = doFn;
-    this.pipelineOptions = pipelineOptions;
+    this.pipelineOptions = context.getOptions();
+    this.runtimeContext = context.getRuntimeContext();
     this.inputCoder = inputCoder;
     this.outputCoders = outputCoders;
     this.windowingStrategy = windowingStrategy;
@@ -96,7 +101,7 @@ public class DoFnFunction<OT, IT>
 
   @Override
   public void prepare(TSetContext context) {
-    sideInputReader = new Twister2SideInputReader(sideInputs, InMemoryStateInternals.<Void>forKey(null));
+    sideInputReader = new Twister2SideInputReader(sideInputs, runtimeContext);
     outputManager.setup(mainOutput, sideOutputs);
 
     doFnRunner =

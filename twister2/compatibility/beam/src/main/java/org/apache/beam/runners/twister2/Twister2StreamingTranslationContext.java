@@ -17,18 +17,13 @@
  */
 package org.apache.beam.runners.twister2;
 
-import edu.iu.dsc.tws.tset.worker.TwisterStreamingContext;
-
 /**
  * doc.
  */
 public class Twister2StreamingTranslationContext extends Twister2TranslationContext {
 
-  private final TwisterStreamingContext twisterStreamingContext;
-
   public Twister2StreamingTranslationContext(
-      Twister2PipelineOptions options, TwisterStreamingContext streamExecutionContext) {
+      Twister2PipelineOptions options, Twister2RuntimeContext twister2RuntimeContext) {
     super(options, twister2RuntimeContext);
-    this.twisterStreamingContext = streamExecutionContext;
   }
 }

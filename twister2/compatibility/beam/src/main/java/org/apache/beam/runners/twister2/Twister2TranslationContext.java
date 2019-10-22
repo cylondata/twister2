@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.apache.beam.runners.core.construction.SerializablePipelineOptions;
 import org.apache.beam.runners.core.construction.TransformInputs;
+import org.apache.beam.runners.twister2.translators.functions.SideInputSinkFunction;
 import org.apache.beam.runners.twister2.translators.functions.Twister2SinkFunction;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -88,6 +89,10 @@ public class Twister2TranslationContext {
     return tSet;
   }
 
+  public Twister2RuntimeContext getRuntimeContext() {
+    return runtimeContext;
+  }
+
   public <T> Map<TupleTag<?>, PValue> getInputs() {
     return currentTransform.getInputs();
   }
@@ -120,7 +125,7 @@ public class Twister2TranslationContext {
 
   public void execute() {
     for (TSet sides : sideInputDataSets.values()) {
-      sides.direct().sink(new Twister2SinkFunction());
+      sides.direct().sink(new SideInputSinkFunction(runtimeContext));
     }
     for (TSet leaf : leaves) {
       leaf.direct().sink(new Twister2SinkFunction());
