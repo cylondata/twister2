@@ -149,6 +149,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
       if (iNode instanceof Receptor) {
         if (((Receptor) iNode).getReceivableNames() != null) {
           receivableNameSet = ((Receptor) iNode).getReceivableNames();
+          LOG.info("$$$$ receivable Name Set: $$$$" + receivableNameSet);
         }
       }
     }
@@ -167,11 +168,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
         if (iNode instanceof Collector) {
           int collectorParallelism = vertex.getParallelism();
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
+          LOG.info("$$$$ collectible name set: $$$$" + collectibleNameSet);
           if (receivableNameSet.containsAll(collectibleNameSet)) {
-            /*if (receptorParallelism != collectorParallelism) {
+            if (receptorParallelism != collectorParallelism) {
               throw new TaskSchedulerException("Specify the same parallelism value for "
                   + "the dependent task in the task graphs");
-            }*/
+            }
           }
         }
       }
@@ -261,15 +263,18 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
     index++;
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, workerSchedulePlans);
-    Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-      LOG.fine("Graph Name:" + computeGraph.getGraphName() + "\tcontainer id:" + integer);
-      for (TaskInstancePlan ip : containerPlanTaskInstances) {
-        LOG.fine("Task Id:" + ip.getTaskId() + "\tIndex" + ip.getTaskIndex()
-            + "\tName:" + ip.getTaskName());
+
+    if (workerId == 0) {
+      Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+        LOG.info("Graph Name:" + computeGraph.getGraphName() + "\tcontainer id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tIndex" + ip.getTaskIndex()
+              + "\tName:" + ip.getTaskName());
+        }
       }
     }
     return taskSchedulePlan;
@@ -306,9 +311,13 @@ public class BatchTaskScheduler implements ITaskScheduler {
         if (iNode instanceof Collector) {
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           storeDependentGraphParallelism(vertex.getName(), vertex.getParallelism());
+          LOG.info("collectible name set inside the scheduling:" + collectibleNameSet);
         } else if (iNode instanceof Receptor) {
           receivableNameSet = ((Receptor) iNode).getReceivableNames();
-          validateDependentGraphParallelism(vertex.getParallelism());
+          LOG.info("receivable name set inside the scheduling:" + receivableNameSet);
+          if (collectibleNameSet.equals(receivableNameSet)) {
+            validateDependentGraphParallelism(vertex.getParallelism());
+          }
         }
         independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
         globalTaskIndex++;
@@ -321,10 +330,10 @@ public class BatchTaskScheduler implements ITaskScheduler {
     if (receivableNameSet.containsAll(collectibleNameSet)) {
       for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
         int collectorParallelism = entry.getValue();
-//        if (receptorParallel != collectorParallelism) {
-//          throw new TaskSchedulerException("Specify the same parallelism value for "
-//              + "the dependent task in the task graphs");
-//        }
+        if (receptorParallel != collectorParallelism) {
+          throw new TaskSchedulerException("Specify the same parallelism value for "
+              + "the dependent task in the task graphs");
+        }
       }
     }
   }
