@@ -21,7 +21,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
-public class ComputeTSet<O, I> extends BBaseTSet<O> {
+public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
   public ComputeTSet(BatchTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFn,

@@ -33,9 +33,9 @@ import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
+public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<T> {
 
-  BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
+  BatchTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -101,7 +101,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
 
-    if (this.getParallelism() != ((BBaseTSet) other).getParallelism()) {
+    if (this.getParallelism() != ((BatchTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
@@ -130,7 +130,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
     // this -- directThis -- unionTSet
 
     for (TSet<T> tSet : tSets) {
-      if (this.getParallelism() != ((BBaseTSet) tSet).getParallelism()) {
+      if (this.getParallelism() != ((BatchTSetImpl) tSet).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
@@ -168,7 +168,7 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public BBaseTSet<T> addInput(String key, Storable<?> input) {
+  public BatchTSetImpl<T> addInput(String key, Storable<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }

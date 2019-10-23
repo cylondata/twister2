@@ -44,9 +44,9 @@ import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
+public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
-  public SBaseTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
+  public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -108,7 +108,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   @Override
   public SComputeTSet<T, T> union(TSet<T> other) {
 
-    if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
+    if (this.getParallelism() != ((StreamingTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
@@ -136,7 +136,7 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
     // this -- directThis -- unionTSet
 
     for (TSet<T> other : tSets) {
-      if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
+      if (this.getParallelism() != ((StreamingTSetImpl) other).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }

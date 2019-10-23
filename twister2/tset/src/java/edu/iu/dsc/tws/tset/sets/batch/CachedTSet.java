@@ -44,7 +44,7 @@ import edu.iu.dsc.tws.tset.sources.CacheSourceFunc;
  *
  * @param <T> base type of the tset
  */
-public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
+public class CachedTSet<T> extends BatchTSetImpl<T> implements Storable<T> {
   private SinkFunc<?> cacheSinkFunc;
   private String cacheSourcePrefix;
   private SourceTSet<T> cacheSource;

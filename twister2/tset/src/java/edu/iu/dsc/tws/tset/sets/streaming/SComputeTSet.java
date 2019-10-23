@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
-public class SComputeTSet<O, I> extends SBaseTSet<O> {
+public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
   private TFunction<O, I> computeFunc;
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,

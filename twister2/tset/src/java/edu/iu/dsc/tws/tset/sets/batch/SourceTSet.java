@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
-public class SourceTSet<T> extends BBaseTSet<T> {
+public class SourceTSet<T> extends BatchTSetImpl<T> {
   private SourceFunc<T> source;
 
   public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {

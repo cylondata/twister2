@@ -18,7 +18,6 @@ import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
-import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class KeyedSourceTSet<K, V> extends BatchTupleTSetImpl<K, V> {
   private SourceFunc<Tuple<K, V>> source;

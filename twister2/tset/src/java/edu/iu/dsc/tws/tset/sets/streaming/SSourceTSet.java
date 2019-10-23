@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
-public class SSourceTSet<T> extends SBaseTSet<T> {
+public class SSourceTSet<T> extends StreamingTSetImpl<T> {
   private SourceFunc<T> source;
 
   public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {

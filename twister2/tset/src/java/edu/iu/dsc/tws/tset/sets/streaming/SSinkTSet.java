@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
 
-public class SSinkTSet<T> extends SBaseTSet<T> {
+public class SSinkTSet<T> extends StreamingTSetImpl<T> {
   private SinkFunc<T> sink;
 
   /**

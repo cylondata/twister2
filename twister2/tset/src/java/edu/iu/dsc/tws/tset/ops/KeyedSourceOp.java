@@ -30,7 +30,7 @@ public class KeyedSourceOp<K, V> extends BaseOp implements ISource, Closable {
 
   }
 
-  public KeyedSourceOp(SourceFunc<Tuple<K, V>>src, BaseTSet originTSet,
+  public KeyedSourceOp(SourceFunc<Tuple<K, V>> src, BaseTSet originTSet,
                        Map<String, String> receivables) {
     super(originTSet, receivables);
     this.source = src;

@@ -15,22 +15,16 @@ package edu.iu.dsc.tws.tset.sets.batch;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
-import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
-import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**

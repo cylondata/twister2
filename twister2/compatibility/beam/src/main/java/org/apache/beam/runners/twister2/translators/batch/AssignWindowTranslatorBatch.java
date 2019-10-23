@@ -28,7 +28,7 @@ import org.apache.beam.sdk.transforms.windowing.WindowFn;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 
 /**
@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 public class AssignWindowTranslatorBatch<T> implements BatchTransformTranslator<Window.Assign<T>> {
   @Override
   public void translateNode(Window.Assign<T> transform, Twister2BatchTranslationContext context) {
-    BBaseTSet<WindowedValue<T>> inputTTSet = context.getInputDataSet(context.getInput(transform));
+    BatchTSetImpl<WindowedValue<T>> inputTTSet = context.getInputDataSet(context.getInput(transform));
 
     final WindowingStrategy<T, BoundedWindow> windowingStrategy =
         (WindowingStrategy<T, BoundedWindow>) context.getOutput(transform).getWindowingStrategy();
