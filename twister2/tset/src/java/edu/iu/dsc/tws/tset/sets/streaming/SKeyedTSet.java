@@ -59,4 +59,10 @@ public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);
 
   }
+
+  @Override
+  public SKeyedTSet<K, V> setName(String name) {
+    rename(name);
+    return this;
+  }
 }

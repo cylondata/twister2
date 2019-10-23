@@ -43,10 +43,4 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
     addChildToGraph(partition);
     return partition;
   }
-
-  @Override
-  public StreamingTupleTSetImpl<K, V> setName(String n) {
-    rename(n);
-    return this;
-  }
 }
