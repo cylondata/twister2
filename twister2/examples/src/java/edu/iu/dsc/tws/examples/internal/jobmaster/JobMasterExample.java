@@ -37,6 +37,7 @@ import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.ZKContext;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -71,12 +72,13 @@ public final class JobMasterExample {
   public static void main(String[] args) {
 
     // we assume that the twister2Home is the current directory
-    String configDir = "conf/kubernetes/";
-    String twister2Home = Paths.get("").toAbsolutePath().toString();
+
+//    String configDir = "../twister2/config/src/yaml/";
+    String configDir = "";
+    String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     config = updateConfig(config);
-    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: "
-        + configDir);
+    LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
@@ -134,6 +136,7 @@ public final class JobMasterExample {
 
     try {
       ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
+      ZKRestartCheck.createJobZNode(client, rootPath, job.getJobName());
 
       // test job znode content reading
       JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);

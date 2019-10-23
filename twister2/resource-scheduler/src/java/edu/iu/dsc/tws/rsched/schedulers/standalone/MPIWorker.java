@@ -234,9 +234,13 @@ public final class MPIWorker {
   private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
+
+    // should be either WorkerState.STARTING or WorkerState.RESTARTING
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers);
+        workerInfo, masterHost, masterPort, numberContainers, initialState);
     LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
 

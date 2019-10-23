@@ -134,6 +134,8 @@ public final class JMWorkerAgent {
 
   private CheckpointingClientImpl checkpointClient;
 
+  private JobMasterAPI.WorkerState initialState;
+
   /**
    * Singleton JMWorkerAgent
    */
@@ -141,12 +143,14 @@ public final class JMWorkerAgent {
                         WorkerInfo thisWorker,
                         String masterHost,
                         int masterPort,
-                        int numberOfWorkers) {
+                        int numberOfWorkers,
+                        JobMasterAPI.WorkerState initialState) {
     this.config = config;
     this.thisWorker = thisWorker;
     this.masterAddress = masterHost;
     this.masterPort = masterPort;
     this.numberOfWorkers = numberOfWorkers;
+    this.initialState = initialState;
   }
 
   /**
@@ -157,12 +161,14 @@ public final class JMWorkerAgent {
                                                   WorkerInfo thisWorker,
                                                   String masterHost,
                                                   int masterPort,
-                                                  int numberOfWorkers) {
+                                                  int numberOfWorkers,
+                                                  JobMasterAPI.WorkerState initialState) {
     if (workerAgent != null) {
       return workerAgent;
     }
 
-    workerAgent = new JMWorkerAgent(config, thisWorker, masterHost, masterPort, numberOfWorkers);
+    workerAgent = new JMWorkerAgent(
+        config, thisWorker, masterHost, masterPort, numberOfWorkers, initialState);
     return workerAgent;
   }
 
@@ -298,7 +304,7 @@ public final class JMWorkerAgent {
     jmThread.setName("JM Agent");
     jmThread.start();
 
-    boolean registered = registerWorker();
+    boolean registered = registerWorker(initialState);
     if (!registered) {
       this.close();
       throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
@@ -316,7 +322,7 @@ public final class JMWorkerAgent {
 
     startLooping();
 
-    boolean registered = registerWorker();
+    boolean registered = registerWorker(initialState);
     if (!registered) {
       throw new RuntimeException("Could not register JobMaster with Dashboard. Exiting .....");
     }
@@ -452,12 +458,17 @@ public final class JMWorkerAgent {
    * send RegisterWorker message to Job Master
    * put WorkerInfo in this message
    */
-  private boolean registerWorker() {
+  private boolean registerWorker(JobMasterAPI.WorkerState initState) {
+
+    boolean fromFailure = false;
+    if (initState == JobMasterAPI.WorkerState.RESTARTING) {
+      fromFailure = true;
+    }
 
     JobMasterAPI.RegisterWorker registerWorker = JobMasterAPI.RegisterWorker.newBuilder()
         .setWorkerID(thisWorker.getWorkerID())
         .setWorkerInfo(thisWorker)
-        .setFromFailure(false)
+        .setFromFailure(fromFailure)
         .build();
 
     LOG.fine("Sending RegisterWorker message: \n" + registerWorker);
