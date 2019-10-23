@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
-public class JoinTLink<K, VL, VR> extends BIteratorLink<JoinedTuple<K, VL, VR>> {
+public class JoinTLink<K, VL, VR> extends BatchIteratorLink<JoinedTuple<K, VL, VR>> {
 
   private CommunicationContext.JoinType joinType;
   private TaskPartitioner<K> partitioner;

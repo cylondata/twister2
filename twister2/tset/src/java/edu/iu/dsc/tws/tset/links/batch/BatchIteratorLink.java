@@ -29,14 +29,14 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 
-public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
+public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {
 
-  BIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  BIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchIteratorLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

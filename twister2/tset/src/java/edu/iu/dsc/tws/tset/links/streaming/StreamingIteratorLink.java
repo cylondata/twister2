@@ -27,14 +27,14 @@ import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
-public abstract class SIteratorLink<T> extends SBaseTLink<Iterator<T>, T>
+public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterator<T>, T>
     implements StreamingTupleMappableLink<T> {
 
-  SIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
+  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  SIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

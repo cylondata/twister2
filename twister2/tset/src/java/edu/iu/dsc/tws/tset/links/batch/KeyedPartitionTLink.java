@@ -31,7 +31,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class KeyedPartitionTLink<K, V> extends BIteratorLink<Tuple<K, V>> {
+public class KeyedPartitionTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
 
   public KeyedPartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<K> parFn,

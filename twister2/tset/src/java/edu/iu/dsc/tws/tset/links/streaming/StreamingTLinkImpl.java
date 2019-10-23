@@ -22,10 +22,10 @@ import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSinkTSet;
 
-public abstract class SBaseTLink<T1, T0> extends BaseTLink<T1, T0>
+public abstract class StreamingTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements StreamingTLink<T1, T0> {
 
-  SBaseTLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingTLinkImpl(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

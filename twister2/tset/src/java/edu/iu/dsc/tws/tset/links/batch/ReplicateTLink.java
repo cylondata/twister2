@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class ReplicateTLink<T> extends BIteratorLink<T> {
+public class ReplicateTLink<T> extends BatchIteratorLink<T> {
 
   public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
     super(tSetEnv, "replicate", 1, reps);

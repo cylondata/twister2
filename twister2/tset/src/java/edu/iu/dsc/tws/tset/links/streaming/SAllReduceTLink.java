@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
  *
  * @param <T> type of data
  */
-public class SAllReduceTLink<T> extends SSingleLink<T> {
+public class SAllReduceTLink<T> extends StreamingSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
   public SAllReduceTLink(StreamingTSetEnvironment tSetEnv, ReduceFunc<T> rFn,

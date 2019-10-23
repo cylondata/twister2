@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
-public class SDirectTLink<T> extends SSingleLink<T> {
+public class SDirectTLink<T> extends StreamingSingleLink<T> {
 
   public SDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "sdirect", sourceParallelism);

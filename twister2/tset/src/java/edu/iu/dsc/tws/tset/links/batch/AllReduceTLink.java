@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
  *
  * @param <T> type of data
  */
-public class AllReduceTLink<T> extends BSingleLink<T> {
+public class AllReduceTLink<T> extends BatchSingleLink<T> {
   private ReduceFunc<T> reduceFn;
 
   public AllReduceTLink(BatchTSetEnvironment tSetEnv, ReduceFunc<T> rFn, int sourceParallelism) {

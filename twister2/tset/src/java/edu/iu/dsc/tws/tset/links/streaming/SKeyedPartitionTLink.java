@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
-public class SKeyedPartitionTLink<K, V> extends SSingleLink<Tuple<K, V>> {
+public class SKeyedPartitionTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
   private PartitionFunc<K> partitionFunction;
 
   public SKeyedPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<K> parFn,

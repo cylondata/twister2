@@ -35,13 +35,13 @@ import edu.iu.dsc.tws.tset.sinks.GatherCacheSink;
  *
  * @param <T> value type
  */
-public abstract class BBaseGatherLink<T> extends BBaseTLink<Iterator<Tuple<Integer, T>>, T> {
+public abstract class BatchGatherLink<T> extends BatchTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  BBaseGatherLink(BatchTSetEnvironment env, String n, int sourceP) {
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  BBaseGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 /*  public <P> ComputeTSet<P, Iterator<T>>

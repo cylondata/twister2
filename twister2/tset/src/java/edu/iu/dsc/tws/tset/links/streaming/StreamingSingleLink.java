@@ -25,14 +25,14 @@ import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
-public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
+public abstract class StreamingSingleLink<T> extends StreamingTLinkImpl<T, T> implements
     StreamingTupleMappableLink<T> {
 
-  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP) {
+  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

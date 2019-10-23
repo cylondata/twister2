@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
  *
  * @param <T> the type of data
  */
-public class SGatherTLink<T> extends SBaseGatherLink<T> {
+public class SGatherTLink<T> extends StreamingGatherLink<T> {
 
   public SGatherTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "sgather", sourceParallelism, 1);

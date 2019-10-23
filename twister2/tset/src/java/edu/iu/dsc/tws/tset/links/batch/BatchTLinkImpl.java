@@ -21,10 +21,10 @@ import edu.iu.dsc.tws.tset.links.BaseTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
-public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
+public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  BBaseTLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

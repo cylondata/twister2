@@ -33,13 +33,14 @@ import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
  *
  * @param <T> value type
  */
-public abstract class SBaseGatherLink<T> extends SBaseTLink<Iterator<Tuple<Integer, T>>, T> {
+public abstract class StreamingGatherLink<T>
+    extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  SBaseGatherLink(StreamingTSetEnvironment env, String n, int sourceP) {
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  SBaseGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 /*  public <P> StreamingComputeTSet<P, Iterator<T>>

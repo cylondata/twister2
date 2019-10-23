@@ -40,14 +40,14 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheSingleSink;
 
-public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
+public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
     BatchTupleMappableLink<T> {
 
-  BSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  BSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 

@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class DirectTLink<T> extends BIteratorLink<T> {
+public class DirectTLink<T> extends BatchIteratorLink<T> {
 
   public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
     super(tSetEnv, "direct", sourceParallelism);

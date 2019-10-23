@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
-public class SPartitionTLink<T> extends SSingleLink<T> {
+public class SPartitionTLink<T> extends StreamingSingleLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 

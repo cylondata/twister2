@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class PartitionTLink<T> extends BIteratorLink<T> {
+public class PartitionTLink<T> extends BatchIteratorLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 

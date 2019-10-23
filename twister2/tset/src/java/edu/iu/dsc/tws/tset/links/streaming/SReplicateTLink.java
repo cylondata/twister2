@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
-public class SReplicateTLink<T> extends SSingleLink<T> {
+public class SReplicateTLink<T> extends StreamingSingleLink<T> {
   public SReplicateTLink(StreamingTSetEnvironment tSetEnv, int reps) {
     super(tSetEnv, "sreplicate", 1, reps);
   }
