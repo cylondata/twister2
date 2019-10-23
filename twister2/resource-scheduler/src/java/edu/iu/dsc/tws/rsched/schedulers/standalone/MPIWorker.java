@@ -234,9 +234,13 @@ public final class MPIWorker {
   private JMWorkerAgent createMasterAgent(Config cfg, String masterHost, int masterPort,
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
+
+    // should be either WorkerState.STARTING or WorkerState.RESTARTING
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
-        workerInfo, masterHost, masterPort, numberContainers);
+        workerInfo, masterHost, masterPort, numberContainers, initialState);
     LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
 
@@ -376,8 +380,11 @@ public final class MPIWorker {
       LOG.log(Level.INFO, String.format("Starting the job manager: %s:%d", hostAddress, port));
       JobMasterAPI.NodeInfo jobMasterNodeInfo = null;
       IScalerPerCluster clusterScaler = null;
+      JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+      NomadTerminator nt = new NomadTerminator();
+
       JobMaster jobMaster = new JobMaster(
-          cfg, hostAddress, port, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+          cfg, hostAddress, port, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
       jobMaster.addShutdownHook(false);
       Thread jmThread = jobMaster.startJobMasterThreaded();
 

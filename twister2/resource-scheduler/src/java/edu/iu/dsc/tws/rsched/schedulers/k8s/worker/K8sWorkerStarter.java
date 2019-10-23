@@ -16,7 +16,11 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.curator.framework.CuratorFramework;
+
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
@@ -25,6 +29,8 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -147,8 +153,7 @@ public final class K8sWorkerStarter {
         + "hostIP(nodeIP): " + hostIP + "\n"
     );
 
-    // TODO: get initialState from checkpoint manager or from starting script
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState = determineInitialState();
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -238,6 +243,36 @@ public final class K8sWorkerStarter {
     }
 
     worker.execute(config, workerID, workerController, pv, volatileVolume);
+  }
+
+  /**
+   * worker is either starting for the first time, or it is coming from failure
+   * We return either WorkerState.STARTING or WorkerState.RESTARTING
+   * TODO: If ZooKeeper is not used,
+   *   currently we just return STARTING. We do not determine real initial status.
+   * @return
+   */
+  public static JobMasterAPI.WorkerState determineInitialState() {
+
+    if (ZKContext.isZooKeeperServerUsed(config)) {
+      String zkServerAddresses = ZKContext.serverAddresses(config);
+      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
+      CuratorFramework client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+      String rootPath = ZKContext.rootNode(config);
+
+      try {
+        if (ZKInitialStateManager.isWorkerRestarting(client, rootPath, jobName, workerID)) {
+          return JobMasterAPI.WorkerState.RESTARTING;
+        }
+
+        return JobMasterAPI.WorkerState.STARTING;
+
+      } catch (Exception e) {
+        throw new Twister2RuntimeException(e);
+      }
+    }
+
+    return JobMasterAPI.WorkerState.STARTING;
   }
 
   /**

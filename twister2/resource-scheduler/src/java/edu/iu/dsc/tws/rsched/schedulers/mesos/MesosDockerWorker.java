@@ -189,8 +189,12 @@ public class MesosDockerWorker {
 
     LOG.info("JobMaster IP..: " + jobMasterIP);
     LOG.info("NETWORK INFO..: " + workerInfo.getWorkerIP());
+
+    //TODO: should be either WorkerState.STARTING or WorkerState.RESTARTING
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+
     jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-        jobMasterPort, numberOfWorkers);
+        jobMasterPort, numberOfWorkers, initialState);
     jobMasterAgent.startThreaded();
 
     // No need for sending workerStarting message anymore
