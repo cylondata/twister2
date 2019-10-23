@@ -37,7 +37,8 @@ import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 public class AssignWindowTranslatorBatch<T> implements BatchTransformTranslator<Window.Assign<T>> {
   @Override
   public void translateNode(Window.Assign<T> transform, Twister2BatchTranslationContext context) {
-    BatchTSetImpl<WindowedValue<T>> inputTTSet = context.getInputDataSet(context.getInput(transform));
+    BatchTSetImpl<WindowedValue<T>> inputTTSet = context.getInputDataSet(context.getInput(
+        transform));
 
     final WindowingStrategy<T, BoundedWindow> windowingStrategy =
         (WindowingStrategy<T, BoundedWindow>) context.getOutput(transform).getWindowingStrategy();
