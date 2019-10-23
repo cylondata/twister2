@@ -32,8 +32,6 @@ import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
 public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {
 
-//  private CachedTSet<T> savedCacheTSet;
-
   BIteratorLink(BatchTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
@@ -53,18 +51,6 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
   }
 
   @Override
-  public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, Iterator<T>> set = lazyForEach(applyFunction);
-
-    getTSetEnv().run(set);
-  }
-
-  @Override
-  public ComputeTSet<Object, Iterator<T>> lazyForEach(ApplyFunc<T> applyFunction) {
-    return compute("foreach", new ForEachIterCompute<>(applyFunction));
-  }
-
-  @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
     KeyedTSet<K, V> set = new KeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
         getTargetParallelism());
@@ -74,23 +60,17 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
     return set;
   }
 
-//  @Override
-//  public CachedTSet<T> cache(boolean isIterative) {
-//    CachedTSet<T> cacheTSet;
-//    if (isIterative && savedCacheTSet != null) {
-//      cacheTSet = savedCacheTSet;
-//    } else {
-//      cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
-//          getTargetParallelism());
-//      savedCacheTSet = cacheTSet;
-//      addChildToGraph(cacheTSet);
-//    }
-//
-//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet, isIterative);
-////    cacheTSet.setData(output);
-//
-//    return cacheTSet;
-//  }
+  @Override
+  public ComputeTSet<Object, Iterator<T>> lazyForEach(ApplyFunc<T> applyFunction) {
+    return compute("foreach", new ForEachIterCompute<>(applyFunction));
+  }
+
+  @Override
+  public void forEach(ApplyFunc<T> applyFunction) {
+    ComputeTSet<Object, Iterator<T>> set = lazyForEach(applyFunction);
+
+    getTSetEnv().run(set);
+  }
 
   @Override
   public CachedTSet<T> lazyCache() {
@@ -98,8 +78,6 @@ public abstract class BIteratorLink<T> extends BBaseTLink<Iterator<T>, T>
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 
-//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-//    cacheTSet.setData(output);
     return cacheTSet;
   }
 

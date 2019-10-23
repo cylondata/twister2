@@ -28,7 +28,6 @@ import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.Storable;
-import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -74,7 +73,7 @@ public interface BatchTSet<T> extends TSet<T>, AcceptingData<T> {
   BatchTSet<T> union(Collection<TSet<T>> tSets);
 
   @Override
-  TBase addInput(String key, Storable<?> input);
+  BatchTSet<T> addInput(String key, Storable<?> input);
 
   BatchTSet<T> cache();
 

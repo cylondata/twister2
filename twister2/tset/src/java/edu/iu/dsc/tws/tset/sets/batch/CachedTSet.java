@@ -12,12 +12,16 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
@@ -63,17 +67,17 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
 
   @Override
   public DirectTLink<T> direct() {
-    return getCacheSource().direct();
+    return getStoredSourceTSet().direct();
   }
 
   @Override
   public ReduceTLink<T> reduce(ReduceFunc<T> reduceFn) {
-    return getCacheSource().reduce(reduceFn);
+    return getStoredSourceTSet().reduce(reduceFn);
   }
 
   @Override
   public PartitionTLink<T> partition(PartitionFunc<T> partitionFn, int targetParallelism) {
-    return getCacheSource().partition(partitionFn, targetParallelism);
+    return getStoredSourceTSet().partition(partitionFn, targetParallelism);
   }
 
   @Override
@@ -83,57 +87,32 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
 
   @Override
   public GatherTLink<T> gather() {
-    return getCacheSource().gather();
+    return getStoredSourceTSet().gather();
   }
 
   @Override
   public AllReduceTLink<T> allReduce(ReduceFunc<T> reduceFn) {
-    return getCacheSource().allReduce(reduceFn);
+    return getStoredSourceTSet().allReduce(reduceFn);
   }
 
   @Override
   public AllGatherTLink<T> allGather() {
-    return getCacheSource().allGather();
+    return getStoredSourceTSet().allGather();
   }
 
   @Override
   public <K, V> KeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> generateTuple) {
-    return getCacheSource().mapToTuple(generateTuple);
+    return getStoredSourceTSet().mapToTuple(generateTuple);
   }
 
   @Override
   public ReplicateTLink<T> replicate(int replications) {
-    return getCacheSource().replicate(replications);
+    return getStoredSourceTSet().replicate(replications);
   }
 
   @Override
   public CachedTSet<T> cache() {
     return this;
-  }
-
-  /**
-   * Once a cache TSet is run, it will produce data and store data in the data executor with the
-   * tset ID as the key
-   *
-   * @return data object
-   * <p>
-   * todo make this a partition? and hide this from users
-   */
-  @Override
-  public DataObject<T> getDataObject() {
-    return getTSetEnv().getData(getId());
-  }
-
-  private SourceTSet<T> getCacheSource() {
-    if (this.cacheSource == null) {
-      // this cache source will consume the data object created by the execution of this tset.
-      // hence this tset ID needs to be set as an input to the cache source
-      this.cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
-          new CacheSourceFunc<>(cacheSourcePrefix), getParallelism());
-      this.cacheSource.addInput(cacheSourcePrefix, this);
-    }
-
-    return this.cacheSource;
   }
 
   @Override
@@ -155,5 +134,43 @@ public class CachedTSet<T> extends BBaseTSet<T> implements Storable<T> {
   @Override
   public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
     throw new UnsupportedOperationException("Union on CachedTSet is not supported");
+  }
+
+  /**
+   * Once a cache TSet is run, it will produce data and store data in the data executor with the
+   * tset ID as the key. This will be exposed to other operations as a {@link SourceTSet<T>}
+   *
+   * @return {@link SourceTSet<T>} source tset from data
+   * <p>
+   */
+  @Override
+  public SourceTSet<T> getStoredSourceTSet() {
+    if (this.cacheSource == null) {
+      // this cache source will consume the data object created by the execution of this tset.
+      // hence this tset ID needs to be set as an input to the cache source
+      this.cacheSource = getTSetEnv().createSource(cacheSourcePrefix,
+          new CacheSourceFunc<>(cacheSourcePrefix), getParallelism());
+      this.cacheSource.addInput(cacheSourcePrefix, this);
+    }
+
+    return this.cacheSource;
+  }
+
+  @Override
+  public List<T> getData() {
+    List<T> results = new ArrayList<>();
+
+    DataObject<T> data = getTSetEnv().getData(getId());
+
+    if (data != null) {
+      for (DataPartition<T> partition : data.getPartitions()) {
+        DataPartitionConsumer<T> consumer = partition.getConsumer();
+        while (consumer.hasNext()) {
+          results.add(consumer.next());
+        }
+      }
+    }
+
+    return results;
   }
 }

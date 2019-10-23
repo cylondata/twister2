@@ -13,7 +13,6 @@
 
 package edu.iu.dsc.tws.tset.sets.batch;
 
-import java.util.Collections;
 import java.util.Comparator;
 
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
@@ -123,10 +122,10 @@ public class KeyedTSet<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V>
 
     if (mapToTupleFunc instanceof MapCompute) {
       return new MapToTupleOp<>((MapCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
-          Collections.emptyMap());
+          getInputs());
     } else if (mapToTupleFunc instanceof MapIterCompute) {
       return new MapToTupleIterOp<>((MapIterCompute<Tuple<K, V>, ?>) mapToTupleFunc, this,
-          Collections.emptyMap());
+          getInputs());
     }
 
     throw new RuntimeException("Unknown map function passed to keyed tset" + mapToTupleFunc);

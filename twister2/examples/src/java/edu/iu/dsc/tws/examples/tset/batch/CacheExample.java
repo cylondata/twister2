@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -65,6 +66,10 @@ public class CacheExample extends BatchTsetExample {
     LOG.info("test foreach");
     cTset.direct()
         .forEach(i -> LOG.info("foreach: " + i));
+
+    LOG.info("test list");
+    List<Integer> data = cTset.getData();
+    LOG.info("List out: " + data);
 
     LOG.info("test map");
     cTset.direct()

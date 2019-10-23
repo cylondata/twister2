@@ -13,11 +13,9 @@
 package edu.iu.dsc.tws.api.tset;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
-import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.sets.TSet;
 
 /**
  * All Tsets that are cachable need to implement this interface
@@ -27,59 +25,19 @@ import edu.iu.dsc.tws.api.dataset.DataPartition;
 public interface Storable<T> extends TBase, Serializable {
 
   /**
-   * retrieve data saved in the TSet
+   * retrieve data saved in the TSet as a {@link List}
    * <p>
-   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
-   * this would unnecessarily loads data to the memory from the partition consumer
+   * NOTE: use this method only when you need to pull the data from the tset. Otherwise
+   * this would unnecessarily loads data to the memory.
    *
    * @return dataObject
    */
-  default List<T> getData() {
-    List<T> results = new ArrayList<>();
-
-    if (getDataObject() != null) {
-      for (DataPartition<T> partition : getDataObject().getPartitions()) {
-        while (partition.getConsumer().hasNext()) {
-          results.add(partition.getConsumer().next());
-        }
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * get the data from the given partition.
-   * <p>
-   * NOTE: use this method only when you need to pull the data from the data object. Otherwise
-   * this would unnecessarily loads data to the memory from the partition consumer
-   *
-   * @param partitionId the partition ID
-   * @return the data related to the given partition
-   */
-  default List<T> getData(int partitionId) {
-    DataPartition<T> partition = getDataObject().getPartition(partitionId);
-    List<T> results = new ArrayList<>();
-    while (partition.getConsumer().hasNext()) {
-      results.add(partition.getConsumer().next());
-    }
-
-    return results;
-  }
+  List<T> getData();
 
   /**
    * retrieve data saved in the TSet
    *
    * @return dataObject
    */
-  DataObject<T> getDataObject();
-
-//  /**
-//   * Add Data to the data object
-//   *
-//   * @param data value to be added
-//   * @return true if the data was added successfully or false otherwise
-//   */
-//  boolean updateDataObject(DataObject<T> data);
-
+  TSet<T> getStoredSourceTSet();
 }
