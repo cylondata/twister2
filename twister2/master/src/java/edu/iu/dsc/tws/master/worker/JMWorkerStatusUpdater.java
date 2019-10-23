@@ -11,10 +11,13 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.worker;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public class JMWorkerStatusUpdater implements IWorkerStatusUpdater {
+  private static final Logger LOG = Logger.getLogger(JMWorkerController.class.getName());
 
   private JMWorkerAgent workerAgent;
 
@@ -25,14 +28,13 @@ public class JMWorkerStatusUpdater implements IWorkerStatusUpdater {
   @Override
   public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
 
-    if (newState == JobMasterAPI.WorkerState.STARTING
-        || newState == JobMasterAPI.WorkerState.RESTARTING) {
-      return workerAgent.sendWorkerRunningMessage();
-    } else if (newState == JobMasterAPI.WorkerState.RUNNING) {
+    if (newState == JobMasterAPI.WorkerState.RUNNING) {
       return workerAgent.sendWorkerRunningMessage();
     } else if (newState == JobMasterAPI.WorkerState.COMPLETED) {
       return workerAgent.sendWorkerCompletedMessage();
     }
+
+    LOG.severe("Unsupported state: " + newState);
     return false;
   }
 
