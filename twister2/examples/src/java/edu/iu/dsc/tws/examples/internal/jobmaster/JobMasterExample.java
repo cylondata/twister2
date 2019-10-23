@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
-import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -136,7 +136,7 @@ public final class JobMasterExample {
 
     try {
       ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      ZKRestartCheck.createJobZNode(client, rootPath, job.getJobName());
+      ZKInitialStateManager.createJobZNode(client, rootPath, job.getJobName());
 
       // test job znode content reading
       JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);

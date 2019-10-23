@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
+import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -126,7 +126,7 @@ public final class JobMasterStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKRestartCheck.isJobMasterRestarting(client, rootPath, jobName)) {
+        if (ZKInitialStateManager.isJobMasterRestarting(client, rootPath, jobName)) {
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

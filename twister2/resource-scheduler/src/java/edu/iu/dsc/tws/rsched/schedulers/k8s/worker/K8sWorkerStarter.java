@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKRestartCheck;
+import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -261,7 +261,7 @@ public final class K8sWorkerStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKRestartCheck.isWorkerRestarting(client, rootPath, jobName, workerID)) {
+        if (ZKInitialStateManager.isWorkerRestarting(client, rootPath, jobName, workerID)) {
           return JobMasterAPI.WorkerState.RESTARTING;
         }
 

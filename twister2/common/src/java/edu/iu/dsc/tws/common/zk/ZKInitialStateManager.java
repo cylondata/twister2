@@ -27,32 +27,33 @@ import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
  * When workers scaled down, we must delete the znodes of killed worker.
  * This is handled by the scaler.
  */
-public final class ZKRestartCheck {
-  public static final Logger LOG = Logger.getLogger(ZKRestartCheck.class.getName());
+public final class ZKInitialStateManager {
+  public static final Logger LOG = Logger.getLogger(ZKInitialStateManager.class.getName());
 
-  private ZKRestartCheck() { }
+  private ZKInitialStateManager() { }
 
   /**
-   * Create job znode for worker and job master restart checking
+   * Create job znode for worker and job master initial state checking
    * Assumes that there is no znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
   public static void createJobZNode(CuratorFramework client, String rootPath, String jobName)
       throws Exception {
 
-    String checkPath = ZKUtils.constructJobRestartCheckPath(rootPath, jobName);
+    String initialStatePath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
 
     try {
       client
           .create()
           .creatingParentsIfNeeded()
           .withMode(CreateMode.PERSISTENT)
-          .forPath(checkPath);
+          .forPath(initialStatePath);
 
-      LOG.info("RestartCheckPath created: " + checkPath);
+      LOG.info("Job InitialStatePath created: " + initialStatePath);
 
     } catch (Exception e) {
-      throw new Exception("RestartCheckPath can not be created for the path: " + checkPath, e);
+      throw new Exception("InitialStatePath can not be created for the path: "
+          + initialStatePath, e);
     }
   }
 
@@ -97,11 +98,11 @@ public final class ZKRestartCheck {
                                            String jobName,
                                            String entityID) throws Exception {
 
-    String jobCheckPath = ZKUtils.constructJobRestartCheckPath(rootPath, jobName);
-    String entityCheckPath = ZKUtils.constructRestartCheckPath(jobCheckPath, entityID);
+    String jobInitStatePath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
+    String entityInitStatePath = ZKUtils.constructInitialStatePath(jobInitStatePath, entityID);
 
-    if (client.checkExists().forPath(entityCheckPath) != null) {
-      LOG.warning("RestartCheckPath exists: " + entityCheckPath);
+    if (client.checkExists().forPath(entityInitStatePath) != null) {
+      LOG.warning("InitialStatePath exists: " + entityInitStatePath);
       return true;
     }
 
@@ -110,13 +111,13 @@ public final class ZKRestartCheck {
           .create()
           .creatingParentsIfNeeded()
           .withMode(CreateMode.PERSISTENT)
-          .forPath(entityCheckPath);
+          .forPath(entityInitStatePath);
 
-      LOG.info("RestartCheckPath created: " + entityCheckPath);
+      LOG.info("InitialStatePath created: " + entityInitStatePath);
       return false;
 
     } catch (Exception e) {
-      throw new Exception("RestartCheckPath can not be created: " + entityCheckPath, e);
+      throw new Exception("InitialStatePath can not be created: " + entityInitStatePath, e);
     }
   }
 
@@ -130,21 +131,21 @@ public final class ZKRestartCheck {
                                             int minID,
                                             int maxID) throws Twister2Exception {
 
-    String checkPath = ZKUtils.constructJobRestartCheckPath(rootPath, jobName);
+    String checkPath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
 
     for (int workerID = minID; workerID < maxID; workerID++) {
-      String workerCheckPath = ZKUtils.constructWorkerRestartCheckPath(checkPath, workerID);
+      String workerCheckPath = ZKUtils.constructWorkerInitialStatePath(checkPath, workerID);
 
       try {
         // not sure whether we need to check the existence
         if (client.checkExists().forPath(workerCheckPath) != null) {
 
           client.delete().forPath(workerCheckPath);
-          LOG.info("WorkerRestartCheckPath delete: " + workerCheckPath);
+          LOG.info("Worker InitialStatePath deleted: " + workerCheckPath);
 
         }
       } catch (Exception e) {
-        throw new Twister2Exception("WorkerRestartCheckPath cannot be deleted: " + workerCheckPath,
+        throw new Twister2Exception("Worker InitialStatePath cannot be deleted: " + workerCheckPath,
             e);
       }
     }

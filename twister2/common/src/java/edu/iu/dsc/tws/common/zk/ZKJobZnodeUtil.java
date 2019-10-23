@@ -57,10 +57,10 @@ public final class ZKJobZnodeUtil {
         logMessage.append("jobZnode exists: " + jobPath);
       }
 
-      String checkPath = ZKUtils.constructJobRestartCheckPath(rootPath, jobName);
+      String checkPath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
       if (client.checkExists().forPath(checkPath) != null) {
         jobZnodesExist = true;
-        logMessage.append("RestartCheckPath exists: " + checkPath);
+        logMessage.append("InitialStatePath exists: " + checkPath);
       }
 
       // check whether the job node exists, if not, return false, nothing to do
@@ -184,12 +184,12 @@ public final class ZKJobZnodeUtil {
         LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
       }
 
-      String checkPath = ZKUtils.constructJobRestartCheckPath(rootPath, jobName);
+      String checkPath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
       if (client.checkExists().forPath(checkPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(checkPath);
-        LOG.log(Level.INFO, "RestartCheckPath deleted from ZooKeeper: " + checkPath);
+        LOG.log(Level.INFO, "InitialStatePath deleted from ZooKeeper: " + checkPath);
       } else {
-        LOG.log(Level.INFO, "No RestartCheckPath exists in ZooKeeper to delete for: " + checkPath);
+        LOG.log(Level.INFO, "No InitialStatePath exists in ZooKeeper to delete for: " + checkPath);
       }
 
       // delete distributed atomic integer for barrier

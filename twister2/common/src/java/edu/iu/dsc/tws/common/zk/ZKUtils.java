@@ -108,10 +108,10 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a job path from the given job name
+   * construct a job initial state path from the given job name
    */
-  public static String constructJobRestartCheckPath(String rootPath, String jobName) {
-    return rootPath + "/restart-check/" + jobName;
+  public static String constructJobInitialStatePath(String rootPath, String jobName) {
+    return rootPath + "/initial-state/" + jobName;
   }
 
   /**
@@ -136,17 +136,17 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a worker path from the given job restart check path and worker ID
+   * construct a worker path from the given job initial state path and worker ID
    */
-  public static String constructWorkerRestartCheckPath(String jobCheckPath, int workerID) {
-    return constructRestartCheckPath(jobCheckPath, workerID + "");
+  public static String constructWorkerInitialStatePath(String jobCheckPath, int workerID) {
+    return constructInitialStatePath(jobCheckPath, workerID + "");
   }
 
   /**
-   * construct a worker path from the given job restart check path and entityID
+   * construct a worker path from the given job initial state path and entityID
    * entityID can be "jm" for job master and workerID for workers
    */
-  public static String constructRestartCheckPath(String jobCheckPath, String entityID) {
+  public static String constructInitialStatePath(String jobCheckPath, String entityID) {
     return jobCheckPath + "/" + entityID;
   }
 
