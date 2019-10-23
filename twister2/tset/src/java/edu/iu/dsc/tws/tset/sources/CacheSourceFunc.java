@@ -40,7 +40,7 @@ public class CacheSourceFunc<T> extends BaseSourceFunc<T> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
     // retrieve the partition from the context
-    DataPartition<T> data = (DataPartition<T>) ctx.getInput(cachedKey);
+    DataPartition<T> data = (DataPartition<T>) getInput(cachedKey);
     this.currentConsumer = data.getConsumer();
   }
 }

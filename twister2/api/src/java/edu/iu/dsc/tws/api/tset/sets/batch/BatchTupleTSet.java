@@ -43,6 +43,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
@@ -86,4 +87,8 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
   <VR> BatchTLink<Iterator<JoinedTuple<K, V, VR>>, JoinedTuple<K, V, VR>>
       join(BatchTupleTSet<K, VR> rightTSet, CommunicationContext.JoinType type,
            Comparator<K> keyComparator, TaskPartitioner<K> partitioner);
+
+  BatchTupleTSet<K, V> addInput(String key, Storable<?> input);
+
+  BatchTupleTSet<K, V> cache();
 }

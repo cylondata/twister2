@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.sources.HadoopSource;
 import edu.iu.dsc.tws.tset.sources.HadoopSourceWithMap;
@@ -63,6 +64,24 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   @Override
   public <T> SourceTSet<T> createSource(String name, SourceFunc<T> source, int parallelism) {
     SourceTSet<T> sourceT = new SourceTSet<>(this, name, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
+  @Override
+  public <K, V> KeyedSourceTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
+                                                        int parallelism) {
+    KeyedSourceTSet<K, V> sourceT = new KeyedSourceTSet<>(this, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
+  @Override
+  public <K, V> KeyedSourceTSet<K, V> createKeyedSource(String name, SourceFunc<Tuple<K, V>> source,
+                                                        int parallelism) {
+    KeyedSourceTSet<K, V> sourceT = new KeyedSourceTSet<>(this, name, source, parallelism);
     getGraph().addSourceTSet(sourceT);
 
     return sourceT;
@@ -164,9 +183,9 @@ public class BatchTSetEnvironment extends TSetEnvironment {
    * Similar to eval, but here, the data produced by the evaluation will be passed on to the
    * updateTSet
    *
-   * @param evalTSet TSet to be evaluated
+   * @param evalTSet   TSet to be evaluated
    * @param updateTSet TSet to be updated
-   * @param <T> type
+   * @param <T>        type
    */
   public <T, ST extends BaseTSet<T> & Storable<T>> void evalAndUpdate(ST evalTSet, ST updateTSet) {
     // first eval the TSet then update

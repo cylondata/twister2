@@ -10,38 +10,39 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-
 package edu.iu.dsc.tws.tset.sets.streaming;
 
 import java.util.Collections;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.ops.SourceOp;
+import edu.iu.dsc.tws.tset.ops.KeyedSourceOp;
 
-public class SSourceTSet<T> extends SBaseTSet<T> {
-  private SourceFunc<T> source;
+public class SKeyedSourceTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
+  private SourceFunc<Tuple<K, V>> source;
 
-  public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, "ssource", parallelism);
+  public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<Tuple<K, V>> src,
+                          int parallelism) {
+    super(tSetEnv, "sksource", parallelism);
     this.source = src;
   }
 
-  public SSourceTSet(StreamingTSetEnvironment tSetEnv, String name, SourceFunc<T> src,
-                     int parallelism) {
+  public SKeyedSourceTSet(StreamingTSetEnvironment tSetEnv, String name,
+                          SourceFunc<Tuple<K, V>> src, int parallelism) {
     super(tSetEnv, name, parallelism);
     this.source = src;
   }
 
   @Override
-  public SSourceTSet<T> setName(String n) {
+  public SKeyedSourceTSet<K, V> setName(String n) {
     rename(n);
     return this;
   }
 
   @Override
   public INode getINode() {
-    return new SourceOp<>(source, this, Collections.emptyMap());
+    return new KeyedSourceOp<>(source, this, Collections.emptyMap());
   }
 }

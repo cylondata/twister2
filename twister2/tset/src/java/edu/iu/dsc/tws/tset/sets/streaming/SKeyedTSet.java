@@ -17,16 +17,12 @@ import java.util.Collections;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
-import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
-import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.ops.MapToTupleIterOp;
 import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
-import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Attaches a key to the oncoming data.
@@ -34,7 +30,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <K> key type
  * @param <V> data (value) type
  */
-public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<K, V> {
+public class SKeyedTSet<K, V> extends StreamingTupleTSetImpl<K, V> {
   private TFunction<Tuple<K, V>, ?> mapToTupleFunc;
 
   public SKeyedTSet(StreamingTSetEnvironment tSetEnv, MapCompute<Tuple<K, V>, ?> mapFn,
@@ -47,25 +43,6 @@ public class SKeyedTSet<K, V> extends BaseTSet<V> implements StreamingTupleTSet<
                     int parallelism) {
     super(tSetEnv, "skeyed", parallelism);
     this.mapToTupleFunc = mapFn;
-  }
-
-  @Override
-  public StreamingTSetEnvironment getTSetEnv() {
-    return (StreamingTSetEnvironment) super.getTSetEnv();
-  }
-
-  @Override
-  public SKeyedPartitionTLink<K, V> keyedPartition(PartitionFunc<K> partitionFn) {
-    SKeyedPartitionTLink<K, V> partition = new SKeyedPartitionTLink<>(getTSetEnv(), partitionFn,
-        getParallelism());
-    addChildToGraph(partition);
-    return partition;
-  }
-
-  @Override
-  public SKeyedTSet<K, V> setName(String n) {
-    rename(n);
-    return this;
   }
 
   @Override

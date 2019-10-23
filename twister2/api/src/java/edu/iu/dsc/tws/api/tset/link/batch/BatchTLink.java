@@ -43,15 +43,6 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   @Override
   TBase sink(SinkFunc<T1> sinkFunction);
 
-//  /**
-//   * Runs the dataflow graph and caches data in memory
-//   *
-//   * @return output TSet
-//   */
-//  default BatchTSet<T0> cache(boolean isIterative) {
-//    throw new UnsupportedOperationException("Operation not implemented");
-//  }
-
   /**
    * Runs the dataflow graph and caches data in memory
    *

@@ -28,11 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
 import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -78,6 +80,13 @@ public abstract class TSetEnvironment {
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
 
   public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
+
+  public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
+                                                           int parallelism);
+
+  public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
+                                                           SourceFunc<Tuple<K, V>> source,
+                                                           int parallelism);
 
   /**
    * Returns the tset graph
