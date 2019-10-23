@@ -47,8 +47,8 @@ public class AddInputsExample extends BatchTsetExample {
         new BaseComputeCollectorFunc<Integer, Iterator<Integer>>() {
           @Override
           public void compute(Iterator<Integer> input, RecordCollector<Integer> collector) {
-            DataPartitionConsumer<Integer> c1 = (DataPartitionConsumer<Integer>) getTSetContext()
-                .getInput("src-input").getConsumer();
+            DataPartitionConsumer<Integer> c1 = (DataPartitionConsumer<Integer>)
+                getInput("src-input").getConsumer();
 
             while (input.hasNext() && c1.hasNext()) {
               collector.collect(input.next() + c1.next());

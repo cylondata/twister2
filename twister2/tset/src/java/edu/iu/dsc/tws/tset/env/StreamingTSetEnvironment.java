@@ -51,7 +51,7 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
    */
   public void run() {
     BuildContext buildCtx = getTSetGraph().build();
-    executeBuildContext(buildCtx, null);
+    executeBuildContext(buildCtx);
   }
 
 }

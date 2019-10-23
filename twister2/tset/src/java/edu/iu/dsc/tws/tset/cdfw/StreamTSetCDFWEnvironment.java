@@ -11,11 +11,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.cdfw;
 
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
 import edu.iu.dsc.tws.tset.env.BuildContext;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
 
@@ -27,12 +25,7 @@ public class StreamTSetCDFWEnvironment extends StreamingTSetEnvironment {
   }
 
   @Override
-  protected <T> DataObject<T> executeBuildContext(BuildContext buildContext,
-                                                  BuildableTSet outputTSet) {
-    return super.executeBuildContext(buildContext, outputTSet);
+  protected void executeBuildContext(BuildContext buildContext) {
+    super.executeBuildContext(buildContext);
   }
-
-//  @Override
-//  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-//  }
 }

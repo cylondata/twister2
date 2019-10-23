@@ -24,11 +24,9 @@ import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 /**
  * TSet build context holds references for executed tset, build sequence of that tset, compute
- * graph, inputs(?), output data obj (?)
+ * graph
  */
 public class BuildContext {
-//  private static final long serialVersionUID = -3016894342731475383L;
-
   private String buildId;
   private Set<BuildableTSet> rootTBases;
   private Set<TBase> buildSequence;
@@ -36,7 +34,6 @@ public class BuildContext {
 
   private ComputeGraph computeGraph;
   private ExecutionPlan executionPlan;
-//  private List<DataObject> inputs, outputs;
 
   public BuildContext(String bId, Set<BuildableTSet> roots, Set<TBase> buildSeq,
                       OperationMode opMode) {
