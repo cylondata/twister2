@@ -19,7 +19,6 @@ package org.apache.beam.runners.twister2.translators.functions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,10 +27,7 @@ import java.util.Set;
 
 import org.apache.beam.runners.core.DoFnRunner;
 import org.apache.beam.runners.core.DoFnRunners;
-import org.apache.beam.runners.core.InMemoryStateInternals;
-import org.apache.beam.runners.core.SideInputHandler;
 import org.apache.beam.runners.core.StepContext;
-import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
 import org.apache.beam.runners.twister2.Twister2RuntimeContext;
 import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.runners.twister2.utils.NoOpStepContext;

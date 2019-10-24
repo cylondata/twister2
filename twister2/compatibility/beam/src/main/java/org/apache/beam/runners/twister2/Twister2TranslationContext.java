@@ -59,7 +59,8 @@ public class Twister2TranslationContext {
     return serializableOptions;
   }
 
-  public Twister2TranslationContext(Twister2PipelineOptions options, Twister2RuntimeContext twister2RuntimeContext) {
+  public Twister2TranslationContext(Twister2PipelineOptions options,
+                                    Twister2RuntimeContext twister2RuntimeContext) {
     this.options = options;
     this.environment = options.getTSetEnvironment();
     this.sideInputDataSets = new HashMap<>();

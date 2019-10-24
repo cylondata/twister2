@@ -11,6 +11,9 @@
 //  limitations under the License.
 package org.apache.beam.runners.twister2.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Nullable;
 
 import org.apache.beam.runners.core.SideInputReader;
@@ -21,10 +24,6 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkArgument;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,7 +32,8 @@ public class Twister2SideInputReader implements SideInputReader {
   private final Twister2RuntimeContext runtimeContext;
   private final Map<TupleTag<?>, WindowingStrategy<?, ?>> sideInputs;
 
-  public Twister2SideInputReader(Map<PCollectionView<?>, WindowingStrategy<?, ?>> indexByView, Twister2RuntimeContext context) {
+  public Twister2SideInputReader(Map<PCollectionView<?>, WindowingStrategy<?, ?>> indexByView,
+                                 Twister2RuntimeContext context) {
     this.sideInputs = new HashMap<>();
 
     for (PCollectionView<?> view : indexByView.keySet()) {

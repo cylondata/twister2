@@ -58,7 +58,8 @@ public class Twister2PiplineExecutionEnvironment {
       twister2TranslationContext = new Twister2TranslationContext(options, twister2RuntimeContext);
       translator = new Twister2StreamPipelineTranslator(options, twister2TranslationContext);
     } else {
-      twister2TranslationContext = new Twister2BatchTranslationContext(options, twister2RuntimeContext);
+      twister2TranslationContext = new Twister2BatchTranslationContext(options,
+          twister2RuntimeContext);
       translator =
           new Twister2BatchPipelineTranslator(
               options, (Twister2BatchTranslationContext) twister2TranslationContext);
