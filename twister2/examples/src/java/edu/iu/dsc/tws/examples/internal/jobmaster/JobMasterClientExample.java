@@ -50,7 +50,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
 import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterClientExample {
   private static final Logger LOG = Logger.getLogger(JobMasterClientExample.class.getName());
@@ -175,7 +174,7 @@ public final class JobMasterClientExample {
         .putAll(config)
         .put(JobMasterContext.JOB_MASTER_IP, jmIP)
         .build();
-    return JobUtils.resolveJobId(cnfg, Context.jobName(cnfg));
+    return cnfg;
   }
 
   /**

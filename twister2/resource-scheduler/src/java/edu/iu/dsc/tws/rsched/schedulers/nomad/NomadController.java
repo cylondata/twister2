@@ -39,7 +39,6 @@ import com.hashicorp.nomad.javasdk.NomadException;
 import com.hashicorp.nomad.javasdk.ServerQueryResponse;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.IController;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.master.JobMasterContext;
@@ -280,8 +279,7 @@ public class NomadController implements IController {
     // lets construct the mpi command to launch
     List<String> mpiCommand = workerProcessCommand(getScriptPath(config, configDirectoryName));
     Map<String, Object> map = workerCommandArguments(config, workingDirectory, job);
-    Config configCopy = JobUtils.resolveJobId(config, job.getJobName());
-    String jobId = configCopy.getStringValue(Context.JOB_ID);
+    String jobId = job.getJobId();
     String runIncLient = null;
     if (JobMasterContext.jobMasterRunsInClient(config)) {
       runIncLient = "true";

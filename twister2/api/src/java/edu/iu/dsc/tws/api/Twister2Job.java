@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.protobuf.ByteString;
@@ -97,7 +98,13 @@ public final class Twister2Job {
 
     jobBuilder.setConfig(configBuilder);
     jobBuilder.setJobName(jobName);
+
+    // if jobID is not set, set it
+    if (jobID == null) {
+      jobID = String.format("%s-%s", jobName, UUID.randomUUID().toString());
+    }
     jobBuilder.setJobId(jobID);
+
     jobBuilder.setWorkerClassName(workerClass);
 
     // driverClass is optional, set it if specified

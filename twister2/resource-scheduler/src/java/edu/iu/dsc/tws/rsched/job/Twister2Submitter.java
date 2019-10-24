@@ -58,26 +58,28 @@ public final class Twister2Submitter {
       }
     }
 
-    Config configCopy = JobUtils.resolveJobId(config, twister2Job.getJobName());
+    // set jobID if it is set in configuration file,
+    // otherwise it will be automatically generated
+    twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
 
-    // get existing id or create a new job id
-    String jobId = configCopy.getStringValue(Context.JOB_ID);
-
-    // save the job to transfer to workers
-    twister2Job.setJobID(jobId);
     JobAPI.Job job = twister2Job.serialize();
+    LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
+
+    // update the config object with the values from job
+    Config updatedConfig = JobUtils.updateConfigs(job, config);
+    String jobId = job.getJobId();
 
     //if checkpointing is enabled, twister2Job and config will be saved to the state backend
-    if (CheckpointingConfigurations.isCheckpointingEnabled(configCopy)) {
+    if (CheckpointingConfigurations.isCheckpointingEnabled(updatedConfig)) {
       LOG.info("Checkpointing has enabled for this job.");
 
-      StateStore stateStore = CheckpointUtils.getStateStore(configCopy);
-      stateStore.init(configCopy, jobId);
+      StateStore stateStore = CheckpointUtils.getStateStore(updatedConfig);
+      stateStore.init(updatedConfig, job.getJobId());
 
       try {
         if (startingFromACheckpoint) {
           // if job is starting from a checkpoint and previous state is not found in store
-          if (!CheckpointUtils.containsJobInStore(jobId, stateStore)) {
+          if (!CheckpointUtils.containsJobInStore(job.getJobId(), stateStore)) {
             throw new RuntimeException("Couldn't find job state in store to restart " + jobId);
           }
 
@@ -87,12 +89,12 @@ public final class Twister2Submitter {
           job = JobAPI.Job.parseFrom(jobMetaBytes);
 
           byte[] configBytes = CheckpointUtils.restoreJobConfig(jobId, stateStore);
-          configCopy = ConfigLoader.loadConfig(configBytes);
+          updatedConfig = ConfigLoader.loadConfig(configBytes);
         } else {
           // first time running or re-running the job, backup configs
           LOG.info("Saving job config and metadata");
           CheckpointUtils.saveJobConfigAndMeta(
-              jobId, job.toByteArray(), ConfigSerializer.serialize(configCopy), stateStore);
+              jobId, job.toByteArray(), ConfigSerializer.serialize(updatedConfig), stateStore);
         }
       } catch (IOException e) {
         LOG.severe("Failed to submit th checkpointing enabled job");
@@ -100,12 +102,7 @@ public final class Twister2Submitter {
       }
     }
 
-    LOG.info("The job to be submitted: \n" + JobUtils.toString(job));
-
-    // update the config object with the values from job
-    Config updatedConfig = JobUtils.updateConfigs(job, configCopy);
-
-    // launch the luancher
+    // launch the launcher
     ResourceAllocator resourceAllocator = new ResourceAllocator();
     resourceAllocator.submitJob(job, updatedConfig);
   }
