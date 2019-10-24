@@ -179,7 +179,7 @@ public class TestForSSSP extends BasicComputation implements Serializable {
             count++;
           }
         } else {
-          if (context.writeEnd("keyedreduce", "taskend", new int[]{10})) {
+          if (context.writeEnd("keyedreduce", "taskend", new int[]{0})) {
             count = 0;
 
           }
@@ -194,7 +194,7 @@ public class TestForSSSP extends BasicComputation implements Serializable {
           System.out.println("vertex: " + key + "value: " + defaultVertex.getValue());
 
         }
-        context.end("keyedreduce");
+        context.writeEnd("keyedreduce", "taskend", new int[]{0});
       }
 
     }
@@ -203,7 +203,8 @@ public class TestForSSSP extends BasicComputation implements Serializable {
   private class Task2 extends ComputeTask {
 
     @Override
-    public void calculation(Iterator iterator, HashMap<String, VertexStatus> hashMap) {
+    public void calculation(Iterator iterator) {
+      HashMap<String, VertexStatus> hashMap = new HashMap<>();
       while (iterator.hasNext()) {
         Object next = iterator.next();
         if (next instanceof Tuple) {

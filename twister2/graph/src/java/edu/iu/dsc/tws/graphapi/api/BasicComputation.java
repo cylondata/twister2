@@ -111,6 +111,7 @@ public abstract class BasicComputation extends TaskWorker {
 //third task graph for computations
     ComputeGraph computationTaskgraph = computation();
     ExecutionPlan plan = taskExecutor.plan(computationTaskgraph);
+    int unlimitedItr = 0;
 
     if (iterations != 0) {
       for (int i = 0; i < iterations; i++) {
@@ -127,10 +128,7 @@ public abstract class BasicComputation extends TaskWorker {
             "sink");
       }
 
-      taskExecutor.waitFor(computationTaskgraph, plan);
-
     } else {
-      int itr = 0;
       while (globaliterationStatus) {
 
 
@@ -143,12 +141,15 @@ public abstract class BasicComputation extends TaskWorker {
 
         graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
             "sink");
-        itr++;
+        unlimitedItr++;
 
       }
-      System.out.println("total Iteration: " + itr);
-      taskExecutor.waitFor(computationTaskgraph, plan);
     }
+    taskExecutor.close();
+    if (workerId == 0) {
+      System.out.println("total number of iterations : " + unlimitedItr);
+    }
+
 
 
 
@@ -364,16 +365,15 @@ public abstract class BasicComputation extends TaskWorker {
   public  abstract class ComputeTask extends BaseCompute {
 
 
-    public abstract void calculation(Iterator iterator, HashMap<String, VertexStatus> hashMap);
+    public abstract void calculation(Iterator iterator);
 
 
     @Override
     public boolean execute(IMessage content) {
-      HashMap<String, VertexStatus> output = new HashMap<String, VertexStatus>();
       Iterator<Object> it;
       if (content.getContent() instanceof Iterator) {
         it = (Iterator<Object>) content.getContent();
-        calculation(it, output);
+        calculation(it);
 
       }
       context.end("all-reduce");

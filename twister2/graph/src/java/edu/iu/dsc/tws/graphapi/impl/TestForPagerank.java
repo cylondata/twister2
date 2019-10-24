@@ -26,7 +26,8 @@ public class TestForPagerank extends BasicComputation {
 
   private GraphPartiton graphPartiton = new DataPartitionPageRank(Context.TWISTER2_DIRECT_EDGE,
       parallelism, graphsize);
-  private GraphInitialization graphInitialization = new DataIniPageRank(Context.TWISTER2_DIRECT_EDGE,
+  private GraphInitialization graphInitialization = new DataIniPageRank(
+      Context.TWISTER2_DIRECT_EDGE,
       parallelism, graphsize);
 
   private SourceTask sourceTask = new SourceTaskPageRank();
@@ -53,9 +54,9 @@ public class TestForPagerank extends BasicComputation {
   }
 
 
-  private class DataPartitionPageRank extends GraphPartiton{
+  class DataPartitionPageRank extends GraphPartiton {
 
-    private DataPartitionPageRank(String edgename, int dsize, int parallel) {
+    DataPartitionPageRank(String edgename, int dsize, int parallel) {
       super(edgename, dsize, parallel);
     }
 
@@ -65,9 +66,9 @@ public class TestForPagerank extends BasicComputation {
     }
   }
 
-  private class DataIniPageRank extends GraphInitialization{
+  class DataIniPageRank extends GraphInitialization {
 
-    private DataIniPageRank(String edgename, int dsize, int parallel) {
+    DataIniPageRank(String edgename, int dsize, int parallel) {
       super(edgename, dsize, parallel);
     }
 
@@ -77,7 +78,7 @@ public class TestForPagerank extends BasicComputation {
     }
   }
 
-  private class SourceTaskPageRank extends SourceTask{
+  private class SourceTaskPageRank extends SourceTask {
 
     @Override
     public void sendmessage(HashMap<String, DefaultVertex> hashMap1,
@@ -86,10 +87,10 @@ public class TestForPagerank extends BasicComputation {
     }
   }
 
-  private class ComputeTaskPageRank extends ComputeTask{
+  private class ComputeTaskPageRank extends ComputeTask {
 
     @Override
-    public void calculation(Iterator iterator, HashMap<String, VertexStatus> hashMap) {
+    public void calculation(Iterator iterator) {
 
     }
   }

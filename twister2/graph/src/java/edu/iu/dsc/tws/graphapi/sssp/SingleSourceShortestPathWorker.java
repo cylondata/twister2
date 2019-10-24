@@ -15,11 +15,9 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 
@@ -110,7 +108,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     /* Third Graph to do the actual calculation **/
     ComputeGraph sssptaskgraph = buildComputationSsspTG(parallelismValue, config);
 
-
     ExecutionPlan plan = taskExecutor.plan(sssptaskgraph);
 
     int itr = 0;
@@ -129,10 +126,10 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
       itr++;
 
     }
+    taskExecutor.close();
 
-    taskExecutor.closeExecution(sssptaskgraph, plan);
 
-    if (workerId == 0) {
+    if (workerId == 1) {
       System.out.println("Tatol iteration: " + itr);
     }
 
@@ -285,7 +282,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
                     ssspDefaultVertex.setValue(ssspVertexStatus.getValue());
                     ArrayList<DefaultEdge> arrayList  = (ArrayList<DefaultEdge>)
                         ssspDefaultVertex.getEdges();
-                    System.out.println("key: " + key + " val: " + ssspDefaultVertex.getValue());
                     for (DefaultEdge defaultEdge : arrayList) {
                       String key1 = defaultEdge.getTargetVertexId();
                       Integer edgevalue = defaultEdge.getValue();
@@ -303,7 +299,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
             count++;
           }
         } else {
-          if (context.writeEnd("keyedreduce", "taskend", new int[]{10})) {
+          if (context.writeEnd("keyedreduce", "taskend", new int[]{0})) {
             count = 0;
 
           }
@@ -318,7 +314,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
           System.out.println("vertex: " + key + "value: " + ssspDefaultVertex.getValue());
 
         }
-        context.end("keyedreduce");
+        context.writeEnd("keyedreduce", "taskend", new int[]{0});
       }
     }
 
@@ -332,17 +328,9 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
       }
     }
 
-    @Override
-    public Set<String> getReceivableNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("graphData");
-      inputKeys.add("graphInitialValue");
-      return inputKeys;
-    }
   }
 
   private static class SsspKeyedReduce extends BaseCompute {
-
 
     @Override
     public boolean execute(IMessage content) {
@@ -390,13 +378,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     @Override
     public DataPartition<HashMap<String, SsspVertexStatus>> get() {
       return new EntityPartition<>(context.taskIndex(), finalout);
-    }
-
-    @Override
-    public Set<String> getCollectibleNames() {
-      Set<String> inputKeys = new HashSet<>();
-      inputKeys.add("graphInitialValue");
-      return inputKeys;
     }
 
     @Override
