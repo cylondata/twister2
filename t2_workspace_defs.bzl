@@ -2,6 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:java.bzl", "java_import_external")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@rules_jvm_external//:defs.bzl", "maven_install")
 
 _MAVEN_MIRRORS = [
     "http://bazel-mirror.storage.googleapis.com/repo1.maven.org/maven2/",
@@ -59,8 +60,20 @@ def load_modules():
         urls = ["https://github.com/bazelbuild/bazel-skylib/archive/{}.zip".format(skylib_version)],
     )
 
+    maven_install(
+        name = "maven",
+        artifacts = [
+            "org.powermock:powermock-module-junit4-common:1.6.2",
+        ],
+        repositories = [
+            "https://maven.google.com",
+            "https://repo1.maven.org/maven2",
+        ],
+        fetch_sources = False,  # Fetch source jars. Defaults to False.
+    )
+
     #Generated MVN artifacts
-    _maven_import(artifact = "org.powermock:powermock-module-junit4-common:1.6.2", licenses = ["notice"], sha256 = "d3911d010a954ddd912d6d4f5dde5eed0bd6535936654c69a9b63789a0b08723")
+    #    _maven_import(artifact = "org.powermock:powermock-module-junit4-common:1.6.2", licenses = ["notice"], sha256 = "d3911d010a954ddd912d6d4f5dde5eed0bd6535936654c69a9b63789a0b08723")
     _maven_import(artifact = "com.squareup.okhttp:logging-interceptor:2.7.5", licenses = ["notice"], sha256 = "995576e55173cca3bf4fd472c128d1dca2675d9f56f76320b74c4d6ddbd3d600")
     _maven_import(artifact = "org.powermock:powermock-api-support:1.6.2", licenses = ["notice"], sha256 = "89e32d0c53dac114ea5e6506b140cf441a7964bde7abba6caacaa3cffa09f0ea")
     _maven_import(artifact = "org.slf4j:slf4j-jdk14:1.7.7", licenses = ["notice"], sha256 = "9909915e991269e5f3f4d8eb51fb0a1da7ff8bc6174a4cf25970f373abafcf9b")
@@ -253,33 +266,32 @@ def load_modules():
     _maven_import(artifact = "org.hibernate:hibernate-core:5.3.7.Final", licenses = ["notice"], sha256 = "862822a3ebf43aa38ff7d36346bb4cef1fc5a5c400b0a8f35d4a33df816202e9")
     _maven_import(artifact = "org.springframework.boot:spring-boot-loader:2.1.0.RELEASE", licenses = ["notice"], sha256 = "776f84cf9c67e3c5c719e92bd9369c9b10b5e35f3814d8eb3de1317539c96eb1")
     _maven_import(artifact = "it.unimi.dsi:fastutil:8.2.2", licenses = ["notice"], sha256 = "a6492bd60e4a93c3e302c00291497696bf6d2f927eacaff11cb4fa336dfd5097")
-    _maven_import(artifact = "org.slf4j:slf4j-api:1.7.25",licenses = ["notice"],sha256 = "18c4a0095d5c1da6b817592e767bb23d29dd2f560ad74df75ff3961dbde25b79",)
-    _maven_import(artifact = "com.thoughtworks.paranamer:paranamer:2.7",licenses = ["notice"],sha256 = "63e3f53f8f70784b65c25b2ee475813979d6d0e7f7b2510b364c4e1f4a803ccc",)
-    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-annotations:2.9.9",licenses = ["notice"],sha256 = "1100a5884ddc4439a77165e1b9668c6063c07447cd2f6c9f69e3688ee76080c1",)
-    _maven_import(artifact = "org.codehaus.jackson:jackson-core-asl:1.9.13",licenses = ["notice"],sha256 = "440a9cb5ca95b215f953d3a20a6b1a10da1f09b529a9ddea5f8a4905ddab4f5a",)
-    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-core:2.9.9",licenses = ["notice"],sha256 = "3083079be6088db2ed0a0c6ff92204e0aa48fa1de9db5b59c468f35acf882c2c",)
-    _maven_import(artifact = "org.apache.commons:commons-compress:1.8.1",licenses = ["notice"],sha256 = "5fca136503f86ecc6cb61fbd17b137d59e56b45c7a5494e6b8fd3cabd4697fbd",)
-    _maven_import(artifact = "org.apache.beam:beam-model-job-management:2.14.0",licenses = ["notice"],sha256 = "abe89830f2319a3dc15c5334ddaadb2074845cb2d00381985feec7e1d14017b6",)
-    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-databind:2.9.9",licenses = ["notice"],sha256 = "5cbbf429d9e32e3881f0a1438a1f666912219327e9e68b5dcaef6d8e5c5f6b28",)
-    _maven_import(artifact = "org.codehaus.jackson:jackson-mapper-asl:1.9.13",licenses = ["notice"],sha256 = "74e7a07a76f2edbade29312a5a2ebccfa019128bc021ece3856d76197e9be0c2",)
-    _maven_import(artifact = "org.xerial.snappy:snappy-java:1.1.4",licenses = ["notice"],sha256 = "f75ec0fa9c843e236c6e1512c17c095cfffd175f32e21ea0e3eccb540d77f002",)
-    _maven_import(artifact = "org.apache.avro:avro:1.8.2",licenses = ["notice"],sha256 = "f754a0830ce67a5a9fa67a54ec15d103ef15e1c850d7b26faf7b647eeddc82d3",)
-    _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0",licenses = ["notice"],sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb",)
-    _maven_import(artifact = "org.apache.beam:beam-sdks-java-core:2.14.0",licenses = ["notice"],sha256 = "45abd6f498080cbf1df73d386ae20aca35d7284605504214d3cbf03d9f459cf8",)
-    _maven_import(artifact = "org.apache.beam:beam-sdks-java-fn-execution:2.14.0",licenses = ["notice"],sha256 = "03cc6924b1f0f98faa7424fae4cddaa75d4b8f7111b31ddbe8586113f41d1061",)
-    _maven_import(artifact = "org.apache.beam:beam-runners-core-java:2.14.0",licenses = ["notice"],sha256 = "904a66fbf35b7919b9e40a75e2f013a5e4be1876c157a5768f89086e271e4276",)
-    _maven_import(artifact = "org.apache.beam:beam-runners-core-construction-java:2.14.0",licenses = ["notice"],sha256 = "c5c2db509a9d45e4ce48661be85c4ef216330ed5697efbc2af623f0f6958661e",)
-    _maven_import(artifact = "org.apache.beam:beam-model-fn-execution:2.14.0",licenses = ["notice"],sha256 = "c134f05d0947484826849663261d5847c94bc9c1b6e9b718019991f92df11bff",)
-    _maven_import(artifact = "args4j:args4j:2.33",licenses = ["notice"],sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6",)
-    _maven_import(artifact = "org.apache.beam:beam-runners-java-fn-execution:2.14.0",licenses = ["notice"],sha256 = "54c33c8dc09c9a145664563a899af06bb2b66d71a7f30e72444673dde476cb20",)
-    _maven_import(artifact = "org.apache.beam:beam-vendor-sdks-java-extensions-protobuf:2.14.0",licenses = ["notice"],sha256 = "7d7f2e082fa22d3fb8cff2ff5923a10a548ca04a6aaa9e9315db26ee2e6632b2",)
-    _maven_import(artifact = "joda-time:joda-time:2.10.1",licenses = ["notice"],sha256 = "d269671656767e05a58dd634cbafc36ed70d417220b058d11c0d88dfd281616d",)
-    _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0",licenses = ["notice"],sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb",)
-    _maven_import(artifact = "org.apache.beam:beam-vendor-guava-20_0:0.1",licenses = ["notice"],sha256 = "ea30aaecc425d9630ae8b0f285add31bbbc1600acf8be2a582ed3a7c1891b3f6",)
-    _maven_import(artifact = "javax.xml.bind:jaxb-api:2.3.1",licenses = ["notice"],sha256 = "88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06",)
-    _maven_import(artifact = "org.apache.beam:beam-vendor-grpc-1_13_1:0.2",licenses = ["notice"],sha256 = "3cdb4a043692be8a51e58ca5a6de55073c55a6500557852a3ad0b5d0fee33f49",)
+    _maven_import(artifact = "org.slf4j:slf4j-api:1.7.25", licenses = ["notice"], sha256 = "18c4a0095d5c1da6b817592e767bb23d29dd2f560ad74df75ff3961dbde25b79")
+    _maven_import(artifact = "com.thoughtworks.paranamer:paranamer:2.7", licenses = ["notice"], sha256 = "63e3f53f8f70784b65c25b2ee475813979d6d0e7f7b2510b364c4e1f4a803ccc")
+    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-annotations:2.9.9", licenses = ["notice"], sha256 = "1100a5884ddc4439a77165e1b9668c6063c07447cd2f6c9f69e3688ee76080c1")
+    _maven_import(artifact = "org.codehaus.jackson:jackson-core-asl:1.9.13", licenses = ["notice"], sha256 = "440a9cb5ca95b215f953d3a20a6b1a10da1f09b529a9ddea5f8a4905ddab4f5a")
+    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-core:2.9.9", licenses = ["notice"], sha256 = "3083079be6088db2ed0a0c6ff92204e0aa48fa1de9db5b59c468f35acf882c2c")
+    _maven_import(artifact = "org.apache.commons:commons-compress:1.8.1", licenses = ["notice"], sha256 = "5fca136503f86ecc6cb61fbd17b137d59e56b45c7a5494e6b8fd3cabd4697fbd")
+    _maven_import(artifact = "org.apache.beam:beam-model-job-management:2.14.0", licenses = ["notice"], sha256 = "abe89830f2319a3dc15c5334ddaadb2074845cb2d00381985feec7e1d14017b6")
+    _maven_import(artifact = "com.fasterxml.jackson.core:jackson-databind:2.9.9", licenses = ["notice"], sha256 = "5cbbf429d9e32e3881f0a1438a1f666912219327e9e68b5dcaef6d8e5c5f6b28")
+    _maven_import(artifact = "org.codehaus.jackson:jackson-mapper-asl:1.9.13", licenses = ["notice"], sha256 = "74e7a07a76f2edbade29312a5a2ebccfa019128bc021ece3856d76197e9be0c2")
+    _maven_import(artifact = "org.xerial.snappy:snappy-java:1.1.4", licenses = ["notice"], sha256 = "f75ec0fa9c843e236c6e1512c17c095cfffd175f32e21ea0e3eccb540d77f002")
+    _maven_import(artifact = "org.apache.avro:avro:1.8.2", licenses = ["notice"], sha256 = "f754a0830ce67a5a9fa67a54ec15d103ef15e1c850d7b26faf7b647eeddc82d3")
+    _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0", licenses = ["notice"], sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb")
+    _maven_import(artifact = "org.apache.beam:beam-sdks-java-core:2.14.0", licenses = ["notice"], sha256 = "45abd6f498080cbf1df73d386ae20aca35d7284605504214d3cbf03d9f459cf8")
+    _maven_import(artifact = "org.apache.beam:beam-sdks-java-fn-execution:2.14.0", licenses = ["notice"], sha256 = "03cc6924b1f0f98faa7424fae4cddaa75d4b8f7111b31ddbe8586113f41d1061")
+    _maven_import(artifact = "org.apache.beam:beam-runners-core-java:2.14.0", licenses = ["notice"], sha256 = "904a66fbf35b7919b9e40a75e2f013a5e4be1876c157a5768f89086e271e4276")
+    _maven_import(artifact = "org.apache.beam:beam-runners-core-construction-java:2.14.0", licenses = ["notice"], sha256 = "c5c2db509a9d45e4ce48661be85c4ef216330ed5697efbc2af623f0f6958661e")
+    _maven_import(artifact = "org.apache.beam:beam-model-fn-execution:2.14.0", licenses = ["notice"], sha256 = "c134f05d0947484826849663261d5847c94bc9c1b6e9b718019991f92df11bff")
+    _maven_import(artifact = "args4j:args4j:2.33", licenses = ["notice"], sha256 = "91ddeaba0b24adce72291c618c00bbdce1c884755f6c4dba9c5c46e871c69ed6")
+    _maven_import(artifact = "org.apache.beam:beam-runners-java-fn-execution:2.14.0", licenses = ["notice"], sha256 = "54c33c8dc09c9a145664563a899af06bb2b66d71a7f30e72444673dde476cb20")
+    _maven_import(artifact = "org.apache.beam:beam-vendor-sdks-java-extensions-protobuf:2.14.0", licenses = ["notice"], sha256 = "7d7f2e082fa22d3fb8cff2ff5923a10a548ca04a6aaa9e9315db26ee2e6632b2")
+    _maven_import(artifact = "joda-time:joda-time:2.10.1", licenses = ["notice"], sha256 = "d269671656767e05a58dd634cbafc36ed70d417220b058d11c0d88dfd281616d")
+    _maven_import(artifact = "org.apache.beam:beam-model-pipeline:2.14.0", licenses = ["notice"], sha256 = "683a66f3ad5deab6be513e2d16870e1569d2a9a75dba833536358b278b9612cb")
+    _maven_import(artifact = "org.apache.beam:beam-vendor-guava-20_0:0.1", licenses = ["notice"], sha256 = "ea30aaecc425d9630ae8b0f285add31bbbc1600acf8be2a582ed3a7c1891b3f6")
+    _maven_import(artifact = "javax.xml.bind:jaxb-api:2.3.1", licenses = ["notice"], sha256 = "88b955a0df57880a26a74708bc34f74dcaf8ebf4e78843a28b50eae945732b06")
+    _maven_import(artifact = "org.apache.beam:beam-vendor-grpc-1_13_1:0.2", licenses = ["notice"], sha256 = "3cdb4a043692be8a51e58ca5a6de55073c55a6500557852a3ad0b5d0fee33f49")
 
     # For Python Support
-    _maven_import(artifact = "net.sf.py4j:py4j:0.10.8.1",licenses = ["notice"],sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835",)
-    _maven_import(artifact = "black.ninia:jep:3.8.2",licenses = ["notice"],sha256 = "dbd5cf18e130eca889bfec01edd6ed7fedaf2bbc1ba4ef405166625917c82003",)
-
+    _maven_import(artifact = "net.sf.py4j:py4j:0.10.8.1", licenses = ["notice"], sha256 = "4c484e75a3d8695ccbb7d4327298c48fc9bb8fe979bb90fa092d1b67459f3835")
+    _maven_import(artifact = "black.ninia:jep:3.8.2", licenses = ["notice"], sha256 = "dbd5cf18e130eca889bfec01edd6ed7fedaf2bbc1ba4ef405166625917c82003")

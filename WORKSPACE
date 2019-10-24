@@ -22,6 +22,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
+http_archive(
+    name = "rules_jvm_external",
+    sha256 = "e5c68b87f750309a79f59c2b69ead5c3221ffa54ff9496306937bfa1c9c8c86b",
+    strip_prefix = "rules_jvm_external-1.2",
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/1.2.zip",
+)
+
 http_file(
     name = "pytest_whl",
     downloaded_file_path = "pytest-3.1.3-py2.py3-none-any.whl",
