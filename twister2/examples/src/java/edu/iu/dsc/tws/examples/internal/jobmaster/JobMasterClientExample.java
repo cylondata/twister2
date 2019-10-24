@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.protobuf.Any;
 
@@ -72,20 +73,20 @@ public final class JobMasterClientExample {
    */
   public static void main(String[] args) {
 
-    int workerID = -1;
     if (args.length != 1) {
       LOG.severe("Provide workerID as the parameter.");
       return;
     }
 
-    workerID = Integer.parseInt(args[0]);
+    int workerID = Integer.parseInt(args[0]);
 
     // we assume that the twister2Home is the current directory
-    String configDir = "conf/kubernetes/";
-    String twister2Home = Paths.get("").toAbsolutePath().toString();
+//    String configDir = "../twister2/config/src/yaml/";
+    String configDir = "";
+    String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
     config = updateConfig(config);
-    LOG.info("Loaded: " + config.size() + " parameters from configuration directory: " + configDir);
+    LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
     twister2Job.setJobID(config.getStringValue(Context.JOB_ID));
@@ -101,12 +102,8 @@ public final class JobMasterClientExample {
 
     String workerIP = JMWorkerController.convertStringToIP("localhost").getHostAddress();
     int workerPort = 10000 + (int) (Math.random() * 10000);
-
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo("node.ip", "rack01", null);
-
     JobAPI.ComputeResource computeResource = job.getComputeResource(0);
-    int numberOfWorkers = computeResource.getInstances() * computeResource.getWorkersPerPod();
-
     Map<String, Integer> additionalPorts = generateAdditionalPorts(config, workerPort);
 
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
@@ -134,32 +131,39 @@ public final class JobMasterClientExample {
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
-    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
+    LOG.info("Currently joined worker IDs: " + getIDs(workerList));
 
     try {
       workerList = workerController.getAllWorkers();
+      LOG.info("All workers joined. IDs: " + getIDs(workerList));
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return;
     }
-    LOG.info(WorkerInfoUtils.workerListAsString(workerList));
 
     // wait up to 10sec
     try {
       workerController.waitOnBarrier();
-      LOG.info("All workers reached the barrier. Proceeding.");
+      LOG.info("All workers reached the barrier. Proceeding.......");
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
     // wait up to 3sec
-    sleeeep((long) (Math.random() * 100 * 1000));
+//    sleeeep((long) (Math.random() * 100 * 1000));
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
     WorkerRuntime.close();
 
     System.out.println("Client has finished the computation. Client exiting.");
+  }
+
+  public static List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
+    return workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .sorted()
+        .collect(Collectors.toList());
   }
 
   /**

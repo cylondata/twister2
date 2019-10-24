@@ -121,10 +121,12 @@ public final class MesosJobMasterStarter {
         IScalerPerCluster clusterScaler = null;
         MesosScaler mesosScaler = new MesosScaler(config, job, controller);
         mesosScaler.setFrameWorkId(System.getenv("FRAMEWORK_ID"));
+        JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+
         //JobMaster.jobID = jobId;
         jobMaster =
             new JobMaster(config, InetAddress.getLocalHost().getHostAddress(),
-                terminator, job, jobMasterNodeInfo, clusterScaler);
+                terminator, job, jobMasterNodeInfo, clusterScaler, initialState);
         //jobMaster.jobId = jobId;
         LOG.info("JobMaster host address...:" + InetAddress.getLocalHost().getHostAddress());
         jobMaster.startJobMasterBlocking();

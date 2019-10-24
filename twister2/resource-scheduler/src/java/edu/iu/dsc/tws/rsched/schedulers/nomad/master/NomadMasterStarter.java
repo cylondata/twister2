@@ -82,8 +82,11 @@ public final class NomadMasterStarter {
 
         JobMasterAPI.NodeInfo jobMasterNodeInfo = NomadContext.getNodeInfo(config, hostAddress);
         IScalerPerCluster clusterScaler = null;
+        JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+        NomadTerminator nt = new NomadTerminator();
+
         jobMaster = new JobMaster(
-            config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+            config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
         jobMaster.addShutdownHook(true);
         jmThread = jobMaster.startJobMasterThreaded();
       } catch (UnknownHostException e) {
