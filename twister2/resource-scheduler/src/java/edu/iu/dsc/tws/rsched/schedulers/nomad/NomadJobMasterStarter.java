@@ -259,8 +259,11 @@ public final class NomadJobMasterStarter {
     //  hostAddress = JobMasterContext.jobMasterIP(config);
     //}
     LOG.log(Level.INFO, String.format("Starting the Job Master: %s:%d", hostAddress, port));
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+    NomadTerminator nt = new NomadTerminator();
+
     jobMaster = new JobMaster(
-        config, hostAddress, new NomadTerminator(), job, jobMasterNodeInfo, clusterScaler);
+        config, hostAddress, nt, job, jobMasterNodeInfo, clusterScaler, initialState);
     jobMaster.addShutdownHook(true);
     jobMaster.startJobMasterBlocking();
     //jmThread = jobMaster.startJobMasterThreaded();

@@ -38,7 +38,6 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.proto.utils.ComputeResourceUtils;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.proto.utils.WorkerInfoUtils;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 import static java.lang.Thread.sleep;
 
 /**
@@ -290,7 +289,6 @@ public final class ZKWControllerExample {
         .put(ZKContext.SERVER_ADDRESSES, zkAddresses)
         .build();
 
-    config = JobUtils.resolveJobId(config, jobName);
     return config;
   }
 

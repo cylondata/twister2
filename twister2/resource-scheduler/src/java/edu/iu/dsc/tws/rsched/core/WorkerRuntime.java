@@ -75,7 +75,7 @@ public final class WorkerRuntime {
     if (!job.getDriverClassName().isEmpty()) {
       // construct JMWorkerAgent
       jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+          JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
 
       // start JMWorkerAgent
       jmWorkerAgent.startThreaded();
@@ -107,7 +107,7 @@ public final class WorkerRuntime {
 
         // construct JMWorkerAgent
         jmWorkerAgent = JMWorkerAgent.createJMWorkerAgent(config, workerInfo, jobMasterIP,
-            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers());
+            JobMasterContext.jobMasterPort(config), job.getNumberOfWorkers(), initialState);
 
         // start JMWorkerAgent
         jmWorkerAgent.startThreaded();
