@@ -102,6 +102,10 @@ deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/util/libapi-utils-java.jar \
   twister2/api/src/java/edu/iu/dsc/tws/api/util/pom.xml
 
+deploy_library \
+  twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance/libfault-tolerance-api-java.jar \
+  twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance/pom.xml
+
 # End of APIs
 
 deploy_library \

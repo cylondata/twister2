@@ -12,5 +12,5 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-public abstract class BaseSinkFunc<T> extends BaseTFunction implements SinkFunc<T> {
+public abstract class BaseSinkFunc<T> extends BaseTFunction<T, T> implements SinkFunc<T> {
 }

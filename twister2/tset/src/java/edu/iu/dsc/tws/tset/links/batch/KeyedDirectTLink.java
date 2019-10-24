@@ -9,23 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset;
+package edu.iu.dsc.tws.tset.links.batch;
 
-/**
- * Collector for map function
- *
- * @param <T> input type
- */
-public interface Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-  /**
-   * Close the collector
-   */
-  void close();
+public class KeyedDirectTLink<K, V> extends DirectTLink<Tuple<K, V>>  {
+  public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, "kdirect", sourceParallelism);
+  }
 }

@@ -42,7 +42,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 
@@ -116,7 +116,7 @@ public class DoFnFunction<OT, IT>
   }
 
   @Override
-  public void compute(Iterator<WindowedValue<IT>> input, Collector<RawUnionValue> output) {
+  public void compute(Iterator<WindowedValue<IT>> input, RecordCollector<RawUnionValue> output) {
     outputManager.clear();
 
     doFnRunner.startBundle();

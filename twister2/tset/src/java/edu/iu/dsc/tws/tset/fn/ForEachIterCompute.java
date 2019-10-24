@@ -24,6 +24,7 @@ public class ForEachIterCompute<T> implements ComputeFunc<Object, Iterator<T>> {
   public ForEachIterCompute() {
 
   }
+
   public ForEachIterCompute(ApplyFunc<T> applyFunction) {
     this.applyFn = applyFunction;
   }

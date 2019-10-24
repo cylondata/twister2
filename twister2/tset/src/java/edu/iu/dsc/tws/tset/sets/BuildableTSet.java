@@ -12,29 +12,30 @@
 
 package edu.iu.dsc.tws.tset.sets;
 
+import java.util.Collection;
+
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tset.TSetGraph;
+import edu.iu.dsc.tws.tset.Buildable;
 
-public interface BuildableTSet extends TBase {
+public interface BuildableTSet extends TBase, Buildable {
 
   int getParallelism();
 
   INode getINode();
 
-  default void build(TSetGraph tSetGraph) {
-    GraphBuilder dfwGraphBuilder = tSetGraph.getDfwGraphBuilder();
-
+  @Override
+  default void build(GraphBuilder graphBuilder, Collection<? extends TBase> buildSequence) {
     if (getINode() instanceof ICompute) {
-      dfwGraphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
+      graphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
     } else if (getINode() instanceof ISource) {
-      dfwGraphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
+      graphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
     } else if (getINode() instanceof ISink) {
-      dfwGraphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
+      graphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
     } else {
       throw new RuntimeException("Unknown INode " + getINode());
     }

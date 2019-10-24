@@ -11,5 +11,5 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-public abstract class BaseMapFunc<O, I> extends BaseTFunction implements MapFunc<O, I> {
+public abstract class BaseMapFunc<O, I> extends BaseTFunction<O, I> implements MapFunc<O, I> {
 }

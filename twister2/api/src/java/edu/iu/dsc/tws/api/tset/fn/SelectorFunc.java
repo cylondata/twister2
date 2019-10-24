@@ -29,7 +29,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  * @param <V> data type
  * @param <K> key type
  */
-public interface SelectorFunc<K, V> extends TFunction {
+public interface SelectorFunc<K, V> extends TFunction<K, V> {
   /**
    * Select key value from data t
    *

@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.tset.fn.LoadBalancePartitioner;
 import edu.iu.dsc.tws.tset.links.batch.PartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -77,10 +78,11 @@ public class HelloTSet implements BatchTSetIWorker, Serializable {
       return ret;
     });
 
-    reduce.sink(value -> {
+    SinkTSet<int[]> sink = reduce.sink(value -> {
       LOG.info("Results " + Arrays.toString(value));
       return false;
     });
+    env.run(sink);
 
     LOG.info("Ending  Hello TSet Example");
 

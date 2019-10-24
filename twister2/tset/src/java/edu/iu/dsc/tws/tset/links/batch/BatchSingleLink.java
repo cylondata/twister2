@@ -27,54 +27,55 @@
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachCompute;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheSingleSink;
 
-public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
+public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
     BatchTupleMappableLink<T> {
 
-  BSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP) {
     super(env, n, sourceP, sourceP);
   }
 
-  BSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchSingleLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
   @Override
   public <P> ComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("map"), new MapCompute<>(mapFn));
+    return compute("map", new MapCompute<>(mapFn));
   }
 
   @Override
   public <P> ComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("flatmap"), new FlatMapCompute<>(mapFn));
+    return compute("flatmap", new FlatMapCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    ComputeTSet<Object, T> set = compute(TSetUtils.generateName("foreach"),
-        new ForEachCompute<>(applyFunction));
+    ComputeTSet<Object, T> set = lazyForEach(applyFunction);
 
     getTSetEnv().run(set);
   }
 
   @Override
+  public ComputeTSet<Object, T> lazyForEach(ApplyFunc<T> applyFunction) {
+    return compute("foreach", new ForEachCompute<>(applyFunction));
+  }
+
+  @Override
   public <K, O> KeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+    KeyedTSet<K, O> set = new KeyedTSet<>(getTSetEnv(), new MapCompute<>(genTupleFn),
         getTargetParallelism());
 
     addChildToGraph(set);
@@ -83,14 +84,24 @@ public abstract class BSingleLink<T> extends BBaseTLink<T, T> implements
   }
 
   @Override
-  public CachedTSet<T> cache() {
+  public CachedTSet<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
 
-    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-    cacheTSet.setData(output);
+//    getTSetEnv().run(cacheTSet);
+//    cacheTSet.setData(output);
 
     return cacheTSet;
   }
+
+  @Override
+  public CachedTSet<T> cache() {
+    CachedTSet<T> cacheTSet = lazyCache();
+    getTSetEnv().run(cacheTSet);
+//    cacheTSet.setData(output);
+
+    return cacheTSet;
+  }
+
 }

@@ -13,32 +13,26 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import java.util.Collections;
+
 import edu.iu.dsc.tws.api.compute.nodes.INode;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
-public class SSourceTSet<T> extends SBaseTSet<T> {
+public class SSourceTSet<T> extends StreamingTSetImpl<T> {
   private SourceFunc<T> source;
 
   public SSourceTSet(StreamingTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("ssource"), parallelism);
+    super(tSetEnv, "ssource", parallelism);
     this.source = src;
   }
 
-/*  public <P> StreamingMapTSet<T, P> map(MapFunction<T, P> mapFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    return direct.map(mapFn);
+  public SSourceTSet(StreamingTSetEnvironment tSetEnv, String name, SourceFunc<T> src,
+                     int parallelism) {
+    super(tSetEnv, name, parallelism);
+    this.source = src;
   }
-
-  public <P> StreamingFlatMapTSet<T, P> flatMap(FlatMapFunction<T, P> mapFn) {
-    StreamingDirectTLink<T> direct = new StreamingDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph(direct);
-    return direct.flatMap(mapFn);
-  }
-*/
 
   @Override
   public SSourceTSet<T> setName(String n) {
@@ -48,6 +42,6 @@ public class SSourceTSet<T> extends SBaseTSet<T> {
 
   @Override
   public INode getINode() {
-    return new SourceOp<>(source);
+    return new SourceOp<>(source, this, Collections.emptyMap());
   }
 }

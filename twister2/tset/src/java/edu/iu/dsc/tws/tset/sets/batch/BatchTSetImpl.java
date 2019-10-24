@@ -16,13 +16,12 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.links.batch.AllGatherTLink;
@@ -34,11 +33,9 @@ import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
+public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<T> {
 
-  private DirectTLink<T> iterdirect = null;
-
-  BBaseTSet(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
+  BatchTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -104,18 +101,18 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public ComputeTSet<T, Iterator<T>> union(TSet<T> other) {
 
-    if (this.getParallelism() != ((BBaseTSet) other).getParallelism()) {
+    if (this.getParallelism() != ((BatchTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
         new MapIterCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
     DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph((BBaseTSet) other, directOther);
+    addChildToGraph(other, directOther);
     addChildToGraph(directOther, unionTSet);
     // now the following relationship is created
     // this __ directThis __ unionTSet
@@ -127,18 +124,18 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   @Override
   public ComputeTSet<T, Iterator<T>> union(Collection<TSet<T>> tSets) {
 
-    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute(TSetUtils.generateName("union"),
+    ComputeTSet<T, Iterator<T>> unionTSet = direct().compute("union",
         new MapIterCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
     for (TSet<T> tSet : tSets) {
-      if (this.getParallelism() != ((BBaseTSet) tSet).getParallelism()) {
+      if (this.getParallelism() != ((BatchTSetImpl) tSet).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
       DirectTLink<T> directOther = new DirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph((BBaseTSet) tSet, directOther);
+      addChildToGraph(tSet, directOther);
       addChildToGraph(directOther, unionTSet);
       // now the following relationship is created
       // this __ directThis __ unionTSet
@@ -160,32 +157,19 @@ public abstract class BBaseTSet<T> extends BaseTSet<T> implements BatchTSet<T> {
   }
 
   @Override
-  public CachedTSet<T> cache(boolean isIterative) {
-    if (isIterative && iterdirect != null) {
-      return iterdirect.cache(isIterative);
-    } else if (isIterative) {
-      iterdirect = direct();
-      return iterdirect.cache(isIterative);
-    } else {
-      return direct().cache(isIterative);
-    }
-  }
-
-  @Override
   public CachedTSet<T> cache() {
-    return cache(false);
+    // todo remove this direct and plug it into the underlying tset op
+    return direct().cache();
   }
 
   @Override
-  public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getId(), key, input);
-    return true;
+  public CachedTSet<T> lazyCache() {
+    return direct().lazyCache();
   }
 
-  public void finishIter() {
-    if (iterdirect == null) {
-      throw new IllegalStateException("cache with iter needs to be called first");
-    }
-    iterdirect.finishIter();
+  @Override
+  public BatchTSetImpl<T> addInput(String key, Storable<?> input) {
+    getTSetEnv().addInput(getId(), input.getId(), key);
+    return this;
   }
 }

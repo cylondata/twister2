@@ -12,36 +12,39 @@
 
 package edu.iu.dsc.tws.tset.sets.streaming;
 
+import java.util.Collections;
+
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
+import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
+import edu.iu.dsc.tws.api.tset.fn.TFunction;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.ops.BaseComputeOp;
 import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
 import edu.iu.dsc.tws.tset.ops.ComputeOp;
 
-public class SComputeTSet<O, I> extends SBaseTSet<O> {
-  private BaseComputeOp<I> computeOp;
+public class SComputeTSet<O, I> extends StreamingTSetImpl<O> {
+  private TFunction<O, I> computeFunc;
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeOp<O, I> computeFunction,
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeFunc<O, I> computeFunction,
                       int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("scompute"), computeFunction, parallelism);
+    this(tSetEnv, "scompute", computeFunction, parallelism);
   }
 
-  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorOp<O, I> compOp,
+  public SComputeTSet(StreamingTSetEnvironment tSetEnv, ComputeCollectorFunc<O, I> compOp,
                       int parallelism) {
-    this(tSetEnv, TSetUtils.generateName("scomputec"), compOp, parallelism);
+    this(tSetEnv, "scomputec", compOp, parallelism);
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeOp<O, I> computeFunction, int parallelism) {
+                      ComputeFunc<O, I> computeFunction, int parallelism) {
     super(tSetEnv, name, parallelism);
-    this.computeOp = computeFunction;
+    this.computeFunc = computeFunction;
   }
 
   public SComputeTSet(StreamingTSetEnvironment tSetEnv, String name,
-                      ComputeCollectorOp<O, I> compOp, int parallelism) {
+                      ComputeCollectorFunc<O, I> compOp, int parallelism) {
     super(tSetEnv, name, parallelism);
-    this.computeOp = compOp;
+    this.computeFunc = compOp;
   }
 
   @Override
@@ -53,6 +56,15 @@ public class SComputeTSet<O, I> extends SBaseTSet<O> {
 
   @Override
   public ICompute<I> getINode() {
-    return computeOp;
+    // todo: fix empty map
+    if (computeFunc instanceof ComputeFunc) {
+      return new ComputeOp<>((ComputeFunc<O, I>) computeFunc, this, Collections.emptyMap());
+    } else if (computeFunc instanceof ComputeCollectorFunc) {
+      return new ComputeCollectorOp<>((ComputeCollectorFunc<O, I>) computeFunc, this,
+          Collections.emptyMap());
+    }
+
+    throw new RuntimeException("Unknown function type for compute: " + computeFunc);
+
   }
 }

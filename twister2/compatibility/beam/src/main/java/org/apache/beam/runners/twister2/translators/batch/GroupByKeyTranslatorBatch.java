@@ -36,7 +36,7 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
 /**
@@ -47,7 +47,7 @@ public class GroupByKeyTranslatorBatch<K, V> implements BatchTransformTranslator
   @Override
   public void translateNode(GroupByKey<K, V> transform, Twister2BatchTranslationContext context) {
     PCollection<KV<K, V>> input = context.getInput(transform);
-    BBaseTSet<WindowedValue<KV<K, V>>> inputTTSet = context.getInputDataSet(input);
+    BatchTSetImpl<WindowedValue<KV<K, V>>> inputTTSet = context.getInputDataSet(input);
     final KvCoder<K, V> coder = (KvCoder<K, V>) context.getInput(transform).getCoder();
     Coder<K> inputKeyCoder = ((KvCoder<K, V>) input.getCoder()).getKeyCoder();
     WindowingStrategy windowingStrategy = input.getWindowingStrategy();

@@ -40,7 +40,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Maps;
 
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 /**
  * ParDo translator.
@@ -53,7 +53,7 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
       ParDo.MultiOutput<IT, OT> transform, Twister2BatchTranslationContext context) {
     DoFn<IT, OT> doFn;
     doFn = transform.getFn();
-    BBaseTSet<WindowedValue<IT>> inputTTSet =
+    BatchTSetImpl<WindowedValue<IT>> inputTTSet =
         context.getInputDataSet(context.getInput(transform));
 
     WindowingStrategy<?, ?> windowingStrategy = context.getInput(transform).getWindowingStrategy();
