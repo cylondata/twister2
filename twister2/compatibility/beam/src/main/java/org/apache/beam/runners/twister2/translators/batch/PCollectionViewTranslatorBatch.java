@@ -28,7 +28,7 @@ import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PCollection;
 
-import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 
 /**
  * PCollectionView translator.
@@ -38,7 +38,8 @@ public class PCollectionViewTranslatorBatch<ET, VT>
   @Override
   public void translateNode(
       View.CreatePCollectionView<ET, VT> transform, Twister2BatchTranslationContext context) {
-    TSet<WindowedValue<ET>> inputDataSet = context.getInputDataSet(context.getInput(transform));
+    BBaseTSet<WindowedValue<ET>> inputDataSet
+        = context.getInputDataSet(context.getInput(transform));
     @SuppressWarnings("unchecked")
     AppliedPTransform<
         PCollection<ET>,

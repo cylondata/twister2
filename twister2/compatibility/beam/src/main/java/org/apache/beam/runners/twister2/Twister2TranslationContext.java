@@ -39,8 +39,11 @@ import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
 
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
 /**
  * Twister2TranslationContext.
@@ -49,7 +52,7 @@ public class Twister2TranslationContext {
   private final Twister2PipelineOptions options;
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
   private final Set<TSet> leaves = new LinkedHashSet<>();
-  private final Map<PCollectionView<?>, TSet<?>> sideInputDataSets;
+  private final Map<PCollectionView<?>, BBaseTSet<?>> sideInputDataSets;
   private final Map<PCollectionView<?>, SideInputSinkFunction> sideInputSinks;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
@@ -127,8 +130,10 @@ public class Twister2TranslationContext {
   }
 
   public void execute() {
-    for (Map.Entry<PCollectionView<?>, TSet<?>> sides : sideInputDataSets.entrySet()) {
-      sides.getValue().direct().sink(new SideInputSinkFunction(runtimeContext, sides.getKey()));
+    for (Map.Entry<PCollectionView<?>, BBaseTSet<?>> sides : sideInputDataSets.entrySet()) {
+      CachedTSet tempCache = sides.getValue().cache();
+      DataPartition<?> centroidPartition = tempCache.getDataObject().getPartition(0);
+      //sides.getValue().direct().sink(new SideInputSinkFunction(runtimeContext, sides.getKey()));
     }
     for (TSet leaf : leaves) {
       leaf.direct().sink(new Twister2SinkFunction());
@@ -136,7 +141,7 @@ public class Twister2TranslationContext {
   }
 
   public <VT, ET> void setSideInputDataSet(
-      PCollectionView<VT> value, TSet<WindowedValue<ET>> set) {
+      PCollectionView<VT> value, BBaseTSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
       //sideInputSinks.put(value, new SideInputSinkFunction<Object, VT>(runtimeContext, value));
