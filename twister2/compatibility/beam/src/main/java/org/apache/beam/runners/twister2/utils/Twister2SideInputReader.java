@@ -58,12 +58,12 @@ public class Twister2SideInputReader implements SideInputReader {
     checkNotNull(view, "View passed to sideInput cannot be null");
     TupleTag<?> tag = view.getTagInternal();
     checkNotNull(sideInputs.get(tag), "Side input for " + view + " not available.");
-    return runtimeContext.<T>getSideInput(window);
+    return runtimeContext.getSideInput(view, window);
   }
 
   @Override
   public <T> boolean contains(PCollectionView<T> view) {
-    return false;
+    return sideInputs.containsKey(view.getTagInternal());
   }
 
   @Override

@@ -11,16 +11,12 @@
 //  limitations under the License.
 package org.apache.beam.runners.twister2.translators.functions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.beam.runners.twister2.Twister2RuntimeContext;
-import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.KV;
+import org.apache.beam.sdk.values.PCollectionView;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
@@ -29,25 +25,22 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 /**
  * Sink Function that collects results.
  */
-public class SideInputSinkFunction<T> implements SinkFunc<T> {
+public class SideInputSinkFunction<T, VT> implements SinkFunc<T> {
   private final Twister2RuntimeContext runtimeContext;
+  private final PCollectionView<VT> view;
 
-  public SideInputSinkFunction(Twister2RuntimeContext context) {
+  public SideInputSinkFunction(Twister2RuntimeContext context, PCollectionView<VT> key) {
     this.runtimeContext = context;
+    this.view = key;
   }
 
   @Override
   public boolean add(T value) {
     //TODO need to complete functionality if needed
-    Map<BoundedWindow, List<WindowedValue<KV<?, ?>>>> partitionedElements = new HashMap<>();
-
     Iterator iterator = (Iterator) value;
     while (iterator.hasNext()) {
       WindowedValue<KV<?, ?>> winValue = (WindowedValue<KV<?, ?>>) iterator.next();
-      for (BoundedWindow window : winValue.getWindows()) {
-        List<WindowedValue<KV<?, ?>>> windowedValues =
-            partitionedElements.computeIfAbsent(window, k -> new ArrayList<>());
-        windowedValues.add(winValue);      }
+      runtimeContext.addSideInput(view.getTagInternal().getId(), winValue);
     }
     return true;
   }

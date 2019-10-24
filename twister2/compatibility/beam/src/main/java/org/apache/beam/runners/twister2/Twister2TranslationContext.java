@@ -50,6 +50,7 @@ public class Twister2TranslationContext {
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
   private final Set<TSet> leaves = new LinkedHashSet<>();
   private final Map<PCollectionView<?>, TSet<?>> sideInputDataSets;
+  private final Map<PCollectionView<?>, SideInputSinkFunction> sideInputSinks;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
   private final Twister2RuntimeContext runtimeContext;
@@ -64,6 +65,7 @@ public class Twister2TranslationContext {
     this.options = options;
     this.environment = options.getTSetEnvironment();
     this.sideInputDataSets = new HashMap<>();
+    this.sideInputSinks = new HashMap<>();
     this.serializableOptions = new SerializablePipelineOptions(options);
     this.runtimeContext = twister2RuntimeContext;
   }
@@ -125,8 +127,8 @@ public class Twister2TranslationContext {
   }
 
   public void execute() {
-    for (TSet sides : sideInputDataSets.values()) {
-      sides.direct().sink(new SideInputSinkFunction(runtimeContext));
+    for (Map.Entry<PCollectionView<?>, TSet<?>> sides : sideInputDataSets.entrySet()) {
+      sides.getValue().direct().sink(new SideInputSinkFunction(runtimeContext, sides.getKey()));
     }
     for (TSet leaf : leaves) {
       leaf.direct().sink(new Twister2SinkFunction());
@@ -137,6 +139,7 @@ public class Twister2TranslationContext {
       PCollectionView<VT> value, TSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
+      //sideInputSinks.put(value, new SideInputSinkFunction<Object, VT>(runtimeContext, value));
     }
   }
 }
