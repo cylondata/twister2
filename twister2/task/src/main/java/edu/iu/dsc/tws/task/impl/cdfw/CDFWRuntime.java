@@ -190,34 +190,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     return true;
   }
 
-//  /**
-//   * execute
-//   */
-//  public boolean execute() {
-//    Any msg;
-//    while (true) {
-//      try {
-//        msg = executeMessageQueue.take();
-//        if (msg.is(CDFWJobAPI.ExecuteMessage.class)) {
-//          if (handleExecuteMessage(msg)) {
-//            return false;
-//          }
-//        } else if (msg.is(CDFWJobAPI.CDFWJobCompletedMessage.class)) {
-//          LOG.log(Level.INFO, workerId + "Received CDFW job completed message. Leaving execution "
-//              + "loop");
-//          break;
-//        } else {
-//          LOG.log(Level.WARNING, workerId + "Unknown message for cdfw task execution");
-//        }
-//      } catch (InterruptedException e) {
-//        LOG.log(Level.SEVERE, "Unable to insert message to the queue", e);
-//      }
-//    }
-//
-//    LOG.log(Level.INFO, workerId + " Execution Completed");
-//    return true;
-//  }
-
   private boolean handleExecuteMessage(Any msg) {
     JMSenderToDriver senderToDriver = JMWorkerAgent.getJMWorkerAgent().getSenderToDriver();
     CDFWJobAPI.ExecuteMessage executeMessage;

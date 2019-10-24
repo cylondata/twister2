@@ -149,7 +149,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     ComputeGraph firstGraph = buildFirstGraph(2, config);
-    ComputeGraph secondGraph = buildSecondGraph(4, config);
+    ComputeGraph secondGraph = buildSecondGraph(2, config);
     ComputeGraph thirdGraph = buildThirdGraph(4, config);
 
     //Get the execution plan for the first task graph
@@ -204,7 +204,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points: " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received Points: " + context.getWorkerId()
           + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();
@@ -296,7 +296,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public boolean execute(IMessage message) {
-      LOG.log(Level.INFO, "Received Points: " + context.getWorkerId()
+      LOG.log(Level.FINE, "Received Points: " + context.getWorkerId()
           + ":" + context.globalTaskId());
       if (message.getContent() instanceof Iterator) {
         Iterator it = (Iterator) message.getContent();

@@ -115,7 +115,7 @@ public class  DriverExample implements IDriver {
       e.printStackTrace();
     }
 
-    int toAdd = 10;
+    int toAdd = 2;
     LOG.info("Adding " + toAdd + " new workers.");
     scaler.scaleUpWorkers(toAdd);
 
@@ -139,17 +139,17 @@ public class  DriverExample implements IDriver {
 //      e.printStackTrace();
 //    }
 
-    LOG.info("Adding " + toAdd + " new workers.");
-    scaler.scaleUpWorkers(toAdd);
-
-    waitAllWorkersToJoin();
-
-    try {
-      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
-      Thread.sleep(sleepDuration);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+//    LOG.info("Adding " + toAdd + " new workers.");
+//    scaler.scaleUpWorkers(toAdd);
+//
+//    waitAllWorkersToJoin();
+//
+//    try {
+//      LOG.info(String.format("Sleeping %s seconds ....", sleepDuration));
+//      Thread.sleep(sleepDuration);
+//    } catch (InterruptedException e) {
+//      e.printStackTrace();
+//    }
 
     JobMasterAPI.WorkerStateChange stateChange = JobMasterAPI.WorkerStateChange.newBuilder()
         .setState(JobMasterAPI.WorkerState.COMPLETED)
