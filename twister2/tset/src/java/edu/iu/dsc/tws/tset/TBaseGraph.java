@@ -62,8 +62,6 @@ public class TBaseGraph {
     this.opMode = operationMode;
 
     this.sources = new HashSet<>();
-
-//    resetDfwGraphBuilder();
   }
 
   /**
@@ -125,15 +123,6 @@ public class TBaseGraph {
   public Set<TBase> getNodes() {
     return this.graph.nodes();
   }
-
-//  public edu.iu.dsc.tws.task.graph.GraphBuilder getDfwGraphBuilder() {
-//    return dfwGraphBuilder;
-//  }
-
-//  public void resetDfwGraphBuilder() {
-//    this.dfwGraphBuilder = edu.iu.dsc.tws.task.graph.GraphBuilder.newBuilder();
-//    this.dfwGraphBuilder.operationMode(opMode);
-//  }
 
   private BuildContext doBuild(Set<BuildableTSet> roots, AdjNodesExtractor nodesExtractor) {
     String buildId = TSetUtils.generateBuildId(roots);
@@ -216,26 +205,6 @@ public class TBaseGraph {
 
     return buildSequence;
   }
-
-//  // todo: this functionality is broken!!
-//  private boolean cleanUpstream(Collection<BuildableTSet> tSets) {
-//    Set<TBase> toRemove = new HashSet<>();
-//
-//    boolean changed = false;
-//
-//    // todo: need to clean up the entire upstream! not just the precessesor of cacheable!!
-//    for (BuildableTSet tset : tSets) {
-//      if (tset instanceof Cacheable) {
-//        toRemove.addAll(getPredecessors(tset));
-//      }
-//    }
-//
-//    for (TBase tset : toRemove) {
-//      changed = changed || removeNode(tset);
-//    }
-//
-//    return changed;
-//  }
 
   interface AdjNodesExtractor {
     Set<TBase> extract(TBase node);

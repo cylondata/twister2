@@ -23,12 +23,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
-import edu.iu.dsc.tws.api.compute.IFunction;
-
 /**
  * Reduce function
  */
-public interface ReduceFunc<T> extends TFunction<T, T>, IFunction<T> {
+public interface ReduceFunc<T> extends TFunction<T, T> {
   /**
    * Reduce the t1 and t2 into a single value
    *
@@ -37,9 +35,4 @@ public interface ReduceFunc<T> extends TFunction<T, T>, IFunction<T> {
    * @return the reduced object
    */
   T reduce(T t1, T t2);
-
-  @Override
-  default T onMessage(T object1, T object2) {
-    return reduce(object1, object2);
-  }
 }
