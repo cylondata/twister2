@@ -9,32 +9,13 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-
 package edu.iu.dsc.tws.tset.links.batch;
 
-import edu.iu.dsc.tws.api.compute.OperationNames;
-import edu.iu.dsc.tws.api.compute.graph.Edge;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 
-public class DirectTLink<T> extends BatchIteratorLink<T> {
-
-  public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, "direct", sourceParallelism);
-  }
-
-  public DirectTLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism) {
-    super(tSetEnv, name, sourceParallelism);
-  }
-
-  @Override
-  public DirectTLink<T> setName(String name) {
-    rename(name);
-    return this;
-  }
-
-  @Override
-  public Edge getEdge() {
-    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+public class KeyedDirectTLink<K, V> extends DirectTLink<Tuple<K, V>>  {
+  public KeyedDirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, "kdirect", sourceParallelism);
   }
 }
