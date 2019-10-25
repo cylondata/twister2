@@ -20,6 +20,7 @@ package org.apache.beam.runners.twister2;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,26 +34,27 @@ import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.runners.AppliedPTransform;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.util.WindowedValue;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
 
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
 /**
  * Twister2TranslationContext.
  */
-public class Twister2TranslationContext {
+public abstract class Twister2TranslationContext {
   private final Twister2PipelineOptions options;
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
   private final Set<TSet> leaves = new LinkedHashSet<>();
-  private final Map<PCollectionView<?>, BBaseTSet<?>> sideInputDataSets;
+  private final Map<PCollectionView<?>, BatchTSet<?>> sideInputDataSets;
   private final Map<PCollectionView<?>, SideInputSinkFunction> sideInputSinks;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
@@ -130,18 +132,25 @@ public class Twister2TranslationContext {
   }
 
   public void execute() {
-    for (Map.Entry<PCollectionView<?>, BBaseTSet<?>> sides : sideInputDataSets.entrySet()) {
-      CachedTSet tempCache = sides.getValue().cache();
-      DataPartition<?> centroidPartition = tempCache.getDataObject().getPartition(0);
-      //sides.getValue().direct().sink(new SideInputSinkFunction(runtimeContext, sides.getKey()));
+    for (Map.Entry<PCollectionView<?>, BatchTSet<?>> sides : sideInputDataSets.entrySet()) {
+      CachedTSet tempCache = (CachedTSet) sides.getValue().cache();
+      List<WindowedValue<KV<?, ?>>> data = tempCache.getData();
+      if (data.size() == 1) {
+        runtimeContext.addSideInput(sides.getKey().getTagInternal().getId(), data.get(0));
+      } else {
+        throw new IllegalStateException("More than more data point");
+      }
     }
     for (TSet leaf : leaves) {
-      leaf.direct().sink(new Twister2SinkFunction());
+      SinkTSet sinkTSet = (SinkTSet) leaf.direct().sink(new Twister2SinkFunction());
+      eval(sinkTSet);
     }
   }
 
+  public abstract void eval(SinkTSet<?> tSet);
+
   public <VT, ET> void setSideInputDataSet(
-      PCollectionView<VT> value, BBaseTSet<WindowedValue<ET>> set) {
+      PCollectionView<VT> value, BatchTSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
       //sideInputSinks.put(value, new SideInputSinkFunction<Object, VT>(runtimeContext, value));
