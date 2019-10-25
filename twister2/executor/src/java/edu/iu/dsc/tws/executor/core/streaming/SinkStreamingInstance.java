@@ -228,7 +228,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       }
     }
 
-    return true;
+    return false;
   }
 
   @Override
