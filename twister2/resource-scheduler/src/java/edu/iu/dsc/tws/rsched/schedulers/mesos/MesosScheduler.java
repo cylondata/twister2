@@ -26,7 +26,6 @@ import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 import edu.iu.dsc.tws.rsched.utils.JobUtils;
@@ -55,8 +54,7 @@ public class MesosScheduler implements Scheduler {
     totalTaskCount = MesosContext.numberOfContainers(config);
     this.job = myJob;
     this.jobName = myJob.getJobName();
-    Config configCopy = JobUtils.resolveJobId(config, jobName);
-    this.jobId = configCopy.getStringValue(Context.JOB_ID);
+    this.jobId = myJob.getJobId();
   }
 
   @Override

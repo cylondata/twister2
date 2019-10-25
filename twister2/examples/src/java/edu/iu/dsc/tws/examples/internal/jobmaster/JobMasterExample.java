@@ -48,7 +48,6 @@ import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesContext;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.KubernetesController;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.driver.K8sScaler;
 import edu.iu.dsc.tws.rsched.schedulers.k8s.master.JobTerminator;
-import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 public final class JobMasterExample {
   private static final Logger LOG = Logger.getLogger(JobMasterExample.class.getName());
@@ -77,7 +76,6 @@ public final class JobMasterExample {
     String configDir = "";
     String twister2Home = Paths.get(configDir).toAbsolutePath().toString();
     Config config = ConfigLoader.loadConfig(twister2Home, "conf", "kubernetes");
-    config = updateConfig(config);
     LOG.info("Loaded: " + config.size() + " configuration parameters.");
 
     Twister2Job twister2Job = Twister2Job.loadTwister2Job(config, null);
@@ -111,13 +109,6 @@ public final class JobMasterExample {
         + "\njobName: " + job.getJobName()
     );
 
-  }
-
-  /**
-   * construct a Config object
-   */
-  public static Config updateConfig(Config config) {
-    return JobUtils.resolveJobId(config, Context.jobName(config));
   }
 
   public static void printUsage() {
