@@ -24,6 +24,7 @@
 
 package edu.iu.dsc.tws.common.zk;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +38,8 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 public final class ZKJobZnodeUtil {
   public static final Logger LOG = Logger.getLogger(ZKJobZnodeUtil.class.getName());
+
+  private static final long MAX_WAIT_TIME_FOR_ZNODE_DELETE = 5000;
 
   private ZKJobZnodeUtil() { }
 
@@ -175,15 +178,10 @@ public final class ZKJobZnodeUtil {
    * delete job related znode from previous sessions
    */
   public static boolean deleteJobZNodes(CuratorFramework client, String rootPath, String jobName) {
-    try {
-      String jobPath = ZKUtils.constructJobPath(rootPath, jobName);
-      if (client.checkExists().forPath(jobPath) != null) {
-        client.delete().deletingChildrenIfNeeded().forPath(jobPath);
-        LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
-      } else {
-        LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
-      }
 
+    boolean allDeleted = true;
+    try {
+      // delete job initial-state znode
       String checkPath = ZKUtils.constructJobInitialStatePath(rootPath, jobName);
       if (client.checkExists().forPath(checkPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(checkPath);
@@ -191,7 +189,12 @@ public final class ZKJobZnodeUtil {
       } else {
         LOG.log(Level.INFO, "No InitialStatePath exists in ZooKeeper to delete for: " + checkPath);
       }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "", e);
+      allDeleted = false;
+    }
 
+    try {
       // delete distributed atomic integer for barrier
       String daiPath = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
       if (client.checkExists().forPath(daiPath) != null) {
@@ -200,14 +203,49 @@ public final class ZKJobZnodeUtil {
       } else {
         LOG.info("No DistributedAtomicInteger exists for the job at ZooKeeper: " + daiPath);
       }
-
-      return true;
     } catch (Exception e) {
       LOG.log(Level.WARNING, "", e);
-      return false;
+      allDeleted = false;
     }
+
+    // delete job znode
+    String jobPath = ZKUtils.constructJobPath(rootPath, jobName);
+    try {
+      if (client.checkExists().forPath(jobPath) != null) {
+
+        // wait for workers to be deleted
+        long delay = 0;
+        long start = System.currentTimeMillis();
+        List<String> list = client.getChildren().forPath(jobPath);
+        int children = list.size();
+
+        while (children != 0 && delay < MAX_WAIT_TIME_FOR_ZNODE_DELETE) {
+          try {
+            Thread.sleep(200);
+          } catch (InterruptedException e) { }
+
+          delay = System.currentTimeMillis() - start;
+          list = client.getChildren().forPath(jobPath);
+          children = list.size();
+        }
+
+        if (list.size() != 0) {
+          LOG.info("Waited " + delay + " ms before deleting job znode. Children: " + list);
+        }
+
+        client.delete().deletingChildrenIfNeeded().forPath(jobPath);
+        LOG.log(Level.INFO, "Job Znode deleted from ZooKeeper: " + jobPath);
+      } else {
+        LOG.log(Level.INFO, "No job znode exists in ZooKeeper to delete for: " + jobPath);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.FINE, "", e);
+      LOG.info("Following exception is thrown when deleting the job znode: " + jobPath
+          + "; " + e.getMessage());
+      allDeleted = false;
+    }
+
+    return allDeleted;
   }
-
-
 
 }
