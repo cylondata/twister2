@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-//import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
 public class TaskSchedulerClassTest {
 

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
@@ -32,13 +33,11 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.tsched.utils.TaskSchedulerClassTest;
 
-//import org.junit.Assert;
-
 public class BatchTaskSchedulerTest {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskSchedulerTest.class.getName());
 
-  /*@Test
+  @Test
   public void testUniqueSchedules1() {
 
     int parallel = 16;
@@ -105,12 +104,8 @@ public class BatchTaskSchedulerTest {
 
   @Test
   public void testUniqueSchedules4() {
-
-    *//*int parallel = 200;
-    int workers = 400;*//*
-
-    int parallel = 2;
-    int workers = 4;
+    int parallel = 400;
+    int workers = 200;
 
     ComputeGraph[] graph = new ComputeGraph[3];
     Arrays.setAll(graph, i -> createGraph(parallel, "graph" + i));
@@ -148,8 +143,7 @@ public class BatchTaskSchedulerTest {
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
 
-    Map<String, TaskSchedulePlan> plan1
-        = scheduler.schedule(workerPlan, graph[0], graph[1]);
+    Map<String, TaskSchedulePlan> plan1 = scheduler.schedule(workerPlan, graph[0], graph[1]);
 
     for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry : plan1.entrySet()) {
       TaskSchedulePlan plan2 = taskSchedulePlanEntry.getValue();
@@ -199,23 +193,26 @@ public class BatchTaskSchedulerTest {
         }
       }
     }
-  }*/
+  }
 
   @Test
   public void testUniqueSchedules7() {
     int parallel = 2;
-    int workers = 2;
+    int workers = 4;
 
     ComputeGraph[] graph = new ComputeGraph[3];
-    graph[0] = createGraphWithDifferentParallelismInput(1, "graph" + 0, "a");
+    graph[0] = createGraphWithDifferentParallelismInput(parallel, "graph" + 0, "a");
     graph[1] = createGraphWithDifferentParallelismInput(parallel, "graph" + 1, "b");
-    graph[2] = createGraphWithDifferentParallelismInput(parallel, "graph" + 2, "c");
+
+    //if you specify any parallel value other than 2, it will throw
+    // edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException: Please verify the dependent
+    // collector(s) and receptor(s) parallelism values which are not equal
+    graph[2] = createGraphWithDifferentParallelismInput(parallel, "graph" + 2, "b");
 
     BatchTaskScheduler scheduler = new BatchTaskScheduler();
     scheduler.initialize(Config.newBuilder().build());
     WorkerPlan workerPlan = createWorkPlan(workers);
 
-    //TaskSchedulePlan taskSchedulePlan = scheduler.schedule(graph[0], workerPlan);
     Map<String, TaskSchedulePlan> plan1 = scheduler.schedule(workerPlan, graph);
 
     for (Map.Entry<String, TaskSchedulePlan> taskSchedulePlanEntry : plan1.entrySet()) {
@@ -226,11 +223,11 @@ public class BatchTaskSchedulerTest {
         WorkerSchedulePlan workerSchedulePlan = entry.getValue();
         Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
         index++;
-        /*if (index <= parallel) {
+        if (index <= parallel) {
           Assert.assertEquals(containerPlanTaskInstances.size(), workers / parallel);
         } else {
           Assert.assertEquals(containerPlanTaskInstances.size(), 0);
-        }*/
+        }
       }
     }
   }
@@ -252,12 +249,11 @@ public class BatchTaskSchedulerTest {
   }
 
   private ComputeGraph createGraphWithDifferentParallelismInput(int parallel, String graphName,
-                                                           String... inputKey) {
+                                                                String... inputKey) {
 
-    LOG.info("%%%%%%%%%%%%%%% input key:%%%%%%%%%%%%%%%" + Arrays.toString(inputKey));
     TaskSchedulerClassTest.TestSource testSource
         = new TaskSchedulerClassTest.TestSource(inputKey[0]);
-    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink();
+    TaskSchedulerClassTest.TestSink testSink = new TaskSchedulerClassTest.TestSink(inputKey[0]);
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);

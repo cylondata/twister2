@@ -62,8 +62,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(BatchTaskSchedulerExample.class.getName());
 
-  private static ComputeGraph buildFirstGraph(int parallelism,
-                                              Config conf) {
+  private static ComputeGraph buildFirstGraph(int parallelism, Config conf) {
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
     FirstSourceTask sourceTask = new FirstSourceTask();
@@ -148,9 +147,17 @@ public class BatchTaskSchedulerExample implements IWorker {
         persistentVolume, volatileVolume);
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
+    //Independent Graph and it has collector
     ComputeGraph firstGraph = buildFirstGraph(2, config);
+    //Dependent Graph and it has collector
     ComputeGraph secondGraph = buildSecondGraph(4, config);
+    //Dependent Graph and it has receptor to receive the input from secondGraph
     ComputeGraph thirdGraph = buildThirdGraph(4, config);
+
+    ComputeGraph[] graph = new ComputeGraph[3];
+    graph[0] = firstGraph;
+    graph[1] = secondGraph;
+    graph[2] = thirdGraph;
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
@@ -163,6 +170,19 @@ public class BatchTaskSchedulerExample implements IWorker {
     //Get the execution plan for the third task graph
     ExecutionPlan thirdGraphExecutionPlan = taskExecutor.plan(thirdGraph);
     taskExecutor.execute(thirdGraph, thirdGraphExecutionPlan);
+
+    //This is to test all the three graphs as dependent
+    /*Map<String, ExecutionPlan> taskExecutionPlan = taskExecutor.plan(graph);
+    for (Map.Entry<String, ExecutionPlan> planEntry : taskExecutionPlan.entrySet()) {
+      String graphName = planEntry.getKey();
+      if (graphName.equals(graph[0].getGraphName())) {
+        taskExecutor.execute(graph[0], planEntry.getValue());
+      } else if (graphName.equals(graph[1].getGraphName())) {
+        taskExecutor.execute(graph[1], planEntry.getValue());
+      } else {
+        taskExecutor.execute(graph[2], planEntry.getValue());
+      }
+    }*/
     cEnv.close();
     long endTime = System.currentTimeMillis();
     LOG.info("Total Execution Time: " + (endTime - startTime));
@@ -386,6 +406,7 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     @Override
     public IONames getReceivableNames() {
+      //add the "firstgraphpoints" here if you want to connect the first graph with third graph
       return IONames.declare("secondgraphpoints");
     }
   }
