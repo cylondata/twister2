@@ -96,6 +96,13 @@ public interface MessageReceiver {
   boolean progress();
 
   /**
+   * Weather we are complete a set of messages
+   *
+   * @return true if a round is complete with syncs
+   */
+  boolean isComplete();
+
+  /**
    * Close the receiver
    */
   default void close() {

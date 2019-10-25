@@ -423,6 +423,11 @@ public abstract class KeyedReceiver implements MessageReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    return false;
+  }
+
   /**
    * Performs the final steps of the progress method in the receiver. If the method of finishing
    * needs to be changed this method needs to be overwritten.

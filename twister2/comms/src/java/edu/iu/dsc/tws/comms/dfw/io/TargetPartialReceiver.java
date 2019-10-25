@@ -248,6 +248,11 @@ public class TargetPartialReceiver extends TargetReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    return false;
+  }
+
   /**
    * Handle the sync
    *

@@ -129,6 +129,11 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
 
   private Lock lock = new ReentrantLock();
 
+  /**
+   * Weather we are complete
+   */
+  private boolean complete = false;
+
   public DPartitionBatchFinalReceiver(BulkReceiver receiver, boolean srt,
                                       List<String> shuffleDirs,
                                       Comparator<Object> com,
@@ -296,7 +301,14 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         lock.unlock();
       }
     }
-    return finishedTargetsCompleted.size() != targets.size();
+    boolean b = finishedTargetsCompleted.size() != targets.size();
+    complete = !b;
+    return b;
+  }
+
+  @Override
+  public boolean isComplete() {
+    return complete;
   }
 
   private void finishTarget(int target) {
@@ -335,7 +347,7 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     for (int taraget : targetStates.keySet()) {
       targetStates.put(taraget, ReceiverState.INIT);
     }
-
+    complete = false;
     refresh++;
   }
 }

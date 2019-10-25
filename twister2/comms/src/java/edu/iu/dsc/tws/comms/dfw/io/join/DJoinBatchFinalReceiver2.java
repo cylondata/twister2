@@ -125,6 +125,11 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     return leftReceiver.progress() | rightReceiver.progress();
   }
 
+  @Override
+  public boolean isComplete() {
+    return leftReceiver.isComplete() && rightReceiver.isComplete();
+  }
+
   private class InnerBulkReceiver implements BulkReceiver {
     private int tag;
 

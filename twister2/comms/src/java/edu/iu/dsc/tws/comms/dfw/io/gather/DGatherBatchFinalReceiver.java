@@ -76,6 +76,11 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
    */
   private KryoSerializer kryoSerializer;
 
+  /**
+   * Weather we are complete
+   */
+  private boolean complete = false;
+
   public DGatherBatchFinalReceiver(BulkReceiver bulkReceiver, String shuffleDir) {
     this.bulkReceiver = bulkReceiver;
     this.shuffleDirectory = shuffleDir;
@@ -196,7 +201,17 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
         onFinish(t);
       }
     }
+
+    if (!needsFurtherProgress) {
+      complete = true;
+    }
+
     return needsFurtherProgress;
+  }
+
+  @Override
+  public boolean isComplete() {
+    return complete;
   }
 
   private String getOperationName(int target) {
@@ -209,6 +224,12 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
     for (Shuffle s : sortedMergers.values()) {
       s.clean();
     }
+    complete = false;
+  }
+
+  @Override
+  public void clean() {
+    complete = false;
   }
 
   @Override

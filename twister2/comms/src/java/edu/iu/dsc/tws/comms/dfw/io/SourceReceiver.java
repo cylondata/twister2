@@ -233,6 +233,11 @@ public abstract class SourceReceiver implements MessageReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    return false;
+  }
+
   /**
    * Check weather all the other information is flushed
    *

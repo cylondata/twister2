@@ -168,4 +168,9 @@ public class JoinBatchFinalReceiver2 implements MessageReceiver {
       return false;
     }
   }
+
+  @Override
+  public boolean isComplete() {
+    return leftReceiver.isComplete() && rightReceiver.isComplete();
+  }
 }

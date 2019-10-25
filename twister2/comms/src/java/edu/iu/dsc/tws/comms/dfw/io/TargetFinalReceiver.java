@@ -157,6 +157,11 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    return false;
+  }
+
   protected abstract boolean isAllEmpty(int target);
 
   protected boolean sync(int target) {
