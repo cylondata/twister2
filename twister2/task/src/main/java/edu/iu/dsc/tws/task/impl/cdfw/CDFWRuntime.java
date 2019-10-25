@@ -11,9 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl.cdfw;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,7 +26,6 @@ import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IReceiverFromDriver;
@@ -62,13 +59,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
   private KryoSerializer serializer;
 
   /**
-   * The outputs from previous graphs
-   * [graph, [output name, data set]]
-   */
-  private Map<String, Map<String, DataObject<Object>>> outPuts = new HashMap<>();
-  private Map<String, DataObject<Object>> iterativeOutPuts = new HashMap<>();
-
-  /**
    * Task executor
    */
   private TaskExecutor taskExecutor;
@@ -81,21 +71,8 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
 
   private TWSChannel channel;
 
-  /**
-   * Connected dataflow runtime
-   *
-   * @param cfg configuration
-   * @param wId worker id
-   * @param workerInfoList worker information list
-   * @param net network
-   */
-/*  public CDFWRuntime(Config cfg, int wId, List<JobMasterAPI.WorkerInfo> workerInfoList,
-                     Communicator net) {
-    taskExecutor = new TaskExecutor(cfg, wId, workerInfoList, net, null);
-    this.executeMessageQueue = new LinkedBlockingQueue<Any>();
-    this.workerId = wId;
-    this.serializer = new KryoSerializer();
-  }*/
+  private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
+  private AtomicBoolean scaleDownRequest = new AtomicBoolean(false);
 
   /**
    * Connected Dataflow Runtime
@@ -222,9 +199,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     }
     return false;
   }
-
-  private AtomicBoolean scaleUpRequest = new AtomicBoolean(false);
-  private AtomicBoolean scaleDownRequest = new AtomicBoolean(false);
 
   @Override
   public void driverMessageReceived(Any anyMessage) {
