@@ -25,8 +25,8 @@ import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 public class Twister2StreamingTranslationContext extends Twister2TranslationContext {
 
   public Twister2StreamingTranslationContext(
-      Twister2PipelineOptions options, Twister2RuntimeContext twister2RuntimeContext) {
-    super(options, twister2RuntimeContext);
+      Twister2PipelineOptions options) {
+    super(options);
   }
 
   @Override

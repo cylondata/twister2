@@ -20,21 +20,18 @@ package org.apache.beam.runners.twister2;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.beam.runners.core.construction.SerializablePipelineOptions;
 import org.apache.beam.runners.core.construction.TransformInputs;
-import org.apache.beam.runners.twister2.translators.functions.SideInputSinkFunction;
 import org.apache.beam.runners.twister2.translators.functions.Twister2SinkFunction;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.runners.AppliedPTransform;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.util.WindowedValue;
-import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.PValue;
@@ -55,24 +52,19 @@ public abstract class Twister2TranslationContext {
   protected final Map<PValue, TSet<?>> dataSets = new LinkedHashMap<>();
   private final Set<TSet> leaves = new LinkedHashSet<>();
   private final Map<PCollectionView<?>, BatchTSet<?>> sideInputDataSets;
-  private final Map<PCollectionView<?>, SideInputSinkFunction> sideInputSinks;
   private AppliedPTransform<?, ?, ?> currentTransform;
   private final TSetEnvironment environment;
-  private final Twister2RuntimeContext runtimeContext;
   private final SerializablePipelineOptions serializableOptions;
 
   public SerializablePipelineOptions getSerializableOptions() {
     return serializableOptions;
   }
 
-  public Twister2TranslationContext(Twister2PipelineOptions options,
-                                    Twister2RuntimeContext twister2RuntimeContext) {
+  public Twister2TranslationContext(Twister2PipelineOptions options) {
     this.options = options;
     this.environment = options.getTSetEnvironment();
     this.sideInputDataSets = new HashMap<>();
-    this.sideInputSinks = new HashMap<>();
     this.serializableOptions = new SerializablePipelineOptions(options);
-    this.runtimeContext = twister2RuntimeContext;
   }
 
   @SuppressWarnings("unchecked")
@@ -95,10 +87,6 @@ public abstract class Twister2TranslationContext {
     TSet<WindowedValue<T>> tSet = (TSet<WindowedValue<T>>) dataSets.get(input);
     leaves.remove(tSet);
     return tSet;
-  }
-
-  public Twister2RuntimeContext getRuntimeContext() {
-    return runtimeContext;
   }
 
   public <T> Map<TupleTag<?>, PValue> getInputs() {
@@ -132,18 +120,30 @@ public abstract class Twister2TranslationContext {
   }
 
   public void execute() {
+    Map<String, CachedTSet> sideInputTSets = new HashMap<>();
     for (Map.Entry<PCollectionView<?>, BatchTSet<?>> sides : sideInputDataSets.entrySet()) {
       CachedTSet tempCache = (CachedTSet) sides.getValue().cache();
-      List<WindowedValue<KV<?, ?>>> data = tempCache.getData();
-      if (data.size() == 1) {
-        runtimeContext.addSideInput(sides.getKey().getTagInternal().getId(), data.get(0));
-      } else {
-        throw new IllegalStateException("More than more data point");
-      }
+      sideInputTSets.put(sides.getKey().getTagInternal().getId(), tempCache);
+//      List<WindowedValue<KV<?, ?>>> data = tempCache.getData();
+//      if (data.size() == 1) {
+//        runtimeContext.addSideInput(sides.getKey().getTagInternal().getId(), data.get(0));
+//      } else {
+//        throw new IllegalStateException("More than more data point");
+//      }
     }
     for (TSet leaf : leaves) {
       SinkTSet sinkTSet = (SinkTSet) leaf.direct().sink(new Twister2SinkFunction());
+      addInputs(sinkTSet, sideInputTSets);
       eval(sinkTSet);
+    }
+  }
+
+  /**
+   * Adds all the side inputs into the sink test so it is available from the DoFn's
+   */
+  private void addInputs(SinkTSet sinkTSet, Map<String, CachedTSet> sideInputTSets) {
+    for (Map.Entry<String, CachedTSet> entry : sideInputTSets.entrySet()) {
+      sinkTSet.addInput(entry.getKey(), entry.getValue());
     }
   }
 
@@ -153,7 +153,6 @@ public abstract class Twister2TranslationContext {
       PCollectionView<VT> value, BatchTSet<WindowedValue<ET>> set) {
     if (!sideInputDataSets.containsKey(value)) {
       sideInputDataSets.put(value, set);
-      //sideInputSinks.put(value, new SideInputSinkFunction<Object, VT>(runtimeContext, value));
     }
   }
 }

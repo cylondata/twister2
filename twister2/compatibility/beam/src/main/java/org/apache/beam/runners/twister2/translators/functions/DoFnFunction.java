@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.beam.runners.core.DoFnRunner;
 import org.apache.beam.runners.core.DoFnRunners;
 import org.apache.beam.runners.core.StepContext;
-import org.apache.beam.runners.twister2.Twister2RuntimeContext;
 import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.runners.twister2.utils.NoOpStepContext;
 import org.apache.beam.runners.twister2.utils.Twister2SideInputReader;
@@ -67,7 +66,6 @@ public class DoFnFunction<OT, IT>
   private StepContext stepcontext;
   private final DoFnSchemaInformation doFnSchemaInformation;
   private final Map<TupleTag<?>, Integer> outputMap;
-  private final Twister2RuntimeContext runtimeContext;
 
   public DoFnFunction(
       Twister2TranslationContext context,
@@ -82,7 +80,6 @@ public class DoFnFunction<OT, IT>
       Map<TupleTag<?>, Integer> outputMap) {
     this.doFn = doFn;
     this.pipelineOptions = context.getOptions();
-    this.runtimeContext = context.getRuntimeContext();
     this.inputCoder = inputCoder;
     this.outputCoders = outputCoders;
     this.windowingStrategy = windowingStrategy;
@@ -97,7 +94,7 @@ public class DoFnFunction<OT, IT>
 
   @Override
   public void prepare(TSetContext context) {
-    sideInputReader = new Twister2SideInputReader(sideInputs, runtimeContext);
+    sideInputReader = new Twister2SideInputReader(sideInputs, context);
     outputManager.setup(mainOutput, sideOutputs);
 
     doFnRunner =
@@ -118,7 +115,6 @@ public class DoFnFunction<OT, IT>
   @Override
   public void compute(Iterator<WindowedValue<IT>> input, RecordCollector<RawUnionValue> output) {
     outputManager.clear();
-
     doFnRunner.startBundle();
     while (input.hasNext()) {
       doFnRunner.processElement(input.next());

@@ -12,28 +12,32 @@
 package org.apache.beam.runners.twister2.utils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.apache.beam.runners.core.SideInputReader;
-import org.apache.beam.runners.twister2.Twister2RuntimeContext;
 import org.apache.beam.sdk.transforms.Materializations;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
+import org.apache.beam.sdk.util.WindowedValue;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
+import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.tset.TSetContext;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkArgument;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkNotNull;
 
 public class Twister2SideInputReader implements SideInputReader {
 
-  private final Twister2RuntimeContext runtimeContext;
+  private final TSetContext runtimeContext;
   private final Map<TupleTag<?>, WindowingStrategy<?, ?>> sideInputs;
 
   public Twister2SideInputReader(Map<PCollectionView<?>, WindowingStrategy<?, ?>> indexByView,
-                                 Twister2RuntimeContext context) {
+                                 TSetContext context) {
     this.sideInputs = new HashMap<>();
 
     for (PCollectionView<?> view : indexByView.keySet()) {
@@ -58,7 +62,7 @@ public class Twister2SideInputReader implements SideInputReader {
     checkNotNull(view, "View passed to sideInput cannot be null");
     TupleTag<?> tag = view.getTagInternal();
     checkNotNull(sideInputs.get(tag), "Side input for " + view + " not available.");
-    return runtimeContext.getSideInput(view, window);
+    return getSideInput(view, window);
   }
 
   @Override
@@ -69,5 +73,44 @@ public class Twister2SideInputReader implements SideInputReader {
   @Override
   public boolean isEmpty() {
     return false;
+  }
+
+  private  <T> T getSideInput(PCollectionView<T> view, BoundedWindow window) {
+    Map<BoundedWindow, List<WindowedValue<KV<?, ?>>>> partitionedElements = new HashMap<>();
+    DataPartition<?> sideInput = runtimeContext.getInput(view.getTagInternal().getId());
+    sideInput.getConsumer().hasNext();
+//    WindowedValue<KV<?, ?>> winValue = sideInput.get
+//    for (BoundedWindow tbw : winValue.getWindows()) {
+//      List<WindowedValue<KV<?, ?>>> windowedValues =
+//          partitionedElements.computeIfAbsent(tbw, k -> new ArrayList<>());
+//      windowedValues.add(winValue);
+//    }
+//
+//    Map<BoundedWindow, T> resultMap = new HashMap<>();
+//
+//    for (Map.Entry<BoundedWindow, List<WindowedValue<KV<?, ?>>>> elements
+//        : partitionedElements.entrySet()) {
+//
+//      ViewFn<Materializations.MultimapView, T> viewFn
+//          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
+//      Coder keyCoder = ((KvCoder<?, ?>) view.getCoderInternal()).getKeyCoder();
+//      resultMap.put(
+//          elements.getKey(),
+//          (T)
+//              viewFn.apply(
+//                  InMemoryMultimapSideInputView.fromIterable(
+//                      keyCoder,
+//                      (Iterable)
+//                          elements.getValue().stream()
+//                              .map(WindowedValue::getValue)
+//                              .collect(Collectors.toList()))));
+//    }
+//    T result = resultMap.get(window);
+//    if (result == null) {
+//      ViewFn<Materializations.MultimapView, T> viewFn
+//          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
+//      result = viewFn.apply(EMPTY_MULTMAP_VIEW);
+//    }
+    return null;
   }
 }
