@@ -149,7 +149,7 @@ public class BatchTaskSchedulerExample implements IWorker {
     TaskExecutor taskExecutor = cEnv.getTaskExecutor();
 
     ComputeGraph firstGraph = buildFirstGraph(2, config);
-    ComputeGraph secondGraph = buildSecondGraph(2, config);
+    ComputeGraph secondGraph = buildSecondGraph(4, config);
     ComputeGraph thirdGraph = buildThirdGraph(4, config);
 
     //Get the execution plan for the first task graph

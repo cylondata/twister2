@@ -357,13 +357,11 @@ public class BatchTaskScheduler implements ITaskScheduler {
         if (iNode instanceof Collector) {
           collectibleNameSet = ((Collector) iNode).getCollectibleNames();
           for (String collectibles : collectibleNameSet) {
-            //storeDependentGraphParallelism(collectibles, vertex.getParallelism());
             collectibleNameMap.put(collectibles, vertex.getParallelism());
           }
         } else if (iNode instanceof Receptor) {
           receivableNameSet = ((Receptor) iNode).getReceivableNames();
           for (String receivables : receivableNameSet) {
-            //storeDependentGraphParallelism(receivables, vertex.getParallelism());
             receivableNameMap.put(receivables, vertex.getParallelism());
           }
           validateParallelism();
@@ -372,50 +370,26 @@ public class BatchTaskScheduler implements ITaskScheduler {
         globalTaskIndex++;
       }
     }
-    /*if (dependentGraphs) {
-      for (Vertex vertex : taskVertexSet) {
-        INode iNode = vertex.getTask();
-        if (iNode instanceof Receptor) {
-          validateReceptor(graph, vertex);
-        }
-        dependentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
-        globalTaskIndex++;
-      }
-    } else {
-      for (Vertex vertex : taskVertexSet) {
-        INode iNode = vertex.getTask();
-        if (iNode instanceof Collector) {
-          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
-          storeDependentGraphParallelism(vertex.getName(), vertex.getParallelism());
-        } else if (iNode instanceof Receptor) {
-          LOG.info("Vertex Details:" + vertex.getName());
-          receivableNameSet = ((Receptor) iNode).getReceivableNames();
-          if (collectibleNameSet.equals(receivableNameSet)) {
-            LOG.info("collectible and receivable set:"
-                + collectibleNameSet + "\t" + receivableNameSet);
-            validateDependentGraphParallelism(vertex.getParallelism());
-          }
-        }
-        independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
-        globalTaskIndex++;
-      }
-    }*/
     return batchTaskAllocation;
   }
 
-  private void validateParallelism() {
+  private boolean validateParallelism() {
+    boolean flag = false;
     LOG.info("collectible name map:" + collectibleNameMap + "\treceivable:" + receivableNameMap);
     for (Map.Entry<String, Integer> me : collectibleNameMap.entrySet()) {
       if (receivableNameMap.containsKey(me.getKey())) {
         LOG.info("collectible map values:" + me.getKey() + "\t" + me.getValue());
-        LOG.info("receivable map values:" + receivableNameMap.containsValue(me.getValue()));
         int receptorParallel = receivableNameMap.get(me.getKey());
-        if (receptorParallel != me.getValue()) {
+        if (receptorParallel == me.getValue()) {
+          flag = true;
+        } else if (receptorParallel != me.getValue()) {
           throw new Twister2RuntimeException("collector and receptor dependent parallelism "
               + "are not equal");
         }
       }
     }
+    LOG.info("boolean value:" + flag);
+    return flag;
   }
 
   private void validateDependentGraphParallelism(int receptorParallel) {
