@@ -69,4 +69,13 @@ public class ComputeTSet<O, I> extends BatchTSetImpl<O> {
 
     throw new RuntimeException("Unknown function type for compute: " + computeFunc);
   }
+
+  /**
+   * Get the compute function associated with this TSet
+   *
+   * @return the compute function
+   */
+  public TFunction<O, I> getComputeFunc() {
+    return computeFunc;
+  }
 }
