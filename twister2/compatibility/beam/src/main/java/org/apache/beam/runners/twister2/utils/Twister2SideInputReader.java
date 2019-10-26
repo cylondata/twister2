@@ -11,14 +11,21 @@
 //  limitations under the License.
 package org.apache.beam.runners.twister2.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.apache.beam.runners.core.InMemoryMultimapSideInputView;
 import org.apache.beam.runners.core.SideInputReader;
+import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.transforms.Materializations;
+import org.apache.beam.sdk.transforms.ViewFn;
 import org.apache.beam.sdk.transforms.windowing.BoundedWindow;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.KV;
@@ -32,6 +39,8 @@ import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Prec
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkNotNull;
 
 public class Twister2SideInputReader implements SideInputReader {
+  private static final Materializations.MultimapView EMPTY_MULTMAP_VIEW
+      = o -> Collections.EMPTY_LIST;
 
   private final TSetContext runtimeContext;
   private final Map<TupleTag<?>, WindowingStrategy<?, ?>> sideInputs;
@@ -75,42 +84,44 @@ public class Twister2SideInputReader implements SideInputReader {
     return false;
   }
 
-  private  <T> T getSideInput(PCollectionView<T> view, BoundedWindow window) {
+  private <T> T getSideInput(PCollectionView<T> view, BoundedWindow window) {
     Map<BoundedWindow, List<WindowedValue<KV<?, ?>>>> partitionedElements = new HashMap<>();
     DataPartition<?> sideInput = runtimeContext.getInput(view.getTagInternal().getId());
-    sideInput.getConsumer().hasNext();
-//    WindowedValue<KV<?, ?>> winValue = sideInput.get
-//    for (BoundedWindow tbw : winValue.getWindows()) {
-//      List<WindowedValue<KV<?, ?>>> windowedValues =
-//          partitionedElements.computeIfAbsent(tbw, k -> new ArrayList<>());
-//      windowedValues.add(winValue);
-//    }
-//
-//    Map<BoundedWindow, T> resultMap = new HashMap<>();
-//
-//    for (Map.Entry<BoundedWindow, List<WindowedValue<KV<?, ?>>>> elements
-//        : partitionedElements.entrySet()) {
-//
-//      ViewFn<Materializations.MultimapView, T> viewFn
-//          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
-//      Coder keyCoder = ((KvCoder<?, ?>) view.getCoderInternal()).getKeyCoder();
-//      resultMap.put(
-//          elements.getKey(),
-//          (T)
-//              viewFn.apply(
-//                  InMemoryMultimapSideInputView.fromIterable(
-//                      keyCoder,
-//                      (Iterable)
-//                          elements.getValue().stream()
-//                              .map(WindowedValue::getValue)
-//                              .collect(Collectors.toList()))));
-//    }
-//    T result = resultMap.get(window);
-//    if (result == null) {
-//      ViewFn<Materializations.MultimapView, T> viewFn
-//          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
-//      result = viewFn.apply(EMPTY_MULTMAP_VIEW);
-//    }
-    return null;
+    while (sideInput.getConsumer().hasNext()) {
+      WindowedValue<KV<?, ?>> winValue = (WindowedValue<KV<?, ?>>) sideInput.getConsumer().next();
+      for (BoundedWindow tbw : winValue.getWindows()) {
+        List<WindowedValue<KV<?, ?>>> windowedValues =
+            partitionedElements.computeIfAbsent(tbw, k -> new ArrayList<>());
+        windowedValues.add(winValue);
+      }
+
+    }
+
+    Map<BoundedWindow, T> resultMap = new HashMap<>();
+
+    for (Map.Entry<BoundedWindow, List<WindowedValue<KV<?, ?>>>> elements
+        : partitionedElements.entrySet()) {
+
+      ViewFn<Materializations.MultimapView, T> viewFn
+          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
+      Coder keyCoder = ((KvCoder<?, ?>) view.getCoderInternal()).getKeyCoder();
+      resultMap.put(
+          elements.getKey(),
+          (T)
+              viewFn.apply(
+                  InMemoryMultimapSideInputView.fromIterable(
+                      keyCoder,
+                      (Iterable)
+                          elements.getValue().stream()
+                              .map(WindowedValue::getValue)
+                              .collect(Collectors.toList()))));
+    }
+    T result = resultMap.get(window);
+    if (result == null) {
+      ViewFn<Materializations.MultimapView, T> viewFn
+          = (ViewFn<Materializations.MultimapView, T>) view.getViewFn();
+      result = viewFn.apply(EMPTY_MULTMAP_VIEW);
+    }
+    return result;
   }
 }

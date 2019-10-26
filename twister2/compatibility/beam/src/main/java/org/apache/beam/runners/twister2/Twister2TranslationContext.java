@@ -17,6 +17,8 @@
  */
 package org.apache.beam.runners.twister2;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.apache.beam.runners.core.construction.SerializablePipelineOptions;
 import org.apache.beam.runners.core.construction.TransformInputs;
+import org.apache.beam.runners.twister2.translators.functions.DoFnFunction;
 import org.apache.beam.runners.twister2.translators.functions.Twister2SinkFunction;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -38,10 +41,13 @@ import org.apache.beam.sdk.values.PValue;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterables;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
+import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
 /**
@@ -124,12 +130,6 @@ public abstract class Twister2TranslationContext {
     for (Map.Entry<PCollectionView<?>, BatchTSet<?>> sides : sideInputDataSets.entrySet()) {
       CachedTSet tempCache = (CachedTSet) sides.getValue().cache();
       sideInputTSets.put(sides.getKey().getTagInternal().getId(), tempCache);
-//      List<WindowedValue<KV<?, ?>>> data = tempCache.getData();
-//      if (data.size() == 1) {
-//        runtimeContext.addSideInput(sides.getKey().getTagInternal().getId(), data.get(0));
-//      } else {
-//        throw new IllegalStateException("More than more data point");
-//      }
     }
     for (TSet leaf : leaves) {
       SinkTSet sinkTSet = (SinkTSet) leaf.direct().sink(new Twister2SinkFunction());
@@ -142,8 +142,27 @@ public abstract class Twister2TranslationContext {
    * Adds all the side inputs into the sink test so it is available from the DoFn's
    */
   private void addInputs(SinkTSet sinkTSet, Map<String, CachedTSet> sideInputTSets) {
-    for (Map.Entry<String, CachedTSet> entry : sideInputTSets.entrySet()) {
-      sinkTSet.addInput(entry.getKey(), entry.getValue());
+
+    TBaseGraph graph = sinkTSet.getTBaseGraph();
+    Set<String> keys = sideInputTSets.keySet();
+    TBase currNode = null;
+    Deque<TBase> deque = new ArrayDeque<>();
+    deque.add(sinkTSet);
+    while (!deque.isEmpty()) {
+      currNode = deque.remove();
+      deque.addAll(graph.getPredecessors(currNode));
+      if (currNode instanceof ComputeTSet) {
+        if (((ComputeTSet) currNode).getComputeFunc() instanceof DoFnFunction) {
+          Set<String> sideInputKeys
+              = ((DoFnFunction) ((ComputeTSet) currNode).getComputeFunc()).getSideInputKeys();
+          for (String sideInputKey : sideInputKeys) {
+            if (!sideInputTSets.containsKey(sideInputKey)) {
+              throw new IllegalStateException("Side input not found for key " + sideInputKey);
+            }
+            ((ComputeTSet) currNode).addInput(sideInputKey, sideInputTSets.get(sideInputKey));
+          }
+        }
+      }
     }
   }
 

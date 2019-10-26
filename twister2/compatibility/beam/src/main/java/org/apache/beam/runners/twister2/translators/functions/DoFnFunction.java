@@ -92,6 +92,19 @@ public class DoFnFunction<OT, IT>
     outputManager = new DoFnOutputManager(this.outputMap);
   }
 
+  /**
+   * get the tag id's of all the keys
+   *
+   * @return A Set of String key values
+   */
+  public Set<String> getSideInputKeys() {
+    Set<String> keys = new HashSet<>();
+    for (PCollectionView<?> view : sideInputs.keySet()) {
+      keys.add(view.getTagInternal().getId());
+    }
+    return keys;
+  }
+
   @Override
   public void prepare(TSetContext context) {
     sideInputReader = new Twister2SideInputReader(sideInputs, context);
