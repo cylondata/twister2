@@ -529,13 +529,13 @@ public class JobMaster {
           dashClient.jobStateChange(JobState.KILLED);
         }
 
+        if (zkMasterController != null) {
+          zkMasterController.close();
+        }
+
         if (clearResourcesWhenKilled) {
           jobCompleted = true;
           looper.wakeup();
-
-          if (zkMasterController != null) {
-            zkMasterController.close();
-          }
 
           if (jobTerminator != null) {
             jobTerminator.terminateJob(job.getJobName());
