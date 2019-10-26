@@ -268,7 +268,6 @@ public abstract class KeyedReceiver implements MessageReceiver {
    *
    * @param source the task id of the source that has finished
    */
-  @Override
   public void onFinish(int source) {
     for (Integer target : finishedSources.keySet()) {
       Map<Integer, Boolean> finishedMessages = finishedSources.get(target);

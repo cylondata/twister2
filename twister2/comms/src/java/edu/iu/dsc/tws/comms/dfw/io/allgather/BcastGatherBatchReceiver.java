@@ -105,8 +105,7 @@ public class BcastGatherBatchReceiver extends TargetFinalReceiver {
         && messages.get(target).isEmpty();
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  protected void onSyncEvent(int target, byte[] value) {
     receiver.sync(target, value);
   }
 }

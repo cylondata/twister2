@@ -100,8 +100,7 @@ public class PartitionStreamingFinalReceiver extends TargetFinalReceiver {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  protected void onSyncEvent(int target, byte[] value) {
     receiver.sync(target, value);
   }
 }

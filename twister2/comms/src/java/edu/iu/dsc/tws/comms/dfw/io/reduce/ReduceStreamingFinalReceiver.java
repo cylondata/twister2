@@ -45,8 +45,7 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
   }
 
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  protected void onSyncEvent(int target, byte[] value) {
     singularReceiver.sync(target, value);
   }
 }

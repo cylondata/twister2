@@ -108,8 +108,7 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
         && readyToSend.get(target) != null && !readyToSend.get(target).isEmpty();
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  protected void onSyncEvent(int target, byte[] value) {
     receiver.sync(target, value);
   }
 }

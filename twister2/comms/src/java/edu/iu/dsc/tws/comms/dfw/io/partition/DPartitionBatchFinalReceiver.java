@@ -316,16 +316,10 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
     sortedMerger.switchToReading();
     Iterator<Object> itr = sortedMerger.readIterator();
     bulkReceiver.receive(target, itr);
-    onFinish(target);
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  private void onSyncEvent(int target, byte[] value) {
     bulkReceiver.sync(target, value);
-  }
-
-  @Override
-  public void onFinish(int source) {
   }
 
   @Override

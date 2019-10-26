@@ -197,8 +197,6 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
         batchDone.put(t, true);
         fsMerger.switchToReading();
         bulkReceiver.receive(t, fsMerger.readIterator());
-        // we can call on finish at this point
-        onFinish(t);
       }
     }
 
@@ -232,8 +230,7 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
     complete = false;
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  private void onSyncEvent(int target, byte[] value) {
     bulkReceiver.sync(target, value);
   }
 }

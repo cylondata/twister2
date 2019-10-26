@@ -319,8 +319,7 @@ public abstract class SourceReceiver implements MessageReceiver {
     return sourcesOfTarget.get(target) == syncReceived.get(target).size();
   }
 
-  @Override
-  public void onFinish(int source) {
+  protected void onFinish(int source) {
     for (Integer target : syncReceived.keySet()) {
       syncReceived.get(target).add(source);
     }
@@ -333,4 +332,11 @@ public abstract class SourceReceiver implements MessageReceiver {
       targetStates.put(target, ReceiverState.INIT);
     }
   }
+
+  /**
+   * This method is called when there is a sync event on the operation
+   * @param target the target to which the sync event belong
+   * @param value the byte value, can be null
+   */
+  protected abstract void onSyncEvent(int target, byte[] value);
 }

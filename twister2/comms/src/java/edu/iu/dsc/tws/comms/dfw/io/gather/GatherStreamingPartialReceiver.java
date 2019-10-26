@@ -102,4 +102,9 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     return operation.sendPartial(task, message, flags, dest);
   }
+
+  @Override
+  protected void onSyncEvent(int target, byte[] value) {
+
+  }
 }

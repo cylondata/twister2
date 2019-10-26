@@ -32,6 +32,5 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   protected boolean isFilledToSend(int target, boolean sync) {
     return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
   }
-
 }
 

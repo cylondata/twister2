@@ -85,12 +85,6 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
   }
 
   @Override
-  public void onFinish(int source) {
-    leftReceiver.onFinish(source);
-    rightReceiver.onFinish(source);
-  }
-
-  @Override
   public void close() {
     leftReceiver.clean();
     rightReceiver.clean();
@@ -106,8 +100,7 @@ public class DJoinBatchFinalReceiver2 implements MessageReceiver {
     rightValues.clear();
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  private void onSyncEvent(int target, byte[] value) {
     bulkReceiver.sync(target, value);
   }
 

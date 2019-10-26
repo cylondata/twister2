@@ -333,4 +333,8 @@ public class TargetPartialReceiver extends TargetReceiver {
       targetAcceptMessages.put(target, true);
     }
   }
+
+  @Override
+  protected void onSyncEvent(int target, byte[] value) {
+  }
 }
