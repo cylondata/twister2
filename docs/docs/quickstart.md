@@ -58,8 +58,14 @@ public class HelloWorld implements IWorker {
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {
