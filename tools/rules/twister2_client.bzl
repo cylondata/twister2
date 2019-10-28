@@ -83,10 +83,6 @@ def twister2_client_lib_resource_scheduler_files():
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
-        "@org_apache_curator_curator_client//jar",
-        "@org_apache_curator_curator_framework//jar",
-        "@org_apache_curator_curator_recipes//jar",
-        "@org_apache_zookeeper_zookeeper//jar",
         "@io_kubernetes_client_java//jar",
         "@io_kubernetes_client_java_api//jar",
         "@io_kubernetes_client_java_proto//jar",
@@ -109,6 +105,15 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
         "@com_google_protobuf//:protobuf_java",
+    ]
+
+def twister2_client_lib_curator_zookeeper_files():
+    return [
+        "@maven//:org_apache_curator_curator_client",
+        "@maven//:org_apache_curator_curator_framework",
+        "@maven//:org_apache_curator_curator_recipes",
+        "@maven//:org_apache_zookeeper_zookeeper",
+        "@maven//:org_apache_zookeeper_zookeeper_jute",
     ]
 
 def twister2_client_lib_api_files():
