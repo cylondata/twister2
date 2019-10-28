@@ -12,7 +12,16 @@ else
 fi
 
 # install system dependencies
-sh install_sys_dep.sh
+if [ "$(
+  . /etc/os-release
+  echo $NAME
+)" = "Ubuntu" ]; then
+  sh install_sys_dep_ubuntu.sh
+else
+  echo "This script supports only dependency installation for Ubuntu. Please manually install dependencies based on following URLS".
+  echo "https://docs.bazel.build/versions/master/install.html"
+  echo "https://twister2.org/docs/compiling/linux"
+fi
 
 echo "Looking for bazel..."
 if ! exists bazel; then
