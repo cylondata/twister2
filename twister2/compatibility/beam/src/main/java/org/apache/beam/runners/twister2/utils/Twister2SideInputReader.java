@@ -34,6 +34,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkArgument;
 import static org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Preconditions.checkNotNull;
@@ -87,8 +88,9 @@ public class Twister2SideInputReader implements SideInputReader {
   private <T> T getSideInput(PCollectionView<T> view, BoundedWindow window) {
     Map<BoundedWindow, List<WindowedValue<KV<?, ?>>>> partitionedElements = new HashMap<>();
     DataPartition<?> sideInput = runtimeContext.getInput(view.getTagInternal().getId());
-    while (sideInput.getConsumer().hasNext()) {
-      WindowedValue<KV<?, ?>> winValue = (WindowedValue<KV<?, ?>>) sideInput.getConsumer().next();
+    DataPartitionConsumer<?> dataPartitionConsumer = sideInput.getConsumer();
+    while (dataPartitionConsumer.hasNext()) {
+      WindowedValue<KV<?, ?>> winValue = (WindowedValue<KV<?, ?>>) dataPartitionConsumer.next();
       for (BoundedWindow tbw : winValue.getWindows()) {
         List<WindowedValue<KV<?, ?>>> windowedValues =
             partitionedElements.computeIfAbsent(tbw, k -> new ArrayList<>());
