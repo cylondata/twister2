@@ -142,7 +142,7 @@ twister2.network.receiveBuffer.count.batch.partition: 4
 
 ## Keyed Gather ##
 # the partitioning algorithm
-twister2.network.alltoall.algorithm.batch.keyed_gather: "ring"
+twister2.network.alltoall.algorithm.batch.keyed_gather: "simple"
 
 # ring group worker
 ttwister2.network.partition.ring.group.workers.batch.keyed_gather: 2
@@ -168,7 +168,7 @@ twister2.network.message.grouping.size.batch.keyed_gather: 10000
 
 ## Keyed Reduce ##
 # the partitioning algorithm
-twister2.network.alltoall.algorithm.batch.keyed_reduce: "ring"
+twister2.network.alltoall.algorithm.batch.keyed_reduce: "simple"
 
 # ring group worker
 ttwister2.network.partition.ring.group.workers.batch.keyed_reduce: 2

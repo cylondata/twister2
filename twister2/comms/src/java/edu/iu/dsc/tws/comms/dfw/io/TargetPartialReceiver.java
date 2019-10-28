@@ -27,7 +27,6 @@ import edu.iu.dsc.tws.comms.utils.TaskPlanUtils;
 
 import it.unimi.dsi.fastutil.ints.Int2BooleanArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 
 public class TargetPartialReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetPartialReceiver.class.getName());
@@ -118,8 +117,8 @@ public class TargetPartialReceiver extends TargetReceiver {
     // we are at the receiving state
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.INIT);
-      syncSent.put(source, new IntArraySet());
-      syncsReceived.put(source, new IntArraySet());
+      syncSent.put(source, new HashSet<>());
+      syncsReceived.put(source, new HashSet<>());
     }
   }
 
@@ -178,7 +177,6 @@ public class TargetPartialReceiver extends TargetReceiver {
     Set<Integer> syncs = syncsReceived.get(source);
     syncs.add(target);
     if (syncs.size() == targets.length) {
-      LOG.info(String.format("Setting to ALL_SYNC s %d", source));
       sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
       sourceAcceptMessages.put(source, false);
     }
@@ -299,11 +297,8 @@ public class TargetPartialReceiver extends TargetReceiver {
 
           if (operation.sendPartial(source, message, flags, dest)) {
             finishedDestPerSource.add(dest);
-            LOG.info(String.format("Adding to finished s %d, d %d size %d dest size %d",
-                source, dest, finishedDestPerSource.size(), thisDestinations.size()));
 
             if (finishedDestPerSource.size() == thisDestinations.size()) {
-              LOG.info(String.format("Adding SYNC s %d", source));
               sourceStates.put(source, ReceiverState.SYNCED);
             }
           } else {

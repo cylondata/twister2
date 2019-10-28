@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
-import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.JoinedTuple;
 import edu.iu.dsc.tws.api.config.Config;
@@ -168,16 +167,15 @@ public class BJoinStudentExample extends KeyedBenchWorker {
       // Each task will only send out data for students who have a student id of (task id + 1)
       // This is done for demonstration purposes to make sure no two tasks send the same data points
       // Which would result in duplicate entries in the join results
-      int flag = MessageFlags.SYNC_MESSAGE;
       for (int i = 0; i < keysStudent.length; i++) {
         if (keysStudent[i] == task + 1) {
-          sendMessages(task, new Integer(keysStudent[i]), names[i], flag, 0);
+          sendMessages(task, new Integer(keysStudent[i]), names[i], 0, 0);
         }
 
       }
       for (int i = 0; i < keysCourse.length; i++) {
         if (keysCourse[i] == task + 1) {
-          sendMessages(task, new Integer(keysCourse[i]), courses[i], flag, 1);
+          sendMessages(task, new Integer(keysCourse[i]), courses[i], 0, 1);
         }
 
       }
