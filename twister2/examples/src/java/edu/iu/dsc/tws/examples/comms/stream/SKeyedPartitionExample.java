@@ -37,7 +37,6 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   private SKeyedPartition partition;
 
-  private boolean partitionDone = false;
   private ResultsVerifier<int[], Tuple<Integer, int[]>> resultsVerifier;
 
   @Override
@@ -71,12 +70,13 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return partition.progress();
+    partition.progress();
+    return !partition.isComplete();
   }
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && partition.isComplete();
+    return sourcesDone && partition.isComplete();
   }
 
   @Override
@@ -102,9 +102,6 @@ public class SKeyedPartitionExample extends KeyedBenchWorker {
       count++;
       LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
           workerId, target, count, expected));
-      if (count >= expected) {
-        partitionDone = true;
-      }
       // verifyResults(resultsVerifier, data, null);
       return true;
     }

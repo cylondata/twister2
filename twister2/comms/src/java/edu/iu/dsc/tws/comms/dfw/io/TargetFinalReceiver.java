@@ -77,6 +77,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   protected void addSyncMessage(int source, int target) {
     Set<Integer> sources = syncReceived.get(target);
     sources.add(source);
+    LOG.info(String.format("Adding FINAL SYNC %d -> %d", source, target));
     for (int t : thisDestinations) {
       Set<Integer> syncSources = syncReceived.get(t);
       if (syncSources.equals(this.thisSources)) {

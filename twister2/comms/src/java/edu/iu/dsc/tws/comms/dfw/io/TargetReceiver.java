@@ -131,18 +131,18 @@ public abstract class TargetReceiver implements MessageReceiver {
           representSourceSet = true;
         }
 
-        // if we have a sync from this source we cannot accept more data
-        // until we finish this sync
-        if (!canAcceptMessage(source, target)) {
-          return false;
-        }
-
         if ((flags & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
           addSyncMessage(source, target);
           return true;
         } else if ((flags & MessageFlags.SYNC_BARRIER) == MessageFlags.SYNC_BARRIER) {
           addSyncMessageBarrier(source, target, (byte[]) object);
           return true;
+        }
+
+        // if we have a sync from this source we cannot accept more data
+        // until we finish this sync
+        if (!canAcceptMessage(source, target)) {
+          return false;
         }
 
         if (object instanceof ChannelMessage) {

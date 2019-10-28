@@ -78,7 +78,8 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return direct.progress();
+    direct.progress();
+    return !direct.isComplete();
   }
 
   @Override
@@ -135,5 +136,11 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
+    direct.finish(src);
+  }
+
+  @Override
+  public void close() {
+    direct.close();
   }
 }

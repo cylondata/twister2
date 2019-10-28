@@ -546,10 +546,6 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         boolean receiveAccepted;
         lock.lock();
         try {
-          if ((outMessage.getFlags() & MessageFlags.SYNC_EMPTY) == MessageFlags.SYNC_EMPTY) {
-            LOG.info(String.format("SYNC RECEIVE %d -> %d, %d",
-                outMessage.getSource(), inRoutes.get(i), outMessage.getTarget()));
-          }
           receiveAccepted = receiver.receiveSendInternally(
               outMessage.getSource(), inRoutes.get(i), outMessage.getTarget(),
               outMessage.getFlags(), messageObject);
