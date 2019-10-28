@@ -113,6 +113,7 @@ public abstract class BasicComputation extends TaskWorker {
     ExecutionPlan plan = taskExecutor.plan(computationTaskgraph);
     int unlimitedItr = 0;
 
+    long startime = System.currentTimeMillis();
     if (iterations != 0) {
       for (int i = 0; i < iterations; i++) {
         taskExecutor.addInput(computationTaskgraph, plan,
@@ -146,8 +147,10 @@ public abstract class BasicComputation extends TaskWorker {
       }
     }
     taskExecutor.close();
+    long endTime = System.currentTimeMillis();
     if (workerId == 0) {
       System.out.println("total number of iterations : " + unlimitedItr);
+      System.out.println("computation time: " + (endTime - startime));
     }
 
 

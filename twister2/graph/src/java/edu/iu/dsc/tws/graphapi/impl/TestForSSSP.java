@@ -161,7 +161,6 @@ public class TestForSSSP extends BasicComputation implements Serializable {
                     defaultVertex.setValue(vertexStatusForInt.getValue());
                     ArrayList<DefaultEdge> arrayList  = (ArrayList<DefaultEdge>)
                         defaultVertex.getEdges();
-                    System.out.println("key: " + key + " val: " + defaultVertex.getValue());
                     for (DefaultEdge defaultEdge : arrayList) {
                       String key1 = defaultEdge.getTargetVertexId();
                       Integer edgevalue = defaultEdge.getValue();
