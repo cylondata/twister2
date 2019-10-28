@@ -33,6 +33,41 @@ public final class OperationUtils {
 
   /**
    * Progress the receivers and return true if needs further progress
+   * @param finalLock lock for final receiver
+   * @param finalReceiver final receiver
+   * @param partialLock lock for partial receiver
+   * @param partialReceiver partial receiver
+   * @return true if need further progress
+   */
+  public static boolean areReceiversComplete(Lock finalLock, MessageReceiver finalReceiver,
+                                             Lock partialLock, MessageReceiver partialReceiver) {
+    boolean finalComplete = false;
+    boolean mergeComplete = false;
+    try {
+      if (finalLock.tryLock()) {
+        try {
+          finalComplete = finalReceiver.isComplete();
+        } finally {
+          finalLock.unlock();
+        }
+      }
+
+      if (partialLock.tryLock()) {
+        try {
+          mergeComplete = partialReceiver.isComplete();
+        } finally {
+          partialLock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new RuntimeException(t);
+    }
+    return finalComplete && mergeComplete;
+  }
+
+  /**
+   * Progress the receivers and return true if needs further progress
    * @param delegate the channel dataflow opeation
    * @param lock lock for final receiver
    * @param finalReceiver final receiver

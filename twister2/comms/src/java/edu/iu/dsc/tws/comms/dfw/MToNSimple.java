@@ -329,9 +329,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
 
   public boolean isComplete() {
     boolean done = delegete.isComplete();
-    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+    boolean complete = OperationUtils.areReceiversComplete(lock, finalReceiver,
         partialLock, partialReceiver);
-    return done && !needsFurtherProgress;
+    return done && complete;
   }
 
   public boolean isDelegateComplete() {
@@ -371,6 +371,7 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
   @Override
   public void finish(int source) {
     for (int dest : destinations) {
+      LOG.info(String.format("FINISHING s %s, d %d", source, dest));
       // first we need to call finish on the partial receivers
       while (!send(source, new byte[0], MessageFlags.SYNC_EMPTY, dest)) {
         // lets progress until finish

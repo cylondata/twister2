@@ -235,7 +235,7 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @param target the target to which the sync event belong
    * @param value the byte value, can be null
    */
-  protected abstract void onSyncEvent(int target, byte[] value);
+  protected abstract boolean onSyncEvent(int target, byte[] value);
 
   /**
    * Return true if we are filled to send
@@ -243,8 +243,4 @@ public abstract class TargetReceiver implements MessageReceiver {
    * @return true if we are filled enough to send
    */
   protected abstract boolean isFilledToSend(int target);
-
-  protected void onFinish(int source) {
-    throw new RuntimeException("Not implemented");
-  }
 }

@@ -85,7 +85,8 @@ public class BBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return bcast.progress();
+    bcast.progress();
+    return !bcast.isComplete();
   }
 
   protected void finishCommunication(int src) {

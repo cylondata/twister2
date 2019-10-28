@@ -95,7 +95,7 @@ public class JoinPartitionBatchReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  public void onSyncEvent(int target, byte[] value) {
-    receiver.sync(target, value);
+  public boolean onSyncEvent(int target, byte[] value) {
+    return receiver.sync(target, value);
   }
 }

@@ -39,7 +39,7 @@ public class ReduceBatchFinalReceiver extends BaseReduceBatchFinalReceiver {
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+  protected boolean sendSyncForward(int target) {
     onSyncEvent(target, barriers.get(target));
     return false;
   }

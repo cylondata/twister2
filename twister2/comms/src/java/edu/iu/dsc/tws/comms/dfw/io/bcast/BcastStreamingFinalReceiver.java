@@ -117,7 +117,7 @@ public class BcastStreamingFinalReceiver extends TargetFinalReceiver {
     return readyToSend.get(target) != null && readyToSend.get(target).size() > 0;
   }
 
-  protected void onSyncEvent(int target, byte[] value) {
-    receiver.sync(target, value);
+  protected boolean onSyncEvent(int target, byte[] value) {
+    return receiver.sync(target, value);
   }
 }

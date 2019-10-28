@@ -101,7 +101,8 @@ public class BJoinStudentExample extends KeyedBenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return join.progress();
+    join.progress();
+    return !join.isComplete();
   }
 
   @Override

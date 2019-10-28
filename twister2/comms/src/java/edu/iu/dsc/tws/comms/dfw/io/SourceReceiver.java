@@ -87,6 +87,12 @@ public abstract class SourceReceiver implements MessageReceiver {
    */
   protected SyncState syncState = SyncState.SYNC;
 
+  /**
+   * A boolean to keep track weather we synced, we can figure this out using the
+   * state in targetStates, but it can be in-efficient, so we keep a boolean
+   */
+  private boolean completed;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     workerId = op.getLogicalPlan().getThisWorker();
@@ -172,10 +178,13 @@ public abstract class SourceReceiver implements MessageReceiver {
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
+    boolean localCompleted = true;
     for (int target : messages.keySet()) {
       // if we are at init state nothing to do
       if (targetStates.get(target) == ReceiverState.SYNCED) {
         continue;
+      } else {
+        localCompleted = false;
       }
       // now check weather we have the messages for this source
       Map<Integer, Queue<Object>> messagePerTarget = messages.get(target);
@@ -218,24 +227,32 @@ public abstract class SourceReceiver implements MessageReceiver {
         if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED
             && allQueuesEmpty(messagePerTarget)
             && isAllEmpty(target)) {
-          needsFurtherProgress = sendSyncForward(needsFurtherProgress, target);
-          if (!needsFurtherProgress) {
+          boolean sendSuccess = !sendSyncForward(target);
+          if (sendSuccess) {
             targetStates.put(target, ReceiverState.SYNCED);
             // at this point we call the sync event
             onSyncEvent(target, barriers.get(target));
             clearTarget(target);
           }
+
+          if (!sendSuccess) {
+            needsFurtherProgress = true;
+          }
+        }
+
+        if (!canProgress) {
+          needsFurtherProgress = true;
         }
       }
 
-      needsFurtherProgress = targetStates.get(target) != ReceiverState.SYNCED;
     }
+    completed = localCompleted;
     return needsFurtherProgress;
   }
 
   @Override
   public boolean isComplete() {
-    return false;
+    return completed;
   }
 
   /**
@@ -249,11 +266,10 @@ public abstract class SourceReceiver implements MessageReceiver {
   /**
    * Handle the sync
    *
-   * @param needsFurtherProgress the current value of need progress
    * @param target target
    * @return the needFurtherProgress
    */
-  protected abstract boolean sendSyncForward(boolean needsFurtherProgress, int target);
+  protected abstract boolean sendSyncForward(int target);
 
   /**
    * Clear all the buffers for the target, to ready for the next
@@ -331,6 +347,7 @@ public abstract class SourceReceiver implements MessageReceiver {
       clearTarget(target);
       targetStates.put(target, ReceiverState.INIT);
     }
+    completed = false;
   }
 
   /**
