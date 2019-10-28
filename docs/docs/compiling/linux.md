@@ -17,20 +17,29 @@ Twister2 build needs several software installed on your system.
    * Extract the archive to a folder named `jdk1.8.0`
    * Set the following environment variables.
 
-     ```text
-     JAVA_HOME=<path-to-jdk1.8.0-directory>
-     PATH=$JAVA_HOME/bin:$PATH
-     export JAVA_HOME PATH
-     ```
+```text
+JAVA_HOME=<path-to-jdk1.8.0-directory>
+PATH=$JAVA_HOME/bin:$PATH
+export JAVA_HOME PATH
+```
      
 ```java
 which java
 ``` 
+
+| :exclamation: After installing java, you may follow below two steps to automatically configure your environment and build twister2. Currently this works only on Debian distributions with sudo access. Skip steps upto Twister2 Distribution if this is applicable.|
+| --- |
+```bash
+git clone https://github.com/DSC-SPIDAL/twister2.git
+cd twister2
+./build_linux.sh
+``` 
+
      
 3. Install the required tools
 
 ```bash
-   sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
 ```
 
 ```text
