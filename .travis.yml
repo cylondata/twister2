@@ -24,11 +24,11 @@ script:
   - echo "PATH CHECK:vb"
   - bazel version
   - echo " BAZEL BUILD START"
-  - bazel build --config=ubuntu twister2/...
+  - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
   - echo " BAZEL BUILD END"
-  - bazel test --config=ubuntu twister2/...
+  - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
   - echo "BAZEL PACKAGE START"
-  - bazel build --config=ubuntu //scripts/package:tarpkgs
+  - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
   - echo "BAZEL PACKAGE END"
   - echo " END ALL "
   - echo "e:============================================"

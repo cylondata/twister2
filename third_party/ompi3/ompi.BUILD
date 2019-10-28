@@ -348,7 +348,7 @@ genrule(
         'mkdir -p $$TMP_DIR',
         'cp -pLR $$(pwd)/external/ompi3/* $$TMP_DIR',
         'cd $$TMP_DIR',
-        './configure --prefix=$$INSTALL_DIR --enable-mpi-java --disable-mpi-fortran --with-jdk-bindir=$$(JAVA_HOME)/bin --with-jdk-headers=$$(JAVA_HOME)/include',
+        './configure --prefix=$$INSTALL_DIR --enable-mpi-java --disable-mpi-fortran --with-jdk-bindir=$$JAVA_HOME/bin --with-jdk-headers=$$JAVA_HOME/include',
         'make -j 4; make install',
         'rm -rf $$TMP_DIR',
     ]),
