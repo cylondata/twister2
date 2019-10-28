@@ -27,8 +27,8 @@ export JAVA_HOME PATH
 which java
 ``` 
 
-| After installing java, you may follow below two steps to automatically configure your environment and build twister2. Currently this works only on Debian distributions with sudo access|
-                                                                                                             | --- |
+| :exclamation: After installing java, you may follow below two steps to automatically configure your environment and build twister2. Currently this works only on Debian distributions with sudo access. Skip steps upto Twister2 Distribution if this is applicable.|
+| --- |
 ```bash
 git clone https://github.com/DSC-SPIDAL/twister2.git
 cd twister2
