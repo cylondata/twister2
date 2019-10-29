@@ -113,12 +113,11 @@ public class BatchTaskScheduler implements ITaskScheduler {
                                                 ComputeGraph... computeGraphs) {
     if (computeGraphs.length > 1) {
       addReceptorsCollectors(computeGraphs);
-      if (validateParallelism()) {
-        dependentGraphs = true;
-        for (ComputeGraph computeGraph : computeGraphs) {
-          TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
-          taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
-        }
+      validateParallelism();
+      dependentGraphs = true;
+      for (ComputeGraph computeGraph : computeGraphs) {
+        TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
+        taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
       }
     } else {
       TaskSchedulePlan taskSchedulePlan = schedule(computeGraphs[0], workerPlan);
@@ -291,7 +290,7 @@ public class BatchTaskScheduler implements ITaskScheduler {
   /**
    * This method is to validate the receptor and collector task parallelism in the task graphs.
    */
-  private boolean validateParallelism() {
+  private void validateParallelism() {
     for (Map.Entry<String, Integer> receivable : receivableNameMap.entrySet()) {
       if (collectibleNameMap.containsKey(receivable.getKey())) {
         int collectorParallel = collectibleNameMap.get(receivable.getKey());
@@ -301,7 +300,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
         }
       }
     }
-    return true;
   }
 
   /**
