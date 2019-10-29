@@ -100,7 +100,7 @@ You can compile the Twister2 distribution by using the bazel target as below.
 
 ```bash
 cd twister2
-bazel build --config=darwin scripts/package:tarpkgs
+bazel build --config=darwin scripts/package:tarpkgs --action_env=JAVA_HOME
 ```
 
 This will build twister2 distribution in the file
@@ -112,13 +112,13 @@ bazel-bin/scripts/package/twister2-0.3.0.tar.gz
 If you would like to compile the twister2 without building the distribution packages use the command
 
 ```bash
-bazel build --config=darwin twister2/...
+bazel build --config=darwin twister2/... --action_env=JAVA_HOME
 ```
 
 For compiling a specific target such as communications
 
 ```bash
-bazel build --config=darwin twister2/comms/src/java:comms-java
+bazel build --config=darwin twister2/comms/src/java:comms-java --action_env=JAVA_HOME
 ```
 
 ## Twister2 Distribution

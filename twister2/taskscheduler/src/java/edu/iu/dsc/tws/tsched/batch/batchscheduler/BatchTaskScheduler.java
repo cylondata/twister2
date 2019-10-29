@@ -14,7 +14,6 @@ package edu.iu.dsc.tws.tsched.batch.batchscheduler;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +39,7 @@ import edu.iu.dsc.tws.api.compute.schedule.elements.Worker;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerPlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.WorkerSchedulePlan;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.tsched.spi.common.TaskSchedulerContext;
 import edu.iu.dsc.tws.tsched.spi.taskschedule.TaskInstanceMapCalculation;
 import edu.iu.dsc.tws.tsched.utils.TaskAttributes;
@@ -72,8 +72,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
 
   private int index;
 
-  private int receptorParallelism = 0;
-
   private boolean dependentGraphs = false;
 
   private List<Integer> workerIdList = new ArrayList<>();
@@ -82,8 +80,8 @@ public class BatchTaskScheduler implements ITaskScheduler {
   private Map<Integer, List<TaskInstanceId>> batchTaskAllocation;
   private Map<String, TaskSchedulePlan> taskSchedulePlanMap = new LinkedHashMap<>();
 
-  private static Set<String> receivableNameSet = new HashSet<>();
-  private static Set<String> collectibleNameSet = new HashSet<>();
+  private static Map<String, Integer> receivableNameMap = new LinkedHashMap<>();
+  private static Map<String, Integer> collectibleNameMap = new LinkedHashMap<>();
 
   /**
    * This method initialize the task instance values with the values specified in the task config
@@ -114,12 +112,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
   public Map<String, TaskSchedulePlan> schedule(WorkerPlan workerPlan,
                                                 ComputeGraph... computeGraphs) {
     if (computeGraphs.length > 1) {
-      if (validateDependentGraphs(computeGraphs)) {
-        dependentGraphs = true;
-        for (ComputeGraph computeGraph : computeGraphs) {
-          TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
-          taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
-        }
+      addReceptorsCollectors(computeGraphs);
+      validateParallelism();
+      dependentGraphs = true;
+      for (ComputeGraph computeGraph : computeGraphs) {
+        TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
+        taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
       }
     } else {
       TaskSchedulePlan taskSchedulePlan = schedule(computeGraphs[0], workerPlan);
@@ -129,61 +127,35 @@ public class BatchTaskScheduler implements ITaskScheduler {
   }
 
   /**
-   * This method is to validate the receptor and collector task in the dataflow task graphs. The
-   * validation starts from the last leaf of the task graph.
-   */
-  private boolean validateDependentGraphs(ComputeGraph... computeGraphs) {
-    int length = computeGraphs.length;
-    return receptorTaskValidation(computeGraphs[length - 1])
-        && collectorTaskValidation(computeGraphs);
-  }
-
-  /**
    * This method is to validate the receptor task and it also has the receivable name set.
    */
-  private boolean receptorTaskValidation(ComputeGraph computeGraph) {
-    Set<Vertex> childTaskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
-    for (Vertex vertex : childTaskVertexSet) {
-      receptorParallelism = vertex.getParallelism();
-      INode iNode = vertex.getTask();
-      if (iNode instanceof Receptor) {
-        if (((Receptor) iNode).getReceivableNames() != null) {
-          receivableNameSet = ((Receptor) iNode).getReceivableNames();
-        }
-      }
-    }
-    return true;
-  }
-
-  /**
-   * This method is to validate the collector task and it validates that the parallelism value of
-   * collector task with the receptor tasks.
-   */
-  private boolean collectorTaskValidation(ComputeGraph... computeGraphs) {
-    for (int i = 0; i < computeGraphs.length - 1; i++) {
-      Set<Vertex> taskVertexSet = new LinkedHashSet<>(computeGraphs[i].getTaskVertexSet());
-      for (Vertex vertex : taskVertexSet) {
+  private void addReceptorsCollectors(ComputeGraph... computeGraphs) {
+    for (ComputeGraph computeGraph : computeGraphs) {
+      LinkedHashSet<Vertex> vertices = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
+      for (Vertex vertex : vertices) {
         INode iNode = vertex.getTask();
-        if (iNode instanceof Collector) {
-          int collectorParallelism = vertex.getParallelism();
-          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
-          if (receivableNameSet.containsAll(collectibleNameSet)) {
-            if (receptorParallelism != collectorParallelism) {
-              throw new TaskSchedulerException("Specify the same parallelism value for "
-                  + "the dependent task in the task graphs");
-            }
+        if (iNode instanceof Receptor) {
+          if (((Receptor) iNode).getReceivableNames() != null) {
+            ((Receptor) iNode).getReceivableNames().forEach(
+                key -> receivableNameMap.put(key, vertex.getParallelism()));
+          }
+        } else if (iNode instanceof Collector) {
+          if (((Collector) iNode).getCollectibleNames() != null) {
+            ((Collector) iNode).getCollectibleNames().forEach(
+                key -> collectibleNameMap.put(key, vertex.getParallelism()));
           }
         }
       }
     }
-    return true;
   }
 
   /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
    *
-   * @return TaskSchedulePlan
+   * @param computeGraph
+   * @param workerPlan   worker plan
+   * @return
    */
   @Override
   public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
@@ -261,25 +233,22 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
     index++;
     TaskSchedulePlan taskSchedulePlan = new TaskSchedulePlan(0, workerSchedulePlans);
-    Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
-    for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
-      Integer integer = entry.getKey();
-      WorkerSchedulePlan workerSchedulePlan = entry.getValue();
-      Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
-      LOG.fine("Graph Name:" + computeGraph.getGraphName() + "\tcontainer id:" + integer);
-      for (TaskInstancePlan ip : containerPlanTaskInstances) {
-        LOG.fine("Task Id:" + ip.getTaskId() + "\tIndex" + ip.getTaskIndex()
-            + "\tName:" + ip.getTaskName());
+    if (workerId == 0) {
+      Map<Integer, WorkerSchedulePlan> containersMap = taskSchedulePlan.getContainersMap();
+      for (Map.Entry<Integer, WorkerSchedulePlan> entry : containersMap.entrySet()) {
+        Integer integer = entry.getKey();
+        WorkerSchedulePlan workerSchedulePlan = entry.getValue();
+        Set<TaskInstancePlan> containerPlanTaskInstances = workerSchedulePlan.getTaskInstances();
+        LOG.fine("Graph Name:" + computeGraph.getGraphName() + "\tcontainer id:" + integer);
+        for (TaskInstancePlan ip : containerPlanTaskInstances) {
+          LOG.fine("Task Id:" + ip.getTaskId() + "\tIndex" + ip.getTaskIndex()
+              + "\tName:" + ip.getTaskName());
+        }
       }
     }
     return taskSchedulePlan;
   }
 
-  /**
-   * This method retrieves the parallel task map and the total number of task instances for the task
-   * vertex set. Then, it will allocate the instances into the number of containers allocated for
-   * the task in a round robin fashion.
-   */
   private Map<Integer, List<TaskInstanceId>> batchSchedulingAlgorithm(
       ComputeGraph graph, int numberOfContainers) throws TaskSchedulerException {
 
@@ -304,11 +273,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
       for (Vertex vertex : taskVertexSet) {
         INode iNode = vertex.getTask();
         if (iNode instanceof Collector) {
-          collectibleNameSet = ((Collector) iNode).getCollectibleNames();
-          storeDependentGraphParallelism(vertex.getName(), vertex.getParallelism());
+          ((Collector) iNode).getCollectibleNames().forEach(
+              key -> collectibleNameMap.put(key, vertex.getParallelism()));
         } else if (iNode instanceof Receptor) {
-          receivableNameSet = ((Receptor) iNode).getReceivableNames();
-          validateDependentGraphParallelism(vertex.getParallelism());
+          ((Receptor) iNode).getReceivableNames().forEach(
+              key -> receivableNameMap.put(key, vertex.getParallelism()));
+          validateParallelism();
         }
         independentTaskWorkerAllocation(graph, vertex, numberOfContainers, globalTaskIndex);
         globalTaskIndex++;
@@ -317,27 +287,25 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return batchTaskAllocation;
   }
 
-  private void validateDependentGraphParallelism(int receptorParallel) {
-    if (receivableNameSet.containsAll(collectibleNameSet)) {
-      for (Map.Entry<String, Integer> entry : dependentGraphParallelismMap.entrySet()) {
-        int collectorParallelism = entry.getValue();
-        if (receptorParallel != collectorParallelism) {
-          throw new TaskSchedulerException("Specify the same parallelism value for "
-              + "the dependent task in the task graphs");
+  /**
+   * This method is to validate the receptor and collector task parallelism in the task graphs.
+   */
+  private void validateParallelism() {
+    for (Map.Entry<String, Integer> receivable : receivableNameMap.entrySet()) {
+      if (collectibleNameMap.containsKey(receivable.getKey())) {
+        int collectorParallel = collectibleNameMap.get(receivable.getKey());
+        if (collectorParallel != receivable.getValue()) {
+          throw new Twister2RuntimeException("Please verify the dependent collector(s) and"
+              + " receptor(s) parallelism values which are not equal");
         }
       }
     }
   }
 
-  private static Map<String, Integer> dependentGraphParallelismMap = new HashMap<>();
-
-  private void storeDependentGraphParallelism(String taskName, int parallel) {
-    dependentGraphParallelismMap.put(taskName, parallel);
-  }
-
   /**
    * This method is for allocating the multiple dependent task graphs. First, it stores the
-   * scheduled worker list in the list for scheduling the next task graphs.
+   * scheduled worker list in the list for scheduling the next task graphs. It gets invoked
+   * when all the task graphs are connected together.
    */
   private void dependentTaskWorkerAllocation(ComputeGraph graph, Vertex vertex,
                                              int numberOfContainers, int globalTaskIndex) {
@@ -380,8 +348,14 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
   }
 
+
   /**
-   * This method is to schedule the individual task graph which is independent in nature.
+   * This method is to allocate the task for the individual task graph.
+   *
+   * @param graph
+   * @param vertex
+   * @param numberOfContainers
+   * @param globalTaskIndex
    */
   private void independentTaskWorkerAllocation(ComputeGraph graph, Vertex vertex,
                                                int numberOfContainers, int globalTaskIndex) {
@@ -420,6 +394,12 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
   }
 
+
+  /**
+   * It is to validate the parallelism of the receptor and collector inside the task graph.
+   *
+   * @param vertex
+   */
   private void validateReceptor(ComputeGraph graph, Vertex vertex) {
     Set<Edge> edges = graph.outEdges(vertex);
     for (Edge e : edges) {

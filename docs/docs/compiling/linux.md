@@ -17,20 +17,29 @@ Twister2 build needs several software installed on your system.
    * Extract the archive to a folder named `jdk1.8.0`
    * Set the following environment variables.
 
-     ```text
-     JAVA_HOME=<path-to-jdk1.8.0-directory>
-     PATH=$JAVA_HOME/bin:$PATH
-     export JAVA_HOME PATH
-     ```
+```text
+JAVA_HOME=<path-to-jdk1.8.0-directory>
+PATH=$JAVA_HOME/bin:$PATH
+export JAVA_HOME PATH
+```
      
 ```java
 which java
 ``` 
+
+| :exclamation: After installing java, you may follow below two steps to automatically configure your environment and build twister2. Currently this works only on Debian distributions with sudo access. Skip steps upto Twister2 Distribution if this is applicable.|
+| --- |
+```bash
+git clone https://github.com/DSC-SPIDAL/twister2.git
+cd twister2
+./build_linux.sh
+``` 
+
      
 3. Install the required tools
 
 ```bash
-   sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
+sudo apt-get install g++ git build-essential automake cmake libtool-bin zip libunwind-setjmp0-dev zlib1g-dev unzip pkg-config python-setuptools -y
 ```
 
 ```text
@@ -83,7 +92,7 @@ You can compile the Twister2 distribution by using the bazel target as below.
 
 ```bash
 cd twister2
-bazel build --config=ubuntu scripts/package:tarpkgs
+bazel build --config=ubuntu scripts/package:tarpkgs --action_env=JAVA_HOME
 ```
 
 This will build twister2 distribution in the file
@@ -95,13 +104,13 @@ bazel-bin/scripts/package/twister2-0.3.0.tar.gz
 If you would like to compile the twister2 without building the distribution packages use the command
 
 ```bash
-bazel build --config=ubuntu twister2/...
+bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
 ```
 
 For compiling a specific target such as communications
 
 ```bash
-bazel build --config=ubuntu twister2/comms/src/java:comms-java
+bazel build --config=ubuntu twister2/comms/src/java:comms-java --action_env=JAVA_HOME
 ```
 
 ## Twister2 Distribution

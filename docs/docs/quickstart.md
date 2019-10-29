@@ -9,7 +9,7 @@ Lets look at how to setup Twister2 and run few examples. Lets start with the sim
 ### Building Twister2
 
 First we need to build Twister2. [Compiling Twister2](compiling/compiling.md) explains how to build it. After building the code and
-following the instructions in [Twister2 Distribution](https://twister2.gitbook.io/twister2/compiling/linux#twister2-distribution) you should have a extracted folder named `twister2-0.3.0`, this would be your twister2 home folder.
+following the instructions in [Twister2 Distribution](compiling/linux.md) you should have a extracted folder named `twister2-0.3.0`, this would be your twister2 home folder.
 
 ### Starting parallel workers
 
@@ -58,8 +58,14 @@ public class HelloWorld implements IWorker {
             + "and I got a message: %s", workerID,
         workerController.getNumberOfWorkers(), helloKeyValue));
 
-    List<WorkerNetworkInfo> workerList = workerController.waitForAllWorkersToJoin(50000);
-    String workersStr = WorkerNetworkInfo.workerListAsString(workerList);
+    List<JobMasterAPI.WorkerInfo> workerList = null;
+    try {
+      workerList = workerController.getAllWorkers();
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
+    String workersStr = WorkerInfoUtils.workerListAsString(workerList);
     LOG.info("All workers have joined the job. Worker list: \n" + workersStr);
 
     try {
