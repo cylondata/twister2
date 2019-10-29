@@ -31,6 +31,14 @@ public class TaskSchedulerClassTest {
     private static final long serialVersionUID = -254264903510284748L;
 
     private Set<String> inputSet = new HashSet<>();
+    private String inputKey;
+
+    public TestSource() {
+    }
+
+    public TestSource(String inputkey) {
+      this.inputKey = inputkey;
+    }
 
     @Override
     public void execute() {
@@ -42,7 +50,7 @@ public class TaskSchedulerClassTest {
 
     @Override
     public IONames getReceivableNames() {
-      return IONames.declare("points", "centroids");
+      return IONames.declare(inputKey);
     }
   }
 
@@ -67,6 +75,14 @@ public class TaskSchedulerClassTest {
   public static class TestSink extends BaseSink implements Collector {
     private static final long serialVersionUID = -254264903510284748L;
 
+    private String inputKey;
+    public TestSink() {
+    }
+
+    public TestSink(String inputkey) {
+      this.inputKey = inputkey;
+    }
+
     @Override
     public boolean execute(IMessage message) {
       return false;
@@ -84,7 +100,7 @@ public class TaskSchedulerClassTest {
 
     @Override
     public IONames getCollectibleNames() {
-      return IONames.declare("centroids");
+      return IONames.declare(inputKey);
     }
   }
 
