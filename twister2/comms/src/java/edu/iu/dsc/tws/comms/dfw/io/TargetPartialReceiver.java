@@ -176,7 +176,6 @@ public class TargetPartialReceiver extends TargetReceiver {
   protected void addSyncMessage(int source, int target) {
     Set<Integer> syncs = syncsReceived.get(source);
     syncs.add(target);
-    LOG.info(String.format("Adding MERGE SYNC %d -> %d", source, target));
     if (syncs.size() == targets.length) {
       sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
       sourceAcceptMessages.put(source, false);
@@ -273,13 +272,18 @@ public class TargetPartialReceiver extends TargetReceiver {
   public boolean sync() {
     boolean needProgress = false;
 
+    // we need to wait until every source is ALL_SYNCS_RECEIVED
     for (int i = 0; i < thisSourceArray.length; i++) {
       int source = thisSourceArray[i];
       ReceiverState state = sourceStates.get(source);
 
-      if (state != ReceiverState.ALL_SYNCS_RECEIVED) {
-        continue;
+      if (state != ReceiverState.ALL_SYNCS_RECEIVED && state != ReceiverState.SYNCED) {
+        return true;
       }
+    }
+
+    for (int i = 0; i < thisSourceArray.length; i++) {
+      int source = thisSourceArray[i];
 
       Set<Integer> finishedDestPerSource = syncSent.get(source);
       for (int j = 0; j < targets.length; j++) {
@@ -297,7 +301,6 @@ public class TargetPartialReceiver extends TargetReceiver {
           }
 
           if (operation.sendPartial(source, message, flags, dest)) {
-            LOG.info(String.format("SENT - %d -> %d", source, dest));
             finishedDestPerSource.add(dest);
 
             if (finishedDestPerSource.size() == thisDestinations.size()) {

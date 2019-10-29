@@ -24,7 +24,7 @@ import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.comms.dfw.MToNRing2;
+import edu.iu.dsc.tws.comms.dfw.MToNChain;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.partition.PartitionPartialReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.reduce.keyed.KReduceBatchFinalReceiver;
@@ -59,7 +59,7 @@ public class BKeyedReduce extends BaseOperation {
           keyType, keyType, edgeId, messageSchema);
     } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
-      op = new MToNRing2(comm.getConfig(), comm.getChannel(),
+      op = new MToNChain(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, new KReduceBatchFinalReceiver(fnc, rcvr), partialReceiver,
           dataType, dataType, keyType, keyType, edgeId, messageSchema);
     }
