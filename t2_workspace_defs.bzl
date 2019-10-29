@@ -69,6 +69,9 @@ def load_modules():
             "org.apache.curator:curator-recipes:4.2.0",
             "org.apache.zookeeper:zookeeper:3.5.6",
             "org.apache.zookeeper:zookeeper-jute:3.5.6",
+            "io.kubernetes:client-java:6.0.1",
+            "io.kubernetes:client-java-proto:6.0.1",
+            "io.kubernetes:client-java-api:6.0.1",
         ],
         repositories = [
             "https://maven.google.com",
@@ -92,7 +95,6 @@ def load_modules():
     _maven_import(artifact = "commons-logging:commons-logging:1.1.1", licenses = ["notice"], sha256 = "ce6f913cad1f0db3aad70186d65c5bc7ffcc9a99e3fe8e0b137312819f7c362f")
     _maven_import(artifact = "org.lmdbjava:lmdbjava-native-osx-x86_64:0.9.21-1", licenses = ["notice"], sha256 = "5ebe0302edd76cb63b25fdfea86f75af1e917c0c0355e12f939fccb3c83409bc")
     _maven_import(artifact = "org.ow2.asm:asm:4.2", licenses = ["notice"], sha256 = "3c7e45fe303bd02193d951df134255033b9d8147e77508d09703bac245e6cd9b")
-    _maven_import(artifact = "io.kubernetes:client-java:3.0.0", licenses = ["notice"], sha256 = "778f965df7c036a7f6b81b0f56fe4569b62a91792f6d1366aa5bc712dbec4357")
     _maven_import(artifact = "com.squareup.okio:okio:1.6.0", licenses = ["notice"], sha256 = "114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266")
     _maven_import(artifact = "junit:junit:4.11", licenses = ["notice"], sha256 = "90a8e1603eeca48e7e879f3afbc9560715322985f39a274f6f6070b43f9d06fe")
     _maven_import(artifact = "com.google.code.findbugs:jsr305:3.0.0", licenses = ["notice"], sha256 = "bec0b24dcb23f9670172724826584802b80ae6cbdaba03bdebdef9327b962f6a")
@@ -150,8 +152,6 @@ def load_modules():
     _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs-client:2.9.0", licenses = ["notice"], sha256 = "a7af83f48abfeee4dbb10ae0695d7f3a415f1a60d30a098e5f194f86fabb64f0")
     _maven_import(artifact = "org.apache.mesos:mesos:1.5.0", licenses = ["notice"], sha256 = "66cb1222778c0fd665d99bbd3b57e05e769fd5fe2683374fecc82dab50cf9376")
     _maven_import(artifact = "org.apache.hadoop:hadoop-hdfs:2.9.0", licenses = ["notice"], sha256 = "1cb5ed365bc486b802215d8b374a885d5743e760d733ed91948aa7ee6519cfd8")
-    _maven_import(artifact = "io.kubernetes:client-java-proto:3.0.0", licenses = ["notice"], sha256 = "ed6b863c1cf141220c6c7e9160b2b139b8b1c18ec7334d713d451b7d804275a4")
-    _maven_import(artifact = "io.kubernetes:client-java-api:3.0.0", licenses = ["notice"], sha256 = "22e51b86c3ea2421c0413be5b4c6978ee0a6f40532a79df4dcca0f4d3a02bfc0")
     _maven_import(artifact = "org.codehaus.woodstox:stax2-api:3.0.1", licenses = ["notice"], sha256 = "68ed11b72b138356063b8baf8551b9d67f46717b3c0001890949195c5b153199")
     _maven_import(artifact = "log4j:log4j:1.2.17", licenses = ["notice"], sha256 = "1d31696445697720527091754369082a6651bd49781b6005deb94e56753406f9")
     _maven_import(artifact = "it.unimi.dsi:fastutil:7.0.13", licenses = ["notice"], sha256 = "2ec909c77642b9c0220ab3e1c69bfcad3072789e2bcae5acdb5fb1df1ca14f04")

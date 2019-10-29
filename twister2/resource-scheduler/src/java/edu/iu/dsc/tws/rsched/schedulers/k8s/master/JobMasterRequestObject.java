@@ -45,10 +45,10 @@ import io.kubernetes.client.models.V1ResourceRequirements;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServicePort;
 import io.kubernetes.client.models.V1ServiceSpec;
+import io.kubernetes.client.models.V1StatefulSet;
+import io.kubernetes.client.models.V1StatefulSetSpec;
 import io.kubernetes.client.models.V1Volume;
 import io.kubernetes.client.models.V1VolumeMount;
-import io.kubernetes.client.models.V1beta2StatefulSet;
-import io.kubernetes.client.models.V1beta2StatefulSetSpec;
 
 public final class JobMasterRequestObject {
   private static final Logger LOG = Logger.getLogger(JobMasterRequestObject.class.getName());
@@ -70,7 +70,7 @@ public final class JobMasterRequestObject {
    * create StatefulSet object for a job
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetObject(String nodeInfoListStr) {
+  public static V1StatefulSet createStatefulSetObject(String nodeInfoListStr) {
 
     if (config == null) {
       LOG.severe("JobMasterRequestObject.init method has not been called.");
@@ -78,9 +78,7 @@ public final class JobMasterRequestObject {
     }
     encodedNodeInfoList = nodeInfoListStr;
 
-    V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
-    statefulSet.setApiVersion("apps/v1beta2");
-    statefulSet.setKind("StatefulSet");
+    V1StatefulSet statefulSet = new V1StatefulSet();
 
     // construct metadata and set for jobName setting
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -88,7 +86,7 @@ public final class JobMasterRequestObject {
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
-    V1beta2StatefulSetSpec setSpec = new V1beta2StatefulSetSpec();
+    V1StatefulSetSpec setSpec = new V1StatefulSetSpec();
     setSpec.serviceName(KubernetesUtils.createJobMasterServiceName(jobName));
     setSpec.setReplicas(1);
 
