@@ -12,17 +12,28 @@
 
 package edu.iu.dsc.tws.tset;
 
+import java.util.Set;
+import java.util.StringJoiner;
+
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
+import edu.iu.dsc.tws.api.tset.TBase;
 
 public final class TSetUtils {
-  private static long genCount = 0;
-
   private TSetUtils() {
   }
 
-  public static String generateName(String prefix) {
-    return prefix + (++genCount);
+  public static String generateBuildId(Set<? extends TBase> roots) {
+    StringJoiner joiner = new StringJoiner("_");
+    joiner.add("build");
+    for (TBase t : roots) {
+      joiner.add(t.getId());
+    }
+    return joiner.toString();
+  }
+
+  public static String generateBuildId(TBase root) {
+    return "build_" + root.getId();
   }
 
   public static MessageType getDataType(Class type) {

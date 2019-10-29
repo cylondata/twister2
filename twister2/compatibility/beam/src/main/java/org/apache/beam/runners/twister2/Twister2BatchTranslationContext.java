@@ -20,7 +20,7 @@ package org.apache.beam.runners.twister2;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 
 /**
  * Twister2BatchTranslationContext.
@@ -32,9 +32,9 @@ public class Twister2BatchTranslationContext extends Twister2TranslationContext 
   }
 
   @Override
-  public <T> BBaseTSet<WindowedValue<T>> getInputDataSet(PValue input) {
-    BBaseTSet<WindowedValue<T>> baseTSet =
-        (BBaseTSet<WindowedValue<T>>) super.<T>getInputDataSet(input);
+  public <T> BatchTSetImpl<WindowedValue<T>> getInputDataSet(PValue input) {
+    BatchTSetImpl<WindowedValue<T>> baseTSet =
+        (BatchTSetImpl<WindowedValue<T>>) super.<T>getInputDataSet(input);
     return baseTSet;
   }
 }

@@ -13,7 +13,7 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-public abstract class BaseComputeCollectorFunc<O, I> extends BaseTFunction implements
+public abstract class BaseComputeCollectorFunc<O, I> extends BaseTFunction<O, I> implements
     ComputeCollectorFunc<O, I> {
 
 }

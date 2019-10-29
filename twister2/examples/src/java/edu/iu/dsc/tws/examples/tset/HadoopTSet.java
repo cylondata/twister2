@@ -38,10 +38,12 @@ import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class HadoopTSet implements IWorker, Serializable {
   private static final Logger LOG = Logger.getLogger(HadoopTSet.class.getName());
+
   @Override
   public void execute(Config config, int workerID, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
@@ -63,16 +65,14 @@ public class HadoopTSet implements IWorker, Serializable {
               }
             });
 
-    source.direct().sink(new SinkFunc<Iterator<String>>() {
-      @Override
-      public boolean add(Iterator<String> value) {
-        while (value.hasNext()) {
-          String next = value.next();
-          LOG.info("Received value: " + next);
-        }
-        return true;
+    SinkTSet<Iterator<String>> sink = source.direct().sink((SinkFunc<Iterator<String>>) value -> {
+      while (value.hasNext()) {
+        String next = value.next();
+        LOG.info("Received value: " + next);
       }
+      return true;
     });
+    tSetEnv.run(sink);
   }
 
   public static void main(String[] args) {

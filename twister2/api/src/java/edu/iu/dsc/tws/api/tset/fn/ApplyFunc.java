@@ -16,7 +16,7 @@ package edu.iu.dsc.tws.api.tset.fn;
  *
  * @param <T> data type
  */
-public interface ApplyFunc<T> extends TFunction {
+public interface ApplyFunc<T> extends TFunction<T, T> {
 
   void apply(T data);
 }

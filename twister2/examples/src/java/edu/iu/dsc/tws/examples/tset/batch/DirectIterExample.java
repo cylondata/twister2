@@ -32,14 +32,22 @@ public class DirectIterExample extends BatchTsetExample {
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
+
+    // cache the src input (first task graph will be created and executed)
+    CachedTSet<Integer> cachedInput = src.direct().cache();
+
     LOG.info("test direct iteration");
-    ComputeTSet<Integer, Iterator<Integer>> testmap = src.direct().map(input -> input);
-    CachedTSet<Integer> cached = null;
+    ComputeTSet<Object, Iterator<Integer>> lazyForEach = cachedInput.direct().lazyForEach(
+        input -> {
+          LOG.info("##" + input.toString());
+        });
+
+    // eval the lazyCached tset for 4 times (second task graph will be created once but
+    // will be executed 4 times)
     for (int i = 0; i < 4; i++) {
-      cached = testmap.cache(true);
+      env.eval(lazyForEach);
     }
-    LOG.info("out: " + cached.getDataObject().getPartitions().length);
-    testmap.finishIter();
+    env.finishEval(lazyForEach);
   }
 
 

@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.api.compute.modifiers;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 
 public final class IONames extends HashSet<String> {
@@ -22,5 +23,11 @@ public final class IONames extends HashSet<String> {
 
   public static IONames declare(String... variables) {
     return new IONames(variables);
+  }
+
+  public static IONames declare(Collection<String> variables) {
+    IONames strings = new IONames();
+    strings.addAll(variables);
+    return strings;
   }
 }

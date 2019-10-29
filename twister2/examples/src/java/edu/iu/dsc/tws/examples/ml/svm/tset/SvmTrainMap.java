@@ -24,7 +24,8 @@ import edu.iu.dsc.tws.examples.ml.svm.util.BinaryBatchModel;
 import edu.iu.dsc.tws.examples.ml.svm.util.DataUtils;
 import edu.iu.dsc.tws.examples.ml.svm.util.SVMJobParameters;
 
-public class SvmTrainMap extends BaseTFunction implements MapFunc<double[], double[][]> {
+public class SvmTrainMap extends BaseTFunction<double[], double[][]>
+    implements MapFunc<double[], double[][]> {
 
   private static final Logger LOG = Logger.getLogger(SvmTrainMap.class.getName());
 
@@ -59,8 +60,7 @@ public class SvmTrainMap extends BaseTFunction implements MapFunc<double[], doub
     this.binaryBatchModel = DataUtils.updateModelData(this.binaryBatchModel, dataPoints);
     this.binaryBatchModel.setW(
         (double[]) getTSetContext().getInput(Constants.SimpleGraphConfig.INPUT_WEIGHT_VECTOR)
-            .getPartition(0).getConsumer().next());
-    // todo: this is not the best way to do it! partitionID should correspond to task ID
+            .getConsumer().next());
 
     this.pegasosSgdSvm = new PegasosSgdSvm(this.binaryBatchModel.getW(),
         this.binaryBatchModel.getX(), this.binaryBatchModel.getY(),

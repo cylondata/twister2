@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.Path;
-import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
@@ -65,11 +64,13 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     long startTime = System.currentTimeMillis();
     CachedTSet<double[][]> points =
-        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache(false);
+        tc.createSource(new PointsSource(), parallelismValue).setName("dataSource").cache();
+
     CachedTSet<double[][]> centers =
-        tc.createSource(new CenterSource(), parallelismValue).cache(false);
+        tc.createSource(new CenterSource(), parallelismValue).cache();
 
     long endTimeData = System.currentTimeMillis();
+
     ComputeTSet<double[][], Iterator<double[][]>> kmeansTSet =
         points.direct().map(new KMeansMap());
 
@@ -86,29 +87,25 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
           return newCentroids;
         }).map(new AverageCenters());
 
+    kmeansTSet.addInput("centers", centers);
+
+    CachedTSet<double[][]> cached = reduced.lazyCache();
+
     for (int i = 0; i < iterations; i++) {
-      kmeansTSet.addInput("centers", centers);
-      centers = reduced.cache(true);
+      tc.evalAndUpdate(cached, centers);
     }
 
-    reduced.finishIter();
-
-    DataPartition<?> centroidPartition = centers.getDataObject().getPartition(workerId);
-    double[][] centroid = null;
-    if (centroidPartition.getConsumer().hasNext()) {
-      centroid = (double[][]) centroidPartition.getConsumer().next();
-    }
+    tc.finishEval(cached);
 
     long endTime = System.currentTimeMillis();
     if (workerId == 0) {
       LOG.info("Data Load time : " + (endTimeData - startTime) + "\n"
           + "Total Time : " + (endTime - startTime)
           + "Compute Time : " + (endTime - endTimeData));
-      if (workerId == 0) {
-        LOG.info("Final Centroids After\t" + iterations + "\titerations\t"
-            + Arrays.toString(centroid[0]));
 
-      }
+      LOG.info("Final Centroids After\t" + iterations + "\titerations\t");
+
+      centers.direct().forEach(i -> LOG.info(Arrays.toString(i)));
     }
   }
 
@@ -126,15 +123,15 @@ public class KMeansTsetJob implements BatchTSetIWorker, Serializable {
 
     @Override
     public double[][] map(double[][] data) {
-      double[][] centers = (double[][]) getTSetContext().getInput("centers").
-          getPartition(getTSetContext().getIndex()).getConsumer().next();
+      double[][] centers = (double[][]) getTSetContext()
+          .getInput("centers").getConsumer().next();
       KMeansCalculator kMeansCalculator = new KMeansCalculator(data, centers, dimension);
       return kMeansCalculator.calculate();
     }
   }
 
 
-  private class   AverageCenters implements MapFunc<double[][], double[][]> {
+  private class AverageCenters implements MapFunc<double[][], double[][]> {
     @Override
     public double[][] map(double[][] centers) {
       //The centers that are received at this map is a the sum of all points assigned to each

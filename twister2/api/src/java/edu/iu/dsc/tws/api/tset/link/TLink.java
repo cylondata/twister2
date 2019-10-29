@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.link;
 
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -26,7 +27,7 @@ import edu.iu.dsc.tws.api.tset.sets.TSet;
  * @param <T1> Type output from the communication layer for the corresponding edge
  * @param <T0> Base type of the edge
  */
-public interface TLink<T1, T0> {
+public interface TLink<T1, T0> extends TBase {
 
   /**
    * Name of the TSet and return the same tlink
@@ -34,13 +35,14 @@ public interface TLink<T1, T0> {
    * @param name name
    * @return same TLink
    */
+  @Override
   TLink<T1, T0> setName(String name);
 
   /**
    * Base compute implementation
    *
    * @param computeFunction comp function. Takes in T0 type object and map to the output type O
-   * @param <O> output tset base type
+   * @param <O>             output tset base type
    * @return output TSet
    */
   <O> TSet<O> compute(ComputeFunc<O, T1> computeFunction);
@@ -49,7 +51,7 @@ public interface TLink<T1, T0> {
    * Base compute implementation which would take in a Collector<O>
    *
    * @param computeFunction compute function with collector
-   * @param <O> output type (Collector type)
+   * @param <O>             output type (Collector type)
    * @return output TSet
    */
   <O> TSet<O> compute(ComputeCollectorFunc<O, T1> computeFunction);
@@ -58,7 +60,7 @@ public interface TLink<T1, T0> {
    * Elementwise map operation
    *
    * @param mapFn map function T0 to O
-   * @param <O> output type
+   * @param <O>   output type
    * @return output TSet
    */
   <O> TSet<O> map(MapFunc<O, T0> mapFn);
@@ -67,7 +69,7 @@ public interface TLink<T1, T0> {
    * Flatmap operation
    *
    * @param mapFn map function which can produce multiple elements for a single <T0> element
-   * @param <O> map function to T0 to multiple elements of <O>
+   * @param <O>   map function to T0 to multiple elements of <O>
    * @return output TSet
    */
   <O> TSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
@@ -83,7 +85,7 @@ public interface TLink<T1, T0> {
    * Sink function
    *
    * @param sinkFunction sink function which takes in <T1>. Similar to a compute, but would not
-   * return any TSet
+   *                     return any TSet
    */
-  void sink(SinkFunc<T1> sinkFunction);
+  TBase sink(SinkFunc<T1> sinkFunction);
 }

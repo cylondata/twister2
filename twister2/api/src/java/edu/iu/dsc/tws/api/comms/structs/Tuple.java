@@ -33,7 +33,8 @@ public class Tuple<K, V> {
 
   /**
    * Create a tuple wit key and value
-   * @param key first value
+   *
+   * @param key   first value
    * @param value second value
    */
   public Tuple(K key, V value) {

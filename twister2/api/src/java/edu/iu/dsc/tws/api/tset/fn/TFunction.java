@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.tset.TSetContext;
 /**
  * Base class for all the functions in TSet implementation
  */
-public interface TFunction extends Serializable {
+public interface TFunction<O, I> extends Serializable {
 
   /**
    * Prepare the function. Use this context in case you need to add/get inputs

@@ -16,10 +16,9 @@ package edu.iu.dsc.tws.tset.links.streaming;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 
-public class SPartitionTLink<T> extends SSingleLink<T> {
+public class SPartitionTLink<T> extends StreamingSingleLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 
@@ -34,7 +33,7 @@ public class SPartitionTLink<T> extends SSingleLink<T> {
 
   public SPartitionTLink(StreamingTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                          int sourceParallelism, int targetParallelism) {
-    super(tSetEnv, TSetUtils.generateName("spartition"), sourceParallelism,
+    super(tSetEnv, "spartition", sourceParallelism,
         targetParallelism);
     this.partitionFunction = parFn;
   }

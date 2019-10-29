@@ -30,19 +30,19 @@ public class SDirectExample extends StreamingTsetExample {
 
   @Override
   public void buildGraph(StreamingTSetEnvironment env) {
-    SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
+    SSourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM).setName("src");
 
-    SDirectTLink<Integer> link = src.direct();
+    SDirectTLink<Integer> link = src.direct().setName("dir");
 
-    link.map(i -> i * 2).direct().forEach(i -> LOG.info("m" + i.toString()));
+    link.map(i -> i * 2).setName("map").direct().forEach(i -> LOG.info("m" + i.toString()));
 
-    link.flatmap((i, c) -> c.collect("fm" + i))
+    link.flatmap((i, c) -> c.collect("fm" + i)).setName("flatmap")
         .direct().forEach(i -> LOG.info(i.toString()));
 
-    link.compute(i -> i + "C")
+    link.compute(i -> i + "C").setName("compute")
         .direct().forEach(i -> LOG.info(i));
 
-    link.compute((input, output) -> output.collect(input + "DD"))
+    link.compute((input, output) -> output.collect(input + "DD")).setName("computec")
         .direct().forEach(s -> LOG.info(s.toString()));
   }
 

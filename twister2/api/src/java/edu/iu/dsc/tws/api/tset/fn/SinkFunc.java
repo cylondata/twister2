@@ -24,13 +24,14 @@
 package edu.iu.dsc.tws.api.tset.fn;
 
 import edu.iu.dsc.tws.api.dataset.DataPartition;
+import edu.iu.dsc.tws.api.dataset.EmptyDataPartition;
 
 /**
  * Add a value at the end of the graph
  *
  * @param <T> input type of sink
  */
-public interface SinkFunc<T> extends TFunction {
+public interface SinkFunc<T> extends TFunction<T, T> {
   /**
    * Add a value
    *
@@ -54,7 +55,6 @@ public interface SinkFunc<T> extends TFunction {
    * be T
    */
   default DataPartition<?> get() {
-    throw new UnsupportedOperationException("Get is not supported for this task, please"
-        + "override the get method in the Sink interface to add functionality");
+    return EmptyDataPartition.getInstance();
   }
 }

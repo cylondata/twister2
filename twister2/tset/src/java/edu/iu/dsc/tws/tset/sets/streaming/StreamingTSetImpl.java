@@ -28,13 +28,11 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.TSet;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTSet;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.links.streaming.SAllGatherTLink;
@@ -46,9 +44,9 @@ import edu.iu.dsc.tws.tset.links.streaming.SReduceTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SReplicateTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<T> {
+public abstract class StreamingTSetImpl<T> extends BaseTSet<T> implements StreamingTSet<T> {
 
-  public SBaseTSet(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
+  public StreamingTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -110,18 +108,18 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
   @Override
   public SComputeTSet<T, T> union(TSet<T> other) {
 
-    if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
+    if (this.getParallelism() != ((StreamingTSetImpl) other).getParallelism()) {
       throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
           + "perform a union operation");
     }
 
-    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+    SComputeTSet<T, T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
     SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-    addChildToGraph((SBaseTSet) other, directOther);
+    addChildToGraph(other, directOther);
     addChildToGraph(directOther, union);
     // now the following relationship is created
     // this __ directThis __ unionTSet
@@ -132,18 +130,18 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
 
   @Override
   public SComputeTSet<T, T> union(Collection<TSet<T>> tSets) {
-    SComputeTSet<T, T> union = direct().compute(TSetUtils.generateName("sunion"),
+    SComputeTSet<T, T> union = direct().compute("sunion",
         new MapCompute<>((MapFunc<T, T>) input -> input));
     // now the following relationship is created
     // this -- directThis -- unionTSet
 
     for (TSet<T> other : tSets) {
-      if (this.getParallelism() != ((SBaseTSet) other).getParallelism()) {
+      if (this.getParallelism() != ((StreamingTSetImpl) other).getParallelism()) {
         throw new IllegalStateException("Parallelism of the TSets need to be the same in order to"
             + "perform a union operation");
       }
       SDirectTLink<T> directOther = new SDirectTLink<>(getTSetEnv(), getParallelism());
-      addChildToGraph((SBaseTSet) other, directOther);
+      addChildToGraph(other, directOther);
       addChildToGraph(directOther, union);
     }
     return union;
@@ -167,11 +165,4 @@ public abstract class SBaseTSet<T> extends BaseTSet<T> implements StreamingTSet<
     addChildToGraph(cloneTSet);
     return cloneTSet;
   }
-
-  @Override
-  public boolean addInput(String key, Cacheable<?> input) {
-    getTSetEnv().addInput(getId(), key, input);
-    return true;
-  }
-
 }

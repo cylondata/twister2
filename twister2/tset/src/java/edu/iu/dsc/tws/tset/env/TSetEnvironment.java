@@ -28,19 +28,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.Cacheable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.dataset.EmptyDataObject;
+import edu.iu.dsc.tws.api.tset.sets.TupleTSet;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-import edu.iu.dsc.tws.tset.TSetGraph;
+import edu.iu.dsc.tws.tset.TBaseGraph;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
-import edu.iu.dsc.tws.tset.sets.BuildableTSet;
 
 /**
  * Entry point to tset operations. This is a singleton which initializes as
@@ -50,21 +47,21 @@ public abstract class TSetEnvironment {
   private static final Logger LOG = Logger.getLogger(TSetEnvironment.class.getName());
 
   private WorkerEnvironment workerEnv;
-  private TSetGraph tsetGraph;
+  private TBaseGraph tBaseGraph;
   private TaskExecutor taskExecutor;
-  private ComputeGraph itergraph;
-  private ExecutionPlan iterexecutionPlan;
+
   private int defaultParallelism = 1;
   private boolean isCDFW = false;
 
-  private Map<String, Map<String, Cacheable<?>>> tSetInputMap = new HashMap<>();
+  // map (tsetID --> ( map ( input tset id --> input key)))
+  private Map<String, Map<String, String>> tSetInputMap = new HashMap<>();
 
   private static volatile TSetEnvironment thisTSetEnv;
 
   protected TSetEnvironment(WorkerEnvironment wEnv) {
     this.workerEnv = wEnv;
 
-    this.tsetGraph = new TSetGraph(this, getOperationMode());
+    this.tBaseGraph = new TBaseGraph(getOperationMode());
 
     // can not use task env at the moment because it does not support graph builder API
     this.taskExecutor = new TaskExecutor(workerEnv);
@@ -75,20 +72,29 @@ public abstract class TSetEnvironment {
    */
   protected TSetEnvironment() {
     this.isCDFW = true;
-    this.tsetGraph = new TSetGraph(this, getOperationMode());
+    this.tBaseGraph = new TBaseGraph(getOperationMode());
   }
 
   public abstract OperationMode getOperationMode();
 
   public abstract <T> BaseTSet<T> createSource(SourceFunc<T> source, int parallelism);
 
+  public abstract <T> BaseTSet<T> createSource(String name, SourceFunc<T> source, int parallelism);
+
+  public abstract <K, V> TupleTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
+                                                           int parallelism);
+
+  public abstract <K, V> TupleTSet<K, V> createKeyedSource(String name,
+                                                           SourceFunc<Tuple<K, V>> source,
+                                                           int parallelism);
+
   /**
    * Returns the tset graph
    *
    * @return tset graph
    */
-  public TSetGraph getGraph() {
-    return tsetGraph;
+  public TBaseGraph getGraph() {
+    return tBaseGraph;
   }
 
   /**
@@ -127,97 +133,49 @@ public abstract class TSetEnvironment {
     return workerEnv.getWorkerId();
   }
 
-  /**
-   * Runs the entire TSet graph
-   */
-  public void run() {
-    ComputeGraph graph = tsetGraph.build();
-    executeDataFlowGraph(graph, null, false);
+  TBaseGraph getTSetGraph() {
+    return tBaseGraph;
   }
 
-  protected TSetGraph getTSetGraph() {
-    return tsetGraph;
+  TaskExecutor getTaskExecutor() {
+    return taskExecutor;
   }
 
   /**
    * execute data flow graph
    *
-   * @param <T> type of the output data object
-   * @param dataflowGraph data flow graph
-   * @param outputTset output tset. If null, then no output would be returned
-   * @return output as a data object if outputTset is not null. Else null
+   * @param buildContext data flow graph
    */
-  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
-                                                   BuildableTSet outputTset, boolean isIterative) {
-    ExecutionPlan executionPlan = null;
-    if (isIterative && iterexecutionPlan != null) {
-      executionPlan = iterexecutionPlan;
-    } else {
-      executionPlan = taskExecutor.plan(dataflowGraph);
-      if (isIterative) {
-        iterexecutionPlan = executionPlan;
-        itergraph = dataflowGraph;
-      }
-    }
+  protected void executeBuildContext(BuildContext buildContext) {
+    // build the context which will create compute graph and execution plan
+    buildContext.build(taskExecutor);
 
-    LOG.fine(executionPlan::toString);
-    LOG.fine(() -> "edges: " + dataflowGraph.getDirectedEdgesSet());
-    LOG.fine(() -> "vertices: " + dataflowGraph.getTaskVertexSet());
+    LOG.fine(buildContext.getComputeGraph()::toString);
+    LOG.fine(() -> "edges: " + buildContext.getComputeGraph().getDirectedEdgesSet());
+    LOG.fine(() -> "vertices: " + buildContext.getComputeGraph().getTaskVertexSet());
 
-    pushInputsToFunctions(dataflowGraph, executionPlan);
-    if (isIterative) {
-      taskExecutor.itrExecute(dataflowGraph, executionPlan);
-    } else {
-      taskExecutor.execute(dataflowGraph, executionPlan);
-
-      // once a graph is built and executed, reset the underlying builder!
-      tsetGraph.resetDfwGraphBuilder();
-    }
-
-    // output tset alone does not guarantees that there will be an output available.
-    // Example: if the output is done after a reduce, parallelism(output tset) = 1. Then only
-    // executor 1 would have an output to get.
-    if (outputTset != null && executionPlan.isNodeAvailable(outputTset.getId())) {
-      return this.taskExecutor.getOutput(null, executionPlan, outputTset.getId());
-    }
-
-    // if there is no output, an empty data object needs to be returned!
-    return new EmptyDataObject<>();
-  }
-
-  public void finishIter() {
-    taskExecutor.closeExecution(itergraph, iterexecutionPlan);
-    tsetGraph.resetDfwGraphBuilder();
-    itergraph = null;
-    iterexecutionPlan = null;
+    taskExecutor.execute(buildContext.getComputeGraph(), buildContext.getExecutionPlan());
   }
 
   /**
    * Adds inputs to tasks
    *
-   * @param taskName task name
-   * @param key identifier/ key for the input
-   * @param input a cacheable object which returns a {@link DataObject}
+   * @param tSetID      task name
+   * @param inputTSetID identifier/ inputTSetID for the inputKey
+   * @param inputKey    a cacheable object which returns a {@link DataObject}
    */
-  public void addInput(String taskName, String key, Cacheable<?> input) {
-    Map<String, Cacheable<?>> temp = tSetInputMap.getOrDefault(taskName, new HashMap<>());
-    temp.put(key, input);
-    tSetInputMap.put(taskName, temp);
+  public void addInput(String tSetID, String inputTSetID, String inputKey) {
+    if (tSetInputMap.containsKey(tSetID)) {
+      tSetInputMap.get(tSetID).put(inputTSetID, inputKey);
+    } else {
+      Map<String, String> temp = new HashMap<>();
+      temp.put(inputTSetID, inputKey);
+      tSetInputMap.put(tSetID, temp);
+    }
   }
 
-  /**
-   * pushes the inputs into each task before the task execution is done
-   *
-   * @param executionPlan the built execution plan
-   */
-  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    for (String taskName : tSetInputMap.keySet()) {
-      Map<String, Cacheable<?>> tempMap = tSetInputMap.get(taskName);
-      for (String keyName : tempMap.keySet()) {
-        taskExecutor.addInput(graph, executionPlan, taskName,
-            keyName, tempMap.get(keyName).getDataObject());
-      }
-    }
+  public Map<String, String> getInputs(String tSetID) {
+    return tSetInputMap.getOrDefault(tSetID, new HashMap<>());
   }
 
   // TSetEnvironment singleton initialization

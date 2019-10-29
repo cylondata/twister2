@@ -13,50 +13,51 @@
 
 package edu.iu.dsc.tws.tset.links.streaming;
 
+import java.util.Iterator;
+
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.link.streaming.StreamingTupleMappableLink;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
-import edu.iu.dsc.tws.tset.fn.FlatMapCompute;
-import edu.iu.dsc.tws.tset.fn.ForEachCompute;
-import edu.iu.dsc.tws.tset.fn.MapCompute;
-import edu.iu.dsc.tws.tset.ops.MapToTupleOp;
+import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
+import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
+import edu.iu.dsc.tws.tset.fn.MapIterCompute;
 import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
-public abstract class SSingleLink<T> extends SBaseTLink<T, T> implements
-    StreamingTupleMappableLink<T> {
+public abstract class StreamingIteratorLink<T> extends StreamingTLinkImpl<Iterator<T>, T>
+    implements StreamingTupleMappableLink<T> {
 
-  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP) {
-    super(env, n, sourceP, sourceP);
+  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP) {
+    this(env, n, sourceP, sourceP);
   }
 
-  SSingleLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingIteratorLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
   @Override
-  public <P> SComputeTSet<P, T> map(MapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("smap"), new MapCompute<>(mapFn));
+  public <P> SComputeTSet<P, Iterator<T>> map(MapFunc<P, T> mapFn) {
+    return compute("smap", new MapIterCompute<>(mapFn));
   }
 
   @Override
-  public <P> SComputeTSet<P, T> flatmap(FlatMapFunc<P, T> mapFn) {
-    return compute(TSetUtils.generateName("sflatmap"), new FlatMapCompute<>(mapFn));
+  public <P> SComputeTSet<P, Iterator<T>> flatmap(FlatMapFunc<P, T> mapFn) {
+    return compute("sflatmap", new FlatMapIterCompute<>(mapFn));
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
-    SComputeTSet<Object, T> set = compute(TSetUtils.generateName("sforeach"),
-        new ForEachCompute<>(applyFunction));
+    SComputeTSet<Object, Iterator<T>> set = compute("sforeach",
+        new ForEachIterCompute<>(applyFunction)
+    );
   }
 
   @Override
-  public <K, O> SKeyedTSet<K, O> mapToTuple(MapFunc<Tuple<K, O>, T> genTupleFn) {
-    SKeyedTSet<K, O> set = new SKeyedTSet<>(getTSetEnv(), new MapToTupleOp<>(genTupleFn),
+  public <K, V> SKeyedTSet<K, V> mapToTuple(MapFunc<Tuple<K, V>, T> mapToTupFn) {
+    SKeyedTSet<K, V> set = new SKeyedTSet<>(getTSetEnv(), new MapIterCompute<>(mapToTupFn),
         getTargetParallelism());
 
     addChildToGraph(set);

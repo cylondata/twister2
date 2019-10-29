@@ -19,7 +19,7 @@ public class CacheSingleSink<T> extends BaseSinkFunc<T> {
 
   @Override
   public boolean add(T value) {
-    this.partition = new EntityPartition<>(getTSetContext().getIndex(), value);
+    this.partition = new EntityPartition<>(value);
     return true;
   }
 
