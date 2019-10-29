@@ -10,38 +10,33 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+package edu.iu.dsc.tws.tset.links.streaming;
 
-package edu.iu.dsc.tws.tset.links.batch;
-
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedTSet;
 
-public class ReplicateTLink<T> extends BatchIteratorLink<T> {
+public class SKeyedDirectTLink<K, V> extends StreamingSingleLink<Tuple<K, V>> {
 
-  public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
-    super(tSetEnv, "replicate", 1, reps);
+  public SKeyedDirectTLink(StreamingTSetEnvironment tSetEnv, int sourceParallelism) {
+    super(tSetEnv, "skdirect", sourceParallelism);
+  }
+
+  public SKeyedTSet<K, V> mapToTuple() {
+    return super.mapToTuple((MapFunc<Tuple<K, V>, Tuple<K, V>>) input -> input);
   }
 
   @Override
   public Edge getEdge() {
-    return new Edge(getId(), OperationNames.BROADCAST, getMessageType());
+    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 
   @Override
-  public ReplicateTLink<T> setName(String n) {
+  public SKeyedDirectTLink<K, V> setName(String n) {
     rename(n);
     return this;
-  }
-
-  @Override
-  public CachedTSet<T> lazyCache() {
-    return (CachedTSet<T>) super.lazyCache();
-  }
-
-  @Override
-  public CachedTSet<T> cache() {
-    return (CachedTSet<T>) super.cache();
   }
 }

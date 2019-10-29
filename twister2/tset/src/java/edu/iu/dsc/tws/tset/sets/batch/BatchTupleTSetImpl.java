@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
@@ -42,6 +43,13 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public BatchTSetEnvironment getTSetEnv() {
     return (BatchTSetEnvironment) super.getTSetEnv();
+  }
+
+  @Override
+  public KeyedDirectTLink<K, V> keyedDirect() {
+    KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(kDirect);
+    return kDirect;
   }
 
   @Override
@@ -119,7 +127,7 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
 
   @Override
   public BatchTupleTSetImpl<K, V> cache() {
-    return null;
+    return keyedDirect().cache();
   }
 
   @Override

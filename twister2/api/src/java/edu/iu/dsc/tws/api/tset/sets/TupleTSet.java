@@ -37,4 +37,11 @@ public interface TupleTSet<K, V> extends TBase {
    * @return partition link
    */
   TLink<?, ?> keyedPartition(PartitionFunc<K> partitionFn);
+
+  /**
+   * Direct communication for keyed TSets
+   *
+   * @return partition link
+   */
+  TLink<?, ?> keyedDirect();
 }

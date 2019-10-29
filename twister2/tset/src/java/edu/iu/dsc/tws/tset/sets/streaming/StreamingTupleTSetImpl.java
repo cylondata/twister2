@@ -15,6 +15,7 @@ package edu.iu.dsc.tws.tset.sets.streaming;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.sets.streaming.StreamingTupleTSet;
 import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
+import edu.iu.dsc.tws.tset.links.streaming.SKeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.streaming.SKeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
@@ -27,7 +28,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implements
     StreamingTupleTSet<K, V> {
 
-  public StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
+  StreamingTupleTSetImpl(StreamingTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -42,5 +43,12 @@ public abstract class StreamingTupleTSetImpl<K, V> extends BaseTSet<V> implement
         getParallelism());
     addChildToGraph(partition);
     return partition;
+  }
+
+  @Override
+  public SKeyedDirectTLink<K, V> keyedDirect() {
+    SKeyedDirectTLink<K, V> direct = new SKeyedDirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(direct);
+    return direct;
   }
 }

@@ -16,10 +16,12 @@ import java.io.Serializable;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.KeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 
@@ -39,6 +41,24 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
       @Override
       public Integer next() {
         return c++;
+      }
+    }, parallel);
+  }
+
+  KeyedSourceTSet<String, Integer> dummyKeyedSource(BatchTSetEnvironment env, int count,
+                                                    int parallel) {
+    return env.createKeyedSource(new SourceFunc<Tuple<String, Integer>>() {
+      private int c = 0;
+
+      @Override
+      public boolean hasNext() {
+        return c < count;
+      }
+
+      @Override
+      public Tuple<String, Integer> next() {
+        c++;
+        return new Tuple<>(Integer.toString(c), c);
       }
     }, parallel);
   }

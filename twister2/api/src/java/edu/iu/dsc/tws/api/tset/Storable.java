@@ -15,8 +15,6 @@ package edu.iu.dsc.tws.api.tset;
 import java.io.Serializable;
 import java.util.List;
 
-import edu.iu.dsc.tws.api.tset.sets.TSet;
-
 /**
  * All Tsets that are cachable need to implement this interface
  * This interface defines the methods that other classes can use to
@@ -39,5 +37,5 @@ public interface Storable<T> extends TBase, Serializable {
    *
    * @return dataObject
    */
-  TSet<T> getStoredSourceTSet();
+  TBase getStoredSourceTSet();
 }

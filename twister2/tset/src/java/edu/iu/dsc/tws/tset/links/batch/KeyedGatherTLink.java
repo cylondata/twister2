@@ -21,6 +21,7 @@ import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
 public class KeyedGatherTLink<K, V> extends BatchIteratorLink<Tuple<K, Iterator<V>>> {
   private static final Logger LOG = Logger.getLogger(KeyedGatherTLink.class.getName());
@@ -68,5 +69,15 @@ public class KeyedGatherTLink<K, V> extends BatchIteratorLink<Tuple<K, Iterator<
   public KeyedGatherTLink<K, V> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public CachedTSet<Tuple<K, Iterator<V>>> lazyCache() {
+    return (CachedTSet<Tuple<K, Iterator<V>>>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<Tuple<K, Iterator<V>>> cache() {
+    return (CachedTSet<Tuple<K, Iterator<V>>>) super.cache();
   }
 }
