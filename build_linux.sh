@@ -35,4 +35,4 @@ else
 fi
 
 echo "Building twister2..."
-bazel build --config=ubuntu scripts/package:tarpkgs
+bazel build --config=ubuntu scripts/package:tarpkgs --action_env=JAVA_HOME
