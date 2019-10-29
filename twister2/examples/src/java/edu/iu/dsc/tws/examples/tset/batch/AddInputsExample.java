@@ -58,7 +58,13 @@ public class AddInputsExample extends BatchTsetExample {
     ).addInput("src-input", srcCache).lazyCache();
 
     for (int i = 0; i < 4; i++) {
+      LOG.info("iter: " + i);
       env.evalAndUpdate(out, baseSrcCache);
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
     }
 
     baseSrcCache.direct().forEach(l -> LOG.info(l.toString()));

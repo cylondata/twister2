@@ -190,8 +190,6 @@ public class BatchTSetEnvironment extends TSetEnvironment {
   public <T, ST extends BaseTSet<T> & Storable<T>> void evalAndUpdate(ST evalTSet, ST updateTSet) {
     // first eval the TSet then update
     eval(evalTSet);
-    finishEval(evalTSet);
-
     updateTSet(evalTSet, updateTSet);
   }
 
