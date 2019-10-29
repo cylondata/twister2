@@ -104,10 +104,58 @@ public class BatchTaskScheduler implements ITaskScheduler {
   }
 
   /**
+   * This method receives the worker plan and the dataflow graph as a variable argument which may
+   * have multiple dataflow graphs. First, it will do the validation of the parallelism values for
+   * the receptor and collector tasks and then invoke the schedule() method to schedule the
+   * individual task graphs.
+   */
+  public Map<String, TaskSchedulePlan> schedule(WorkerPlan workerPlan,
+                                                ComputeGraph... computeGraphs) {
+    if (computeGraphs.length > 1) {
+      addReceptorsCollectors(computeGraphs);
+      validateParallelism();
+      dependentGraphs = true;
+      for (ComputeGraph computeGraph : computeGraphs) {
+        TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
+        taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
+      }
+    } else {
+      TaskSchedulePlan taskSchedulePlan = schedule(computeGraphs[0], workerPlan);
+      taskSchedulePlanMap.put(computeGraphs[0].getGraphName(), taskSchedulePlan);
+    }
+    return taskSchedulePlanMap;
+  }
+
+  /**
+   * This method is to validate the receptor task and it also has the receivable name set.
+   */
+  private void addReceptorsCollectors(ComputeGraph... computeGraphs) {
+    for (ComputeGraph computeGraph : computeGraphs) {
+      LinkedHashSet<Vertex> vertices = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
+      for (Vertex vertex : vertices) {
+        INode iNode = vertex.getTask();
+        if (iNode instanceof Receptor) {
+          if (((Receptor) iNode).getReceivableNames() != null) {
+            ((Receptor) iNode).getReceivableNames().forEach(
+                key -> receivableNameMap.put(key, vertex.getParallelism()));
+          }
+        } else if (iNode instanceof Collector) {
+          if (((Collector) iNode).getCollectibleNames() != null) {
+            ((Collector) iNode).getCollectibleNames().forEach(
+                key -> collectibleNameMap.put(key, vertex.getParallelism()));
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * This is the base method which receives the dataflow taskgraph and the worker plan to allocate
    * the task instances to the appropriate workers with their required ram, disk, and cpu values.
    *
-   * @return TaskSchedulePlan
+   * @param computeGraph
+   * @param workerPlan   worker plan
+   * @return
    */
   @Override
   public TaskSchedulePlan schedule(ComputeGraph computeGraph, WorkerPlan workerPlan) {
@@ -239,17 +287,19 @@ public class BatchTaskScheduler implements ITaskScheduler {
     return batchTaskAllocation;
   }
 
-  private boolean validateParallelism() {
-    for (Map.Entry<String, Integer> collectible : collectibleNameMap.entrySet()) {
-      if (receivableNameMap.containsKey(collectible.getKey())) {
-        int receptorParallel = receivableNameMap.get(collectible.getKey());
-        if (receptorParallel != collectible.getValue()) {
+  /**
+   * This method is to validate the receptor and collector task parallelism in the task graphs.
+   */
+  private void validateParallelism() {
+    for (Map.Entry<String, Integer> receivable : receivableNameMap.entrySet()) {
+      if (collectibleNameMap.containsKey(receivable.getKey())) {
+        int collectorParallel = collectibleNameMap.get(receivable.getKey());
+        if (collectorParallel != receivable.getValue()) {
           throw new Twister2RuntimeException("Please verify the dependent collector(s) and"
               + " receptor(s) parallelism values which are not equal");
         }
       }
     }
-    return true;
   }
 
   /**
@@ -344,77 +394,6 @@ public class BatchTaskScheduler implements ITaskScheduler {
     }
   }
 
-  /**
-   * This method receives the worker plan and the dataflow graph as a variable argument which may
-   * have multiple dataflow graphs. First, it will do the validation of the parallelism values for
-   * the receptor and collector tasks and then invoke the schedule() method to schedule the
-   * individual task graphs.
-   */
-  public Map<String, TaskSchedulePlan> schedule(WorkerPlan workerPlan,
-                                                ComputeGraph... computeGraphs) {
-    if (computeGraphs.length > 1) {
-      if (validateDependentGraphs(computeGraphs)) {
-        dependentGraphs = true;
-        for (ComputeGraph computeGraph : computeGraphs) {
-          TaskSchedulePlan taskSchedulePlan = schedule(computeGraph, workerPlan);
-          taskSchedulePlanMap.put(computeGraph.getGraphName(), taskSchedulePlan);
-        }
-      }
-    } else {
-      TaskSchedulePlan taskSchedulePlan = schedule(computeGraphs[0], workerPlan);
-      taskSchedulePlanMap.put(computeGraphs[0].getGraphName(), taskSchedulePlan);
-    }
-    return taskSchedulePlanMap;
-  }
-
-  /**
-   * This method is to validate the receptor and collector task in the dataflow task graphs. The
-   * validation starts from the last leaf of the task graph.
-   */
-  private boolean validateDependentGraphs(ComputeGraph... computeGraphs) {
-    int length = computeGraphs.length;
-    return receptorTaskValidation(computeGraphs[length - 1])
-        && collectorTaskValidation(computeGraphs);
-  }
-
-  /**
-   * This method is to validate the receptor task and it also has the receivable name set.
-   */
-  private boolean receptorTaskValidation(ComputeGraph computeGraph) {
-    Set<Vertex> childTaskVertexSet = new LinkedHashSet<>(computeGraph.getTaskVertexSet());
-    for (Vertex vertex : childTaskVertexSet) {
-      INode iNode = vertex.getTask();
-      if (iNode instanceof Receptor) {
-        if (((Receptor) iNode).getReceivableNames() != null) {
-          ((Receptor) iNode).getReceivableNames().forEach(
-              key -> receivableNameMap.put(key, vertex.getParallelism()));
-        }
-      }
-    }
-    return true;
-  }
-
-  /**
-   * This method is to validate the collector task and it validates that the parallelism value of
-   * collector task with the receptor tasks.
-   */
-  private boolean collectorTaskValidation(ComputeGraph... computeGraphs) {
-    boolean flag = false;
-    for (int i = 0; i < computeGraphs.length - 1; i++) {
-      Set<Vertex> taskVertexSet = new LinkedHashSet<>(computeGraphs[i].getTaskVertexSet());
-      for (Vertex vertex : taskVertexSet) {
-        INode iNode = vertex.getTask();
-        if (iNode instanceof Collector) {
-          ((Collector) iNode).getCollectibleNames().forEach(
-              key -> collectibleNameMap.put(key, vertex.getParallelism()));
-        }
-      }
-    }
-    if (validateParallelism()) {
-      flag = true;
-    }
-    return flag;
-  }
 
   /**
    * It is to validate the parallelism of the receptor and collector inside the task graph.

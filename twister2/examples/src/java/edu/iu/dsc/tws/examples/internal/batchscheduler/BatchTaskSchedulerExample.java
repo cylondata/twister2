@@ -149,38 +149,38 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     //Independent Graph and it has collector
     ComputeGraph firstGraph = buildFirstGraph(2, config);
+
     //Dependent Graph and it has collector
     ComputeGraph secondGraph = buildSecondGraph(4, config);
-    //Dependent Graph and it has receptor to receive the input from secondGraph
+
+    //Dependent Graph and it has receptor to receive the input from second graph or first graph
     ComputeGraph thirdGraph = buildThirdGraph(4, config);
 
-    ComputeGraph[] graph = new ComputeGraph[3];
-    graph[0] = firstGraph;
-    graph[1] = secondGraph;
-    graph[2] = thirdGraph;
+    ComputeGraph[] computeGraphs = new ComputeGraph[] {firstGraph, secondGraph, thirdGraph};
 
     //Get the execution plan for the first task graph
     ExecutionPlan firstGraphExecutionPlan = taskExecutor.plan(firstGraph);
-    taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
 
     //Get the execution plan for the second task graph
     ExecutionPlan secondGraphExecutionPlan = taskExecutor.plan(secondGraph);
-    taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
 
     //Get the execution plan for the third task graph
     ExecutionPlan thirdGraphExecutionPlan = taskExecutor.plan(thirdGraph);
+
+    taskExecutor.execute(firstGraph, firstGraphExecutionPlan);
+    taskExecutor.execute(secondGraph, secondGraphExecutionPlan);
     taskExecutor.execute(thirdGraph, thirdGraphExecutionPlan);
 
     //This is to test all the three graphs as dependent
-    /*Map<String, ExecutionPlan> taskExecutionPlan = taskExecutor.plan(graph);
+    /*Map<String, ExecutionPlan> taskExecutionPlan = taskExecutor.plan(computeGraphs);
     for (Map.Entry<String, ExecutionPlan> planEntry : taskExecutionPlan.entrySet()) {
       String graphName = planEntry.getKey();
-      if (graphName.equals(graph[0].getGraphName())) {
-        taskExecutor.execute(graph[0], planEntry.getValue());
-      } else if (graphName.equals(graph[1].getGraphName())) {
-        taskExecutor.execute(graph[1], planEntry.getValue());
+      if (graphName.equals(computeGraphs[0].getGraphName())) {
+        taskExecutor.execute(computeGraphs[0], planEntry.getValue());
+      } else if (graphName.equals(computeGraphs[1].getGraphName())) {
+        taskExecutor.execute(computeGraphs[1], planEntry.getValue());
       } else {
-        taskExecutor.execute(graph[2], planEntry.getValue());
+        taskExecutor.execute(computeGraphs[2], planEntry.getValue());
       }
     }*/
     cEnv.close();
@@ -193,7 +193,6 @@ public class BatchTaskSchedulerExample implements IWorker {
 
     private double[] datapoints = null;
     private int numPoints = 0;
-    private int parallelism = 0;
 
     FirstSourceTask() {
     }
@@ -283,9 +282,9 @@ public class BatchTaskSchedulerExample implements IWorker {
 
   private static class SecondSourceTask extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
+
     private double[] datapoints = null;
     private int numPoints = 0;
-    private int parallelism = 0;
 
     SecondSourceTask() {
     }
