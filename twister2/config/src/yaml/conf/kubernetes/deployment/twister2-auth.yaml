@@ -29,8 +29,8 @@ rules:
   verbs: ["get", "list", "watch", "delete"]
 
 - apiGroups: ["apps"]
-  resources: ["statefulsets"]
-  verbs: ["get", "list", "watch", "delete", "patch"]
+  resources: ["statefulsets", "statefulsets/scale"]
+  verbs: ["get", "list", "watch", "delete", "patch", "update"]
 
 ---
 

@@ -19,20 +19,17 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.squareup.okhttp.Response;
 
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.utils.NodeInfoUtils;
 import edu.iu.dsc.tws.rsched.utils.ProcessUtils;
-
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
-import io.kubernetes.client.apis.AppsV1beta2Api;
+import io.kubernetes.client.apis.AppsV1Api;
 import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1DeleteOptions;
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.models.V1Node;
 import io.kubernetes.client.models.V1NodeAddress;
 import io.kubernetes.client.models.V1NodeList;
@@ -44,8 +41,9 @@ import io.kubernetes.client.models.V1Secret;
 import io.kubernetes.client.models.V1SecretList;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServiceList;
-import io.kubernetes.client.models.V1beta2StatefulSet;
-import io.kubernetes.client.models.V1beta2StatefulSetList;
+import io.kubernetes.client.models.V1StatefulSet;
+import io.kubernetes.client.models.V1StatefulSetList;
+import io.kubernetes.client.util.ClientBuilder;
 
 /**
  * a controller class to talk to the Kubernetes Master to manage jobs
@@ -57,7 +55,7 @@ public class KubernetesController {
   private String namespace;
   private ApiClient client = null;
   private CoreV1Api coreApi;
-  private AppsV1beta2Api appsApi;
+  private AppsV1Api appsApi;
 
   public void init(String nspace) {
     this.namespace = nspace;
@@ -74,7 +72,7 @@ public class KubernetesController {
     Configuration.setDefaultApiClient(client);
 
     coreApi = new CoreV1Api();
-    appsApi = new AppsV1beta2Api(client);
+    appsApi = new AppsV1Api(client);
   }
 
   /**
@@ -82,16 +80,16 @@ public class KubernetesController {
    * otherwise return null
    */
   public boolean existStatefulSets(List<String> statefulSetNames) {
-    V1beta2StatefulSetList setList = null;
+    V1StatefulSetList setList = null;
     try {
       setList = appsApi.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
       throw new RuntimeException(e);
     }
 
-    for (V1beta2StatefulSet statefulSet : setList.getItems()) {
+    for (V1StatefulSet statefulSet : setList.getItems()) {
       if (statefulSetNames.contains(statefulSet.getMetadata().getName())) {
         LOG.severe("There is already a StatefulSet with the name: "
             + statefulSet.getMetadata().getName());
@@ -108,10 +106,10 @@ public class KubernetesController {
    * otherwise return an empty ArrayList
    */
   public ArrayList<String> getStatefulSetsForJobWorkers(String jobName) {
-    V1beta2StatefulSetList setList = null;
+    V1StatefulSetList setList = null;
     try {
       setList = appsApi.listNamespacedStatefulSet(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting StatefulSet list.", e);
       throw new RuntimeException(e);
@@ -119,7 +117,7 @@ public class KubernetesController {
 
     ArrayList<String> ssNameList = new ArrayList<>();
 
-    for (V1beta2StatefulSet statefulSet : setList.getItems()) {
+    for (V1StatefulSet statefulSet : setList.getItems()) {
       String ssName = statefulSet.getMetadata().getName();
       if (ssName.matches(jobName + "-" + "[0-9]+")) {
         ssNameList.add(ssName);
@@ -132,12 +130,13 @@ public class KubernetesController {
   /**
    * create the given StatefulSet on Kubernetes master
    */
-  public boolean createStatefulSet(V1beta2StatefulSet statefulSet) {
+  public boolean createStatefulSet(V1StatefulSet statefulSet) {
 
     String statefulSetName = statefulSet.getMetadata().getName();
     try {
       Response response = appsApi.createNamespacedStatefulSetCall(
-          namespace, statefulSet, null, null, null).execute();
+          namespace, statefulSet, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is created.");
@@ -164,12 +163,12 @@ public class KubernetesController {
   public boolean deleteStatefulSet(String statefulSetName) {
 
     try {
-      V1DeleteOptions deleteOptions = new V1DeleteOptions();
-      deleteOptions.setGracePeriodSeconds(0L);
-      deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
+      Integer gracePeriodSeconds = 0;
 
       Response response = appsApi.deleteNamespacedStatefulSetCall(
-          statefulSetName, namespace, deleteOptions, null, null, null, null, null, null).execute();
+          statefulSetName, namespace, null, null, null, gracePeriodSeconds, null,
+          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + statefulSetName + "] is deleted.");
@@ -203,14 +202,24 @@ public class KubernetesController {
   public boolean patchStatefulSet(String ssName, int replicas) {
 
     String jsonPatchStr =
-        "{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}";
-    Object obj = (new Gson()).fromJson(jsonPatchStr, JsonElement.class);
-    ArrayList<Object> objectList = new ArrayList<>();
-    objectList.add(obj);
+        "[{\"op\":\"replace\",\"path\":\"/spec/replicas\",\"value\":" + replicas + "}]";
+
+    // json-patch a deployment
+    ApiClient jsonPatchClient;
+    try {
+      jsonPatchClient =
+          ClientBuilder.standard().setOverridePatchFormat(V1Patch.PATCH_FORMAT_JSON_PATCH).build();
+    } catch (IOException e) {
+      LOG.log(Level.SEVERE, "Error when creating patch client: " + ssName, e);
+      return false;
+    }
+
+    AppsV1Api patchApi = new AppsV1Api(jsonPatchClient);
 
     try {
-      Response response = appsApi.patchNamespacedStatefulSetCall(
-          ssName, namespace, objectList, null, null, null).execute();
+      Response response = patchApi.patchNamespacedStatefulSetScaleCall(
+          ssName, namespace, new V1Patch(jsonPatchStr), null, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "StatefulSet [" + ssName + "] is patched.");
@@ -238,7 +247,8 @@ public class KubernetesController {
     String serviceName = service.getMetadata().getName();
     try {
       Response response = coreApi.createNamespacedServiceCall(
-          namespace, service, null, null, null).execute();
+          namespace, service, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "Service [" + serviceName + "] created.");
@@ -266,7 +276,7 @@ public class KubernetesController {
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(namespace,
-          null, null, null, null, null, null, null, null, null);
+          null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting service list.", e);
       throw new RuntimeException(e);
@@ -287,13 +297,13 @@ public class KubernetesController {
    */
   public boolean deleteService(String serviceName) {
 
-    V1DeleteOptions deleteOptions = new V1DeleteOptions();
-    deleteOptions.setGracePeriodSeconds(0L);
-    deleteOptions.setPropagationPolicy(KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY);
+    Integer gracePeriodsSeconds = 0;
 
     try {
       Response response = coreApi.deleteNamespacedServiceCall(
-          serviceName, namespace, deleteOptions, null, null, null, null, null, null).execute();
+          serviceName, namespace, null, null, null, gracePeriodsSeconds, null,
+          KubernetesConstants.DELETE_OPTIONS_PROPAGATION_POLICY, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.info("Service [" + serviceName + "] is deleted.");
@@ -327,7 +337,7 @@ public class KubernetesController {
     V1ServiceList serviceList = null;
     try {
       serviceList = coreApi.listNamespacedService(namespace,
-          null, null, null, null, null, null, null, null, null);
+          null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting service list.", e);
       throw new RuntimeException(e);
@@ -366,7 +376,7 @@ public class KubernetesController {
     V1PersistentVolumeClaimList pvcList = null;
     try {
       pvcList = coreApi.listNamespacedPersistentVolumeClaim(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PersistentVolumeClaim list.", e);
       throw new RuntimeException(e);
@@ -390,7 +400,8 @@ public class KubernetesController {
     String pvcName = pvc.getMetadata().getName();
     try {
       Response response = coreApi.createNamespacedPersistentVolumeClaimCall(
-          namespace, pvc, null, null, null).execute();
+          namespace, pvc, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is created.");
@@ -414,7 +425,8 @@ public class KubernetesController {
 
     try {
       Response response = coreApi.deleteNamespacedPersistentVolumeClaimCall(
-          pvcName, namespace, null, null, null, null, null, null, null).execute();
+          pvcName, namespace, null, null, null, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolumeClaim [" + pvcName + "] is deleted.");
@@ -444,7 +456,7 @@ public class KubernetesController {
   public V1PersistentVolume getPersistentVolume(String pvName) {
     V1PersistentVolumeList pvList = null;
     try {
-      pvList = coreApi.listPersistentVolume(null, null, null, null, null, null, null, null, null);
+      pvList = coreApi.listPersistentVolume(null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PersistentVolume list.", e);
       throw new RuntimeException(e);
@@ -466,7 +478,8 @@ public class KubernetesController {
 
     String pvName = pv.getMetadata().getName();
     try {
-      Response response = coreApi.createPersistentVolumeCall(pv, null, null, null).execute();
+      Response response = coreApi.createPersistentVolumeCall(pv, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is created.");
@@ -492,7 +505,8 @@ public class KubernetesController {
 
     try {
       Response response = coreApi.deletePersistentVolumeCall(
-          pvName, null, null, null, null, null, null, null).execute();
+          pvName, null, null, null, null, null, null, null, null)
+          .execute();
 
       if (response.isSuccessful()) {
         LOG.log(Level.INFO, "PersistentVolume [" + pvName + "] is deleted.");
@@ -526,8 +540,8 @@ public class KubernetesController {
   public boolean existSecret(String secretName) {
     V1SecretList secretList = null;
     try {
-      secretList = coreApi.listNamespacedSecret(namespace,
-          null, null, null, null, null, null, null, null, null);
+      secretList = coreApi.listNamespacedSecret(
+          namespace, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting Secret list.", e);
       throw new RuntimeException(e);
@@ -551,7 +565,7 @@ public class KubernetesController {
 
     V1NodeList nodeList = null;
     try {
-      nodeList = coreApi.listNode(null, null, null, null, null, null, null, null, null);
+      nodeList = coreApi.listNode(null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting NodeList.", e);
       return null;
@@ -587,6 +601,5 @@ public class KubernetesController {
 
     return nodeInfoList;
   }
-
 
 }
