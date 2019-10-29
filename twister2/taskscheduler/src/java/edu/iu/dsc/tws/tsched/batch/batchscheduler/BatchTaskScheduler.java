@@ -289,13 +289,13 @@ public class BatchTaskScheduler implements ITaskScheduler {
   }
 
   /**
-   * This method is to validate the receptor and collector task in the dataflow task graphs.
+   * This method is to validate the receptor and collector task parallelism in the task graphs.
    */
   private boolean validateParallelism() {
-    for (Map.Entry<String, Integer> collectible : collectibleNameMap.entrySet()) {
-      if (receivableNameMap.containsKey(collectible.getKey())) {
-        int receptorParallel = receivableNameMap.get(collectible.getKey());
-        if (receptorParallel != collectible.getValue()) {
+    for (Map.Entry<String, Integer> receivable : receivableNameMap.entrySet()) {
+      if (collectibleNameMap.containsKey(receivable.getKey())) {
+        int collectorParallel = collectibleNameMap.get(receivable.getKey());
+        if (collectorParallel != receivable.getValue()) {
           throw new Twister2RuntimeException("Please verify the dependent collector(s) and"
               + " receptor(s) parallelism values which are not equal");
         }
