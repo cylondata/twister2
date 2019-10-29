@@ -100,6 +100,24 @@ public abstract class BatchTsetExample implements BatchTSetIWorker, Serializable
     }, parallel);
   }
 
+  KeyedSourceTSet<String, Integer> dummyKeyedSourceOther(BatchTSetEnvironment env, int count,
+                                                         int parallel) {
+    return env.createKeyedSource(new SourceFunc<Tuple<String, Integer>>() {
+      private int c = 0;
+
+      @Override
+      public boolean hasNext() {
+        return c < count;
+      }
+
+      @Override
+      public Tuple<String, Integer> next() {
+        c++;
+        return new Tuple<>(Integer.toString(c), c + 25);
+      }
+    }, parallel);
+  }
+
   public static void submitJob(Config config, int containers, JobConfig jobConfig, String clazz) {
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()

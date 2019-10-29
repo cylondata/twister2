@@ -38,9 +38,7 @@ public class KeyedDirectTLink<K, V> extends BatchIteratorLink<Tuple<K, V>> {
 
   @Override
   public Edge getEdge() {
-    Edge e = new Edge(getId(), OperationNames.DIRECT, getMessageType());
-//    e.setKeyed(true);
-    return e;
+    return new Edge(getId(), OperationNames.DIRECT, getMessageType());
   }
 
   @Override

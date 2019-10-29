@@ -39,7 +39,7 @@ import edu.iu.dsc.tws.tset.sources.CacheSourceFunc;
 
 public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
     implements Storable<Tuple<K, V>> {
-  private SinkFunc<Iterator<Tuple<K, V>>> cacheSinkFunc; // keyed comms only output iterators
+  private SinkFunc<Iterator<Tuple<K, V>>> cacheSinkFunc; // batch keyed comms only output iterators
   private String cacheSourcePrefix;
   private KeyedSourceTSet<K, V> cacheSource;
 
@@ -48,24 +48,6 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
     super(tSetEnv, "kcached", parallelism);
     this.cacheSinkFunc = sinkFunc;
     this.cacheSourcePrefix = "kcsource(" + getId() + ")";
-  }
-
-  @Override
-  public List<Tuple<K, V>> getData() {
-    List<Tuple<K, V>> results = new ArrayList<>();
-
-    DataObject<Tuple<K, V>> data = getTSetEnv().getData(getId());
-
-    if (data != null) {
-      for (DataPartition<Tuple<K, V>> partition : data.getPartitions()) {
-        DataPartitionConsumer<Tuple<K, V>> consumer = partition.getConsumer();
-        while (consumer.hasNext()) {
-          results.add(consumer.next());
-        }
-      }
-    }
-
-    return results;
   }
 
   @Override
@@ -115,6 +97,16 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
   }
 
   @Override
+  public KeyedCachedTSet<K, V> cache() {
+    return this;
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> lazyCache() {
+    return this;
+  }
+
+  @Override
   public KeyedSourceTSet<K, V> getStoredSourceTSet() {
     if (this.cacheSource == null) {
       // this cache source will consume the data object created by the execution of this tset.
@@ -125,6 +117,24 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
     }
 
     return this.cacheSource;
+  }
+
+  @Override
+  public List<Tuple<K, V>> getData() {
+    List<Tuple<K, V>> results = new ArrayList<>();
+
+    DataObject<Tuple<K, V>> data = getTSetEnv().getData(getId());
+
+    if (data != null) {
+      for (DataPartition<Tuple<K, V>> partition : data.getPartitions()) {
+        DataPartitionConsumer<Tuple<K, V>> consumer = partition.getConsumer();
+        while (consumer.hasNext()) {
+          results.add(consumer.next());
+        }
+      }
+    }
+
+    return results;
   }
 
   @Override

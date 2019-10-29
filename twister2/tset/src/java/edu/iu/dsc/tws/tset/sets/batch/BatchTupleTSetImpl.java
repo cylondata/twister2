@@ -35,7 +35,8 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <V> data (value) type
  */
 public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V> {
-  public BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
+
+  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -126,8 +127,13 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
-  public BatchTupleTSetImpl<K, V> cache() {
+  public KeyedCachedTSet<K, V> cache() {
     return keyedDirect().cache();
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> lazyCache() {
+    return keyedDirect().lazyCache();
   }
 
   @Override

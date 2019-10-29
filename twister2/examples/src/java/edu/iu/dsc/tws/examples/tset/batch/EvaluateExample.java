@@ -25,7 +25,9 @@ import edu.iu.dsc.tws.tset.links.batch.DirectTLink;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
-
+/*
+ * Can be removed!
+ */
 public class EvaluateExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(EvaluateExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
