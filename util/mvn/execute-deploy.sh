@@ -24,7 +24,7 @@ deploy_library() {
   local library=$1
   local pomfile=$2
   bazel build --define=pom_version="$VERSION_NAME" \
-    $library $pomfile
+    $library $pomfile --action_env=JAVA_HOME
 
   printf "\nGenerating %s\n\n" "$1"
 
@@ -40,7 +40,7 @@ deploy_proto_library() {
   local pomfile=$2
   local buildfile=$3
   bazel build --define=pom_version="$VERSION_NAME" \
-    $library $pomfile
+    $library $pomfile --action_env=JAVA_HOME
 
   mvn $MVN_GOAL \
     -Dfile=$(bazel_output_file $buildfile) \
