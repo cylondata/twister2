@@ -22,7 +22,7 @@ import java.util.Iterator;
 import org.apache.beam.sdk.transforms.join.RawUnionValue;
 import org.apache.beam.sdk.util.WindowedValue;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 /**
@@ -38,7 +38,7 @@ public class OutputTagFilter<OT, IT>
   }
 
   @Override
-  public void compute(Iterator<RawUnionValue> input, Collector<WindowedValue<OT>> output) {
+  public void compute(Iterator<RawUnionValue> input, RecordCollector<WindowedValue<OT>> output) {
     RawUnionValue temp;
     while (input.hasNext()) {
       temp = input.next();

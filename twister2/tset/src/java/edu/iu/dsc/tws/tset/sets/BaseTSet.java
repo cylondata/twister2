@@ -12,9 +12,8 @@
 
 package edu.iu.dsc.tws.tset.sets;
 
+import java.util.Map;
 import java.util.Objects;
-
-import com.google.common.reflect.TypeToken;
 
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.tset.env.TSetEnvironment;
@@ -70,13 +69,13 @@ public abstract class BaseTSet<T> implements BuildableTSet {
    */
   private StateType stateType = StateType.DISTRIBUTED;
 
-  public BaseTSet(TSetEnvironment tSetEnv, String name) {
-    this(tSetEnv, name, tSetEnv.getDefaultParallelism());
+  public BaseTSet(TSetEnvironment tSetEnv, String id) {
+    this(tSetEnv, id, tSetEnv.getDefaultParallelism());
   }
 
   public BaseTSet(TSetEnvironment env, String n, int parallel) {
     this.tSetEnv = env;
-    this.id = n;
+    this.id = generateID(n);
     this.parallelism = parallel;
 
     this.name = id;
@@ -105,6 +104,10 @@ public abstract class BaseTSet<T> implements BuildableTSet {
     return tSetEnv;
   }
 
+  protected Map<String, String> getInputs() {
+    return tSetEnv.getInputs(getId());
+  }
+
   public boolean isMutable() {
     return isMutable;
   }
@@ -121,12 +124,6 @@ public abstract class BaseTSet<T> implements BuildableTSet {
     this.stateType = stateType;
   }
 
-  protected Class getType() {
-    TypeToken<T> typeToken = new TypeToken<T>(getClass()) {
-    };
-    return typeToken.getRawType();
-  }
-
   protected void addChildToGraph(TBase child) {
     tSetEnv.getGraph().addTSet(this, child);
   }
@@ -137,7 +134,7 @@ public abstract class BaseTSet<T> implements BuildableTSet {
 
   @Override
   public String toString() {
-    return getName() + "(" + getId() + ")[" + getParallelism() + "]";
+    return getName() + "[" + getParallelism() + "]";
   }
 
   @Override

@@ -12,59 +12,47 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
-import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
- * takes care of preparing the compute instances and creating the out edges list
+ * takes care of preparing the compute instances and creating the
+ * {@link MultiEdgeOpAdapter}
  */
-public abstract class BaseComputeOp<I> extends BaseCompute<I> implements Receptor {
-  private TSetContext tSetContext;
-
-  // this map will hold input temporarily until tset context is available
-  private Map<String, DataObject<?>> tempInputMap = new HashMap<>();
-
+public abstract class BaseComputeOp<I> extends BaseOp implements ICompute<I> {
   private MultiEdgeOpAdapter multiEdgeOpAdapter;
+
+  BaseComputeOp() {
+  }
+
+  BaseComputeOp(BaseTSet originTSet, Map<String, String> receivablesTSets) {
+    super(originTSet, receivablesTSets);
+  }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    super.prepare(cfg, ctx);
-    this.tSetContext = new TSetContext(cfg, ctx);
-    this.tSetContext.addInputMap(tempInputMap);
-
-    this.getFunction().prepare(tSetContext);
+    gettSetContext().update(cfg, ctx);
+    this.getFunction().prepare(gettSetContext());
 
     this.multiEdgeOpAdapter = new MultiEdgeOpAdapter(ctx);
   }
 
   public abstract TFunction getFunction();
 
-  public <T> void writeToEdges(T output) {
+  <T> void writeToEdges(T output) {
     multiEdgeOpAdapter.writeToEdges(output);
   }
 
-  public void writeEndToEdges() {
+  void writeEndToEdges() {
     multiEdgeOpAdapter.writeEndToEdges();
   }
 
-  public <K, V> void keyedWriteToEdges(K key, V val) {
+  <K, V> void keyedWriteToEdges(K key, V val) {
     multiEdgeOpAdapter.keyedWriteToEdges(key, val);
-  }
-
-  @Override
-  public void add(String name, DataObject<?> data) {
-    if (tSetContext != null) {
-      tSetContext.addInput(name, data);
-    } else {
-      tempInputMap.put(name, data);
-    }
   }
 }

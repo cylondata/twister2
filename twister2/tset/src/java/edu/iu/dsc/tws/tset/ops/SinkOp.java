@@ -11,37 +11,44 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Receptor {
+/**
+ * Creates a sink using {@link SinkFunc}. Can produce a single {@link DataPartition} from the
+ * ID of the origin {@link BaseTSet}
+ *
+ * @param <T> data type
+ */
+public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, Collector {
   private static final long serialVersionUID = -9398832570L;
 
   private SinkFunc<T> sink;
-
-  private TSetContext tSetContext;
+  private IONames collectible; // key of the data partition this op produces
 
   public SinkOp() {
-
   }
 
-  public SinkOp(SinkFunc<T> sink) {
+  public SinkOp(SinkFunc<T> sink, BaseTSet originTSet, Map<String, String> receivableTSets) {
+    super(originTSet, receivableTSets);
     this.sink = sink;
+    this.collectible = IONames.declare(originTSet.getId());
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
-    tSetContext = new TSetContext(cfg, ctx);
-    sink.prepare(tSetContext);
+    gettSetContext().update(cfg, ctx);
+    sink.prepare(gettSetContext());
   }
 
   @Override
@@ -55,13 +62,16 @@ public class SinkOp<T> implements IComputableSink<T>, Closable, Collector, Recep
     sink.close();
   }
 
+  /**
+   * returns the collected data partition only when it matches the provided name
+   */
   @Override
-  public DataPartition<?> get() {
+  public DataPartition<?> get(String name) {
     return sink.get();
   }
 
   @Override
-  public void add(String name, DataObject<?> data) {
-    tSetContext.addInput(name, data);
+  public IONames getCollectibleNames() {
+    return collectible;
   }
 }

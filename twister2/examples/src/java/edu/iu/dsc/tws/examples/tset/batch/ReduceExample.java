@@ -35,6 +35,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.ReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -79,11 +80,13 @@ public class ReduceExample extends BatchTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    reduce.sink((SinkFunc<Integer>)
+    SinkTSet<Integer> sink = reduce.sink((SinkFunc<Integer>)
         value -> {
           LOG.info("val =" + value);
           return true;
         });
+    env.run(sink);
+
   }
 
 

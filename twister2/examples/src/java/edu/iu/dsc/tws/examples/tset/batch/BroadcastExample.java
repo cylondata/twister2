@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.ReplicateTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -75,12 +76,13 @@ public class BroadcastExample extends BatchTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    replicate.sink((SinkFunc<Iterator<Integer>>) value -> {
+    SinkTSet<Iterator<Integer>> sink = replicate.sink((SinkFunc<Iterator<Integer>>) value -> {
       while (value.hasNext()) {
         LOG.info("val =" + value.next());
       }
       return true;
     });
+    env.run(sink);
 
   }
 

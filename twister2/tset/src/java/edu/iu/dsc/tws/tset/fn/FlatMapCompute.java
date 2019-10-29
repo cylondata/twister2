@@ -25,7 +25,7 @@
 
 package edu.iu.dsc.tws.tset.fn;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -38,7 +38,7 @@ public class FlatMapCompute<O, I> implements ComputeCollectorFunc<O, I> {
   }
 
   @Override
-  public void compute(I input, Collector<O> output) {
+  public void compute(I input, RecordCollector<O> output) {
     mapFn.flatMap(input, output);
   }
 

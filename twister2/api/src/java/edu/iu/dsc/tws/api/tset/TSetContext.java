@@ -17,7 +17,7 @@ import java.util.Map;
 
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 
 public class TSetContext implements Serializable {
   /**
@@ -28,7 +28,7 @@ public class TSetContext implements Serializable {
   /**
    * Unique id of the tSet
    */
-  private int tSetId;
+  private String tSetId;
 
   /**
    * Name of the tSet
@@ -49,7 +49,7 @@ public class TSetContext implements Serializable {
    * Inputs that are added to a TSet are stored in this
    * map to be passed to functions
    */
-  private Map<String, DataObject<?>> inputMap;
+  private Map<String, DataPartition<?>> inputMap;
 
   /**
    * The worker id this tSet instance belongs to
@@ -64,15 +64,15 @@ public class TSetContext implements Serializable {
   /**
    * TSet context
    *
-   * @param cfg configuration
-   * @param tSetIndex index
-   * @param tSetId id
-   * @param tSetName name
+   * @param cfg         configuration
+   * @param tSetIndex   index
+   * @param tSetId      id
+   * @param tSetName    name
    * @param parallelism parallelism
-   * @param wId worker id
-   * @param configs configuration
+   * @param wId         worker id
+   * @param configs     configuration
    */
-  public TSetContext(Config cfg, int tSetIndex, int tSetId, String tSetName,
+  public TSetContext(Config cfg, int tSetIndex, String tSetId, String tSetName,
                      int parallelism, int wId, Map<String, Object> configs) {
     this.config = cfg;
     this.tSetIndex = tSetIndex;
@@ -86,11 +86,6 @@ public class TSetContext implements Serializable {
 
   public TSetContext() {
     this.inputMap = new HashMap<>();
-  }
-
-  public TSetContext(Config cfg, TaskContext ctx) {
-    this(cfg, ctx.taskIndex(), ctx.globalTaskId(), ctx.taskName(), ctx.getParallelism(),
-        ctx.getWorkerId(), ctx.getConfigurations());
   }
 
   /**
@@ -107,7 +102,7 @@ public class TSetContext implements Serializable {
    *
    * @return the tSet id
    */
-  public int getId() {
+  public String getId() {
     return tSetId;
   }
 
@@ -169,7 +164,7 @@ public class TSetContext implements Serializable {
    *
    * @return the current input map
    */
-  public Map<String, DataObject<?>> getInputMap() {
+  public Map<String, DataPartition<?>> getInputMap() {
     return inputMap;
   }
 
@@ -178,7 +173,7 @@ public class TSetContext implements Serializable {
    *
    * @param inputMap the map to be set for this context
    */
-  public void setInputMap(Map<String, DataObject<?>> inputMap) {
+  public void setInputMap(Map<String, DataPartition<?>> inputMap) {
     this.inputMap = inputMap;
   }
 
@@ -187,7 +182,7 @@ public class TSetContext implements Serializable {
    *
    * @param map the map to be added
    */
-  public void addInputMap(Map<String, DataObject<?>> map) {
+  public void addInputMap(Map<String, DataPartition<?>> map) {
     this.inputMap.putAll(map);
   }
 
@@ -197,17 +192,17 @@ public class TSetContext implements Serializable {
    * @param key key of the input object
    * @return the input object if the key is present or null
    */
-  public DataObject<?> getInput(String key) {
+  public DataPartition<?> getInput(String key) {
     return inputMap.get(key);
   }
 
   /**
    * Adds a input object into the map
    *
-   * @param key the key to be associated with the input object
+   * @param key  the key to be associated with the input object
    * @param data the input object
    */
-  public void addInput(String key, DataObject<?> data) {
+  public void addInput(String key, DataPartition<?> data) {
     inputMap.put(key, data);
   }
 
@@ -215,7 +210,7 @@ public class TSetContext implements Serializable {
     this.tSetIndex = tSetIndex;
   }
 
-  public void settSetId(int tSetId) {
+  public void settSetId(String tSetId) {
     this.tSetId = tSetId;
   }
 
@@ -237,5 +232,11 @@ public class TSetContext implements Serializable {
 
   public void setConfig(Config config) {
     this.config = config;
+  }
+
+  public void update(Config conf, TaskContext taskCtx) {
+    setConfig(conf);
+    settSetIndex(taskCtx.taskIndex());
+    setWorkerId(taskCtx.getWorkerId());
   }
 }

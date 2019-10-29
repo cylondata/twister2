@@ -43,7 +43,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.joda.time.Instant;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 
@@ -69,7 +69,7 @@ public class GroupByWindowFunction<K, V, W extends BoundedWindow>
   @Override
   public void flatMap(
       KV<K, Iterable<WindowedValue<V>>> kIteratorKV,
-      Collector<WindowedValue<KV<K, Iterable<V>>>> collector) {
+      RecordCollector<WindowedValue<KV<K, Iterable<V>>>> collector) {
     try {
       K key = kIteratorKV.getKey();
       Iterable<WindowedValue<V>> values = kIteratorKV.getValue();

@@ -13,7 +13,7 @@ package edu.iu.dsc.tws.python.tset.fn;
 
 import java.io.Serializable;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.python.processors.PythonLambdaProcessor;
 
@@ -34,7 +34,7 @@ public class FlatMapFunctions extends TFunc<FlatMapFunc> {
     }
 
     @Override
-    public void flatMap(Object o, Collector collector) {
+    public void flatMap(Object o, RecordCollector collector) {
       this.pythonLambdaProcessor.invoke(o, collector);
     }
   }

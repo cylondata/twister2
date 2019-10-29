@@ -13,10 +13,13 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
@@ -29,16 +32,17 @@ public class ComputeCollectorOp<O, I> extends BaseComputeOp<I> {
   private ComputeCollectorFunc<O, I> computeFunction;
 
   public ComputeCollectorOp() {
-
   }
 
-  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction) {
+  public ComputeCollectorOp(ComputeCollectorFunc<O, I> computeFunction, BaseTSet origin,
+                            Map<String, String> receivables) {
+    super(origin, receivables);
     this.computeFunction = computeFunction;
   }
 
   @Override
   public boolean execute(IMessage<I> content) {
-    computeFunction.compute(content.getContent(), new Collector<O>() {
+    computeFunction.compute(content.getContent(), new RecordCollector<O>() {
       @Override
       public void collect(O record) {
         writeToEdges(record);

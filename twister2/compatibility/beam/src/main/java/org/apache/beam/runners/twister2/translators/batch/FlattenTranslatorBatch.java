@@ -28,7 +28,7 @@ import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.values.PValue;
 
 import edu.iu.dsc.tws.api.tset.sets.TSet;
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 
 /**
  * Flatten translator.
@@ -39,18 +39,18 @@ public class FlattenTranslatorBatch<T>
   public void translateNode(
       Flatten.PCollections<T> transform, Twister2BatchTranslationContext context) {
     Collection<PValue> pcs = context.getInputs().values();
-    List<BBaseTSet<WindowedValue<T>>> tSets = new ArrayList<>();
-    BBaseTSet<WindowedValue<T>> unionTSet = null;
+    List<BatchTSetImpl<WindowedValue<T>>> tSets = new ArrayList<>();
+    BatchTSetImpl<WindowedValue<T>> unionTSet = null;
     if (pcs.isEmpty()) {
       // TODO: create empty TSet
       throw new UnsupportedOperationException("Operation not implemented yet");
     } else {
       for (PValue pc : pcs) {
-        BBaseTSet<WindowedValue<T>> curr = context.getInputDataSet(pc);
+        BatchTSetImpl<WindowedValue<T>> curr = context.getInputDataSet(pc);
         tSets.add(curr);
       }
 
-      BBaseTSet<WindowedValue<T>> first = tSets.remove(0);
+      BatchTSetImpl<WindowedValue<T>> first = tSets.remove(0);
       Collection<TSet<WindowedValue<T>>> others = new ArrayList<>();
       others.addAll(tSets);
       if (tSets.size() > 0) {

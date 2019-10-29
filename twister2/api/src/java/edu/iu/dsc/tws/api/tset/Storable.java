@@ -9,23 +9,33 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.api.tset;
 
+import java.io.Serializable;
+import java.util.List;
+
 /**
- * Collector for map function
- *
- * @param <T> input type
+ * All Tsets that are cachable need to implement this interface
+ * This interface defines the methods that other classes can use to
+ * access the cached data
  */
-public interface Collector<T> {
-  /**
-   * Collect the record
-   *
-   * @param record this will be sent
-   */
-  void collect(T record);
+public interface Storable<T> extends TBase, Serializable {
 
   /**
-   * Close the collector
+   * retrieve data saved in the TSet as a {@link List}
+   * <p>
+   * NOTE: use this method only when you need to pull the data from the tset. Otherwise
+   * this would unnecessarily loads data to the memory.
+   *
+   * @return dataObject
    */
-  void close();
+  List<T> getData();
+
+  /**
+   * retrieve data saved in the TSet
+   *
+   * @return dataObject
+   */
+  TBase getStoredSourceTSet();
 }

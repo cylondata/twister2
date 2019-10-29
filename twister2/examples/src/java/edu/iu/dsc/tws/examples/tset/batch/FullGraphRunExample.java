@@ -51,7 +51,7 @@ public class FullGraphRunExample extends BatchTsetExample {
         .flatmap((FlatMapFunc<Object, Integer>)
             (integer, collector) -> LOG.info("red= " + integer));
 
-    env.run();
+//    env.run();
   }
 
 
