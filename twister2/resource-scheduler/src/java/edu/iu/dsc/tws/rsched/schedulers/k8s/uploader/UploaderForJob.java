@@ -125,7 +125,7 @@ public class UploaderForJob extends Thread {
     try {
       watcher = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobPodsLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, jobPodsLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());

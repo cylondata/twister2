@@ -56,10 +56,10 @@ import io.kubernetes.client.models.V1SecretVolumeSource;
 import io.kubernetes.client.models.V1Service;
 import io.kubernetes.client.models.V1ServicePort;
 import io.kubernetes.client.models.V1ServiceSpec;
+import io.kubernetes.client.models.V1StatefulSet;
+import io.kubernetes.client.models.V1StatefulSetSpec;
 import io.kubernetes.client.models.V1Volume;
 import io.kubernetes.client.models.V1VolumeMount;
-import io.kubernetes.client.models.V1beta2StatefulSet;
-import io.kubernetes.client.models.V1beta2StatefulSetSpec;
 
 /**
  * build objects to submit to Kubernetes master
@@ -99,7 +99,7 @@ public final class RequestObjectBuilder {
    * create StatefulSet object for a job
    * @return
    */
-  public static V1beta2StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
+  public static V1StatefulSet createStatefulSetForWorkers(ComputeResource computeResource,
                                                                String encodedNodeInfoList) {
 
     if (config == null) {
@@ -110,9 +110,7 @@ public final class RequestObjectBuilder {
     String statefulSetName =
         KubernetesUtils.createWorkersStatefulSetName(jobName, computeResource.getIndex());
 
-    V1beta2StatefulSet statefulSet = new V1beta2StatefulSet();
-    statefulSet.setApiVersion("apps/v1beta2");
-    statefulSet.setKind("StatefulSet");
+    V1StatefulSet statefulSet = new V1StatefulSet();
 
     // construct metadata and set for jobName setting
     V1ObjectMeta meta = new V1ObjectMeta();
@@ -120,7 +118,7 @@ public final class RequestObjectBuilder {
     statefulSet.setMetadata(meta);
 
     // construct JobSpec and set
-    V1beta2StatefulSetSpec setSpec = new V1beta2StatefulSetSpec();
+    V1StatefulSetSpec setSpec = new V1StatefulSetSpec();
     setSpec.serviceName(KubernetesUtils.createServiceName(jobName));
     // pods will be started in parallel
     // by default they are started sequentially
