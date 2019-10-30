@@ -121,16 +121,16 @@ public class SPartitionExample extends BenchWorker {
 //          workerId, target, count, expected));
       //Since this is a streaming example we will simply stop after a number of messages are
       // received
+      if (count >= expectedWarmups) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == recvrInWorker0);
+      }
+
       if (count >= expected) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0
             && target == recvrInWorker0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
             && target == recvrInWorker0);
         resultsRecorder.writeToCSV();
-      }
-
-      if (count >= expectedWarmups) {
-        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == recvrInWorker0);
       }
 
       verifyResults(resultsVerifier, it, null);

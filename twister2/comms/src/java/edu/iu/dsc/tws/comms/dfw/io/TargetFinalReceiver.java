@@ -122,7 +122,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-
+    boolean messagesEmpty = true;
     lock.lock();
     try {
       for (int i = 0; i < targets.length; i++) {
@@ -135,6 +135,9 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
         // check weather we are ready to send and we have values to send
         if (!isFilledToSend(key)) {
+          if (!val.isEmpty()) {
+            messagesEmpty = false;
+          }
           continue;
         }
 
@@ -142,9 +145,13 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
         if (!sendToTarget(representSource, key)) {
           needsFurtherProgress = true;
         }
+
+        if (!val.isEmpty()) {
+          messagesEmpty = false;
+        }
       }
 
-      if (!needsFurtherProgress) {
+      if (!needsFurtherProgress && messagesEmpty) {
         for (int i = 0; i < targets.length; i++) {
           int key = targets[i];
           if (isAllEmpty(key)) {
