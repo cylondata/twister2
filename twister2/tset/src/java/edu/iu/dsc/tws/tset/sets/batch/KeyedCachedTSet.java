@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
@@ -48,6 +49,11 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
     super(tSetEnv, "kcached", parallelism);
     this.cacheSinkFunc = sinkFunc;
     this.cacheSourcePrefix = "kcsource(" + getId() + ")";
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> setName(String n) {
+    return (KeyedCachedTSet<K, V>) super.setName(n);
   }
 
   @Override
@@ -79,6 +85,22 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
   public KeyedGatherTLink<K, V> keyedGather(PartitionFunc<K> partitionFn,
                                             Comparator<K> comparator) {
     return getStoredSourceTSet().keyedGather(partitionFn, comparator);
+  }
+
+  @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped() {
+    return getStoredSourceTSet().keyedGatherUngrouped();
+  }
+
+  @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn) {
+    return getStoredSourceTSet().keyedGatherUngrouped(partitionFn);
+  }
+
+  @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn,
+                                                              Comparator<K> comparator) {
+    return getStoredSourceTSet().keyedGatherUngrouped(partitionFn, comparator);
   }
 
   @Override
