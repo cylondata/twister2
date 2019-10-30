@@ -41,7 +41,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1beta2StatefulSet;
+import io.kubernetes.client.models.V1StatefulSet;
 
 public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
@@ -474,7 +474,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
       // create the StatefulSet object for this job
-      V1beta2StatefulSet jobMasterStatefulSet =
+      V1StatefulSet jobMasterStatefulSet =
           JobMasterRequestObject.createStatefulSetObject(encodedNodeInfoList);
       if (jobMasterStatefulSet == null) {
         return false;
@@ -504,7 +504,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
 
       // create the StatefulSet object for this job
-      V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
+      V1StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
           computeResource, encodedNodeInfoList);
 
       if (statefulSet == null) {

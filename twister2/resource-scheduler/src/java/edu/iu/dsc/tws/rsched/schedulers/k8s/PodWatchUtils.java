@@ -81,7 +81,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, labelSelector,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, labelSelector,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -153,7 +153,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, serviceLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, serviceLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -230,7 +230,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedEventCall(namespace, null, null, null, null, null,
+          coreApi.listNamespacedEventCall(namespace, null, null, null, null,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Event>>() {
           }.getType());
@@ -286,7 +286,7 @@ public final class PodWatchUtils {
     V1PodList podList = null;
     try {
       podList = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, workerRoleLabel, null, null, null, null);
+          namespace, null, null, null, workerRoleLabel, null, null, null, null);
     } catch (ApiException e) {
       LOG.log(Level.SEVERE, "Exception when getting PodList.", e);
       throw new RuntimeException(e);
@@ -314,7 +314,7 @@ public final class PodWatchUtils {
     V1PodList list = null;
     try {
       list = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, null, null, null, null, null);
+          namespace, null, null, null, null, null, null, null, null);
     } catch (ApiException e) {
       String logMessage = "Exception when getting the pod list: \n"
           + "exCode: " + e.getCode() + "\n"
@@ -346,7 +346,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobPodsLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, jobPodsLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -408,7 +408,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, podNameLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, podNameLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -474,7 +474,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, jobMasterRoleLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, jobMasterRoleLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());
@@ -547,7 +547,7 @@ public final class PodWatchUtils {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, workerRoleLabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, workerRoleLabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());

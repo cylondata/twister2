@@ -37,8 +37,8 @@ import edu.iu.dsc.tws.tset.worker.BatchTSetIWorker;
 /**
  * doc.
  */
-public class WordCountWorker implements Serializable, BatchTSetIWorker {
-  private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
+public class ReadSourceTest implements Serializable, BatchTSetIWorker {
+  private static final Logger LOG = Logger.getLogger(ReadSourceTest.class.getName());
 
   @Override
   public void execute(BatchTSetEnvironment env) {
