@@ -98,7 +98,7 @@ public abstract class BaseOperation {
    * Wait for the operation to complete
    */
   public void waitForCompletion() {
-    while (op.isComplete()) {
+    while (!op.isComplete()) {
       op.progress();
     }
   }
