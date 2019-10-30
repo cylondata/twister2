@@ -2,6 +2,9 @@ build --genrule_strategy=standalone
 build --host_force_python=PY3
 build --ignore_unsupported_sandboxing
 build --spawn_strategy=standalone
+build --incompatible_strict_action_env
+run --incompatible_strict_action_env
+build --action_env=JAVA_HOME
 
 # For centos
 # To use it: bazel build --config=centos
