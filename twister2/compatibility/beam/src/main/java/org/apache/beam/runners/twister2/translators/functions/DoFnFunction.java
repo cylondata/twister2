@@ -19,7 +19,6 @@ package org.apache.beam.runners.twister2.translators.functions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -28,10 +27,10 @@ import java.util.Set;
 
 import org.apache.beam.runners.core.DoFnRunner;
 import org.apache.beam.runners.core.DoFnRunners;
-import org.apache.beam.runners.core.InMemoryStateInternals;
-import org.apache.beam.runners.core.SideInputHandler;
 import org.apache.beam.runners.core.StepContext;
+import org.apache.beam.runners.twister2.Twister2TranslationContext;
 import org.apache.beam.runners.twister2.utils.NoOpStepContext;
+import org.apache.beam.runners.twister2.utils.Twister2SideInputReader;
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -58,9 +57,9 @@ public class DoFnFunction<OT, IT>
   private final Coder<IT> inputCoder;
   private final Map<TupleTag<?>, Coder<?>> outputCoders;
   private final WindowingStrategy<?, ?> windowingStrategy;
-  private final Collection<PCollectionView<?>> sideInputs;
+  private final Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs;
   private final TupleTag<OT> mainOutput;
-  private transient SideInputHandler sideInputReader;
+  private transient Twister2SideInputReader sideInputReader;
   private transient DoFnRunner<IT, OT> doFnRunner;
   private final DoFnOutputManager outputManager;
   private final List<TupleTag<?>> sideOutputs;
@@ -69,18 +68,18 @@ public class DoFnFunction<OT, IT>
   private final Map<TupleTag<?>, Integer> outputMap;
 
   public DoFnFunction(
-      PipelineOptions pipelineOptions,
+      Twister2TranslationContext context,
       DoFn<IT, OT> doFn,
       Coder<IT> inputCoder,
       Map<TupleTag<?>, Coder<?>> outputCoders,
       List<TupleTag<?>> sideOutputs,
       WindowingStrategy<?, ?> windowingStrategy,
-      Collection<PCollectionView<?>> sideInputs,
+      Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputs,
       TupleTag<OT> mainOutput,
       DoFnSchemaInformation doFnSchemaInformation,
       Map<TupleTag<?>, Integer> outputMap) {
     this.doFn = doFn;
-    this.pipelineOptions = pipelineOptions;
+    this.pipelineOptions = context.getOptions();
     this.inputCoder = inputCoder;
     this.outputCoders = outputCoders;
     this.windowingStrategy = windowingStrategy;
@@ -93,9 +92,22 @@ public class DoFnFunction<OT, IT>
     outputManager = new DoFnOutputManager(this.outputMap);
   }
 
+  /**
+   * get the tag id's of all the keys
+   *
+   * @return A Set of String key values
+   */
+  public Set<String> getSideInputKeys() {
+    Set<String> keys = new HashSet<>();
+    for (PCollectionView<?> view : sideInputs.keySet()) {
+      keys.add(view.getTagInternal().getId());
+    }
+    return keys;
+  }
+
   @Override
   public void prepare(TSetContext context) {
-    sideInputReader = new SideInputHandler(sideInputs, InMemoryStateInternals.<Void>forKey(null));
+    sideInputReader = new Twister2SideInputReader(sideInputs, context);
     outputManager.setup(mainOutput, sideOutputs);
 
     doFnRunner =
@@ -116,7 +128,6 @@ public class DoFnFunction<OT, IT>
   @Override
   public void compute(Iterator<WindowedValue<IT>> input, RecordCollector<RawUnionValue> output) {
     outputManager.clear();
-
     doFnRunner.startBundle();
     while (input.hasNext()) {
       doFnRunner.processElement(input.next());
