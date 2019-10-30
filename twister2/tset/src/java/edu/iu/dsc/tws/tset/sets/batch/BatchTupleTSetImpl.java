@@ -24,6 +24,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.sets.BaseTSet;
@@ -94,6 +95,31 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped() {
+    KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
+        getParallelism());
+    addChildToGraph(gather);
+    return gather;
+  }
+
+  @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn) {
+    KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
+        partitionFn, getParallelism());
+    addChildToGraph(gather);
+    return gather;
+  }
+
+  @Override
+  public KeyedGatherUngroupedTLink<K, V> keyedGatherUngrouped(PartitionFunc<K> partitionFn,
+                                                              Comparator<K> comparator) {
+    KeyedGatherUngroupedTLink<K, V> gather = new KeyedGatherUngroupedTLink<>(getTSetEnv(),
+        partitionFn, getParallelism(), true, comparator);
+    addChildToGraph(gather);
+    return gather;
+  }
+
+  @Override
   public <VR> JoinTLink<K, V, VR> join(BatchTupleTSet<K, VR> rightTSet,
                                        CommunicationContext.JoinType type,
                                        Comparator<K> keyComparator,
@@ -104,7 +130,6 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
     } else {
       join = new JoinTLink<>(getTSetEnv(), type, keyComparator, this, rightTSet);
     }
-
     addChildToGraph(join);
 
     // add the right tset connection
