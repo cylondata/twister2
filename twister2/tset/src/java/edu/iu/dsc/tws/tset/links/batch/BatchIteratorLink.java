@@ -16,6 +16,7 @@ package edu.iu.dsc.tws.tset.links.batch;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -24,6 +25,7 @@ import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.FlatMapIterCompute;
 import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
 import edu.iu.dsc.tws.tset.fn.MapIterCompute;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
@@ -72,8 +74,12 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
     getTSetEnv().run(set);
   }
 
+  /*
+   * Returns the superclass @Storable<T> because, this class is used by both keyed and non-keyed
+   * TSets. Hence, it produces both CachedTSet<T> as well as KeyedCachedTSet<K, V>
+   */
   @Override
-  public CachedTSet<T> lazyCache() {
+  public Storable<T> lazyCache() {
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheIterSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
@@ -81,10 +87,14 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
     return cacheTSet;
   }
 
+  /*
+   * Returns the superclass @Storable<T> because, this class is used by both keyed and non-keyed
+   * TSets. Hence, it produces both CachedTSet<T> as well as KeyedCachedTSet<K, V>
+   */
   @Override
-  public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
+  public Storable<T> cache() {
+    Storable<T> cacheTSet = lazyCache();
+    getTSetEnv().run((BaseTSet) cacheTSet);
     return cacheTSet;
   }
 }

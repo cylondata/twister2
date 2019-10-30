@@ -12,6 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.link.batch;
 
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
@@ -48,11 +49,11 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
    *
    * @return output TSet
    */
-  default BatchTSet<T0> cache() {
+  default Storable<T0> cache() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 
-  default BatchTSet<T0> lazyCache() {
+  default Storable<T0> lazyCache() {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 

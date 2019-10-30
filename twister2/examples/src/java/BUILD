@@ -54,6 +54,7 @@ common_deps_files = [
     "//twister2/api/src/java/edu/iu/dsc/tws/api/tset:tset-api-java",
     "//twister2/proto/utils:proto-utils-java",
     "//twister2/tset/src/java:tset-java",
+    "@org_apache_kafka_kafka_clients//:org_apache_kafka_kafka_clients",
 ]
 
 t2_java_lib(

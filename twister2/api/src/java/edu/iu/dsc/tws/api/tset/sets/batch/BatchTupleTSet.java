@@ -106,5 +106,7 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
 
   BatchTupleTSet<K, V> addInput(String key, Storable<?> input);
 
-  BatchTupleTSet<K, V> cache();
+  Storable<Tuple<K, V>> cache();
+
+  Storable<Tuple<K, V>> lazyCache();
 }

@@ -22,6 +22,7 @@ import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
 import edu.iu.dsc.tws.api.tset.sets.batch.BatchTupleTSet;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.JoinTLink;
+import edu.iu.dsc.tws.tset.links.batch.KeyedDirectTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedGatherTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
@@ -34,7 +35,8 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  * @param <V> data (value) type
  */
 public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements BatchTupleTSet<K, V> {
-  public BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
+
+  BatchTupleTSetImpl(BatchTSetEnvironment tSetEnv, String name, int parallelism) {
     super(tSetEnv, name, parallelism);
   }
 
@@ -42,6 +44,13 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   @Override
   public BatchTSetEnvironment getTSetEnv() {
     return (BatchTSetEnvironment) super.getTSetEnv();
+  }
+
+  @Override
+  public KeyedDirectTLink<K, V> keyedDirect() {
+    KeyedDirectTLink<K, V> kDirect = new KeyedDirectTLink<>(getTSetEnv(), getParallelism());
+    addChildToGraph(kDirect);
+    return kDirect;
   }
 
   @Override
@@ -118,8 +127,13 @@ public abstract class BatchTupleTSetImpl<K, V> extends BaseTSet<V> implements Ba
   }
 
   @Override
-  public BatchTupleTSetImpl<K, V> cache() {
-    return null;
+  public KeyedCachedTSet<K, V> cache() {
+    return keyedDirect().cache();
+  }
+
+  @Override
+  public KeyedCachedTSet<K, V> lazyCache() {
+    return keyedDirect().lazyCache();
   }
 
   @Override

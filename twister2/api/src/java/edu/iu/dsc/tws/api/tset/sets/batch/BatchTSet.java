@@ -75,7 +75,7 @@ public interface BatchTSet<T> extends TSet<T>, AcceptingData<T> {
   @Override
   BatchTSet<T> addInput(String key, Storable<?> input);
 
-  BatchTSet<T> cache();
+  Storable<T> cache();
 
-  BatchTSet<T> lazyCache();
+  Storable<T> lazyCache();
 }

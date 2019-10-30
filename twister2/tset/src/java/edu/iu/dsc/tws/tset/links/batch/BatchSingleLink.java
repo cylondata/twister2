@@ -88,10 +88,6 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
     CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheSingleSink<T>(),
         getTargetParallelism());
     addChildToGraph(cacheTSet);
-
-//    getTSetEnv().run(cacheTSet);
-//    cacheTSet.setData(output);
-
     return cacheTSet;
   }
 
@@ -99,8 +95,6 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
   public CachedTSet<T> cache() {
     CachedTSet<T> cacheTSet = lazyCache();
     getTSetEnv().run(cacheTSet);
-//    cacheTSet.setData(output);
-
     return cacheTSet;
   }
 

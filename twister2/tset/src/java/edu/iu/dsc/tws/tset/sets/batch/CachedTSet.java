@@ -116,6 +116,11 @@ public class CachedTSet<T> extends BatchTSetImpl<T> implements Storable<T> {
   }
 
   @Override
+  public CachedTSet<T> lazyCache() {
+    return this;
+  }
+
+  @Override
   public CachedTSet<T> setName(String n) {
     rename(n);
     return this;

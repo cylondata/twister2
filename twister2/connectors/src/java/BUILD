@@ -12,6 +12,8 @@ common_deps_files = [
     "@org_apache_kafka_kafka_clients//jar",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
     "//twister2/api/src/java/edu/iu/dsc/tws/api/compute:task-api-java",
+    "//twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing:checkpointing-api-java",
+    "//twister2/checkpointing/src/java:checkpointing-java",
 ]
 
 t2_java_lib(

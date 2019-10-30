@@ -128,7 +128,7 @@ public class TBaseGraph {
     String buildId = TSetUtils.generateBuildId(roots);
 
     Set<TBase> buildSeq = conditionalBFS(roots, nodesExtractor);
-    LOG.fine(() -> "Build order for " + buildId + " : " + buildSeq.toString());
+    LOG.info(() -> "Build order for " + buildId + " : " + buildSeq.toString());
 
     return new BuildContext(buildId, roots, buildSeq, opMode);
   }
