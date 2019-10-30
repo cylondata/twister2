@@ -93,4 +93,13 @@ public abstract class BaseOperation {
   public boolean sendBarrier(int src, byte[] barrierId) {
     return this.op.send(src, barrierId, MessageFlags.SYNC_BARRIER);
   }
+
+  /**
+   * Wait for the operation to complete
+   */
+  public void waitForCompletion() {
+    while (op.isComplete()) {
+      op.progress();
+    }
+  }
 }
