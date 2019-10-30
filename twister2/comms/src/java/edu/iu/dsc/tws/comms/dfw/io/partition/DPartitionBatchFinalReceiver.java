@@ -301,9 +301,8 @@ public class DPartitionBatchFinalReceiver implements MessageReceiver {
         lock.unlock();
       }
     }
-    boolean b = finishedTargetsCompleted.size() != targets.size();
-    complete = !b;
-    return b;
+    complete = finishedTargetsCompleted.size() == targets.size();
+    return !complete;
   }
 
   @Override

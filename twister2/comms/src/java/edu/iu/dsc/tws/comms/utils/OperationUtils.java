@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.comms.dfw.ChannelDataFlowOperation;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
@@ -61,7 +62,7 @@ public final class OperationUtils {
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
+      throw new Twister2RuntimeException(t);
     }
     return finalComplete && mergeComplete;
   }
@@ -99,7 +100,7 @@ public final class OperationUtils {
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
+      throw new Twister2RuntimeException(t);
     }
     return finalNeedsProgress || partialNeedsProgress;
   }

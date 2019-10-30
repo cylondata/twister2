@@ -233,9 +233,7 @@ public abstract class SourceReceiver implements MessageReceiver {
             // at this point we call the sync event
             onSyncEvent(target, barriers.get(target));
             clearTarget(target);
-          }
-
-          if (!sendSuccess) {
+          } else {
             needsFurtherProgress = true;
           }
         }
