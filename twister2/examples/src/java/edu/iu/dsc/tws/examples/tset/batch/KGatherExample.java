@@ -44,6 +44,14 @@ public class KGatherExample extends BatchTsetExample {
   private static final Logger LOG = Logger.getLogger(KGatherExample.class.getName());
   private static final long serialVersionUID = -2753072757838198105L;
 
+  private <T> String iterToString(Iterator<T> iter) {
+    StringBuilder sb = new StringBuilder();
+    while (iter.hasNext()) {
+      sb.append(iter.next()).append(" ");
+    }
+    return sb.toString();
+  }
+
   @Override
   public void execute(BatchTSetEnvironment env) {
     SourceTSet<Integer> src = dummySource(env, COUNT, PARALLELISM);
@@ -53,7 +61,7 @@ public class KGatherExample extends BatchTsetExample {
 
     LOG.info("test foreach");
     klink.forEach((ApplyFunc<Tuple<Integer, Iterator<Integer>>>)
-        data -> LOG.info("key " + data.getKey() + " " + data.getValue().toString())
+        data -> LOG.info(data.getKey() + " -> " + iterToString(data.getValue()))
     );
 
     LOG.info("test map");
@@ -63,7 +71,7 @@ public class KGatherExample extends BatchTsetExample {
           while (input.getValue().hasNext()) {
             s += input.getValue().next();
           }
-          return "key " + input.getKey() + " " + s;
+          return input.getKey() + " -> " + s;
         })
         .direct()
         .forEach(s -> LOG.info("map: " + s));
@@ -74,7 +82,8 @@ public class KGatherExample extends BatchTsetExample {
           StringBuilder s = new StringBuilder();
           while (input.hasNext()) {
             Tuple<Integer, Iterator<Integer>> next = input.next();
-            s.append("$").append(next.getKey()).append("_").append(next.getValue().toString());
+            s.append(" [").append(next.getKey()).append(" -> ")
+                .append(iterToString(next.getValue())).append("] ");
           }
           return s.toString();
         })
@@ -86,7 +95,7 @@ public class KGatherExample extends BatchTsetExample {
         (input, output) -> {
           while (input.hasNext()) {
             Tuple<Integer, Iterator<Integer>> next = input.next();
-            output.collect(next.getKey() + "#" + next.getValue().toString());
+            output.collect(next.getKey() + " -> " + iterToString(next.getValue()));
           }
         })
         .direct()
