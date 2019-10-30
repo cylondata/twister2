@@ -12,8 +12,8 @@
 package edu.iu.dsc.tws.tset.cdfw;
 
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
-import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
+import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.env.BuildContext;
 
@@ -28,7 +28,7 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
 
   @Override
   protected void executeBuildContext(BuildContext buildContext) {
-    DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+    DataFlowJobConfig dafaFlowJobConfig = new DataFlowJobConfig();
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", buildContext.getComputeGraph()).
         setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig).setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);

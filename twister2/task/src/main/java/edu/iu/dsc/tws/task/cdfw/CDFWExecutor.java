@@ -160,7 +160,7 @@ public final class CDFWExecutor {
   }
 
   void workerMessageReceived(Any anyMessage, int senderWorkerID) {
-    LOG.log(Level.INFO, String.format("Received worker message %d: %s", senderWorkerID,
+    LOG.log(Level.FINE, String.format("Received worker message %d: %s", senderWorkerID,
         anyMessage.getClass().getName()));
     driverEvents.offer(new DriverEvent(DriveEventType.FINISHED_JOB, anyMessage, senderWorkerID));
   }

@@ -72,7 +72,6 @@ public class CDFWScheduler implements ICDFWScheduler {
    * based on the requested workers and the available workers in the worker info list.
    */
   private Set<Integer> scheduleGraphs(DataFlowGraph graph) {
-    LOG.info("I am getting called inside scheduleGraphs");
     if (workerInfoList.size() == graph.getWorkers()) {
       for (JobMasterAPI.WorkerInfo workerInfos : workerInfoList) {
         workerList.add(workerInfos.getWorkerID());

@@ -104,8 +104,8 @@ public final class KMeansConnectedDataflowExample {
         .put(CDFConstants.ARGS_WORKERS, Integer.toString(instances))
         .put(CDFConstants.ARGS_PARALLELISM_VALUE, Integer.toString(parallelism))
         .put(CDFConstants.ARGS_DIMENSIONS, Integer.toString(dimension))
-        .put(CDFConstants.ARGS_CSIZE, Integer.toString(dsize))
-        .put(CDFConstants.ARGS_DSIZE, Integer.toString(csize))
+        .put(CDFConstants.ARGS_CSIZE, Integer.toString(csize))
+        .put(CDFConstants.ARGS_DSIZE, Integer.toString(dsize))
         .put(CDFConstants.ARGS_DINPUT, dataDirectory)
         .put(CDFConstants.ARGS_CINPUT, centroidDirectory)
         .put(CDFConstants.ARGS_ITERATIONS, Integer.toString(iterations))
@@ -249,7 +249,7 @@ public final class KMeansConnectedDataflowExample {
 
       DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension, dsize,
           instances, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, dsize,
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, csize,
           instances, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job1);
