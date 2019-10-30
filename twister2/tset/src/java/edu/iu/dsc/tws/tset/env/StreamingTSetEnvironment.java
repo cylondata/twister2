@@ -12,9 +12,11 @@
 
 package edu.iu.dsc.tws.tset.env;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
+import edu.iu.dsc.tws.tset.sets.streaming.SKeyedSourceTSet;
 import edu.iu.dsc.tws.tset.sets.streaming.SSourceTSet;
 
 public class StreamingTSetEnvironment extends TSetEnvironment {
@@ -39,4 +41,38 @@ public class StreamingTSetEnvironment extends TSetEnvironment {
 
     return sourceT;
   }
+
+  @Override
+  public <T> SSourceTSet<T> createSource(String name, SourceFunc<T> source, int parallelism) {
+    SSourceTSet<T> sourceT = new SSourceTSet<>(this, name, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+
+    return sourceT;
+  }
+
+  @Override
+  public <K, V> SKeyedSourceTSet<K, V> createKeyedSource(SourceFunc<Tuple<K, V>> source,
+                                                         int parallelism) {
+    SKeyedSourceTSet<K, V> sourceT = new SKeyedSourceTSet<>(this, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+    return sourceT;
+  }
+
+  @Override
+  public <K, V> SKeyedSourceTSet<K, V> createKeyedSource(String name,
+                                                         SourceFunc<Tuple<K, V>> source,
+                                                         int parallelism) {
+    SKeyedSourceTSet<K, V> sourceT = new SKeyedSourceTSet<>(this, name, source, parallelism);
+    getGraph().addSourceTSet(sourceT);
+    return sourceT;
+  }
+
+  /**
+   * Runs the entire TSet graph
+   */
+  public void run() {
+    BuildContext buildCtx = getTSetGraph().build();
+    executeBuildContext(buildCtx);
+  }
+
 }

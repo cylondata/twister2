@@ -11,18 +11,21 @@
 //  limitations under the License.
 
 
-
 package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class DirectTLink<T> extends BIteratorLink<T> {
+public class DirectTLink<T> extends BatchIteratorLink<T> {
 
   public DirectTLink(BatchTSetEnvironment tSetEnv, int sourceParallelism) {
-    super(tSetEnv, TSetUtils.generateName("direct"), sourceParallelism);
+    super(tSetEnv, "direct", sourceParallelism);
+  }
+
+  public DirectTLink(BatchTSetEnvironment tSetEnv, String name, int sourceParallelism) {
+    super(tSetEnv, name, sourceParallelism);
   }
 
   @Override
@@ -34,5 +37,15 @@ public class DirectTLink<T> extends BIteratorLink<T> {
   @Override
   public Edge getEdge() {
     return new Edge(getId(), OperationNames.DIRECT, getMessageType());
+  }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return (CachedTSet<T>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    return (CachedTSet<T>) super.cache();
   }
 }

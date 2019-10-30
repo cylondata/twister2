@@ -18,16 +18,13 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.api.tset.link.batch.BatchTLink;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.BaseTLink;
-import edu.iu.dsc.tws.tset.ops.ComputeCollectorOp;
-import edu.iu.dsc.tws.tset.ops.ComputeOp;
-import edu.iu.dsc.tws.tset.ops.SinkOp;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
-public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
+public abstract class BatchTLinkImpl<T1, T0> extends BaseTLink<T1, T0>
     implements BatchTLink<T1, T0> {
 
-  BBaseTLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  BatchTLinkImpl(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
 
@@ -39,25 +36,21 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
   public <P> ComputeTSet<P, T1> compute(String n, ComputeFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, new ComputeOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), new ComputeOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
     }
     addChildToGraph(set);
 
     return set;
   }
 
-  public  <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
+  public <P> ComputeTSet<P, T1> compute(String n, ComputeCollectorFunc<P, T1> computeFunction) {
     ComputeTSet<P, T1> set;
     if (n != null && !n.isEmpty()) {
-      set = new ComputeTSet<>(getTSetEnv(), n, new ComputeCollectorOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), n, computeFunction, getTargetParallelism());
     } else {
-      set = new ComputeTSet<>(getTSetEnv(), new ComputeCollectorOp<>(computeFunction),
-          getTargetParallelism());
+      set = new ComputeTSet<>(getTSetEnv(), computeFunction, getTargetParallelism());
     }
     addChildToGraph(set);
 
@@ -74,12 +67,11 @@ public abstract class BBaseTLink<T1, T0> extends BaseTLink<T1, T0>
     return compute(null, computeFunction);
   }
 
-
   @Override
-  public void sink(SinkFunc<T1> sinkFunction) {
-    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), new SinkOp<>(sinkFunction),
-        getTargetParallelism());
+  public SinkTSet<T1> sink(SinkFunc<T1> sinkFunction) {
+    SinkTSet<T1> sinkTSet = new SinkTSet<>(getTSetEnv(), sinkFunction, getTargetParallelism());
     addChildToGraph(sinkTSet);
-    getTSetEnv().run(sinkTSet);
+
+    return sinkTSet;
   }
 }

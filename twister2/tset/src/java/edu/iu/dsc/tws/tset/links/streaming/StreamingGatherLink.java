@@ -11,84 +11,68 @@
 //  limitations under the License.
 
 
-package edu.iu.dsc.tws.tset.links.batch;
+package edu.iu.dsc.tws.tset.links.streaming;
 
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
-import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.env.StreamingTSetEnvironment;
 import edu.iu.dsc.tws.tset.fn.GatherFlatMapCompute;
 import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
-import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
-import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.tset.sinks.GatherCacheSink;
+import edu.iu.dsc.tws.tset.sets.streaming.SComputeTSet;
 
 /**
  * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
  * etc will be done on the tuple value only (key will be dropped, as key is an information
  * forcibly attached at the communication level). If the key information is required, users can
- * use the compute methods which enables the use of Iterator<Tuple<Integer, T>>
+ * use the compute methods which enables the use of Iterator<Tuple<K, T>>
  *
  * @param <T> value type
  */
-public abstract class BBaseGatherLink<T> extends BBaseTLink<Iterator<Tuple<Integer, T>>, T> {
+public abstract class StreamingGatherLink<T>
+    extends StreamingTLinkImpl<Iterator<Tuple<Integer, T>>, T> {
 
-  BBaseGatherLink(BatchTSetEnvironment env, String n, int sourceP) {
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP) {
     this(env, n, sourceP, sourceP);
   }
 
-  BBaseGatherLink(BatchTSetEnvironment env, String n, int sourceP, int targetP) {
+  StreamingGatherLink(StreamingTSetEnvironment env, String n, int sourceP, int targetP) {
     super(env, n, sourceP, targetP);
   }
-/*  public <P> ComputeTSet<P, Iterator<T>>
+/*  public <P> StreamingComputeTSet<P, Iterator<T>>
 computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
-    computeFnWrapper = new ComputeCollectorWrapper<P, Integer, T>(computeFunction);
+    computeFnWrapper = new ComputeCollectorWrapper<P, K, T>(computeFunction);
     return null;
   }
 
-  public <P> ComputeTSet<P, Iterator<T>>
+  public <P> StreamingComputeTSet<P, Iterator<T>>
   computeWithoutKey(ComputeCollector<P, Iterator<T>> computeFunction) {
-    ComputeCollectorWrapper<P, Integer, T> computeFnWrapper =
+    ComputeCollectorWrapper<P, K, T> computeFnWrapper =
         new ComputeCollectorWrapper<>(computeFunction);
-    return compute(TSetUtils.generateName("computec"));
+    return compute(("computec"));
   }*/
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
+  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> map(MapFunc<O, T> mapFn) {
     GatherMapCompute<O, T> comp = new GatherMapCompute<>(mapFn);
-    return compute(TSetUtils.generateName("map"), comp);
+    return compute("smap", comp);
   }
 
   @Override
-  public <O> ComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
+  public <O> SComputeTSet<O, Iterator<Tuple<Integer, T>>> flatmap(FlatMapFunc<O, T> mapFn) {
     GatherFlatMapCompute<O, T> comp = new GatherFlatMapCompute<>(mapFn);
-    return compute(TSetUtils.generateName("map"), comp);
+    return compute("smap", comp);
   }
 
   @Override
   public void forEach(ApplyFunc<T> applyFunction) {
     GatherForEachCompute<T> comp = new GatherForEachCompute<>(applyFunction);
-    ComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
-        compute(TSetUtils.generateName("foreach"), comp);
+    SComputeTSet<Object, Iterator<Tuple<Integer, T>>> foreach =
+        compute("sforeach", comp);
     addChildToGraph(foreach);
-    getTSetEnv().run(foreach);
-  }
-
-  @Override
-  public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new GatherCacheSink<T>(),
-        getTargetParallelism());
-    addChildToGraph(cacheTSet);
-
-    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-    cacheTSet.setData(output);
-
-    return cacheTSet;
   }
 }

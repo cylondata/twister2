@@ -11,14 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.tset.cdfw;
 
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.task.cdfw.CDFWEnv;
+import edu.iu.dsc.tws.task.cdfw.DafaFlowJobConfig;
 import edu.iu.dsc.tws.task.cdfw.DataFlowGraph;
-import edu.iu.dsc.tws.task.cdfw.DataFlowJobConfig;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
-import edu.iu.dsc.tws.tset.sets.BuildableTSet;
+import edu.iu.dsc.tws.tset.env.BuildContext;
 
 public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
 
@@ -30,22 +27,10 @@ public class BatchTSetCDFWEnvironment extends BatchTSetEnvironment {
   }
 
   @Override
-  protected <T> DataObject<T> executeDataFlowGraph(ComputeGraph dataflowGraph,
-                                                   BuildableTSet outputTset, boolean isIterative) {
-    DataFlowJobConfig dataFlowJobConfig = new DataFlowJobConfig();
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", dataflowGraph).
-        setWorkers(2).addDataFlowJobConfig(dataFlowJobConfig).setGraphType("non-iterative");
+  protected void executeBuildContext(BuildContext buildContext) {
+    DafaFlowJobConfig dafaFlowJobConfig = new DafaFlowJobConfig();
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", buildContext.getComputeGraph()).
+        setWorkers(2).addDataFlowJobConfig(dafaFlowJobConfig).setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);
-    return null;
-  }
-
-  @Override
-  public void finishIter() {
-    return;
-  }
-
-  @Override
-  protected void pushInputsToFunctions(ComputeGraph graph, ExecutionPlan executionPlan) {
-    return;
   }
 }

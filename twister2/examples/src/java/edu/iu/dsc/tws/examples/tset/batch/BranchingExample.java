@@ -46,11 +46,12 @@ public class BranchingExample extends BatchTsetExample {
 
 
     ComputeTSet<String, Iterator<JoinedTuple<Integer, Integer, Integer>>> map
-        = join.map(t -> "(" + t.getKey() + " " + t.getLeftValue() + " " + t.getRightValue() + ")");
+        = join.map(t -> "(" + t.getKey() + " " + t.getLeftValue() + " " + t.getRightValue() + ")")
+        .setName("map***");
 
-    ComputeTSet<String, Iterator<String>> map1 = map.direct().map(s -> "###" + s);
+    ComputeTSet<String, Iterator<String>> map1 = map.direct().map(s -> "###" + s).setName("map@@");
 
-    ComputeTSet<String, Iterator<String>> union = map.union(map1);
+    ComputeTSet<String, Iterator<String>> union = map.union(map1).setName("union");
 
     union.direct().forEach(s -> LOG.info(s));
   }

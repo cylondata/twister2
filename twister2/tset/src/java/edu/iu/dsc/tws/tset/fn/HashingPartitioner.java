@@ -43,6 +43,7 @@ public class HashingPartitioner<T> implements PartitionFunc<T> {
   private void initialize(Set<Integer> sources, Set<Integer> destinations) {
     for (int s : sources) {
       ArrayList<Integer> destList = new ArrayList<>(destinations);
+      destList.sort((o1, o2) -> o1 - o2);
       destination.put(s, destList);
     }
   }

@@ -18,11 +18,7 @@
 package org.apache.beam.runners.twister2.translators.batch;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.beam.runners.core.construction.ParDoTranslation;
 import org.apache.beam.runners.twister2.Twister2BatchTranslationContext;
@@ -44,7 +40,7 @@ import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.WindowingStrategy;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Maps;
 
-import edu.iu.dsc.tws.tset.sets.batch.BBaseTSet;
+import edu.iu.dsc.tws.tset.sets.batch.BatchTSetImpl;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 /**
  * ParDo translator.
@@ -57,7 +53,7 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
       ParDo.MultiOutput<IT, OT> transform, Twister2BatchTranslationContext context) {
     DoFn<IT, OT> doFn;
     doFn = transform.getFn();
-    BBaseTSet<WindowedValue<IT>> inputTTSet =
+    BatchTSetImpl<WindowedValue<IT>> inputTTSet =
         context.getInputDataSet(context.getInput(transform));
 
     WindowingStrategy<?, ?> windowingStrategy = context.getInput(transform).getWindowingStrategy();
@@ -72,6 +68,14 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
     TupleTag<OT> mainOutput = transform.getMainOutputTag();
     List<TupleTag<?>> additionalOutputTags = new ArrayList<>(outputs.size() - 1);
     Collection<PCollectionView<?>> sideInputs = transform.getSideInputs();
+
+    // construct a map from side input to WindowingStrategy so that
+    // the DoFn runner can map main-input windows to side input windows
+    Map<PCollectionView<?>, WindowingStrategy<?, ?>> sideInputStrategies = new HashMap<>();
+    for (PCollectionView<?> sideInput : sideInputs) {
+      sideInputStrategies.put(sideInput, sideInput.getWindowingStrategyInternal());
+    }
+
     TupleTag<?> mainOutputTag;
     try {
       mainOutputTag = ParDoTranslation.getMainOutputTag(context.getCurrentTransform());
@@ -93,13 +97,13 @@ public class ParDoMultiOutputTranslatorBatch<IT, OT>
             .direct()
             .<RawUnionValue>compute(
                 new DoFnFunction<OT, IT>(
-                    context.getOptions(),
+                    context,
                     doFn,
                     inputCoder,
                     outputCoders,
                     additionalOutputTags,
                     windowingStrategy,
-                    sideInputs,
+                    sideInputStrategies,
                     mainOutput,
                     doFnSchemaInformation,
                     outputMap));

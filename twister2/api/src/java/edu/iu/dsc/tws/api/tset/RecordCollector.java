@@ -9,18 +9,23 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.tset.sets.batch;
+package edu.iu.dsc.tws.api.tset;
 
-import edu.iu.dsc.tws.api.tset.sets.TSet;
-
-public interface CacheableTSet<T> {
+/**
+ * Collector for map function
+ *
+ * @param <T> input type
+ */
+public interface RecordCollector<T> {
+  /**
+   * Collect the record
+   *
+   * @param record this will be sent
+   */
+  void collect(T record);
 
   /**
-   * Executes TSet and saves any generated data as a in-memory data object
-   *
-   * @return the resulting TSet
+   * Close the collector
    */
-  TSet<T> cache(boolean isIterative);
-
-  TSet<T> cache();
+  void close();
 }

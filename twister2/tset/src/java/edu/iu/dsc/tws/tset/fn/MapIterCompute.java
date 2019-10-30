@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
@@ -27,7 +27,7 @@ public class MapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterator<I>
   }
 
   @Override
-  public void compute(Iterator<I> input, Collector<O> output) {
+  public void compute(Iterator<I> input, RecordCollector<O> output) {
     while (input.hasNext()) {
       O result = mapFn.map(input.next());
       output.collect(result);

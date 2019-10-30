@@ -11,9 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.tset.fn;
 
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 
-public abstract class BaseTFunction implements TFunction {
+public abstract class BaseTFunction<O, I> implements TFunction<O, I> {
   /**
    * The runtime context that is made avilable to users who create functions that
    * extend from the TBaseFunction abstract class
@@ -27,5 +28,9 @@ public abstract class BaseTFunction implements TFunction {
 
   public TSetContext getTSetContext() {
     return context;
+  }
+
+  public DataPartition<?> getInput(String key) {
+    return context.getInput(key);
   }
 }

@@ -14,7 +14,7 @@ package edu.iu.dsc.tws.tset.fn;
 
 import java.util.Iterator;
 
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -27,7 +27,7 @@ public class FlatMapIterCompute<O, I> implements ComputeCollectorFunc<O, Iterato
   }
 
   @Override
-  public void compute(Iterator<I> input, Collector<O> output) {
+  public void compute(Iterator<I> input, RecordCollector<O> output) {
     while (input.hasNext()) {
       mapFn.flatMap(input.next(), output);
     }

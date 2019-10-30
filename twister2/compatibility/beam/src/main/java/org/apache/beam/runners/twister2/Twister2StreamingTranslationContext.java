@@ -17,18 +17,20 @@
  */
 package org.apache.beam.runners.twister2;
 
-import edu.iu.dsc.tws.tset.worker.TwisterStreamingContext;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 
 /**
  * doc.
  */
 public class Twister2StreamingTranslationContext extends Twister2TranslationContext {
 
-  private final TwisterStreamingContext twisterStreamingContext;
-
   public Twister2StreamingTranslationContext(
-      Twister2PipelineOptions options, TwisterStreamingContext streamExecutionContext) {
+      Twister2PipelineOptions options) {
     super(options);
-    this.twisterStreamingContext = streamExecutionContext;
+  }
+
+  @Override
+  public void eval(SinkTSet<?> tSet) {
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 }

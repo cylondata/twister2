@@ -31,6 +31,7 @@ import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.AllReduceTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class TSetAllReduceExample extends BaseTSetBatchWorker {
@@ -53,7 +54,7 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
       return val;
     });
 
-    reduce.sink(value -> {
+    SinkTSet<int[]> sink = reduce.sink(value -> {
       experimentData.setOutput(value);
       try {
         LOG.info("Results " + Arrays.toString(value));
@@ -63,6 +64,8 @@ public class TSetAllReduceExample extends BaseTSetBatchWorker {
       }
       return true;
     });
+    env.run(sink);
+
   }
 
 }

@@ -26,22 +26,31 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.INode;
+import edu.iu.dsc.tws.api.tset.Storable;
 import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SourceOp;
 
-public class SourceTSet<T> extends BBaseTSet<T> {
+public class SourceTSet<T> extends BatchTSetImpl<T> {
   private SourceFunc<T> source;
 
   public SourceTSet(BatchTSetEnvironment tSetEnv, SourceFunc<T> src, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("source"), parallelism);
+    this(tSetEnv, "source", src, parallelism);
+  }
+
+  public SourceTSet(BatchTSetEnvironment tSetEnv, String name, SourceFunc<T> src, int parallelism) {
+    super(tSetEnv, name, parallelism);
     this.source = src;
   }
 
   @Override
+  public SourceTSet<T> addInput(String key, Storable<?> input) {
+    return (SourceTSet<T>) super.addInput(key, input);
+  }
+
+  @Override
   public INode getINode() {
-    return new SourceOp<>(source);
+    return new SourceOp<>(source, this, getInputs());
   }
 
   @Override
@@ -49,5 +58,4 @@ public class SourceTSet<T> extends BBaseTSet<T> {
     rename(name);
     return this;
   }
-
 }

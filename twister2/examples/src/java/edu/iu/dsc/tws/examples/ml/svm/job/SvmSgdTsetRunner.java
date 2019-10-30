@@ -135,7 +135,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
   }
 
   private void executeTraining(BatchTSetEnvironment env) {
-    this.binaryBatchModel.setW(this.trainedWeightVector.getData(0).get(0));
+    this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0)); // todo test this!
     for (int i = 0; i < this.svmJobParameters.getIterations(); i++) {
       LOG.info(String.format("Iteration %d", i));
 
@@ -185,7 +185,7 @@ public class SvmSgdTsetRunner implements BatchTSetIWorker, Serializable {
   }
 
   private void executePredict(BatchTSetEnvironment env) {
-    assert this.trainedWeightVector.getDataObject() != null : "Partition is null";
+    assert this.trainedWeightVector.getStoredSourceTSet() != null : "Partition is null";
 
     this.binaryBatchModel.setW(this.trainedWeightVector.getData().get(0));
 

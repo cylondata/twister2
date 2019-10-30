@@ -26,6 +26,7 @@ package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
@@ -36,6 +37,7 @@ import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 
@@ -49,36 +51,40 @@ public class CacheExample extends BatchTsetExample {
 
     // test direct().cache() which has IterLink semantics
     CachedTSet<Integer> cache = src.direct().cache();
-    runOps(cache);
+    runOps(env, cache);
 
     // test reduce().cache() which has SingleLink semantics
     CachedTSet<Integer> cache1 = src.reduce(Integer::sum).cache();
-    runOps(cache1);
+    runOps(env, cache1);
 
     // test gather.cache() which has TupleValueIterLink
     CachedTSet<Integer> cache2 = src.gather().cache();
-    runOps(cache2);
+    runOps(env, cache2);
   }
 
-  private void runOps(CachedTSet<Integer> cache) {
+  private void runOps(BatchTSetEnvironment env, CachedTSet<Integer> cTset) {
     LOG.info("test foreach");
-    cache.direct()
+    cTset.direct()
         .forEach(i -> LOG.info("foreach: " + i));
 
+    LOG.info("test list");
+    List<Integer> data = cTset.getData();
+    LOG.info("List out: " + data);
+
     LOG.info("test map");
-    cache.direct()
+    cTset.direct()
         .map(i -> i.toString() + "$$")
         .direct()
         .forEach(s -> LOG.info("map: " + s));
 
-    LOG.info("test flat map");
-    cache.direct()
+    LOG.info("test flatmap");
+    cTset.direct()
         .flatmap((i, c) -> c.collect(i.toString() + "##"))
         .direct()
         .forEach(s -> LOG.info("flat:" + s));
 
     LOG.info("test compute");
-    cache.direct()
+    cTset.direct()
         .compute((ComputeFunc<String, Iterator<Integer>>) input -> {
           int sum = 0;
           while (input.hasNext()) {
@@ -90,7 +96,7 @@ public class CacheExample extends BatchTsetExample {
         .forEach(i -> LOG.info("comp: " + i));
 
     LOG.info("test computec");
-    cache.direct()
+    cTset.direct()
         .compute((ComputeCollectorFunc<String, Iterator<Integer>>)
             (input, output) -> {
               int sum = 0;
@@ -103,13 +109,14 @@ public class CacheExample extends BatchTsetExample {
         .forEach(s -> LOG.info("computec: " + s));
 
     LOG.info("test sink");
-    cache.direct()
+    SinkTSet<Iterator<Integer>> sink = cTset.direct()
         .sink((SinkFunc<Iterator<Integer>>) value -> {
           while (value.hasNext()) {
             LOG.info("val =" + value.next());
           }
           return true;
         });
+    env.run(sink);
   }
 
 

@@ -69,6 +69,7 @@ public class BasicK8sWorker
 
   private static final Logger LOG = Logger.getLogger(BasicK8sWorker.class.getName());
 
+  private int wID;
   private ISenderToDriver senderToDriver;
 
   private Object waitObject = new Object();
@@ -104,8 +105,9 @@ public class BasicK8sWorker
     WorkerRuntime.addAllJoinedListener(this);
     WorkerRuntime.addReceiverFromDriver(this);
     WorkerRuntime.addScalerListener(this);
-
     senderToDriver = WorkerRuntime.getSenderToDriver();
+
+    wID = workerID;
 
     LOG.info("BasicK8sWorker started. Current time: " + System.currentTimeMillis());
 
@@ -265,7 +267,10 @@ public class BasicK8sWorker
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
     try {
+      long start = System.currentTimeMillis();
       workerController.waitOnBarrier();
+      long delay = System.currentTimeMillis() - start;
+      LOG.info("Barrier wait time: " + delay + " ms for worker: " + wID);
     } catch (TimeoutException e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
       return null;
@@ -277,7 +282,7 @@ public class BasicK8sWorker
 
   private void waitAndComplete() {
 
-    long duration = 60;
+    long duration = 600;
     try {
       LOG.info("Sleeping " + duration + " seconds. Will complete after that.");
       Thread.sleep(duration * 1000);
