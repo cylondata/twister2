@@ -17,7 +17,9 @@ import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.metrics.MetricResults;
 import org.joda.time.Duration;
 
-/** Represents a Twister2 pipeline execution result. */
+/**
+ * Represents a Twister2 pipeline execution result.
+ */
 public class Twister2PiplineResult implements PipelineResult {
   @Override
   public State getState() {
@@ -31,12 +33,12 @@ public class Twister2PiplineResult implements PipelineResult {
 
   @Override
   public State waitUntilFinish(Duration duration) {
-    throw new UnsupportedOperationException("Operation not supported");
+    return State.DONE;
   }
 
   @Override
   public State waitUntilFinish() {
-    throw new UnsupportedOperationException("Operation not supported");
+    return State.DONE;
   }
 
   @Override
