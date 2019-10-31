@@ -11,8 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.comms.stream;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -104,22 +102,14 @@ public class SDirectExample extends BenchWorker {
 
     private int totalExpectedCount = 0;
 
-    private Map<Integer, Integer> targetCounts = new HashMap<>();
-
     @Override
     public void init(Config cfg, Set<Integer> targets) {
       this.totalExpectedCount = targets.size() * jobParameters.getTotalIterations();
-      for (int i : targets) {
-        targetCounts.put(i, 0);
-      }
     }
 
     @Override
     public boolean receive(int target, Object object) {
       count++;
-
-      int c = targetCounts.get(target);
-      targetCounts.put(target, c + 1);
 
       if (receiverInWorker0 == target) {
         this.countToLowest++;
@@ -128,7 +118,6 @@ public class SDirectExample extends BenchWorker {
         }
         if (countToLowest == jobParameters.getTotalIterations()) {
           Timing.mark(TIMING_ALL_RECV, workerId == 0);
-          LOG.info(String.format("Total: %s, target %d", targetCounts, receiverInWorker0));
           BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0);
           resultsRecorder.writeToCSV();
           LOG.info(() -> String.format("Target %d received ALL %d", target, countToLowest));
