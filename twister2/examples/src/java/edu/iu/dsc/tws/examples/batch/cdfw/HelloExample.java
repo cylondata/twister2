@@ -70,9 +70,10 @@ public final class HelloExample {
       graphBuilderX.setMode(OperationMode.BATCH);
       ComputeGraph batchGraph = graphBuilderX.build();
 
-      //Invoke CDFW Submitter and send the metagraph
-      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph).
-          setWorkers(4).addDataFlowJobConfig(dataFlowJobConfig);
+      //Invoke CDFW Submitter and send the meta graph
+      DataFlowGraph job = DataFlowGraph.newSubGraphJob("hello", batchGraph)
+          .setWorkers(4).addDataFlowJobConfig(dataFlowJobConfig)
+          .setGraphType("non-iterative");
       execEnv.executeDataFlowGraph(job);
     }
   }

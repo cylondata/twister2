@@ -247,10 +247,10 @@ public final class KMeansConnectedDataflowExample {
 
       generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
 
-      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension, dsize,
-          instances, jobConfig);
-      DataFlowGraph job2 = generateSecondJob(config, parallelism, dataDirectory, dimension, csize,
-          instances, jobConfig);
+      DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension,
+          dsize, instances, jobConfig);
+      DataFlowGraph job2 = generateSecondJob(config, parallelism, centroidDirectory, dimension,
+          csize, instances, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
