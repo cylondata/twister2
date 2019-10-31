@@ -92,8 +92,7 @@ public class PartitionBatchFinalReceiver extends TargetFinalReceiver {
         && readyToSend.get(target) != null && !readyToSend.get(target).isEmpty();
   }
 
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
-    receiver.sync(target, value);
+  protected boolean onSyncEvent(int target, byte[] value) {
+    return receiver.sync(target, value);
   }
 }

@@ -18,8 +18,8 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    return DFWIOUtils.sendSyncForward(needsFurtherProgress, target, syncState,
+  protected boolean sendSyncForward(int target) {
+    return DFWIOUtils.sendSyncForward(target, syncState,
         barriers, operation, isSyncSent);
   }
 
@@ -32,6 +32,5 @@ public class GatherBatchPartialReceiver extends BaseGatherBatchReceiver {
   protected boolean isFilledToSend(int target, boolean sync) {
     return gatheredValuesMap.get(target) != null && gatheredValuesMap.get(target).size() > 0;
   }
-
 }
 

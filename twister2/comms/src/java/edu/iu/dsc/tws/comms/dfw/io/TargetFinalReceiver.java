@@ -13,7 +13,6 @@ package edu.iu.dsc.tws.comms.dfw.io;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +22,7 @@ import edu.iu.dsc.tws.api.comms.DataFlowOperation;
 import edu.iu.dsc.tws.api.config.Config;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 
 public abstract class TargetFinalReceiver extends TargetReceiver {
   private static final Logger LOG = Logger.getLogger(TargetFinalReceiver.class.getName());
@@ -48,6 +48,12 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
   protected boolean calledReceive = false;
 
+  /**
+   * A boolean to keep track weather we synced, we can figure this out using the
+   * state in targetStates, but it can be in-efficient, so we keep a boolean
+   */
+  private boolean complete;
+
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
@@ -55,7 +61,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     thisDestinations = expectedIds.keySet();
 
     for (Integer target : expectedIds.keySet()) {
-      syncReceived.put(target, new HashSet<>());
+      syncReceived.put(target, new IntArraySet());
       targetStates.put(target, ReceiverState.INIT);
     }
 
@@ -116,7 +122,7 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
   @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
-
+    boolean messagesEmpty = true;
     lock.lock();
     try {
       for (int i = 0; i < targets.length; i++) {
@@ -129,6 +135,9 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
         // check weather we are ready to send and we have values to send
         if (!isFilledToSend(key)) {
+          if (!val.isEmpty()) {
+            messagesEmpty = false;
+          }
           continue;
         }
 
@@ -137,16 +146,18 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
           needsFurtherProgress = true;
         }
 
-        if (!val.isEmpty() || !isAllEmpty(key)) {
-          needsFurtherProgress = true;
+        if (!val.isEmpty()) {
+          messagesEmpty = false;
         }
       }
 
-      if (!needsFurtherProgress) {
+      if (!needsFurtherProgress && messagesEmpty) {
         for (int i = 0; i < targets.length; i++) {
           int key = targets[i];
-          if (!isAllEmpty(key) || !sync(key)) {
-            needsFurtherProgress = true;
+          if (isAllEmpty(key)) {
+            if (!sync(key)) {
+              needsFurtherProgress = true;
+            }
           }
         }
       }
@@ -157,22 +168,29 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    boolean comp = true;
+    for (int i = 0; i < targets.length; i++) {
+      int t = targets[i];
+      if (targetStates.get(t) != ReceiverState.SYNCED) {
+        comp = false;
+      }
+    }
+    complete = comp;
+    return complete;
+  }
+
   protected abstract boolean isAllEmpty(int target);
 
   protected boolean sync(int target) {
-    boolean allSynced = false;
-    // if we have synced no need to go forward
-    if (targetStates.get(target) == ReceiverState.SYNCED) {
-      return true;
-    }
-
     if (targetStates.get(target) == ReceiverState.ALL_SYNCS_RECEIVED) {
+      if (!onSyncEvent(target, barriers.get(target))) {
+        return false;
+      }
       targetStates.put(target, ReceiverState.SYNCED);
-      onSyncEvent(target, barriers.get(target));
-      allSynced = true;
     }
-
-    return allSynced;
+    return true;
   }
 
   @Override
@@ -189,5 +207,6 @@ public abstract class TargetFinalReceiver extends TargetReceiver {
 
     barriers.clear();
     stateCleared = false;
+    complete = false;
   }
 }

@@ -38,8 +38,8 @@ public class AllGatherStreamingFinalReceiver extends GatherStreamingPartialRecei
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    return DFWIOUtils.sendFinalSyncForward(needsFurtherProgress, target, syncState,
+  protected boolean sendSyncForward(int target) {
+    return DFWIOUtils.sendFinalSyncForward(target, syncState,
         barriers, broadcast, isSyncSent);
   }
 }

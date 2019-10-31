@@ -38,15 +38,14 @@ public class ReduceStreamingFinalReceiver extends ReduceStreamingReceiver {
     return singularReceiver.receive(source, message);
   }
 
+
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+  protected boolean sendSyncForward(int target) {
     onSyncEvent(target, barriers.get(target));
-    return needsFurtherProgress;
+    return false;
   }
 
-
-  @Override
-  public void onSyncEvent(int target, byte[] value) {
+  protected void onSyncEvent(int target, byte[] value) {
     singularReceiver.sync(target, value);
   }
 }

@@ -98,4 +98,9 @@ public abstract class ReduceBatchReceiver extends SourceReceiver {
     }
     return false;
   }
+
+  @Override
+  protected void onSyncEvent(int target, byte[] value) {
+
+  }
 }

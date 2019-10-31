@@ -132,7 +132,7 @@ public class KReduceBatchFinalReceiver extends TargetFinalReceiver {
   }
 
   @Override
-  public void onSyncEvent(int target, byte[] value) {
-    bulkReceiver.sync(target, value);
+  public boolean onSyncEvent(int target, byte[] value) {
+    return bulkReceiver.sync(target, value);
   }
 }
