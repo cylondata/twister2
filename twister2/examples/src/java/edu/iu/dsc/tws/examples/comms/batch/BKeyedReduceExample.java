@@ -115,7 +115,8 @@ public class BKeyedReduceExample extends KeyedBenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return keyedReduce.progress();
+    keyedReduce.progress();
+    return !keyedReduce.isComplete();
   }
 
   @Override

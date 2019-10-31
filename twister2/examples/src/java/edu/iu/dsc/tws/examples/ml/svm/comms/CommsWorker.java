@@ -19,7 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -142,8 +141,7 @@ public abstract class CommsWorker implements IWorker {
     public void run() {
       LOG.info(() -> "Starting map worker: " + workerId + " task: " + task);
       for (int i = 0; i < inputDataArray.length; i++) {
-        int flag = (i == inputDataArray.length - 1) ? MessageFlags.SYNC_MESSAGE : 0;
-        sendMessages(task, inputDataArray[i], flag);
+        sendMessages(task, inputDataArray[i], 0);
       }
       LOG.info(() -> String.format("%d Done sending", workerId));
       synchronized (finishedSources) {

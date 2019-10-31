@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.MessageReceiver;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.comms.dfw.ChannelDataFlowOperation;
 import edu.iu.dsc.tws.comms.routing.InvertedBinaryTreeRouter;
 
@@ -29,6 +30,41 @@ public final class OperationUtils {
   private static final Logger LOG = Logger.getLogger(OperationUtils.class.getName());
 
   private OperationUtils() {
+  }
+
+  /**
+   * Progress the receivers and return true if needs further progress
+   * @param finalLock lock for final receiver
+   * @param finalReceiver final receiver
+   * @param partialLock lock for partial receiver
+   * @param partialReceiver partial receiver
+   * @return true if need further progress
+   */
+  public static boolean areReceiversComplete(Lock finalLock, MessageReceiver finalReceiver,
+                                             Lock partialLock, MessageReceiver partialReceiver) {
+    boolean finalComplete = false;
+    boolean mergeComplete = false;
+    try {
+      if (finalLock.tryLock()) {
+        try {
+          finalComplete = finalReceiver.isComplete();
+        } finally {
+          finalLock.unlock();
+        }
+      }
+
+      if (partialLock.tryLock()) {
+        try {
+          mergeComplete = partialReceiver.isComplete();
+        } finally {
+          partialLock.unlock();
+        }
+      }
+    } catch (Throwable t) {
+      LOG.log(Level.SEVERE, "un-expected error", t);
+      throw new Twister2RuntimeException(t);
+    }
+    return finalComplete && mergeComplete;
   }
 
   /**
@@ -64,7 +100,7 @@ public final class OperationUtils {
       }
     } catch (Throwable t) {
       LOG.log(Level.SEVERE, "un-expected error", t);
-      throw new RuntimeException(t);
+      throw new Twister2RuntimeException(t);
     }
     return finalNeedsProgress || partialNeedsProgress;
   }
@@ -98,5 +134,15 @@ public final class OperationUtils {
     int temp = array[i];
     array[i] = array[j];
     array[j] = temp;
+  }
+
+  public static String printStackTrace(StackTraceElement[] elements) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 1; i < elements.length; i++) {
+      StackTraceElement s = elements[i];
+      sb.append("\tat " + s.getClassName() + "." + s.getMethodName()
+          + "(" + s.getFileName() + ":" + s.getLineNumber() + ")" + "\n");
+    }
+    return sb.toString();
   }
 }

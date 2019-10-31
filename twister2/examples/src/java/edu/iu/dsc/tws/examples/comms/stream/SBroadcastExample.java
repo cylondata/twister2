@@ -88,7 +88,8 @@ public class SBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return bcast.progress();
+    bcast.progress();
+    return !bcast.isComplete();
   }
 
   @Override
@@ -143,5 +144,15 @@ public class SBroadcastExample extends BenchWorker {
       }
       return true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    bcast.finish(src);
+  }
+
+  @Override
+  public void close() {
+    bcast.close();
   }
 }

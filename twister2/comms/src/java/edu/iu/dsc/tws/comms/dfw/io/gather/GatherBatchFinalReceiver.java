@@ -48,7 +48,7 @@ public class GatherBatchFinalReceiver extends BaseGatherBatchReceiver {
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+  protected boolean sendSyncForward(int target) {
     return false;
   }
 

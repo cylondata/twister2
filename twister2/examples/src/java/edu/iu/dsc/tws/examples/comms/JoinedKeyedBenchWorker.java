@@ -29,9 +29,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
-
-
 /**
  * BenchWorker class that works with keyed join operations, The worker generates two sets
  * of data with a single key type for both
@@ -59,9 +56,6 @@ public abstract class JoinedKeyedBenchWorker extends KeyedBenchWorker {
         // lets generate a message
         key = 100 + task;
         int flag = 0;
-        if (i == jobParameters.getIterations() - 1) {
-          flag = MessageFlags.SYNC_MESSAGE;
-        }
         sendMessages(task, key, dataLeft, flag, 0);
         sendMessages(task, key, dataRight, flag, 1);
       }

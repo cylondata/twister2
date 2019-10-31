@@ -92,12 +92,17 @@ public abstract class ReduceStreamingReceiver extends SourceReceiver {
   }
 
   @Override
+  protected void onSyncEvent(int target, byte[] value) {
+
+  }
+
+  @Override
   protected boolean isAllEmpty(int target) {
     return reducedValuesMap.get(target).isEmpty();
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+  protected boolean sendSyncForward(int target) {
     return false;
   }
 

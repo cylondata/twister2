@@ -56,11 +56,6 @@ public class TargetPartialReceiver extends TargetReceiver {
   private int[] thisSourceArray;
 
   /**
-   * This source array for iteration
-   */
-  private int[] sourceArray;
-
-  /**
    * Keep weather source accepts a message
    */
   private Int2BooleanArrayMap sourceAcceptMessages = new Int2BooleanArrayMap();
@@ -69,6 +64,17 @@ public class TargetPartialReceiver extends TargetReceiver {
    * Keep weather target accepts a message
    */
   private Int2BooleanArrayMap targetAcceptMessages = new Int2BooleanArrayMap();
+
+  /**
+   * Keep track of the syncs received from source -> target
+   */
+  private Int2ObjectArrayMap<Set<Integer>> syncsReceived = new Int2ObjectArrayMap<>();
+
+  /**
+   * A boolean to keep track weather we synced, we can figure this out using the
+   * state in targetStates, but it can be in-efficient, so we keep a boolean
+   */
+  private boolean complete;
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
@@ -108,13 +114,11 @@ public class TargetPartialReceiver extends TargetReceiver {
       targetAcceptMessages.put(target, true);
     }
 
-    index = 0;
-    sourceArray = new int[thisSources.size()];
     // we are at the receiving state
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.INIT);
       syncSent.put(source, new HashSet<>());
-      sourceArray[index++] = source;
+      syncsReceived.put(source, new HashSet<>());
     }
   }
 
@@ -153,7 +157,7 @@ public class TargetPartialReceiver extends TargetReceiver {
    *
    * @return true if there is nothing to process
    */
-  protected boolean isAllEmpty() {
+  private boolean isAllEmpty() {
     for (int i = 0; i < targets.length; i++) {
       List<Object> msgQueue = messages.get(targets[i]);
       if (msgQueue.size() > 0) {
@@ -170,8 +174,12 @@ public class TargetPartialReceiver extends TargetReceiver {
 
   @Override
   protected void addSyncMessage(int source, int target) {
-    sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
-    sourceAcceptMessages.put(source, false);
+    Set<Integer> syncs = syncsReceived.get(source);
+    syncs.add(target);
+    if (syncs.size() == targets.length) {
+      sourceStates.put(source, ReceiverState.ALL_SYNCS_RECEIVED);
+      sourceAcceptMessages.put(source, false);
+    }
   }
 
   @Override
@@ -207,11 +215,6 @@ public class TargetPartialReceiver extends TargetReceiver {
   }
 
   @Override
-  public void onFinish(int source) {
-    addSyncMessage(source, 0);
-  }
-
-  @Override
   public boolean progress() {
     boolean needsFurtherProgress = false;
 
@@ -238,8 +241,10 @@ public class TargetPartialReceiver extends TargetReceiver {
           allEmpty &= val.isEmpty();
         }
 
-        if (!allEmpty || !isAllEmpty() || !sync()) {
-          needsFurtherProgress = true;
+        if (allEmpty && isAllEmpty()) {
+          if (sync()) {
+            needsFurtherProgress = true;
+          }
         }
       } finally {
         lock.unlock();
@@ -248,31 +253,38 @@ public class TargetPartialReceiver extends TargetReceiver {
     return needsFurtherProgress;
   }
 
+  @Override
+  public boolean isComplete() {
+    for (int i = 0; i < thisSourceArray.length; i++) {
+      ReceiverState state = sourceStates.get(thisSourceArray[i]);
+      if (state != ReceiverState.SYNCED) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /**
    * Handle the sync
    *
    * @return true if everything is synced
    */
   public boolean sync() {
-    boolean allSyncsSent = true;
-    boolean allSynced = true;
-    for (int i = 0; i < sourceArray.length; i++) {
-      ReceiverState state = sourceStates.get(sourceArray[i]);
-      if (state == ReceiverState.RECEIVING) {
-        return false;
-      }
+    boolean needProgress = false;
 
-      if (state != ReceiverState.INIT && state != ReceiverState.SYNCED) {
-        allSynced = false;
-      }
-    }
+    // we need to wait until every source is ALL_SYNCS_RECEIVED
+    for (int i = 0; i < thisSourceArray.length; i++) {
+      int source = thisSourceArray[i];
+      ReceiverState state = sourceStates.get(source);
 
-    if (allSynced) {
-      return true;
+      if (state != ReceiverState.ALL_SYNCS_RECEIVED && state != ReceiverState.SYNCED) {
+        return true;
+      }
     }
 
     for (int i = 0; i < thisSourceArray.length; i++) {
       int source = thisSourceArray[i];
+
       Set<Integer> finishedDestPerSource = syncSent.get(source);
       for (int j = 0; j < targets.length; j++) {
         int dest = targets[j];
@@ -295,7 +307,7 @@ public class TargetPartialReceiver extends TargetReceiver {
               sourceStates.put(source, ReceiverState.SYNCED);
             }
           } else {
-            allSyncsSent = false;
+            needProgress = true;
             // no point in going further
             break;
           }
@@ -303,7 +315,7 @@ public class TargetPartialReceiver extends TargetReceiver {
       }
     }
 
-    return allSyncsSent;
+    return needProgress;
   }
 
   @Override
@@ -318,6 +330,7 @@ public class TargetPartialReceiver extends TargetReceiver {
 
     for (int source : thisSources) {
       sourceStates.put(source, ReceiverState.INIT);
+      syncsReceived.get(source).clear();
     }
     syncState = SyncState.SYNC;
     barriers.clear();
@@ -327,5 +340,11 @@ public class TargetPartialReceiver extends TargetReceiver {
     for (int target : thisDestinations) {
       targetAcceptMessages.put(target, true);
     }
+    complete = false;
+  }
+
+  @Override
+  protected boolean onSyncEvent(int target, byte[] value) {
+    return true;
   }
 }

@@ -298,6 +298,8 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
         task.execute(m);
       }
     }
+    // set the initial nothing to execute
+    boolean nothingToExecute = inQueue.isEmpty();
 
     // now check the output queue
     while (!outQueue.isEmpty()) {
@@ -315,6 +317,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
             : op.send(globalTaskId, message, message.getFlag())) {
           outQueue.poll();
         } else {
+          nothingToExecute = false;
           break;
         }
       }
@@ -337,7 +340,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       }
     }
 
-    return true;
+    return nothingToExecute;
   }
 
   public void scheduleBarriers(Long bid) {

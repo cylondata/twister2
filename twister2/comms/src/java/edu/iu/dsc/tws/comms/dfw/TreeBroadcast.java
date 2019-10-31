@@ -302,12 +302,11 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean isComplete() {
     if (lock.tryLock()) {
-      delegate.progress();
       boolean done = delegate.isComplete();
       try {
-        boolean needsFurtherProgress = finalReceiver.progress();
+        boolean complete = finalReceiver.isComplete();
         boolean needFinishProgress = handleFinish();
-        return done && !needsFurtherProgress && !needFinishProgress;
+        return done && complete && !needFinishProgress;
       } finally {
         lock.unlock();
       }
@@ -347,7 +346,6 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     boolean partialNeedsProgress;
     boolean needFinishProgress;
-    boolean done;
     boolean needReceiveProgress;
     if (lock.tryLock()) {
       try {
@@ -358,7 +356,6 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         needReceiveProgress = receiveProgressMessage();
 
         delegate.progress();
-        done = delegate.isComplete();
         partialNeedsProgress = finalReceiver.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "un-expected error", t);
@@ -366,7 +363,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       } finally {
         lock.unlock();
       }
-      return partialNeedsProgress || !done || needFinishProgress || needReceiveProgress;
+      return partialNeedsProgress || needFinishProgress || needReceiveProgress;
     }
     return true;
   }

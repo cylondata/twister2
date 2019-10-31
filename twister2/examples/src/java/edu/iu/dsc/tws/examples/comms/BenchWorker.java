@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -208,8 +207,6 @@ public abstract class BenchWorker implements IWorker {
 
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
-        int flag = (i == jobParameters.getTotalIterations() - 1) ? MessageFlags.SYNC_MESSAGE : 0;
-
         if (i == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);
         }
@@ -221,7 +218,7 @@ public abstract class BenchWorker implements IWorker {
                   || i % jobParameters.getTaskStages().get(1) == 0));
         }
 
-        sendMessages(task, inputDataArray, flag);
+        sendMessages(task, inputDataArray, 0);
       }
 
       LOG.info(() -> String.format("%d Done sending", workerId));

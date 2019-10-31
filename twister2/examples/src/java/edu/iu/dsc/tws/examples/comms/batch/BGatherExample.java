@@ -104,7 +104,8 @@ public class BGatherExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return gather.progress();
+    gather.progress();
+    return !gather.isComplete();
   }
 
   @Override

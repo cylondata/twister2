@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -212,6 +213,11 @@ public class JoinBatchFinalReceiver implements MessageReceiver {
     }
 
     return needsFurtherProgress;
+  }
+
+  @Override
+  public boolean isComplete() {
+    throw new NotImplementedException("Not implemented");
   }
 
   /**

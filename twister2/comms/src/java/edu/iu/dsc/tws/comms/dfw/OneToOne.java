@@ -245,7 +245,6 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     boolean partialNeedsProgress = false;
     boolean needFinishProgress = true;
-    boolean done;
     try {
       // lets send the finished one
       if (lock.tryLock()) {
@@ -257,7 +256,6 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       }
 
       delegate.progress();
-      done = delegate.isComplete();
       if (lock.tryLock()) {
         try {
           partialNeedsProgress = finalReceiver.progress();
@@ -269,7 +267,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return partialNeedsProgress || !done || needFinishProgress;
+    return partialNeedsProgress || needFinishProgress;
   }
 
   private boolean handleFinish() {
@@ -297,9 +295,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     if (lock.tryLock()) {
       boolean done = delegate.isComplete();
       try {
-        boolean needsFurtherProgress = finalReceiver.progress();
+        boolean complete = finalReceiver.isComplete();
         boolean needFinishProgress = handleFinish();
-        return done && !needsFurtherProgress && !needFinishProgress;
+        return done && complete && !needFinishProgress;
       } finally {
         lock.unlock();
       }

@@ -64,7 +64,7 @@ public final class DFWIOUtils {
     buffer.setSize(HEADER_SIZE);
   }
 
-  public static boolean sendSyncForward(boolean needsFurtherProgress, int target,
+  public static boolean sendSyncForward(int target,
                                         SyncState syncState, Map<Integer, byte[]> barriers,
                                         DataFlowOperation operation,
                                         Map<Integer, Boolean> isSyncSent) {
@@ -83,10 +83,10 @@ public final class DFWIOUtils {
     } else {
       return true;
     }
-    return needsFurtherProgress;
+    return false;
   }
 
-  public static boolean sendFinalSyncForward(boolean needsFurtherProgress, int target,
+  public static boolean sendFinalSyncForward(int target,
                                              SyncState syncState, Map<Integer, byte[]> barriers,
                                              DataFlowOperation operation,
                                              Map<Integer, Boolean> isSyncSent) {
@@ -105,7 +105,7 @@ public final class DFWIOUtils {
     } else {
       return true;
     }
-    return needsFurtherProgress;
+    return false;
   }
 }
 

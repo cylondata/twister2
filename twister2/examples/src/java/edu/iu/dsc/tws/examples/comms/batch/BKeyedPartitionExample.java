@@ -108,7 +108,8 @@ public class BKeyedPartitionExample extends KeyedBenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return partition.progress();
+    partition.progress();
+    return !partition.isComplete();
   }
 
   @Override
