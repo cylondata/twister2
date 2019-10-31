@@ -83,20 +83,8 @@ def twister2_client_lib_resource_scheduler_files():
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@org_apache_commons_commons_compress//jar",
-        "@org_apache_curator_curator_client//jar",
-        "@org_apache_curator_curator_framework//jar",
-        "@org_apache_curator_curator_recipes//jar",
-        "@org_apache_zookeeper_zookeeper//jar",
-        "@io_kubernetes_client_java//jar",
-        "@io_kubernetes_client_java_api//jar",
-        "@io_kubernetes_client_java_proto//jar",
         "@io_swagger_swagger_annotations//jar",
         "@com_google_code_gson_gson//jar",
-        "@com_squareup_okhttp_okhttp//jar",
-        "@com_squareup_okhttp_logging_interceptor//jar",
-        "@com_squareup_okhttp_okhttp_ws//jar",
-        "@com_squareup_okio_okio//jar",
-        "@joda_time_joda_time//jar",
         "@commons_codec_commons_codec//jar",
         "@com_hashicorp_nomad_nomad_sdk//jar",
         "@com_fasterxml_jackson_core_jackson_annotations//jar",
@@ -109,6 +97,27 @@ def twister2_client_lib_resource_scheduler_files():
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
         "@com_google_protobuf//:protobuf_java",
+    ]
+
+def twister2_kubernetes_lib_files():
+    return [
+        "@maven//:io_kubernetes_client_java",
+        "@maven//:io_kubernetes_client_java_api",
+        "@maven//:io_kubernetes_client_java_proto",
+        "@com_squareup_okhttp_okhttp//jar",
+        "@com_squareup_okhttp_logging_interceptor//jar",
+        "@com_squareup_okhttp_okhttp_ws//jar",
+        "@com_squareup_okio_okio//jar",
+        "@joda_time_joda_time//jar",
+    ]
+
+def twister2_curator_zookeeper_lib_files():
+    return [
+        "@maven//:org_apache_curator_curator_client",
+        "@maven//:org_apache_curator_curator_framework",
+        "@maven//:org_apache_curator_curator_recipes",
+        "@maven//:org_apache_zookeeper_zookeeper",
+        "@maven//:org_apache_zookeeper_zookeeper_jute",
     ]
 
 def twister2_client_lib_api_files():

@@ -15,6 +15,8 @@ load("//tools/rules:twister2_client.bzl", "twister2_client_dashboard_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_third_party_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_task_scheduler_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_resource_scheduler_files")
+load("//tools/rules:twister2_client.bzl", "twister2_curator_zookeeper_lib_files")
+load("//tools/rules:twister2_client.bzl", "twister2_kubernetes_lib_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_api_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_task_files")
 load("//tools/rules:twister2_client.bzl", "twister2_client_lib_data_files")
@@ -83,6 +85,8 @@ pack_tw2(
     version = T2_VERSION,
     deps = [
         ":twister2-checkpointing",
+        ":twister2-curator-zookeeper-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -110,6 +114,8 @@ pack_tw2(
     deps = [
         ":twister2-beam",
         ":twister2-checkpointing",
+        ":twister2-curator-zookeeper-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-core-lib-api",
         ":twister2-core-lib-common",
         ":twister2-core-lib-communication",
@@ -206,6 +212,20 @@ pack_tw2(
 )
 
 pack_tw2(
+    name = "twister2-kubernetes-libs",
+    srcs = twister2_kubernetes_lib_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
+    name = "twister2-curator-zookeeper-libs",
+    srcs = twister2_curator_zookeeper_lib_files(),
+    package_dir = "lib",
+    version = T2_VERSION,
+)
+
+pack_tw2(
     name = "twister2-core-lib-task-scheduler",
     srcs = twister2_client_lib_task_scheduler_files(),
     package_dir = "lib",
@@ -274,6 +294,8 @@ pack_tw2(
     deps = [
         ":twister2-bin",
         ":twister2-checkpointing",
+        ":twister2-curator-zookeeper-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-dashboard",
@@ -316,6 +338,8 @@ pack_tw2(
         ":twister2-beam",
         ":twister2-bin",
         ":twister2-checkpointing",
+        ":twister2-curator-zookeeper-libs",
+        ":twister2-kubernetes-libs",
         ":twister2-communication",
         ":twister2-conf-aurora",
         ":twister2-conf-common",

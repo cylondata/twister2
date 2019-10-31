@@ -46,7 +46,6 @@ public class KeyedSourceTSet<K, V> extends BatchTupleTSetImpl<K, V> {
 
   @Override
   public KeyedSourceTSet<K, V> setName(String name) {
-    rename(name);
-    return this;
+    return (KeyedSourceTSet<K, V>) super.setName(name);
   }
 }

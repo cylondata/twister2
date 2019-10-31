@@ -85,8 +85,31 @@ public interface BatchTupleTSet<K, V> extends TupleTSet<K, V> {
    *
    * @return this TSet
    */
-  BatchTLink<Iterator<Tuple<K, Iterator<V>>>, Tuple<K, Iterator<V>>>
-      keyedGather(PartitionFunc<K> partitionFn, Comparator<K> comparator);
+  BatchTLink<Iterator<Tuple<K, Iterator<V>>>, Tuple<K, Iterator<V>>> keyedGather(
+      PartitionFunc<K> partitionFn, Comparator<K> comparator);
+
+  /**
+   * Gather by key ungrouped
+   *
+   * @return this TSet
+   */
+  BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedGatherUngrouped();
+
+  /**
+   * Gather by key ungrouped
+   *
+   * @return this TSet
+   */
+  BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedGatherUngrouped(PartitionFunc<K> partitionFn);
+
+  /**
+   * Gather by key. Sort the records with the key according to the comparator ungrouped
+   *
+   * @return this TSet
+   */
+  BatchTLink<Iterator<Tuple<K, V>>, Tuple<K, V>> keyedGatherUngrouped(PartitionFunc<K> partitionFn,
+                                                                      Comparator<K> comparator);
+
 
   /**
    * Reduce by key
