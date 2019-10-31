@@ -25,6 +25,8 @@ import java.util.stream.StreamSupport;
 
 import org.apache.beam.runners.twister2.utils.TranslationUtils;
 import org.apache.beam.sdk.coders.Coder;
+import org.apache.beam.sdk.coders.CoderException;
+import org.apache.beam.sdk.util.CoderUtils;
 import org.apache.beam.sdk.util.WindowedValue;
 import org.apache.beam.sdk.util.WindowedValue.WindowedValueCoder;
 import org.apache.beam.sdk.values.KV;
@@ -32,6 +34,7 @@ import org.apache.beam.sdk.values.KV;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
+
 /**
  * ByteToWindow function.
  */
@@ -47,12 +50,18 @@ public class ByteToWindowFunction<K, V>
 
   @Override
   public KV<K, Iterable<WindowedValue<V>>> map(Tuple<byte[], Iterator<byte[]>> input) {
-    K key = TranslationUtils.fromByteArray(input.getKey(), keyCoder);
-    Iterable<WindowedValue<V>> value =
-        StreamSupport.stream(
-            Spliterators.spliteratorUnknownSize(input.getValue(), Spliterator.ORDERED), false)
-            .map(bytes -> TranslationUtils.fromByteArray(bytes, wvCoder))
-            .collect(Collectors.toList());
+    K key = null;
+    Iterable<WindowedValue<V>> value = null;
+    try {
+      key = CoderUtils.decodeFromByteArray(keyCoder, input.getKey());
+
+      value = StreamSupport.stream(
+          Spliterators.spliteratorUnknownSize(input.getValue(), Spliterator.ORDERED), false)
+          .map(bytes -> TranslationUtils.fromByteArray(bytes, wvCoder))
+          .collect(Collectors.toList());
+    } catch (CoderException e) {
+      e.printStackTrace();
+    }
     return KV.of(key, value);
   }
 
