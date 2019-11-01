@@ -167,6 +167,18 @@ public class Config {
     }
   }
 
+  public <T> T get(String key, Class<T> clazz) {
+    return this.get(key, clazz, null);
+  }
+
+  public <T> T get(String key, Class<T> clazz, T defaultValue) {
+    Object val = this.get(key);
+    if (val != null) {
+      return (T) val;
+    }
+    return defaultValue;
+  }
+
   public String getStringValue(ConfigEntry key) {
     return getStringValue(key.getKey(), key.getDefaultValue());
   }
