@@ -100,7 +100,7 @@ public final class TwoDataFlowsExample {
 
     private String inputKey;
 
-    private String[] dataPointsLocal;
+    private String dataPointsLocal;
 
     protected FirstSinkTask() {
     }
@@ -121,10 +121,6 @@ public final class TwoDataFlowsExample {
         values.add(String.valueOf(((Iterator) message.getContent()).next()));
       }
       LOG.info("values value:" + values);
-      dataPointsLocal = new String[values.size()];
-      for (String value : values) {
-        dataPointsLocal = (String[]) value;
-      }
       return true;
     }
 
