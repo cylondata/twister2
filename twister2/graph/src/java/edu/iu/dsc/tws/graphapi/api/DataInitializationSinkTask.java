@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -33,6 +34,11 @@ public class DataInitializationSinkTask extends BaseSink implements Collector {
 
   private HashMap<String, VertexStatus> dataPointsLocal;
 
+  private String inputKey;
+
+  public DataInitializationSinkTask(String inputkey) {
+    this.inputKey = inputkey;
+  }
 
   /**
    * This method add the received message from the DataObject Source into the data objects.
@@ -56,6 +62,12 @@ public class DataInitializationSinkTask extends BaseSink implements Collector {
   @Override
   public DataPartition<HashMap<String, VertexStatus>> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+
+  @Override
+  public IONames getCollectibleNames() {
+    return IONames.declare(inputKey);
   }
 
 }

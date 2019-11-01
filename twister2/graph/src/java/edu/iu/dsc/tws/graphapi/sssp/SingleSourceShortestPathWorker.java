@@ -30,6 +30,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -79,8 +80,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     //Actual execution for the first taskgraph
     taskExecutor.execute(datapointsTaskGraph, firstGraphExecutionPlan);
     //Retrieve the output of the first task graph
-    DataObject<Object> graphPartitionData = taskExecutor.getOutput(
-        datapointsTaskGraph, firstGraphExecutionPlan, "Graphdatasink");
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -97,8 +96,6 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
     //Actual execution for the second taskgraph
     taskExecutor.execute(graphInitialValueTaskGraph, secondGraphExecutionPlan);
     //Retrieve the output of the second task graph
-    DataObject<Object> graphInitialValue = taskExecutor.getOutput(
-        graphInitialValueTaskGraph, secondGraphExecutionPlan, "ssspInitialSink");
 
 
 
@@ -112,20 +109,11 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
     int itr = 0;
     while (globaliterationStatus)  {
-
-
-      taskExecutor.addInput(sssptaskgraph, plan,
-          "ssspSource", "graphData", graphPartitionData);
-
-      taskExecutor.addInput(sssptaskgraph, plan,
-          "ssspSource", "graphInitialValue", graphInitialValue);
-      taskExecutor.itrExecute(sssptaskgraph, plan);
-
-      graphInitialValue = taskExecutor.getOutput(sssptaskgraph, plan,
-          "ssspSink");
+      taskExecutor.itrExecute(sssptaskgraph, plan, false);
       itr++;
 
     }
+    taskExecutor.closeExecution(sssptaskgraph, plan);
     taskExecutor.close();
 
 
@@ -142,7 +130,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
         dataDirectory, dsize);
     GraphDataCompute graphDataCompute = new GraphDataCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
-    GraphDataSink graphDataSink = new GraphDataSink();
+    GraphDataSink graphDataSink = new GraphDataSink("PartitionSink");
 
     ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
@@ -180,7 +168,7 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
         dataDirectory, dsize);
     SsspInitialCompute ssspInitialCompute = new SsspInitialCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue, soruceVertex);
-    SsspInitialSink ssspInitialSink = new SsspInitialSink();
+    SsspInitialSink ssspInitialSink = new SsspInitialSink("InitialValue");
 
 
     ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
@@ -320,12 +308,17 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
 
     @Override
     public void add(String name, DataObject<?> data) {
-      if ("graphData".equals(name)) {
+      if ("PartitionSink".equals(name)) {
         this.graphObject = data;
       }
-      if ("graphInitialValue".equals(name)) {
+      if ("InitialValue".equals(name)) {
         this.graphObjectvalues = data;
       }
+    }
+
+    @Override
+    public IONames getReceivableNames() {
+      return IONames.declare("PartitionSink", "InitialValue");
     }
 
   }
@@ -385,6 +378,11 @@ public class SingleSourceShortestPathWorker extends TaskWorker {
       super.prepare(cfg, context);
       this.datapoints = new DataObjectImpl<>(config);
     }
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare("InitialValue");
+    }
+
   }
 
 

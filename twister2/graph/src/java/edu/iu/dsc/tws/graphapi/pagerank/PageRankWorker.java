@@ -32,6 +32,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -78,9 +79,6 @@ public class PageRankWorker extends TaskWorker {
     ExecutionPlan executionPlan = taskExecutor.plan(datapointsTaskGraph);
     //Actual execution for the first taskgraph
     taskExecutor.execute(datapointsTaskGraph, executionPlan);
-    //Retrieve the output of the first task graph
-    DataObject<Object> graphPartitionData = taskExecutor.getOutput(
-        datapointsTaskGraph, executionPlan, "Graphdatasink");
 
     /* the out of the first graph would like below
     * task Id: 0
@@ -97,10 +95,6 @@ public class PageRankWorker extends TaskWorker {
     ExecutionPlan executionPlan1 = taskExecutor.plan(graphInitialValueTaskGraph);
     //Actual execution for the first taskgraph
     taskExecutor.execute(graphInitialValueTaskGraph, executionPlan1);
-    //Retrieve the output of the first task graph
-    DataObject<Object> graphInitialPagerankValue = taskExecutor.getOutput(
-        graphInitialValueTaskGraph, executionPlan1, "pageRankValueHolderSink");
-
 
     /* the output of second graph should like below
       initiate the pagerank value
@@ -120,28 +114,21 @@ public class PageRankWorker extends TaskWorker {
     //Perform the iterations from 0 to 'n' number of iterations
     long startime = System.currentTimeMillis();
     for (int i = 0; i < iterations; i++) {
-      taskExecutor.addInput(pageranktaskgraph, plan,
-          "pageranksource", "graphData", graphPartitionData);
 
-      taskExecutor.addInput(pageranktaskgraph, plan,
-          "pageranksource", "graphInitialPagerankValue", graphInitialPagerankValue);
+      taskExecutor.itrExecute(pageranktaskgraph, plan, i == iterations - 1);
 
-      taskExecutor.itrExecute(pageranktaskgraph, plan);
-
-
-      graphInitialPagerankValue = taskExecutor.getOutput(pageranktaskgraph, plan,
-          "pageranksink");
 
     }
-//    taskExecutor.closeExecution(pageranktaskgraph, plan);
     taskExecutor.close();
     long endTime = System.currentTimeMillis();
 
 
 
     if (workerId == 0) {
+      DataObject<Object> graphInitialPagerankValue = taskExecutor.getOutput("InitialValue");
       DataPartition<?> finaloutput = graphInitialPagerankValue.getPartition(workerId);
       HashMap<String, Double> finalone = (HashMap<String, Double>) finaloutput.getConsumer().next();
+      System.out.println(finalone);
       LOG.info("Final output After " + iterations + "iterations ");
       Iterator it = finalone.entrySet().iterator();
       Double recivedFinalDanglingValue = finalone.get("danglingvalues");
@@ -184,7 +171,7 @@ public class PageRankWorker extends TaskWorker {
         dataDirectory, dsize);
     DataObjectCompute dataObjectCompute = new DataObjectCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue);
-    DataObjectSink dataObjectSink = new DataObjectSink();
+    DataObjectSink dataObjectSink = new DataObjectSink("Partitionsink");
 
     ComputeGraphBuilder datapointsTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
@@ -218,7 +205,7 @@ public class PageRankWorker extends TaskWorker {
         dataDirectory, dsize);
     PageRankValueHolderCompute pageRankValueHolderCompute = new PageRankValueHolderCompute(
         Context.TWISTER2_DIRECT_EDGE, dsize, parallelismValue);
-    PageRankValueHolderSink pageRankValueHolderSink = new PageRankValueHolderSink();
+    PageRankValueHolderSink pageRankValueHolderSink = new PageRankValueHolderSink("InitialValue");
 
 
     ComputeGraphBuilder pagerankInitialationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
@@ -379,12 +366,17 @@ public class PageRankWorker extends TaskWorker {
 
     @Override
     public void add(String name, DataObject<?> data) {
-      if ("graphData".equals(name)) {
+      if ("Partitionsink".equals(name)) {
         this.graphObject = data;
       }
-      if ("graphInitialPagerankValue".equals(name)) {
+      if ("InitialValue".equals(name)) {
         this.graphObjectvalues = data;
       }
+    }
+
+    @Override
+    public IONames getReceivableNames() {
+      return IONames.declare("Partitionsink", "InitialValue");
     }
   }
 
@@ -455,6 +447,11 @@ public class PageRankWorker extends TaskWorker {
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
       this.datapoints = new DataObjectImpl<>(config);
+    }
+
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare("InitialValue");
     }
 
   }
