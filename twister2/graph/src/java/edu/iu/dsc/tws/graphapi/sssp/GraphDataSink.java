@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -34,6 +35,12 @@ public class GraphDataSink extends BaseSink implements Collector {
   private static final long serialVersionUID = -1L;
 
   private HashMap<String, SsspDefaultVertex> dataPointsLocal;
+  private String inputKey;
+
+  public GraphDataSink(String inputkey) {
+    this.inputKey = inputkey;
+  }
+
 
 
   /**
@@ -62,5 +69,10 @@ public class GraphDataSink extends BaseSink implements Collector {
   @Override
   public DataPartition<HashMap<String, SsspDefaultVertex>> get() {
     return new EntityPartition<>(context.taskIndex(), dataPointsLocal);
+  }
+
+  @Override
+  public IONames getCollectibleNames() {
+    return IONames.declare(inputKey);
   }
 }
