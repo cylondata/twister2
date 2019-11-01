@@ -12,12 +12,19 @@
 package edu.iu.dsc.tws.examples.connectors;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -44,12 +51,39 @@ import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 public class KafkaExample implements IWorker {
 
   private static final Logger LOG = Logger.getLogger(KafkaSource.class.getName());
+  private static final String CLI_TOPICS = "topics";
+  private static final String CLI_SERVER = "server";
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParseException {
+
+    Options options = new Options();
+    options.addOption(CLI_SERVER, true,
+        "Kafka bootstrap server in the format host:port");
+    options.addOption(CLI_TOPICS, true,
+        "Set of topics in the format topic1,topic2");
+
+    CommandLineParser cliParser = new DefaultParser();
+    CommandLine cli = cliParser.parse(options, args);
+
+    HashMap<String, Object> configs = new HashMap<>();
+    configs.put(CLI_SERVER, "localhost:9092");
+    configs.put(CLI_TOPICS, Collections.singleton("test2"));
+
+    if (cli.hasOption(CLI_SERVER)) {
+      configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, cli.getOptionValue(CLI_SERVER));
+    }
+
+    if (cli.hasOption(CLI_TOPICS)) {
+      String topics = cli.getOptionValue(CLI_TOPICS);
+      Set<String> topicsSet = Arrays.stream(topics.split(","))
+          .map(String::trim).collect(Collectors.toSet());
+      configs.put(CLI_TOPICS, topicsSet);
+    }
 
     Config config = ResourceAllocator.loadConfig(new HashMap<>());
 
     JobConfig jobConfig = new JobConfig();
+    jobConfig.putAll(configs);
 
     Twister2Job twister2Job;
     twister2Job = Twister2Job.newBuilder()
@@ -67,7 +101,7 @@ public class KafkaExample implements IWorker {
     @Override
     public Properties getConsumerProperties() {
       Properties props = new Properties();
-      props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+      props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, cfg.getStringValue(CLI_SERVER));
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
           "org.apache.kafka.common.serialization.StringDeserializer");
       props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
@@ -77,9 +111,7 @@ public class KafkaExample implements IWorker {
 
     @Override
     public Set<String> getTopics() {
-      Set<String> topics = new HashSet<>();
-      topics.add("test2");
-      return topics;
+      return cfg.get(CLI_TOPICS, Set.class);
     }
 
     @Override
