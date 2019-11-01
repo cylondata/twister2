@@ -12,49 +12,37 @@
 package edu.iu.dsc.tws.task.cdfw.task;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class ConnectedSink extends BaseSink implements Collector {
-  /**
-   * The name of the data set
-   */
-  private String outName;
 
-  /**
-   * The partition to use
-   */
+  private static final Logger LOG = Logger.getLogger(ConnectedSink.class.getName());
+
+  private String inputKey;
+
   private CollectionPartition<Object> partition;
 
   public ConnectedSink() {
   }
 
-  public ConnectedSink(String outName) {
-    this.outName = outName;
-  }
-
-  @Override
-  public DataPartition<Object> get() {
-    return partition;
-  }
-
-  @Override
-  public DataPartition<Object> get(String name) {
-    if (name.equals(outName)) {
-      return partition;
-    } else {
-      throw new RuntimeException("Un-expected name: " + name);
-    }
+  public ConnectedSink(String inputkey) {
+    this.inputKey = inputkey;
   }
 
   @Override
   public boolean execute(IMessage message) {
+    LOG.info("context task index:" + context.taskIndex() + "execute message:" + message);
+    partition = new CollectionPartition<>(context.taskIndex());
     if (message.getContent() instanceof Iterator) {
       Iterator<Object> itr = (Iterator<Object>) message.getContent();
       while (itr.hasNext()) {
@@ -63,12 +51,23 @@ public class ConnectedSink extends BaseSink implements Collector {
     } else {
       partition.add(message.getContent());
     }
+    LOG.info("context task index:" + context.taskIndex()
+        + "Partition Size:" + partition.getConsumer().next());
     return true;
+  }
+
+  @Override
+  public DataPartition<Object> get() {
+    return new EntityPartition<>(partition);
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-    partition = new CollectionPartition<>(ctx.taskIndex());
+  }
+
+  @Override
+  public IONames getCollectibleNames() {
+    return IONames.declare(inputKey);
   }
 }

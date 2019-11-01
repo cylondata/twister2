@@ -11,7 +11,10 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,13 +28,18 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
+import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
+import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
+import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
@@ -55,27 +63,79 @@ public final class TwoDataFlowsExample {
     public void execute(CDFWEnv exec) {
       // build JobConfig
       DataFlowJobConfig jobConfig = new DataFlowJobConfig();
-
       LOG.log(Level.INFO, "Executing the first graph");
       // run the first job
       runFirstJob(exec.getConfig(), exec, 4, jobConfig);
       // run the second job
       LOG.log(Level.INFO, "Executing the second graph");
-      runSecondJob(exec.getConfig(), exec, 4, jobConfig);
+      //runSecondJob(exec.getConfig(), exec, 4, jobConfig);
     }
   }
 
-  private static class FirstSourceTask extends BaseSource implements Receptor {
+  private static class FirstSourceTask extends BaseSource {
     private static final long serialVersionUID = -254264120110286748L;
 
-    @Override
-    public void execute() {
-      context.writeEnd("partition", "Hello");
+    protected FirstSourceTask() {
     }
 
     @Override
-    public void add(String name, DataObject<?> data) {
-      LOG.log(Level.FINE, "Received input: " + name);
+    public void execute() {
+      LOG.info("Context task id and index:" + context.taskId() + "\t" + context.taskIndex());
+      if (context.taskIndex() == 0) {
+        context.write("partition", "Hello");
+      } else if (context.taskIndex() == 1) {
+        context.write("partition", "Hi");
+      }
+      context.end("partition");
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+  }
+
+  private static class FirstSinkTask extends BaseSink implements Collector {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private String inputKey;
+
+    private String[] dataPointsLocal;
+
+    protected FirstSinkTask() {
+    }
+
+    protected FirstSinkTask(String inputkey) {
+      this.inputKey = inputkey;
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+    }
+
+    @Override
+    public boolean execute(IMessage message) {
+      List<String> values = new ArrayList<>();
+      while (((Iterator) message.getContent()).hasNext()) {
+        values.add(String.valueOf(((Iterator) message.getContent()).next()));
+      }
+      LOG.info("values value:" + values);
+      dataPointsLocal = new String[values.size()];
+      for (String value : values) {
+        dataPointsLocal = (String[]) value;
+      }
+      return true;
+    }
+
+    @Override
+    public DataPartition<?> get(String name) {
+      return new EntityPartition<>(dataPointsLocal);
+    }
+
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare(inputKey);
     }
   }
 
@@ -142,7 +202,8 @@ public final class TwoDataFlowsExample {
   private static void runFirstJob(Config config, CDFWEnv cdfwEnv,
                                   int parallelism, DataFlowJobConfig jobConfig) {
     FirstSourceTask firstSourceTask = new FirstSourceTask();
-    ConnectedSink connectedSink = new ConnectedSink("first_out");
+    //ConnectedSink connectedSink = new ConnectedSink("first_out");
+    FirstSinkTask connectedSink = new FirstSinkTask("first_out");
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelism);
@@ -156,7 +217,7 @@ public final class TwoDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);
   }
@@ -164,14 +225,14 @@ public final class TwoDataFlowsExample {
   private static void runSecondJob(Config config, CDFWEnv cdfwEnv, int parallelism,
                                    DataFlowJobConfig jobConfig) {
 
-    ConnectedSource connectedSource = new ConnectedSource("reduce");
+    ConnectedSource connectedSource = new ConnectedSource("all-reduce", "first_out");
     ConnectedSink connectedSink = new ConnectedSink();
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
-    graphBuilderX.addSource("source1", connectedSource, parallelism);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
-    reduceConn.reduce("source1")
-        .viaEdge("reduce")
+    graphBuilderX.addSource("source2", connectedSource, parallelism);
+    ComputeConnection reduceConn = graphBuilderX.addSink("sink2", connectedSink, 1);
+    reduceConn.reduce("source2")
+        .viaEdge("all-reduce")
         .withReductionFunction(new Aggregator())
         .withDataType(MessageTypes.OBJECT);
 
@@ -179,7 +240,7 @@ public final class TwoDataFlowsExample {
     ComputeGraph batchGraph = graphBuilderX.build();
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph)
-        .setWorkers(4).addDataFlowJobConfig(jobConfig)
+        .setWorkers(2).addDataFlowJobConfig(jobConfig)
         .setGraphType("non-iterative");
     cdfwEnv.executeDataFlowGraph(job);
   }
