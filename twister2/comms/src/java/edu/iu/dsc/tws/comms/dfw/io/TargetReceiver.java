@@ -231,14 +231,16 @@ public abstract class TargetReceiver implements MessageReceiver {
   protected abstract boolean sendToTarget(int source, int target);
 
   /**
+   * This method is called when there is a sync event on the operation
+   * @param target the target to which the sync event belong
+   * @param value the byte value, can be null
+   */
+  protected abstract boolean onSyncEvent(int target, byte[] value);
+
+  /**
    * Return true if we are filled to send
    *
    * @return true if we are filled enough to send
    */
   protected abstract boolean isFilledToSend(int target);
-
-  @Override
-  public void onFinish(int source) {
-    throw new RuntimeException("Not implemented");
-  }
 }

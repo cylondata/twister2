@@ -85,4 +85,8 @@ public abstract class BaseGatherBatchReceiver extends SourceReceiver {
   }
 
   protected abstract boolean handleMessage(int task, Object message, int flags, int dest);
+
+  @Override
+  protected void onSyncEvent(int target, byte[] value) {
+  }
 }

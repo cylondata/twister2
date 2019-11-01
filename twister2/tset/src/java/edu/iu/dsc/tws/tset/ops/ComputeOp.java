@@ -12,9 +12,12 @@
 
 package edu.iu.dsc.tws.tset.ops;
 
+import java.util.Map;
+
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
 import edu.iu.dsc.tws.api.tset.fn.TFunction;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
 /**
  * Performs the compute function on the value received for the imessage and write it to edges
@@ -24,10 +27,11 @@ public class ComputeOp<O, I> extends BaseComputeOp<I> {
   private ComputeFunc<O, I> computeFunction;
 
   public ComputeOp() {
-
   }
 
-  public ComputeOp(ComputeFunc<O, I> computeFunction) {
+  public ComputeOp(ComputeFunc<O, I> computeFunction, BaseTSet origin,
+                   Map<String, String> receivables) {
+    super(origin, receivables);
     this.computeFunction = computeFunction;
   }
 

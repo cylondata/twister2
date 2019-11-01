@@ -202,7 +202,7 @@ public class K8sWorkerController implements IWorkerController {
     V1PodList list = null;
     try {
       list = coreApi.listNamespacedPod(
-          namespace, null, null, null, null, servicelabel, null, null, null, null);
+          namespace, null, null, null, servicelabel, null, null, null, null);
     } catch (ApiException e) {
       String logMessage = "Exception when getting the pod list for the job: " + jobName + "\n"
           + "exCode: " + e.getCode() + "\n"
@@ -322,7 +322,7 @@ public class K8sWorkerController implements IWorkerController {
     try {
       watch = Watch.createWatch(
           apiClient,
-          coreApi.listNamespacedPodCall(namespace, null, null, null, null, servicelabel,
+          coreApi.listNamespacedPodCall(namespace, null, null, null, servicelabel,
               null, null, timeoutSeconds, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Pod>>() {
           }.getType());

@@ -25,6 +25,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -40,7 +41,7 @@ import edu.iu.dsc.tws.rsched.utils.JobUtils;
 
 import io.kubernetes.client.models.V1PersistentVolumeClaim;
 import io.kubernetes.client.models.V1Service;
-import io.kubernetes.client.models.V1beta2StatefulSet;
+import io.kubernetes.client.models.V1StatefulSet;
 
 public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
@@ -102,7 +103,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     // create znodes at ZooKeeper server if ZK server is used
     if (ZKContext.isZooKeeperServerUsed(config)) {
-      boolean jobZnodeCreated = createJobZnode(job);
+      boolean jobZnodeCreated = createJobZnodes(job);
       if (!jobZnodeCreated) {
         // nothing to clear at this point, if the job znode is not created
         return false;
@@ -184,18 +185,19 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
   }
 
   /**
-   * create a znode on ZooKeeper server
+   * create znodes on ZooKeeper server for this job
    * @param job
    * @return
    */
-  public boolean createJobZnode(JobAPI.Job job) {
+  public boolean createJobZnodes(JobAPI.Job job) {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String rootPath = ZKContext.rootNode(config);
 
     try {
       ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      jobSubmissionStatus.setJobZNodeCreated(true);
+      ZKInitialStateManager.createJobZNode(client, rootPath, job.getJobName());
+      jobSubmissionStatus.setJobZNodesCreated(true);
       return true;
 
     } catch (Exception e) {
@@ -256,7 +258,10 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     JobMasterAPI.NodeInfo nodeInfo = NodeInfoUtils.createNodeInfo(hostAdress, null, null);
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
-    JobMaster jobMaster = new JobMaster(config, hostAdress, this, job, nodeInfo, k8sScaler);
+    JobMasterAPI.JobMasterState initialState = JobMasterAPI.JobMasterState.JM_STARTED;
+
+    JobMaster jobMaster =
+        new JobMaster(config, hostAdress, this, job, nodeInfo, k8sScaler, initialState);
     jobMaster.addShutdownHook(true);
 //    jobMaster.startJobMasterThreaded();
     jobMaster.startJobMasterBlocking();
@@ -469,7 +474,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
     if (!JobMasterContext.jobMasterRunsInClient(config)) {
 
       // create the StatefulSet object for this job
-      V1beta2StatefulSet jobMasterStatefulSet =
+      V1StatefulSet jobMasterStatefulSet =
           JobMasterRequestObject.createStatefulSetObject(encodedNodeInfoList);
       if (jobMasterStatefulSet == null) {
         return false;
@@ -499,7 +504,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       }
 
       // create the StatefulSet object for this job
-      V1beta2StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
+      V1StatefulSet statefulSet = RequestObjectBuilder.createStatefulSetForWorkers(
           computeResource, encodedNodeInfoList);
 
       if (statefulSet == null) {
@@ -645,7 +650,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
       boolean claimDeleted = controller.deletePersistentVolumeClaim(pvcName);
     }
 
-    if (jobSubmissionStatus.isJobZNodeCreated()) {
+    if (jobSubmissionStatus.isJobZNodesCreated()) {
       deleteJobZnode(jobName);
     }
   }

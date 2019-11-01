@@ -185,7 +185,7 @@ public class JobPackageTransferThread extends Thread {
       watcher = Watch.createWatch(
           PodWatchUtils.apiClient,
           PodWatchUtils.coreApi.listNamespacedEventCall(namespace, null, null, fieldSelector,
-              null, null, null, null, MAX_WAIT_TIME_FOR_POD_START, Boolean.TRUE, null, null),
+              null, null, null, MAX_WAIT_TIME_FOR_POD_START, Boolean.TRUE, null, null),
           new TypeToken<Watch.Response<V1Event>>() {
           }.getType());
 

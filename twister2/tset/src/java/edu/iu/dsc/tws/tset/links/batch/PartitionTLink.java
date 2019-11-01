@@ -16,10 +16,10 @@ package edu.iu.dsc.tws.tset.links.batch;
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class PartitionTLink<T> extends BIteratorLink<T> {
+public class PartitionTLink<T> extends BatchIteratorLink<T> {
 
   private PartitionFunc<T> partitionFunction;
 
@@ -34,8 +34,7 @@ public class PartitionTLink<T> extends BIteratorLink<T> {
 
   public PartitionTLink(BatchTSetEnvironment tSetEnv, PartitionFunc<T> parFn,
                         int sourceParallelism, int targetParallelism) {
-    super(tSetEnv, TSetUtils.generateName("partition"),
-        sourceParallelism, targetParallelism);
+    super(tSetEnv, "partition", sourceParallelism, targetParallelism);
     this.partitionFunction = parFn;
   }
 
@@ -53,5 +52,15 @@ public class PartitionTLink<T> extends BIteratorLink<T> {
   public PartitionTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return (CachedTSet<T>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    return (CachedTSet<T>) super.cache();
   }
 }

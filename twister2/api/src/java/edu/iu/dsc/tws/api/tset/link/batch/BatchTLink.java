@@ -12,6 +12,8 @@
 
 package edu.iu.dsc.tws.api.tset.link.batch;
 
+import edu.iu.dsc.tws.api.tset.Storable;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.ApplyFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
@@ -37,27 +39,24 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
   @Override
   <O> BatchTSet<O> flatmap(FlatMapFunc<O, T0> mapFn);
 
-  /**
-   * Runs the dataflow graph and caches data in memory
-   *
-   * @return output TSet
-   */
-  default BatchTSet<T0> cache(boolean isIterative) {
-    throw new UnsupportedOperationException("Operation not implemented");
-  }
+  BatchTSet<Object> lazyForEach(ApplyFunc<T0> applyFunction);
+
+  @Override
+  TBase sink(SinkFunc<T1> sinkFunction);
 
   /**
    * Runs the dataflow graph and caches data in memory
    *
    * @return output TSet
    */
-  default BatchTSet<T0> cache() {
-    return cache(false);
+  default Storable<T0> cache() {
+    throw new UnsupportedOperationException("Operation not implemented");
+  }
+
+  default Storable<T0> lazyCache() {
+    throw new UnsupportedOperationException("Operation not implemented");
   }
 
   @Override
   void forEach(ApplyFunc<T0> applyFunction);
-
-  @Override
-  void sink(SinkFunc<T1> sinkFunction);
 }

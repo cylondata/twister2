@@ -102,7 +102,8 @@ public class SAllGatherExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return gather.progress();
+    gather.progress();
+    return !gather.isComplete();
   }
 
   @Override
@@ -160,5 +161,15 @@ public class SAllGatherExample extends BenchWorker {
       }
       return true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    gather.finish(src);
+  }
+
+  @Override
+  public void close() {
+    gather.close();
   }
 }

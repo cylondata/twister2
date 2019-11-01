@@ -12,5 +12,5 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-public abstract class BaseSourceFunc<T> extends BaseTFunction implements SourceFunc<T> {
+public abstract class BaseSourceFunc<T> extends BaseTFunction<T, T> implements SourceFunc<T> {
 }

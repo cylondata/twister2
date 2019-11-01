@@ -93,7 +93,8 @@ public class BPartitionExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return partition.progress();
+    partition.progress();
+    return !partition.isComplete();
   }
 
   @Override

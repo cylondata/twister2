@@ -15,13 +15,13 @@ package edu.iu.dsc.tws.tset.links.batch;
 
 import edu.iu.dsc.tws.api.compute.OperationNames;
 import edu.iu.dsc.tws.api.compute.graph.Edge;
-import edu.iu.dsc.tws.tset.TSetUtils;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
+import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 
-public class ReplicateTLink<T> extends BIteratorLink<T> {
+public class ReplicateTLink<T> extends BatchIteratorLink<T> {
 
   public ReplicateTLink(BatchTSetEnvironment tSetEnv, int reps) {
-    super(tSetEnv, TSetUtils.generateName("replicate"), 1, reps);
+    super(tSetEnv, "replicate", 1, reps);
   }
 
   @Override
@@ -33,5 +33,15 @@ public class ReplicateTLink<T> extends BIteratorLink<T> {
   public ReplicateTLink<T> setName(String n) {
     rename(n);
     return this;
+  }
+
+  @Override
+  public CachedTSet<T> lazyCache() {
+    return (CachedTSet<T>) super.lazyCache();
+  }
+
+  @Override
+  public CachedTSet<T> cache() {
+    return (CachedTSet<T>) super.cache();
   }
 }

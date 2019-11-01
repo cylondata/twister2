@@ -34,6 +34,7 @@ import edu.iu.dsc.tws.examples.tset.BaseTSetBatchWorker;
 import edu.iu.dsc.tws.examples.verification.VerificationException;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.links.batch.GatherTLink;
+import edu.iu.dsc.tws.tset.sets.batch.SinkTSet;
 import edu.iu.dsc.tws.tset.sets.batch.SourceTSet;
 
 public class TSetGatherExample extends BaseTSetBatchWorker {
@@ -51,23 +52,25 @@ public class TSetGatherExample extends BaseTSetBatchWorker {
 
     GatherTLink<int[]> gather = source.gather();
 
-    gather.sink((SinkFunc<Iterator<Tuple<Integer, int[]>>>)
-        val -> {
-          // todo: check this!
-          int[] value = null;
-          while (val.hasNext()) {
-            value = val.next().getValue();
-          }
+    SinkTSet<Iterator<Tuple<Integer, int[]>>> sink =
+        gather.sink((SinkFunc<Iterator<Tuple<Integer, int[]>>>)
+            val -> {
+              // todo: check this!
+              int[] value = null;
+              while (val.hasNext()) {
+                value = val.next().getValue();
+              }
 
-          experimentData.setOutput(value);
-          LOG.info("Results " + Arrays.toString(value));
-          try {
-            verify(OperationNames.GATHER);
-          } catch (VerificationException e) {
-            LOG.info("Exception Message : " + e.getMessage());
-          }
-          return true;
-        });
+              experimentData.setOutput(value);
+              LOG.info("Results " + Arrays.toString(value));
+              try {
+                verify(OperationNames.GATHER);
+              } catch (VerificationException e) {
+                LOG.info("Exception Message : " + e.getMessage());
+              }
+              return true;
+            });
+    env.run(sink);
   }
 
 }

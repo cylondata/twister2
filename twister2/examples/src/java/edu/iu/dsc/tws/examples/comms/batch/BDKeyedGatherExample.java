@@ -134,7 +134,8 @@ public class BDKeyedGatherExample extends KeyedBenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return keyedGather.progress();
+    keyedGather.progress();
+    return !keyedGather.isComplete();
   }
 
   @Override

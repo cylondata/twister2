@@ -92,7 +92,8 @@ public class SReduceExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return reduce.progress();
+    reduce.progress();
+    return !reduce.isComplete();
   }
 
   @Override
@@ -137,5 +138,15 @@ public class SReduceExample extends BenchWorker {
       }
       return true;
     }
+  }
+
+  @Override
+  protected void finishCommunication(int src) {
+    reduce.finish(src);
+  }
+
+  @Override
+  public void close() {
+    reduce.close();
   }
 }

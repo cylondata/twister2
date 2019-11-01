@@ -26,29 +26,15 @@ package edu.iu.dsc.tws.examples.tset.batch;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.OperationNames;
-import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
-import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
-import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
-import edu.iu.dsc.tws.api.tset.fn.ComputeFunc;
-import edu.iu.dsc.tws.api.tset.fn.SourceFunc;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
-import edu.iu.dsc.tws.task.ComputeEnvironment;
-import edu.iu.dsc.tws.task.graph.GraphBuilder;
-import edu.iu.dsc.tws.tset.fn.ForEachIterCompute;
-import edu.iu.dsc.tws.tset.ops.ComputeOp;
-import edu.iu.dsc.tws.tset.ops.SourceOp;
 
 public class TSetExecDemo implements IWorker, Serializable {
   static final int COUNT = 5;
@@ -60,51 +46,51 @@ public class TSetExecDemo implements IWorker, Serializable {
   public void execute(Config config, int workerID, IWorkerController workerController,
                       IPersistentVolume persistentVolume, IVolatileVolume volatileVolume) {
 
-    WorkerEnvironment env = WorkerEnvironment.init(config, workerID, workerController,
-        persistentVolume, volatileVolume);
-
-    ComputeEnvironment tenv = ComputeEnvironment.init(env);
-
-    GraphBuilder graph = GraphBuilder.newBuilder();
-    graph.operationMode(OperationMode.BATCH);
-
-    graph.addSource("src", new SourceOp<>(new SourceFunc<Integer>() {
-      private int c = 0;
-
-      @Override
-      public boolean hasNext() {
-        return c < COUNT;
-      }
-
-      @Override
-      public Integer next() {
-        return c++;
-      }
-    }), PARALLELISM);
-
-
-    graph.addTask("compute",
-        new ComputeOp<>((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
-            input -> {
-              int sum = 0;
-              while (input.hasNext()) {
-                sum += input.next().getValue();
-              }
-              LOG.info("####" + sum);
-              return "sum=" + sum;
-            }), 1);
-
-    graph.connect("src", "compute", "e1", OperationNames.GATHER);
-
-    graph.addTask("foreach",
-        new ComputeOp<>(new ForEachIterCompute<>(s -> LOG.info("compute: " + s))), 1);
-
-    graph.connect("compute", "foreach", "e2", OperationNames.DIRECT);
-
-    ComputeGraph build = graph.build();
-    ExecutionPlan plan = tenv.getTaskExecutor().plan(build);
-
-    tenv.getTaskExecutor().execute(build, plan);
+//    WorkerEnvironment env = WorkerEnvironment.init(config, workerID, workerController,
+//        persistentVolume, volatileVolume);
+//
+//    ComputeEnvironment tenv = ComputeEnvironment.init(env);
+//
+//    GraphBuilder graph = GraphBuilder.newBuilder();
+//    graph.operationMode(OperationMode.BATCH);
+//
+//    graph.addSource("src", new SourceOp<>(new SourceFunc<Integer>() {
+//      private int c = 0;
+//
+//      @Override
+//      public boolean hasNext() {
+//        return c < COUNT;
+//      }
+//
+//      @Override
+//      public Integer next() {
+//        return c++;
+//      }
+//    }, , ), PARALLELISM);
+//
+//
+//    graph.addTask("compute",
+//        new ComputeOp<>((ComputeFunc<String, Iterator<Tuple<Integer, Integer>>>)
+//            input -> {
+//              int sum = 0;
+//              while (input.hasNext()) {
+//                sum += input.next().getValue();
+//              }
+//              LOG.info("####" + sum);
+//              return "sum=" + sum;
+//            }, , ), 1);
+//
+//    graph.connect("src", "compute", "e1", OperationNames.GATHER);
+//
+//    graph.addTask("foreach",
+//        new ComputeOp<>(new ForEachIterCompute<>(s -> LOG.info("compute: " + s)), , ), 1);
+//
+//    graph.connect("compute", "foreach", "e2", OperationNames.DIRECT);
+//
+//    ComputeGraph build = graph.build();
+//    ExecutionPlan plan = tenv.getTaskExecutor().plan(build);
+//
+//    tenv.getTaskExecutor().execute(build, plan);
   }
 
   public static void main(String[] args) {

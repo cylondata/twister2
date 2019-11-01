@@ -179,16 +179,30 @@ public class WorkerMonitor
    */
   public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
 
+    // send worker registration message to dashboard
+    if (dashClient != null) {
+      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
+    }
+
+    // if this is not a fault tolerant job, we terminate the job with failure
+    // because, this worker has failed previously failed and it is coming from failure
+    if (!faultTolerant) {
+      LOG.info("A worker is coming from failure in a NON-FAULT TOLERANT job. Terminating the job.");
+      jobMaster.completeJob(JobState.FAILED);
+      return;
+    }
+
+    WorkerWithState existingWorker = workers.get(workerInfo.getWorkerID());
+    if (existingWorker == null) {
+      LOG.warning(String.format("The worker[%s] that has not joined the job yet tries to rejoin. ",
+          workerInfo.getWorkerID()));
+    }
+
     // update workerInfo and its status in the worker list
     WorkerWithState worker = new WorkerWithState(workerInfo);
     worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
     workers.put(worker.getWorkerID(), worker);
     LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
-
-    // send worker registration message to dashboard
-    if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
-    }
 
     // TODO inform checkpoint master
   }
@@ -237,7 +251,15 @@ public class WorkerMonitor
    * called when a worker FAILED
    */
   public void failed(int workerID) {
-    workers.get(workerID).addWorkerState(JobMasterAPI.WorkerState.FAILED);
+
+    WorkerWithState failedWorker = workers.get(workerID);
+    if (failedWorker == null) {
+      LOG.warning("The worker[" + workerID + "] that hos not joined the job failed. "
+          + "Ignoring this event.");
+      return;
+    }
+
+    failedWorker.addWorkerState(JobMasterAPI.WorkerState.FAILED);
     LOG.info("Worker: " + workerID + " FAILED.");
 
     // send worker state change message to dashboard

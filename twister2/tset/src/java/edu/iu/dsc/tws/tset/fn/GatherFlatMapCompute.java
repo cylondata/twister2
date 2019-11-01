@@ -15,7 +15,7 @@ package edu.iu.dsc.tws.tset.fn;
 import java.util.Iterator;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Collector;
+import edu.iu.dsc.tws.api.tset.RecordCollector;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.ComputeCollectorFunc;
 import edu.iu.dsc.tws.api.tset.fn.FlatMapFunc;
@@ -34,7 +34,7 @@ public class GatherFlatMapCompute<O, I> implements
   }
 
   @Override
-  public void compute(Iterator<Tuple<Integer, I>> input, Collector<O> output) {
+  public void compute(Iterator<Tuple<Integer, I>> input, RecordCollector<O> output) {
     while (input.hasNext()) {
       mapFn.flatMap(input.next().getValue(), output);
     }

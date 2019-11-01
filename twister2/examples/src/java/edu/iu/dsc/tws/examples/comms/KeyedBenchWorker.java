@@ -18,7 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.comms.messaging.MessageFlags;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
@@ -194,7 +193,7 @@ public abstract class KeyedBenchWorker implements IWorker {
       for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
         // lets generate a message
         key = i;
-        int flag = i == jobParameters.getTotalIterations() - 1 ? MessageFlags.SYNC_MESSAGE : 0;
+        int flag = 0;
 
         if (i == jobParameters.getWarmupIterations()) {
           Timing.mark(TIMING_ALL_SEND, this.timingCondition);

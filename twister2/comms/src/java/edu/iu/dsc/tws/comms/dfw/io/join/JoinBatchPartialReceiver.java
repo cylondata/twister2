@@ -54,4 +54,9 @@ public class JoinBatchPartialReceiver implements MessageReceiver {
   public boolean progress() {
     return joiningReceiver.progress();
   }
+
+  @Override
+  public boolean isComplete() {
+    return joiningReceiver.isComplete();
+  }
 }

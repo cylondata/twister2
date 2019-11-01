@@ -83,17 +83,18 @@ public interface MessageReceiver {
   }
 
   /**
-   * Called when the end of the operation is reached
-   */
-  default void onFinish(int source) {
-  }
-
-  /**
    * This method will be called by the communicationProgress
    *
    * @return true if needs further communicationProgress
    */
   boolean progress();
+
+  /**
+   * Weather we are complete a set of messages
+   *
+   * @return true if a round is complete with syncs
+   */
+  boolean isComplete();
 
   /**
    * Close the receiver
@@ -105,13 +106,5 @@ public interface MessageReceiver {
    * Clean any state associated with the receiver and go to initial state
    */
   default void clean() {
-  }
-
-  /**
-   * This method is called when there is a sync event on the operation
-   * @param target the target to which the sync event belong
-   * @param value the byte value, can be null
-   */
-  default void onSyncEvent(int target, byte[] value) {
   }
 }

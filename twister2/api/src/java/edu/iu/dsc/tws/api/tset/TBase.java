@@ -26,4 +26,9 @@ public interface TBase {
    * Name of the data set
    */
   String getName();
+
+  /**
+   * Name of the tset
+   */
+  TBase setName(String name);
 }

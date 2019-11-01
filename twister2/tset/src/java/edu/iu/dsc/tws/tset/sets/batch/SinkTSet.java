@@ -14,43 +14,54 @@
 package edu.iu.dsc.tws.tset.sets.batch;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.tset.TSetUtils;
+import edu.iu.dsc.tws.api.tset.Storable;
+import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
+import edu.iu.dsc.tws.api.tset.sets.AcceptingData;
 import edu.iu.dsc.tws.tset.env.BatchTSetEnvironment;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
+import edu.iu.dsc.tws.tset.sets.BaseTSet;
 
-public class SinkTSet<T> extends BBaseTSet<T> {
-  private SinkOp<T> sink;
+public class SinkTSet<T> extends BaseTSet<T> implements AcceptingData<T> {
+  private SinkFunc<T> sinkFunc;
 
   /**
    * Creates SinkTSet with the given parameters, the parallelism of the TSet is taken as 1
    *
    * @param tSetEnv The TSetEnv used for execution
-   * @param s The Sink function to be used
+   * @param s       The Sink function to be used
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkOp<T> s) {
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> s) {
     this(tSetEnv, s, 1);
   }
 
   /**
    * Creates SinkTSet with the given parameters
    *
-   * @param tSetEnv The TSetEnv used for execution
-   * @param s The Sink function to be used
+   * @param tSetEnv     The TSetEnv used for execution
+   * @param sinkFn      The Sink function to be used
    * @param parallelism the parallelism of the sink
    */
-  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkOp<T> s, int parallelism) {
-    super(tSetEnv, TSetUtils.generateName("sink"), parallelism);
-    this.sink = s;
+  public SinkTSet(BatchTSetEnvironment tSetEnv, SinkFunc<T> sinkFn, int parallelism) {
+    super(tSetEnv, "sink", parallelism);
+    this.sinkFunc = sinkFn;
   }
 
   @Override
   public ICompute getINode() {
-    return sink;
+    // If a sink function is producing a data object/ partition, it will be identified by the
+    // TSet ID. Essentially, only one data object can be created by a TSet
+    return new SinkOp<>(sinkFunc, this, getInputs());
   }
 
   @Override
   public SinkTSet<T> setName(String n) {
     rename(n);
+    return this;
+  }
+
+  @Override
+  public SinkTSet<T> addInput(String key, Storable<?> input) {
+    getTSetEnv().addInput(getId(), input.getId(), key);
     return this;
   }
 }

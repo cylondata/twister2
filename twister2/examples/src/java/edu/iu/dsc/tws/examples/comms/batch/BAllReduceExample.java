@@ -93,7 +93,8 @@ public class BAllReduceExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return reduce.progress();
+    reduce.progress();
+    return !reduce.isComplete();
   }
 
   @Override

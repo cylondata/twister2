@@ -40,7 +40,7 @@ public interface PartitionFunc<T> extends Serializable, TaskPartitioner<T> {
   /**
    * Prepare the function
    *
-   * @param sources source
+   * @param sources      source
    * @param destinations destinations
    */
   void prepare(Set<Integer> sources, Set<Integer> destinations);
@@ -56,7 +56,7 @@ public interface PartitionFunc<T> extends Serializable, TaskPartitioner<T> {
   /**
    * Commit the partition
    *
-   * @param source the source
+   * @param source    the source
    * @param partition partition
    */
   void commit(int source, int partition);

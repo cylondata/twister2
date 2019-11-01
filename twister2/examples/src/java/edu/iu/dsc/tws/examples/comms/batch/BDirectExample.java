@@ -104,7 +104,8 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return direct.progress();
+    direct.progress();
+    return !direct.isComplete();
   }
 
   @Override

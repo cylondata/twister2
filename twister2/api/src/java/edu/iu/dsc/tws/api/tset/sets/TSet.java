@@ -38,7 +38,7 @@ package edu.iu.dsc.tws.api.tset.sets;
 import java.util.Collection;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.tset.Cacheable;
+import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.api.tset.fn.MapFunc;
 import edu.iu.dsc.tws.api.tset.fn.PartitionFunc;
 import edu.iu.dsc.tws.api.tset.fn.ReduceFunc;
@@ -49,10 +49,11 @@ import edu.iu.dsc.tws.api.tset.link.TLink;
  *
  * @param <T> type of the data set
  */
-public interface TSet<T> {
+public interface TSet<T> extends TBase {
   /**
    * Name of the tset
    */
+  @Override
   TSet<T> setName(String name);
 
   /**
@@ -81,7 +82,7 @@ public interface TSet<T> {
   /**
    * Partition the data according the to partition function
    *
-   * @param partitionFn partition function
+   * @param partitionFn       partition function
    * @param targetParallelism target parallelism
    * @return this set
    */
@@ -89,6 +90,7 @@ public interface TSet<T> {
 
   /**
    * Partition with the same parallelism
+   *
    * @param partitionFn function
    * @return the link
    */
@@ -123,18 +125,19 @@ public interface TSet<T> {
    */
   TLink<?, T> replicate(int replications);
 
-  /**
-   * Allows users to pass in other TSets as inputs for a TSet
-   *
-   * @param key the key used to store the given TSet
-   * @param input the TSet to be added as an input
-   * @return true if the input was added successfully or false otherwise
-   */
-  boolean addInput(String key, Cacheable<?> input);
+//  /**
+//   * Allows users to pass in other TSets as inputs for a TSet
+//   *
+//   * @param key the key used to store the given TSet
+//   * @param input a @{@link Storable} TSet to be added as an input
+//   * @return this TSet
+//   */
+//  TSet<T> addInput(String key, Storable<?> input);
 
   /**
    * Union operation which results in a single TSet, In order for this to work both TSet's should
    * have the same type
+   *
    * @param unionTSet TSet to union with
    * @return A TSet that is a union of the two TSets
    */
@@ -143,6 +146,7 @@ public interface TSet<T> {
   /**
    * Union operation which results in a single TSet, In order for this to work all TSet's should
    * have the same type
+   *
    * @param tSets a collection of TSet's to union with
    * @return A TSet that is a union of all the TSets
    */

@@ -12,7 +12,7 @@
 
 package edu.iu.dsc.tws.api.tset.fn;
 
-public interface ComputeFunc<O, I> extends TFunction {
+public interface ComputeFunc<O, I> extends TFunction<O, I> {
 
   O compute(I input);
 }
