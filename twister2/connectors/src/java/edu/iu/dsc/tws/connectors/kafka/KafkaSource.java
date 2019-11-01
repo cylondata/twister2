@@ -23,9 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.connectors.kafka;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -46,7 +48,7 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
   private static final String LAST_PARTITION_OFFSETS = "LAST_PARTITION_OFFSETS";
 
   private KafkaConsumer<K, V> kafkaConsumer;
-  private Config cfg;
+  protected Config cfg;
   protected TaskContext context;
 
   private HashMap<String, HashMap<Integer, Long>> partitionOffsets;
@@ -67,17 +69,32 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
     this.kafkaConsumer = new KafkaConsumer<>(consumerProperties);
     this.kafkaConsumer.subscribe(this.getTopics());
 
-    if (this.partitionOffsets == null) {
-      this.partitionOffsets = new HashMap<>();
-    }
+    this.partitionOffsets = new HashMap<>();
+  }
+
+  /**
+   * This method will be called once a snapshot is restored.
+   */
+  private void assignAndSeek() {
+    HashMap<TopicPartition, Long> topicPartitionOffset = new HashMap<>();
+
     this.partitionOffsets.forEach((topic, v) -> {
       v.forEach((partition, offset) -> {
         TopicPartition topicPartition = new TopicPartition(topic, partition);
-        this.kafkaConsumer.seek(topicPartition, offset);
+        topicPartitionOffset.put(topicPartition, offset + 1);
       });
     });
 
-    this.partitionOffsets = new HashMap<>();
+    if (!topicPartitionOffset.isEmpty()) {
+      // first unsubscribe from current
+      this.kafkaConsumer.unsubscribe();
+      Set<TopicPartition> topicPartitions = topicPartitionOffset.keySet();
+      LOG.log(Level.FINE, "Assigning to " + context.taskIndex() + ": " + topicPartitions);
+      this.kafkaConsumer.assign(topicPartitions);
+    }
+    topicPartitionOffset.forEach((k, v) -> {
+      this.kafkaConsumer.seek(k, v);
+    });
   }
 
   /**
@@ -86,10 +103,10 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
    * kafka across the tasks of this type.
    * Users can override this method to change this behaviour
    *
-   * @param context Instance of {@link TaskContext}
+   * @param ctx Instance of {@link TaskContext}
    */
-  public String getConsumerGroup(TaskContext context) {
-    return context.taskName();
+  public String getConsumerGroup(TaskContext ctx) {
+    return ctx.taskName();
   }
 
   public abstract Properties getConsumerProperties();
@@ -98,13 +115,24 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
 
   public abstract void writeRecord(ConsumerRecord<K, V> kafkaRecord);
 
+  public abstract Duration getPollingTimeout();
+
+  /**
+   * This method can be used to get the kafka consumer instance, which is created in
+   * {@link KafkaSource#prepare(Config, TaskContext)} method.
+   */
+  public KafkaConsumer<K, V> getKafkaConsumer() {
+    return kafkaConsumer;
+  }
+
   @Override
   public void execute() {
-    ConsumerRecords<K, V> newRecords = this.kafkaConsumer.poll(1);
+    ConsumerRecords<K, V> newRecords = this.kafkaConsumer.poll(this.getPollingTimeout());
     for (ConsumerRecord<K, V> newRecord : newRecords) {
       this.writeRecord(newRecord);
-      LOG.info(String.format("%s : %d : %d",
-          newRecord.topic(), newRecord.partition(), newRecord.offset()));
+      LOG.log(Level.FINEST, String.format(
+          "[%s]  topic[%s] : partition[%d] : offset[%d] : value[%s]", context.taskIndex(),
+          newRecord.topic(), newRecord.partition(), newRecord.offset(), newRecord.value()));
       this.partitionOffsets.computeIfAbsent(newRecord.topic(),
           topic -> new HashMap<>()).put(newRecord.partition(), newRecord.offset());
     }
@@ -112,8 +140,9 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
 
   @Override
   public void restoreSnapshot(Snapshot snapshot) {
-    this.partitionOffsets = (HashMap<String, HashMap<Integer, Long>>) snapshot.get(
-        LAST_PARTITION_OFFSETS);
+    this.partitionOffsets = (HashMap<String, HashMap<Integer, Long>>) snapshot.getOrDefault(
+        LAST_PARTITION_OFFSETS, new HashMap<>());
+    this.assignAndSeek();
   }
 
   @Override
@@ -124,8 +153,7 @@ public abstract class KafkaSource<K, V> implements CheckpointableTask, ISource {
 
   @Override
   public void onCheckpointPropagated(Snapshot snapshot) {
-    // todo sync or async commit?
-    this.kafkaConsumer.commitSync();
+    // nothing to do here
   }
 
   @Override
