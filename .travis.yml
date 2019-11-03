@@ -10,6 +10,10 @@ addons:
 
 jdk: oraclejdk11
 
+cache:
+  directories:
+    - $HOME/.cache/bazel
+
 before_install:
   - echo "s:======================================"
   - echo "Downloading bazel"
