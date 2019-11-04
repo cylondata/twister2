@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.cli.CommandLine;
@@ -25,13 +24,13 @@ import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IFunction;
+import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
+import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
 import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.cdfw.BaseDriver;
@@ -111,7 +110,6 @@ public final class ParallelDataFlowsExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("first_graph", batchGraph)
         .setWorkers(workers).addDataFlowJobConfig(jobConfig)
-        //.addOutput("first_out", "sink1")
         .setGraphType("non-iterative");
     return job;
   }
@@ -119,7 +117,7 @@ public final class ParallelDataFlowsExample {
   private static DataFlowGraph generateSecondJob(Config config, int parallelismValue,
                                                  int workers, DataFlowJobConfig jobConfig) {
 
-    ConnectedSource connectedSource = new ConnectedSource("reduce");
+    ConnectedSource connectedSource = new ConnectedSource("reduce", "first_out");
     ConnectedSink connectedSink = new ConnectedSink();
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
@@ -136,7 +134,6 @@ public final class ParallelDataFlowsExample {
 
     DataFlowGraph job = DataFlowGraph.newSubGraphJob("second_graph", batchGraph)
         .setWorkers(workers).addDataFlowJobConfig(jobConfig)
-        //.addInput("first_graph", "first_out", "source1")
         .setGraphType("non-iterative");
     return job;
   }
@@ -167,7 +164,7 @@ public final class ParallelDataFlowsExample {
     }
   }
 
-  private static class FirstSourceTask extends BaseSource implements Receptor {
+  /*private static class FirstSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
 
     @Override
@@ -178,6 +175,30 @@ public final class ParallelDataFlowsExample {
     @Override
     public void add(String name, DataObject<?> data) {
       LOG.log(Level.FINE, "Received input: " + name);
+    }
+  }*/
+
+  private static class FirstSourceTask extends BaseSource {
+    private static final long serialVersionUID = -254264120110286748L;
+
+    private CollectionPartition<Object> collectionPartition;
+
+    protected FirstSourceTask() {
+    }
+
+    @Override
+    public void execute() {
+      LOG.fine("Context task id and index:" + context.taskId() + "\t" + context.taskIndex());
+      for (int i = 0; i < 4; i++) {
+        collectionPartition.add("PartitionValue" + i);
+      }
+      context.writeEnd("partition", collectionPartition);
+    }
+
+    @Override
+    public void prepare(Config cfg, TaskContext context) {
+      super.prepare(cfg, context);
+      collectionPartition = new CollectionPartition();
     }
   }
 

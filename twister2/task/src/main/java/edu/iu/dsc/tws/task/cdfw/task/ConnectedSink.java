@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.task.cdfw.task;
 
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
@@ -25,11 +24,14 @@ import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
 public class ConnectedSink extends BaseSink implements Collector {
-
-  private static final Logger LOG = Logger.getLogger(ConnectedSink.class.getName());
-
+  /**
+   * The name of the data set
+   */
   private String inputKey;
 
+  /**
+   * The partition to use
+   */
   private CollectionPartition<Object> partition;
 
   public ConnectedSink() {
@@ -41,29 +43,23 @@ public class ConnectedSink extends BaseSink implements Collector {
 
   @Override
   public boolean execute(IMessage message) {
-    LOG.info("context task index:" + context.taskIndex() + "execute message:" + message);
-    partition = new CollectionPartition<>(context.taskIndex());
-    if (message.getContent() instanceof Iterator) {
-      Iterator<Object> itr = (Iterator<Object>) message.getContent();
-      while (itr.hasNext()) {
-        partition.add(itr.next());
+    if (message.getContent() instanceof  Iterator) {
+      while (((Iterator<Object>) message.getContent()).hasNext()) {
+        partition.add(((Iterator<Object>) message.getContent()).next());
       }
-    } else {
-      partition.add(message.getContent());
     }
-    LOG.info("context task index:" + context.taskIndex()
-        + "Partition Size:" + partition.getConsumer().next());
     return true;
-  }
-
-  @Override
-  public DataPartition<Object> get() {
-    return new EntityPartition<>(partition);
   }
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
+    partition = new CollectionPartition<>();
+  }
+
+  @Override
+  public DataPartition<Object> get() {
+    return new EntityPartition<>(partition);
   }
 
   @Override

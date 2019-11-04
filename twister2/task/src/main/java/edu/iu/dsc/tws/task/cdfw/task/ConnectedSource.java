@@ -11,34 +11,30 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.cdfw.task;
 
+import java.util.logging.Logger;
+
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
-import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.task.impl.TaskConfigurations;
 
 /**
- * Connected source
+ * Connected source for the connected dataflow example
  */
 public class ConnectedSource extends BaseSource implements Receptor {
 
-  private DataObject<?> dSet;
+  private static final Logger LOG = Logger.getLogger(ConnectedSource.class.getName());
 
   private String edge = TaskConfigurations.DEFAULT_EDGE;
 
-  private boolean finished = false;
-
   private DataPartition<?> dataPartition;
 
-  private DataPartitionConsumer<?> iterator;
+  private Object dataObject = null;
 
   private String inputKey;
-
-  private Object datapoints = null;
 
   public ConnectedSource() {
   }
@@ -52,40 +48,15 @@ public class ConnectedSource extends BaseSource implements Receptor {
     this.inputKey = inputkey;
   }
 
-  /*@Override
-  public void execute() {
-    if (finished) {
-      return;
-    }
-
-    if (dataPartition == null) {
-      dataPartition = dSet.getPartition(context.taskIndex());
-      iterator = dataPartition.getConsumer();
-    }
-
-    if (iterator.hasNext()) {
-      context.write(edge, iterator.next());
-    } else {
-      context.end(edge);
-      finished = true;
-    }
-  }*/
-
   @Override
   public void execute() {
-    dataPartition = (DataPartition<?>) dataPartition.first();
-    context.writeEnd(edge, dataPartition);
+    dataObject = dataPartition.first();
+    context.writeEnd(edge, dataObject);
   }
-
 
   @Override
   public void prepare(Config cfg, TaskContext ctx) {
     super.prepare(cfg, ctx);
-  }
-
-  @Override
-  public IONames getReceivableNames() {
-    return IONames.declare(inputKey);
   }
 
   public String getEdge() {
@@ -101,5 +72,10 @@ public class ConnectedSource extends BaseSource implements Receptor {
     if (inputKey.equals(name)) {
       this.dataPartition = data;
     }
+  }
+
+  @Override
+  public IONames getReceivableNames() {
+    return IONames.declare(inputKey);
   }
 }
