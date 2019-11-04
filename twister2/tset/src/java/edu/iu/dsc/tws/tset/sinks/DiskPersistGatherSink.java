@@ -9,34 +9,34 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
 package edu.iu.dsc.tws.tset.sinks;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
-/**
- * An in-memory cached TSet
- *
- * @param <T> TSet data type
- */
-public class CacheIterSink<T> extends StoreIterSink<T, T> {
+public class DiskPersistGatherSink<T> extends StoreIterSink<Tuple<Integer, T>, T> {
 
-  private CollectionPartition<T> partition;
+  private DiskBackedCollectionPartition<T> partition;
 
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-    this.partition = new CollectionPartition<>();
+    this.partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig());
   }
 
   @Override
-  protected CollectionPartition<T> getPartition() {
+  protected DiskBackedCollectionPartition<T> getPartition() {
     return partition;
   }
 
   @Override
-  protected ValueExtractor<T, T> getValueExtractor() {
-    return input -> input;
+  protected ValueExtractor<T, Tuple<Integer, T>> getValueExtractor() {
+    return Tuple::getValue;
+  }
+
+  @Override
+  public void close() {
+    this.partition.close();
   }
 }

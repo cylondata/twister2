@@ -78,4 +78,8 @@ public interface BatchTSet<T> extends TSet<T>, AcceptingData<T> {
   Storable<T> cache();
 
   Storable<T> lazyCache();
+
+  Storable<T> persist();
+
+  Storable<T> lazyPersist();
 }
