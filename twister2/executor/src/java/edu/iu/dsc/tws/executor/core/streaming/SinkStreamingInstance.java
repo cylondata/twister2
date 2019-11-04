@@ -209,6 +209,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
   }
 
   public boolean execute() {
+    boolean needFurther = false;
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
       if (m != null) {
@@ -217,7 +218,10 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      intOpArray[i].progress();
+      boolean needProgress = intOpArray[i].progress();
+      if (needProgress) {
+        needFurther = true;
+      }
     }
 
     if (this.checkpointable && this.streamingInQueue.isEmpty()) {
@@ -228,7 +232,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       }
     }
 
-    return false;
+    return needFurther;
   }
 
   @Override

@@ -271,7 +271,10 @@ public class SourceStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      outOpArray[i].progress();
+      boolean needProgress = outOpArray[i].progress();
+      if (needProgress) {
+        nothingToProcess = false;
+      }
     }
 
     if (this.checkpointable && outStreamingQueue.isEmpty() && this.pendingCheckpoint.isPending()) {

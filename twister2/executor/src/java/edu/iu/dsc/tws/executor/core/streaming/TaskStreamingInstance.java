@@ -324,11 +324,17 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      nothingToExecute &= outOpArray[i].progress();
+      boolean needProgress = outOpArray[i].progress();
+      if (needProgress) {
+        nothingToExecute = false;
+      }
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      nothingToExecute &= intOpArray[i].progress();
+      boolean needProgress = intOpArray[i].progress();
+      if (needProgress) {
+        nothingToExecute = false;
+      }
     }
 
     if (this.checkpointable && this.inQueue.isEmpty() && this.outQueue.isEmpty()) {
@@ -340,7 +346,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       }
     }
 
-    return nothingToExecute;
+    return !nothingToExecute;
   }
 
   public void scheduleBarriers(Long bid) {
