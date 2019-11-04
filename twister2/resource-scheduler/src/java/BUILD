@@ -54,5 +54,6 @@ t2_java_lib(
         "@org_apache_mesos_mesos//jar",
         "@org_bouncycastle_bcpkix_jdk15on//jar",
         "@org_bouncycastle_bcprov_jdk15on//jar",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance:fault-tolerance-api-java"
     ],
 )

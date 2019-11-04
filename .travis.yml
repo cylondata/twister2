@@ -10,6 +10,10 @@ addons:
 
 jdk: oraclejdk11
 
+cache:
+  directories:
+    - $HOME/.cache/bazel
+
 before_install:
   - echo "s:======================================"
   - echo "Downloading bazel"
@@ -19,6 +23,7 @@ before_install:
   - echo "Installing C++ and Python"
   - sudo apt-get install g++
   - sudo apt-get install  python-dev python-pip python3-dev python3-pip
+  - sudo apt-get install maven
 
 script:
   - echo "PATH CHECK:vb"
@@ -30,6 +35,8 @@ script:
   - echo "BAZEL PACKAGE START"
   - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
   - echo "BAZEL PACKAGE END"
+  - echo "MAVEN BUILD"
+  - sh util/mvn/install-local-snapshot.sh
   - echo " END ALL "
   - echo "e:============================================"
 

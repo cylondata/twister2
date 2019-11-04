@@ -27,6 +27,7 @@ common_deps_files = [
        "@com_google_guava_guava//jar",
        "//third_party:vendored_grpc_1_21_0",
        "//third_party:vendored_guava_26_0_jre",
+       "@com_google_code_findbugs_jsr305//jar"
 ]
 
 t2_java_lib(
