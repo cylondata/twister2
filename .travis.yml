@@ -27,11 +27,10 @@ before_install:
 
 jobs:
   include:
-    - stage: "Build Stages"
-      name: "Full Build"
+    - stage: "Warmup & Full Build"
       script:
-        - echo "Starting full build..."
         - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
+    - stage: "Build Stages"
     - script:
         - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
       name: "Tests"
