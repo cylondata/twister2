@@ -284,6 +284,7 @@ public class SourceStreamingInstance implements INodeInstance {
             .onCheckpointPropagated(this.snapshot);
         this.scheduleBarriers(barrier);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, barrier);
+        nothingToProcess = false;
       }
     }
     return !nothingToProcess;

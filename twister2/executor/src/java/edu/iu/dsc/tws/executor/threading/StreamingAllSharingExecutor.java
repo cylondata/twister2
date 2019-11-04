@@ -22,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -164,11 +163,10 @@ public class StreamingAllSharingExecutor implements IExecutor {
       idleTasks[i] = new AtomicBoolean(false);
     }
     doneSignal = new CountDownLatch(numThreads - 1);
-    ReentrantLock sharedLock = new ReentrantLock();
     AtomicInteger idleCounter = new AtomicInteger(tasks.size());
-    workers[0] = new StreamWorker(tasks, taskStatus, idleTasks, sharedLock, idleCounter);
+    workers[0] = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter);
     for (int i = 1; i < numThreads; i++) {
-      StreamWorker task = new StreamWorker(tasks, taskStatus, idleTasks, sharedLock, idleCounter);
+      StreamWorker task = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter);
       threads.submit(task);
       workers[i] = task;
     }
@@ -316,16 +314,14 @@ public class StreamingAllSharingExecutor implements IExecutor {
     private AtomicBoolean[] ignoreIndex;
     private AtomicBoolean[] idleTasks;
     private int lastIndex;
-    private ReentrantLock sharedLock;
     private AtomicInteger activeCounter;
 
     public StreamWorker(List<INodeInstance> tasks,
                         AtomicBoolean[] ignoreIndex, AtomicBoolean[] idle,
-                        ReentrantLock lock, AtomicInteger idleCounter) {
+                        AtomicInteger idleCounter) {
       this.tasks = tasks;
       this.ignoreIndex = ignoreIndex;
       this.idleTasks = idle;
-      this.sharedLock = lock;
       this.activeCounter = idleCounter;
     }
 
@@ -364,27 +360,17 @@ public class StreamingAllSharingExecutor implements IExecutor {
           } else {
             // if we don't need further execution at this time and we were not idle before
             if (this.idleTasks[nodeInstanceIndex].compareAndSet(false, true)) {
-              try {
-                sharedLock.lock();
-                int count = activeCounter.decrementAndGet();
-                // if we reach 0, we need to sleep
-                if (count == 0) {
-                  LockSupport.parkNanos(1);
-                }
-              } finally {
-                sharedLock.unlock();
+              int count = activeCounter.decrementAndGet();
+              // if we reach 0, we need to sleep
+              if (count == 0) {
+                LockSupport.parkNanos(1);
               }
             } else {
               // if we were idle before, check if the count is still 0
-              try {
-                sharedLock.lock();
-                int count = activeCounter.get();
-                // if we reach 0, we need to sleep
-                if (count == 0) {
-                  LockSupport.parkNanos(1);
-                }
-              } finally {
-                sharedLock.unlock();
+              int count = activeCounter.get();
+              // if we reach 0, we need to sleep
+              if (count == 0) {
+                LockSupport.parkNanos(1);
               }
             }
           }

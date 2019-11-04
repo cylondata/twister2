@@ -209,7 +209,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
   }
 
   public boolean execute() {
-    boolean nothingToExecute = true;
+    boolean nothingToProcess = true;
     while (!streamingInQueue.isEmpty()) {
       IMessage m = streamingInQueue.poll();
       if (m != null) {
@@ -220,7 +220,7 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
     for (int i = 0; i < intOpArray.length; i++) {
       boolean needProgress = intOpArray[i].progress();
       if (needProgress) {
-        nothingToExecute = false;
+        nothingToProcess = false;
       }
     }
 
@@ -229,10 +229,11 @@ public class SinkStreamingInstance implements INodeInstance, ISync {
       if (checkpointedBarrierId != -1) {
         ((CheckpointableTask) this.streamingTask).onCheckpointPropagated(this.snapshot);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
+        nothingToProcess = false;
       }
     }
 
-    return !nothingToExecute;
+    return !nothingToProcess;
   }
 
   @Override

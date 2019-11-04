@@ -299,7 +299,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
       }
     }
     // set the initial nothing to execute
-    boolean nothingToExecute = inQueue.isEmpty();
+    boolean nothingToProcess = inQueue.isEmpty();
 
     // now check the output queue
     while (!outQueue.isEmpty()) {
@@ -317,7 +317,7 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
             : op.send(globalTaskId, message, message.getFlag())) {
           outQueue.poll();
         } else {
-          nothingToExecute = false;
+          nothingToProcess = false;
           break;
         }
       }
@@ -326,14 +326,14 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     for (int i = 0; i < outOpArray.length; i++) {
       boolean needProgress = outOpArray[i].progress();
       if (needProgress) {
-        nothingToExecute = false;
+        nothingToProcess = false;
       }
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
       boolean needProgress = intOpArray[i].progress();
       if (needProgress) {
-        nothingToExecute = false;
+        nothingToProcess = false;
       }
     }
 
@@ -343,10 +343,11 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
         ((CheckpointableTask) this.task).onCheckpointPropagated(this.snapshot);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, checkpointedBarrierId);
         this.scheduleBarriers(checkpointedBarrierId);
+        nothingToProcess = false;
       }
     }
 
-    return !nothingToExecute;
+    return !nothingToProcess;
   }
 
   public void scheduleBarriers(Long bid) {
