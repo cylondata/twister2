@@ -27,13 +27,11 @@ before_install:
 
 jobs:
   include:
-    - stage: "Warmup & Full Build"
-      script:
-        - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
     - stage: "Build Stages"
     - script:
+        - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
         - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
-      name: "Tests"
+      name: "Build & Test"
     - script:
         - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
       name: "Tar Package"
