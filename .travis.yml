@@ -28,7 +28,7 @@ before_install:
 jobs:
   include:
     - stage: "Build Stages"
-    - script:
+      script:
         - bazel build --config=ubuntu twister2/... --action_env=JAVA_HOME
         - bazel test --config=ubuntu twister2/... --action_env=JAVA_HOME
       name: "Build & Test"
