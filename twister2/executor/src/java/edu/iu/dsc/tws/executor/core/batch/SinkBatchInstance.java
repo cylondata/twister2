@@ -255,24 +255,4 @@ public class SinkBatchInstance implements INodeInstance, ISync {
   public BlockingQueue<IMessage> getBatchInQueue() {
     return batchInQueue;
   }
-
-  public int getGlobalTaskId() {
-    return globalTaskId;
-  }
-
-  public int getBatchTaskIndex() {
-    return batchTaskIndex;
-  }
-
-  public int getParallelism() {
-    return parallelism;
-  }
-
-  public String getTaskName() {
-    return taskName;
-  }
-
-  public int getWorkerId() {
-    return workerId;
-  }
 }

@@ -271,7 +271,10 @@ public class SourceStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      outOpArray[i].progress();
+      boolean needProgress = outOpArray[i].progress();
+      if (needProgress) {
+        nothingToProcess = false;
+      }
     }
 
     if (this.checkpointable && outStreamingQueue.isEmpty() && this.pendingCheckpoint.isPending()) {
@@ -281,6 +284,7 @@ public class SourceStreamingInstance implements INodeInstance {
             .onCheckpointPropagated(this.snapshot);
         this.scheduleBarriers(barrier);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, barrier);
+        nothingToProcess = false;
       }
     }
     return !nothingToProcess;
