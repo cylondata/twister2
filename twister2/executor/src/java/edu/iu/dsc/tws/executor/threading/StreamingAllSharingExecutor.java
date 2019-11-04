@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -354,9 +355,8 @@ public class StreamingAllSharingExecutor implements IExecutor {
         if (nodeInstanceIndex != -1) {
           INodeInstance nodeInstance = this.tasks.get(nodeInstanceIndex);
           boolean needsFurther = nodeInstance.execute();
+          // need further execution
           if (needsFurther) {
-            // need further execution
-            this.ignoreIndex[nodeInstanceIndex].set(false);
             // if we were idle, we are no longer idle
             if (idleTasks[nodeInstanceIndex].compareAndSet(true, false)) {
               activeCounter.getAndIncrement();
@@ -369,7 +369,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
                 int count = activeCounter.decrementAndGet();
                 // if we reach 0, we need to sleep
                 if (count == 0) {
-                  Thread.sleep(0, 0);
+                  LockSupport.parkNanos(1);
                 }
               } finally {
                 sharedLock.unlock();
@@ -381,13 +381,14 @@ public class StreamingAllSharingExecutor implements IExecutor {
                 int count = activeCounter.get();
                 // if we reach 0, we need to sleep
                 if (count == 0) {
-                  Thread.sleep(0, 0);
+                  LockSupport.parkNanos(1);
                 }
               } finally {
                 sharedLock.unlock();
               }
             }
           }
+          this.ignoreIndex[nodeInstanceIndex].set(false);
         }
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, String.format("%d Error in executor", workerId), t);
