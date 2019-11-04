@@ -53,6 +53,6 @@ public class ExecutorContext extends Context {
   }
 
   public static String getStreamExecutor(Config cfg) {
-    return cfg.getStringValue(STREAM_EXECUTOR, STREAM_EXECUTOR_ALL_SHARING);
+    return cfg.getStringValue(STREAM_EXECUTOR, STREAM_EXECUTOR_DEDICATED_COMM);
   }
 }
