@@ -452,12 +452,8 @@ public class StreamingAllSharingExecutor implements IExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped) {
-        channel.progress();
-        worker.runChannelComplete();
-        return true;
-      }
-
+      channel.progress();
+      worker.runChannelComplete();
       return false;
     }
 
