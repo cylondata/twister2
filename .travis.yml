@@ -35,9 +35,9 @@ script:
   - echo "BAZEL PACKAGE START"
   - bazel build --config=ubuntu //scripts/package:tarpkgs --action_env=JAVA_HOME
   - echo "BAZEL PACKAGE END"
-  - echo " END ALL "
   - echo "MAVEN BUILD"
   - sh util/mvn/install-local-snapshot.sh
+  - echo " END ALL "
   - echo "e:============================================"
 
 notifications:
