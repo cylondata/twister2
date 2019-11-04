@@ -20,6 +20,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -155,13 +157,17 @@ public class StreamingAllSharingExecutor implements IExecutor {
     StreamWorker[] workers = new StreamWorker[numThreads];
 
     final AtomicBoolean[] taskStatus = new AtomicBoolean[tasks.size()];
+    final AtomicBoolean[] idleTasks = new AtomicBoolean[tasks.size()];
     for (int i = 0; i < tasks.size(); i++) {
       taskStatus[i] = new AtomicBoolean(false);
+      idleTasks[i] = new AtomicBoolean(false);
     }
     doneSignal = new CountDownLatch(numThreads - 1);
-    workers[0] = new StreamWorker(tasks, taskStatus);
+    ReentrantLock sharedLock = new ReentrantLock();
+    AtomicInteger idleCounter = new AtomicInteger(tasks.size());
+    workers[0] = new StreamWorker(tasks, taskStatus, idleTasks, sharedLock, idleCounter);
     for (int i = 1; i < numThreads; i++) {
-      StreamWorker task = new StreamWorker(tasks, taskStatus);
+      StreamWorker task = new StreamWorker(tasks, taskStatus, idleTasks, sharedLock, idleCounter);
       threads.submit(task);
       workers[i] = task;
     }
@@ -307,11 +313,19 @@ public class StreamingAllSharingExecutor implements IExecutor {
     // round robin mode
     private List<INodeInstance> tasks;
     private AtomicBoolean[] ignoreIndex;
+    private AtomicBoolean[] idleTasks;
     private int lastIndex;
+    private ReentrantLock sharedLock;
+    private AtomicInteger activeCounter;
 
-    public StreamWorker(List<INodeInstance> tasks, AtomicBoolean[] ignoreIndex) {
+    public StreamWorker(List<INodeInstance> tasks,
+                        AtomicBoolean[] ignoreIndex, AtomicBoolean[] idle,
+                        ReentrantLock lock, AtomicInteger idleCounter) {
       this.tasks = tasks;
       this.ignoreIndex = ignoreIndex;
+      this.idleTasks = idle;
+      this.sharedLock = lock;
+      this.activeCounter = idleCounter;
     }
 
     private int getNext() {
@@ -343,6 +357,36 @@ public class StreamingAllSharingExecutor implements IExecutor {
           if (needsFurther) {
             // need further execution
             this.ignoreIndex[nodeInstanceIndex].set(false);
+            // if we were idle, we are no longer idle
+            if (idleTasks[nodeInstanceIndex].compareAndSet(true, false)) {
+              activeCounter.getAndIncrement();
+            }
+          } else {
+            // if we don't need further execution at this time and we were not idle before
+            if (this.idleTasks[nodeInstanceIndex].compareAndSet(false, true)) {
+              try {
+                sharedLock.lock();
+                int count = activeCounter.decrementAndGet();
+                // if we reach 0, we need to sleep
+                if (count == 0) {
+                  Thread.sleep(0, 0);
+                }
+              } finally {
+                sharedLock.unlock();
+              }
+            } else {
+              // if we were idle before, check if the count is still 0
+              try {
+                sharedLock.lock();
+                int count = activeCounter.get();
+                // if we reach 0, we need to sleep
+                if (count == 0) {
+                  Thread.sleep(0, 0);
+                }
+              } finally {
+                sharedLock.unlock();
+              }
+            }
           }
         }
       } catch (Throwable t) {

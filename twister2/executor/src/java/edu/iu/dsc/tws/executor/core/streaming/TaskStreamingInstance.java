@@ -324,11 +324,11 @@ public class TaskStreamingInstance implements INodeInstance, ISync {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      outOpArray[i].progress();
+      nothingToExecute &= outOpArray[i].progress();
     }
 
     for (int i = 0; i < intOpArray.length; i++) {
-      intOpArray[i].progress();
+      nothingToExecute &= intOpArray[i].progress();
     }
 
     if (this.checkpointable && this.inQueue.isEmpty() && this.outQueue.isEmpty()) {
