@@ -228,6 +228,20 @@ public class ChannelDataFlowOperation implements ChannelListener, ChannelMessage
         pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
   }
 
+  public void init(Config cfg, MessageType messageType, MessageType recvMessageType,
+                   LogicalPlan plan,
+                   int graphEdge, Set<Integer> recvExecutors,
+                   ChannelReceiver msgReceiver,
+                   Map<Integer, ArrayBlockingQueue<OutMessage>> pendingSendPerSource,
+                   Map<Integer, Queue<InMessage>> pRMPS,
+                   Map<Integer, Queue<InMessage>> pendingReceiveDesrialize,
+                   Map<Integer, MessageSerializer> serializer,
+                   Map<Integer, MessageDeSerializer> deSerializer, boolean keyed) {
+    init(cfg, messageType, recvMessageType, keyType, keyType,
+        plan, graphEdge, recvExecutors, msgReceiver,
+        pendingSendPerSource, pRMPS, pendingReceiveDesrialize, serializer, deSerializer, keyed);
+  }
+
   private void initSerializers() {
     // initialize the serializers
     for (MessageSerializer serializer : messageSerializer.values()) {

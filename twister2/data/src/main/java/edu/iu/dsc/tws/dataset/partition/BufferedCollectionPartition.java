@@ -244,7 +244,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   public void flush() {
-    Path filePath = new Path(this.rootPath, String.valueOf(this.fileCounter++) + EXTENSION);
+    Path filePath = new Path(this.rootPath, (this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
       outputStream.writeInt(this.buffers.size());
       while (!this.buffers.isEmpty()) {
