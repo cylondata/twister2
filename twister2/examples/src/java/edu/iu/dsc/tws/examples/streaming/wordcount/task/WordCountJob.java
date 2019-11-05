@@ -126,7 +126,7 @@ public class WordCountJob implements IWorker {
       counts.put(word, count);
       LOG.log(Level.INFO, String.format("%d Word %s count %s", context.globalTaskId(),
           word, count));
-      return false;
+      return true;
     }
   }
 
