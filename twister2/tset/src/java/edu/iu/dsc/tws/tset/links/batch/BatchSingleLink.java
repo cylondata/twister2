@@ -38,7 +38,9 @@ import edu.iu.dsc.tws.tset.fn.MapCompute;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheSingleSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistSingleSink;
 
 public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
     BatchTupleMappableLink<T> {
@@ -98,4 +100,18 @@ public abstract class BatchSingleLink<T> extends BatchTLinkImpl<T, T> implements
     return cacheTSet;
   }
 
+  @Override
+  public PersistedTSet<T> lazyPersist() {
+    PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
+        new DiskPersistSingleSink<>(), getTargetParallelism());
+    addChildToGraph(persistedTSet);
+    return persistedTSet;
+  }
+
+  @Override
+  public PersistedTSet<T> persist() {
+    PersistedTSet<T> persistTSet = lazyPersist();
+    getTSetEnv().run(persistTSet);
+    return persistTSet;
+  }
 }

@@ -29,7 +29,9 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
 import edu.iu.dsc.tws.tset.sets.batch.KeyedTSet;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
 import edu.iu.dsc.tws.tset.sinks.CacheIterSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistIterSink;
 
 public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T>
     implements BatchTupleMappableLink<T> {
@@ -96,5 +98,24 @@ public abstract class BatchIteratorLink<T> extends BatchTLinkImpl<Iterator<T>, T
     Storable<T> cacheTSet = lazyCache();
     getTSetEnv().run((BaseTSet) cacheTSet);
     return cacheTSet;
+  }
+
+  /*
+   * Similar to cache, but stores data in disk rather than in memory.
+   */
+  @Override
+  public Storable<T> persist() {
+    Storable<T> lazyPersist = lazyPersist();
+    getTSetEnv().run((BaseTSet) lazyPersist);
+    return lazyPersist;
+  }
+
+  @Override
+  public Storable<T> lazyPersist() {
+    PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(), new DiskPersistIterSink<>(),
+        getTargetParallelism());
+    addChildToGraph(persistedTSet);
+
+    return persistedTSet;
   }
 }
