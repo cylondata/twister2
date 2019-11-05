@@ -301,11 +301,6 @@ public class SourceBatchInstance implements INodeInstance, ISync {
     return complete;
   }
 
-
-  public BlockingQueue<IMessage> getOutQueue() {
-    return outBatchQueue;
-  }
-
   public void registerOutParallelOperation(String edge, IParallelOperation op) {
     outBatchParOps.put(edge, op);
   }

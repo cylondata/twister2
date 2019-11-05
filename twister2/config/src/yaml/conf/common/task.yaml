@@ -96,3 +96,12 @@ twister2.executor.batch.name: "edu.iu.dsc.tws.executor.threading.BatchSharingExe
 # number of tuples executed at a single pass
 twister2.exector.instance.queue.low.watermark: 10000
 
+# name of the streaming executor
+
+## this executor with not block and will use all the threads availbale all the time for processing
+## this can lead to higher CPU usage and low latency
+twister2.executor.stream.name: "edu.iu.dsc.tws.executor.threading.StreamingSharingExecutor"
+
+## this executor with not block and will use all the threads availbale all the time for processing
+## this can lead to low CPU usage and higher latency
+# twister2.executor.stream.name: "edu.iu.dsc.tws.executor.threading.StreamingAllSharingExecutor"
