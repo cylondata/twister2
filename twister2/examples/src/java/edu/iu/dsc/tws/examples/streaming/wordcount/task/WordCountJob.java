@@ -73,7 +73,7 @@ public class WordCountJob implements IWorker {
         .keyedPartition("word-source")
         .viaEdge(EDGE)
         .withKeyType(MessageTypes.OBJECT)
-        .withDataType(MessageTypes.INTEGER_ARRAY);
+        .withDataType(MessageTypes.INTEGER);
     builder.setMode(OperationMode.STREAMING);
 
     // execute the graph
@@ -104,7 +104,7 @@ public class WordCountJob implements IWorker {
     @Override
     public void execute() {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
-      context.write(EDGE, word, new int[]{1});
+      context.write(EDGE, word, 1);
     }
   }
 
