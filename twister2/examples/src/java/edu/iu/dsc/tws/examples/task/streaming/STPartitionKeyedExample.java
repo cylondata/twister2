@@ -33,7 +33,7 @@ import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
 import edu.iu.dsc.tws.examples.verification.comparators.IntArrayComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
-import edu.iu.dsc.tws.task.typed.streaming.SPartitionKeyedCompute;
+import edu.iu.dsc.tws.task.typed.streaming.SKeyedPartitionCompute;
 
 public class STPartitionKeyedExample extends BenchTaskWorker {
 
@@ -59,7 +59,7 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class SKeyedPartitionSinkTask extends SPartitionKeyedCompute<Integer, int[]>
+  protected static class SKeyedPartitionSinkTask extends SKeyedPartitionCompute<Integer, int[]>
       implements ISink {
 
     private static final long serialVersionUID = -254264903510284798L;
