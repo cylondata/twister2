@@ -21,16 +21,14 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.JobConfig;
 import edu.iu.dsc.tws.api.Twister2Job;
-import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
+import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -42,7 +40,7 @@ import edu.iu.dsc.tws.rsched.job.Twister2Submitter;
 import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.impl.TaskExecutor;
-import edu.iu.dsc.tws.task.impl.function.ReduceFn;
+import edu.iu.dsc.tws.task.typed.streaming.SKeyedPartitionCompute;
 
 /**
  * A simple wordcount program where fixed number of words are generated and the global counts
@@ -72,11 +70,10 @@ public class WordCountJob implements IWorker {
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
     builder.addSink("word-aggregator", counter, 4)
-        .keyedReduce("word-source")
+        .keyedPartition("word-source")
         .viaEdge(EDGE)
-        .withReductionFunction(new ReduceFn(Op.SUM, MessageTypes.INTEGER_ARRAY))
         .withKeyType(MessageTypes.OBJECT)
-        .withDataType(MessageTypes.INTEGER_ARRAY);
+        .withDataType(MessageTypes.INTEGER);
     builder.setMode(OperationMode.STREAMING);
 
     // execute the graph
@@ -107,23 +104,28 @@ public class WordCountJob implements IWorker {
     @Override
     public void execute() {
       String word = sampleWords.get(random.nextInt(sampleWords.size()));
-      context.write(EDGE, word, new int[]{1});
+      context.write(EDGE, word, 1);
     }
   }
 
-  private static class WordAggregator extends BaseSink {
+  private static class WordAggregator extends SKeyedPartitionCompute<String, int[]>
+      implements ISink {
     private static final long serialVersionUID = -254264903510284798L;
 
     // keep track of the counts
     private Map<String, Integer> counts = new HashMap<>();
 
     @Override
-    public boolean execute(IMessage message) {
-      if (message.getContent() instanceof Tuple) {
-        Tuple kc = (Tuple) message.getContent();
-        LOG.log(Level.INFO, String.format("%d Word %s count %s", context.globalTaskId(),
-            kc.getKey(), ((int[]) kc.getValue())[0]));
+    public boolean keyedPartition(Tuple<String, int[]> content) {
+      String word = content.getKey();
+      int count = 1;
+      if (counts.containsKey(word)) {
+        count = counts.get(word);
+        count++;
       }
+      counts.put(word, count);
+      LOG.log(Level.INFO, String.format("%d Word %s count %s", context.globalTaskId(),
+          word, count));
       return true;
     }
   }

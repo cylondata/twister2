@@ -168,6 +168,16 @@ public abstract class BatchTSetImpl<T> extends BaseTSet<T> implements BatchTSet<
   }
 
   @Override
+  public PersistedTSet<T> persist() {
+    return direct().persist();
+  }
+
+  @Override
+  public PersistedTSet<T> lazyPersist() {
+    return direct().lazyPersist();
+  }
+
+  @Override
   public BatchTSetImpl<T> addInput(String key, Storable<?> input) {
     getTSetEnv().addInput(getId(), input.getId(), key);
     return this;

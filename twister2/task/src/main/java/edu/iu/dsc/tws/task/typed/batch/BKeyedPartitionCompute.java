@@ -17,7 +17,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
 
-public abstract class BPartitionKeyedCompute<K, T>
+public abstract class BKeyedPartitionCompute<K, T>
     extends AbstractIterableDataCompute<Tuple<K, T>> {
 
   public abstract boolean keyedPartition(Iterator<Tuple<K, T>> content);

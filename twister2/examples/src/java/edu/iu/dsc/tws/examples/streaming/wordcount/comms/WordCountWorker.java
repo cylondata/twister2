@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
-import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
@@ -28,15 +27,14 @@ import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.Network;
-import edu.iu.dsc.tws.comms.functions.reduction.ReduceOperationFunction;
 import edu.iu.dsc.tws.comms.selectors.HashingSelector;
-import edu.iu.dsc.tws.comms.stream.SKeyedReduce;
+import edu.iu.dsc.tws.comms.stream.SKeyedPartition;
 import edu.iu.dsc.tws.examples.utils.WordCountUtils;
 
 public class WordCountWorker implements IWorker {
   private static final Logger LOG = Logger.getLogger(WordCountWorker.class.getName());
 
-  private SKeyedReduce keyGather;
+  private SKeyedPartition keyedPartition;
 
   private Communicator channel;
 
@@ -65,9 +63,8 @@ public class WordCountWorker implements IWorker {
     setupNetwork(workerController);
 
     // create the communication
-    keyGather = new SKeyedReduce(channel, logicalPlan, sources, destinations,
+    keyedPartition = new SKeyedPartition(channel, logicalPlan, sources, destinations,
         MessageTypes.OBJECT, MessageTypes.INTEGER,
-        new ReduceOperationFunction(Op.SUM, MessageTypes.INTEGER),
         new WordAggregate(), new HashingSelector());
 
     scheduleTasks();
@@ -104,7 +101,7 @@ public class WordCountWorker implements IWorker {
     if (id < 2) {
       for (int i = 0; i < noOfTasksPerExecutor; i++) {
         // the map thread where data is produced
-        Thread mapThread = new Thread(new StreamingWordSource(keyGather, 1000,
+        Thread mapThread = new Thread(new StreamingWordSource(keyedPartition, 1000,
             noOfTasksPerExecutor * id + i, 10));
         mapThread.start();
       }
@@ -118,7 +115,7 @@ public class WordCountWorker implements IWorker {
         // communicationProgress the channel
         channel.getChannel().progress();
         // we should communicationProgress the communication directive
-        keyGather.progress();
+        keyedPartition.progress();
       } catch (Throwable t) {
         LOG.log(Level.SEVERE, "Error", t);
       }

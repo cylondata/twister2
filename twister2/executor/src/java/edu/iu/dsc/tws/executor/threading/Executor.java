@@ -18,6 +18,7 @@ import edu.iu.dsc.tws.api.compute.executor.IExecution;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
 public class Executor implements IExecutor {
@@ -43,7 +44,15 @@ public class Executor implements IExecutor {
 
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {
-      executor = new StreamingSharingExecutor(config, workerId, channel);
+      String streamExecutor = ExecutorContext.getStreamExecutor(config);
+      if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
+        executor = new StreamingAllSharingExecutor(config, workerId, channel);
+      } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
+        executor = new StreamingSharingExecutor(config, workerId, channel);
+      } else {
+        throw new Twister2RuntimeException("Un-known stream executor specified - "
+            + streamExecutor);
+      }
     } else {
       String batchExecutor = ExecutorContext.getBatchExecutor(config);
       if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
@@ -51,7 +60,7 @@ public class Executor implements IExecutor {
       } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
         executor = new BatchSharingExecutor2(config, workerId, channel);
       } else {
-        throw new RuntimeException("Un-known batch executor specified - " + batchExecutor);
+        throw new Twister2RuntimeException("Un-known batch executor specified - " + batchExecutor);
       }
     }
   }

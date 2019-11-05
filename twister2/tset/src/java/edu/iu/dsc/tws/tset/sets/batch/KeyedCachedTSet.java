@@ -36,7 +36,7 @@ import edu.iu.dsc.tws.tset.links.batch.KeyedGatherUngroupedTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedPartitionTLink;
 import edu.iu.dsc.tws.tset.links.batch.KeyedReduceTLink;
 import edu.iu.dsc.tws.tset.ops.SinkOp;
-import edu.iu.dsc.tws.tset.sources.CacheSourceFunc;
+import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 
 public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
     implements Storable<Tuple<K, V>> {
@@ -134,7 +134,7 @@ public class KeyedCachedTSet<K, V> extends BatchTupleTSetImpl<K, V>
       // this cache source will consume the data object created by the execution of this tset.
       // hence this tset ID needs to be set as an input to the cache source
       this.cacheSource = getTSetEnv().createKeyedSource(cacheSourcePrefix,
-          new CacheSourceFunc<>(cacheSourcePrefix), getParallelism());
+          new DataPartitionSourceFunc<>(cacheSourcePrefix), getParallelism());
       this.cacheSource.addInput(cacheSourcePrefix, this);
     }
 

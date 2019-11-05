@@ -26,6 +26,7 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
+import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
@@ -83,9 +84,6 @@ public abstract class BasicComputation extends TaskWorker {
     //Actual execution for the first taskgraph
     taskExecutor.execute(graphpartitionTaskGraph, executionPlan);
     //Retrieve the output of the first task graph
-    DataObject<Object> graphPartitionData = taskExecutor.getOutput(
-        graphpartitionTaskGraph, executionPlan, "GraphPartitionSink");
-
 
 
 
@@ -99,9 +97,6 @@ public abstract class BasicComputation extends TaskWorker {
     //Actual execution for the first taskgraph
     taskExecutor.execute(graphInitializationTaskGraph, executionPlan1);
     //Retrieve the output of the first task graph
-    DataObject<Object> graphInitializationData = taskExecutor.getOutput(
-        graphInitializationTaskGraph, executionPlan1, "GraphInitializationSink");
-
 
 
 
@@ -116,35 +111,19 @@ public abstract class BasicComputation extends TaskWorker {
     long startime = System.currentTimeMillis();
     if (iterations != 0) {
       for (int i = 0; i < iterations; i++) {
-        taskExecutor.addInput(computationTaskgraph, plan,
-            "source", "graphData", graphPartitionData);
+        taskExecutor.itrExecute(computationTaskgraph, plan, i == iterations - 1);
 
-        taskExecutor.addInput(computationTaskgraph, plan,
-            "source", "graphInitialValue", graphInitializationData);
-
-        taskExecutor.itrExecute(computationTaskgraph, plan);
-
-
-        graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
-            "sink");
       }
 
     } else {
       while (globaliterationStatus) {
 
-
-        taskExecutor.addInput(computationTaskgraph, plan,
-            "source", "graphData", graphPartitionData);
-
-        taskExecutor.addInput(computationTaskgraph, plan,
-            "source", "graphInitialValue", graphInitializationData);
-        taskExecutor.itrExecute(computationTaskgraph, plan);
-
-        graphInitializationData = taskExecutor.getOutput(computationTaskgraph, plan,
-            "sink");
+        taskExecutor.itrExecute(computationTaskgraph, plan, false);
         unlimitedItr++;
 
       }
+      taskExecutor.closeExecution(computationTaskgraph, plan);
+      taskExecutor.close();
     }
     taskExecutor.close();
     long endTime = System.currentTimeMillis();
@@ -166,7 +145,7 @@ public abstract class BasicComputation extends TaskWorker {
     GraphDataSource dataObjectSource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
         path, dsize);
 
-    DataSinkTask dataSinkTask = new DataSinkTask();
+    DataSinkTask dataSinkTask = new DataSinkTask("PartitionSink");
     ComputeGraphBuilder graphPartitionTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
     //Add source, compute, and sink tasks to the task graph builder for the first task graph
@@ -198,7 +177,8 @@ public abstract class BasicComputation extends TaskWorker {
                                                      GraphInitialization graphInitialization) {
     GraphDataSource initialaizatioSource = new GraphDataSource(Context.TWISTER2_DIRECT_EDGE,
         path, dsize);
-    DataInitializationSinkTask dataInitializationSinkTask = new DataInitializationSinkTask();
+    DataInitializationSinkTask dataInitializationSinkTask = new DataInitializationSinkTask(
+        "InitialValue");
 
     ComputeGraphBuilder initialationTaskGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
 
@@ -354,13 +334,19 @@ public abstract class BasicComputation extends TaskWorker {
 
     @Override
     public void add(String name, DataObject<?> data) {
-      if ("graphData".equals(name)) {
+      if ("PartitionSink".equals(name)) {
         this.graphObject = data;
       }
-      if ("graphInitialValue".equals(name)) {
+      if ("InitialValue".equals(name)) {
         this.graphObjectvalues = data;
       }
     }
+
+    @Override
+    public IONames getReceivableNames() {
+      return IONames.declare("PartitionSink", "InitialValue");
+    }
+
   }
 
   //abstracted compute task class
@@ -412,6 +398,10 @@ public abstract class BasicComputation extends TaskWorker {
     public void prepare(Config cfg, TaskContext context) {
       super.prepare(cfg, context);
       this.datapoints = new DataObjectImpl<>(config);
+    }
+    @Override
+    public IONames getCollectibleNames() {
+      return IONames.declare("InitialValue");
     }
 
   }
