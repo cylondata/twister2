@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.streaming.wordcount.comms;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -38,22 +37,16 @@ public class WordAggregate implements SingularReceiver {
   @Override
   public boolean receive(int target, Object message) {
     if (message instanceof Tuple) {
-      Tuple kc = (Tuple) message;
-      LOG.log(Level.INFO, String.format("%d Word %s count %s",
-          target, kc.getKey(), ((int[]) kc.getValue())[0]));
-    }
-    return true;
-  }
-
-  public boolean onMessage(int source, int path, int target, int flags, Object object) {
-    if (object instanceof List) {
-      for (Object o : (List) object) {
-        addValue(o.toString());
+      Tuple content = (Tuple) message;
+      String word = (String) content.getKey();
+      int count = 1;
+      if (wordCounts.containsKey(word)) {
+        count = wordCounts.get(word);
+        count++;
       }
-    } else {
-      addValue(object.toString());
+      wordCounts.put(word, count);
+      LOG.log(Level.INFO, String.format("Word %s count %s", word, count));
     }
-
     return true;
   }
 
