@@ -56,7 +56,7 @@ spec:
 ################################################################
 # ------------------- Dashboard StatefulSet ------------------ #
 
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: twister2-dashboard
@@ -98,8 +98,8 @@ spec:
 
           resources:
             requests:
-              cpu: 1.0
-              memory: 2048Mi
+              cpu: 0.5
+              memory: 256Mi
 
           volumeMounts:
             - name: persistent-volume

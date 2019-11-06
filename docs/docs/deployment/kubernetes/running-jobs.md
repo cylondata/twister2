@@ -1,7 +1,7 @@
 # Running Jobs
 
 We assume that you have a running Kubernetes cluster. In your machine, kubectl is configured to talk to Kubernetes master.
-You completed [Twister2 installation instructions at Kubernetes clusters](twister2-kubernetes-install.md).
+You completed [Twister2 installation instructions at Kubernetes clusters](twister2-install-kubernetes.md).
 
 ## Running HelloWorld Example
 
@@ -28,7 +28,7 @@ There must be a StatefulSet with the job name. List the pods in that StatefulSet
 Check the output for each pod by clicking on the right hand side button. You will see the output for each worker over there.
 
 You can also check the log files from persistent storage if persistent storage is enabled. 
-As it is explained in the [installation document](twister2-kubernetes-install.md). 
+As it is explained in the [installation document](twister2-install-kubernetes.md). 
 
 You need to learn the persistent logging directory of your storage provisioner. 
 You can learn it from Kubernetes Dashboard by checking the provisioner entity or consulting your administrator. 
