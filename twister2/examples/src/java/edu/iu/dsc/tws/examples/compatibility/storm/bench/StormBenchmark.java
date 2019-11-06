@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -105,7 +105,7 @@ public class StormBenchmark extends TaskWorker {
   }
 
 
-  public static class DataSink implements IComputableSink {
+  public static class DataSink implements ICompute {
 
     private static final long serialVersionUID = -254264903510284798L;
 

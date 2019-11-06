@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Closable;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
-import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.api.tset.fn.SinkFunc;
@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.tset.sets.BaseTSet;
  *
  * @param <T> data type
  */
-public class SinkOp<T> extends BaseOp implements IComputableSink<T>, Closable, Collector {
+public class SinkOp<T> extends BaseOp implements ICompute<T>, Closable, Collector {
   private static final long serialVersionUID = -9398832570L;
 
   private SinkFunc<T> sink;

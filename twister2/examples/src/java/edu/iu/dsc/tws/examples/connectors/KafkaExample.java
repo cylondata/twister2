@@ -35,7 +35,7 @@ import edu.iu.dsc.tws.api.comms.packing.types.primitive.LongPacker;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -125,7 +125,7 @@ public class KafkaExample implements IWorker {
     }
   }
 
-  public static class KSink implements IComputableSink, CheckpointableTask {
+  public static class KSink implements ICompute, CheckpointableTask {
 
     private Long sum = 0L;
     private TaskContext context;
