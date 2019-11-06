@@ -80,4 +80,4 @@ If job names do not conform to these rules, we automatically change them to acco
 ## Modifying Twister2 Core Components
 
 If you want to modify Twister2 core components, you need to build Twister2 Docker image. 
-Please consult the readme file in docker/kubernetes directory.
+Please consult [Building Docker Image for Kubernetes](buiding-docker-image.md)

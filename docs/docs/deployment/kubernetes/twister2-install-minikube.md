@@ -107,3 +107,8 @@ You will see a directory created for each running twister2 job.
 The directory name should be something like: pvc-1e2faca6-2c62-415a-a7ea-88db4b1caa8a
 
 When the job completes and its resources deleted, this directory will also be deleted. 
+
+## Modifying Twister2 Core Components
+
+If you want to modify Twister2 core components, you need to build Twister2 Docker image. 
+Please consult [Building Docker Image for Kubernetes](buiding-docker-image.md)
