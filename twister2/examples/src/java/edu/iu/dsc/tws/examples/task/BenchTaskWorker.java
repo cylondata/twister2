@@ -40,6 +40,7 @@ import edu.iu.dsc.tws.task.ComputeEnvironment;
 import edu.iu.dsc.tws.task.impl.ComputeConnection;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.window.BaseWindowSource;
+
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_ALL_SEND;
 import static edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants.TIMING_MESSAGE_SEND;
 
@@ -206,7 +207,7 @@ public abstract class BenchTaskWorker implements IWorker {
         }
 
 
-        if ((this.keyed && context.write(this.edge, context.taskIndex(), inputDataArray))
+        if ((this.keyed && context.write(this.edge, count, inputDataArray))
             || (!this.keyed && context.write(this.edge, inputDataArray))) {
           count++;
         }
