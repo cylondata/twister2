@@ -1,8 +1,10 @@
 # Installing Twister2 on Kubernetes
 
-First, you can install Kubernetes project to a machine on your cluster or your personal machine. You need to have kubectl running on the machine you installed the project.
+We assume that you have a Kubernetes cluster and you have kubectl running. 
+To install Twister2 on Minikube, please follow the steps at: 
+[Installing Twister2 on Minikube](twister2-install-minikube.md)
 
-To compile  and install Twister2 on a machine, please follow the steps in [compiling document](../../compiling/compiling.md).
+To install and compile Twister2 project on your machine, please follow the steps in [compiling document](../../compiling/compiling.md).
 You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
 
 Here are the things that you need to do to run Twister2 jobs on Kubernetes clusters:
@@ -39,27 +41,27 @@ Then, execute the following command:
 ## Deploying Twister2 Dashboard
 
 Twister2 Dashboard enables users to monitor their jobs through a web browser. 
-Although it is not mandatory, it is highly recommended. 
-A single instance of the Dashboard runs in each cluster. 
+Although installing this dashboard is not mandatory for running Twister2 jobs, it is highly recommended. 
+A single instance of the Dashboard runs in each cluster for all users. 
 
-There are two versions of Dashboard. One version saves Dashboard state in a persistent storage. 
-Another version does not use persistent storage. It looses its content if its pod restarts. 
+There are two versions of Twister2 Dashboard. One version saves the dashboard state in a persistent storage. 
+The other version does not use persistent storage. It looses its content after s restart.
 
-If you are using default namespace, then you can deploy Dashboard without persistent storage as:
+If you are using default namespace, then you can deploy Twister2 Dashboard without persistent storage as:
 
 ```bash
     $ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-wo-ps.yaml
 ```
 
-You can deploy Dashboard with persistent storage as:
+You can deploy Twister2 Dashboard with persistent storage as:
 
 ```bash
     $ kubectl create -f https://raw.githubusercontent.com/DSC-SPIDAL/twister2/master/twister2/config/src/yaml/conf/kubernetes/deployment/twister2-dashboard-with-ps.yaml
 ```
 
 If you are using another namespace, or would like to change a parameter of Dashboard, 
-then you can download one of these files, 
-change the desired parameter value in them and execute the create command on modified file. 
+then you can download one of these files, change the desired parameter values and 
+execute the create command on the modified file. 
 
 ### Accessing Dashboard
 
@@ -102,13 +104,17 @@ You should set the value of following parameter:
 
 ## Persistent Storage Settings
 
-To enable persistent storage in Twister2, either a Persistent Storage Provisioner or statically configured PersistentVolume must exist in the cluster. Persistent storage class needs to be specified in the client.yaml configuration file. Configuration parameter is:
+To enable persistent storage in Twister2, either a Persistent Storage Provisioner 
+or statically configured PersistentVolume must exist in the cluster. 
+Persistent storage class needs to be specified in the conf/kubernetes/resource.yaml configuration file. 
+Configuration parameter is:
 
 ```text
     kubernetes.persistent.storage.class
 ```
 
-We used the default storage class value as "twister2-nfs-storage". Please set your persistent storage class name in your provisioner and in the client.yaml config file.
+We used the default storage class value as "twister2-pers-storage". 
+Please set your persistent storage class name in your provisioner and in the resource.yaml config file.
 
 We tested with NFS-Client provisioner from: [https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client](https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client)
 
