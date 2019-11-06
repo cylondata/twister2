@@ -59,7 +59,7 @@ public class KMeansDataGeneratorTest {
     DataObjectSource sourceTask = new DataObjectSource("direct", dinputDirectory);
     DataObjectSink sinkTask = new DataObjectSink();
     computeGraphBuilder.addSource("source", sourceTask, parallelismValue);
-    ComputeConnection computeConnection1 = computeGraphBuilder.addSink("sink", sinkTask,
+    ComputeConnection computeConnection1 = computeGraphBuilder.addCompute("sink", sinkTask,
         parallelismValue);
     computeConnection1.direct("source").viaEdge("direct").withDataType(MessageTypes.OBJECT);
     computeGraphBuilder.setMode(OperationMode.BATCH);

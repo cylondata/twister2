@@ -19,7 +19,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.streaming.SKeyedReduceCompute;
@@ -42,9 +42,9 @@ public class STKeyedReduceExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new KeyedReduceSinkTask();
+    ICompute r = new KeyedReduceSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedReduce(SOURCE)
         .viaEdge(edge)
         .withOperation(operation, dataType)
@@ -54,7 +54,7 @@ public class STKeyedReduceExample extends BenchTaskWorker {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class KeyedReduceSinkTask
-      extends SKeyedReduceCompute<Integer, int[]> implements ISink {
+      extends SKeyedReduceCompute<Integer, int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
 

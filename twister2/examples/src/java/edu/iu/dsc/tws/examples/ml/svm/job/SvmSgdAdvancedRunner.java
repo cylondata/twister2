@@ -164,7 +164,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     DataObjectSink sinkTask = new DataObjectSink();
     trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
         sourceTask, dataStreamerParallelism);
-    ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = trainingBuilder.addCompute(
         Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
     firstGraphComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(MessageTypes.OBJECT);
@@ -198,7 +198,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     DataObjectSink sinkTask = new DataObjectSink();
     trainingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE,
         sourceTask, dataStreamerParallelism);
-    ComputeConnection firstGraphComputeConnection = trainingBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = trainingBuilder.addCompute(
         Constants.SimpleGraphConfig.DATA_OBJECT_SINK, sinkTask, dataStreamerParallelism);
     firstGraphComputeConnection.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE)
         .viaEdge(Context.TWISTER2_DIRECT_EDGE).withDataType(MessageTypes.OBJECT);
@@ -235,7 +235,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     DataObjectSink sinkTask1 = new DataObjectSink();
     testingBuilder.addSource(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING,
         sourceTask1, dataStreamerParallelism);
-    ComputeConnection firstGraphComputeConnection1 = testingBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection1 = testingBuilder.addCompute(
         Constants.SimpleGraphConfig.DATA_OBJECT_SINK_TESTING, sinkTask1, dataStreamerParallelism);
     firstGraphComputeConnection1.direct(Constants.SimpleGraphConfig.DATA_OBJECT_SOURCE_TESTING)
         .viaEdge(TEST_DATA_LOAD_EDGE_DIRECT).withDataType(MessageTypes.OBJECT);
@@ -281,7 +281,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
     ComputeConnection svmComputeConnection = trainingBuilder
         .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, svmCompute, svmComputeParallelism);
     ComputeConnection svmReduceConnection = trainingBuilder
-        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+        .addCompute(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
 
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)
@@ -343,7 +343,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, iterativeSVMCompute,
             svmComputeParallelism);
     ComputeConnection svmReduceConnection = trainingBuilder
-        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+        .addCompute(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
 
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)
@@ -443,7 +443,7 @@ public class SvmSgdAdvancedRunner extends TaskWorker {
         predictionSourceTask,
         dataStreamerParallelism);
     ComputeConnection predictionReduceConnection = testingBuilder
-        .addSink(Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK, predictionReduceTask,
+        .addCompute(Constants.SimpleGraphConfig.PREDICTION_REDUCE_TASK, predictionReduceTask,
             reduceParallelism);
     predictionReduceConnection
         .reduce(Constants.SimpleGraphConfig.PREDICTION_SOURCE_TASK)

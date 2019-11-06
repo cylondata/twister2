@@ -85,7 +85,7 @@ public class SvmSgdRunner extends TaskWorker {
     ComputeConnection svmComputeConnection = builder
         .addCompute(Constants.SimpleGraphConfig.SVM_COMPUTE, svmCompute, svmComputeParallelism);
     ComputeConnection svmReduceConnection = builder
-        .addSink(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
+        .addCompute(Constants.SimpleGraphConfig.SVM_REDUCE, svmReduce, reduceParallelism);
 
     svmComputeConnection
         .direct(Constants.SimpleGraphConfig.DATASTREAMER_SOURCE)

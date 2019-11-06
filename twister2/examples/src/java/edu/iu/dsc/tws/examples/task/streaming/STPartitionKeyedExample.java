@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -48,9 +48,9 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge, true);
-    ISink r = new SKeyedPartitionSinkTask();
+    ICompute r = new SKeyedPartitionSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.keyedPartition(SOURCE)
         .viaEdge(edge)
         .withKeyType(keyType)
@@ -59,8 +59,7 @@ public class STPartitionKeyedExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class SKeyedPartitionSinkTask extends SKeyedPartitionCompute<Integer, int[]>
-      implements ISink {
+  protected static class SKeyedPartitionSinkTask extends SKeyedPartitionCompute<Integer, int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
     private ResultsVerifier<int[], Tuple<Integer, int[]>> resultsVerifier;

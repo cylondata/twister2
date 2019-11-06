@@ -35,7 +35,6 @@ import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -180,7 +179,7 @@ public class PageRankWorker extends TaskWorker {
         parallelismValue);
     ComputeConnection datapointComputeConnection = datapointsTaskGraphBuilder.addCompute(
         "Graphdatacompute", dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = datapointsTaskGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = datapointsTaskGraphBuilder.addCompute(
         "Graphdatasink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -215,7 +214,7 @@ public class PageRankWorker extends TaskWorker {
         parallelismValue);
     ComputeConnection datapointComputeConnection = pagerankInitialationTaskGraphBuilder.addCompute(
         "pageRankValueHolderCompute", pageRankValueHolderCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = pagerankInitialationTaskGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = pagerankInitialationTaskGraphBuilder.addCompute(
         "pageRankValueHolderSink", pageRankValueHolderSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -248,7 +247,7 @@ public class PageRankWorker extends TaskWorker {
     ComputeConnection computeConnectionKeyedReduce = pagerankComputationTaskGraphBuilder.addCompute(
         "pagerankcompute", pageRankKeyedReduce, parallelismValue);
 
-    ComputeConnection computeConnectionAllReduce = pagerankComputationTaskGraphBuilder.addSink(
+    ComputeConnection computeConnectionAllReduce = pagerankComputationTaskGraphBuilder.addCompute(
         "pageranksink", pagerankSink, parallelismValue);
 
     computeConnectionKeyedReduce.keyedReduce("pageranksource")
@@ -427,7 +426,7 @@ public class PageRankWorker extends TaskWorker {
     }
   }
 
-  private static class PagerankSink extends BaseSink implements Collector {
+  private static class PagerankSink extends BaseCompute implements Collector {
     private DataObject<Object> datapoints = null;
     private HashMap<String, Double> finalout = new HashMap<String, Double>();
 

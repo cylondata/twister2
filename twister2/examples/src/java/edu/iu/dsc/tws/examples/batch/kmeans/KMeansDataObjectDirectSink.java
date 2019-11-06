@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.dataset.partition.EntityPartition;
  * This class receives the message object from the DataObjectCompute and write into their
  * respective task index values.
  */
-public class KMeansDataObjectDirectSink<T> extends BaseSink implements Collector {
+public class KMeansDataObjectDirectSink<T> extends BaseCompute implements Collector {
 
   private static final Logger LOG = Logger.getLogger(KMeansDataObjectDirectSink.class.getName());
 

@@ -58,11 +58,11 @@ public class StormBenchmark extends TaskWorker {
     computeGraphBuilder.addSource("generator", generator, parallelSources);
 
     if ("reduce".equals(config.get(PARAM_OPERATION))) {
-      computeGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addCompute("sink", dataSink)
           .reduce("generator").viaEdge("edge").withOperation(Op.SUM,
           MessageTypes.DOUBLE_ARRAY);
     } else {
-      computeGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addCompute("sink", dataSink)
           .gather("generator").viaEdge("edge");
     }
 

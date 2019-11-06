@@ -170,7 +170,7 @@ public class KafkaExample implements IWorker {
     graphBuilder.setMode(OperationMode.STREAMING);
 
     graphBuilder.addSource("ksource", new KSource(), 2);
-    graphBuilder.addSink("sink", new KSink(), 2)
+    graphBuilder.addCompute("sink", new KSink(), 2)
         .direct("ksource").viaEdge("edge");
 
     cEnv.buildAndExecute(graphBuilder);
