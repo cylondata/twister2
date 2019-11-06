@@ -9,6 +9,7 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+
 package edu.iu.dsc.tws.executor.threading;
 
 import java.util.ArrayList;
@@ -35,9 +36,10 @@ import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.executor.IParallelOperation;
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 
-public class StreamingAllSharingExecutor implements IExecutor {
+public class StreamingAllSharingExecutor2 implements IExecutor {
   private static final Logger LOG = Logger.getLogger(StreamingSharingExecutor.class.getName());
 
   /**
@@ -80,7 +82,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public StreamingAllSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
+  public StreamingAllSharingExecutor2(Config cfg, int workerId, TWSChannel channel) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -164,9 +166,9 @@ public class StreamingAllSharingExecutor implements IExecutor {
     }
     doneSignal = new CountDownLatch(numThreads - 1);
     AtomicInteger idleCounter = new AtomicInteger(tasks.size());
-    workers[0] = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter);
+    workers[0] = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter, 0);
     for (int i = 1; i < numThreads; i++) {
-      StreamWorker task = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter);
+      StreamWorker task = new StreamWorker(tasks, taskStatus, idleTasks, idleCounter, i);
       threads.submit(task);
       workers[i] = task;
     }
@@ -310,19 +312,21 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
   protected class StreamWorker implements Runnable {
     // round robin mode
-    private List<INodeInstance> tasks;
+    private final List<INodeInstance> tasks;
     private AtomicBoolean[] ignoreIndex;
-    private AtomicBoolean[] idleTasks;
     private int lastIndex;
+    private AtomicBoolean[] idleTasks;
     private AtomicInteger activeCounter;
+    private int threadIndex;
 
     public StreamWorker(List<INodeInstance> tasks,
                         AtomicBoolean[] ignoreIndex, AtomicBoolean[] idle,
-                        AtomicInteger activeCounter) {
+                        AtomicInteger activeCounter, int threadIndex) {
       this.tasks = tasks;
       this.ignoreIndex = ignoreIndex;
       this.idleTasks = idle;
       this.activeCounter = activeCounter;
+      this.threadIndex = threadIndex;
     }
 
     private int getNext() {
@@ -345,6 +349,21 @@ public class StreamingAllSharingExecutor implements IExecutor {
       doneSignal.countDown();
     }
 
+    private void doWaiting() {
+      if (this.threadIndex == 0) {
+        //sleep for few nanos
+        LockSupport.parkNanos(1);
+      } else {
+        synchronized (tasks) {
+          try {
+            tasks.wait();
+          } catch (InterruptedException e) {
+            throw new Twister2RuntimeException("Interrupted while waiting", e);
+          }
+        }
+      }
+    }
+
     private void runExecution() {
       try {
         int nodeInstanceIndex = this.getNext();
@@ -357,20 +376,25 @@ public class StreamingAllSharingExecutor implements IExecutor {
             if (idleTasks[nodeInstanceIndex].compareAndSet(true, false)) {
               activeCounter.getAndIncrement();
             }
+
+            if (this.threadIndex == 0) {
+              synchronized (tasks) {
+                // we need more threads now. Notifying others to join processing
+                tasks.notifyAll();
+              }
+            }
           } else {
             // if we don't need further execution at this time and we were not idle before
             if (this.idleTasks[nodeInstanceIndex].compareAndSet(false, true)) {
-              int count = activeCounter.decrementAndGet();
               // if we reach 0, we need to sleep
-              if (count == 0) {
-                LockSupport.parkNanos(1);
+              if (activeCounter.decrementAndGet() == 0) {
+                this.doWaiting();
               }
             } else {
               // if we were idle before, check if the count is still 0
-              int count = activeCounter.get();
               // if we reach 0, we need to sleep
-              if (count == 0) {
-                LockSupport.parkNanos(1);
+              if (activeCounter.get() == 0) {
+                this.doWaiting();
               }
             }
           }
@@ -449,7 +473,7 @@ public class StreamingAllSharingExecutor implements IExecutor {
       }
 
       if (!cleanUpCalled) {
-        StreamingAllSharingExecutor.this.close(executionPlan, nodeMap);
+        StreamingAllSharingExecutor2.this.close(executionPlan, nodeMap);
         cleanUpCalled = true;
       } else {
         throw new RuntimeException("Close is called on a already closed execution");

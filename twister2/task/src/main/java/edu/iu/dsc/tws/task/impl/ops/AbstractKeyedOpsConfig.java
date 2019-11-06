@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.task.impl.ops;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
@@ -42,6 +43,10 @@ public abstract class AbstractKeyedOpsConfig<T extends AbstractOpsConfig>
   public T withKeyType(MessageType keyType) {
     this.opKeyType = keyType;
     return (T) this;
+  }
+
+  public T useDisk(boolean useDisk) {
+    return this.withProperty(CommunicationContext.USE_DISK, useDisk);
   }
 
   @Override

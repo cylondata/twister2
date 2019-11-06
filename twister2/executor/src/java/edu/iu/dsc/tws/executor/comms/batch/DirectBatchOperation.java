@@ -18,6 +18,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -41,10 +42,12 @@ public class DirectBatchOperation extends AbstractParallelOperation {
     ArrayList<Integer> targets = new ArrayList<>(dests);
     Collections.sort(targets);
 
+    Object useDisk = edge.getProperty(CommunicationContext.USE_DISK);
+
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BDirect(newComm, logicalPlan, sources, targets,
         new PartitionReceiver(), edge.getDataType(), edge.getEdgeID().nextId(),
-        edge.getMessageSchema());
+        edge.getMessageSchema(), useDisk != null);
   }
 
   public void send(int source, IMessage message) {

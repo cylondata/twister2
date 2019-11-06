@@ -8,19 +8,19 @@ t2_java_lib(
     artifact_name = "Twsiter2 Communication",
     deps = [
         "//third_party:ompi_javabinding_java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",  ## todo get rid of this, Had to add this because of Network class
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
         "//twister2/common/src/java:common-java",
-        #"//twister2/data/src/main/java:data-java",
+        "//twister2/data/src/main/java:data-java",
+        "//twister2/proto:proto-java",
+        "//twister2/proto/utils:proto-utils-java",
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
-        "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",  ## todo get rid of this, Had to add this because of Network class
         "@org_apache_commons_commons_lang3//jar",
-        "//twister2/proto:proto-java",
-        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -33,11 +33,11 @@ java_binary(
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
+        "//twister2/proto/utils:proto-utils-java",
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_lang3//jar",
-        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -48,11 +48,11 @@ java_binary(
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
+        "//twister2/proto/utils:proto-utils-java",
         "@com_google_guava_guava//jar",
         "@commons_io_commons_io//jar",
         "@it_unimi_dsi_fastutil//jar",
         "@org_apache_commons_commons_lang3//jar",
-        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -65,6 +65,7 @@ java_binary(
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
+        "//twister2/proto/utils:proto-utils-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_esotericsoftware_minlog//jar",
         "@com_esotericsoftware_reflectasm//jar",
@@ -76,7 +77,6 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
-        "//twister2/proto/utils:proto-utils-java",
     ],
 )
 
@@ -89,6 +89,7 @@ java_binary(
         "//third_party:ompi_javabinding_java",
         "//twister2/common/src/java:common-java",
         "//twister2/data/src/main/java:data-java",
+        "//twister2/proto/utils:proto-utils-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_esotericsoftware_minlog//jar",
         "@com_esotericsoftware_reflectasm//jar",
@@ -100,6 +101,5 @@ java_binary(
         "@org_objenesis_objenesis//jar",
         "@org_ow2_asm_asm//jar",
         "@org_yaml_snakeyaml//jar",
-        "//twister2/proto/utils:proto-utils-java",
     ],
 )

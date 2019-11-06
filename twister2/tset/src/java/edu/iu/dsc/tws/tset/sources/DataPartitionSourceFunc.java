@@ -16,14 +16,14 @@ import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSourceFunc;
 
-public class CacheSourceFunc<T> extends BaseSourceFunc<T> {
+public class DataPartitionSourceFunc<T> extends BaseSourceFunc<T> {
 //  private static final Logger LOG = Logger.getLogger(CacheSource.class.getName());
 
-  private String cachedKey;
+  private String storedKey;
   private transient DataPartitionConsumer<T> currentConsumer;
 
-  public CacheSourceFunc(String cachedDataKey) {
-    this.cachedKey = cachedDataKey;
+  public DataPartitionSourceFunc(String storedDataKey) {
+    this.storedKey = storedDataKey;
   }
 
   @Override
@@ -40,7 +40,7 @@ public class CacheSourceFunc<T> extends BaseSourceFunc<T> {
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
     // retrieve the partition from the context
-    DataPartition<T> data = (DataPartition<T>) getInput(cachedKey);
+    DataPartition<T> data = (DataPartition<T>) getInput(storedKey);
     this.currentConsumer = data.getConsumer();
   }
 }

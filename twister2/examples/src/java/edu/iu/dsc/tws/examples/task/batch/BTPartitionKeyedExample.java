@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.examples.verification.comparators.IntComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
-import edu.iu.dsc.tws.task.typed.batch.BPartitionKeyedCompute;
+import edu.iu.dsc.tws.task.typed.batch.BKeyedPartitionCompute;
 
 public class BTPartitionKeyedExample extends BenchTaskWorker {
 
@@ -65,7 +65,7 @@ public class BTPartitionKeyedExample extends BenchTaskWorker {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected static class BKeyedPartitionSinkTask
-      extends BPartitionKeyedCompute<Integer, int[]> implements ISink {
+      extends BKeyedPartitionCompute<Integer, int[]> implements ISink {
 
     private static final long serialVersionUID = -254264903510284798L;
     private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;

@@ -20,6 +20,7 @@ import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.comms.dfw.OneToOne;
 import edu.iu.dsc.tws.comms.dfw.io.direct.DirectBatchFinalReceiver;
@@ -29,7 +30,7 @@ public class BDirect extends BaseOperation {
   public BDirect(Communicator comm, LogicalPlan plan,
                  List<Integer> sources, List<Integer> targets,
                  BulkReceiver rcvr, MessageType dataType, int edgeId,
-                 MessageSchema messageSchema) {
+                 MessageSchema messageSchema, boolean useDisk) {
     super(comm, false, CommunicationContext.DIRECT);
     if (sources.size() == 0) {
       throw new IllegalArgumentException("The sources cannot be empty");
@@ -43,9 +44,22 @@ public class BDirect extends BaseOperation {
     int firstSource = sources.iterator().next();
     plan.addLogicalIdToWorker(plan.getWorkerForForLogicalId(firstSource), middleTask);
 
+    MessageType recvType = dataType;
+    if (useDisk) {
+      recvType = MessageTypes.BYTE_ARRAY;
+    }
+
     op = new OneToOne(comm.getChannel(), sources, targets,
-        new DirectBatchFinalReceiver(rcvr), comm.getConfig(), dataType, plan,
+        new DirectBatchFinalReceiver(rcvr, true, dataType),
+        comm.getConfig(), dataType, recvType, plan,
         edgeId, messageSchema);
+  }
+
+  public BDirect(Communicator comm, LogicalPlan plan,
+                 List<Integer> sources, List<Integer> targets,
+                 BulkReceiver rcvr, MessageType dataType, int edgeId,
+                 MessageSchema messageSchema) {
+    this(comm, plan, sources, targets, rcvr, dataType, edgeId, messageSchema, false);
   }
 
   /**
@@ -70,6 +84,14 @@ public class BDirect extends BaseOperation {
         new ArrayList<>(logicalPlanBuilder.getSources()),
         new ArrayList<>(logicalPlanBuilder.getTargets()),
         rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema());
+  }
+
+  public BDirect(Communicator comm, LogicalPlanBuilder logicalPlanBuilder,
+                 BulkReceiver rcvr, MessageType dataType, boolean useDisk) {
+    this(comm, logicalPlanBuilder.build(),
+        new ArrayList<>(logicalPlanBuilder.getSources()),
+        new ArrayList<>(logicalPlanBuilder.getTargets()),
+        rcvr, dataType, comm.nextEdge(), MessageSchema.noSchema(), useDisk);
   }
 
   public BDirect(Communicator comm, LogicalPlan plan,

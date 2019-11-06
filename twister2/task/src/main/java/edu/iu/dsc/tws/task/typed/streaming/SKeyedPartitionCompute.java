@@ -15,7 +15,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.task.typed.AbstractSingleDataCompute;
 
-public abstract class SPartitionKeyedCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {
+public abstract class SKeyedPartitionCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {
 
   public abstract boolean keyedPartition(Tuple<K, T> content);
 

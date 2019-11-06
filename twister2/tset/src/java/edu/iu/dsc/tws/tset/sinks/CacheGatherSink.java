@@ -12,15 +12,11 @@
 
 package edu.iu.dsc.tws.tset.sinks;
 
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
-/**
- * An in-memory cached TSet
- *
- * @param <T> TSet data type
- */
-public class CacheIterSink<T> extends StoreIterSink<T, T> {
+public class CacheGatherSink<T> extends StoreIterSink<Tuple<Integer, T>, T> {
 
   private CollectionPartition<T> partition;
 
@@ -32,11 +28,11 @@ public class CacheIterSink<T> extends StoreIterSink<T, T> {
 
   @Override
   protected CollectionPartition<T> getPartition() {
-    return partition;
+    return this.partition;
   }
 
   @Override
-  protected ValueExtractor<T, T> getValueExtractor() {
-    return input -> input;
+  protected ValueExtractor<T, Tuple<Integer, T>> getValueExtractor() {
+    return Tuple::getValue;
   }
 }
