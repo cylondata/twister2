@@ -12,6 +12,9 @@
 package edu.iu.dsc.tws.examples.task.batch;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +39,7 @@ import edu.iu.dsc.tws.examples.verification.comparators.IteratorComparator;
 import edu.iu.dsc.tws.examples.verification.comparators.TupleComparator;
 import edu.iu.dsc.tws.task.impl.ComputeGraphBuilder;
 import edu.iu.dsc.tws.task.typed.batch.BKeyedGatherGroupedCompute;
+import edu.iu.dsc.tws.tset.fn.HashingPartitioner;
 
 public class BTKeyedGatherExample extends BenchTaskWorker {
 
@@ -56,6 +60,7 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
     computeConnection.keyedGather(SOURCE)
         .viaEdge(edge)
         .withKeyType(keyType)
+        .withTaskPartitioner(new HashingPartitioner())
         .withDataType(dataType);
     return computeGraphBuilder;
   }
@@ -74,23 +79,33 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
       super.prepare(cfg, ctx);
       this.timingCondition = getTimingCondition(SINK, context);
       resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
-        Set<Integer> taskIds = ctx.getTasksByName(SOURCE).stream()
+        List<Integer> sinkIndex = ctx.getTasksByName(SINK).stream()
             .map(TaskInstancePlan::getTaskIndex)
-            .filter(i -> (Math.abs(i.hashCode())) == ctx.taskIndex())
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
 
-        List<int[]> dataFromEachTask = new ArrayList<>();
-        for (int i = 0; i < jobParameters.getTotalIterations(); i++) {
-          dataFromEachTask.add(ints);
+        sinkIndex.sort(Comparator.comparingInt(o -> o));
+
+        int thisTaskIndex = Integer.parseInt(args.get("taskIndex").toString());
+
+        Set<Integer> keysRoutedToThis = new HashSet<>();
+        for (Integer i = 0; i < jobParameters.getTotalIterations(); i++) {
+          if (sinkIndex.get(i.hashCode() % sinkIndex.size()) == thisTaskIndex) {
+            keysRoutedToThis.add(i);
+          }
         }
 
-        List<Tuple<Integer, Iterator<int[]>>> finalOutput = new ArrayList<>();
+        List<int[]> dataForEachKey = new ArrayList<>();
+        for (int i = 0; i < ctx.getTasksByName(SOURCE).size(); i++) {
+          dataForEachKey.add(ints);
+        }
 
-        taskIds.forEach(key -> {
-          finalOutput.add(new Tuple<>(key, dataFromEachTask.iterator()));
-        });
+        List<Tuple<Integer, Iterator<int[]>>> expectedData = new ArrayList<>();
 
-        return finalOutput.iterator();
+        for (Integer key : keysRoutedToThis) {
+          expectedData.add(new Tuple<>(key, dataForEachKey.iterator()));
+        }
+
+        return expectedData.iterator();
       }, new IteratorComparator<>(
           new TupleComparator<>(
               (d1, d2) -> true, //return true for any key, since we
@@ -109,7 +124,8 @@ public class BTKeyedGatherExample extends BenchTaskWorker {
           context.getWorkerId(), context.globalTaskId()));
       BenchmarkUtils.markTotalTime(resultsRecorder, this.timingCondition);
       resultsRecorder.writeToCSV();
-      this.verified = verifyResults(resultsVerifier, content, null, verified);
+      this.verified = verifyResults(resultsVerifier, content,
+          Collections.singletonMap("taskIndex", context.taskIndex()), verified);
       return true;
     }
   }
