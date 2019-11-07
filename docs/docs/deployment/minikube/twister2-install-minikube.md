@@ -1,8 +1,12 @@
-# Installing Twister2 on Minikube
+---
+id: Minikube
+title: Minikube
+sidebar_label: Minikube
+---
 
 We assume that you have installed Minikube on your machine and you can access the cluster with kubectl. 
 Please start Minikube cluster if not already running. To install Twister2 on a regular Kubernetes cluster, 
-please follow the steps at: [Installing Twister2 on Kubernetes](twister2-install-kubernetes.md)
+please follow the steps at: [Installing Twister2 on Kubernetes](../kubernetes/twister2-install-kubernetes.md)
 
 To install and compile Twister2 project on your machine, please follow the steps in [compiling document](../../compiling/compiling.md).
 You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
@@ -111,4 +115,4 @@ When the job completes and its resources deleted, this directory will also be de
 ## Modifying Twister2 Core Components
 
 If you want to modify Twister2 core components, you need to build Twister2 Docker image. 
-Please consult [Building Docker Image for Kubernetes](buiding-docker-image.md)
+Please consult [Building Docker Image for Kubernetes](../kubernetes/buiding-docker-image.md)
