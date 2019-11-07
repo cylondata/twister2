@@ -52,132 +52,130 @@ deploy_proto_library() {
 
 deploy_library \
   twister2/api/src/java/libapi-java.jar \
-  twister2/api/src/java/pom.xml &
+  twister2/api/src/java/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/libcheckpointing-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/checkpointing/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/comms/libcomms-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/comms/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/comms/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/config/libconfig-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/config/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/config/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/data/libdata-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/data/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/data/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/dataset/libdataset-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/dataset/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/libexceptions-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/exceptions/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/net/libnetwork-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/net/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/net/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/resource/libresource-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/resource/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/resource/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/libscheduler-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/scheduler/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/compute/libtask-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/compute/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/compute/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/tset/libtset-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/tset/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/tset/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/util/libapi-utils-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/util/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/util/pom.xml
 
 deploy_library \
   twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance/libfault-tolerance-api-java.jar \
-  twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance/pom.xml &
+  twister2/api/src/java/edu/iu/dsc/tws/api/faulttolerance/pom.xml
 
 # End of APIs
 
 deploy_library \
   twister2/common/src/java/libcommon-java.jar \
-  twister2/common/src/java/pom.xml &
+  twister2/common/src/java/pom.xml
 
 deploy_library \
   twister2/comms/src/java/libcomms-java.jar \
-  twister2/comms/src/java/pom.xml &
+  twister2/comms/src/java/pom.xml
 
 deploy_library \
   twister2/connectors/src/java/libconnector-java.jar \
-  twister2/connectors/src/java/pom.xml &
+  twister2/connectors/src/java/pom.xml
 
 deploy_library \
   twister2/data/src/main/java/libdata-java.jar \
-  twister2/data/src/main/java/pom.xml &
+  twister2/data/src/main/java/pom.xml
 
 deploy_library \
   twister2/examples/src/java/libexamples-java.jar \
-  twister2/examples/src/java/pom.xml &
+  twister2/examples/src/java/pom.xml
 
 deploy_library \
   twister2/executor/src/java/libexecutor-java.jar \
-  twister2/executor/src/java/pom.xml &
+  twister2/executor/src/java/pom.xml
 
 deploy_library \
   twister2/master/src/java/libmaster-java.jar \
-  twister2/master/src/java/pom.xml &
+  twister2/master/src/java/pom.xml
 
 deploy_library \
   twister2/resource-scheduler/src/java/libresource-scheduler-java.jar \
-  twister2/resource-scheduler/src/java/pom.xml &
+  twister2/resource-scheduler/src/java/pom.xml
 
 deploy_library \
   twister2/task/src/main/java/libtask-java.jar \
-  twister2/task/src/main/java/pom.xml &
+  twister2/task/src/main/java/pom.xml
 
 deploy_library \
   twister2/taskscheduler/src/java/libtaskscheduler-java.jar \
-  twister2/taskscheduler/src/java/pom.xml &
+  twister2/taskscheduler/src/java/pom.xml
 
 deploy_library \
   twister2/compatibility/storm/libtwister2-storm.jar \
-  twister2/compatibility/storm/pom.xml &
+  twister2/compatibility/storm/pom.xml
 
 deploy_library \
   twister2/compatibility/beam/libtwister2-beam.jar \
-  twister2/compatibility/beam/pom.xml &
+  twister2/compatibility/beam/pom.xml
 
 deploy_library \
   twister2/checkpointing/src/java/libcheckpointing-java.jar \
-  twister2/checkpointing/src/java/pom.xml &
+  twister2/checkpointing/src/java/pom.xml
 
 deploy_library \
   twister2/proto/libjproto-java.jar \
-  twister2/proto/pom.xml &
+  twister2/proto/pom.xml
 
 deploy_library \
   twister2/proto/utils/libproto-utils-java.jar \
-  twister2/proto/utils/pom.xml &
+  twister2/proto/utils/pom.xml
 
 deploy_library \
   twister2/compatibility/harp/libtwister2-harp.jar \
-  twister2/compatibility/harp/pom.xml &
+  twister2/compatibility/harp/pom.xml
 
 deploy_library \
   twister2/tools/local-runner/src/java/liblocal-runner-java.jar \
-  twister2/tools/local-runner/src/java/pom.xml &
+  twister2/tools/local-runner/src/java/pom.xml
 
 deploy_library \
   twister2/tset/src/java/libtset-java.jar \
-  twister2/tset/src/java/pom.xml &
-
-wait
+  twister2/tset/src/java/pom.xml
