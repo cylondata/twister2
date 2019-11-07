@@ -17,7 +17,6 @@ cache:
 
 before_install:
   - echo "s:======================================"
-  - mkdir -p $HOME/.cache/apt
   - echo "Downloading bazel"
   - wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
   - sha256sum -c tools/bazel_1.1.0-linux-x86_64.deb.sha256
