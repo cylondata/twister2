@@ -189,7 +189,7 @@ public class TeraSort implements IWorker {
         config.getIntegerValue(ARG_TASKS_SOURCES, 4));
 
     Receiver receiver = new Receiver();
-    KeyedGatherConfig keyedGatherConfig = teraSortTaskGraph.addSink(TASK_RECV, receiver,
+    KeyedGatherConfig keyedGatherConfig = teraSortTaskGraph.addCompute(TASK_RECV, receiver,
         config.getIntegerValue(ARG_TASKS_SINKS, 4))
         .keyedGather(TASK_SOURCE)
         .viaEdge(EDGE)

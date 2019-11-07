@@ -15,13 +15,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 
 /**
  * This is not a windowed Sink but this is the sink used after a windowed compute
  */
-public class IterativeStreamingSinkEvaluator extends BaseSink<Double> {
+public class IterativeStreamingSinkEvaluator extends BaseCompute<Double> {
   private static final long serialVersionUID = 1576464625318900125L;
 
   private int count = 0;

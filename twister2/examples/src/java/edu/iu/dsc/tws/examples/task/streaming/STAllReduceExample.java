@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.verifiers.ReduceVerifier;
@@ -40,10 +40,10 @@ public class STAllReduceExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new AllReduceSinkTask();
+    ICompute r = new AllReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.allreduce(SOURCE)
         .viaEdge(edge)
         .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
@@ -51,7 +51,7 @@ public class STAllReduceExample extends BenchTaskWorker {
     return computeGraphBuilder;
   }
 
-  protected static class AllReduceSinkTask extends AllReduceCompute<int[]> implements ISink {
+  protected static class AllReduceSinkTask extends AllReduceCompute<int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
     private ResultsVerifier<int[], int[]> resultsVerifier;

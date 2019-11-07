@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.verification.ResultsVerifier;
@@ -42,15 +42,15 @@ public class STPartitionExample extends BenchTaskWorker {
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
     ((SourceTask) g).setMarkTimingOnlyForLowestTarget(true);
-    ISink r = new PartitionSinkTask();
+    ICompute r = new PartitionSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.partition(SOURCE).viaEdge(edge).withDataType(dataType);
     return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class PartitionSinkTask extends SPartitionCompute<int[]> implements ISink {
+  protected static class PartitionSinkTask extends SPartitionCompute<int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
     private ResultsVerifier<int[], int[]> resultsVerifier;
