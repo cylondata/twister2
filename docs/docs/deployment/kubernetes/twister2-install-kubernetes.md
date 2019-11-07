@@ -1,8 +1,12 @@
-# Installing Twister2 on Kubernetes
+---
+id: Kubernetes
+title: Kubernetes
+sidebar_label: Kubernetes
+---
 
 We assume that you have a Kubernetes cluster and you have kubectl running. 
 To install Twister2 on Minikube, please follow the steps at: 
-[Installing Twister2 on Minikube](twister2-install-minikube.md)
+[Installing Twister2 on Minikube](../minikube/twister2-install-minikube.md)
 
 To install and compile Twister2 project on your machine, please follow the steps in [compiling document](../../compiling/compiling.md).
 You may also check [developer document](../../developers/developer-environment.md) for setting up IDEs.
