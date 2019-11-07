@@ -10,6 +10,7 @@ t2_java_lib(
         "//third_party:ompi_javabinding_java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/comms:comms-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/dataset:dataset-api-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/exceptions:exceptions-java",
         "//twister2/api/src/java/edu/iu/dsc/tws/api/resource:resource-api-java",  ## todo get rid of this, Had to add this because of Network class
         "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
