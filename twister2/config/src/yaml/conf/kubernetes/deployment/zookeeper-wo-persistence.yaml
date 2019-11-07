@@ -1,0 +1,79 @@
+################################################################
+# Running ZooKeeper server on Kubernetes as a StatefulSet without Persistent Storage
+#
+# We define:
+#   a service,
+#   a StatefulSet
+#
+# Things to update when running in a new cluster:
+#   1. default namespace is used. If you are using another namespace,
+#      please change namespace value in both entities below.
+#   2. Update ZooKeeper resources.
+#      By default it uses 1.0 core and 2048MB of memory
+#
+################################################################
+# ------------------- ZooKeeper Service ---------------------- #
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: twister2-zookeeper
+  name: twister2-zookeeper
+  namespace: default
+spec:
+  ports:
+  - port: 2181
+    targetPort: 2181
+  selector:
+    app: twister2-zookeeper
+
+---
+################################################################
+# ------------------- ZooKeeper StatefulSet ------------------ #
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: twister2-zookeeper
+  namespace: default
+  labels:
+    app: twister2-zookeeper
+
+spec:
+  replicas: 1
+  serviceName: twister2-zookeeper
+
+  selector:
+    matchLabels:
+      app: twister2-zookeeper
+
+  template:
+    metadata:
+      labels:
+        app: twister2-zookeeper
+
+    spec:
+      terminationGracePeriodSeconds: 1
+
+      containers:
+      - name: twister2-zookeeper
+        image: zookeeper
+        imagePullPolicy: IfNotPresent
+        env:
+        # 0 means, no limit on the number os concurrent clients for zk
+        - name: ZOO_MAX_CLIENT_CNXNS
+          value: "0"
+
+        ports:
+        - containerPort: 2181
+          name: zk-port
+        - containerPort: 2888
+          name: server
+        - containerPort: 3888
+          name: leader-election
+
+        resources:
+          requests:
+            cpu: 1.0
+            memory: 2048Mi

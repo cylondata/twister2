@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
@@ -29,7 +28,6 @@ import edu.iu.dsc.tws.comms.utils.DiskBasedList;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class DirectBatchFinalReceiver extends TargetFinalReceiver {
-  private static final Logger LOG = Logger.getLogger(DirectBatchFinalReceiver.class.getName());
 
   /**
    * The receiver to be used to deliver the message
