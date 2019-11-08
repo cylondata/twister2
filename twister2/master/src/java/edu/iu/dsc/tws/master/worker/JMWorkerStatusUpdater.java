@@ -28,9 +28,7 @@ public class JMWorkerStatusUpdater implements IWorkerStatusUpdater {
   @Override
   public boolean updateWorkerStatus(JobMasterAPI.WorkerState newState) {
 
-    if (newState == JobMasterAPI.WorkerState.RUNNING) {
-      return workerAgent.sendWorkerRunningMessage();
-    } else if (newState == JobMasterAPI.WorkerState.COMPLETED) {
+    if (newState == JobMasterAPI.WorkerState.COMPLETED) {
       return workerAgent.sendWorkerCompletedMessage();
     }
 
