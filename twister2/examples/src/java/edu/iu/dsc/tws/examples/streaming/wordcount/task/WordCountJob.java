@@ -28,7 +28,6 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
@@ -69,7 +68,7 @@ public class WordCountJob implements IWorker {
     // build the graph
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(config);
     builder.addSource("word-source", source, 4);
-    builder.addSink("word-aggregator", counter, 4)
+    builder.addCompute("word-aggregator", counter, 4)
         .keyedPartition("word-source")
         .viaEdge(EDGE)
         .withKeyType(MessageTypes.OBJECT)
@@ -108,8 +107,7 @@ public class WordCountJob implements IWorker {
     }
   }
 
-  private static class WordAggregator extends SKeyedPartitionCompute<String, int[]>
-      implements ISink {
+  private static class WordAggregator extends SKeyedPartitionCompute<String, int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     // keep track of the counts

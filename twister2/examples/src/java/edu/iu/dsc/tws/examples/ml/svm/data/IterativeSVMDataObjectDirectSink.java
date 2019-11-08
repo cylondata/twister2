@@ -27,14 +27,13 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.ICollector;
 import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
 
 public class IterativeSVMDataObjectDirectSink
-    extends AbstractIterableDataCompute<double[][]> implements ISink, ICollector<double[][]> {
+    extends AbstractIterableDataCompute<double[][]> implements ICollector<double[][]> {
 
   private static final long serialVersionUID = 556286022242885874L;
 

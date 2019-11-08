@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
@@ -72,7 +71,7 @@ public class TaskSchedulerClassTest {
     }
   }
 
-  public static class TestSink extends BaseSink implements Collector {
+  public static class TestSink extends BaseCompute implements Collector {
     private static final long serialVersionUID = -254264903510284748L;
 
     private String inputKey;

@@ -50,7 +50,7 @@ public class BDirect extends BaseOperation {
     }
 
     op = new OneToOne(comm.getChannel(), sources, targets,
-        new DirectBatchFinalReceiver(rcvr, true, dataType),
+        new DirectBatchFinalReceiver(rcvr, useDisk, dataType),
         comm.getConfig(), dataType, recvType, plan,
         edgeId, messageSchema);
   }

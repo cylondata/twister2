@@ -19,7 +19,6 @@ import edu.iu.dsc.tws.api.compute.graph.Edge;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 
 /**
@@ -46,16 +45,6 @@ public final class GraphBuilder {
   public GraphBuilder addSource(String name, ISource source, int parallelism) {
     return addSource(name, source).setParallelism(name, parallelism);
   }
-
-  public GraphBuilder addSink(String name, ISink sink) {
-    graph.addTaskVertex(name, new Vertex(name, sink));
-    return this;
-  }
-
-  public GraphBuilder addSink(String name, ISink sink, int parallelism) {
-    return addSink(name, sink).setParallelism(name, parallelism);
-  }
-
 
   public GraphBuilder addTask(String name, ICompute task) {
     graph.addTaskVertex(name, new Vertex(name, task));

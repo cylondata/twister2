@@ -305,7 +305,7 @@ public class SvmSgdOnlineRunner extends TaskWorker {
         .addCompute("window-sink", iterativeStreamingCompute, dataStreamerParallelism);
 
     ComputeConnection svmFinalEvaluationConnection = trainingBuilder
-        .addSink("window-evaluation-sink", iterativeStreamingSinkEvaluator,
+        .addCompute("window-evaluation-sink", iterativeStreamingSinkEvaluator,
             dataStreamerParallelism);
 
     svmComputeConnection.direct(Constants.SimpleGraphConfig

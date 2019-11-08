@@ -99,7 +99,7 @@ public final class ParallelDataFlowsExample {
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelismValue);
-    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
+    ComputeConnection partitionConnection = graphBuilderX.addCompute("sink1", connectedSink,
         parallelismValue);
     partitionConnection.partition("source1")
         .viaEdge("partition")
@@ -122,7 +122,7 @@ public final class ParallelDataFlowsExample {
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelismValue);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink,
+    ComputeConnection reduceConn = graphBuilderX.addCompute("sink1", connectedSink,
         1);
     reduceConn.reduce("source1")
         .viaEdge("reduce")

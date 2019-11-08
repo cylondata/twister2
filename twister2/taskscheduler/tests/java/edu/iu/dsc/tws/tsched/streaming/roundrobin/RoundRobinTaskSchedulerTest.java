@@ -169,7 +169,7 @@ public class RoundRobinTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, parallel);
+    ComputeConnection c = builder.addCompute("sink", testSink, parallel);
     c.reduce("source")
         .viaEdge("edge")
         .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
@@ -183,7 +183,7 @@ public class RoundRobinTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection c = builder.addSink("sink", testSink, parallel);
+    ComputeConnection c = builder.addCompute("sink", testSink, parallel);
     c.reduce("source").viaEdge("edge").withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
     builder.setMode(OperationMode.STREAMING);
 
@@ -204,7 +204,7 @@ public class RoundRobinTaskSchedulerTest {
 
     ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, parallel);
-    ComputeConnection sinkComputeConnection = computeGraphBuilder.addSink(
+    ComputeConnection sinkComputeConnection = computeGraphBuilder.addCompute(
         "sink", testSink, parallel);
 
     computeConnection.direct("source")

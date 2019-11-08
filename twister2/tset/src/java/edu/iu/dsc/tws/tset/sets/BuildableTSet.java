@@ -16,7 +16,6 @@ import java.util.Collection;
 
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.tset.TBase;
 import edu.iu.dsc.tws.task.graph.GraphBuilder;
@@ -34,8 +33,6 @@ public interface BuildableTSet extends TBase, Buildable {
       graphBuilder.addTask(getId(), (ICompute) getINode(), getParallelism());
     } else if (getINode() instanceof ISource) {
       graphBuilder.addSource(getId(), (ISource) getINode(), getParallelism());
-    } else if (getINode() instanceof ISink) {
-      graphBuilder.addSink(getId(), (ISink) getINode(), getParallelism());
     } else {
       throw new RuntimeException("Unknown INode " + getINode());
     }

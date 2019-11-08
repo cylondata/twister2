@@ -93,7 +93,8 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   private LogicalPlan instancePlan;
   private int executor;
   private int edge;
-  private MessageType type;
+  private MessageType dataType;
+  private MessageType recvDataType;
   private Map<Integer, ArrayBlockingQueue<OutMessage>>
       pendingSendMessagesPerSource = new HashMap<>();
   private Lock lock = new ReentrantLock();
@@ -104,6 +105,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
    * The key type
    */
   private MessageType keyType;
+  private MessageType recvKeyType;
 
   public TreeBroadcast(TWSChannel channel, int src, Set<Integer> dests,
                        MessageReceiver finalRcvr, MessageType keyType,
@@ -112,7 +114,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     this.destinations = dests;
     this.finalReceiver = finalRcvr;
     this.keyType = keyType;
-    this.type = dataType;
+    this.dataType = dataType;
 
     this.delegate = new ChannelDataFlowOperation(channel);
     this.messageSchema = messageSchema;
@@ -222,14 +224,23 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     return done;
   }
 
-
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, LogicalPlan tPlan, int ed) {
+  public void init(Config cfg, MessageType dType,
+                   MessageType recvDType,
+                   MessageType kType,
+                   MessageType recvKType,
+                   LogicalPlan tPlan, int ed) {
     this.config = cfg;
     this.instancePlan = tPlan;
-    this.type = t;
+
+    this.dataType = dType;
+    this.recvDataType = recvDType;
+
+    this.keyType = kType;
+    this.recvKeyType = recvKType;
+
     this.edge = ed;
     this.executor = tPlan.getThisWorker();
     this.currentReceiveMessage = new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
@@ -258,7 +269,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       ArrayBlockingQueue<OutMessage> pendingSendMessages =
           new ArrayBlockingQueue<>(CommunicationContext.sendPendingMax(cfg));
       pendingSendMessagesPerSource.put(s, pendingSendMessages);
-      serializerMap.put(s, Serializers.get(keyType != null, this.messageSchema));
+      serializerMap.put(s, Serializers.get(kType != null, this.messageSchema));
     }
 
     int maxReceiveBuffers = CommunicationContext.receiveBufferCount(cfg);
@@ -272,7 +283,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
       Queue<InMessage> pendingReceiveMessages = new ArrayBlockingQueue<>(capacity);
       pendingReceiveMessagesPerSource.put(source, pendingReceiveMessages);
       pendingReceiveDeSerializations.put(source, new ArrayBlockingQueue<>(capacity));
-      deSerializerMap.put(source, Deserializers.get(keyType != null, this.messageSchema));
+      deSerializerMap.put(source, Deserializers.get(kType != null, this.messageSchema));
     }
 
     calculateRoutingParameters();
@@ -282,16 +293,30 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
     }
 
     if (this.keyType != null) {
-      delegate.init(cfg, t, t, keyType, keyType, tPlan, ed,
+      delegate.init(cfg, dType, recvDataType, kType, recvKType, tPlan, ed,
           router.receivingExecutors(), this,
           pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
           pendingReceiveDeSerializations, serializerMap, deSerializerMap, true);
     } else {
-      delegate.init(cfg, t, tPlan, ed,
+      delegate.init(cfg, dType, recvDataType, tPlan, ed,
           router.receivingExecutors(), this,
           pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
           pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
     }
+  }
+
+  public void init(Config cfg, MessageType dType,
+                   MessageType recvDType,
+                   LogicalPlan tPlan, int ed) {
+    this.init(cfg, dType, recvDType, null, null, tPlan, ed);
+  }
+
+
+  /**
+   * Initialize
+   */
+  public void init(Config cfg, MessageType dType, LogicalPlan tPlan, int ed) {
+    this.init(cfg, dType, dType, tPlan, ed);
   }
 
   @Override
@@ -411,7 +436,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
         currentMessage.getHeader().getEdge(),
         di, CommunicationContext.DEFAULT_DESTINATION, currentMessage.getHeader().getFlags(),
         routingParameters.getInternalRoutes(),
-        routingParameters.getExternalRoutes(), type, null, delegate,
+        routingParameters.getExternalRoutes(), dataType, this.keyType, delegate,
         CommunicationContext.EMPTY_OBJECT);
     sendMessage.getChannelMessages().offer(currentMessage);
 

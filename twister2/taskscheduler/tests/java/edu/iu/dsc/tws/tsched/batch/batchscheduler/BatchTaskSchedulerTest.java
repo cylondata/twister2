@@ -257,7 +257,7 @@ public class BatchTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -276,7 +276,7 @@ public class BatchTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -295,7 +295,7 @@ public class BatchTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -316,7 +316,7 @@ public class BatchTaskSchedulerTest {
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     computeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)

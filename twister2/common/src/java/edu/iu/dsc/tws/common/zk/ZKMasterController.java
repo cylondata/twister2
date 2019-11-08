@@ -48,8 +48,8 @@ public class ZKMasterController extends ZKBaseController {
 
     if (!(initialState == JobMasterState.JM_STARTED
         || initialState == JobMasterState.JM_RESTARTED)) {
-      throw new Exception("initialState has to be either WorkerState.STARTING or "
-          + "WorkerState.RESTARTING. Supplied value: " + initialState);
+      throw new Exception("initialState has to be either WorkerState.STARTED or "
+          + "WorkerState.RESTARTED. Supplied value: " + initialState);
     }
 
     try {

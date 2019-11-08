@@ -21,14 +21,14 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.graphapi.vertex.SsspVertexStatus;
 
 
-public class SsspInitialSink extends BaseSink implements Collector {
+public class SsspInitialSink extends BaseCompute implements Collector {
 
   private static final Logger LOG = Logger.getLogger(SsspInitialSink.class.getName());
 

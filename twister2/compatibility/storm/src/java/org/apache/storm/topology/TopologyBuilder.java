@@ -129,7 +129,7 @@ public class TopologyBuilder implements Serializable {
 
     this.sinkNodes.forEach(sink -> {
       Twister2Bolt twister2Bolt = (Twister2Bolt) nodes.get(sink);
-      ComputeConnection computeConnection = this.computeGraphBuilder.addSink(
+      ComputeConnection computeConnection = this.computeGraphBuilder.addCompute(
           sink,
           twister2Bolt,
           twister2Bolt.getParallelism()

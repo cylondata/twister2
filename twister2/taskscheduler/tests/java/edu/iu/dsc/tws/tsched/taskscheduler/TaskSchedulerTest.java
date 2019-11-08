@@ -80,7 +80,7 @@ public class TaskSchedulerTest {
     builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
 
-    builder.addSink("sink1", testSink);
+    builder.addTask("sink1", testSink);
     builder.setParallelism("sink1", parallel);
 
     builder.operationMode(OperationMode.STREAMING);
@@ -95,7 +95,7 @@ public class TaskSchedulerTest {
     builder.addSource("source", testSource);
     builder.setParallelism("source", parallel);
 
-    builder.addSink("sink1", testSink);
+    builder.addTask("sink1", testSink);
     builder.setParallelism("sink1", parallel);
 
     builder.operationMode(OperationMode.BATCH);
