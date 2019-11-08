@@ -68,7 +68,7 @@ public interface MutableGraph<T> extends Serializable {
    *
    * @throws IllegalArgumentException if {@code node} is not an element of this graph
    */
-  T successors(T node);
+  Set<T> successors(T node);
 
 
   /**
@@ -77,7 +77,7 @@ public interface MutableGraph<T> extends Serializable {
    *
    * @throws IllegalArgumentException if {@code node} is not an element of this graph
    */
-  T predecessors(T node);
+  Set<T> predecessors(T node);
 
   /**
    * Returns true if this graph allows self-loops (edges that connect a node to itself). Attempting
