@@ -177,13 +177,13 @@ public class ZKBaseController {
   /**
    * count joined and live workers
    */
-  private int countJoinedLiveWorkers() {
+  private int countJoinedWorkers() {
 
     int count = 0;
     for (WorkerState state : jobWorkers.values()) {
-      if (state == WorkerState.STARTING
-          || state == WorkerState.RUNNING
-          || state == WorkerState.RESTARTING) {
+      if (state == WorkerState.STARTED
+          || state == WorkerState.RESTARTED
+          || state == WorkerState.COMPLETED) {
         count++;
       }
     }
@@ -407,12 +407,12 @@ public class ZKBaseController {
     // if the status of joining worker is RESTARTING, it is coming from failure
     // if there is already an entry in worker map, remove it. Then add new one.
     // inform the listener if any
-    if (pair.getValue() == WorkerState.RESTARTING) {
+    if (pair.getValue() == WorkerState.RESTARTED) {
       removeWorkerInfo(newWorkerID);
       jobWorkers.put(pair.getKey(), pair.getValue());
 
       if (failureListener != null) {
-        failureListener.rejoined(pair.getKey());
+        failureListener.restarted(pair.getKey());
       }
 
       LOG.info("A worker rejoined the job with ID: " + newWorkerID);
@@ -435,7 +435,7 @@ public class ZKBaseController {
 
       // inform worker status listener
       if (workerStatusListener != null) {
-        workerStatusListener.joined(pair.getKey());
+        workerStatusListener.started(pair.getKey());
       }
     }
 
@@ -443,7 +443,7 @@ public class ZKBaseController {
     // we don't check the size of jobWorkers,
     // because some workers may have joined and failed.
     // This shows currently existing workers in the job group
-    if (numberOfWorkers == countJoinedLiveWorkers() && !allJoined) {
+    if (numberOfWorkers == countJoinedWorkers() && !allJoined) {
       allJoined = true;
       synchronized (waitObject) {
         waitObject.notify();
@@ -521,15 +521,10 @@ public class ZKBaseController {
     LOG.info(String.format("Worker[%s] status changed to: %s ",
         pair.getKey().getWorkerID(), pair.getValue()));
 
-    // inform the listener if the worker becomes RUNNING
-    if (workerStatusListener != null && pair.getValue() == WorkerState.RUNNING) {
-      workerStatusListener.running(pair.getKey().getWorkerID());
-
-      // inform the listener if the worker becomes COMPLETED
-    } else if (workerStatusListener != null && pair.getValue() == WorkerState.COMPLETED) {
+    // inform the listener if the worker becomes COMPLETED
+    if (workerStatusListener != null && pair.getValue() == WorkerState.COMPLETED) {
       workerStatusListener.completed(pair.getKey().getWorkerID());
     }
-
   }
 
   /**
