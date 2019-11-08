@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.TaskMessage;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.IntData;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -97,14 +96,15 @@ public class STWindowEventTimeExample extends BenchTaskWorker {
         .withWatermarkInterval(1, TimeUnit.MILLISECONDS)
         .withTumblingDurationWindow(1, TimeUnit.MILLISECONDS);
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, sdwCountTumblingProcess, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK,
+        sdwCountTumblingProcess, sinkParallelism);
     computeConnection.direct(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
     //computeConnection.direct(SOURCE, edge, DataType.INTEGER_ARRAY);
 
     return computeGraphBuilder;
   }
 
-  protected static class DirectReceiveTask extends DirectCompute<int[]> implements ISink {
+  protected static class DirectReceiveTask extends DirectCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     private int count = 0;

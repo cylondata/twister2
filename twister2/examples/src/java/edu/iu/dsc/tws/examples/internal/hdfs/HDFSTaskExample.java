@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
@@ -94,7 +94,7 @@ public class HDFSTaskExample implements IWorker {
     builder.addSource("source", g);
     builder.setParallelism("source", 2);
 
-    builder.addSink("sink", r);
+    builder.addTask("sink", r);
     builder.setParallelism("sink", 2);
 
     builder.connect("source", "sink", "partition-edge",
@@ -214,7 +214,7 @@ public class HDFSTaskExample implements IWorker {
     }
   }
 
-  private static class ReceivingTask extends BaseSink {
+  private static class ReceivingTask extends BaseCompute {
 
     private static final long serialVersionUID = -254264903510284798L;
     private int count = 0;

@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.data.FileSystem;
 import edu.iu.dsc.tws.api.data.Path;
@@ -29,7 +29,7 @@ import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 /**
  * This class receives the message from the DataFileSource and writes the output into the DataObject
  */
-public class DataFileSink<T> extends BaseSink implements Collector {
+public class DataFileSink<T> extends BaseCompute<T> implements Collector {
 
   private static final Logger LOG = Logger.getLogger(DataFileSink.class.getName());
 

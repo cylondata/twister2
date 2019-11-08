@@ -15,9 +15,7 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 public interface IWorkerStatusListener {
 
-  void joined(JobMasterAPI.WorkerInfo workerInfo);
-
-  void running(int workerID);
+  void started(JobMasterAPI.WorkerInfo workerInfo);
 
   void completed(int workerID);
 }

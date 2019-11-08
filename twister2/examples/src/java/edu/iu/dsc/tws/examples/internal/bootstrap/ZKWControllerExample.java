@@ -122,13 +122,8 @@ public final class ZKWControllerExample {
 
     zkWorkerController.addWorkerStatusListener(new IWorkerStatusListener() {
       @Override
-      public void joined(JobMasterAPI.WorkerInfo wInfo) {
+      public void started(JobMasterAPI.WorkerInfo wInfo) {
         LOG.info("worker: " + wInfo.getWorkerID() + " JOINED. ********************* ");
-      }
-
-      @Override
-      public void running(int workerID) {
-        LOG.info("worker: " + workerID + " became RUNNING. ********************* ");
       }
 
       @Override
@@ -145,7 +140,7 @@ public final class ZKWControllerExample {
       }
 
       @Override
-      public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }
@@ -175,7 +170,7 @@ public final class ZKWControllerExample {
       }
     });
 
-    zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTING);
+    zkWorkerController.initialize(JobMasterAPI.WorkerState.STARTED);
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Initial worker list: \n" + WorkerInfoUtils.workerListAsString(workerList));
@@ -184,9 +179,6 @@ public final class ZKWControllerExample {
     // wait until 100sec
     workerList = workerController.getAllWorkers();
     LOG.info(WorkerInfoUtils.workerListAsString(workerList));
-
-    // test state change
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     sleeeep((long) (Math.random() * 10 * 1000));
 
@@ -230,7 +222,7 @@ public final class ZKWControllerExample {
       }
 
       @Override
-      public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
+      public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
         LOG.info(String.format("Worker[%s] has come back from failure ......................",
             workerInfo.getWorkerID()));
       }

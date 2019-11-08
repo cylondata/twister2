@@ -235,17 +235,14 @@ public final class MPIWorker {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    // should be either WorkerState.STARTING or WorkerState.RESTARTING
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    // should be either WorkerState.STARTED or WorkerState.RESTARTED
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
         workerInfo, masterHost, masterPort, numberContainers, initialState);
     LOG.log(Level.FINE, String.format("Connecting to job master %s:%d", masterHost, masterPort));
     jobMasterAgent.startThreaded();
-
-    // now lets send the starting message
-    jobMasterAgent.sendWorkerRunningMessage();
 
     return jobMasterAgent;
   }

@@ -45,13 +45,12 @@ enum JobMasterState {
 
 // a worker can be any one of these states
 enum WorkerState {
-    STARTING = 0;
-    RESTARTING = 1;
-    RUNNING = 2;
-    COMPLETED = 3;
-    FAILED = 4;
-    ERROR = 5;
-    UNASSIGNED = 6;
+    STARTED = 0;
+    RESTARTED = 1;
+    COMPLETED = 2;
+    FAILED = 3;
+    ERROR = 4;
+    UNASSIGNED = 5;
 }
 
 message NodeInfo {
@@ -82,13 +81,16 @@ message RegisterWorker {
     oneof idRequired {
         int32 workerID = 1;
     }
-    //WorkerInfo workerInfo = 2;
-    oneof fromFailureRequired {
-        bool fromFailure = 2;
-    }
-    WorkerInfo workerInfo = 3;
-}
 
+    //initialState can be either STARTED or RESTARTED
+    oneof initialStateRequired {
+        WorkerState initialState = 2;
+    }
+
+    oneof workerInfoRequired {
+        WorkerInfo workerInfo = 3;
+    }
+}
 
 message RegisterWorkerResponse {
     oneof idRequired {

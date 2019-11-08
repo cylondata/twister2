@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.IComputableSink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -58,11 +58,11 @@ public class StormBenchmark extends TaskWorker {
     computeGraphBuilder.addSource("generator", generator, parallelSources);
 
     if ("reduce".equals(config.get(PARAM_OPERATION))) {
-      computeGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addCompute("sink", dataSink)
           .reduce("generator").viaEdge("edge").withOperation(Op.SUM,
           MessageTypes.DOUBLE_ARRAY);
     } else {
-      computeGraphBuilder.addSink("sink", dataSink)
+      computeGraphBuilder.addCompute("sink", dataSink)
           .gather("generator").viaEdge("edge");
     }
 
@@ -105,7 +105,7 @@ public class StormBenchmark extends TaskWorker {
   }
 
 
-  public static class DataSink implements IComputableSink {
+  public static class DataSink implements ICompute {
 
     private static final long serialVersionUID = -254264903510284798L;
 

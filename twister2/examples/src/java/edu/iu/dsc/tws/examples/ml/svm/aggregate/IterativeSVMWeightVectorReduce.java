@@ -27,13 +27,13 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.ml.svm.integration.test.ICollector;
 
 public class IterativeSVMWeightVectorReduce
-    extends BaseSink<double[]> implements ICollector<double[]> {
+    extends BaseCompute<double[]> implements ICollector<double[]> {
 
   private static final long serialVersionUID = -2284525532560239802L;
   private static final Logger LOG = Logger.getLogger(IterativeSVMWeightVectorReduce.class

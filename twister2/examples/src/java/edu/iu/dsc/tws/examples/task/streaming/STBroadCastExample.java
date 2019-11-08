@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.utils.bench.BenchmarkConstants;
@@ -40,16 +40,16 @@ public class STBroadCastExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new BroadCastSinkTask();
+    ICompute r = new BroadCastSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeGraphBuilder.addSink(SINK, r, sinkParallelism)
+    computeGraphBuilder.addCompute(SINK, r, sinkParallelism)
         .broadcast(SOURCE).viaEdge(edge).withDataType(MessageTypes.INTEGER_ARRAY);
 
     return computeGraphBuilder;
   }
 
-  protected static class BroadCastSinkTask extends SBroadCastCompute<int[]> implements ISink {
+  protected static class BroadCastSinkTask extends SBroadCastCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
     private ResultsVerifier<int[], int[]> resultsVerifier;
     private boolean verified = true;

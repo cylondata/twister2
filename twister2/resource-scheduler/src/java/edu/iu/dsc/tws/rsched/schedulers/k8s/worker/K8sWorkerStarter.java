@@ -162,9 +162,6 @@ public final class K8sWorkerStarter {
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
 
-    // update worker status to RUNNING
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
-
     // add shut down hook
     addShutdownHook();
 
@@ -247,7 +244,7 @@ public final class K8sWorkerStarter {
 
   /**
    * worker is either starting for the first time, or it is coming from failure
-   * We return either WorkerState.STARTING or WorkerState.RESTARTING
+   * We return either WorkerState.STARTED or WorkerState.RESTARTED
    * TODO: If ZooKeeper is not used,
    *   currently we just return STARTING. We do not determine real initial status.
    * @return
@@ -262,17 +259,17 @@ public final class K8sWorkerStarter {
 
       try {
         if (ZKInitialStateManager.isWorkerRestarting(client, rootPath, jobName, workerID)) {
-          return JobMasterAPI.WorkerState.RESTARTING;
+          return JobMasterAPI.WorkerState.RESTARTED;
         }
 
-        return JobMasterAPI.WorkerState.STARTING;
+        return JobMasterAPI.WorkerState.STARTED;
 
       } catch (Exception e) {
         throw new Twister2RuntimeException(e);
       }
     }
 
-    return JobMasterAPI.WorkerState.STARTING;
+    return JobMasterAPI.WorkerState.STARTED;
   }
 
   /**

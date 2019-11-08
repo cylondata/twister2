@@ -169,7 +169,7 @@ public class DataLocalityTaskSchedulerTest {
     ComputeGraphBuilder computeGraphBuilder =
         ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     computeGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
@@ -187,7 +187,7 @@ public class DataLocalityTaskSchedulerTest {
     ComputeGraphBuilder computeGraphBuilder =
         ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     computeGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
@@ -211,7 +211,7 @@ public class DataLocalityTaskSchedulerTest {
 
     ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "compute", testCompute, parallel);
-    ComputeConnection sinkComputeConnection = computeGraphBuilder.addSink(
+    ComputeConnection sinkComputeConnection = computeGraphBuilder.addCompute(
         "sink", testSink, parallel);
 
     computeConnection.direct("source")
