@@ -59,6 +59,8 @@ def do_arg_map(arg, numpy_builder=None):
         if hasattr(arg, "getInput"):
             # TSetContext
             return TSetContext(arg)
+    elif arg is None:
+        return None
 
     return arg
 
