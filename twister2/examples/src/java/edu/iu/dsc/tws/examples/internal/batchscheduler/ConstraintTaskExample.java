@@ -37,7 +37,7 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -172,7 +172,7 @@ public class ConstraintTaskExample implements IWorker {
     FirstSinkTask sinkTask = new FirstSinkTask(dimension, inputKey);
     ComputeGraphBuilder firstGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     firstGraphBuilder.addSource("firstsource", sourceTask, parallelism);
-    ComputeConnection computeConnection = firstGraphBuilder.addSink(
+    ComputeConnection computeConnection = firstGraphBuilder.addCompute(
         "firstsink", sinkTask, parallelism);
 
     computeConnection.direct("firstsource")
@@ -193,7 +193,7 @@ public class ConstraintTaskExample implements IWorker {
     SecondSinkTask sinkTask = new SecondSinkTask(dimension);
     ComputeGraphBuilder secondGraphBuilder = ComputeGraphBuilder.newBuilder(conf);
     secondGraphBuilder.addSource("secondsource", sourceTask, parallelism);
-    ComputeConnection computeConnection = secondGraphBuilder.addSink(
+    ComputeConnection computeConnection = secondGraphBuilder.addCompute(
         "secondsink", sinkTask, parallelism);
 
     computeConnection.direct("secondsource")
@@ -263,7 +263,7 @@ public class ConstraintTaskExample implements IWorker {
     }
   }
 
-  private static class FirstSinkTask extends BaseSink implements Collector {
+  private static class FirstSinkTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private int length;
@@ -347,7 +347,7 @@ public class ConstraintTaskExample implements IWorker {
     }
   }
 
-  private static class SecondSinkTask extends BaseSink {
+  private static class SecondSinkTask extends BaseCompute {
     private static final long serialVersionUID = -254264120110286748L;
 
     private static int worldRank = 0;

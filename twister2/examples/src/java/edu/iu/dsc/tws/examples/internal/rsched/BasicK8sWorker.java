@@ -43,7 +43,6 @@ import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -178,7 +177,7 @@ public class BasicK8sWorker
     pc.partition("source")
         .viaEdge("partition-edge")
         .withDataType(MessageTypes.OBJECT);
-    ComputeConnection rc = builder.addSink("sink", rt, 1);
+    ComputeConnection rc = builder.addCompute("sink", rt, 1);
     rc.reduce("compute")
         .viaEdge("compute-edge")
         .withReductionFunction((object1, object2) -> object1);
@@ -209,7 +208,7 @@ public class BasicK8sWorker
     }
   }
 
-  private static class ReduceTask extends BaseSink {
+  private static class ReduceTask extends BaseCompute {
     private static final long serialVersionUID = -254264903510284791L;
     private int count = 0;
 
