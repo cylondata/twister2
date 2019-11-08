@@ -16,6 +16,7 @@ import java.util.Set;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
 import edu.iu.dsc.tws.api.compute.IMessage;
@@ -35,15 +36,11 @@ public class GatherBatchOperation extends AbstractParallelOperation {
     if (dests.size() > 1) {
       throw new RuntimeException("Gather can only have one target: " + dests);
     }
-    Object shuffleProp = edge.getProperty("shuffle");
-    boolean shuffle = false;
-    if (shuffleProp instanceof Boolean && (Boolean) shuffleProp) {
-      shuffle = true;
-    }
+    Object useDisk = edge.getProperty(CommunicationContext.USE_DISK);
 
     Communicator newComm = channel.newWithConfig(edge.getProperties());
     op = new BGather(newComm, logicalPlan, srcs, dests.iterator().next(),
-        edge.getDataType(), new FinalGatherReceiver(), shuffle,
+        edge.getDataType(), new FinalGatherReceiver(), useDisk != null && (Boolean) useDisk,
         edge.getEdgeID().nextId(), edge.getMessageSchema());
   }
 

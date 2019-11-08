@@ -12,27 +12,54 @@
 
 package edu.iu.dsc.tws.comms.utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.UUID;
 
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.dataset.DataPartitionConsumer;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.dataset.partition.BufferedCollectionPartition;
 import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
-public class DiskBasedList extends ArrayList {
+public class DiskBasedList implements List {
 
   private BufferedCollectionPartition<byte[]> collectionPartition;
   private MessageType dataType;
+  private int size = 0;
 
   public DiskBasedList(Config conf,
                        MessageType dataType) {
-    this.collectionPartition = new DiskBackedCollectionPartition<>(0,
-        MessageTypes.BYTE_ARRAY, conf);
+    long maxBytesInMemory = CommunicationContext.getShuffleMaxBytesInMemory(conf);
+    long maxRecordsInMemory = CommunicationContext.getShuffleMaxRecordsInMemory(conf);
+
+    this.collectionPartition = new DiskBackedCollectionPartition<>(maxRecordsInMemory,
+        MessageTypes.BYTE_ARRAY, maxBytesInMemory, conf, UUID.randomUUID().toString());
     this.dataType = dataType;
+  }
+
+  private Twister2RuntimeException unSupportedException() {
+    return new Twister2RuntimeException("Unsupported disk backed operation");
+  }
+
+  @Override
+  public int size() {
+    return size;
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return size == 0;
+  }
+
+  @Override
+  public boolean contains(Object o) {
+    throw unSupportedException();
   }
 
   @Override
@@ -42,7 +69,18 @@ public class DiskBasedList extends ArrayList {
     } else {
       this.collectionPartition.add(this.dataType.getDataPacker().packToByteArray(t));
     }
+    this.size++;
     return true;
+  }
+
+  @Override
+  public boolean remove(Object o) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public boolean containsAll(Collection collection) {
+    throw unSupportedException();
   }
 
   @Override
@@ -51,6 +89,79 @@ public class DiskBasedList extends ArrayList {
       this.add(datum);
     }
     return true;
+  }
+
+  @Override
+  public boolean addAll(int i, Collection collection) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public void clear() {
+    this.collectionPartition.clear();
+  }
+
+  @Override
+  public Object get(int i) {
+    DataPartitionConsumer<byte[]> consumer = this.collectionPartition.getConsumer();
+    int index = 0;
+    while (index++ < i && consumer.hasNext()) {
+      consumer.next();
+    }
+    if (consumer.hasNext()) {
+      return dataType.getDataPacker().unpackFromByteArray(consumer.next());
+    }
+    return null;
+  }
+
+  @Override
+  public Object set(int i, Object o) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public void add(int i, Object o) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public Object remove(int i) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public int indexOf(Object o) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public int lastIndexOf(Object o) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public ListIterator listIterator() {
+    throw unSupportedException();
+  }
+
+  @Override
+  public ListIterator listIterator(int i) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public List subList(int i, int i1) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public boolean retainAll(Collection collection) {
+    throw unSupportedException();
+  }
+
+  @Override
+  public boolean removeAll(Collection collection) {
+    throw unSupportedException();
   }
 
   @Override
@@ -68,5 +179,15 @@ public class DiskBasedList extends ArrayList {
         return dataType.getDataPacker().unpackFromByteArray(next);
       }
     };
+  }
+
+  @Override
+  public Object[] toArray() {
+    throw unSupportedException();
+  }
+
+  @Override
+  public Object[] toArray(Object[] objects) {
+    throw unSupportedException();
   }
 }
