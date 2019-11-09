@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.examples.batch.cdfw;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
@@ -35,14 +34,11 @@ import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.api.data.Path;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansCalculator;
-import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataGenerator;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectCompute;
 import edu.iu.dsc.tws.examples.batch.kmeans.KMeansDataObjectDirectSink;
 import edu.iu.dsc.tws.rsched.core.ResourceAllocator;
@@ -245,13 +241,17 @@ public final class KMeansConnectedDataflowExample {
       int dsize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_DSIZE)));
       int csize = Integer.parseInt(String.valueOf(config.get(CDFConstants.ARGS_CSIZE)));
 
-      generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
+      //generateData(config, dataDirectory, centroidDirectory, dimension, dsize, csize);
+
+      DataFlowGraph job = generateData(config, dataDirectory, centroidDirectory, dimension,
+          dsize, csize, instances, parallelism, jobConfig);
 
       DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension,
           dsize, instances, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, parallelism, centroidDirectory, dimension,
           csize, instances, jobConfig);
 
+      cdfwEnv.executeDataFlowGraph(job);
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
 
@@ -274,7 +274,7 @@ public final class KMeansConnectedDataflowExample {
       cdfwEnv.close();
     }
 
-    public void generateData(Config config, String dataDirectory, String centroidDirectory,
+    /*public void generateData(Config config, String dataDirectory, String centroidDirectory,
                              int dimension, int dsize, int csize) {
       try {
         int numOfFiles = 1;
@@ -286,8 +286,36 @@ public final class KMeansConnectedDataflowExample {
       } catch (IOException ioe) {
         throw new Twister2RuntimeException("Failed to create input data:", ioe);
       }
-    }
+    }*/
   }
+
+  private static DataFlowGraph generateData(Config config, String dataDirectory,
+                                            String centroidDirectory, int dimension, int dsize,
+                                            int csize, int workers, int parallel,
+                                            DataFlowJobConfig jobConfig) {
+
+    DataGeneratorSource dataGeneratorSource = new DataGeneratorSource(Context.TWISTER2_DIRECT_EDGE,
+        dsize, csize, dimension, dataDirectory, centroidDirectory);
+    DataGeneratorSink dataGeneratorSink = new DataGeneratorSink();
+    ComputeGraphBuilder dataGenerationGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    dataGenerationGraphBuilder.setTaskGraphName("DataGenerator");
+    dataGenerationGraphBuilder.addSource("datageneratorsource", dataGeneratorSource, parallel);
+
+    ComputeConnection dataObjectComputeConnection = dataGenerationGraphBuilder.addCompute(
+        "datageneratorsink", dataGeneratorSink, parallel);
+    dataObjectComputeConnection.direct("datageneratorsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    dataGenerationGraphBuilder.setMode(OperationMode.BATCH);
+    ComputeGraph dataObjectTaskGraph = dataGenerationGraphBuilder.build();
+    dataGenerationGraphBuilder.setTaskGraphName("datageneratorTG");
+
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorsink", dataObjectTaskGraph)
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .setGraphType("non-iterative");
+    return job;
+  }
+
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {
     private static final long serialVersionUID = -254264120110286748L;
