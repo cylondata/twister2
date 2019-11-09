@@ -36,7 +36,6 @@ import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -117,7 +116,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
         "firstcompute", firstComputeTask, parallel);
     ComputeConnection secondComputeConnection = builder.addCompute(
         "secondcompute", secondComputeTask, parallel);
-    ComputeConnection reduceConnection = builder.addSink("sink", reduceTask, parallel);
+    ComputeConnection reduceConnection = builder.addCompute("sink", reduceTask, parallel);
 
     firstComputeConnection.direct("source")
         .viaEdge("fdirect")
@@ -247,7 +246,7 @@ public class MultiComputeTaskGraphExample extends TaskWorker {
     }
   }
 
-  private static class ReduceTask extends BaseSink implements Collector {
+  private static class ReduceTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[] newValues;

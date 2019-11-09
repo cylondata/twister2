@@ -61,7 +61,7 @@ public final class TGUtils {
         = datapointsComputeGraphBuilder.addCompute(dataObjectComputeStr,
         dataObjectCompute, parallelism);
     ComputeConnection computeConnectionSink = datapointsComputeGraphBuilder
-        .addSink(dataObjectSinkStr,
+        .addCompute(dataObjectSinkStr,
             iterativeSVMPrimaryDataObjectDirectSink,
             parallelism);
     datapointComputeConnection.direct(dataObjectSourceStr)
@@ -125,7 +125,7 @@ public final class TGUtils {
         .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_COMPUTE,
             weightVectorObjectCompute, dataStreamerParallelism);
     ComputeConnection weightVectorSinkConnection = weightVectorComputeGraphBuilder
-        .addSink(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
+        .addCompute(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SINK, weightVectorObjectSink,
             dataStreamerParallelism);
 
     weightVectorComputeConnection.direct(Constants.SimpleGraphConfig.WEIGHT_VECTOR_OBJECT_SOURCE)

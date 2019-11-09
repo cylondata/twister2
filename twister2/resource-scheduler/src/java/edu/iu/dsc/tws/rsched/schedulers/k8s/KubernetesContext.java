@@ -43,7 +43,6 @@ public class KubernetesContext extends SchedulerContext {
   public static final String K8S_IMAGE_PULL_POLICY_NAMESPACE = "IfNotPresent";
   public static final String K8S_IMAGE_PULL_POLICY = "kubernetes.image.pull.policy";
 
-  public static final String K8S_PERSISTENT_STORAGE_CLASS_DEFAULT = "twister2";
   public static final String K8S_PERSISTENT_STORAGE_CLASS
       = "twister2.resource.kubernetes.persistent.storage.class";
 
@@ -115,7 +114,7 @@ public class KubernetesContext extends SchedulerContext {
   }
 
   public static String persistentStorageClass(Config cfg) {
-    return cfg.getStringValue(K8S_PERSISTENT_STORAGE_CLASS, K8S_PERSISTENT_STORAGE_CLASS_DEFAULT);
+    return cfg.getStringValue(K8S_PERSISTENT_STORAGE_CLASS);
   }
 
   public static String storageAccessMode(Config cfg) {

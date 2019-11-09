@@ -39,7 +39,6 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.graph.Vertex;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.nodes.INode;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.nodes.ISource;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskSchedulePlan;
@@ -49,10 +48,8 @@ import edu.iu.dsc.tws.api.exceptions.net.BlockingSendException;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointableTask;
 import edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink;
 import edu.iu.dsc.tws.checkpointing.util.CheckpointingConfigurations;
-import edu.iu.dsc.tws.executor.core.batch.SinkBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.SourceBatchInstance;
 import edu.iu.dsc.tws.executor.core.batch.TaskBatchInstance;
-import edu.iu.dsc.tws.executor.core.streaming.SinkStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.SourceStreamingInstance;
 import edu.iu.dsc.tws.executor.core.streaming.TaskStreamingInstance;
 import edu.iu.dsc.tws.executor.util.Utils;
@@ -80,14 +77,10 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       = HashBasedTable.create();
   private Table<String, Integer, SourceBatchInstance> batchSourceInstances
       = HashBasedTable.create();
-  private Table<String, Integer, SinkBatchInstance> batchSinkInstances
-      = HashBasedTable.create();
 
   private Table<String, Integer, TaskStreamingInstance> streamingTaskInstances
       = HashBasedTable.create();
   private Table<String, Integer, SourceStreamingInstance> streamingSourceInstances
-      = HashBasedTable.create();
-  private Table<String, Integer, SinkStreamingInstance> streamingSinkInstances
       = HashBasedTable.create();
 
 
@@ -191,7 +184,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
         }
       }
 
-      if (node instanceof ICompute || node instanceof ISink) {
+      if (node instanceof ICompute) {
         // lets get the parent tasks
         Set<Edge> parentEdges = taskGraph.inEdges(v);
         for (Edge e : parentEdges) {
@@ -280,11 +273,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                   = streamingSourceInstances.get(sourceTask, i);
               sourceStreamingInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
               found = true;
-            } else if (streamingSinkInstances.contains(sourceTask, i)) {
-              SinkStreamingInstance sinkStreamingInstance
-                  = streamingSinkInstances.get(sourceTask, i);
-              sinkStreamingInstance.registerInParallelOperation(c.getEdge(sIndex).getName(), op);
-              found = true;
             }
             if (!found) {
               throw new RuntimeException("Not found: " + c.getSourceTask());
@@ -300,13 +288,7 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             op.register(i, taskStreamingInstance.getInQueue());
             taskStreamingInstance.registerInParallelOperation(targetEdge, op);
             op.registerSync(i, taskStreamingInstance);
-          } else if (streamingSinkInstances.contains(c.getTargetTask(), i)) {
-            SinkStreamingInstance streamingSinkInstance
-                = streamingSinkInstances.get(c.getTargetTask(), i);
-            streamingSinkInstance.registerInParallelOperation(targetEdge, op);
-            op.register(i, streamingSinkInstance.getStreamingInQueue());
-            op.registerSync(i, streamingSinkInstance);
-          } else {
+          }  else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
         }
@@ -328,12 +310,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
                   = batchSourceInstances.get(sourceTask, i);
               sourceBatchInstance.registerOutParallelOperation(c.getEdge(sIndex).getName(), op);
               found = true;
-            } else if (batchSinkInstances.contains(sourceTask, i)) {
-              // for fault tolerance implementation, sink can become a source of
-              // the edu.iu.dsc.tws.checkpointing.task.CheckpointingSGatherSink
-              SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(sourceTask, i);
-              sinkBatchInstance.registerInParallelOperation(c.getEdge(sIndex).getName(), op);
-              found = true;
             }
           }
           if (!found) {
@@ -347,11 +323,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             op.register(i, taskBatchInstance.getInQueue());
             taskBatchInstance.registerInParallelOperation(targetEdge, op);
             op.registerSync(i, taskBatchInstance);
-          } else if (batchSinkInstances.contains(c.getTargetTask(), i)) {
-            SinkBatchInstance sinkBatchInstance = batchSinkInstances.get(c.getTargetTask(), i);
-            sinkBatchInstance.registerInParallelOperation(targetEdge, op);
-            op.register(i, sinkBatchInstance.getBatchInQueue());
-            op.registerSync(i, sinkBatchInstance);
           } else {
             throw new RuntimeException("Not found: " + c.getTargetTask());
           }
@@ -425,25 +396,15 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
 
     if (operationMode.equals(OperationMode.BATCH)) {
       if (newInstance instanceof ICompute) {
-        if (newInstance instanceof ISink) {
-          SinkBatchInstance v = new SinkBatchInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(), cfg, vertex.getName(), ip.getTaskId(),
-              taskId, ip.getTaskIndex(), vertex.getParallelism(),
-              workerId, vertex.getConfig().toMap(), inEdges, taskSchedule,
-              this.checkpointingClient, taskGraphName, tasksVersion);
-          batchSinkInstances.put(vertex.getName(), taskId, v);
-          return v;
-        } else {
-          TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
-              new LinkedBlockingQueue<>(),
-              new LinkedBlockingQueue<>(), cfg,
-              vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
-              vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
-              inEdges, outEdges, taskSchedule, this.checkpointingClient,
-              taskGraphName, tasksVersion);
-          batchTaskInstances.put(vertex.getName(), taskId, v);
-          return v;
-        }
+        TaskBatchInstance v = new TaskBatchInstance((ICompute) newInstance,
+            new LinkedBlockingQueue<>(),
+            new LinkedBlockingQueue<>(), cfg,
+            vertex.getName(), ip.getTaskId(), taskId, ip.getTaskIndex(),
+            vertex.getParallelism(), workerId, vertex.getConfig().toMap(),
+            inEdges, outEdges, taskSchedule, this.checkpointingClient,
+            taskGraphName, tasksVersion);
+        batchTaskInstances.put(vertex.getName(), taskId, v);
+        return v;
       } else if (newInstance instanceof ISource) {
         SourceBatchInstance v = new SourceBatchInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,
@@ -457,16 +418,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
       }
     } else if (operationMode.equals(OperationMode.STREAMING)) {
       if (newInstance instanceof ICompute) {
-        // todo remove commented parts if nothing breaks with ths change
-//        if (newInstance instanceof ISink) {
-//          SinkStreamingInstance v = new SinkStreamingInstance((ICompute) newInstance,
-//              new LinkedBlockingQueue<>(), cfg, vertex.getName(),
-//              ip.getTaskId(), taskId, ip.getTaskIndex(), vertex.getParallelism(), workerId,
-//              vertex.getConfig().toMap(), inEdges, taskSchedule,
-//              this.checkpointingClient, taskGraphName, tasksVersion);
-//          streamingSinkInstances.put(vertex.getName(), taskId, v);
-//          return v;
-//        } else {
         TaskStreamingInstance v = new TaskStreamingInstance((ICompute) newInstance,
             new LinkedBlockingQueue<>(),
             new LinkedBlockingQueue<>(), cfg,
@@ -475,7 +426,6 @@ public class ExecutionPlanBuilder implements IExecutionPlanBuilder {
             outEdges, taskSchedule, this.checkpointingClient, taskGraphName, tasksVersion);
         streamingTaskInstances.put(vertex.getName(), taskId, v);
         return v;
-//        }
       } else if (newInstance instanceof ISource) {
         SourceStreamingInstance v = new SourceStreamingInstance((ISource) newInstance,
             new LinkedBlockingQueue<>(), cfg,

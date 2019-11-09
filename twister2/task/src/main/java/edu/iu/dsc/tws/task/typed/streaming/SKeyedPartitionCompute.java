@@ -9,20 +9,17 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.task.typed.batch;
-
-import java.util.Iterator;
+package edu.iu.dsc.tws.task.typed.streaming;
 
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
-import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
+import edu.iu.dsc.tws.task.typed.AbstractSingleDataCompute;
 
-public abstract class BPartitionKeyedCompute<K, T>
-    extends AbstractIterableDataCompute<Tuple<K, T>> {
+public abstract class SKeyedPartitionCompute<K, T> extends AbstractSingleDataCompute<Tuple<K, T>> {
 
-  public abstract boolean keyedPartition(Iterator<Tuple<K, T>> content);
+  public abstract boolean keyedPartition(Tuple<K, T> content);
 
-  public boolean execute(IMessage<Iterator<Tuple<K, T>>> content) {
+  public boolean execute(IMessage<Tuple<K, T>> content) {
     return this.keyedPartition(content.getContent());
   }
 }

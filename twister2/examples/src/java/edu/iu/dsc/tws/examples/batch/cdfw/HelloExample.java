@@ -64,7 +64,7 @@ public final class HelloExample {
       SecondSink secondSink = new SecondSink();
       ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(execEnv.getConfig());
       graphBuilderX.addSource("source1", firstSource, 4);
-      ComputeConnection reduceConn = graphBuilderX.addSink("sink1", secondSink,
+      ComputeConnection reduceConn = graphBuilderX.addCompute("sink1", secondSink,
           1);
       reduceConn.reduce("source1")
           .viaEdge("all-reduce")

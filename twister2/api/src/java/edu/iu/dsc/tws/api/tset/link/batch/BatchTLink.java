@@ -57,6 +57,15 @@ public interface BatchTLink<T1, T0> extends TLink<T1, T0> {
     throw new UnsupportedOperationException("Operation not implemented");
   }
 
+  default Storable<T0> persist() {
+    throw new UnsupportedOperationException("Operation not implemented");
+  }
+
+  default Storable<T0> lazyPersist() {
+    throw new UnsupportedOperationException("Operation not implemented");
+  }
+
+
   @Override
   void forEach(ApplyFunc<T0> applyFunction);
 }

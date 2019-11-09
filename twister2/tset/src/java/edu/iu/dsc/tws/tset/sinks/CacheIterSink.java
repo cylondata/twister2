@@ -12,33 +12,31 @@
 
 package edu.iu.dsc.tws.tset.sinks;
 
-import java.util.Iterator;
-
 import edu.iu.dsc.tws.api.tset.TSetContext;
-import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
 import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
 
-public class CacheIterSink<T> extends BaseSinkFunc<Iterator<T>> {
+/**
+ * An in-memory cached TSet
+ *
+ * @param <T> TSet data type
+ */
+public class CacheIterSink<T> extends StoreIterSink<T, T> {
 
   private CollectionPartition<T> partition;
 
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-
     this.partition = new CollectionPartition<>();
   }
 
   @Override
-  public boolean add(Iterator<T> value) {
-    while (value.hasNext()) {
-      partition.add(value.next());
-    }
-    return true;
+  protected CollectionPartition<T> getPartition() {
+    return partition;
   }
 
   @Override
-  public CollectionPartition<T> get() {
-    return partition;
+  protected ValueExtractor<T, T> getValueExtractor() {
+    return input -> input;
   }
 }

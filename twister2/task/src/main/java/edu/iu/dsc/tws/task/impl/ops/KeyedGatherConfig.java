@@ -20,7 +20,6 @@ import edu.iu.dsc.tws.task.impl.ComputeConnection;
 
 public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig> {
 
-  private boolean useDsk;
   private Comparator keyCompartor;
   private boolean grpByKey = true;
   private boolean srtByKey;
@@ -28,11 +27,6 @@ public class KeyedGatherConfig extends AbstractKeyedOpsConfig<KeyedGatherConfig>
   public KeyedGatherConfig(String parent,
                            ComputeConnection computeConnection) {
     super(parent, OperationNames.KEYED_GATHER, computeConnection);
-  }
-
-  public KeyedGatherConfig useDisk(boolean useDisk) {
-    this.useDsk = useDisk;
-    return this.withProperty(CommunicationContext.USE_DISK, useDisk);
   }
 
   public <T> KeyedGatherConfig sortBatchByKey(boolean sortByKey,

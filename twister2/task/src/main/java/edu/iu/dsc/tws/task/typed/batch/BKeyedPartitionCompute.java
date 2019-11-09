@@ -9,7 +9,20 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.api.compute.nodes;
+package edu.iu.dsc.tws.task.typed.batch;
 
-public interface IComputableSink<T> extends ICompute<T>, ISink {
+import java.util.Iterator;
+
+import edu.iu.dsc.tws.api.comms.structs.Tuple;
+import edu.iu.dsc.tws.api.compute.IMessage;
+import edu.iu.dsc.tws.task.typed.AbstractIterableDataCompute;
+
+public abstract class BKeyedPartitionCompute<K, T>
+    extends AbstractIterableDataCompute<Tuple<K, T>> {
+
+  public abstract boolean keyedPartition(Iterator<Tuple<K, T>> content);
+
+  public boolean execute(IMessage<Iterator<Tuple<K, T>>> content) {
+    return this.keyedPartition(content.getContent());
+  }
 }

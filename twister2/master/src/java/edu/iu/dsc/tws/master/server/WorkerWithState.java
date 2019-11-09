@@ -23,11 +23,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 
 /**
  * JobMaster keeps WorkerInfos with state
@@ -37,24 +37,24 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 public class WorkerWithState {
   private static final Logger LOG = Logger.getLogger(WorkerWithState.class.getName());
 
-  private JobMasterAPI.WorkerInfo workerInfo;
-  private ArrayList<JobMasterAPI.WorkerState> states;
+  private WorkerInfo workerInfo;
+  private WorkerState state;
 
-  public WorkerWithState(JobMasterAPI.WorkerInfo workerInfo) {
+  public WorkerWithState(WorkerInfo workerInfo, WorkerState state) {
     this.workerInfo = workerInfo;
-    states = new ArrayList<>();
+    this.state = state;
   }
 
-  public void addWorkerState(JobMasterAPI.WorkerState workerState) {
-    states.add(workerState);
+  public void updateState(WorkerState workerState) {
+    state = workerState;
   }
 
-  public JobMasterAPI.WorkerInfo getWorkerInfo() {
+  public WorkerInfo getWorkerInfo() {
     return workerInfo;
   }
 
-  public JobMasterAPI.WorkerState getLastState() {
-    return states.get(states.size() - 1);
+  public WorkerState getState() {
+    return state;
   }
 
   public String getIp() {
@@ -82,36 +82,47 @@ public class WorkerWithState {
   }
 
   public boolean hasNodeIP() {
-    return workerInfo.getNodeInfo().getNodeIP().isEmpty() ? false : true;
+    return !workerInfo.getNodeInfo().getNodeIP().isEmpty();
   }
 
   public boolean hasRackName() {
-    return workerInfo.getNodeInfo().getRackName().isEmpty() ? false : true;
+    return !workerInfo.getNodeInfo().getRackName().isEmpty();
   }
 
   public boolean hasDataCenterName() {
-    return workerInfo.getNodeInfo().getDataCenterName().isEmpty() ? false : true;
+    return !workerInfo.getNodeInfo().getDataCenterName().isEmpty();
   }
 
-  public void setWorkerInfo(JobMasterAPI.WorkerInfo workerInfo) {
+  public void setWorkerInfo(WorkerInfo workerInfo) {
     this.workerInfo = workerInfo;
   }
 
   /**
-   * if the worker became RUNNING in the past, return true.
-   * Its current status can be RUNNING, COMPLETED or something else
+   * return true if the worker status is either or STARTED, RESTARTED
    * @return
    */
-  public boolean hasWorkerBecomeRunning() {
-    return states.contains(JobMasterAPI.WorkerState.RUNNING) ? true : false;
+  public boolean running() {
+    return state == WorkerState.STARTED
+        || state == WorkerState.RESTARTED;
+  }
+
+
+  /**
+   * return true if the worker status is either or STARTED, RESTARTED, COMPLETED
+   * @return
+   */
+  public boolean startedOrCompleted() {
+    return state == WorkerState.STARTED
+        || state == WorkerState.RESTARTED
+        || state == WorkerState.COMPLETED;
   }
 
   /**
-   * if the worker has COMPLETED in its state history
+   * if the worker state is COMPLETED
    * @return
    */
-  public boolean hasWorkerCompleted() {
-    return states.contains(JobMasterAPI.WorkerState.COMPLETED) ? true : false;
+  public boolean completed() {
+    return state == WorkerState.COMPLETED;
   }
 
   @Override

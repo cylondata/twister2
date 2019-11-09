@@ -28,5 +28,5 @@ public interface IWorkerFailureListener {
    * let the listener know that previously failed worker rejoined the job
    * @param workerInfo
    */
-  void rejoined(JobMasterAPI.WorkerInfo workerInfo);
+  void restarted(JobMasterAPI.WorkerInfo workerInfo);
 }

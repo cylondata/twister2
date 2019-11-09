@@ -72,6 +72,9 @@ public class WorkerMonitor
   // whether this is a fault tolerant job
   private boolean faultTolerant;
 
+  // upto date status of the job
+  private JobState jobState;
+
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -94,6 +97,7 @@ public class WorkerMonitor
     this.driver = driver;
     this.numberOfWorkers = job.getNumberOfWorkers();
     this.faultTolerant = faultTolerant;
+    this.jobState = JobState.STARTING;
 
     workers = new TreeMap<>();
   }
@@ -136,11 +140,8 @@ public class WorkerMonitor
     return workers.containsKey(workerID);
   }
 
-  /**
-   * get WorkerWithState for the given workerID
-   */
-  public WorkerWithState getWorkerWithState(int workerID) {
-    return workers.get(workerID);
+  public JobState getJobState() {
+    return jobState;
   }
 
   @Override
@@ -157,36 +158,43 @@ public class WorkerMonitor
   }
 
   /**
-   * new worker joins for the first
+   * new worker joins for the first time
    */
-  public void joined(JobMasterAPI.WorkerInfo workerInfo) {
+  public void started(JobMasterAPI.WorkerInfo workerInfo) {
 
     // if it is a regular join event
     // add the worker to worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo);
-    worker.addWorkerState(JobMasterAPI.WorkerState.STARTING);
+    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.STARTED);
     workers.put(worker.getWorkerID(), worker);
     LOG.info("Worker: " + workerInfo.getWorkerID() + " joined the job.");
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTING);
+      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTED);
+    }
+
+    if (jobState == JobState.STARTING && allWorkersJoined()) {
+      jobState = JobState.STARTED;
+      if (dashClient != null) {
+        dashClient.jobStateChange(JobState.STARTED);
+      }
     }
   }
 
   /**
    * if the worker is coming from failure
    */
-  public void rejoined(JobMasterAPI.WorkerInfo workerInfo) {
+  public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTING);
+      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
     }
 
     // if this is not a fault tolerant job, we terminate the job with failure
     // because, this worker has failed previously failed and it is coming from failure
     if (!faultTolerant) {
+      jobState = JobState.FAILED;
       LOG.info("A worker is coming from failure in a NON-FAULT TOLERANT job. Terminating the job.");
       jobMaster.completeJob(JobState.FAILED);
       return;
@@ -199,38 +207,25 @@ public class WorkerMonitor
     }
 
     // update workerInfo and its status in the worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo);
-    worker.addWorkerState(JobMasterAPI.WorkerState.RESTARTING);
+    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
     workers.put(worker.getWorkerID(), worker);
     LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
 
+    if (jobState == JobState.STARTING && allWorkersJoined()) {
+      jobState = JobState.STARTED;
+      if (dashClient != null) {
+        dashClient.jobStateChange(JobState.STARTED);
+      }
+    }
+
     // TODO inform checkpoint master
-  }
-
-  /**
-   * called when a worker becomes running
-   */
-  public void running(int workerID) {
-
-    workers.get(workerID).addWorkerState(JobMasterAPI.WorkerState.RUNNING);
-    LOG.info("Worker: " + workerID + " became RUNNING.");
-
-    // send worker state change message to dashboard
-    if (dashClient != null) {
-      dashClient.workerStateChange(workerID, JobMasterAPI.WorkerState.RUNNING);
-    }
-
-    // if all workers have become RUNNING, send job STARTED message
-    if (haveAllWorkersBecomeRunning()) {
-      jobMaster.allWorkersBecameRunning();
-    }
   }
 
   /**
    * called when a worker COMPLETED the job
    */
   public void completed(int workerID) {
-    workers.get(workerID).addWorkerState(JobMasterAPI.WorkerState.COMPLETED);
+    workers.get(workerID).updateState(JobMasterAPI.WorkerState.COMPLETED);
     LOG.info("Worker:" + workerID + " COMPLETED.");
 
     // send worker state change message to dashboard
@@ -242,6 +237,7 @@ public class WorkerMonitor
     // if so, stop the job master
     // if all workers have completed, no need to send the response message back to the client
     if (allWorkersCompleted()) {
+      jobState = JobState.COMPLETED;
       LOG.info("All " + numberOfWorkers + " workers COMPLETED. Terminating the job.");
       jobMaster.completeJob(JobState.COMPLETED);
     }
@@ -259,7 +255,7 @@ public class WorkerMonitor
       return;
     }
 
-    failedWorker.addWorkerState(JobMasterAPI.WorkerState.FAILED);
+    failedWorker.updateState(JobMasterAPI.WorkerState.FAILED);
     LOG.info("Worker: " + workerID + " FAILED.");
 
     // send worker state change message to dashboard
@@ -270,6 +266,7 @@ public class WorkerMonitor
     // TODO: test whether this works
     // if this is a non-fault tolerant job, job needs to be terminated
     if (!faultTolerant) {
+      jobState = JobState.FAILED;
       LOG.info("A worker failed in a NON-FAULT TOLERANT job. Terminating the job.");
       jobMaster.completeJob(JobState.FAILED);
     }
@@ -331,7 +328,7 @@ public class WorkerMonitor
 
     // if all newly scaled up workers are already joined
     // send WorkersJoined messages
-    if (allWorkersRegistered()) {
+    if (allWorkersJoined()) {
       sendWorkersJoinedMessage();
     }
 
@@ -350,12 +347,12 @@ public class WorkerMonitor
             .setData(Any.pack(message).toByteString())
             .build();
 
-    // if all workers are not registered,
+    // if all workers are not running
     // send a failure response message to the driver
     // do not send the broadcast message to any workers
-    if (!allWorkersRegistered()) {
+    if (!allWorkersRunning()) {
       LOG.warning("Could not send the broadcast message to all workers, "
-          + "since they are not all registered.");
+          + "since not all are currenty running.");
       return false;
     }
 
@@ -398,10 +395,10 @@ public class WorkerMonitor
       if (worker == null) {
         LOG.warning("There is no worker in JobMaster with workerID: " + workerID);
         return false;
-      } else if (worker.getLastState() != JobMasterAPI.WorkerState.RUNNING
-          && worker.getLastState() != JobMasterAPI.WorkerState.STARTING) {
-        LOG.warning("workerID[" + workerID + "] is neither in RUNNING nor in STARTING scate. "
-            + "Worker state: " + worker.getLastState());
+      } else if (worker.getState() != JobMasterAPI.WorkerState.RESTARTED
+          && worker.getState() != JobMasterAPI.WorkerState.STARTED) {
+        LOG.warning("Can not deliver the message to workerID[" + workerID + "]. "
+            + "Its status: " + worker.getState());
         return false;
       }
     }
@@ -459,11 +456,14 @@ public class WorkerMonitor
   }
 
   /**
-   * make sure that
-   * all workers registered and their state may be anything
-   * TODO: check the status of all workers. They have to be either STARTING or RUNNING.
+   * if all workers are in one of these states: STARTED, RESTARTED or COMPLETED.
+   * return true
+   *
+   * This is used to send allWorkersJoined message
+   * We omit started but failed workers
+   * We include started but completed workers
    */
-  public boolean allWorkersRegistered() {
+  public boolean allWorkersJoined() {
 
     // if numberOfWorkers does not match the number of registered workers,
     // return false
@@ -478,23 +478,9 @@ public class WorkerMonitor
       return false;
     }
 
-    return true;
-  }
-
-  /**
-   * make sure that
-   * all workers registered and their state is RUNNING
-   * so that we can send a message to all
-   */
-  private boolean allWorkersRunning() {
-
-    if (!allWorkersRegistered()) {
-      return false;
-    }
-
-    // check the status of all workers, all have to be RUNNING
+    // check the status of all workers, all have to be either STARTED, RESTARTED, COMPLETED
     for (WorkerWithState worker : workers.values()) {
-      if (worker.getLastState() != JobMasterAPI.WorkerState.RUNNING) {
+      if (!worker.startedOrCompleted()) {
         return false;
       }
     }
@@ -503,17 +489,28 @@ public class WorkerMonitor
   }
 
   /**
-   * worker RUNNING message received from all workers
-   * if some workers may have already completed, that does not matter
-   * the important thing is whether they have became RUNNING in the past
+   * make sure that
+   * all workers started or restarted
+   * so that we can send a message to all
    */
-  private boolean haveAllWorkersBecomeRunning() {
-    if (numberOfWorkers != workers.size()) {
+  private boolean allWorkersRunning() {
+
+    // if numberOfWorkers does not match the number of registered workers,
+    // return false
+    if (workers.size() != numberOfWorkers) {
       return false;
     }
 
+    // if there is a gap in workerID sequence, return false
+    // since workerIDs are sorted and they start from 0
+    // checking the workerID of the last worker is sufficient
+    if (workers.lastKey() != (numberOfWorkers - 1)) {
+      return false;
+    }
+
+    // check the status of all workers, all have to be either STARTED, RESTARTED
     for (WorkerWithState worker : workers.values()) {
-      if (!worker.hasWorkerBecomeRunning()) {
+      if (!worker.running()) {
         return false;
       }
     }
@@ -530,7 +527,7 @@ public class WorkerMonitor
     }
 
     for (WorkerWithState worker : workers.values()) {
-      if (!worker.hasWorkerCompleted()) {
+      if (!worker.completed()) {
         return false;
       }
     }
@@ -556,7 +553,6 @@ public class WorkerMonitor
     for (Integer workerID : workers.keySet()) {
       rrServer.sendMessage(joinedMessage, workerID);
     }
-
   }
 
   /**

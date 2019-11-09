@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 
 import edu.iu.dsc.tws.api.comms.BaseOperation;
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
+import edu.iu.dsc.tws.api.comms.CommunicationContext;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.comms.DestinationSelector;
 import edu.iu.dsc.tws.api.comms.LogicalPlan;
@@ -50,9 +51,9 @@ public class KeyedGatherBatchOperation extends AbstractParallelOperation {
     Comparator keyComparator = null;
     boolean groupByKey = true;
     try {
-      groupByKey = (Boolean) edge.getProperty("group-by-key");
-      useDisk = (Boolean) edge.getProperty("use-disk");
-      keyComparator = (Comparator) edge.getProperty("key-comparator");
+      groupByKey = (Boolean) edge.getProperty(CommunicationContext.GROUP_BY_KEY);
+      useDisk = (Boolean) edge.getProperty(CommunicationContext.USE_DISK);
+      keyComparator = (Comparator) edge.getProperty(CommunicationContext.KEY_COMPARATOR);
     } catch (Exception ex) {
       //ignore
     }

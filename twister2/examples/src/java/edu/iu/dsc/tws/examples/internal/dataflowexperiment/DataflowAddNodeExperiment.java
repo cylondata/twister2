@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
@@ -57,7 +56,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
         = builder.addCompute("firstcompute", firstComputeTask, parallel);
     ComputeConnection computeConnection1
         = builder.addCompute("secondcompute", secondComputeTask, parallel);
-    ComputeConnection rc = builder.addSink("sink", reduceTask, parallel);
+    ComputeConnection rc = builder.addCompute("sink", reduceTask, parallel);
 
     computeConnection.direct("source")
         .viaEdge("fdirect")
@@ -153,7 +152,7 @@ public class DataflowAddNodeExperiment extends TaskWorker {
     }
   }
 
-  private static class ReduceTask extends BaseSink {
+  private static class ReduceTask extends BaseCompute {
     private static final long serialVersionUID = -5190777711234234L;
     private double[] datapoints;
 

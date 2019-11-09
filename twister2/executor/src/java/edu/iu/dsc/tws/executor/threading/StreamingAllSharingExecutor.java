@@ -318,11 +318,11 @@ public class StreamingAllSharingExecutor implements IExecutor {
 
     public StreamWorker(List<INodeInstance> tasks,
                         AtomicBoolean[] ignoreIndex, AtomicBoolean[] idle,
-                        AtomicInteger idleCounter) {
+                        AtomicInteger activeCounter) {
       this.tasks = tasks;
       this.ignoreIndex = ignoreIndex;
       this.idleTasks = idle;
-      this.activeCounter = idleCounter;
+      this.activeCounter = activeCounter;
     }
 
     private int getNext() {

@@ -11,40 +11,52 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.comms.dfw.io.direct;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.BulkReceiver;
 import edu.iu.dsc.tws.api.comms.DataFlowOperation;
+import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.dfw.io.AggregatedObjects;
 import edu.iu.dsc.tws.comms.dfw.io.ReceiverState;
 import edu.iu.dsc.tws.comms.dfw.io.TargetFinalReceiver;
+import edu.iu.dsc.tws.comms.utils.DiskBasedList;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class DirectBatchFinalReceiver extends TargetFinalReceiver {
-  private static final Logger LOG = Logger.getLogger(DirectBatchFinalReceiver.class.getName());
 
   /**
    * The receiver to be used to deliver the message
    */
   protected BulkReceiver receiver;
+  private boolean useDisk;
+  private MessageType actualDataType;
 
   /**
    * Keep the list of tuples for each target
    */
   private Int2ObjectOpenHashMap<List<Object>> readyToSend = new Int2ObjectOpenHashMap<>();
+  private Config config;
 
   public DirectBatchFinalReceiver(BulkReceiver receiver) {
+    this(receiver, false, null);
+  }
+
+  public DirectBatchFinalReceiver(BulkReceiver receiver,
+                                  boolean useDisk, MessageType actualDataType) {
     this.receiver = receiver;
+    this.useDisk = useDisk;
+    this.actualDataType = actualDataType;
   }
 
   @Override
   public void init(Config cfg, DataFlowOperation op, Map<Integer, List<Integer>> expectedIds) {
     super.init(cfg, op, expectedIds);
+    this.config = cfg;
     this.receiver.init(cfg, expectedIds.keySet());
   }
 
@@ -66,7 +78,13 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
   @Override
   protected void merge(int dest, List<Object> dests) {
     if (!readyToSend.containsKey(dest)) {
-      readyToSend.put(dest, new AggregatedObjects<>(dests));
+      if (this.useDisk) {
+        DiskBasedList diskBasedList = new DiskBasedList(config, actualDataType);
+        diskBasedList.addAll(dests);
+        readyToSend.put(dest, diskBasedList);
+      } else {
+        readyToSend.put(dest, new AggregatedObjects<>(dests));
+      }
     } else {
       List<Object> ready = readyToSend.get(dest);
       ready.addAll(dests);
@@ -76,13 +94,7 @@ public class DirectBatchFinalReceiver extends TargetFinalReceiver {
 
   @Override
   protected boolean isAllEmpty(int target) {
-    if (readyToSend.containsKey(target)) {
-      List<Object> queue = readyToSend.get(target);
-      if (queue.size() > 0) {
-        return false;
-      }
-    }
-    return true;
+    return readyToSend.getOrDefault(target, Collections.emptyList()).isEmpty();
   }
 
   @Override

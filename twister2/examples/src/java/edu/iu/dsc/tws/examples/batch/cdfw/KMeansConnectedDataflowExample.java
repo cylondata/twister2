@@ -30,7 +30,7 @@ import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
 import edu.iu.dsc.tws.api.compute.modifiers.IONames;
 import edu.iu.dsc.tws.api.compute.modifiers.Receptor;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -135,7 +135,7 @@ public final class KMeansConnectedDataflowExample {
         parallelismValue);
     ComputeConnection datapointComputeConnection = datapointsComputeGraphBuilder.addCompute(
         "datapointcompute", dataObjectCompute, parallelismValue);
-    ComputeConnection firstGraphComputeConnection = datapointsComputeGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = datapointsComputeGraphBuilder.addCompute(
         "datapointsink", dataObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -173,7 +173,7 @@ public final class KMeansConnectedDataflowExample {
         parallelismValue);
     ComputeConnection centroidComputeConnection = centroidsComputeGraphBuilder.addCompute(
         "centroidcompute", centroidObjectCompute, parallelismValue);
-    ComputeConnection secondGraphComputeConnection = centroidsComputeGraphBuilder.addSink(
+    ComputeConnection secondGraphComputeConnection = centroidsComputeGraphBuilder.addCompute(
         "centroidsink", centroidObjectSink, parallelismValue);
 
     //Creating the communication edges between the tasks for the second task graph
@@ -204,7 +204,7 @@ public final class KMeansConnectedDataflowExample {
 
     //Add source, and sink tasks to the task graph builder for the third task graph
     kmeansComputeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelismValue);
-    ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addSink(
+    ComputeConnection kMeanscomputeConnection = kmeansComputeGraphBuilder.addCompute(
         "kmeanssink", kMeansAllReduceTask, parallelismValue);
 
     //Creating the communication edges between the tasks for the third task graph
@@ -371,7 +371,7 @@ public final class KMeansConnectedDataflowExample {
     }
   }
 
-  public static class KMeansAllReduceTask extends BaseSink implements Collector {
+  public static class KMeansAllReduceTask extends BaseCompute implements Collector {
     private static final long serialVersionUID = -5190777711234234L;
 
     private double[][] centroids;

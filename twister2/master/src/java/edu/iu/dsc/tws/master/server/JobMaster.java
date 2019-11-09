@@ -470,17 +470,6 @@ public class JobMaster {
   }
 
   /**
-   * this method is called when all workers became RUNNING
-   * we let the dashboard know that the job STARTED
-   */
-  public void allWorkersBecameRunning() {
-    // if Dashboard is used, tell it that the job has STARTED
-    if (dashClient != null) {
-      dashClient.jobStateChange(JobState.STARTED);
-    }
-  }
-
-  /**
    * this method finishes the job
    * It is executed when the worker completed message received from all workers
    */

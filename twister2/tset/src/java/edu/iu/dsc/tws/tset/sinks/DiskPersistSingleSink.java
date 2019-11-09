@@ -12,34 +12,32 @@
 
 package edu.iu.dsc.tws.tset.sinks;
 
-import java.util.Iterator;
-
-import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.tset.TSetContext;
 import edu.iu.dsc.tws.api.tset.fn.BaseSinkFunc;
-import edu.iu.dsc.tws.dataset.partition.CollectionPartition;
+import edu.iu.dsc.tws.dataset.partition.DiskBackedCollectionPartition;
 
-public class GatherCacheSink<T> extends BaseSinkFunc<Iterator<Tuple<Integer, T>>> {
-
-  private CollectionPartition<T> partition;
+public class DiskPersistSingleSink<T> extends BaseSinkFunc<T> {
+  private DiskBackedCollectionPartition<T> partition;
 
   @Override
   public void prepare(TSetContext ctx) {
     super.prepare(ctx);
-
-    this.partition = new CollectionPartition<>();
+    partition = new DiskBackedCollectionPartition<>(0, ctx.getConfig());
   }
 
   @Override
-  public boolean add(Iterator<Tuple<Integer, T>> value) {
-    while (value.hasNext()) {
-      partition.add(value.next().getValue()); // key will be dropped. Only value is cached.
-    }
+  public boolean add(T value) {
+    this.partition.add(value);
     return true;
   }
 
   @Override
-  public CollectionPartition<T> get() {
+  public void close() {
+    partition.close();
+  }
+
+  @Override
+  public DiskBackedCollectionPartition<T> get() {
     return partition;
   }
 }
