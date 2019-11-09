@@ -305,8 +305,8 @@ public final class NomadWorkerStarter {
                                           JobMasterAPI.WorkerInfo workerInfo,
                                           int numberContainers) {
 
-    //should be either WorkerState.STARTING or WorkerState.RESTARTING
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    //should be either WorkerState.STARTED or WorkerState.RESTARTED
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
 
     // we start the job master client
     JMWorkerAgent jobMasterAgent = JMWorkerAgent.createJMWorkerAgent(cfg,
@@ -316,9 +316,6 @@ public final class NomadWorkerStarter {
     jobMasterAgent.startThreaded();
     // No need for sending workerStarting message anymore
     // that is called in startThreaded method
-
-    // now lets send the starting message
-    jobMasterAgent.sendWorkerRunningMessage();
 
     return jobMasterAgent;
   }

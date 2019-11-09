@@ -98,7 +98,7 @@ public final class DashboardClientExample {
     JobMasterAPI.WorkerInfo workerInfo =
         WorkerInfoUtils.createWorkerInfo(workerID, "123.456.789", 9009, nodeInfo, computeResource);
 
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
     dashClient.registerWorker(workerInfo, initialState);
   }
 

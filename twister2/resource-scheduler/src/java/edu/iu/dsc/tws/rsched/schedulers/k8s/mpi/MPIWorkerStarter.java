@@ -166,7 +166,7 @@ public final class MPIWorkerStarter {
     );
 
     // TODO: get initialState from checkpoint manager or from starting script
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     /**
@@ -175,9 +175,6 @@ public final class MPIWorkerStarter {
     IWorkerController workerController = WorkerRuntime.getWorkerController();
     IWorkerStatusUpdater workerStatusUpdater = WorkerRuntime.getWorkerStatusUpdater();
     ISenderToDriver senderToDriver = WorkerRuntime.getSenderToDriver();
-
-    // update worker status to RUNNING
-    workerStatusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     // start the worker
     startWorker(workerController, pv, podName);

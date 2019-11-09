@@ -108,7 +108,7 @@ public final class JobMasterClientExample {
     JobMasterAPI.WorkerInfo workerInfo = WorkerInfoUtils.createWorkerInfo(
         workerID, workerIP, workerPort, nodeInfo, computeResource, additionalPorts);
 
-    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTING;
+    JobMasterAPI.WorkerState initialState = JobMasterAPI.WorkerState.STARTED;
     WorkerRuntime.init(config, job, workerInfo, initialState);
 
     IWorkerStatusUpdater statusUpdater = WorkerRuntime.getWorkerStatusUpdater();
@@ -126,8 +126,6 @@ public final class JobMasterClientExample {
 
     // wait up to 2sec
     sleeeep((long) (Math.random() * 2 * 1000));
-
-    statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.RUNNING);
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Currently joined worker IDs: " + getIDs(workerList));
