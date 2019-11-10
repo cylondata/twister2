@@ -44,7 +44,8 @@ function get_twister2_thirdparty_dependencies() {
   # bazel-genfiles/external for third_party deps
   # bazel-twister2/bazel-out/host/bin/third_party for extra_action proto jars in third_party
   # bazel-twister2/bazel-out/host/genfiles/external more third_party deps
-  echo "$(find {bazel-bin/twister2/proto,bazel-genfiles/external,bazel-genfiles/third_party,bazel-twister2/bazel-out/host/bin/third_party,bazel-twister2/bazel-out/host/genfiles/external}/. -name "*jar" -type f | sort -u)";
+  current_dir=${PWD##*/}
+  echo "$(find {bazel-bin/twister2/proto,bazel-out/host/bin/external,bazel-out/host/bin/third_party,bazel-$current_dir/bazel-out/host/bin/third_party,bazel-$current_dir/bazel-out/host/bin/external,bazel-out/k8-fastbuild/bin/external}/. -name "*jar" -type f | sort -u)";
 }
 
 function get_twister2_bazel_deps(){
@@ -61,7 +62,7 @@ function get_package_of() {
   # look for the longest matching package
   for i in ${package_list}; do
     if [[ "$1" =~ ^$i ]]; then  # we got a match
-      echo $(echo -n $i | wc -c | xargs echo) $i
+        echo $(echo -n $i | wc -c | xargs echo) $i
     fi
   done | sort -r -n | head -1 | cut -d " " -f 2
 }
