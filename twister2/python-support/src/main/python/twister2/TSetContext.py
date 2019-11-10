@@ -1,4 +1,4 @@
-from twister2.data.DataObject import DataObject
+from twister2.data.DataPartition import DataPartition
 
 
 class TSetContext:
@@ -7,8 +7,7 @@ class TSetContext:
         self.__java_ref = java_ref
 
     def get_input(self, key):
-        data_object = self.__java_ref.getInput(key)
-        return DataObject(self.__java_ref.getInput(key))
+        return DataPartition(self.__java_ref.getInput(key))
 
     def get_index(self):
         return self.__java_ref.getIndex()

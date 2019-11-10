@@ -52,7 +52,9 @@ public final class ResourceSchedulerUtils {
     // now lets copy other files
     String dst = Paths.get(workingDirectory, jobName).toString();
     LOG.info(String.format("Downloading package %s to %s", jobPackageURI, dst));
-    if (!FileUtils.copyDirectory(jobPackageURI, dst)) {
+    try {
+      FileUtils.copyDirectory(jobPackageURI, dst);
+    } catch (IOException e) {
       LOG.severe(String.format("Failed to copy the file from "
           + "uploaded place %s to working directory %s", jobPackageURI, dst));
     }
