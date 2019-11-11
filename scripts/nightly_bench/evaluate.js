@@ -1,53 +1,61 @@
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
-
-const csv = require("csv-parse");
-const fs = require('fs');
-const axios = require('axios');
+const csv = require("csv-parse")
+const fs = require('fs')
+const axios = require('axios')
 
 var resultsReady = 0;
 
 const results = {};
 
-const twister2JobsDir = "";
-const googleScriptUrl = "";
+const jobsPath = "/N/u/cwidanage/.twister2/jobs";
+const googleScriptURL = "";
 
 const benchmarks = {
-    "comms_reduce": {
-        title: "Comms Reduce",
-        path: twister2JobsDir + "/edu.iu.dsc.tws.examples.comms.stream.SReduceExample/comms_reduce.csv"
+    "s_comms_reduce": {
+        title: "[STREAM] Comms Reduce",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.SReduceExample/comms_reduce.csv"
     },
-    "comms_bcast": {
-        title: "Comms Broadcast",
-        path: twister2JobsDir + "/edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample/comms_bcast.csv"
+    "s_comms_bcast": {
+        title: "[STREAM] Comms Broadcast",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.SBroadcastExample/comms_bcast.csv"
     },
-    "comms_all_gather": {
-        title: "Comms AllGather",
-        path: twister2JobsDir + "/edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample/comms_all_gather.csv"
+    "s_comms_all_gather": {
+        title: "[STREAM] Comms AllGather",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.SAllGatherExample/comms_all_gather.csv"
     },
-    "comms_all_reduce": {
-        title: "Comms AllReduce",
-        path: twister2JobsDir + "/edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample/comms_all_reduce.csv"
+    "s_comms_all_reduce": {
+        title: "[STREAM] Comms AllReduce",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.SAllReduceExample/comms_all_reduce.csv"
     },
-    "comms_gather": {
-        title: "Comms Gather",
-        path: +twister2JobsDir + "/edu.iu.dsc.tws.examples.comms.stream.SGatherExample/comms_gather.csv"
+    "s_comms_gather": {
+        title: "[STREAM] Comms Gather",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.SGatherExample/comms_gather.csv"
+    },
+    "b_comms_reduce": {
+        title: "[BATCH] Comms Reduce",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BReduceExample/comms_reduce.csv"
+    },
+    "b_comms_bcast": {
+        title: "[BATCH] Comms Broadcast",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BBroadcastExample/comms_bcast.csv"
+    },
+    "b_comms_all_gather": {
+        title: "[BATCH] Comms AllGather",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BAllGatherExample/comms_all_gather.csv"
+    },
+    "b_comms_all_reduce": {
+        title: "[BATCH] Comms AllReduce",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BAllReduceExample/comms_all_reduce.csv"
+    },
+    "b_comms_gather": {
+        title: "[BATCH] Comms Gather",
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BGatherExample/comms_gather.csv"
     }
 };
 
 function isReady() {
     if (++resultsReady == Object.keys(benchmarks).length) {
         //post
-        axios.post(googleScriptUrl,
+        axios.post(googleScriptURL,
             results).then(() => {
             console.log("Posted")
         }).catch(err => {
@@ -69,7 +77,7 @@ function process(bmId, bmObj) {
                 csv: fs.readFileSync(bmObj.path).toString(),
                 title: bmObj.title,
                 values: {}
-            };
+            }
 
             let dataSizeIndex = -1;
             let timeIndex = -1;
