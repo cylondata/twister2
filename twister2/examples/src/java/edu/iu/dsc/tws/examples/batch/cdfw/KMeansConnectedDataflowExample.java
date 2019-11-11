@@ -252,8 +252,11 @@ public final class KMeansConnectedDataflowExample {
           csize, instances, jobConfig);
 
       cdfwEnv.executeDataFlowGraph(job);
+
+      long startTime = System.currentTimeMillis();
       cdfwEnv.executeDataFlowGraph(job1);
       cdfwEnv.executeDataFlowGraph(job2);
+      long endTimeData = System.currentTimeMillis();
 
       for (int i = 0; i < iterations; i++) {
         DataFlowGraph job3 = generateThirdJob(config, parallelism, instances, iterations,
@@ -261,6 +264,10 @@ public final class KMeansConnectedDataflowExample {
         job3.setIterationNumber(i);
         cdfwEnv.executeDataFlowGraph(job3);
       }
+      long endTime = System.currentTimeMillis();
+      LOG.info("Total K-Means Execution Time: " + (endTime - startTime)
+          + "\tData Load time : " + (endTimeData - startTime)
+          + "\tCompute Time : " + (endTime - endTimeData));
 
       //Kubernetes scale up
       /*if (cdfwEnv.increaseWorkers(instances)) {
@@ -273,20 +280,6 @@ public final class KMeansConnectedDataflowExample {
       }*/
       cdfwEnv.close();
     }
-
-    /*public void generateData(Config config, String dataDirectory, String centroidDirectory,
-                             int dimension, int dsize, int csize) {
-      try {
-        int numOfFiles = 1;
-        int sizeMargin = 100;
-        KMeansDataGenerator.generateData("txt", new Path(dataDirectory), numOfFiles, dsize,
-            sizeMargin, dimension, config);
-        KMeansDataGenerator.generateData("txt", new Path(centroidDirectory), numOfFiles, csize,
-            sizeMargin, dimension, config);
-      } catch (IOException ioe) {
-        throw new Twister2RuntimeException("Failed to create input data:", ioe);
-      }
-    }*/
   }
 
   private static DataFlowGraph generateData(Config config, String dataDirectory,
