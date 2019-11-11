@@ -19,8 +19,6 @@ import java.util.Set;
  */
 public interface MutableGraph<T> extends Serializable {
 
-  boolean allowsSelfLoop = false;
-
   /**
    * Adds {@code node} if it is not already present.
    *
@@ -85,7 +83,7 @@ public interface MutableGraph<T> extends Serializable {
    * IllegalArgumentException}.
    */
   default boolean allowsSelfLoops() {
-    return allowsSelfLoop;
+    return false;
   }
 
   /**

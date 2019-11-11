@@ -25,12 +25,14 @@ import java.util.Set;
  */
 public class DAGMutableGraph<T> implements MutableGraph<T> {
 
-  final boolean directed;
-  Map<T, Set<T>> childList;
-  Map<T, Set<T>> parentList;
+  private final boolean directed;
+  private Map<T, Set<T>> childList;
+  private Map<T, Set<T>> parentList;
+  private boolean allowsSelfLoop;
 
-  public DAGMutableGraph(boolean isDirected) {
-    this.directed = isDirected;
+  public DAGMutableGraph() {
+    this.directed = true;
+    this.allowsSelfLoop = false;
     childList = new HashMap<>();
     parentList = new HashMap<>();
   }
@@ -143,5 +145,10 @@ public class DAGMutableGraph<T> implements MutableGraph<T> {
     }
 
     return false;
+  }
+
+  @Override
+  public boolean allowsSelfLoops() {
+    return allowsSelfLoop;
   }
 }
