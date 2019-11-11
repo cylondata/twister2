@@ -27,9 +27,9 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterRegistrar;
 import edu.iu.dsc.tws.master.JobMasterContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterRegistrar;
 
 public final class ZKJobMasterRegistrarExample {
   private static final Logger LOG = Logger.getLogger(ZKJobMasterRegistrarExample.class.getName());
@@ -90,7 +90,7 @@ public final class ZKJobMasterRegistrarExample {
    */
   public static Config buildConfig(String zkAddress, String jobName) {
     return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddress)
+        .put(ZKContext.SERVER_ADDRESSES, zkAddress)
         .put(Context.JOB_NAME, jobName)
         .build();
   }
