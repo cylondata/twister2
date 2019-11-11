@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.streaming.verifiers.GatherVerifier;
@@ -43,15 +43,15 @@ public class STAllGatherExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new AllGatherSinkTask();
+    ICompute r = new AllGatherSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, psource);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, psink);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, psink);
     computeConnection.allgather(SOURCE).viaEdge(edge).withDataType(dataType);
     return computeGraphBuilder;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class AllGatherSinkTask extends AllGatherCompute<int[]> implements ISink {
+  protected static class AllGatherSinkTask extends AllGatherCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     private ResultsVerifier<int[], Iterator<Tuple<Integer, int[]>>> resultsVerifier;

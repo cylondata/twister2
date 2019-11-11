@@ -76,6 +76,11 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
    */
   private KryoSerializer kryoSerializer;
 
+  /**
+   * Weather we are complete
+   */
+  private boolean complete = false;
+
   public DGatherBatchFinalReceiver(BulkReceiver bulkReceiver, String shuffleDir) {
     this.bulkReceiver = bulkReceiver;
     this.shuffleDirectory = shuffleDir;
@@ -192,11 +197,19 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
         batchDone.put(t, true);
         fsMerger.switchToReading();
         bulkReceiver.receive(t, fsMerger.readIterator());
-        // we can call on finish at this point
-        onFinish(t);
       }
     }
+
+    if (!needsFurtherProgress) {
+      complete = true;
+    }
+
     return needsFurtherProgress;
+  }
+
+  @Override
+  public boolean isComplete() {
+    return complete;
   }
 
   private String getOperationName(int target) {
@@ -209,10 +222,15 @@ public class DGatherBatchFinalReceiver implements MessageReceiver {
     for (Shuffle s : sortedMergers.values()) {
       s.clean();
     }
+    complete = false;
   }
 
   @Override
-  public void onSyncEvent(int target, byte[] value) {
+  public void clean() {
+    complete = false;
+  }
+
+  private void onSyncEvent(int target, byte[] value) {
     bulkReceiver.sync(target, value);
   }
 }

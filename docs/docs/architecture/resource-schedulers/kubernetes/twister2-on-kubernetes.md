@@ -401,5 +401,5 @@ We designed the YAML file templates for each dynamically created Kubernetes obje
 $kubectl create -f twister2-auth.yaml
 ```
 
-[**Secret Object**](https://github.com/DSC-SPIDAL/twister2/tree/88f9af0614b72b52c7544f9071b2b0e3e422b76d/docs/documentation/architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml): When using OpenMPI communications in Twister2, pods need to have password-free SSH access among them. This is accomplished by first generating an SSH key pair and deploying them as a Kubernetes Secret object on the cluster. Please check [the document](../../../deployment/kubernetes/twister2-kubernetes-install.md) for deploying the Secret object.
+[**Secret Object**](https://github.com/DSC-SPIDAL/twister2/tree/88f9af0614b72b52c7544f9071b2b0e3e422b76d/docs/documentation/architecture/resource-schedulers/kubernetes/yaml-templates/secret.yaml): When using OpenMPI communications in Twister2, pods need to have password-free SSH access among them. This is accomplished by first generating an SSH key pair and deploying them as a Kubernetes Secret object on the cluster. Please check [the document](../../../deployment/kubernetes/twister2-install-kubernetes.md) for deploying the Secret object.
 

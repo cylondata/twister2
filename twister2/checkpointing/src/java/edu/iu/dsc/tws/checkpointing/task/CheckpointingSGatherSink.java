@@ -19,11 +19,10 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.ICompute;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 
-public class CheckpointingSGatherSink implements ISink, ICompute<Iterator<Tuple<Integer, Long>>> {
+public class CheckpointingSGatherSink implements ICompute<Iterator<Tuple<Integer, Long>>> {
 
   private static final Logger LOG = Logger.getLogger(CheckpointingSGatherSink.class.getName());
 

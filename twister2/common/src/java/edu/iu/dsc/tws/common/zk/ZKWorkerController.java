@@ -124,16 +124,16 @@ public class ZKWorkerController extends ZKBaseController
    * create an ephemeral znode for this worker
    * set this worker info in the body of that node
    * worker status also goes into the body of that znode
-   * initialState has to be either: WorkerState.STARTING or WorkerState.RESTARTING
+   * initialState has to be either: WorkerState.STARTED or WorkerState.RESTARTED
    *
    * The body of the worker znode will be updated as the status of worker changes
    * from STARTING, RUNNING, COMPLETED
    */
   public void initialize(WorkerState initialState) throws Exception {
 
-    if (!(initialState == WorkerState.STARTING || initialState == WorkerState.RESTARTING)) {
-      throw new Exception("initialState has to be either WorkerState.STARTING or "
-          + "WorkerState.RESTARTING. Supplied value: " + initialState);
+    if (!(initialState == WorkerState.STARTED || initialState == WorkerState.RESTARTED)) {
+      throw new Exception("initialState has to be either WorkerState.STARTED or "
+          + "WorkerState.RESTARTED. Supplied value: " + initialState);
     }
 
     try {
@@ -204,6 +204,11 @@ public class ZKWorkerController extends ZKBaseController
    */
   private void createWorkerZnode(WorkerState initialState) {
     String workerPath = ZKUtils.constructWorkerPath(jobPath, workerInfo.getWorkerID());
+
+    if (initialState == WorkerState.RESTARTED) {
+      // TODO: check whether a znode for this worker exists in the server
+      //  if so, delete it first
+    }
 
     // put WorkerInfo and its state into znode body
     byte[] workerZnodeBody = ZKUtils.encodeWorkerZnode(workerInfo, initialState.getNumber());

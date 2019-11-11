@@ -79,7 +79,8 @@ public class BReduceExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return reduce.progress();
+    reduce.progress();
+    return !reduce.isComplete();
   }
 
   @Override

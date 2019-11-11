@@ -20,7 +20,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
@@ -44,9 +44,9 @@ public class BTDirectExample extends BenchTaskWorker {
     MessageType dataType = MessageTypes.INTEGER_ARRAY;
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new PartitionSinkTask();
+    ICompute r = new PartitionSinkTask();
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.direct(SOURCE)
         .viaEdge(edge)
         .withDataType(dataType);
@@ -54,7 +54,7 @@ public class BTDirectExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class PartitionSinkTask extends BPartitionCompute<int[]> implements ISink {
+  protected static class PartitionSinkTask extends BPartitionCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     private ResultsVerifier<int[], Iterator<int[]>> resultsVerifier;

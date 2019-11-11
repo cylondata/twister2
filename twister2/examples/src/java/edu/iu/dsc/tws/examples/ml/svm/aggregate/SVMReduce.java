@@ -18,11 +18,11 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.dataset.DataPartition;
 import edu.iu.dsc.tws.dataset.partition.EntityPartition;
 
-public class SVMReduce extends BaseSink implements Collector {
+public class SVMReduce extends BaseCompute implements Collector {
 
   private static final long serialVersionUID = -254264120110286748L;
 

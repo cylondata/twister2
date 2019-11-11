@@ -47,7 +47,7 @@ public class GatherStreamingFinalReceiver extends GatherStreamingPartialReceiver
     }
   }
 
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
+  protected boolean sendSyncForward(int target) {
     return false;
   }
 

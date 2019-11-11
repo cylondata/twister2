@@ -329,9 +329,9 @@ public class MToNSimple implements DataFlowOperation, ChannelReceiver {
 
   public boolean isComplete() {
     boolean done = delegete.isComplete();
-    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+    boolean complete = OperationUtils.areReceiversComplete(lock, finalReceiver,
         partialLock, partialReceiver);
-    return done && !needsFurtherProgress;
+    return done && complete;
   }
 
   public boolean isDelegateComplete() {

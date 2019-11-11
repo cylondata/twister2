@@ -56,7 +56,7 @@ public class BBroadcastExample extends BenchWorker {
 
     // create the communication
     bcast = new BBroadcast(workerEnv.getCommunicator(), logicalPlanBuilder,
-        new BCastReceiver(), MessageTypes.INTEGER_ARRAY);
+        new BCastReceiver(), MessageTypes.INTEGER_ARRAY, true);
 
     Set<Integer> tasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
     for (int t : tasksOfExecutor) {
@@ -85,7 +85,8 @@ public class BBroadcastExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return bcast.progress();
+    bcast.progress();
+    return !bcast.isComplete();
   }
 
   protected void finishCommunication(int src) {

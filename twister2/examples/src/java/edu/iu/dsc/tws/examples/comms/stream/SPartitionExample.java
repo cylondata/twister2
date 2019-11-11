@@ -12,7 +12,6 @@
 package edu.iu.dsc.tws.examples.comms.stream;
 
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.comms.SingularReceiver;
@@ -38,8 +37,6 @@ public class SPartitionExample extends BenchWorker {
   private static final Logger LOG = Logger.getLogger(SPartitionExample.class.getName());
 
   private SPartition partition;
-
-  private boolean partitionDone = false;
 
   private ResultsVerifier<int[], int[]> resultsVerifier;
 
@@ -77,12 +74,18 @@ public class SPartitionExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return partition.progress();
+    partition.progress();
+    return !partition.isComplete();
   }
 
   @Override
   protected boolean isDone() {
-    return partitionDone && sourcesDone && partition.isComplete();
+    return sourcesDone && partition.isComplete();
+  }
+
+  @Override
+  public void close() {
+    partition.close();
   }
 
   @Override
@@ -114,21 +117,20 @@ public class SPartitionExample extends BenchWorker {
     @Override
     public boolean receive(int target, Object it) {
       count += 1;
-      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
-          workerId, target, count, expected));
+//      LOG.log(Level.INFO, String.format("%d Received message %d count %d expected %d",
+//          workerId, target, count, expected));
       //Since this is a streaming example we will simply stop after a number of messages are
       // received
+      if (count >= expectedWarmups) {
+        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == recvrInWorker0);
+      }
+
       if (count >= expected) {
         Timing.mark(TIMING_ALL_RECV, workerId == 0
             && target == recvrInWorker0);
         BenchmarkUtils.markTotalAndAverageTime(resultsRecorder, workerId == 0
             && target == recvrInWorker0);
         resultsRecorder.writeToCSV();
-        partitionDone = true;
-      }
-
-      if (count >= expectedWarmups) {
-        Timing.mark(TIMING_MESSAGE_RECV, workerId == 0 && target == recvrInWorker0);
       }
 
       verifyResults(resultsVerifier, it, null);
@@ -139,5 +141,6 @@ public class SPartitionExample extends BenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
+    partition.finish(src);
   }
 }

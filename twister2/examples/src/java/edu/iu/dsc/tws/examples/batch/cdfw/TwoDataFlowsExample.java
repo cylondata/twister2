@@ -146,7 +146,7 @@ public final class TwoDataFlowsExample {
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", firstSourceTask, parallelism);
-    ComputeConnection partitionConnection = graphBuilderX.addSink("sink1", connectedSink,
+    ComputeConnection partitionConnection = graphBuilderX.addCompute("sink1", connectedSink,
         parallelism);
     partitionConnection.partition("source1")
         .viaEdge("partition")
@@ -169,7 +169,7 @@ public final class TwoDataFlowsExample {
 
     ComputeGraphBuilder graphBuilderX = ComputeGraphBuilder.newBuilder(config);
     graphBuilderX.addSource("source1", connectedSource, parallelism);
-    ComputeConnection reduceConn = graphBuilderX.addSink("sink1", connectedSink, 1);
+    ComputeConnection reduceConn = graphBuilderX.addCompute("sink1", connectedSink, 1);
     reduceConn.reduce("source1")
         .viaEdge("reduce")
         .withReductionFunction(new Aggregator())

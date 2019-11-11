@@ -179,8 +179,10 @@ public class ResourceAllocator {
       }
       LOG.log(Level.INFO, String.format("Copy core package: %s to %s",
           twister2CorePackage, tempDirPathString));
-      if (!FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString)) {
-        throw new RuntimeException("Failed to copy the core package");
+      try {
+        FileUtils.copyFileToDirectory(twister2CorePackage, tempDirPathString);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to copy the core package", e);
       }
     }
 

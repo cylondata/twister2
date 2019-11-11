@@ -27,7 +27,7 @@ import edu.iu.dsc.tws.api.comms.structs.Tuple;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.TaskPartitioner;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.compute.schedule.elements.TaskInstancePlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.comms.utils.JoinUtils;
@@ -58,10 +58,10 @@ public class BTJoinExample extends BenchTaskWorker {
 
 
     BaseSource g = new JoinSource();
-    ISink r = new JoinSinkTask();
+    ICompute r = new JoinSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.innerJoin(SOURCE, SOURCE)
         .viaLeftEdge(LEFT_EDGE)
         .viaRightEdge(RIGHT_EDGE)
@@ -91,7 +91,7 @@ public class BTJoinExample extends BenchTaskWorker {
   }
 
   protected static class JoinSinkTask
-      extends BJoinCompute<Integer, int[], int[]> implements ISink {
+      extends BJoinCompute<Integer, int[], int[]> {
 
     private static final long serialVersionUID = -254264903510284798L;
 

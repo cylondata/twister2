@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.comms.messaging.types.MessageType;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.comms.packing.MessageSchema;
 import edu.iu.dsc.tws.api.comms.structs.Tuple;
-import edu.iu.dsc.tws.comms.dfw.MToNRing2;
+import edu.iu.dsc.tws.comms.dfw.MToNChain;
 import edu.iu.dsc.tws.comms.dfw.MToNSimple;
 import edu.iu.dsc.tws.comms.dfw.io.gather.keyed.KGatherBatchFinalReceiver;
 import edu.iu.dsc.tws.comms.dfw.io.partition.DPartitionBatchFinalReceiver;
@@ -152,7 +152,7 @@ public class BKeyedGather extends BaseOperation {
       this.simple = true;
     } else if (CommunicationContext.ALLTOALL_ALGO_RING.equals(
         CommunicationContext.partitionAlgorithm(comm.getConfig()))) {
-      op = new MToNRing2(comm.getConfig(), comm.getChannel(),
+      op = new MToNChain(comm.getConfig(), comm.getChannel(),
           plan, sources, destinations, finalReceiver, partialReceiver,
           dataType, receiveDataType, keyType, keyType, edgeId, messageSchema);
       this.simple = false;

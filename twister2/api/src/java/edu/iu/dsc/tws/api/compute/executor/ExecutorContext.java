@@ -9,18 +9,6 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
-//
-//  http://www.apache.org/licenses/LICENSE-2.0
-//
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//  limitations under the License.
 package edu.iu.dsc.tws.api.compute.executor;
 
 import edu.iu.dsc.tws.api.config.Config;
@@ -34,10 +22,17 @@ public class ExecutorContext extends Context {
   public static final String INSTANCE_QUEUE_HIGH_WATERMARK =
       "twister2.exector.instance.queue.high.watermark";
   public static final String BATCH_EXECUTOR = "twister2.executor.batch.name";
+  public static final String STREAM_EXECUTOR = "twister2.executor.stream.name";
   public static final String BATCH_EXECUTOR_SHARING_SEP_COMM
       = "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor";
   public static final String BATCH_EXECUTOR_SHARING
       = "edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2";
+
+  public static final String STREAM_EXECUTOR_ALL_SHARING =
+      "edu.iu.dsc.tws.executor.threading.StreamingAllSharingExecutor";
+  public static final String STREAM_EXECUTOR_DEDICATED_COMM =
+      "edu.iu.dsc.tws.executor.threading.StreamingSharingExecutor";
+
 
   public static final String TWISTER2_RUNTIME_OBJECT = "_twister2.runtime_";
 
@@ -55,5 +50,9 @@ public class ExecutorContext extends Context {
 
   public static String getBatchExecutor(Config cfg) {
     return cfg.getStringValue(BATCH_EXECUTOR, BATCH_EXECUTOR_SHARING_SEP_COMM);
+  }
+
+  public static String getStreamExecutor(Config cfg) {
+    return cfg.getStringValue(STREAM_EXECUTOR, STREAM_EXECUTOR_DEDICATED_COMM);
   }
 }

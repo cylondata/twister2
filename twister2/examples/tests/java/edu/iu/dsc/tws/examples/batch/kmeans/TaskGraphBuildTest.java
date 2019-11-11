@@ -21,7 +21,6 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
@@ -65,7 +64,7 @@ public class TaskGraphBuildTest {
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withDataType(MessageTypes.OBJECT);
-    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
+    ComputeConnection rc = computeGraphBuilder.addCompute("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(TaskConfigurations.DEFAULT_EDGE)
         .withReductionFunction(new Aggregator())
@@ -86,7 +85,7 @@ public class TaskGraphBuildTest {
         "compute", testCompute, 4);
     computeConnection.partition("source").viaEdge(edgeName)
         .withDataType(MessageTypes.OBJECT);
-    ComputeConnection rc = computeGraphBuilder.addSink("sink", testSink, 1);
+    ComputeConnection rc = computeGraphBuilder.addCompute("sink", testSink, 1);
     rc.allreduce("compute")
         .viaEdge(edgeName)
         .withReductionFunction(new Aggregator())
@@ -126,7 +125,7 @@ public class TaskGraphBuildTest {
     }
   }
 
-  public static class TestSink2 extends BaseSink {
+  public static class TestSink2 extends BaseCompute {
     private static final long serialVersionUID = -254264903510284748L;
 
     @Override

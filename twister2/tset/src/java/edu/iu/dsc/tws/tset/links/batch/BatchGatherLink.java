@@ -25,7 +25,9 @@ import edu.iu.dsc.tws.tset.fn.GatherForEachCompute;
 import edu.iu.dsc.tws.tset.fn.GatherMapCompute;
 import edu.iu.dsc.tws.tset.sets.batch.CachedTSet;
 import edu.iu.dsc.tws.tset.sets.batch.ComputeTSet;
-import edu.iu.dsc.tws.tset.sinks.GatherCacheSink;
+import edu.iu.dsc.tws.tset.sets.batch.PersistedTSet;
+import edu.iu.dsc.tws.tset.sinks.CacheGatherSink;
+import edu.iu.dsc.tws.tset.sinks.DiskPersistGatherSink;
 
 /**
  * This is the Tlinks used by gather operations. Specific operations such as map, flatmap, cache,
@@ -83,25 +85,32 @@ computeWithoutKey(Compute<P, Iterator<T>> computeFunction) {
   }
 
   @Override
-  public CachedTSet<T> cache() {
-    CachedTSet<T> cacheTSet = lazyCache();
-    getTSetEnv().run(cacheTSet);
-//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-//    cacheTSet.setData(output);
-
+  public CachedTSet<T> lazyCache() {
+    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new CacheGatherSink<T>(),
+        getTargetParallelism());
+    addChildToGraph(cacheTSet);
     return cacheTSet;
   }
 
   @Override
-  public CachedTSet<T> lazyCache() {
-    CachedTSet<T> cacheTSet = new CachedTSet<>(getTSetEnv(), new GatherCacheSink<T>(),
-        getTargetParallelism());
-    addChildToGraph(cacheTSet);
-
-//    DataObject<T> output = getTSetEnv().runAndGet(cacheTSet);
-//    cacheTSet.setData(output);
-
+  public CachedTSet<T> cache() {
+    CachedTSet<T> cacheTSet = lazyCache();
+    getTSetEnv().run(cacheTSet);
     return cacheTSet;
   }
 
+  @Override
+  public PersistedTSet<T> lazyPersist() {
+    PersistedTSet<T> persistedTSet = new PersistedTSet<>(getTSetEnv(),
+        new DiskPersistGatherSink<>(), getTargetParallelism());
+    addChildToGraph(persistedTSet);
+    return persistedTSet;
+  }
+
+  @Override
+  public PersistedTSet<T> persist() {
+    PersistedTSet<T> persistedTSet = lazyPersist();
+    getTSetEnv().run(persistedTSet);
+    return persistedTSet;
+  }
 }

@@ -56,11 +56,11 @@ public class SDirectExample extends BenchWorker {
     for (int taskId : targetTasksOfExecutor) {
       if (logicalPlanBuilder.getTargets().contains(taskId)) {
         directDone = false;
-
-        if (workerId == 0) {
-          receiverInWorker0 = taskId;
-        }
       }
+    }
+
+    if (workerId == 0) {
+      receiverInWorker0 = targetTasksOfExecutor.iterator().next();
     }
 
     Set<Integer> sourceTasksOfExecutor = logicalPlanBuilder.getSourcesOnThisWorker();
@@ -78,7 +78,8 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return direct.progress();
+    direct.progress();
+    return !direct.isComplete();
   }
 
   @Override
@@ -135,5 +136,11 @@ public class SDirectExample extends BenchWorker {
 
   @Override
   protected void finishCommunication(int src) {
+    direct.finish(src);
+  }
+
+  @Override
+  public void close() {
+    direct.close();
   }
 }

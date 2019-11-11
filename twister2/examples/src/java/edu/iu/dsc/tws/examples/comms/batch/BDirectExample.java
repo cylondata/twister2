@@ -67,7 +67,7 @@ public class BDirectExample extends BenchWorker {
 
     // create the communication
     direct = new BDirect(workerEnv.getCommunicator(), logicalPlanBuilder,
-        new DirectReceiver(), MessageTypes.INTEGER_ARRAY);
+        new DirectReceiver(), MessageTypes.INTEGER_ARRAY, false);
 
 
     resultsVerifier = new ResultsVerifier<>(inputDataArray, (ints, args) -> {
@@ -104,7 +104,8 @@ public class BDirectExample extends BenchWorker {
 
   @Override
   protected boolean progressCommunication() {
-    return direct.progress();
+    direct.progress();
+    return !direct.isComplete();
   }
 
   @Override

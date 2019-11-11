@@ -47,7 +47,7 @@ public class TaskWorkerDataLoader extends TaskWorker {
         dataSource);
     DataObjectSink sinkTask = new DataObjectSink();
     computeGraphBuilder.addSource("datapointsource", sourceTask, parallelism);
-    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addSink(
+    ComputeConnection firstGraphComputeConnection = computeGraphBuilder.addCompute(
         "datapointsink", sinkTask, parallelism);
 
     firstGraphComputeConnection.direct("datapointsource")

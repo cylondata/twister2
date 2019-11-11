@@ -211,7 +211,7 @@ public class DataLocalityBatchTaskSchedulerTest {
 
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     sinkConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -229,7 +229,7 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraphBuilder computeGraphBuilder =
         ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     computeGraphBuilder.addSource("source", testSource, parallel);
-    ComputeConnection computeConnection = computeGraphBuilder.addSink("sink", testSink,
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute("sink", testSink,
         parallel);
     computeConnection.direct("source")
         .viaEdge("direct-edge")
@@ -250,7 +250,7 @@ public class DataLocalityBatchTaskSchedulerTest {
     ComputeGraphBuilder builder = ComputeGraphBuilder.newBuilder(Config.newBuilder().build());
     builder.addSource("source", testSource, parallel);
     ComputeConnection computeConnection = builder.addCompute("compute", testCompute, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     computeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)
@@ -281,7 +281,7 @@ public class DataLocalityBatchTaskSchedulerTest {
         = builder.addCompute("firstcompute", firstTestCompute, parallel);
     ComputeConnection secondComputeConnection
         = builder.addCompute("secondcompute", secondTestCompute, parallel);
-    ComputeConnection sinkConnection = builder.addSink("sink", testSink, parallel);
+    ComputeConnection sinkConnection = builder.addCompute("sink", testSink, parallel);
 
     firstComputeConnection.direct("source")
         .viaEdge(Context.TWISTER2_DIRECT_EDGE)

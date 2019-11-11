@@ -40,13 +40,25 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 public class BatchSharingExecutor2 implements IExecutor {
   private static final Logger LOG = Logger.getLogger(BatchSharingExecutor2.class.getName());
 
-  protected int numThreads;
+  /**
+   * Number of threads to use
+   */
+  private int numThreads;
 
-  protected ExecutorService threads;
+  /**
+   * Number of threads
+   */
+  private ExecutorService threads;
 
-  protected TWSChannel channel;
+  /**
+   * Channel
+   */
+  private TWSChannel channel;
 
-  protected Config config;
+  /**
+   * The configuration
+   */
+  private Config config;
 
   // keep track of finished executions
   private AtomicInteger finishedInstances = new AtomicInteger(0);
@@ -61,7 +73,7 @@ public class BatchSharingExecutor2 implements IExecutor {
   private boolean cleanUpCalled = false;
 
   /**
-   * Wait for threads to finsih
+   * Wait for threads to finish
    */
   private CountDownLatch doneSignal;
 
@@ -365,6 +377,9 @@ public class BatchSharingExecutor2 implements IExecutor {
   }
 
   private class BatchExecution implements IExecution {
+    /**
+     * Keep the node map
+     */
     private Map<Integer, INodeInstance> nodeMap;
 
     private ExecutionPlan executionPlan;

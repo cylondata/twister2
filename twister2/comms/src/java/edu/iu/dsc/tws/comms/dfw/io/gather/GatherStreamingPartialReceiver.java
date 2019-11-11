@@ -94,12 +94,17 @@ public class GatherStreamingPartialReceiver extends SourceReceiver {
   }
 
   @Override
-  protected boolean sendSyncForward(boolean needsFurtherProgress, int target) {
-    return DFWIOUtils.sendSyncForward(needsFurtherProgress, target, syncState,
+  protected boolean sendSyncForward(int target) {
+    return DFWIOUtils.sendSyncForward(target, syncState,
         barriers, operation, isSyncSent);
   }
 
   protected boolean handleMessage(int task, Object message, int flags, int dest) {
     return operation.sendPartial(task, message, flags, dest);
+  }
+
+  @Override
+  protected void onSyncEvent(int target, byte[] value) {
+
   }
 }

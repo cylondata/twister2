@@ -22,7 +22,7 @@ import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
-import edu.iu.dsc.tws.api.compute.nodes.BaseSink;
+import edu.iu.dsc.tws.api.compute.nodes.BaseCompute;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
 import edu.iu.dsc.tws.api.dataset.DataObject;
 import edu.iu.dsc.tws.data.utils.MLDataObjectConstants;
@@ -72,7 +72,7 @@ public class SourceTaskDataLoader extends TaskWorker {
     DataSourceTask kMeansSourceTask = new DataSourceTask();
     SimpleDataAllReduceTask kMeansAllReduceTask = new SimpleDataAllReduceTask();
     computeGraphBuilder.addSource("kmeanssource", kMeansSourceTask, parallelism);
-    ComputeConnection computeConnection = computeGraphBuilder.addSink(
+    ComputeConnection computeConnection = computeGraphBuilder.addCompute(
         "kmeanssink", kMeansAllReduceTask, parallelism);
     computeConnection.allreduce("kmeanssource")
         .viaEdge("all-reduce")
@@ -100,7 +100,7 @@ public class SourceTaskDataLoader extends TaskWorker {
     dataSource = config.getStringValue(MLDataObjectConstants.TRAINING_DATA_DIR, "");
   }
 
-  private static class SimpleDataAllReduceTask extends BaseSink {
+  private static class SimpleDataAllReduceTask extends BaseCompute {
 
     private static final long serialVersionUID = 5705351508072337994L;
 

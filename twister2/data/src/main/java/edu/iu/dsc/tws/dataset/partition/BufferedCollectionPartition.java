@@ -38,12 +38,12 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 public abstract class BufferedCollectionPartition<T> extends CollectionPartition<T>
     implements Closeable {
 
-  private static final int DEFAULT_MAX_BUFFERED_BYTES = 10000000;
+  private static final long DEFAULT_MAX_BUFFERED_BYTES = 10000000;
   private static final MessageType DEFAULT_DATA_TYPE = MessageTypes.OBJECT;
 
   private static final String EXTENSION = ".pbck";
 
-  private int maxFramesInMemory;
+  private long maxFramesInMemory;
   private MessageType dataType;
 
   private List<Path> filesList = new ArrayList<>();
@@ -65,8 +65,8 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param dataType {@link MessageType} of data frames
    * @param bufferedBytes amount to buffer in memory before writing to the disk
    */
-  public BufferedCollectionPartition(int maxFramesInMemory, MessageType dataType,
-                                     int bufferedBytes, Config config, String reference) {
+  public BufferedCollectionPartition(long maxFramesInMemory, MessageType dataType,
+                                     long bufferedBytes, Config config, String reference) {
     super();
     this.reference = reference;
     this.maxFramesInMemory = maxFramesInMemory;
@@ -90,7 +90,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    *
    * @param maxFramesInMemory No of frames(elements) to keep in memory
    */
-  public BufferedCollectionPartition(int maxFramesInMemory, Config config) {
+  public BufferedCollectionPartition(long maxFramesInMemory, Config config) {
     this(maxFramesInMemory, DEFAULT_DATA_TYPE, DEFAULT_MAX_BUFFERED_BYTES,
         config, UUID.randomUUID().toString());
   }
@@ -101,7 +101,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param maxFramesInMemory No of frames(elements) to keep in memory
    * @param dataType {@link MessageType} of data frames
    */
-  public BufferedCollectionPartition(int maxFramesInMemory,
+  public BufferedCollectionPartition(long maxFramesInMemory,
                                      MessageType dataType, Config config) {
     this(maxFramesInMemory, dataType, DEFAULT_MAX_BUFFERED_BYTES, config,
         UUID.randomUUID().toString());
@@ -114,7 +114,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param bufferedBytes amount to buffer in memory before writing to the disk
    */
   public BufferedCollectionPartition(MessageType dataType,
-                                     int bufferedBytes, Config config) {
+                                     long bufferedBytes, Config config) {
     this(0, dataType, bufferedBytes, config, UUID.randomUUID().toString());
   }
 
@@ -127,7 +127,7 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
    * @param reference Partition reference
    */
   public BufferedCollectionPartition(MessageType dataType,
-                                     int bufferedBytes, Config config, String reference) {
+                                     long bufferedBytes, Config config, String reference) {
     this(0, dataType, bufferedBytes, config, reference);
     this.loadFromFS();
   }
@@ -204,8 +204,8 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
           Path nextFile = fileIterator.next();
           try {
             DataInputStream reader = new DataInputStream(fileSystem.open(nextFile));
-            int noOfFrames = reader.readInt();
-            for (int i = 0; i < noOfFrames; i++) {
+            long noOfFrames = reader.readLong();
+            for (long i = 0; i < noOfFrames; i++) {
               int size = reader.readInt();
               byte[] data = new byte[size];
               reader.read(data);
@@ -244,9 +244,9 @@ public abstract class BufferedCollectionPartition<T> extends CollectionPartition
   }
 
   public void flush() {
-    Path filePath = new Path(this.rootPath, String.valueOf(this.fileCounter++) + EXTENSION);
+    Path filePath = new Path(this.rootPath, (this.fileCounter++) + EXTENSION);
     try (DataOutputStream outputStream = new DataOutputStream(this.fileSystem.create(filePath))) {
-      outputStream.writeInt(this.buffers.size());
+      outputStream.writeLong(this.buffers.size());
       while (!this.buffers.isEmpty()) {
         byte[] next = this.buffers.poll();
         outputStream.writeInt(next.length);

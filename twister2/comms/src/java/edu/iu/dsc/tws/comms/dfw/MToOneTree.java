@@ -256,13 +256,17 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
         partialSendRoutingParameters(source, target));
   }
 
-
   /**
    * Initialize
    */
-  public void init(Config cfg, MessageType t, LogicalPlan logicalPlan, int edge) {
+  public void init(Config cfg, MessageType dType, MessageType rcvDType,
+                   MessageType kType, MessageType rcvKType,
+                   LogicalPlan logicalPlan, int edge) {
     this.instancePlan = logicalPlan;
-    this.dataType = t;
+
+    this.dataType = dType;
+    this.keyType = kType;
+
     int workerId = instancePlan.getThisWorker();
     this.edgeValue = edge;
 
@@ -319,10 +323,18 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
       partialSendRoutingParameters(s, pathToUse);
     }
 
-    delegete.init(cfg, t, t, keyType, keyType, logicalPlan, edge,
+    delegete.init(cfg, dType, rcvDType, kType, rcvKType, logicalPlan, edge,
         router.receivingExecutors(), this,
         pendingSendMessagesPerSource, pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, isKeyed);
+  }
+
+
+  /**
+   * Initialize
+   */
+  public void init(Config cfg, MessageType t, LogicalPlan logicalPlan, int edge) {
+    this.init(cfg, t, t, this.keyType, this.keyType, logicalPlan, edge);
   }
 
   @Override
@@ -348,9 +360,9 @@ public class MToOneTree implements DataFlowOperation, ChannelReceiver {
   @Override
   public boolean isComplete() {
     boolean done = delegete.isComplete();
-    boolean needsFurtherProgress = OperationUtils.progressReceivers(delegete, lock, finalReceiver,
+    boolean complete = OperationUtils.areReceiversComplete(lock, finalReceiver,
         partialLock, partialReceiver);
-    return done && !needsFurtherProgress;
+    return done && complete;
   }
 
   @Override

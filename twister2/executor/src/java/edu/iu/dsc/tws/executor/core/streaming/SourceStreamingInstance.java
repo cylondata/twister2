@@ -148,8 +148,14 @@ public class SourceStreamingInstance implements INodeInstance {
    */
   private String[] outEdgeArray;
 
+  /**
+   * The task context implementation
+   */
   private TaskContextImpl taskContext;
 
+  /**
+   * Keep track of checkpoints
+   */
   private PendingCheckpoint pendingCheckpoint;
 
   public SourceStreamingInstance(ISource streamingTask, BlockingQueue<IMessage> outStreamingQueue,
@@ -240,6 +246,8 @@ public class SourceStreamingInstance implements INodeInstance {
         this.scheduleCheckpoint(checkpointVersion++);
       }
     }
+    // we start with setting nothing to execute true
+    boolean nothingToProcess = true;
     // now check the output queue
     while (!outStreamingQueue.isEmpty()) {
       IMessage message = outStreamingQueue.peek();
@@ -253,6 +261,7 @@ public class SourceStreamingInstance implements INodeInstance {
             : op.send(globalTaskId, message, message.getFlag())) {
           outStreamingQueue.poll();
         } else {
+          nothingToProcess = false;
           // we need to break
           break;
         }
@@ -262,7 +271,10 @@ public class SourceStreamingInstance implements INodeInstance {
     }
 
     for (int i = 0; i < outOpArray.length; i++) {
-      outOpArray[i].progress();
+      boolean needProgress = outOpArray[i].progress();
+      if (needProgress) {
+        nothingToProcess = false;
+      }
     }
 
     if (this.checkpointable && outStreamingQueue.isEmpty() && this.pendingCheckpoint.isPending()) {
@@ -272,9 +284,10 @@ public class SourceStreamingInstance implements INodeInstance {
             .onCheckpointPropagated(this.snapshot);
         this.scheduleBarriers(barrier);
         taskContext.write(CheckpointingSGatherSink.FT_GATHER_EDGE, barrier);
+        nothingToProcess = false;
       }
     }
-    return true;
+    return !nothingToProcess;
   }
 
   @Override

@@ -100,7 +100,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   /**
    * Message type
    */
-  private MessageType type;
+  private MessageType sendType;
+
+  private MessageType recvType;
 
   /**
    * Keep sources as a set to return
@@ -135,7 +137,8 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
 
   public OneToOne(TWSChannel channel,
                   List<Integer> src, List<Integer> target,
-                  MessageReceiver finalRcvr, Config cfg, MessageType t,
+                  MessageReceiver finalRcvr, Config cfg, MessageType dataType,
+                  MessageType recvDataType,
                   LogicalPlan plan, int edge, MessageSchema messageSchema) {
     this.sources = src;
     this.targets = target;
@@ -147,7 +150,8 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     this.logicalPlan = plan;
     this.router = new DirectRouter(plan, sources, targets);
     this.config = cfg;
-    this.type = t;
+    this.sendType = dataType;
+    this.recvType = recvDataType;
     this.sourceSet = new HashSet<>(sources);
     this.targetSet = new HashSet<>(target);
     this.pendingFinishSources = new HashSet<>();
@@ -157,6 +161,13 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       sourcesToDestinations.put(sources.get(i), target.get(i));
     }
     init();
+  }
+
+  public OneToOne(TWSChannel channel,
+                  List<Integer> src, List<Integer> target,
+                  MessageReceiver finalRcvr, Config cfg, MessageType dataType,
+                  LogicalPlan plan, int edge, MessageSchema messageSchema) {
+    this(channel, src, target, finalRcvr, cfg, dataType, dataType, plan, edge, messageSchema);
   }
 
   @Override
@@ -215,7 +226,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     // initialize the final receiver
     this.finalReceiver.init(config, this, receiveExpectedTaskIds());
 
-    delegate.init(config, type, logicalPlan, edgeValue, router.receivingExecutors(),
+    delegate.init(config, sendType, recvType, logicalPlan, edgeValue, router.receivingExecutors(),
         this, pendingSendMessagesPerSource,
         pendingReceiveMessagesPerSource,
         pendingReceiveDeSerializations, serializerMap, deSerializerMap, false);
@@ -245,7 +256,6 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
   public boolean progress() {
     boolean partialNeedsProgress = false;
     boolean needFinishProgress = true;
-    boolean done;
     try {
       // lets send the finished one
       if (lock.tryLock()) {
@@ -257,7 +267,6 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       }
 
       delegate.progress();
-      done = delegate.isComplete();
       if (lock.tryLock()) {
         try {
           partialNeedsProgress = finalReceiver.progress();
@@ -269,7 +278,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
       LOG.log(Level.SEVERE, "un-expected error", t);
       throw new RuntimeException(t);
     }
-    return partialNeedsProgress || !done || needFinishProgress;
+    return partialNeedsProgress || needFinishProgress;
   }
 
   private boolean handleFinish() {
@@ -297,9 +306,9 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
     if (lock.tryLock()) {
       boolean done = delegate.isComplete();
       try {
-        boolean needsFurtherProgress = finalReceiver.progress();
+        boolean complete = finalReceiver.isComplete();
         boolean needFinishProgress = handleFinish();
-        return done && !needsFurtherProgress && !needFinishProgress;
+        return done && complete && !needFinishProgress;
       } finally {
         lock.unlock();
       }
@@ -393,7 +402,7 @@ public class OneToOne implements DataFlowOperation, ChannelReceiver {
 
   @Override
   public MessageType getDataType() {
-    return type;
+    return sendType;
   }
 
   public Set<Integer> getSources() {

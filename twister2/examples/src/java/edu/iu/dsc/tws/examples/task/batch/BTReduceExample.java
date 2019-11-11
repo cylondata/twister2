@@ -18,7 +18,7 @@ import edu.iu.dsc.tws.api.comms.Op;
 import edu.iu.dsc.tws.api.comms.messaging.types.MessageTypes;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.nodes.BaseSource;
-import edu.iu.dsc.tws.api.compute.nodes.ISink;
+import edu.iu.dsc.tws.api.compute.nodes.ICompute;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.examples.task.BenchTaskWorker;
 import edu.iu.dsc.tws.examples.task.batch.verifiers.ReduceVerifier;
@@ -40,10 +40,10 @@ public class BTReduceExample extends BenchTaskWorker {
 
     String edge = "edge";
     BaseSource g = new SourceTask(edge);
-    ISink r = new ReduceSinkTask();
+    ICompute r = new ReduceSinkTask();
 
     computeGraphBuilder.addSource(SOURCE, g, sourceParallelism);
-    computeConnection = computeGraphBuilder.addSink(SINK, r, sinkParallelism);
+    computeConnection = computeGraphBuilder.addCompute(SINK, r, sinkParallelism);
     computeConnection.reduce(SOURCE)
         .viaEdge(edge)
         .withOperation(Op.SUM, MessageTypes.INTEGER_ARRAY);
@@ -51,7 +51,7 @@ public class BTReduceExample extends BenchTaskWorker {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  protected static class ReduceSinkTask extends ReduceCompute<int[]> implements ISink {
+  protected static class ReduceSinkTask extends ReduceCompute<int[]> {
     private static final long serialVersionUID = -254264903510284798L;
 
     private boolean timingCondition;

@@ -94,31 +94,16 @@ public final class FileUtils {
     return true;
   }
 
-  public static boolean copyDirectoryToDirectory(String src, String dst) {
-    try {
-      org.apache.commons.io.FileUtils.copyDirectoryToDirectory(new File(src), new File(dst));
-    } catch (IOException e) {
-      return false;
-    }
-    return true;
+  public static void copyDirectoryToDirectory(String src, String dst) throws IOException {
+    org.apache.commons.io.FileUtils.copyDirectoryToDirectory(new File(src), new File(dst));
   }
 
-  public static boolean copyFileToDirectory(String src, String dstFolder) {
-    try {
-      org.apache.commons.io.FileUtils.copyFileToDirectory(new File(src), new File(dstFolder));
-    } catch (IOException e) {
-      return false;
-    }
-    return true;
+  public static void copyFileToDirectory(String src, String dstFolder) throws IOException {
+    org.apache.commons.io.FileUtils.copyFileToDirectory(new File(src), new File(dstFolder));
   }
 
-  public static boolean copyDirectory(String src, String dst) {
-    try {
-      org.apache.commons.io.FileUtils.copyDirectory(new File(src), new File(dst));
-    } catch (IOException e) {
-      return false;
-    }
-    return true;
+  public static void copyDirectory(String src, String dst) throws IOException {
+    org.apache.commons.io.FileUtils.copyDirectory(new File(src), new File(dst));
   }
 
   public static boolean deleteDir(String dir) {
