@@ -21,10 +21,10 @@ import edu.iu.dsc.tws.executor.threading.StreamingSharingExecutor;
  * This is a dedicated communication thread based streaming executor that halts execution in case
  * of an error.
  */
-public class DedicatedComExecutor extends StreamingSharingExecutor {
+public class DedicatedComStreamingExecutor extends StreamingSharingExecutor {
   private boolean isError = false;
 
-  public DedicatedComExecutor(Config cfg, int workerId, TWSChannel channel) {
+  public DedicatedComStreamingExecutor(Config cfg, int workerId, TWSChannel channel) {
     super(cfg, workerId, channel);
   }
 
@@ -35,6 +35,6 @@ public class DedicatedComExecutor extends StreamingSharingExecutor {
 
   @Override
   public void onFault(Fault fault) throws Twister2Exception {
-
+    isError = true;
   }
 }

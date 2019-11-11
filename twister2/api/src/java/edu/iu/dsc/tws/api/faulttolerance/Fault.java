@@ -23,6 +23,9 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.faulttolerance;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Encapsulate a fault occurred in the system.
  */
@@ -37,6 +40,15 @@ public class Fault {
    */
   private String message;
 
+  /**
+   * The workers with the fault
+   */
+  private List<Integer> workers = new ArrayList<>();
+
+  public Fault(int worker) {
+    this.workers.add(worker);
+  }
+
   public Fault(int code, String message) {
     this.code = code;
     this.message = message;
@@ -48,5 +60,9 @@ public class Fault {
 
   public String getMessage() {
     return message;
+  }
+
+  public List<Integer> getWorkers() {
+    return workers;
   }
 }

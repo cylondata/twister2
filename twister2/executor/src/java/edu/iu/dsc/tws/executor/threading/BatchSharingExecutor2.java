@@ -67,7 +67,7 @@ public class BatchSharingExecutor2 implements IExecutor {
   private int workerId;
 
   // not stopped
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   // clean up is called
   private boolean cleanUpCalled = false;
@@ -127,6 +127,10 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
   }
 
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
   /**
    * Execution Method for Batch Tasks
    */
@@ -142,7 +146,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     BatchWorker[] workers = scheduleExecution(nodes);
     BatchWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size()) {
+    while (isNotStopped() && finishedInstances.get() != nodes.size()) {
       channel.progress();
       // the main thread call the run method of the 0th worker
       worker.runExecution();
@@ -219,7 +223,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     CommunicationWorker[] workers = scheduleWaitFor(nodes);
     CommunicationWorker worker = workers[0];
     // we progress until all the channel finish
-    while (notStopped && finishedInstances.get() != nodes.size()) {
+    while (isNotStopped() && finishedInstances.get() != nodes.size()) {
       channel.progress();
       worker.runChannelComplete();
     }
@@ -294,7 +298,7 @@ public class BatchSharingExecutor2 implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         if (!runChannelComplete()) {
           break;
         }
@@ -350,7 +354,7 @@ public class BatchSharingExecutor2 implements IExecutor {
 
     @Override
     public void run() {
-      while (notStopped && finishedInstances.get() != tasks.size()) {
+      while (isNotStopped() && finishedInstances.get() != tasks.size()) {
         runExecution();
       }
       doneSignal.countDown();
@@ -405,7 +409,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped && finishedInstances.get() != nodeMap.size()) {
+      while (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         mainWorker.runExecution();
       }
@@ -440,7 +444,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       }
 
       // we progress until all the channel finish
-      if (notStopped && finishedInstances.get() != nodeMap.size()) {
+      if (isNotStopped() && finishedInstances.get() != nodeMap.size()) {
         channel.progress();
         worker.runChannelComplete();
         return true;
@@ -450,7 +454,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
