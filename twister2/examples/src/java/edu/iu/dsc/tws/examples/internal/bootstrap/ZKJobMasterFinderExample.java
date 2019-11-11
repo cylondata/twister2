@@ -27,8 +27,8 @@ import java.util.logging.Logger;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKContext;
-import edu.iu.dsc.tws.rsched.bootstrap.ZKJobMasterFinder;
+import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKJobMasterFinder;
 
 public final class ZKJobMasterFinderExample {
   private static final Logger LOG = Logger.getLogger(ZKJobMasterFinderExample.class.getName());
@@ -76,7 +76,7 @@ public final class ZKJobMasterFinderExample {
    */
   public static Config buildTestConfig(String zkAddress, String jobName) {
     return Config.newBuilder()
-        .put(ZKContext.ZOOKEEPER_SERVER_ADDRESSES, zkAddress)
+        .put(ZKContext.SERVER_ADDRESSES, zkAddress)
         .put(Context.JOB_NAME, jobName)
         .build();
   }
