@@ -23,7 +23,7 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKJobPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -98,7 +98,7 @@ public final class JobMasterStarter {
     controller.init(KubernetesContext.namespace(config));
     K8sScaler k8sScaler = new K8sScaler(config, job, controller);
 
-    JobMasterAPI.JobMasterState initialState = determineInitialState(config, jobName);
+    JobMasterAPI.JobMasterState initialState = determineInitialState(config, jobName, podIP);
 
     // start JobMaster
     JobMaster jobMaster =
@@ -117,7 +117,9 @@ public final class JobMasterStarter {
    *   currently we just return JM_STARTED. We do not determine real initial status.
    * @return
    */
-  public static JobMasterAPI.JobMasterState determineInitialState(Config config, String jobName) {
+  public static JobMasterAPI.JobMasterState determineInitialState(Config config,
+                                                                  String jobName,
+                                                                  String jmAddress) {
 
     if (ZKContext.isZooKeeperServerUsed(config)) {
       String zkServerAddresses = ZKContext.serverAddresses(config);
@@ -126,7 +128,7 @@ public final class JobMasterStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKInitialStateManager.isJobMasterRestarting(client, rootPath, jobName)) {
+        if (ZKJobPersStateManager.isJobMasterRestarting(client, rootPath, jobName, jmAddress)) {
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

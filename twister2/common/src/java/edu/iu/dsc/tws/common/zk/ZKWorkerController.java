@@ -160,11 +160,9 @@ public class ZKWorkerController extends ZKBaseController
    * Update worker status with new state
    * return true if successful
    * <p>
-   * Initially worker status is set at STARTING.
+   * Initially worker status is set as STARTED or RESTARTED.
    * Therefore, there is no need to call this method after starting this IWorkerController
-   * This method should be called to change worker status to RUNNING, COMPLETED, etc.
-   * FAILED status can not be set with this method because the worker already failed.
-   * Other workers figure out failed worker when the worker looses its connection to ZK server
+   * This method should be called to change worker status to COMPLETED, FAILED, etc.
    */
   @Override
   public boolean updateWorkerStatus(WorkerState newStatus) {
@@ -203,7 +201,7 @@ public class ZKWorkerController extends ZKBaseController
    * create the znode for this worker
    */
   private void createWorkerZnode(WorkerState initialState) {
-    String workerPath = ZKUtils.constructWorkerPath(jobPath, workerInfo.getWorkerID());
+    String workerPath = ZKUtils.constructWorkerEphemPath(jobPath, workerInfo.getWorkerID());
 
     if (initialState == WorkerState.RESTARTED) {
       // TODO: check whether a znode for this worker exists in the server

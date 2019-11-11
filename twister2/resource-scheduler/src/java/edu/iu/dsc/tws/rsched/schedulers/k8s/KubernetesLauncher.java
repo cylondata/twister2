@@ -25,7 +25,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.scheduler.ILauncher;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKJobPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -196,7 +196,7 @@ public class KubernetesLauncher implements ILauncher, IJobTerminator {
 
     try {
       ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      ZKInitialStateManager.createJobZNode(client, rootPath, job.getJobName());
+      ZKJobPersStateManager.createJobZNode(client, rootPath, job);
       jobSubmissionStatus.setJobZNodesCreated(true);
       return true;
 

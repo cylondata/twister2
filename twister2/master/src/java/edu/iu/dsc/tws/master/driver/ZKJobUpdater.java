@@ -19,7 +19,7 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKInitialStateManager;
+import edu.iu.dsc.tws.common.zk.ZKJobPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -46,7 +46,7 @@ public class ZKJobUpdater {
     }
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), job.getJobName());
+    String jobPath = ZKUtils.constructJobEphemPath(ZKContext.rootNode(config), job.getJobName());
     try {
       ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
     } catch (Exception e) {
@@ -69,7 +69,7 @@ public class ZKJobUpdater {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String rootPath = ZKContext.rootNode(config);
     try {
-      ZKInitialStateManager.removeScaledDownZNodes(
+      ZKJobPersStateManager.removeScaledDownZNodes(
           client, rootPath, jobName, minWorkerID, maxWorkerID);
       return true;
     } catch (Twister2Exception e) {

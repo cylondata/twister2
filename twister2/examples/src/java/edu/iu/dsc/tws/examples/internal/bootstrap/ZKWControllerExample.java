@@ -321,7 +321,7 @@ public final class ZKWControllerExample {
   public static void updateJobZnode(JobAPI.Job job) throws Exception {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String jobPath = ZKUtils.constructJobPath(ZKContext.rootNode(config), jobName);
+    String jobPath = ZKUtils.constructJobEphemPath(ZKContext.rootNode(config), jobName);
     ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
 
     ZKUtils.closeClient();

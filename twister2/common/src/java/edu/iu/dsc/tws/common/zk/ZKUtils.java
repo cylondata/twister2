@@ -101,53 +101,60 @@ public final class ZKUtils {
   }
 
   /**
-   * construct a job path from the given job name
+   * construct main job directory path for the job
    */
   public static String constructJobPath(String rootPath, String jobName) {
-    return rootPath + "/jobs/" + jobName;
+    return rootPath + "/" + jobName;
   }
 
   /**
-   * construct a job initial state path from the given job name
+   * construct ephemeral directory path for the job
    */
-  public static String constructJobInitialStatePath(String rootPath, String jobName) {
-    return rootPath + "/initial-state/" + jobName;
+  public static String constructJobEphemPath(String rootPath, String jobName) {
+    return constructJobPath(rootPath, jobName) + "/job-ephem-state";
+  }
+
+  /**
+   * construct persistent directory path for the job
+   */
+  public static String constructJobPersPath(String rootPath, String jobName) {
+    return constructJobPath(rootPath, jobName) + "/job-pers-state";
   }
 
   /**
    * construct a distributed atomic integer path for barrier
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return rootPath + "/dai-for-barrier/" + jobName;
+    return constructJobPath(rootPath, jobName) + "/dai-for-barrier";
   }
 
   /**
    * construct a distributed barrier path
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
-    return rootPath + "/barrier/" + jobName;
+    return constructJobPath(rootPath, jobName) + "/barrier";
   }
 
   /**
    * construct a worker path from the given job path and worker network info
    */
-  public static String constructWorkerPath(String jobPath, int workerID) {
-    return jobPath + "/" + workerID;
+  public static String constructWorkerEphemPath(String jobEphemPath, int workerID) {
+    return jobEphemPath + "/" + workerID;
   }
 
   /**
    * construct a worker path from the given job initial state path and worker ID
    */
-  public static String constructWorkerInitialStatePath(String jobCheckPath, int workerID) {
-    return constructInitialStatePath(jobCheckPath, workerID + "");
+  public static String constructWorkerPersPath(String jobPersPath, int workerID) {
+    return jobPersPath + "/" + workerID;
   }
 
   /**
    * construct a worker path from the given job initial state path and entityID
    * entityID can be "jm" for job master and workerID for workers
    */
-  public static String constructInitialStatePath(String jobCheckPath, String entityID) {
-    return jobCheckPath + "/" + entityID;
+  public static String constructJMPersPath(String jobPersStatePath) {
+    return jobPersStatePath + "/jm";
   }
 
   /**
