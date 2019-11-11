@@ -67,6 +67,7 @@ twister2.job.master.cpu: 0.2
 twister2.job.master.ram: 1000
 
 # the job master ip to be used, this is used only in client based masters
+#twister2.job.master.ip: "149.165.xxx.xx"
 twister2.job.master.ip: "localhost"
 
 ###################################################################################
