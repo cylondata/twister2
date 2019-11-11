@@ -174,4 +174,12 @@ public abstract class Twister2TranslationContext {
       sideInputDataSets.put(value, set);
     }
   }
+
+  public Set<TSet> getLeaves() {
+    return leaves;
+  }
+
+  public Map<PCollectionView<?>, BatchTSet<?>> getSideInputDataSets() {
+    return sideInputDataSets;
+  }
 }

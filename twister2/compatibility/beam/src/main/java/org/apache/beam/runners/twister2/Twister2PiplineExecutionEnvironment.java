@@ -17,12 +17,18 @@
  */
 package org.apache.beam.runners.twister2;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import org.apache.beam.runners.twister2.translators.Twister2BatchPipelineTranslator;
 import org.apache.beam.runners.twister2.translators.Twister2PipelineTranslator;
 import org.apache.beam.runners.twister2.translators.Twister2StreamPipelineTranslator;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.values.PCollectionView;
+
+import edu.iu.dsc.tws.api.tset.sets.TSet;
+import edu.iu.dsc.tws.api.tset.sets.batch.BatchTSet;
 
 /**
  * Twister2PiplineExecutionEnvironment.
@@ -37,6 +43,7 @@ public class Twister2PiplineExecutionEnvironment {
 
   public Twister2PiplineExecutionEnvironment(Twister2PipelineOptions options) {
     this.options = options;
+    //options.setTSetEnvironment(new BeamBatchTSetEnvironment());
   }
 
   /**
@@ -70,5 +77,13 @@ public class Twister2PiplineExecutionEnvironment {
    */
   public void execute() {
     twister2TranslationContext.execute();
+  }
+
+  public Map<PCollectionView<?>, BatchTSet<?>> getSideInputs() {
+    return twister2TranslationContext.getSideInputDataSets();
+  }
+
+  public Set<TSet> getLeaves() {
+    return twister2TranslationContext.getLeaves();
   }
 }
