@@ -8,6 +8,7 @@ t2_java_lib(
     artifact_name = "Twister2 Restarter",
     deps = [
         "//twister2/api/src/java:api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
         "//twister2/checkpointing/src/java:checkpointing-java",
         "//twister2/common/src/java:common-java",
         "//twister2/comms/src/java:comms-java",

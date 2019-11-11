@@ -308,7 +308,7 @@ public class TreeBroadcast implements DataFlowOperation, ChannelReceiver {
   public void init(Config cfg, MessageType dType,
                    MessageType recvDType,
                    LogicalPlan tPlan, int ed) {
-    this.init(cfg, dType, recvDType, null, null, tPlan, ed);
+    this.init(cfg, dType, recvDType, this.keyType, this.keyType, tPlan, ed);
   }
 
 
