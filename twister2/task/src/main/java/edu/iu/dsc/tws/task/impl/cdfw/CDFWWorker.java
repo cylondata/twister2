@@ -88,12 +88,5 @@ public class CDFWWorker implements IWorker {
 
     // call execute
     taskExecutor.execute();
-//    // wait for the sync
-//    try {
-//      workerInfoList = wController.getAllWorkers();
-//    } catch (TimeoutException timeoutException) {
-//      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-//      return;
-//    }
   }
 }

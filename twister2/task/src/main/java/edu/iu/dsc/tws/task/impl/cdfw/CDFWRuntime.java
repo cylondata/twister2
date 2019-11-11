@@ -103,7 +103,6 @@ public class CDFWRuntime implements IReceiverFromDriver, IScalerListener, IAllJo
     List<JobMasterAPI.WorkerInfo> workerList = null;
     try {
       workerList = workerController.getAllWorkers();
-      LOG.info("worker info list size @ cons:" + workerList.size());
     } catch (TimeoutException timeoutException) {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
       return null;
