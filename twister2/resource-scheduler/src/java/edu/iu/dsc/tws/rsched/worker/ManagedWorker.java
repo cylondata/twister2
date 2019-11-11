@@ -9,9 +9,12 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-package edu.iu.dsc.tws.checkpointing.worker;
+package edu.iu.dsc.tws.rsched.worker;
+
+import java.util.List;
 
 import edu.iu.dsc.tws.api.config.Config;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IPersistentVolume;
 import edu.iu.dsc.tws.api.resource.IVolatileVolume;
 import edu.iu.dsc.tws.api.resource.IWorker;
@@ -19,8 +22,12 @@ import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
+import edu.iu.dsc.tws.rsched.core.WorkerRuntime;
 
-public class ManagedWorker implements IWorker, IWorkerFailureListener {
+public class ManagedWorker implements IWorker, IWorkerFailureListener, IAllJoinedListener {
+  /**
+   * The current worker environment
+   */
   private WorkerEnvironment wEnv;
 
   /**
@@ -59,20 +66,33 @@ public class ManagedWorker implements IWorker, IWorkerFailureListener {
     this.pVolume = persistentVolume;
     this.vVolume = volatileVolume;
 
+    WorkerRuntime.addAllJoinedListener(this);
+    WorkerRuntime.addWorkerFailureListener(this);
+
     this.wEnv = WorkerEnvironment.init(config, workerID, workerController,
         persistentVolume, volatileVolume);
   }
 
   @Override
   public void failed(int workerID) {
+    // lets wait for the current execution to finish
+
+
     // lets close the worker environment
     this.wEnv.close();
   }
 
   @Override
   public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
+    // at this point we are sure we
+
     // now lets try to restart
     this.wEnv = WorkerEnvironment.init(cfg, wId, wController,
         pVolume, vVolume);
+  }
+
+  @Override
+  public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+
   }
 }

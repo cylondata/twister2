@@ -11,7 +11,11 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.api.compute.executor;
 
-public interface IExecutor {
+import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.faulttolerance.Fault;
+import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
+
+public interface IExecutor extends FaultAcceptable {
   /**
    * Execute the specific plan
    * @param plan execution plan
@@ -42,8 +46,9 @@ public interface IExecutor {
   /**
    * We are notifying that there is an error in the system and we need to terminate the current
    * execution.
-   * @param code the error code
+   * @param fault the error code
    */
-  default void setError(int code) {
+  @Override
+  default void onFault(Fault fault) throws Twister2Exception {
   }
 }

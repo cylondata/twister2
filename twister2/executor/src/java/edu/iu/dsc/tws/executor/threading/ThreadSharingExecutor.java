@@ -28,7 +28,7 @@ import edu.iu.dsc.tws.executor.core.ExecutionRuntime;
 /**
  * Abstract class for thread sharing executors
  */
-public abstract class ThreadSharingExecutor implements  IExecutor {
+public abstract class ThreadSharingExecutor implements IExecutor {
   private static final Logger LOG = Logger.getLogger(ThreadSharingExecutor.class.getName());
 
   protected int numThreads;

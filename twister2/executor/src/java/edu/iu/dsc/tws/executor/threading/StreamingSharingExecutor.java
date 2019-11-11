@@ -31,7 +31,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
   private int workerId;
 
-  private boolean notStopped = true;
+  protected boolean notStopped = true;
 
   private boolean cleanUpCalled = false;
 
@@ -68,7 +68,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
    * Progress the communications
    */
   private void progressStreamComm() {
-    while (notStopped) {
+    while (isNotStopped()) {
       this.channel.progress();
     }
   }
@@ -139,7 +139,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void run() {
-      while (notStopped) {
+      while (isNotStopped()) {
         try {
           INodeInstance nodeInstance = tasks.poll();
           if (nodeInstance != null) {
@@ -159,6 +159,10 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
+  public boolean isNotStopped() {
+    return notStopped;
+  }
+
   private class StreamExecution implements IExecution {
     private Map<Integer, INodeInstance> nodeMap;
 
@@ -172,7 +176,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean waitForCompletion() {
       // we progress until all the channel finish
-      while (notStopped) {
+      while (isNotStopped()) {
         channel.progress();
       }
 
@@ -183,7 +187,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
     @Override
     public boolean progress() {
       // we progress until all the channel finish
-      if (notStopped) {
+      if (isNotStopped()) {
         channel.progress();
         return true;
       }
@@ -192,7 +196,7 @@ public class StreamingSharingExecutor extends ThreadSharingExecutor {
 
     @Override
     public void close() {
-      if (notStopped) {
+      if (isNotStopped()) {
         throw new RuntimeException("We need to stop the execution before close");
       }
 
