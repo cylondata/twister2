@@ -31,7 +31,7 @@ public class InvertedBinaryTreeRouter {
   private Map<Integer, Set<Integer>> sendExternalTasksPartial;
   private Map<Integer, Set<Integer>> sendExternalTasks;
   private Map<Integer, Set<Integer>> sendInternalTasks;
-  private int mainTask;
+  private int mainTask = -1;
   private boolean mainTaskLast;
   private Map<Integer, Integer> destinationIdentifiers;
   private int executor;
@@ -157,7 +157,7 @@ public class InvertedBinaryTreeRouter {
       return (int) o;
     } else {
       throw new RuntimeException(String.format("%d Unexpected source - "
-              + "%s requesting destination %s", executor, source, destinationIdentifiers));
+          + "%s requesting destination %s", executor, source, destinationIdentifiers));
     }
   }
 
