@@ -50,7 +50,7 @@
     {
       "id": "stream",
       "name": "Stream",
-      "optional": false,
+      "optional": true,
       "values": {
         "type": "none"
       }
