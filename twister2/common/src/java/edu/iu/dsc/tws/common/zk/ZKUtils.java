@@ -158,6 +158,13 @@ public final class ZKUtils {
   }
 
   /**
+   * construct job master path for the given job path
+   */
+  public static String constructJMEphemPath(String jobEphemPath) {
+    return jobEphemPath + "/jm";
+  }
+
+  /**
    * WorkerID is at the end of workerPath
    * The string "w-" proceeds the workerID
    * @return
@@ -165,13 +172,6 @@ public final class ZKUtils {
   public static int getWorkerIDFromPath(String workerPath) {
     String workerIDStr = workerPath.substring(workerPath.lastIndexOf("-") + 1);
     return Integer.parseInt(workerIDStr);
-  }
-
-  /**
-   * construct job master path for the given job path
-   */
-  public static String constructJobMasterPath(String jobPath) {
-    return jobPath + "/jm";
   }
 
   /**

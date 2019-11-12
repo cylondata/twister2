@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.common.net.tcp.Progress;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.util.ReflectionUtils;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKMasterController;
 import edu.iu.dsc.tws.master.IJobTerminator;
 import edu.iu.dsc.tws.master.JobMasterContext;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
@@ -455,16 +454,13 @@ public class JobMaster {
   private void initZKMasterController(WorkerMonitor wMonitor) {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       zkMasterController = new ZKMasterController(config, job.getJobName(),
-          job.getNumberOfWorkers(), ZKContext.serverAddresses(config));
+          job.getNumberOfWorkers(), ZKContext.serverAddresses(config), workerMonitor);
 
       try {
         zkMasterController.initialize(initialState);
       } catch (Exception e) {
         throw new Twister2RuntimeException(e);
       }
-
-      zkMasterController.addFailureListener(wMonitor);
-      zkMasterController.addWorkerStatusListener(wMonitor);
     }
 
   }

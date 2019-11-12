@@ -37,10 +37,9 @@ import com.google.protobuf.Message;
 
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
-import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
-import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.common.driver.IDriver;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.DashboardClient;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -60,8 +59,7 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * It handles Job Master to Dashboard communications
  * It handles Job Master to Driver interactions
  */
-public class WorkerMonitor
-    implements MessageHandler, IWorkerStatusListener, IWorkerFailureListener {
+public class WorkerMonitor implements MessageHandler {
 
   private static final Logger LOG = Logger.getLogger(WorkerMonitor.class.getName());
 
@@ -120,9 +118,21 @@ public class WorkerMonitor
     return workers.values();
   }
 
+  public JobMasterAPI.WorkerInfo getWorkerInfoForID(int id) {
+    WorkerWithState workerWithState = workers.get(id);
+    if (workerWithState == null) {
+      return null;
+    } else {
+      return workerWithState.getInfo();
+    }
+  }
+
+  public WorkerWithState getWorkerWithState(int workerID) {
+    return workers.get(workerID);
+  }
+
   /**
    * get the list of workerIDs sorted
-   * @return
    */
   public List<Integer> getWorkerIDs() {
     return workers
@@ -159,18 +169,37 @@ public class WorkerMonitor
 
   /**
    * new worker joins for the first time
+   * returns null if the join is successful,
+   * otherwise, it returns an explanation for the failure
    */
-  public void started(JobMasterAPI.WorkerInfo workerInfo) {
+  public String started(WorkerWithState workerWithState) {
 
-    // if it is a regular join event
+    // if the workerID of joined worker is higher than numberOfWorkers in the job,
+    // registration is unsuccessful.
+    if (workerWithState.getWorkerID() >= numberOfWorkers) {
+      String failMessage = String.format(
+          "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
+              + "Ignoring this join event. WorkerInfo of ignored worker: %s",
+          workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
+      LOG.severe(failMessage);
+      return failMessage;
+    }
+
+    if (existWorker(workerWithState.getWorkerID())) {
+      String failMessage = "Previously a worker registered with workerID: "
+          + workerWithState.getWorkerID();
+      LOG.severe(failMessage);
+      return failMessage;
+    }
+
+      // if it is a regular join event
     // add the worker to worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.STARTED);
-    workers.put(worker.getWorkerID(), worker);
-    LOG.info("Worker: " + workerInfo.getWorkerID() + " joined the job.");
+    workers.put(workerWithState.getWorkerID(), workerWithState);
+    LOG.info("Worker: " + workerWithState.getWorkerID() + " joined the job.");
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.STARTED);
+      dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
     if (jobState == JobState.STARTING && allWorkersJoined()) {
@@ -179,37 +208,52 @@ public class WorkerMonitor
         dashClient.jobStateChange(JobState.STARTED);
       }
     }
+
+    return null;
   }
 
   /**
    * if the worker is coming from failure
    */
-  public void restarted(JobMasterAPI.WorkerInfo workerInfo) {
+  public String restarted(WorkerWithState workerWithState) {
+
+    // if the workerID of joined worker is higher than numberOfWorkers in the job,
+    // registration is unsuccessful.
+    if (workerWithState.getWorkerID() >= numberOfWorkers) {
+      String failMessage = String.format(
+          "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
+              + "Ignoring this join event. WorkerInfo of ignored worker: %s",
+          workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
+      LOG.severe(failMessage);
+      return failMessage;
+    }
 
     // send worker registration message to dashboard
     if (dashClient != null) {
-      dashClient.registerWorker(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
+      dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
     // if this is not a fault tolerant job, we terminate the job with failure
     // because, this worker has failed previously failed and it is coming from failure
     if (!faultTolerant) {
       jobState = JobState.FAILED;
-      LOG.info("A worker is coming from failure in a NON-FAULT TOLERANT job. Terminating the job.");
+      String failMessage =
+          String.format("worker[%s] is coming from failure in NON-FAULT TOLERANT job. "
+              + "Terminating the job.", workerWithState.getWorkerID());
+      LOG.info(failMessage);
       jobMaster.completeJob(JobState.FAILED);
-      return;
+      return failMessage;
     }
 
-    WorkerWithState existingWorker = workers.get(workerInfo.getWorkerID());
-    if (existingWorker == null) {
-      LOG.warning(String.format("The worker[%s] that has not joined the job yet tries to rejoin. ",
-          workerInfo.getWorkerID()));
+    if (existWorker(workerWithState.getWorkerID())) {
+      LOG.warning(String.format("The worker[%s] that has not joined the job yet tries to rejoin. "
+              + "Ignoring this event.",
+          workerWithState.getWorkerID()));
     }
 
     // update workerInfo and its status in the worker list
-    WorkerWithState worker = new WorkerWithState(workerInfo, JobMasterAPI.WorkerState.RESTARTED);
-    workers.put(worker.getWorkerID(), worker);
-    LOG.info("WorkerID: " + workerInfo.getWorkerID() + " joined from failure.");
+    workers.put(workerWithState.getWorkerID(), workerWithState);
+    LOG.info("WorkerID: " + workerWithState.getWorkerID() + " joined from failure.");
 
     if (jobState == JobState.STARTING && allWorkersJoined()) {
       jobState = JobState.STARTED;
@@ -219,13 +263,14 @@ public class WorkerMonitor
     }
 
     // TODO inform checkpoint master
+    return null;
   }
 
   /**
    * called when a worker COMPLETED the job
    */
   public void completed(int workerID) {
-    workers.get(workerID).updateState(JobMasterAPI.WorkerState.COMPLETED);
+    workers.get(workerID).setState(JobMasterAPI.WorkerState.COMPLETED);
     LOG.info("Worker:" + workerID + " COMPLETED.");
 
     // send worker state change message to dashboard
@@ -255,7 +300,7 @@ public class WorkerMonitor
       return;
     }
 
-    failedWorker.updateState(JobMasterAPI.WorkerState.FAILED);
+    failedWorker.setState(JobMasterAPI.WorkerState.FAILED);
     LOG.info("Worker: " + workerID + " FAILED.");
 
     // send worker state change message to dashboard
@@ -458,7 +503,7 @@ public class WorkerMonitor
   /**
    * if all workers are in one of these states: STARTED, RESTARTED or COMPLETED.
    * return true
-   *
+   * <p>
    * This is used to send allWorkersJoined message
    * We omit started but failed workers
    * We include started but completed workers
@@ -564,7 +609,7 @@ public class WorkerMonitor
         .setNumberOfWorkers(numberOfWorkers);
 
     for (WorkerWithState worker : workers.values()) {
-      joinedBuilder.addWorker(worker.getWorkerInfo());
+      joinedBuilder.addWorker(worker.getInfo());
     }
 
     return joinedBuilder.build();
@@ -578,7 +623,7 @@ public class WorkerMonitor
     List<JobMasterAPI.WorkerInfo> workerList = new LinkedList<>();
 
     for (WorkerWithState worker : workers.values()) {
-      workerList.add(worker.getWorkerInfo());
+      workerList.add(worker.getInfo());
     }
 
     return workerList;

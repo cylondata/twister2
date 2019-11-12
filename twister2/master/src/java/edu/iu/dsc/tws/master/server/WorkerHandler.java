@@ -21,6 +21,7 @@ import com.google.protobuf.Message;
 import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
+import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
@@ -80,41 +81,32 @@ public class WorkerHandler implements MessageHandler {
 
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
-    JobState jobState = workerMonitor.getJobState();
+    JobState initialJobState = workerMonitor.getJobState();
+    WorkerWithState workerWithState = new WorkerWithState(workerInfo, message.getInitialState());
 
     if (message.getInitialState() == JobMasterAPI.WorkerState.RESTARTED) {
       // if it is coming from failure
-      workerMonitor.restarted(workerInfo);
+      String failMessage = workerMonitor.restarted(workerWithState);
+      if (failMessage != null) {
+        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
+        return;
+      }
 
     } else {
 
       // if it is not coming from failure
-
-      // if there is a worker with the same ID already,
-      // ignore this message.
-      // when zk is used, currently workers are joining from both tools.
-      // so, we ignore this repeated join request.
-      // TODO: we may need to reconsider this. We may require workers to join from one tool only.
-      if (workerMonitor.existWorker(workerInfo.getWorkerID())) {
-        LOG.warning("Worker[" + workerInfo.getWorkerID() + "] tries to join, but already joined. "
-            + "Ignoring this join attempt. ");
-
-        String failMessage = "Previously a worker registered with workerID: "
-            + workerInfo.getWorkerID();
-
-        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
+      String failMessage = workerMonitor.started(workerWithState);
+      if (failMessage != null) {
+        sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), false, failMessage);
         return;
       }
-
-      // if the worker does not exist in the worker list, join the job
-      workerMonitor.started(workerInfo);
     }
 
     // send a success response
     sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
 
     // if all workers registered, inform all workers
-    if (jobState == JobState.STARTING && workerMonitor.allWorkersJoined()) {
+    if (initialJobState == JobState.STARTING && workerMonitor.getJobState() == JobState.STARTED) {
       LOG.info("All workers joined the job. Worker IDs: " + workerMonitor.getWorkerIDs());
       sendListWorkersResponseToWaitList();
 
@@ -201,7 +193,7 @@ public class WorkerHandler implements MessageHandler {
             .setWorkerID(workerID);
 
     for (WorkerWithState worker : workerMonitor.getWorkerList()) {
-      responseBuilder.addWorker(worker.getWorkerInfo());
+      responseBuilder.addWorker(worker.getInfo());
     }
 
     JobMasterAPI.ListWorkersResponse response = responseBuilder.build();

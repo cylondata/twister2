@@ -18,6 +18,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
@@ -169,11 +170,11 @@ public final class ZKJobPersStateManager {
     }
   }
 
-  public boolean updateWorkerStatus(CuratorFramework client,
-                                    String rootPath,
-                                    String jobName,
-                                    WorkerInfo workerInfo,
-                                    WorkerState newStatus) {
+  public static boolean updateWorkerStatus(CuratorFramework client,
+                                           String rootPath,
+                                           String jobName,
+                                           WorkerInfo workerInfo,
+                                           WorkerState newStatus) {
 
     String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
     String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerInfo.getWorkerID());
@@ -189,5 +190,22 @@ public final class ZKJobPersStateManager {
       return false;
     }
   }
+
+  public static WorkerWithState getWorkerWithState(CuratorFramework client,
+                                                   String jobPersPath,
+                                                   int workerID) {
+
+    String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerID);
+
+    try {
+      byte[] workerNodeBody = client.getData().forPath(workerPersPath);
+      return WorkerWithState.decode(workerNodeBody);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not get persistent worker znode data: " + workerPersPath, e);
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
 
 }

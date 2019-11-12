@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +41,14 @@ public class WorkerWithState {
     return state;
   }
 
+  public int getWorkerID() {
+    return info.getWorkerID();
+  }
+
+  public void setState(WorkerState state) {
+    this.state = state;
+  }
+
   public byte[] toByteArray() {
     byte[] stateBytes = Ints.toByteArray(state.getNumber());
     byte[] workerInfoBytes = info.toByteArray();
@@ -66,4 +75,51 @@ public class WorkerWithState {
       return null;
     }
   }
+
+  /**
+   * return true if the worker status is either or STARTED, RESTARTED
+   * @return
+   */
+  public boolean running() {
+    return state == WorkerState.STARTED
+        || state == WorkerState.RESTARTED;
+  }
+
+  /**
+   * return true if the worker status is either or STARTED, RESTARTED, COMPLETED
+   * @return
+   */
+  public boolean startedOrCompleted() {
+    return state == WorkerState.STARTED
+        || state == WorkerState.RESTARTED
+        || state == WorkerState.COMPLETED;
+  }
+
+  /**
+   * if the worker state is COMPLETED
+   * @return
+   */
+  public boolean completed() {
+    return state == WorkerState.COMPLETED;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    WorkerWithState that = (WorkerWithState) o;
+    return info.getWorkerID() == that.info.getWorkerID();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(info.getWorkerID());
+  }
+
 }
