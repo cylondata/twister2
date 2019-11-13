@@ -44,7 +44,6 @@ public class CDFWScheduler implements ICDFWScheduler {
   @Override
   public Set<Integer> schedule(DataFlowGraph graphJob) {
     Set<Integer> scheduledGraph = scheduleGraphs(graphJob);
-    LOG.info("Requirements:" + scheduledGraph);
     return scheduledGraph;
   }
 
@@ -63,7 +62,6 @@ public class CDFWScheduler implements ICDFWScheduler {
         scheduledGraphMap.put(graph, workerList);
       }
     }
-    LOG.info("Requirements:" + workerInfoList.size() + "\tSchedule Details:" + scheduledGraphMap);
     return scheduledGraphMap;
   }
 
