@@ -37,19 +37,26 @@
 package edu.iu.dsc.tws.common.zk;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
+import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
@@ -61,6 +68,7 @@ import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
+import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -114,6 +122,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // persistent ephemeral znode for this worker
   private PersistentNode workerEphemZNode;
 
+  // children cache for events znode
+  protected PathChildrenCache eventsChildrenCache;
+
   // config object
   protected Config config;
   protected String rootPath;
@@ -123,7 +134,14 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   private DistributedBarrier barrier;
 
   // all workers in the job, including completed and failed ones
-  protected HashMap<WorkerInfo, WorkerState> jobWorkers;
+  private List<WorkerInfo> workers;
+
+  // a flag to show whether all workers joined the job
+  // Initially it is false. It becomes true when all workers joined the job.
+  private boolean allJoined = false;
+
+  // synchronization object for waiting all workers to join the job
+  protected Object waitObject = new Object();
 
   // Inform worker failure events
   protected IWorkerFailureListener failureListener;
@@ -147,7 +165,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     this.workerInfo = workerInfo;
 
     this.rootPath = ZKContext.rootNode(config);
-    jobWorkers = new HashMap<>(numberOfWorkers);
+    workers = new ArrayList<>(numberOfWorkers);
   }
 
   /**
@@ -180,9 +198,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       // We cache children data for parent path.
       // So we will listen for all workers in the job
-//      childrenCache = new PathChildrenCache(client, jobPath, true);
-//      addChildrenCacheListener(childrenCache);
-//      childrenCache.start();
+      String eventsDir = ZKUtils.constructEventsDir(rootPath, jobName);
+      eventsChildrenCache = new PathChildrenCache(client, eventsDir, true);
+      addEventsChildrenCacheListener(eventsChildrenCache);
+      eventsChildrenCache.start();
 
       String barrierPath = ZKUtils.constructBarrierPath(rootPath, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
@@ -253,9 +272,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   @Override
   public List<WorkerInfo> getJoinedWorkers() {
 
-    List<WorkerWithState> workers = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    List<WorkerWithState> workersWithState =
+        ZKPersStateManager.getWorkers(client, rootPath, jobName);
 
-    return workers
+    return workersWithState
         .stream()
         .filter(workerWithState -> workerWithState.running())
         .map(workerWithState -> workerWithState.getInfo())
@@ -264,8 +284,61 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public List<WorkerInfo> getAllWorkers() throws TimeoutException {
-    return null;
+    // if all workers already joined, return the workers list
+    if (allJoined) {
+      return cloneWorkers();
+    }
+
+    // wait until all workers joined or time limit is reached
+    long timeLimit = ControllerContext.maxWaitTimeForAllToJoin(config);
+    long startTime = System.currentTimeMillis();
+
+    long delay = 0;
+    while (delay < timeLimit) {
+      synchronized (waitObject) {
+        try {
+          waitObject.wait(timeLimit - delay);
+
+          // proceeding with notification or timeout
+          if (allJoined) {
+            return cloneWorkers();
+          } else {
+            throw new TimeoutException("Not all workers joined the job on the given time limit: "
+                + timeLimit + "ms.");
+          }
+
+        } catch (InterruptedException e) {
+          delay = System.currentTimeMillis() - startTime;
+        }
+      }
+    }
+
+    if (allJoined) {
+      return cloneWorkers();
+    } else {
+      throw new TimeoutException("Not all workers joined the job on the given time limit: "
+          + timeLimit + "ms.");
+    }
   }
+
+  protected List<WorkerInfo> cloneWorkers() {
+
+    List<WorkerInfo> clone = new LinkedList<>();
+    for (WorkerInfo info : workers) {
+      clone.add(info);
+    }
+    return clone;
+  }
+
+  /**
+   * remove the workerInfo for the given ID if it exists
+   */
+  private void updateWorkerInfo(WorkerInfo info) {
+    workers.removeIf(wInfo -> wInfo.getWorkerID() == info.getWorkerID());
+    workers.add(info);
+  }
+
+
 
   /**
    * add a single IWorkerFailureListener
@@ -363,9 +436,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    */
   public List<WorkerInfo> getCurrentWorkers() {
 
-    List<WorkerWithState> workers = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+    List<WorkerWithState> workersWithState =
+        ZKPersStateManager.getWorkers(client, rootPath, jobName);
 
-    return workers
+    return workersWithState
         .stream()
         .filter(workerWithState -> workerWithState.startedOrCompleted())
         .map(workerWithState -> workerWithState.getInfo())
@@ -386,6 +460,86 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
     return size;
   }
+
+  private void addEventsChildrenCacheListener(PathChildrenCache cache) {
+    PathChildrenCacheListener listener = new PathChildrenCacheListener() {
+
+      public void childEvent(CuratorFramework clientOfEvent, PathChildrenCacheEvent event) {
+
+        switch (event.getType()) {
+          case CHILD_ADDED:
+            eventPublished(event);
+            break;
+
+          default:
+            // nothing to do
+        }
+      }
+    };
+    cache.getListenable().addListener(listener);
+  }
+
+  /**
+   * when a new znode added to this job znode,
+   * take necessary actions
+   * TODO: we should think about how to handle past events for restarted workers
+   */
+  private void eventPublished(PathChildrenCacheEvent event) {
+
+    // first determine whether the job master has joined
+    // job master path ends with "jm".
+    // worker paths end with workerID
+    String eventPath = event.getData().getPath();
+    byte[] eventData = event.getData().getData();
+    JobMasterAPI.JobEvent jobEvent;
+    try {
+      jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .mergeFrom(eventData)
+          .build();
+    } catch (InvalidProtocolBufferException e) {
+      LOG.log(Level.SEVERE, "Could not decode received JobEvent from the path: " + eventPath, e);
+      return;
+    }
+
+    if (jobEvent.hasAllJoined()) {
+      JobMasterAPI.AllWorkersJoined allWorkersJoined = jobEvent.getAllJoined();
+      workers.addAll(allWorkersJoined.getWorkerInfoList());
+      allJoined = true;
+
+      synchronized (waitObject) {
+        waitObject.notify();
+      }
+
+      if (allJoinedListener != null) {
+        allJoinedListener.allWorkersJoined(cloneWorkers());
+      }
+
+      return;
+    }
+
+    if (jobEvent.hasFailed()) {
+      JobMasterAPI.WorkerFailed workerFailed = jobEvent.getFailed();
+      LOG.info(String.format("Worker[%s] FAILED. ", workerFailed.getWorkerID()));
+
+      if (failureListener != null) {
+        failureListener.failed(workerFailed.getWorkerID());
+      }
+    }
+
+    if (jobEvent.hasRestarted()) {
+      JobMasterAPI.WorkerRestarted workerRestarted = jobEvent.getRestarted();
+      LOG.info(String.format("Worker[%s] RESTARTED.",
+          workerRestarted.getWorkerInfo().getWorkerID()));
+
+      updateWorkerInfo(workerRestarted.getWorkerInfo());
+
+      if (failureListener != null) {
+        failureListener.restarted(workerRestarted.getWorkerInfo());
+      }
+    }
+
+  }
+
 
   /**
    * try to increment the daiForBarrier
@@ -477,11 +631,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * close all local entities.
    */
   public void close() {
-    try {
-      workerEphemZNode.close();
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Exception when closing", e);
-    }
+    CloseableUtils.closeQuietly(workerEphemZNode);
+    CloseableUtils.closeQuietly(eventsChildrenCache);
   }
 
 }

@@ -29,6 +29,7 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
@@ -230,14 +231,22 @@ public class ZKMasterController {
     // worker paths end with workerID
     String addedChildPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
-    edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
+    WorkerWithState workerWithState =
         ZKPersStateManager.getWorkerWithState(client, workersPersDir, workerID);
 
     // if the status of joining worker is RESTARTED, it is coming from failure
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
 
       workerMonitor.restarted(workerWithState);
-      // TODO: publish event
+
+      JobMasterAPI.WorkerRestarted workerRestarted = JobMasterAPI.WorkerRestarted.newBuilder()
+              .setWorkerInfo(workerWithState.getInfo())
+              .build();
+
+      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .setRestarted(workerRestarted)
+          .build();
+      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
 
     } else if (workerWithState.getState() == JobMasterAPI.WorkerState.STARTED) {
 
@@ -252,12 +261,17 @@ public class ZKMasterController {
     }
 
     // if currently all workers exist in the job, let the workers know that all joined
-    // we don't check the size of jobWorkers,
-    // because some workers may have joined and failed.
-    // This shows currently existing workers in the job group
     if (initialJobState == JobState.STARTING && workerMonitor.getJobState() == JobState.STARTED) {
 
-      // TODO: publish allJoined event
+      List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
+
+      JobMasterAPI.AllWorkersJoined allWorkersJoined = JobMasterAPI.AllWorkersJoined.newBuilder()
+              .addAllWorkerInfo(workers)
+              .build();
+      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .setAllJoined(allWorkersJoined)
+          .build();
+      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
     }
   }
 
@@ -303,13 +317,22 @@ public class ZKMasterController {
 
     } else {
       // worker failed
-      LOG.info("Removed worker znode: " + workerPath);
       LOG.info(String.format("Worker[%s] FAILED. Worker last status: %s",
           removedWorkerID, workerWithState.getState()));
 
-      // TODO: publish event
-      // TODO: make worker state FAILED in PersState znode
       workerMonitor.failed(removedWorkerID);
+
+      ZKPersStateManager.updateWorkerStatus(
+          client, rootPath, jobName, workerWithState.getInfo(), JobMasterAPI.WorkerState.FAILED);
+
+      JobMasterAPI.WorkerFailed workerFailed = JobMasterAPI.WorkerFailed.newBuilder()
+          .setWorkerID(workerWithState.getWorkerID())
+          .build();
+
+      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+          .setFailed(workerFailed)
+          .build();
+      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
     }
   }
 

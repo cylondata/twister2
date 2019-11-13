@@ -45,43 +45,22 @@ public final class ZKJobZnodeUtil {
 
   /**
    * check whether there is an active job
-   * if not, but there are znodes from previous sessions, those will be deleted
    */
   public static boolean isThereJobZNodes(CuratorFramework client, String rootPath, String jobName) {
 
-    boolean jobZnodesExist = false;
-    StringBuffer logMessage = new StringBuffer();
-
     try {
-      // check whether the job node exists, if not, return false, nothing to do
-      String jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
-      if (client.checkExists().forPath(jobPath) != null) {
-        jobZnodesExist = true;
-        logMessage.append("jobZnode exists: " + jobPath);
+      // check whether the job znode exists, if not, return false, nothing to do
+      String jobDir = ZKUtils.constructJobDir(rootPath, jobName);
+      if (client.checkExists().forPath(jobDir) != null) {
+        LOG.info("main jobZnode exists: " + jobDir);
+        return true;
       }
 
-      String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
-      if (client.checkExists().forPath(checkPath) != null) {
-        jobZnodesExist = true;
-        logMessage.append("PersStatePath exists: " + checkPath);
-      }
-
-      // check whether the job node exists, if not, return false, nothing to do
-      String daiPathForBarrier = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
-      if (client.checkExists().forPath(daiPathForBarrier) != null) {
-        jobZnodesExist = true;
-        logMessage.append("\nJob daiPathForBarrier exists: " + daiPathForBarrier);
-      }
-
-      if (jobZnodesExist) {
-        LOG.info(logMessage.toString());
-      }
-
-      return jobZnodesExist;
+      return false;
 
     } catch (Exception e) {
       LOG.log(Level.SEVERE, e.getMessage(), e);
-      return jobZnodesExist;
+      return false;
     }
   }
 
@@ -180,35 +159,8 @@ public final class ZKJobZnodeUtil {
   public static boolean deleteJobZNodes(CuratorFramework client, String rootPath, String jobName) {
 
     boolean allDeleted = true;
-    try {
-      // delete job initial-state znode
-      String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
-      if (client.checkExists().forPath(checkPath) != null) {
-        client.delete().deletingChildrenIfNeeded().forPath(checkPath);
-        LOG.log(Level.INFO, "PersStatePath deleted from ZooKeeper: " + checkPath);
-      } else {
-        LOG.log(Level.INFO, "No PersStatePath exists in ZooKeeper to delete for: " + checkPath);
-      }
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "", e);
-      allDeleted = false;
-    }
 
-    try {
-      // delete distributed atomic integer for barrier
-      String daiPath = ZKUtils.constructDaiPathForBarrier(rootPath, jobName);
-      if (client.checkExists().forPath(daiPath) != null) {
-        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(daiPath);
-        LOG.info("DistributedAtomicInteger for barrier deleted from ZooKeeper: " + daiPath);
-      } else {
-        LOG.info("No DistributedAtomicInteger exists for the job at ZooKeeper: " + daiPath);
-      }
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "", e);
-      allDeleted = false;
-    }
-
-    // delete job znode
+    // delete workers ephemeral znode directory
     String jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
     try {
       if (client.checkExists().forPath(jobPath) != null) {
@@ -242,6 +194,20 @@ public final class ZKJobZnodeUtil {
       LOG.log(Level.FINE, "", e);
       LOG.info("Following exception is thrown when deleting the job znode: " + jobPath
           + "; " + e.getMessage());
+      allDeleted = false;
+    }
+
+    try {
+      // delete job directory
+      String jobDir = ZKUtils.constructJobDir(rootPath, jobName);
+      if (client.checkExists().forPath(jobDir) != null) {
+        client.delete().guaranteed().deletingChildrenIfNeeded().forPath(jobDir);
+        LOG.info("JobDirectory deleted from ZooKeeper: " + jobDir);
+      } else {
+        LOG.info("JobDirectory does not exist at ZooKeeper: " + jobDir);
+      }
+    } catch (Exception e) {
+      LOG.log(Level.WARNING, "", e);
       allDeleted = false;
     }
 

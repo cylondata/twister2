@@ -144,6 +144,17 @@ public class WorkerMonitor implements MessageHandler {
   }
 
   /**
+   * get the list of workerIDs sorted
+   */
+  public List<JobMasterAPI.WorkerInfo> getWorkerInfoList() {
+    return workers
+        .values()
+        .stream()
+        .map(wws -> wws.getInfo())
+        .collect(Collectors.toList());
+  }
+
+  /**
    * return true if there is a worker with the given workerID
    */
   public boolean existWorker(int workerID) {

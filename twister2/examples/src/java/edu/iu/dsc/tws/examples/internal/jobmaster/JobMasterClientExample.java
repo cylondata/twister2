@@ -127,22 +127,29 @@ public final class JobMasterClientExample {
       }
     });
 
+//    WorkerRuntime.addAllJoinedListener(new IAllJoinedListener() {
+//      @Override
+//      public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
+//        LOG.info("All workers joined, IDs: " + getIDs(workerList));
+//      }
+//    });
+
     // wait up to 2sec
 //    sleeeep((long) (Math.random() * 2 * 1000));
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Currently joined worker IDs: " + getIDs(workerList));
 
-//    try {
-//      workerList = workerController.getAllWorkers();
-//      LOG.info("All workers joined. IDs: " + getIDs(workerList));
-//    } catch (TimeoutException timeoutException) {
-//      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-//      return;
-//    }
+    try {
+      workerList = workerController.getAllWorkers();
+      LOG.info("All workers joined... IDs: " + getIDs(workerList));
+    } catch (TimeoutException timeoutException) {
+      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+      return;
+    }
 
     // wait up to 3sec
-    sleeeep(50 * 1000);
+    sleeeep(20 * 1000);
 
     try {
       workerController.waitOnBarrier();

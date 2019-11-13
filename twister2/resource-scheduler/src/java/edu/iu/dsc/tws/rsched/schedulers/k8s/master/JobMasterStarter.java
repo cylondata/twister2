@@ -23,6 +23,7 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.scheduler.SchedulerContext;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.server.JobMaster;
@@ -129,6 +130,7 @@ public final class JobMasterStarter {
 
       try {
         if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobName, jmAddress)) {
+          ZKEventsManager.initEventCounter(client, rootPath, jobName);
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

@@ -124,6 +124,13 @@ public final class ZKUtils {
   }
 
   /**
+   * construct events directory path for the job
+   */
+  public static String constructEventsDir(String rootPath, String jobName) {
+    return constructJobDir(rootPath, jobName) + "/events";
+  }
+
+  /**
    * construct a worker path from the workers directory
    */
   public static String constructWorkerPath(String workersDir, int workerID) {
