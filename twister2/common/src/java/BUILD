@@ -40,6 +40,8 @@ t2_java_lib(
     generate_pom = False,
     deps = [
         "//twister2/api/src/java:api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/config:config-api-java",
+        "//twister2/api/src/java/edu/iu/dsc/tws/api/util:api-utils-java",
         "@com_esotericsoftware_kryo//jar",
         "@com_google_protobuf_protobuf_java//jar",
         "@org_yaml_snakeyaml//jar",
