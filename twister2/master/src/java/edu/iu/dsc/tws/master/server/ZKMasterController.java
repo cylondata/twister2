@@ -11,6 +11,7 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +29,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKJobPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
@@ -228,21 +229,19 @@ public class ZKMasterController {
     // job master path ends with "jm".
     // worker paths end with workerID
     String addedChildPath = event.getData().getPath();
-    int workerID = ZKUtils.getWorkerIDFromPath(addedChildPath);
+    int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
     edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
-        ZKJobPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
+        ZKPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
 
     // if the status of joining worker is RESTARTED, it is coming from failure
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
 
-      // currently worker registration only done through worker to JM messaging
-      // workerMonitor.restarted(workerWithState);
+      workerMonitor.restarted(workerWithState);
       // TODO: publish event
 
     } else if (workerWithState.getState() == JobMasterAPI.WorkerState.STARTED) {
 
-      // currently worker registration only done through worker to JM messaging
-      // workerMonitor.started(workerWithState);
+      workerMonitor.started(workerWithState);
 
       // a worker joined with initial state that is not acceptable
     } else {
@@ -271,10 +270,12 @@ public class ZKMasterController {
     // if job master znode removed, it must have failed
     // job master is the last one to leave the job.
     // it does not send complete message as workers when it finishes.
-    String childPath = event.getData().getPath();
-    int removedWorkerID = ZKUtils.getWorkerIDFromPath(childPath);
+    String workerPath = event.getData().getPath();
+    int removedWorkerID = ZKUtils.getWorkerIDFromEphemPath(workerPath);
     WorkerWithState workerWithState =
-        ZKJobPersStateManager.getWorkerWithState(client, jobPersPath, removedWorkerID);
+        ZKPersStateManager.getWorkerWithState(client, jobPersPath, removedWorkerID);
+
+    String workerBodyText = new String(event.getData().getData(), StandardCharsets.UTF_8);
 
     // need to distinguish between completed, scaled down and failed workers
     // if a worker completed before, it has left the job by completion
@@ -294,12 +295,20 @@ public class ZKMasterController {
       // removed event received for completed worker, nothing to do
       return;
 
+    } else if (ZKUtils.DELETE_TAG.equals(workerBodyText)) {
+      // restarting worker deleted the previous ephemeral znode
+      // ignore this event, because the worker is already re-joining
+      LOG.info("Restarting worker deleted znode from previous run: " + workerPath);
+      return;
+
     } else {
       // worker failed
+      LOG.info("Removed worker znode: " + workerPath);
       LOG.info(String.format("Worker[%s] FAILED. Worker last status: %s",
           removedWorkerID, workerWithState.getState()));
 
       // TODO: publish event
+      // TODO: make worker state FAILED in PersState znode
       workerMonitor.failed(removedWorkerID);
     }
   }
@@ -310,9 +319,9 @@ public class ZKMasterController {
    */
   private void childZnodeUpdated(PathChildrenCacheEvent event) {
     String childPath = event.getData().getPath();
-    int workerID = ZKUtils.getWorkerIDFromPath(childPath);
+    int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
     edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
-        ZKJobPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
+        ZKPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
 
     // TODO: make fine
     LOG.info(String.format("Worker[%s] status changed to: %s ",
@@ -335,7 +344,7 @@ public class ZKMasterController {
       CloseableUtils.closeQuietly(masterEphemZNode);
     }
 
-    ZKUtils.closeClient();
+//    ZKUtils.closeClient();
   }
 
 

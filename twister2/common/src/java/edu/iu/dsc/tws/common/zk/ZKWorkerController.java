@@ -36,27 +36,34 @@
 
 package edu.iu.dsc.tws.common.zk;
 
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
 import org.apache.curator.framework.recipes.atomic.DistributedAtomicInteger;
 import org.apache.curator.framework.recipes.barriers.DistributedBarrier;
-import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.nodes.PersistentNode;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
+import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
+import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
+import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
+import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
+import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerInfo;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
+import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * we assume each worker is assigned a unique ID outside of this class
@@ -88,34 +95,59 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
  * we count the number of waiting workers by using a DistributedAtomicInteger
  */
 
-public class ZKWorkerController extends ZKBaseController
-    implements IWorkerController, IWorkerStatusUpdater {
+public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdater {
 
   public static final Logger LOG = Logger.getLogger(ZKWorkerController.class.getName());
+
+  // number of workers in this job
+  protected int numberOfWorkers;
+
+  // name of this job
+  protected String jobName;
 
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
 
+  // the client to connect to ZK server
+  protected CuratorFramework client;
+
   // persistent ephemeral znode for this worker
-  private PersistentNode workerZNode;
+  private PersistentNode workerEphemZNode;
+
+  // config object
+  protected Config config;
+  protected String rootPath;
 
   // variables related to the barrier
   private DistributedAtomicInteger daiForBarrier;
   private DistributedBarrier barrier;
 
+  // all workers in the job, including completed and failed ones
+  protected HashMap<WorkerInfo, WorkerState> jobWorkers;
+
+  // Inform worker failure events
+  protected IWorkerFailureListener failureListener;
+
+  // Inform when all workers joined the job
+  protected IAllJoinedListener allJoinedListener;
+
+  // Inform events related to job master
+  protected IJobMasterListener jobMasterListener;
+
   /**
    * Construct ZKWorkerController but not initialize yet
-   * @param config
-   * @param jobName
-   * @param numberOfWorkers
-   * @param workerInfo
    */
   public ZKWorkerController(Config config,
                             String jobName,
                             int numberOfWorkers,
                             WorkerInfo workerInfo) {
-    super(config, jobName, numberOfWorkers);
+    this.config = config;
+    this.jobName = jobName;
+    this.numberOfWorkers = numberOfWorkers;
     this.workerInfo = workerInfo;
+
+    this.rootPath = ZKContext.rootNode(config);
+    jobWorkers = new HashMap<>(numberOfWorkers);
   }
 
   /**
@@ -125,7 +157,7 @@ public class ZKWorkerController extends ZKBaseController
    * set this worker info in the body of that node
    * worker status also goes into the body of that znode
    * initialState has to be either: WorkerState.STARTED or WorkerState.RESTARTED
-   *
+   * <p>
    * The body of the worker znode will be updated as the status of worker changes
    * from STARTING, RUNNING, COMPLETED
    */
@@ -137,7 +169,20 @@ public class ZKWorkerController extends ZKBaseController
     }
 
     try {
-      super.initialize();
+      String zkServerAddresses = ZKContext.serverAddresses(config);
+      int sessionTimeoutMs = FaultToleranceContext.sessionTimeout(config);
+      client = ZKUtils.connectToServer(zkServerAddresses, sessionTimeoutMs);
+
+      // update numberOfWorkers from jobZnode
+      // with scaling up/down, it may have been changed
+      JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      numberOfWorkers = job.getNumberOfWorkers();
+
+      // We cache children data for parent path.
+      // So we will listen for all workers in the job
+//      childrenCache = new PathChildrenCache(client, jobPath, true);
+//      addChildrenCacheListener(childrenCache);
+//      childrenCache.start();
 
       String barrierPath = ZKUtils.constructBarrierPath(rootPath, jobName);
       barrier = new DistributedBarrier(client, barrierPath);
@@ -167,29 +212,18 @@ public class ZKWorkerController extends ZKBaseController
   @Override
   public boolean updateWorkerStatus(WorkerState newStatus) {
 
-    byte[] workerZnodeBody = ZKUtils.encodeWorkerZnode(workerInfo, newStatus.getNumber());
+    return ZKPersStateManager.updateWorkerStatus(client, rootPath, jobName, workerInfo, newStatus);
+  }
 
-    try {
-      client.setData().forPath(workerZNode.getActualPath(), workerZnodeBody);
-
-      // when we do not getData after setData,
-      // sometimes the data may not be changed immediately
-      // this seems to be working
-      workerZnodeBody = client.getData().forPath(workerZNode.getActualPath());
-      Pair<WorkerInfo, WorkerState> pair = ZKUtils.decodeWorkerZnode(workerZnodeBody);
-      if (pair.getValue() != newStatus) {
-        LOG.severe("Could not set worker status. Tried to set it to: " + newStatus
-            + ". But worker status is " + pair.getValue());
-        return false;
-      }
-
-      LOG.info("Worker status changed to: " + newStatus);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not update worker status in znode: " + workerInfo.getWorkerID(), e);
-      return false;
+  @Override
+  public WorkerState getWorkerStatusForID(int id) {
+    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, jobPersPath, id);
+    if (workerWS != null) {
+      return workerWS.getState();
     }
+
+    return null;
   }
 
   @Override
@@ -197,57 +231,160 @@ public class ZKWorkerController extends ZKBaseController
     return workerInfo;
   }
 
+  @Override
+  public WorkerInfo getWorkerInfoForID(int id) {
+
+    // TODO: get it from local cache if exists,
+
+    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, jobPersPath, id);
+    if (workerWS != null) {
+      return workerWS.getInfo();
+    }
+
+    return null;
+  }
+
+  @Override
+  public int getNumberOfWorkers() {
+    return numberOfWorkers;
+  }
+
+  @Override
+  public List<WorkerInfo> getJoinedWorkers() {
+
+    List<WorkerWithState> workers = ZKPersStateManager.getWorkers(client, rootPath, jobName);
+
+    return workers
+        .stream()
+        .filter(workerWithState -> workerWithState.running())
+        .map(workerWithState -> workerWithState.getInfo())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<WorkerInfo> getAllWorkers() throws TimeoutException {
+    return null;
+  }
+
+  /**
+   * add a single IWorkerFailureListener
+   * if additional IWorkerFailureListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addFailureListener(IWorkerFailureListener iWorkerFailureListener) {
+    if (this.failureListener != null) {
+      return false;
+    }
+
+    this.failureListener = iWorkerFailureListener;
+    return true;
+  }
+
+  /**
+   * add a single IAllJoinedListener
+   * if additional IAllJoinedListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addAllJoinedListener(IAllJoinedListener iAllJoinedListener) {
+    if (allJoinedListener != null) {
+      return false;
+    }
+
+    allJoinedListener = iAllJoinedListener;
+    return true;
+  }
+
+  /**
+   * add a single IJobMasterListener
+   * if additional IJobMasterListener tried to be added,
+   * do not add and return false
+   */
+  public boolean addJobMasterListener(IJobMasterListener iJobMasterListener) {
+    if (jobMasterListener != null) {
+      return false;
+    }
+
+    jobMasterListener = iJobMasterListener;
+    return true;
+  }
+
   /**
    * create the znode for this worker
    */
   private void createWorkerZnode(WorkerState initialState) {
-    String workerPath = ZKUtils.constructWorkerEphemPath(jobPath, workerInfo.getWorkerID());
+    String jobEphemPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    String workerPath = ZKUtils.constructWorkerEphemPath(jobEphemPath, workerInfo.getWorkerID());
 
     if (initialState == WorkerState.RESTARTED) {
-      // TODO: check whether a znode for this worker exists in the server
-      //  if so, delete it first
+      removeEphemZNode(jobEphemPath);
     }
 
-    // put WorkerInfo and its state into znode body
-    byte[] workerZnodeBody = ZKUtils.encodeWorkerZnode(workerInfo, initialState.getNumber());
-    workerZNode = ZKUtils.createPersistentEphemeralZnode(workerPath, workerZnodeBody);
-    workerZNode.start();
+    // create an ephemeral znode for the worker as workerID its body as string
+    byte[] body = ("" + workerInfo.getWorkerID()).getBytes(StandardCharsets.UTF_8);
+    workerEphemZNode = ZKUtils.createPersistentEphemeralZnode(workerPath, body);
+    workerEphemZNode.start();
     try {
-      workerZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
+      workerEphemZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
       LOG.log(Level.SEVERE,
-          "Could not create worker znode: " + workerInfo.getWorkerID(), e);
+          "Could not create worker ephemeral znode: " + workerInfo.getWorkerID(), e);
       throw new RuntimeException("Could not create worker znode: " + workerInfo, e);
     }
 
-    String fullWorkerPath = workerZNode.getActualPath();
+    String fullWorkerPath = workerEphemZNode.getActualPath();
     LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
   }
 
   /**
+   * remove ephemeral worker znode from previous run if exist
+   */
+  private void removeEphemZNode(String jobEphemPath) {
+    try {
+      List<String> children = client.getChildren().forPath(jobEphemPath);
+      for (String childZnodeName: children) {
+        int wID = ZKUtils.getWorkerIDFromEphemPath(childZnodeName);
+        if (wID == workerInfo.getWorkerID()) {
+          String wPath = jobEphemPath + "/" + childZnodeName;
+          client.setData().forPath(wPath, ZKUtils.DELETE_TAG.getBytes(StandardCharsets.UTF_8));
+          client.delete().forPath(wPath);
+          LOG.info("EphemeralWorkerZnode deleted from previous run: " + wPath);
+        }
+      }
+
+    } catch (Exception e) {
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  /**
    * Get current list of workers
-   * This list does not have the workers that have failed or already left
+   * This list does not have the workers that have failed or already completed
    */
   public List<WorkerInfo> getCurrentWorkers() {
 
-    List<WorkerInfo> currentWorkers = new ArrayList<>();
+    List<WorkerWithState> workers = ZKPersStateManager.getWorkers(client, rootPath, jobName);
 
-    for (ChildData child : childrenCache.getCurrentData()) {
-      int id = ZKUtils.getWorkerIDFromPath(child.getPath());
-      WorkerInfo worker = getWorkerInfoForID(id);
-      if (worker != null) {
-        currentWorkers.add(worker);
-      }
-
-    }
-    return currentWorkers;
+    return workers
+        .stream()
+        .filter(workerWithState -> workerWithState.startedOrCompleted())
+        .map(workerWithState -> workerWithState.getInfo())
+        .collect(Collectors.toList());
   }
 
   /**
    * get number of current workers in the job as seen from this worker
    */
-  public int getNumberOfCurrentWorkers() {
-    return childrenCache.getCurrentData().size();
+  public int getNumberOfCurrentWorkers() throws Exception {
+
+    String jobEphemPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    int size = -1;
+    try {
+      size = client.getChildren().forPath(jobEphemPath).size();
+    } catch (Exception e) {
+      throw e;
+    }
+    return size;
   }
 
   /**
@@ -341,8 +478,7 @@ public class ZKWorkerController extends ZKBaseController
    */
   public void close() {
     try {
-      super.close();
-      workerZNode.close();
+      workerEphemZNode.close();
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Exception when closing", e);
     }

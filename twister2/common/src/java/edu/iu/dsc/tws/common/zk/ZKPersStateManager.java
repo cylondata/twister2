@@ -11,6 +11,8 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.common.zk;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,10 +41,10 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
  * When the job is scaled down, we delete the znodes of killed workers.
  * This is handled by the scaler in Job Master.
  */
-public final class ZKJobPersStateManager {
-  public static final Logger LOG = Logger.getLogger(ZKJobPersStateManager.class.getName());
+public final class ZKPersStateManager {
+  public static final Logger LOG = Logger.getLogger(ZKPersStateManager.class.getName());
 
-  private ZKJobPersStateManager() {
+  private ZKPersStateManager() {
   }
 
   /**
@@ -198,11 +200,46 @@ public final class ZKJobPersStateManager {
     String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerID);
 
     try {
-      byte[] workerNodeBody = client.getData().forPath(workerPersPath);
-      return WorkerWithState.decode(workerNodeBody);
+      if (client.checkExists().forPath(workerPersPath) != null) {
+        byte[] workerNodeBody = client.getData().forPath(workerPersPath);
+        return WorkerWithState.decode(workerNodeBody);
+      }
+
+      return null;
+
     } catch (Exception e) {
       LOG.log(Level.SEVERE,
           "Could not get persistent worker znode data: " + workerPersPath, e);
+      throw new Twister2RuntimeException(e);
+    }
+  }
+
+  /**
+   * all registered workers
+   */
+  public static LinkedList<WorkerWithState> getWorkers(CuratorFramework client,
+                                                       String rootPath,
+                                                       String jobName) {
+
+    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+
+    try {
+      List<String> children = client.getChildren().forPath(jobPersPath);
+      LinkedList<WorkerWithState> workers = new LinkedList();
+      for (String childName : children) {
+        if ("jm".equals(childName)) {
+          continue;
+        }
+        String childPath = jobPersPath + "/" + childName;
+        byte[] workerNodeBody = client.getData().forPath(childPath);
+        WorkerWithState workerWithState = WorkerWithState.decode(workerNodeBody);
+        workers.add(workerWithState);
+      }
+
+      return workers;
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE,
+          "Could not get persistent worker znode data: " + jobPersPath, e);
       throw new Twister2RuntimeException(e);
     }
   }

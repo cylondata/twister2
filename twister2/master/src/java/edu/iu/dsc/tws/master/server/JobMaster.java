@@ -268,7 +268,8 @@ public class JobMaster {
     boolean faultTolerant = FaultToleranceContext.faultTolerant(config);
     workerMonitor = new WorkerMonitor(this, rrServer, dashClient, job, driver, faultTolerant);
 
-    workerHandler = new WorkerHandler(workerMonitor, rrServer);
+    workerHandler =
+        new WorkerHandler(workerMonitor, rrServer, ZKContext.isZooKeeperServerUsed(config));
     pingHandler = new PingHandler(workerMonitor, rrServer, dashClient);
     barrierHandler = new BarrierHandler(workerMonitor, rrServer);
 

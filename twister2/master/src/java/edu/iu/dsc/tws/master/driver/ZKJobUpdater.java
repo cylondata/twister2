@@ -19,8 +19,8 @@ import org.apache.curator.framework.CuratorFramework;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKJobPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
@@ -69,7 +69,7 @@ public class ZKJobUpdater {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
     String rootPath = ZKContext.rootNode(config);
     try {
-      ZKJobPersStateManager.removeScaledDownZNodes(
+      ZKPersStateManager.removeScaledDownZNodes(
           client, rootPath, jobName, minWorkerID, maxWorkerID);
       return true;
     } catch (Twister2Exception e) {

@@ -245,15 +245,15 @@ public class WorkerMonitor implements MessageHandler {
       return failMessage;
     }
 
-    if (existWorker(workerWithState.getWorkerID())) {
-      LOG.warning(String.format("The worker[%s] that has not joined the job yet tries to rejoin. "
+    if (!existWorker(workerWithState.getWorkerID())) {
+      LOG.warning(String.format("The worker[%s] that has not joined the job yet, tries to rejoin. "
               + "Ignoring this event.",
           workerWithState.getWorkerID()));
     }
 
     // update workerInfo and its status in the worker list
     workers.put(workerWithState.getWorkerID(), workerWithState);
-    LOG.info("WorkerID: " + workerWithState.getWorkerID() + " joined from failure.");
+    LOG.info("WorkerID: " + workerWithState.getWorkerID() + " rejoined from failure.");
 
     if (jobState == JobState.STARTING && allWorkersJoined()) {
       jobState = JobState.STARTED;

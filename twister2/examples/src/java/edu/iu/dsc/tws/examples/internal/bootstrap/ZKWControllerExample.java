@@ -24,7 +24,6 @@ import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
 import edu.iu.dsc.tws.api.resource.IJobMasterListener;
 import edu.iu.dsc.tws.api.resource.IWorkerController;
 import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
-import edu.iu.dsc.tws.api.resource.IWorkerStatusListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
@@ -86,7 +85,6 @@ public final class ZKWControllerExample {
 
       LoggingHelper.initTwisterFileLogHandler(workerID + "", "logs", config);
       simulateWorker(workerID);
-
     }
 
   }
@@ -116,18 +114,6 @@ public final class ZKWControllerExample {
 
     IWorkerController workerController = zkWorkerController;
     IWorkerStatusUpdater workerStatusUpdater = zkWorkerController;
-
-    zkWorkerController.addWorkerStatusListener(new IWorkerStatusListener() {
-      @Override
-      public void started(JobMasterAPI.WorkerInfo wInfo) {
-        LOG.info("worker: " + wInfo.getWorkerID() + " JOINED. ********************* ");
-      }
-
-      @Override
-      public void completed(int workerID) {
-        LOG.info("worker: " + workerID + " COMPLETED. ********************* ");
-      }
-    });
 
     zkWorkerController.addFailureListener(new IWorkerFailureListener() {
       @Override

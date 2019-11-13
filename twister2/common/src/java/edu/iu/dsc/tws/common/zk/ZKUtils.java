@@ -53,6 +53,8 @@ import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.WorkerState;
 public final class ZKUtils {
   public static final Logger LOG = Logger.getLogger(ZKUtils.class.getName());
 
+  public static final String DELETE_TAG = "DELETED_BY_RESTARTING_WORKER";
+
   // a singleton client
   private static CuratorFramework client;
 
@@ -166,11 +168,21 @@ public final class ZKUtils {
 
   /**
    * WorkerID is at the end of workerPath
-   * The string "w-" proceeds the workerID
+   * The char "-" proceeds the workerID
    * @return
    */
-  public static int getWorkerIDFromPath(String workerPath) {
+  public static int getWorkerIDFromEphemPath(String workerPath) {
     String workerIDStr = workerPath.substring(workerPath.lastIndexOf("-") + 1);
+    return Integer.parseInt(workerIDStr);
+  }
+
+  /**
+   * WorkerID is at the end of workerPath
+   * The char "/" proceeds the workerID
+   * @return
+   */
+  public static int getWorkerIDFromPersPath(String workerPath) {
+    String workerIDStr = workerPath.substring(workerPath.lastIndexOf("/") + 1);
     return Integer.parseInt(workerIDStr);
   }
 

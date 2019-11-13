@@ -42,13 +42,15 @@ public class WorkerHandler implements MessageHandler {
 
   private WorkerMonitor workerMonitor;
   private RRServer rrServer;
+  private boolean zkUsed;
 
   private HashMap<Integer, RequestID> waitList;
 
 
-  public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer) {
+  public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
     this.workerMonitor = workerMonitor;
     this.rrServer = rrServer;
+    this.zkUsed = zkUsed;
 
     waitList = new HashMap<>();
   }
@@ -78,6 +80,12 @@ public class WorkerHandler implements MessageHandler {
   }
 
   private void registerWorkerMessageReceived(RequestID id, JobMasterAPI.RegisterWorker message) {
+
+    if (zkUsed) {
+      LOG.fine("Ignoring RegisterWorker message. Since ZooKeeper is used:" + message);
+      sendRegisterWorkerResponse(id, message.getWorkerInfo().getWorkerID(), true, null);
+      return;
+    }
 
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();

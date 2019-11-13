@@ -128,20 +128,22 @@ public final class JobMasterClientExample {
     });
 
     // wait up to 2sec
-    sleeeep((long) (Math.random() * 2 * 1000));
+//    sleeeep((long) (Math.random() * 2 * 1000));
 
     List<JobMasterAPI.WorkerInfo> workerList = workerController.getJoinedWorkers();
     LOG.info("Currently joined worker IDs: " + getIDs(workerList));
 
-    try {
-      workerList = workerController.getAllWorkers();
-      LOG.info("All workers joined. IDs: " + getIDs(workerList));
-    } catch (TimeoutException timeoutException) {
-      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
-      return;
-    }
+//    try {
+//      workerList = workerController.getAllWorkers();
+//      LOG.info("All workers joined. IDs: " + getIDs(workerList));
+//    } catch (TimeoutException timeoutException) {
+//      LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
+//      return;
+//    }
 
-    // wait up to 10sec
+    // wait up to 3sec
+    sleeeep(100 * 1000);
+
     try {
       workerController.waitOnBarrier();
       LOG.info("All workers reached the barrier. Proceeding.......");
@@ -149,8 +151,12 @@ public final class JobMasterClientExample {
       LOG.log(Level.SEVERE, timeoutException.getMessage(), timeoutException);
     }
 
+    int id = job.getNumberOfWorkers() - 1;
+    JobMasterAPI.WorkerInfo info = workerController.getWorkerInfoForID(id);
+    LOG.info("WorkerInfo for " + id + ": \n" + info);
+
     // wait up to 3sec
-//    sleeeep((long) (Math.random() * 100 * 1000));
+    sleeeep((long) (Math.random() * 100 * 1000));
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 
