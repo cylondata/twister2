@@ -260,7 +260,7 @@ public final class K8sWorkerStarter {
       String rootPath = ZKContext.rootNode(cnfg);
 
       try {
-        if (ZKPersStateManager.isWorkerRestarting(client, rootPath, jbName, wInfo)) {
+        if (ZKPersStateManager.initWorkerPersState(client, rootPath, jbName, wInfo)) {
           return JobMasterAPI.WorkerState.RESTARTED;
         }
 

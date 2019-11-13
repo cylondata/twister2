@@ -217,8 +217,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public WorkerState getWorkerStatusForID(int id) {
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, jobPersPath, id);
+    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
     if (workerWS != null) {
       return workerWS.getState();
     }
@@ -236,8 +236,8 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // TODO: get it from local cache if exists,
 
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, jobPersPath, id);
+    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
     if (workerWS != null) {
       return workerWS.getInfo();
     }
@@ -313,11 +313,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * create the znode for this worker
    */
   private void createWorkerZnode(WorkerState initialState) {
-    String jobEphemPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
-    String workerPath = ZKUtils.constructWorkerEphemPath(jobEphemPath, workerInfo.getWorkerID());
+    String workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
+    String workerPath = ZKUtils.constructWorkerPath(workersEphemDir, workerInfo.getWorkerID());
 
     if (initialState == WorkerState.RESTARTED) {
-      removeEphemZNode(jobEphemPath);
+      removeEphemZNode(workersEphemDir);
     }
 
     // create an ephemeral znode for the worker as workerID its body as string
@@ -339,13 +339,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * remove ephemeral worker znode from previous run if exist
    */
-  private void removeEphemZNode(String jobEphemPath) {
+  private void removeEphemZNode(String workersEphemDir) {
     try {
-      List<String> children = client.getChildren().forPath(jobEphemPath);
+      List<String> children = client.getChildren().forPath(workersEphemDir);
       for (String childZnodeName: children) {
         int wID = ZKUtils.getWorkerIDFromEphemPath(childZnodeName);
         if (wID == workerInfo.getWorkerID()) {
-          String wPath = jobEphemPath + "/" + childZnodeName;
+          String wPath = workersEphemDir + "/" + childZnodeName;
           client.setData().forPath(wPath, ZKUtils.DELETE_TAG.getBytes(StandardCharsets.UTF_8));
           client.delete().forPath(wPath);
           LOG.info("EphemeralWorkerZnode deleted from previous run: " + wPath);
@@ -377,10 +377,10 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    */
   public int getNumberOfCurrentWorkers() throws Exception {
 
-    String jobEphemPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    String workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
     int size = -1;
     try {
-      size = client.getChildren().forPath(jobEphemPath).size();
+      size = client.getChildren().forPath(workersEphemDir).size();
     } catch (Exception e) {
       throw e;
     }

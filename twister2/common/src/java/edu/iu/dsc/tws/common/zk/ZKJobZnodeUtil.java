@@ -54,13 +54,13 @@ public final class ZKJobZnodeUtil {
 
     try {
       // check whether the job node exists, if not, return false, nothing to do
-      String jobPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+      String jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
       if (client.checkExists().forPath(jobPath) != null) {
         jobZnodesExist = true;
         logMessage.append("jobZnode exists: " + jobPath);
       }
 
-      String checkPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+      String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
       if (client.checkExists().forPath(checkPath) != null) {
         jobZnodesExist = true;
         logMessage.append("PersStatePath exists: " + checkPath);
@@ -93,7 +93,7 @@ public final class ZKJobZnodeUtil {
   public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Exception {
 
-    String jobPath = ZKUtils.constructJobEphemPath(rootPath, job.getJobName());
+    String jobPath = ZKUtils.constructWorkersEphemDir(rootPath, job.getJobName());
 
     try {
       client
@@ -117,7 +117,7 @@ public final class ZKJobZnodeUtil {
   public static JobAPI.Job readJobZNodeBody(CuratorFramework client, String jobName, Config config)
       throws Exception {
 
-    String jobPath = ZKUtils.constructJobEphemPath(ZKContext.rootNode(config), jobName);
+    String jobPath = ZKUtils.constructWorkersEphemDir(ZKContext.rootNode(config), jobName);
 
     try {
       byte[] jobBytes = client.getData().forPath(jobPath);
@@ -182,7 +182,7 @@ public final class ZKJobZnodeUtil {
     boolean allDeleted = true;
     try {
       // delete job initial-state znode
-      String checkPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+      String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
       if (client.checkExists().forPath(checkPath) != null) {
         client.delete().deletingChildrenIfNeeded().forPath(checkPath);
         LOG.log(Level.INFO, "PersStatePath deleted from ZooKeeper: " + checkPath);
@@ -209,7 +209,7 @@ public final class ZKJobZnodeUtil {
     }
 
     // delete job znode
-    String jobPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    String jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
     try {
       if (client.checkExists().forPath(jobPath) != null) {
 

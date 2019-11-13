@@ -103,7 +103,7 @@ public class ZKBaseController {
 
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
-    this.jobPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    this.jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
 
     jobWorkers = new HashMap<>(numberOfWorkers);
   }

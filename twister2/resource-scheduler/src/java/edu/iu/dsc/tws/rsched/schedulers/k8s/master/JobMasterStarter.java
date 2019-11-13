@@ -128,7 +128,7 @@ public final class JobMasterStarter {
       String rootPath = ZKContext.rootNode(config);
 
       try {
-        if (ZKPersStateManager.isJobMasterRestarting(client, rootPath, jobName, jmAddress)) {
+        if (ZKPersStateManager.initJobMasterPersState(client, rootPath, jobName, jmAddress)) {
           return JobMasterAPI.JobMasterState.JM_RESTARTED;
         }
 

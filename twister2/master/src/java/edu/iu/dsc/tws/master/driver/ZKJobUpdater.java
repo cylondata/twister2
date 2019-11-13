@@ -46,7 +46,7 @@ public class ZKJobUpdater {
     }
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String jobPath = ZKUtils.constructJobEphemPath(ZKContext.rootNode(config), job.getJobName());
+    String jobPath = ZKUtils.constructWorkersEphemDir(ZKContext.rootNode(config), job.getJobName());
     try {
       ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
     } catch (Exception e) {

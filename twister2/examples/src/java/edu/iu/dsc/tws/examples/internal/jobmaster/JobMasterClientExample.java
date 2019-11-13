@@ -142,7 +142,7 @@ public final class JobMasterClientExample {
 //    }
 
     // wait up to 3sec
-    sleeeep(100 * 1000);
+    sleeeep(50 * 1000);
 
     try {
       workerController.waitOnBarrier();
@@ -156,7 +156,7 @@ public final class JobMasterClientExample {
     LOG.info("WorkerInfo for " + id + ": \n" + info);
 
     // wait up to 3sec
-    sleeeep((long) (Math.random() * 100 * 1000));
+    sleeeep((long) (Math.random() * 10 * 1000));
 
     statusUpdater.updateWorkerStatus(JobMasterAPI.WorkerState.COMPLETED);
 

@@ -47,8 +47,8 @@ public class ZKMasterController {
   // config object
   protected Config config;
   protected String rootPath;
-  protected String jobPersPath;
-  protected String jobEphemPath;
+  protected String workersPersDir;
+  protected String workersEphemDir;
 
   // Job Master IP address
   private String masterAddress;
@@ -84,8 +84,8 @@ public class ZKMasterController {
     this.workerMonitor = workerMonitor;
 
     rootPath = ZKContext.rootNode(config);
-    jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    jobEphemPath = ZKUtils.constructJobEphemPath(rootPath, jobName);
+    workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
   }
 
   /**
@@ -116,12 +116,12 @@ public class ZKMasterController {
       }
 
       // We listen for join/remove events for ephemeral children
-      ephemChildrenCache = new PathChildrenCache(client, jobEphemPath, true);
+      ephemChildrenCache = new PathChildrenCache(client, workersEphemDir, true);
       addEphemChildrenCacheListener(ephemChildrenCache);
       ephemChildrenCache.start();
 
       // We listen for status updates for persistent path
-      persChildrenCache = new PathChildrenCache(client, jobPersPath, true);
+      persChildrenCache = new PathChildrenCache(client, workersPersDir, true);
       addPersChildrenCacheListener(persChildrenCache);
       persChildrenCache.start();
 
@@ -140,7 +140,7 @@ public class ZKMasterController {
    * create ephemeral znode for job master
    */
   private void createJMEphemZnode(JobMasterState initialState) {
-    String jmPath = ZKUtils.constructJMEphemPath(jobEphemPath);
+    String jmPath = ZKUtils.constructJMEphemPath(rootPath, jobName);
 
     // put masterAddress and its state into znode body
     byte[] jmZnodeBody = ZKUtils.encodeJobMasterZnode(masterAddress, initialState.getNumber());
@@ -231,7 +231,7 @@ public class ZKMasterController {
     String addedChildPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
     edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
+        ZKPersStateManager.getWorkerWithState(client, workersPersDir, workerID);
 
     // if the status of joining worker is RESTARTED, it is coming from failure
     if (workerWithState.getState() == JobMasterAPI.WorkerState.RESTARTED) {
@@ -273,7 +273,7 @@ public class ZKMasterController {
     String workerPath = event.getData().getPath();
     int removedWorkerID = ZKUtils.getWorkerIDFromEphemPath(workerPath);
     WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, jobPersPath, removedWorkerID);
+        ZKPersStateManager.getWorkerWithState(client, workersPersDir, removedWorkerID);
 
     String workerBodyText = new String(event.getData().getData(), StandardCharsets.UTF_8);
 
@@ -321,7 +321,7 @@ public class ZKMasterController {
     String childPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromPersPath(childPath);
     edu.iu.dsc.tws.common.zk.WorkerWithState workerWithState =
-        ZKPersStateManager.getWorkerWithState(client, jobPersPath, workerID);
+        ZKPersStateManager.getWorkerWithState(client, workersPersDir, workerID);
 
     // TODO: make fine
     LOG.info(String.format("Worker[%s] status changed to: %s ",

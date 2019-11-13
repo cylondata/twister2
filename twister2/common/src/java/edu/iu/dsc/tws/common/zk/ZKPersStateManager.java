@@ -28,10 +28,11 @@ import edu.iu.dsc.tws.proto.system.job.JobAPI;
 
 /**
  * This class has methods to keep persistent status of a job in ZooKeeper servers
- * Parent znode has the job object as its body
+ * Parent znode (directory) has the job object as its body
  * One persistent child znode is created for each worker with workerID as its name
  * Each worker znode has WorkerInfo and the last WorkerState as its body
- *
+ * A separate persistent znode is created for job master.
+ * JM znode is not in workers directory. It is in the upper directory in the main job directory.
  * <p>
  * When a worker starts, it needs to know whether it is starting for the first time or
  * it is restarting from failure.
@@ -55,7 +56,7 @@ public final class ZKPersStateManager {
   public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Exception {
 
-    String persStatePath = ZKUtils.constructJobPersPath(rootPath, job.getJobName());
+    String persStatePath = ZKUtils.constructWorkersPersDir(rootPath, job.getJobName());
 
     try {
       client
@@ -73,19 +74,20 @@ public final class ZKPersStateManager {
   }
 
   /**
-   * If the worker is starting for the first time,
-   * This method returns false
-   * It creates a persistent znode for this worker on ZooKeeper server
-   * Subsequent calls to this method returns true and updates the znode body
+   * Initialize worker persistent state at ZooKeeper server
+   * If the worker is starting for the first time, returns false
+   * If the worker is restarting, returns true
+   *
+   * A persistent znode is created/updated for this worker on ZooKeeper server
    * Each worker must call this method exactly once when they start
    */
-  public static boolean isWorkerRestarting(CuratorFramework client,
-                                           String rootPath,
-                                           String jobName,
-                                           WorkerInfo workerInfo) throws Exception {
+  public static boolean initWorkerPersState(CuratorFramework client,
+                                            String rootPath,
+                                            String jobName,
+                                            WorkerInfo workerInfo) throws Exception {
 
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerInfo.getWorkerID());
+    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerInfo.getWorkerID());
 
     // if the worker znode exists,
     // update the body and return true
@@ -107,19 +109,19 @@ public final class ZKPersStateManager {
   }
 
   /**
-   * If the job master is starting for the first time,
-   * This method returns false
-   * It creates a znode for the job master on ZooKeeper server
-   * Subsequent calls to this method returns true
-   * Job Master must call this method exactly once when they start
+   * Initialize job master persistent state at ZooKeeper server
+   * If the job master is starting for the first time, return false
+   * If the job master is restarting, return true
+   *
+   * A persistent znode is created/updated for the job master on ZooKeeper server
+   * Job master must call this method exactly once when it starts
    */
-  public static boolean isJobMasterRestarting(CuratorFramework client,
-                                              String rootPath,
-                                              String jobName,
-                                              String jmAddress) throws Exception {
+  public static boolean initJobMasterPersState(CuratorFramework client,
+                                               String rootPath,
+                                               String jobName,
+                                               String jmAddress) throws Exception {
 
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    String jmPersPath = ZKUtils.constructJMPersPath(jobPersPath);
+    String jmPersPath = ZKUtils.constructJMPersPath(rootPath, jobName);
 
     // if the worker znode exists,
     // update the body and return true
@@ -153,10 +155,10 @@ public final class ZKPersStateManager {
                                             int minID,
                                             int maxID) throws Twister2Exception {
 
-    String checkPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+    String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
 
     for (int workerID = minID; workerID < maxID; workerID++) {
-      String workerCheckPath = ZKUtils.constructWorkerPersPath(checkPath, workerID);
+      String workerCheckPath = ZKUtils.constructWorkerPath(checkPath, workerID);
 
       try {
         // not sure whether we need to check the existence
@@ -178,8 +180,8 @@ public final class ZKPersStateManager {
                                            WorkerInfo workerInfo,
                                            WorkerState newStatus) {
 
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
-    String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerInfo.getWorkerID());
+    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerInfo.getWorkerID());
     WorkerWithState workerWithState = new WorkerWithState(workerInfo, newStatus);
 
     try {
@@ -194,10 +196,10 @@ public final class ZKPersStateManager {
   }
 
   public static WorkerWithState getWorkerWithState(CuratorFramework client,
-                                                   String jobPersPath,
+                                                   String workersPersDir,
                                                    int workerID) {
 
-    String workerPersPath = ZKUtils.constructWorkerPersPath(jobPersPath, workerID);
+    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerID);
 
     try {
       if (client.checkExists().forPath(workerPersPath) != null) {
@@ -215,22 +217,19 @@ public final class ZKPersStateManager {
   }
 
   /**
-   * all registered workers
+   * return all registered workers
    */
   public static LinkedList<WorkerWithState> getWorkers(CuratorFramework client,
                                                        String rootPath,
                                                        String jobName) {
 
-    String jobPersPath = ZKUtils.constructJobPersPath(rootPath, jobName);
+    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
 
     try {
-      List<String> children = client.getChildren().forPath(jobPersPath);
+      List<String> children = client.getChildren().forPath(workersPersDir);
       LinkedList<WorkerWithState> workers = new LinkedList();
       for (String childName : children) {
-        if ("jm".equals(childName)) {
-          continue;
-        }
-        String childPath = jobPersPath + "/" + childName;
+        String childPath = workersPersDir + "/" + childName;
         byte[] workerNodeBody = client.getData().forPath(childPath);
         WorkerWithState workerWithState = WorkerWithState.decode(workerNodeBody);
         workers.add(workerWithState);
@@ -239,7 +238,7 @@ public final class ZKPersStateManager {
       return workers;
     } catch (Exception e) {
       LOG.log(Level.SEVERE,
-          "Could not get persistent worker znode data: " + jobPersPath, e);
+          "Could not get persistent worker znode data: " + workersPersDir, e);
       throw new Twister2RuntimeException(e);
     }
   }

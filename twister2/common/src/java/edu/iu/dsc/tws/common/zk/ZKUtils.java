@@ -105,65 +105,57 @@ public final class ZKUtils {
   /**
    * construct main job directory path for the job
    */
-  public static String constructJobPath(String rootPath, String jobName) {
+  public static String constructJobDir(String rootPath, String jobName) {
     return rootPath + "/" + jobName;
   }
 
   /**
    * construct ephemeral directory path for the job
    */
-  public static String constructJobEphemPath(String rootPath, String jobName) {
-    return constructJobPath(rootPath, jobName) + "/job-ephem-state";
+  public static String constructWorkersEphemDir(String rootPath, String jobName) {
+    return constructJobDir(rootPath, jobName) + "/workers-ephem-state";
   }
 
   /**
    * construct persistent directory path for the job
    */
-  public static String constructJobPersPath(String rootPath, String jobName) {
-    return constructJobPath(rootPath, jobName) + "/job-pers-state";
+  public static String constructWorkersPersDir(String rootPath, String jobName) {
+    return constructJobDir(rootPath, jobName) + "/workers-pers-state";
+  }
+
+  /**
+   * construct a worker path from the workers directory
+   */
+  public static String constructWorkerPath(String workersDir, int workerID) {
+    return workersDir + "/" + workerID;
+  }
+
+  /**
+   * construct the job master path for a persistent znode that will store the job master state
+   */
+  public static String constructJMPersPath(String rootPath, String jobName) {
+    return constructJobDir(rootPath, jobName) + "/jm-pers-state";
+  }
+
+  /**
+   * construct the job master path for an ephemeral znode that will watch JM liveness
+   */
+  public static String constructJMEphemPath(String rootPath, String jobName) {
+    return constructJobDir(rootPath, jobName) + "/jm-ephem-state";
   }
 
   /**
    * construct a distributed atomic integer path for barrier
    */
   public static String constructDaiPathForBarrier(String rootPath, String jobName) {
-    return constructJobPath(rootPath, jobName) + "/dai-for-barrier";
+    return constructJobDir(rootPath, jobName) + "/dai-for-barrier";
   }
 
   /**
    * construct a distributed barrier path
    */
   public static String constructBarrierPath(String rootPath, String jobName) {
-    return constructJobPath(rootPath, jobName) + "/barrier";
-  }
-
-  /**
-   * construct a worker path from the given job path and worker network info
-   */
-  public static String constructWorkerEphemPath(String jobEphemPath, int workerID) {
-    return jobEphemPath + "/" + workerID;
-  }
-
-  /**
-   * construct a worker path from the given job initial state path and worker ID
-   */
-  public static String constructWorkerPersPath(String jobPersPath, int workerID) {
-    return jobPersPath + "/" + workerID;
-  }
-
-  /**
-   * construct a worker path from the given job initial state path and entityID
-   * entityID can be "jm" for job master and workerID for workers
-   */
-  public static String constructJMPersPath(String jobPersStatePath) {
-    return jobPersStatePath + "/jm";
-  }
-
-  /**
-   * construct job master path for the given job path
-   */
-  public static String constructJMEphemPath(String jobEphemPath) {
-    return jobEphemPath + "/jm";
+    return constructJobDir(rootPath, jobName) + "/barrier";
   }
 
   /**
