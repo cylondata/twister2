@@ -82,7 +82,13 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public StreamingAllSharingExecutor2(Config cfg, int workerId, TWSChannel channel) {
+  /**
+   * Execution plan
+   */
+  private ExecutionPlan plan;
+
+  public StreamingAllSharingExecutor2(Config cfg, int workerId, TWSChannel channel,
+                                      ExecutionPlan executionPlan) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -91,9 +97,10 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
       this.threads = Executors.newFixedThreadPool(numThreads - 1,
           new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     }
+    this.plan = executionPlan;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -101,10 +108,10 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runExecution(plan);
+    return runExecution();
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  public IExecution iExecute() {
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -112,7 +119,7 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
   }
 
   @Override
@@ -122,11 +129,16 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
     }
   }
 
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return plan;
+  }
+
   /**
    * Execution Method for Batch Tasks
    */
-  public boolean runExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public boolean runExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -143,7 +155,7 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
       worker.runExecution();
     }
 
-    cleanUp(executionPlan, nodes);
+    cleanUp(nodes);
     return true;
   }
 
@@ -175,7 +187,12 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
     return workers;
   }
 
-  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+  @Override
+  public boolean execute(boolean close) {
+    return execute();
+  }
+
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
       doneSignal.await();
@@ -187,8 +204,8 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
     cleanUpCalled = true;
   }
 
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -197,11 +214,11 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
     }
 
     StreamWorker[] workers = scheduleExecution(nodes);
-    return new StreamExecution(executionPlan, nodes, workers[0]);
+    return new StreamExecution(plan, nodes, workers[0]);
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
+  public boolean closeExecution() {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
@@ -436,10 +453,10 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
         mainWorker.runExecution();
       }
 
-      cleanUp(executionPlan, nodeMap);
+      cleanUp(nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 
@@ -453,7 +470,7 @@ public class StreamingAllSharingExecutor2 implements IExecutor {
           return true;
         }
         // clean up
-        cleanUp(executionPlan, nodeMap);
+        cleanUp(nodeMap);
         cleanUpCalled = false;
         // if we finish, lets schedule
         CommunicationWorker[] workers = scheduleWaitFor(nodeMap);

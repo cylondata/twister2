@@ -77,7 +77,12 @@ public class BatchSharingExecutor2 implements IExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel) {
+  /**
+   * The current plan we are executing
+   */
+  protected ExecutionPlan plan;
+
+  public BatchSharingExecutor2(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan) {
     this.workerId = workerId;
     this.config = cfg;
     this.channel = channel;
@@ -86,9 +91,10 @@ public class BatchSharingExecutor2 implements IExecutor {
       this.threads = Executors.newFixedThreadPool(numThreads - 1,
           new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
     }
+    this.plan = plan;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -104,7 +110,7 @@ public class BatchSharingExecutor2 implements IExecutor {
     return runExecution(plan);
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  public IExecution iExecute() {
     // lets create the runtime object
     ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
     // updated config
@@ -117,7 +123,16 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
+  }
+
+  @Override
+  public boolean execute(boolean close) {
+    boolean e = execute();
+    if (close) {
+      closeExecution();
+    }
+    return e;
   }
 
   @Override
@@ -129,6 +144,11 @@ public class BatchSharingExecutor2 implements IExecutor {
 
   public boolean isNotStopped() {
     return notStopped;
+  }
+
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return plan;
   }
 
   /**
@@ -197,8 +217,8 @@ public class BatchSharingExecutor2 implements IExecutor {
     cleanUpCalled = true;
   }
 
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
-    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
+  public IExecution runIExecution() {
+    Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -207,11 +227,11 @@ public class BatchSharingExecutor2 implements IExecutor {
     }
 
     BatchWorker[] workers = scheduleExecution(nodes);
-    return new BatchExecution(executionPlan, nodes, workers[0]);
+    return new BatchExecution(plan, nodes, workers[0]);
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
+  public boolean closeExecution() {
     Map<Integer, INodeInstance> nodes = plan.getNodes();
 
     if (nodes.size() == 0) {
@@ -419,7 +439,7 @@ public class BatchSharingExecutor2 implements IExecutor {
       cleanUp(executionPlan, nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 

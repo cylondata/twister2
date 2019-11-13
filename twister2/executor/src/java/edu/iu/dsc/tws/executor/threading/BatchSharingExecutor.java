@@ -51,15 +51,15 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
    */
   private CountDownLatch doneSignal;
 
-  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel) {
-    super(cfg, channel);
+  public BatchSharingExecutor(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan) {
+    super(cfg, channel, plan);
     this.workerId = workerId;
   }
 
   /**
    * Execution Method for Batch Tasks
    */
-  public boolean runExecution(ExecutionPlan executionPlan) {
+  public boolean runExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -80,8 +80,17 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       channel.progress();
     }
 
-    cleanUp(executionPlan, nodes);
+    cleanUp(nodes);
     return true;
+  }
+
+  @Override
+  public boolean execute(boolean close) {
+    boolean e = execute();
+    if (close) {
+      closeExecution();
+    }
+    return e;
   }
 
   private void scheduleExecution(Map<Integer, INodeInstance> nodes) {
@@ -114,7 +123,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
     }
   }
 
-  private void cleanUp(ExecutionPlan executionPlan, Map<Integer, INodeInstance> nodes) {
+  private void cleanUp(Map<Integer, INodeInstance> nodes) {
     // lets wait for thread to finish
     try {
       doneSignal.await();
@@ -130,7 +139,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public IExecution runIExecution(ExecutionPlan executionPlan) {
+  public IExecution runIExecution() {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
@@ -149,8 +158,8 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
   }
 
   @Override
-  public boolean closeExecution(ExecutionPlan plan) {
-    Map<Integer, INodeInstance> nodes = plan.getNodes();
+  public boolean closeExecution() {
+    Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
 
     if (nodes.size() == 0) {
       LOG.warning(String.format("Worker %d has zero assigned tasks, you may "
@@ -165,7 +174,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       channel.progress();
     }
 
-    close(plan, nodes);
+    close(executionPlan, nodes);
 
     return true;
   }
@@ -349,10 +358,10 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
       // we are going to set to executed
       executionPlan.setExecutionState(ExecutionState.EXECUTED);
 
-      cleanUp(executionPlan, nodeMap);
+      cleanUp(nodeMap);
 
       // now wait for it
-      closeExecution(executionPlan);
+      closeExecution();
       return true;
     }
 
@@ -367,7 +376,7 @@ public class BatchSharingExecutor extends ThreadSharingExecutor {
         // we are going to set to executed
         executionPlan.setExecutionState(ExecutionState.EXECUTED);
         // clean up
-        cleanUp(executionPlan, nodeMap);
+        cleanUp(nodeMap);
         cleanUpCalled = false;
         // if we finish, lets schedule
         scheduleWaitFor(nodeMap);

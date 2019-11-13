@@ -14,82 +14,75 @@ package edu.iu.dsc.tws.executor.threading;
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.compute.executor.ExecutorContext;
-import edu.iu.dsc.tws.api.compute.executor.IExecution;
 import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.util.CommonThreadPool;
 
-public class Executor implements IExecutor {
-
+public class ExecutorFactory {
+  /**
+   * Base configuration we are starting with
+   */
   private Config config;
 
+  /**
+   * THe worker id
+   */
   private int workerId;
 
-  private IExecutor executor;
+  /**
+   * The communication channel
+   */
+  private TWSChannel channel;
 
-  public Executor(Config cfg, int wId, TWSChannel channel) {
-    this(cfg, wId, channel, OperationMode.STREAMING);
-  }
 
-  public Executor(Config cfg, int wId, TWSChannel channel, OperationMode operationMode) {
+  public ExecutorFactory(Config cfg, int wId, TWSChannel ch) {
     this.config = cfg;
     this.workerId = wId;
+    this.channel = ch;
 
-    //initialize common thread pool
+    // initialize common thread pool
     if (!CommonThreadPool.isActive()) {
       CommonThreadPool.init(config);
     }
+  }
 
+  private IExecutor getExecutor(Config planConfig, OperationMode operationMode,
+                                ExecutionPlan plan) {
+    IExecutor executor;
     // lets start the execution
     if (operationMode == OperationMode.STREAMING) {
-      String streamExecutor = ExecutorContext.getStreamExecutor(config);
+      String streamExecutor = ExecutorContext.getStreamExecutor(planConfig);
       if (ExecutorContext.STREAM_EXECUTOR_ALL_SHARING.equals(streamExecutor)) {
-        executor = new StreamingAllSharingExecutor(config, workerId, channel);
+        executor = new StreamingAllSharingExecutor(planConfig, workerId, channel, plan);
       } else if (ExecutorContext.STREAM_EXECUTOR_DEDICATED_COMM.equals(streamExecutor)) {
-        executor = new StreamingSharingExecutor(config, workerId, channel);
+        executor = new StreamingSharingExecutor(planConfig, workerId, channel, plan);
       } else {
         throw new Twister2RuntimeException("Un-known stream executor specified - "
             + streamExecutor);
       }
     } else {
-      String batchExecutor = ExecutorContext.getBatchExecutor(config);
+      String batchExecutor = ExecutorContext.getBatchExecutor(planConfig);
       if (ExecutorContext.BATCH_EXECUTOR_SHARING_SEP_COMM.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor(config, workerId, channel);
+        executor = new BatchSharingExecutor(planConfig, workerId, channel, plan);
       } else if (ExecutorContext.BATCH_EXECUTOR_SHARING.equals(batchExecutor)) {
-        executor = new BatchSharingExecutor2(config, workerId, channel);
+        executor = new BatchSharingExecutor2(planConfig, workerId, channel, plan);
       } else {
         throw new Twister2RuntimeException("Un-known batch executor specified - " + batchExecutor);
       }
     }
+    return executor;
   }
 
-  /***
-   * Communication Channel must be progressed after the task execution model
-   * is initialized. It must be progressed only after execution is instantiated.
-   * */
-  @Override
-  public boolean execute(ExecutionPlan executionPlan) {
-    return executor.execute(executionPlan);
-  }
-
-  /***
-   * Communication Channel must be progressed after the task execution model
-   * is initialized. It must be progressed only after execution is instantiated.
-   * */
-  @Override
-  public IExecution iExecute(ExecutionPlan executionPlan) {
-    return executor.iExecute(executionPlan);
-  }
-
-  @Override
-  public boolean closeExecution(ExecutionPlan executionPlan) {
-    return executor.closeExecution(executionPlan);
-  }
-
-  @Override
-  public void close() {
-    executor.close();
+  /**
+   * Get the executor
+   * @param planConfig the plan specific configurations
+   * @param executionPlan the execut
+   * @param mode the operation mode
+   * @return the executor
+   */
+  public IExecutor getExecutor(Config planConfig, ExecutionPlan executionPlan, OperationMode mode) {
+    return getExecutor(planConfig, mode, executionPlan);
   }
 }

@@ -19,6 +19,7 @@ import edu.iu.dsc.tws.api.compute.IFunction;
 import edu.iu.dsc.tws.api.compute.IMessage;
 import edu.iu.dsc.tws.api.compute.TaskContext;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.graph.OperationMode;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -115,10 +116,10 @@ public class KMeansWorker implements IWorker {
 
     //Perform the iterations from 0 to 'n' number of iterations
     //ExecutionPlan plan = taskSchedulePlanMap.get(kmeansTaskGraph.getGraphName());
-    ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
+    IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph);
     for (int i = 0; i < iterations; i++) {
       //actual execution of the third task graph
-      taskExecutor.itrExecute(kmeansTaskGraph, plan, i == iterations - 1);
+      ex.execute(i == iterations - 1);
     }
 
     cEnv.close();

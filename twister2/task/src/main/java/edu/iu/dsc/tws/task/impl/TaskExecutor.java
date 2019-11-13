@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import edu.iu.dsc.tws.api.checkpointing.CheckpointingClient;
 import edu.iu.dsc.tws.api.comms.Communicator;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
-import edu.iu.dsc.tws.api.compute.executor.IExecution;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.executor.INodeInstance;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.compute.modifiers.Collector;
@@ -40,7 +40,7 @@ import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.resource.WorkerEnvironment;
 import edu.iu.dsc.tws.dataset.DataObjectImpl;
 import edu.iu.dsc.tws.executor.core.ExecutionPlanBuilder;
-import edu.iu.dsc.tws.executor.threading.Executor;
+import edu.iu.dsc.tws.executor.threading.ExecutorFactory;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.tsched.taskscheduler.TaskScheduler;
 
@@ -69,14 +69,26 @@ public class TaskExecutor {
    * The network communicator
    */
   private Communicator communicator;
+
+  /**
+   * Checkpointing client
+   */
   private CheckpointingClient checkpointingClient;
 
   /**
    * The executor used by this task executor
    */
-  private Executor executor;
+  private ExecutorFactory executor;
 
+  /**
+   * Keep the data objects with name -> object
+   */
   private Map<String, DataObject> dataObjectMap = new HashMap<>();
+
+  /**
+   * The current executions that are happening
+   */
+  private Map<String, IExecutor> currentExecutorMap = new HashMap<>();
 
   /**
    * Creates a task executor.
@@ -92,6 +104,7 @@ public class TaskExecutor {
     this.workerInfoList = workerInfoList;
     this.communicator = net;
     this.checkpointingClient = checkpointingClient;
+    this.executor = new ExecutorFactory(config, workerID, communicator.getChannel());
   }
 
   public TaskExecutor(WorkerEnvironment workerEnv) {
@@ -100,6 +113,7 @@ public class TaskExecutor {
     this.workerInfoList = workerEnv.getWorkerList();
     this.communicator = workerEnv.getCommunicator();
     this.checkpointingClient = workerEnv.getWorkerController().getCheckpointingClient();
+    this.executor = new ExecutorFactory(config, workerID, communicator.getChannel());
   }
 
   /**
@@ -158,16 +172,13 @@ public class TaskExecutor {
    * @param plan       the execution plan
    */
   public void execute(Config taskConfig, ComputeGraph graph, ExecutionPlan plan) {
-    this.distributeData(plan);
+    this.distributeData(plan, dataObjectMap);
     Config newCfg = Config.newBuilder().putAll(config).putAll(taskConfig).build();
 
-    if (executor == null) {
-      executor = new Executor(newCfg, workerID, communicator.getChannel(),
-          graph.getOperationMode());
-    }
-    executor.execute(plan);
-    executor.closeExecution(plan);
-    this.collectData(plan);
+    IExecutor ex = executor.getExecutor(newCfg, plan, graph.getOperationMode());
+    ex.execute();
+    ex.closeExecution();
+    this.collectData(config, plan, dataObjectMap);
   }
 
   /**
@@ -179,14 +190,11 @@ public class TaskExecutor {
    * @param plan  the execution plan
    */
   public void execute(ComputeGraph graph, ExecutionPlan plan) {
-    this.distributeData(plan);
-    if (executor == null) {
-      executor = new Executor(config, workerID, communicator.getChannel(),
-          graph.getOperationMode());
-    }
-    executor.execute(plan);
-    executor.closeExecution(plan);
-    this.collectData(plan);
+    this.distributeData(plan, dataObjectMap);
+    IExecutor ex = executor.getExecutor(config, plan, graph.getOperationMode());
+    ex.execute();
+    ex.closeExecution();
+    this.collectData(config, plan, dataObjectMap);
   }
 
   /**
@@ -197,50 +205,47 @@ public class TaskExecutor {
    * @param graph the dataflow graph
    * @param plan  the execution plan
    */
-  public void itrExecute(ComputeGraph graph, ExecutionPlan plan) {
-    this.itrExecute(graph, plan, false);
+  public IExecutor createExecution(ComputeGraph graph, ExecutionPlan plan) {
+    return executor.getExecutor(config, plan, graph.getOperationMode());
   }
 
-  public void itrExecute(ComputeGraph graph, ExecutionPlan plan, boolean finalIteration) {
-    this.distributeData(plan);
-    if (executor == null) {
-      executor = new Executor(config, workerID, communicator.getChannel(),
-          graph.getOperationMode());
-    }
-    executor.execute(plan);
-    if (finalIteration) {
-      executor.closeExecution(plan);
-    }
-    this.collectData(plan);
+  /**
+   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
+   * streaming, this call doesn't return while for batch computations it returns after
+   * the execution is done.
+   *
+   * @param graph the dataflow graph
+   */
+  public IExecutor createExecution(ComputeGraph graph) {
+    TaskScheduler taskScheduler = new TaskScheduler();
+    taskScheduler.initialize(config);
+
+    WorkerPlan workerPlan = createWorkerPlan();
+    TaskSchedulePlan taskSchedulePlan = taskScheduler.schedule(graph, workerPlan);
+
+    ExecutionPlanBuilder executionPlanBuilder = new ExecutionPlanBuilder(
+        workerID, workerInfoList, communicator, this.checkpointingClient);
+    ExecutionPlan plan = executionPlanBuilder.build(config, graph, taskSchedulePlan);
+    return executor.getExecutor(config, plan, graph.getOperationMode());
+  }
+
+  /**
+   * Run the execution. Before that it will distribute the data. After execution, it will collect
+   * the data.
+   *
+   * @param ex the executor
+   */
+  public void execute(IExecutor ex) {
+    this.distributeData(ex.getExecutionPlan(), dataObjectMap);
+    ex.execute();
+    this.collectData(config, ex.getExecutionPlan(), dataObjectMap);
   }
 
   /**
    * Wait for the execution to complete
-   *
-   * @param plan  the dataflow graph
-   * @param graph the task graph
    */
-  public void closeExecution(ComputeGraph graph, ExecutionPlan plan) {
-    if (executor == null) {
-      throw new IllegalStateException("Cannot call waifor before calling execute");
-    }
-    executor.closeExecution(plan);
-  }
-
-  /**
-   * Execute a plan and a graph. This call blocks until the execution finishes. In case of
-   * streaming, this call doesn't return while for batch computations it returns after
-   * the execution is done.
-   *
-   * @param graph the dataflow graph
-   * @param plan  the execution plan
-   */
-  public IExecution iExecute(ComputeGraph graph, ExecutionPlan plan) {
-    if (executor == null) {
-      executor = new Executor(config, workerID, communicator.getChannel(),
-          graph.getOperationMode());
-    }
-    return executor.iExecute(plan);
+  public void closeExecution(IExecutor ex) {
+    ex.closeExecution();
   }
 
   /**
@@ -275,6 +280,21 @@ public class TaskExecutor {
   /**
    * Add input to the the task instances
    *
+   * @param ex     execution plan
+   * @param taskName task name
+   * @param inputKey inputkey
+   * @param input    input
+   * @deprecated Inputs are automatically handled now
+   */
+  @Deprecated
+  public void addInput(IExecutor ex,
+                       String taskName, String inputKey, DataObject<?> input) {
+    addInput(null, ex.getExecutionPlan(), taskName, inputKey, input);
+  }
+
+  /**
+   * Add input to the the task instances
+   *
    * @param graph    task graph
    * @param plan     execution plan
    * @param inputKey inputkey
@@ -297,6 +317,20 @@ public class TaskExecutor {
         ((Receptor) task).add(inputKey, input);
       }
     }
+  }
+
+  /**
+   * Add input to the the task instances
+   *
+   * @param ex     execution plan
+   * @param inputKey inputkey
+   * @param input    input
+   * @deprecated Inputs are handled automatically now
+   */
+  @Deprecated
+  public void addSourceInput(IExecutor ex,
+                             String inputKey, DataObject<Object> input) {
+    addSourceInput(null, ex.getExecutionPlan(), inputKey, input);
   }
 
   /**
@@ -369,7 +403,8 @@ public class TaskExecutor {
    * This method collects all the output from the provided {@link ExecutionPlan}.
    * The partition IDs will be assigned just before adding the partitions to the {@link DataObject}
    */
-  private void collectData(ExecutionPlan executionPlan) {
+  private static void collectData(Config cfg, ExecutionPlan executionPlan,
+                                  Map<String, DataObject> dataMap) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     Map<String, DataObject> dataObjectMapForPlan = new HashMap<>();
     if (nodes != null) {
@@ -388,7 +423,7 @@ public class TaskExecutor {
             if (partition != null) {
               partition.setId(node.getIndex());
               dataObjectMapForPlan.computeIfAbsent(name,
-                  n -> new DataObjectImpl<>(config)).addPartition(partition);
+                  n -> new DataObjectImpl<>(cfg)).addPartition(partition);
             } else {
               LOG.warning(String.format("Task index %d  of task %d returned null for data %s",
                   node.getIndex(), node.getId(), name));
@@ -397,14 +432,14 @@ public class TaskExecutor {
         }
       });
     }
-    this.dataObjectMap.putAll(dataObjectMapForPlan);
+    dataMap.putAll(dataObjectMapForPlan);
   }
 
   /**
    * This method distributes collected {@link DataPartition}s to the
    * intended {@link Receptor}s
    */
-  private void distributeData(ExecutionPlan executionPlan) {
+  private static void distributeData(ExecutionPlan executionPlan, Map<String, DataObject> dataMap) {
     Map<Integer, INodeInstance> nodes = executionPlan.getNodes();
     if (nodes != null) {
       nodes.forEach((id, node) -> {
@@ -412,7 +447,7 @@ public class TaskExecutor {
         if (task instanceof Receptor) {
           Set<String> receivableNames = ((Receptor) task).getReceivableNames();
           for (String receivableName : receivableNames) {
-            DataObject dataObject = this.dataObjectMap.get(receivableName);
+            DataObject dataObject = dataMap.get(receivableName);
             if (dataObject == null) {
               throw new Twister2RuntimeException("Couldn't find input data" + receivableName
                   + " for task " + node.getId());
@@ -455,8 +490,5 @@ public class TaskExecutor {
   }
 
   public void close() {
-    if (executor != null) {
-      executor.close();
-    }
   }
 }

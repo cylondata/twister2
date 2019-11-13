@@ -18,25 +18,28 @@ import edu.iu.dsc.tws.api.faulttolerance.FaultAcceptable;
 public interface IExecutor extends FaultAcceptable {
   /**
    * Execute the specific plan
-   * @param plan execution plan
    * @return true if accepted
    */
-  boolean execute(ExecutionPlan plan);
+  boolean execute();
+
+  /**
+   * Execute the specific plan
+   * @return true if accepted
+   */
+  boolean execute(boolean close);
 
   /**
    * Asynchronously execute a plan, One need to call progress on the execution object returned to
    * continue the execution
-   * @param plan execution plan
    * @return an execution or null if not accepted
    */
-  IExecution iExecute(ExecutionPlan plan);
+  IExecution iExecute();
 
   /**
    * Wait for the execution to complete
-   * @param plan the execution plan
    * @return true if successful
    */
-  boolean closeExecution(ExecutionPlan plan);
+  boolean closeExecution();
 
   /**
    * Terminate the executor
@@ -51,4 +54,10 @@ public interface IExecutor extends FaultAcceptable {
   @Override
   default void onFault(Fault fault) throws Twister2Exception {
   }
+
+  /**
+   * Get the execution plan associated with this executor
+   * @return the execution plan
+   */
+  ExecutionPlan getExecutionPlan();
 }

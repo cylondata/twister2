@@ -39,47 +39,52 @@ public abstract class ThreadSharingExecutor implements IExecutor {
 
   protected Config config;
 
-  public ThreadSharingExecutor(Config config, TWSChannel ch) {
+  protected ExecutionPlan executionPlan;
+
+  public ThreadSharingExecutor(Config config, TWSChannel ch, ExecutionPlan plan) {
     this.config = config;
     this.channel = ch;
     this.numThreads = ExecutorContext.threadsPerContainer(config);
     this.threads = Executors.newFixedThreadPool(numThreads,
         new ThreadFactoryBuilder().setNameFormat("executor-%d").setDaemon(true).build());
+    this.executionPlan = plan;
   }
 
-  public boolean execute(ExecutionPlan plan) {
+  public boolean execute() {
     // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
+    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config),
+        executionPlan, channel);
     // updated config
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runExecution(plan);
+    return runExecution();
   }
 
-  public IExecution iExecute(ExecutionPlan plan) {
+  public IExecution iExecute() {
     // lets create the runtime object
-    ExecutionRuntime runtime = new ExecutionRuntime(ExecutorContext.jobName(config), plan, channel);
+    ExecutionRuntime runtime = new ExecutionRuntime(
+        ExecutorContext.jobName(config), executionPlan, channel);
     // updated config
     this.config = Config.newBuilder().putAll(config).
         put(ExecutorContext.TWISTER2_RUNTIME_OBJECT, runtime).build();
 
     // go through the instances
-    return runIExecution(plan);
+    return runIExecution();
   }
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract boolean runExecution(ExecutionPlan plan);
+  public abstract boolean runExecution();
 
   /**
    * Specific implementation needs to implement this method
    * @return weather we executed successfully
    */
-  public abstract IExecution runIExecution(ExecutionPlan plan);
+  public abstract IExecution runIExecution();
 
   @Override
   public void close() {
@@ -91,5 +96,10 @@ public abstract class ThreadSharingExecutor implements IExecutor {
         break;
       }
     }
+  }
+
+  @Override
+  public ExecutionPlan getExecutionPlan() {
+    return executionPlan;
   }
 }

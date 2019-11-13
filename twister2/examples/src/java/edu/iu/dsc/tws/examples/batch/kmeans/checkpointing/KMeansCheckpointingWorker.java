@@ -28,6 +28,7 @@ import edu.iu.dsc.tws.api.checkpointing.Snapshot;
 import edu.iu.dsc.tws.api.comms.packing.types.ObjectPacker;
 import edu.iu.dsc.tws.api.comms.packing.types.primitive.IntegerPacker;
 import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
+import edu.iu.dsc.tws.api.compute.executor.IExecutor;
 import edu.iu.dsc.tws.api.compute.graph.ComputeGraph;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
@@ -146,7 +147,7 @@ public class KMeansCheckpointingWorker implements IWorker {
 
     //Perform the iterations from 0 to 'n' number of iterations
     ExecutionPlan plan = taskExecutor.plan(kmeansTaskGraph);
-
+    IExecutor ex = taskExecutor.createExecution(kmeansTaskGraph, plan);
     int i = (int) snapshot.getOrDefault(I_KEY, 0);      // recover from checkpoint
     for (; i < iterations; i++) {
       //add the datapoints and centroids as input to the kmeanssource task.
@@ -155,14 +156,14 @@ public class KMeansCheckpointingWorker implements IWorker {
       taskExecutor.addInput(
           kmeansTaskGraph, plan, "kmeanssource", "centroids", centroidsDataObject);
       //actual execution of the third task graph
-      taskExecutor.itrExecute(kmeansTaskGraph, plan);
+      ex.execute();
       //retrieve the new centroid value for the next iterations
       centroidsDataObject = taskExecutor.getOutput(kmeansTaskGraph, plan, "kmeanssink");
 
       // at each iteration, commit the checkpoint.
       checkpointingEnv.commitSnapshot();
     }
-    taskExecutor.closeExecution(kmeansTaskGraph, plan);
+    ex.closeExecution();
 
     DataPartition<?> centroidPartition = centroidsDataObject.getPartition(workerId);
     double[][] centroid = (double[][]) centroidPartition.getConsumer().next();

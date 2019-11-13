@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.executor.threading.ft;
 
 import edu.iu.dsc.tws.api.comms.channel.TWSChannel;
+import edu.iu.dsc.tws.api.compute.executor.ExecutionPlan;
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.Twister2Exception;
 import edu.iu.dsc.tws.api.faulttolerance.Fault;
@@ -20,8 +21,8 @@ import edu.iu.dsc.tws.executor.threading.BatchSharingExecutor2;
 public class AllSharingBatchExecutor extends BatchSharingExecutor2 {
   private boolean isFault = false;
 
-  public AllSharingBatchExecutor(Config cfg, int workerId, TWSChannel channel) {
-    super(cfg, workerId, channel);
+  public AllSharingBatchExecutor(Config cfg, int workerId, TWSChannel channel, ExecutionPlan plan) {
+    super(cfg, workerId, channel, plan);
   }
 
   @Override
