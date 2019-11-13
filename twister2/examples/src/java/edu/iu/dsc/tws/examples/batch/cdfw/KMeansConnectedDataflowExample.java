@@ -118,6 +118,33 @@ public final class KMeansConnectedDataflowExample {
     Twister2Submitter.submitJob(twister2Job, config);
   }
 
+  private static DataFlowGraph generateData(Config config, String dataDirectory,
+                                            String centroidDirectory, int dimension, int dsize,
+                                            int csize, int workers, int parallel,
+                                            DataFlowJobConfig jobConfig) {
+
+    DataGeneratorSource dataGeneratorSource = new DataGeneratorSource(Context.TWISTER2_DIRECT_EDGE,
+        dsize, csize, dimension, dataDirectory, centroidDirectory);
+    DataGeneratorSink dataGeneratorSink = new DataGeneratorSink();
+    ComputeGraphBuilder dataGenerationGraphBuilder = ComputeGraphBuilder.newBuilder(config);
+    dataGenerationGraphBuilder.setTaskGraphName("DataGenerator");
+    dataGenerationGraphBuilder.addSource("datageneratorsource", dataGeneratorSource, parallel);
+
+    ComputeConnection dataObjectComputeConnection = dataGenerationGraphBuilder.addCompute(
+        "datageneratorsink", dataGeneratorSink, parallel);
+    dataObjectComputeConnection.direct("datageneratorsource")
+        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
+        .withDataType(MessageTypes.OBJECT);
+    dataGenerationGraphBuilder.setMode(OperationMode.BATCH);
+    ComputeGraph dataObjectTaskGraph = dataGenerationGraphBuilder.build();
+    dataGenerationGraphBuilder.setTaskGraphName("datageneratorTG");
+
+    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorsink", dataObjectTaskGraph)
+        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
+        .setGraphType("non-iterative");
+    return job;
+  }
+
   private static DataFlowGraph generateFirstJob(Config config, int parallelismValue,
                                                 String dataDirectory, int dimension,
                                                 int dsize, int instances,
@@ -246,12 +273,12 @@ public final class KMeansConnectedDataflowExample {
       DataFlowGraph job = generateData(config, dataDirectory, centroidDirectory, dimension,
           dsize, csize, instances, parallelism, jobConfig);
 
+      cdfwEnv.executeDataFlowGraph(job);
+
       DataFlowGraph job1 = generateFirstJob(config, parallelism, dataDirectory, dimension,
           dsize, instances, jobConfig);
       DataFlowGraph job2 = generateSecondJob(config, parallelism, centroidDirectory, dimension,
           csize, instances, jobConfig);
-
-      cdfwEnv.executeDataFlowGraph(job);
 
       long startTime = System.currentTimeMillis();
       cdfwEnv.executeDataFlowGraph(job1);
@@ -282,32 +309,6 @@ public final class KMeansConnectedDataflowExample {
     }
   }
 
-  private static DataFlowGraph generateData(Config config, String dataDirectory,
-                                            String centroidDirectory, int dimension, int dsize,
-                                            int csize, int workers, int parallel,
-                                            DataFlowJobConfig jobConfig) {
-
-    DataGeneratorSource dataGeneratorSource = new DataGeneratorSource(Context.TWISTER2_DIRECT_EDGE,
-        dsize, csize, dimension, dataDirectory, centroidDirectory);
-    DataGeneratorSink dataGeneratorSink = new DataGeneratorSink();
-    ComputeGraphBuilder dataGenerationGraphBuilder = ComputeGraphBuilder.newBuilder(config);
-    dataGenerationGraphBuilder.setTaskGraphName("DataGenerator");
-    dataGenerationGraphBuilder.addSource("datageneratorsource", dataGeneratorSource, parallel);
-
-    ComputeConnection dataObjectComputeConnection = dataGenerationGraphBuilder.addCompute(
-        "datageneratorsink", dataGeneratorSink, parallel);
-    dataObjectComputeConnection.direct("datageneratorsource")
-        .viaEdge(Context.TWISTER2_DIRECT_EDGE)
-        .withDataType(MessageTypes.OBJECT);
-    dataGenerationGraphBuilder.setMode(OperationMode.BATCH);
-    ComputeGraph dataObjectTaskGraph = dataGenerationGraphBuilder.build();
-    dataGenerationGraphBuilder.setTaskGraphName("datageneratorTG");
-
-    DataFlowGraph job = DataFlowGraph.newSubGraphJob("datageneratorsink", dataObjectTaskGraph)
-        .setWorkers(workers).addDataFlowJobConfig(jobConfig)
-        .setGraphType("non-iterative");
-    return job;
-  }
 
 
   public static class KMeansSourceTask extends BaseSource implements Receptor {
