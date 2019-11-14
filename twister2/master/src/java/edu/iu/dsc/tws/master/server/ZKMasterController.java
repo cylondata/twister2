@@ -32,7 +32,6 @@ import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI.JobMasterState;
 import edu.iu.dsc.tws.proto.system.job.JobAPI;
@@ -86,6 +85,19 @@ public class ZKMasterController {
     rootPath = ZKContext.rootNode(config);
     workersPersDir = ZKUtils.persDir(rootPath, jobName);
     workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+  }
+
+  public void jobScaledUp(int newNumberOfWorkers) {
+    this.numberOfWorkers = newNumberOfWorkers;
+  }
+
+  public void jobScaledDown(int newNumberOfWorkers) {
+    scaledDownWorkers = new LinkedList<>();
+    for (int i = newNumberOfWorkers; i < numberOfWorkers; i++) {
+      scaledDownWorkers.add(i);
+    }
+
+    this.numberOfWorkers = newNumberOfWorkers;
   }
 
   /**
@@ -158,24 +170,6 @@ public class ZKMasterController {
     LOG.info("An ephemeral znode is created for the job master: " + fullPath);
   }
 
-  /**
-   * Update job master status with new state
-   * return true if successful
-   */
-  public boolean updateJobMasterStatus(JobMasterState newStatus) {
-
-    byte[] jmZnodeBody = ZKUtils.encodeJobMasterZnode(masterAddress, newStatus.getNumber());
-
-    try {
-      client.setData().forPath(masterEphemZNode.getActualPath(), jmZnodeBody);
-      return true;
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE,
-          "Could not update job master status in znode: " + masterEphemZNode.getActualPath(), e);
-      return false;
-    }
-  }
-
   private void addEphemChildrenCacheListener(PathChildrenCache cache) {
     PathChildrenCacheListener listener = new PathChildrenCacheListener() {
 
@@ -223,7 +217,7 @@ public class ZKMasterController {
    */
   private void workerZnodeAdded(PathChildrenCacheEvent event) {
 
-    JobState initialJobState = workerMonitor.getJobState();
+    boolean initialAllJoined = workerMonitor.isAllJoined();
 
     // first determine whether the job master has joined
     // job master path ends with "jm".
@@ -260,7 +254,7 @@ public class ZKMasterController {
     }
 
     // if currently all workers exist in the job, let the workers know that all joined
-    if (initialJobState == JobState.STARTING && workerMonitor.getJobState() == JobState.STARTED) {
+    if (!initialAllJoined && workerMonitor.isAllJoined()) {
 
       List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
 

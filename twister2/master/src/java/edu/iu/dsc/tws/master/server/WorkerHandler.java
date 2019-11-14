@@ -22,7 +22,6 @@ import edu.iu.dsc.tws.api.net.request.MessageHandler;
 import edu.iu.dsc.tws.api.net.request.RequestID;
 import edu.iu.dsc.tws.common.net.tcp.request.RRServer;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
-import edu.iu.dsc.tws.master.dashclient.models.JobState;
 import edu.iu.dsc.tws.proto.jobmaster.JobMasterAPI;
 
 /**
@@ -89,7 +88,7 @@ public class WorkerHandler implements MessageHandler {
 
     LOG.fine("RegisterWorker message received: \n" + message);
     JobMasterAPI.WorkerInfo workerInfo = message.getWorkerInfo();
-    JobState initialJobState = workerMonitor.getJobState();
+    boolean initialAllJoined = workerMonitor.isAllJoined();
     WorkerWithState workerWithState = new WorkerWithState(workerInfo, message.getInitialState());
 
     if (message.getInitialState() == JobMasterAPI.WorkerState.RESTARTED) {
@@ -114,7 +113,7 @@ public class WorkerHandler implements MessageHandler {
     sendRegisterWorkerResponse(id, workerInfo.getWorkerID(), true, null);
 
     // if all workers registered, inform all workers
-    if (initialJobState == JobState.STARTING && workerMonitor.getJobState() == JobState.STARTED) {
+    if (!initialAllJoined && workerMonitor.isAllJoined()) {
       LOG.info("All workers joined the job. Worker IDs: " + workerMonitor.getWorkerIDs());
       sendListWorkersResponseToWaitList();
 

@@ -73,6 +73,9 @@ public class WorkerMonitor implements MessageHandler {
   // upto date status of the job
   private JobState jobState;
 
+  // a flag to show whether all expected workers has already joined
+  private boolean allJoined = false;
+
   /**
    * numberOfWorkers in the job is tracked by this variable
    * all other classes in job master should get the upto-date numberOfWorkers from this variable
@@ -165,6 +168,10 @@ public class WorkerMonitor implements MessageHandler {
     return jobState;
   }
 
+  public boolean isAllJoined() {
+    return allJoined;
+  }
+
   @Override
   public void onMessage(RequestID id, int workerId, Message message) {
 
@@ -186,18 +193,20 @@ public class WorkerMonitor implements MessageHandler {
   public String started(WorkerWithState workerWithState) {
 
     // if the workerID of joined worker is higher than numberOfWorkers in the job,
-    // registration is unsuccessful.
+    // log a warning message.
+    // in a possible but unlikely case: when workers scaled up,
+    // new workers might join before the scaler informs WorkerMonitor
+    // in that case, numberOfWorkers would be smaller than workerID
     if (workerWithState.getWorkerID() >= numberOfWorkers) {
-      String failMessage = String.format(
+      String warnMessage = String.format(
           "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
-              + "Ignoring this join event. WorkerInfo of ignored worker: %s",
+              + "If this is not because of scaling up, it seems problematic. Joined worker: %s",
           workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
-      LOG.severe(failMessage);
-      return failMessage;
+      LOG.warning(warnMessage);
     }
 
     if (existWorker(workerWithState.getWorkerID())) {
-      String failMessage = "Previously a worker registered with workerID: "
+      String failMessage = "There is an already registered worker with workerID: "
           + workerWithState.getWorkerID();
       LOG.severe(failMessage);
       return failMessage;
@@ -213,13 +222,7 @@ public class WorkerMonitor implements MessageHandler {
       dashClient.registerWorker(workerWithState.getInfo(), workerWithState.getState());
     }
 
-    if (jobState == JobState.STARTING && allWorkersJoined()) {
-      jobState = JobState.STARTED;
-      if (dashClient != null) {
-        dashClient.jobStateChange(JobState.STARTED);
-      }
-    }
-
+    handleAllJoined();
     return null;
   }
 
@@ -229,14 +232,16 @@ public class WorkerMonitor implements MessageHandler {
   public String restarted(WorkerWithState workerWithState) {
 
     // if the workerID of joined worker is higher than numberOfWorkers in the job,
-    // registration is unsuccessful.
+    // log a warning message.
+    // in a possible but unlikely case: when workers scaled up,
+    // new workers might join before the scaler informs WorkerMonitor
+    // in that case, numberOfWorkers would be smaller than workerID
     if (workerWithState.getWorkerID() >= numberOfWorkers) {
-      String failMessage = String.format(
+      String warnMessage = String.format(
           "A worker joined but its workerID[%s] is higher than numberOfWorkers[%s]. "
-              + "Ignoring this join event. WorkerInfo of ignored worker: %s",
+              + "If this is not because of scaling up, it seems problematic. Joined worker: %s",
           workerWithState.getWorkerID(), numberOfWorkers, workerWithState.getInfo());
-      LOG.severe(failMessage);
-      return failMessage;
+      LOG.warning(warnMessage);
     }
 
     // send worker registration message to dashboard
@@ -266,15 +271,32 @@ public class WorkerMonitor implements MessageHandler {
     workers.put(workerWithState.getWorkerID(), workerWithState);
     LOG.info("WorkerID: " + workerWithState.getWorkerID() + " rejoined from failure.");
 
-    if (jobState == JobState.STARTING && allWorkersJoined()) {
-      jobState = JobState.STARTED;
-      if (dashClient != null) {
-        dashClient.jobStateChange(JobState.STARTED);
-      }
-    }
+    handleAllJoined();
 
     // TODO inform checkpoint master
     return null;
+  }
+
+  private void handleAllJoined() {
+
+    if (!allJoined && allWorkersJoined()) {
+      allJoined = true;
+
+      // inform Driver if exist
+      if (driver != null) {
+        driver.allWorkersJoined(constructWorkerList());
+      }
+
+      // if the job is becoming all joined for the first time, inform dashboard
+      if (jobState == JobState.STARTING) {
+        jobState = JobState.STARTED;
+
+        if (dashClient != null) {
+          dashClient.jobStateChange(JobState.STARTED);
+        }
+      }
+
+    }
   }
 
   /**
@@ -332,6 +354,9 @@ public class WorkerMonitor implements MessageHandler {
 
     // modify numberOfWorkers
     numberOfWorkers -= instancesRemoved;
+    if (jobMaster.getZkMasterController() != null) {
+      jobMaster.getZkMasterController().jobScaledDown(numberOfWorkers);
+    }
 
     // construct scaled message to send to workers
     JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
@@ -367,9 +392,14 @@ public class WorkerMonitor implements MessageHandler {
 
   public void workersScaledUp(int instancesAdded) {
 
+    allJoined = false;
+
     // keep previous numberOfWorkers and update numberOfWorkers with new value
     int numberOfWorkersBeforeScaling = numberOfWorkers;
     numberOfWorkers += instancesAdded;
+    if (jobMaster.getZkMasterController() != null) {
+      jobMaster.getZkMasterController().jobScaledUp(numberOfWorkers);
+    }
 
     JobMasterAPI.WorkersScaled scaledMessage = JobMasterAPI.WorkersScaled.newBuilder()
         .setChange(instancesAdded)
@@ -599,11 +629,6 @@ public class WorkerMonitor implements MessageHandler {
     LOG.info("Sending WorkersJoined messages ...");
 
     JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
-
-    // inform Driver if exist
-    if (driver != null) {
-      driver.allWorkersJoined(constructWorkerList());
-    }
 
     // send the message to all workers
     for (Integer workerID : workers.keySet()) {

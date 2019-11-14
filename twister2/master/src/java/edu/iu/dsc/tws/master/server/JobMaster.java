@@ -466,6 +466,10 @@ public class JobMaster {
 
   }
 
+  public ZKMasterController getZkMasterController() {
+    return zkMasterController;
+  }
+
   /**
    * this method finishes the job
    * It is executed when the worker completed message received from all workers

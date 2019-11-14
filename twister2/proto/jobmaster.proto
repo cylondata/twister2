@@ -69,7 +69,6 @@ message JobEvent {
         WorkerFailed failed = 1;
         WorkerRestarted restarted = 2;
         AllWorkersJoined allJoined = 3;
-        JobScaled scaled = 4;
     }
 }
 
@@ -88,19 +87,6 @@ message WorkerRestarted {
 message AllWorkersJoined {
     repeated WorkerInfo workerInfo = 1;
 }
-
-// if the change is positive, the job is scaled up
-// if the change is negative, the job is scaled down
-// numberOfWorkers shows the numberOfWorkers after scaling
-message JobScaled {
-    oneof changeRequired {
-        int32 change = 1;
-    }
-    oneof numberOfWorkersRequired {
-        int32 numberOfWorkers = 2;
-    }
-}
-
 
 /////////////////////////////////////////////////////////////////
 // Message types exchanged between Job Master and Workers

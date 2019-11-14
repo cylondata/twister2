@@ -479,6 +479,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     if (jobEvent.hasAllJoined()) {
       JobMasterAPI.AllWorkersJoined allWorkersJoined = jobEvent.getAllJoined();
+      workers.clear();
       workers.addAll(allWorkersJoined.getWorkerInfoList());
       allJoined = true;
 
