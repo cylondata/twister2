@@ -32,23 +32,23 @@ const benchmarks = {
     },
     "b_comms_reduce": {
         title: "[BATCH] Comms Reduce",
-        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BReduceExample/comms_reduce.csv"
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.batch.BReduceExample/comms_reduce.csv"
     },
     "b_comms_bcast": {
         title: "[BATCH] Comms Broadcast",
-        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BBroadcastExample/comms_bcast.csv"
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.batch.BBroadcastExample/comms_bcast.csv"
     },
     "b_comms_all_gather": {
         title: "[BATCH] Comms AllGather",
-        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BAllGatherExample/comms_all_gather.csv"
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.batch.BAllGatherExample/comms_all_gather.csv"
     },
     "b_comms_all_reduce": {
         title: "[BATCH] Comms AllReduce",
-        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BAllReduceExample/comms_all_reduce.csv"
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.batch.BAllReduceExample/comms_all_reduce.csv"
     },
     "b_comms_gather": {
         title: "[BATCH] Comms Gather",
-        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.stream.BGatherExample/comms_gather.csv"
+        path: jobsPath + "/edu.iu.dsc.tws.examples.comms.batch.BGatherExample/comms_gather.csv"
     }
 };
 
