@@ -27,7 +27,8 @@ import edu.iu.dsc.tws.api.resource.IWorkerFailureListener;
 import edu.iu.dsc.tws.api.resource.IWorkerStatusUpdater;
 import edu.iu.dsc.tws.common.logging.LoggingHelper;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
+import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.common.zk.ZKWorkerController;
 import edu.iu.dsc.tws.examples.basic.HelloWorld;
@@ -214,15 +215,15 @@ public final class ZKWControllerExample {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
     String rootPath = ZKContext.rootNode(conf);
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
-      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
+    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobName());
     }
 
     try {
-      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
 
       // test job znode content reading
-      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
+      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobName());
       LOG.info("JobZNode content: " + readJob);
 
     } catch (Exception e) {
@@ -236,8 +237,8 @@ public final class ZKWControllerExample {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, ZKContext.rootNode(config), jobName)) {
-      ZKJobZnodeUtil.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
+    if (ZKUtils.isThereJobZNodes(client, ZKContext.rootNode(config), jobName)) {
+      ZKUtils.deleteJobZNodes(client, ZKContext.rootNode(config), jobName);
     }
 
     ZKUtils.closeClient();
@@ -246,8 +247,8 @@ public final class ZKWControllerExample {
   public static void updateJobZnode(JobAPI.Job job) throws Exception {
 
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
-    String jobPath = ZKUtils.constructWorkersEphemDir(ZKContext.rootNode(config), jobName);
-    ZKJobZnodeUtil.updateJobZNode(client, job, jobPath);
+    String rootPath = ZKContext.rootNode(config);
+    ZKPersStateManager.updateJobZNode(client, rootPath, job);
 
     ZKUtils.closeClient();
   }

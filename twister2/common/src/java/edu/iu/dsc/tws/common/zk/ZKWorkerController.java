@@ -36,7 +36,6 @@
 
 package edu.iu.dsc.tws.common.zk;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,7 +59,6 @@ import org.apache.curator.utils.CloseableUtils;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.exceptions.TimeoutException;
-import edu.iu.dsc.tws.api.exceptions.Twister2RuntimeException;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.api.resource.ControllerContext;
 import edu.iu.dsc.tws.api.resource.IAllJoinedListener;
@@ -193,12 +191,12 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
-      JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
       numberOfWorkers = job.getNumberOfWorkers();
 
       // We cache children data for parent path.
       // So we will listen for all workers in the job
-      String eventsDir = ZKUtils.constructEventsDir(rootPath, jobName);
+      String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
       eventsChildrenCache = new PathChildrenCache(client, eventsDir, true);
       addEventsChildrenCacheListener(eventsChildrenCache);
       eventsChildrenCache.start();
@@ -236,7 +234,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   @Override
   public WorkerState getWorkerStatusForID(int id) {
-    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
     if (workerWS != null) {
       return workerWS.getState();
@@ -255,7 +253,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     // TODO: get it from local cache if exists,
 
-    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
     WorkerWithState workerWS = ZKPersStateManager.getWorkerWithState(client, workersPersDir, id);
     if (workerWS != null) {
       return workerWS.getInfo();
@@ -386,48 +384,26 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * create the znode for this worker
    */
   private void createWorkerZnode(WorkerState initialState) {
-    String workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
-    String workerPath = ZKUtils.constructWorkerPath(workersEphemDir, workerInfo.getWorkerID());
+    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+    String workerPath = ZKUtils.workerPath(workersEphemDir, workerInfo.getWorkerID());
 
     if (initialState == WorkerState.RESTARTED) {
-      removeEphemZNode(workersEphemDir);
+      ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, workerInfo.getWorkerID());
     }
 
-    // create an ephemeral znode for the worker as workerID its body as string
-    byte[] body = ("" + workerInfo.getWorkerID()).getBytes(StandardCharsets.UTF_8);
-    workerEphemZNode = ZKUtils.createPersistentEphemeralZnode(workerPath, body);
+    workerEphemZNode =
+        ZKEphemStateManager.createWorkerZnode(client, rootPath, jobName, workerInfo.getWorkerID());
     workerEphemZNode.start();
     try {
       workerEphemZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
       LOG.log(Level.SEVERE,
-          "Could not create worker ephemeral znode: " + workerInfo.getWorkerID(), e);
-      throw new RuntimeException("Could not create worker znode: " + workerInfo, e);
+          "Could not create worker ephemeral znode: " + workerPath, e);
+      throw new RuntimeException("Could not create worker znode: " + workerPath, e);
     }
 
     String fullWorkerPath = workerEphemZNode.getActualPath();
     LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
-  }
-
-  /**
-   * remove ephemeral worker znode from previous run if exist
-   */
-  private void removeEphemZNode(String workersEphemDir) {
-    try {
-      List<String> children = client.getChildren().forPath(workersEphemDir);
-      for (String childZnodeName: children) {
-        int wID = ZKUtils.getWorkerIDFromEphemPath(childZnodeName);
-        if (wID == workerInfo.getWorkerID()) {
-          String wPath = workersEphemDir + "/" + childZnodeName;
-          client.setData().forPath(wPath, ZKUtils.DELETE_TAG.getBytes(StandardCharsets.UTF_8));
-          client.delete().forPath(wPath);
-          LOG.info("EphemeralWorkerZnode deleted from previous run: " + wPath);
-        }
-      }
-
-    } catch (Exception e) {
-      throw new Twister2RuntimeException(e);
-    }
   }
 
   /**
@@ -451,7 +427,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    */
   public int getNumberOfCurrentWorkers() throws Exception {
 
-    String workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
+    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
     int size = -1;
     try {
       size = client.getChildren().forPath(workersEphemDir).size();

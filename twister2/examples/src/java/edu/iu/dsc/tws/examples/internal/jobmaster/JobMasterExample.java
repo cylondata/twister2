@@ -36,8 +36,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.config.Context;
 import edu.iu.dsc.tws.common.config.ConfigLoader;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
@@ -123,17 +123,17 @@ public final class JobMasterExample {
     CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(conf));
     String rootPath = ZKContext.rootNode(conf);
 
-    if (ZKJobZnodeUtil.isThereJobZNodes(client, rootPath, job.getJobName())) {
-      ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, job.getJobName());
+    if (ZKUtils.isThereJobZNodes(client, rootPath, job.getJobName())) {
+      ZKUtils.deleteJobZNodes(client, rootPath, job.getJobName());
     }
 
     try {
-      ZKJobZnodeUtil.createJobZNode(client, rootPath, job);
-      ZKPersStateManager.createJobZNode(client, rootPath, job);
+      ZKEphemStateManager.createEphemDir(client, rootPath, job.getJobName());
+      ZKPersStateManager.createPersStateDir(client, rootPath, job);
       ZKEventsManager.createEventsZNode(client, rootPath, job.getJobName());
 
       // test job znode content reading
-      JobAPI.Job readJob = ZKJobZnodeUtil.readJobZNodeBody(client, job.getJobName(), conf);
+      JobAPI.Job readJob = ZKPersStateManager.readJobZNode(client, rootPath, job.getJobName());
       LOG.info("JobZNode content: " + readJob);
 
     } catch (Exception e) {

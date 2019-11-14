@@ -15,7 +15,6 @@ import org.apache.curator.framework.CuratorFramework;
 
 import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.common.zk.ZKContext;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.IJobTerminator;
 
@@ -35,7 +34,7 @@ public class ZKJobTerminator implements IJobTerminator {
     if (ZKContext.isZooKeeperServerUsed(config)) {
       CuratorFramework client = ZKUtils.connectToServer(ZKContext.serverAddresses(config));
       String rootPath = ZKContext.rootNode(config);
-      zkCleared = ZKJobZnodeUtil.deleteJobZNodes(client, rootPath, jobName);
+      zkCleared = ZKUtils.deleteJobZNodes(client, rootPath, jobName);
       ZKUtils.closeClient();
     }
 

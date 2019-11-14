@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
@@ -53,10 +55,10 @@ public final class ZKPersStateManager {
    * Assumes that there is no znode exists in the ZooKeeper
    * This method should be called by the submitting client
    */
-  public static void createJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
+  public static void createPersStateDir(CuratorFramework client, String rootPath, JobAPI.Job job)
       throws Exception {
 
-    String persStatePath = ZKUtils.constructWorkersPersDir(rootPath, job.getJobName());
+    String persStatePath = ZKUtils.persDir(rootPath, job.getJobName());
 
     try {
       client
@@ -65,10 +67,10 @@ public final class ZKPersStateManager {
           .withMode(CreateMode.PERSISTENT)
           .forPath(persStatePath, job.toByteArray());
 
-      LOG.info("Job PersStatePath created: " + persStatePath);
+      LOG.info("Job PersStateDir created: " + persStatePath);
 
     } catch (Exception e) {
-      throw new Exception("PersStatePath can not be created for the path: "
+      throw new Exception("PersStateDir can not be created for the path: "
           + persStatePath, e);
     }
   }
@@ -86,13 +88,13 @@ public final class ZKPersStateManager {
                                             String jobName,
                                             WorkerInfo workerInfo) throws Exception {
 
-    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
-    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerInfo.getWorkerID());
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
 
     // if the worker znode exists,
     // update the body and return true
     if (client.checkExists().forPath(workerPersPath) != null) {
-      LOG.warning("Worker PersStatePath exists: " + workerPersPath);
+      LOG.warning("Worker PersStateDir exists: " + workerPersPath);
       WorkerWithState workerWithState = new WorkerWithState(workerInfo, WorkerState.RESTARTED);
       client.setData().forPath(workerPersPath, workerWithState.toByteArray());
       return true;
@@ -121,12 +123,12 @@ public final class ZKPersStateManager {
                                                String jobName,
                                                String jmAddress) throws Exception {
 
-    String jmPersPath = ZKUtils.constructJMPersPath(rootPath, jobName);
+    String jmPersPath = ZKUtils.jmPersPath(rootPath, jobName);
 
     // if the worker znode exists,
     // update the body and return true
     if (client.checkExists().forPath(jmPersPath) != null) {
-      LOG.warning("JobMaster PersStatePath exists: " + jmPersPath);
+      LOG.warning("JobMaster PersStateDir exists: " + jmPersPath);
       byte[] znodeBody =
           ZKUtils.encodeJobMasterZnode(jmAddress, JobMasterState.JM_RESTARTED.getNumber());
       client.setData().forPath(jmPersPath, znodeBody);
@@ -155,20 +157,20 @@ public final class ZKPersStateManager {
                                             int minID,
                                             int maxID) throws Twister2Exception {
 
-    String checkPath = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String checkPath = ZKUtils.persDir(rootPath, jobName);
 
     for (int workerID = minID; workerID < maxID; workerID++) {
-      String workerCheckPath = ZKUtils.constructWorkerPath(checkPath, workerID);
+      String workerCheckPath = ZKUtils.workerPath(checkPath, workerID);
 
       try {
         // not sure whether we need to check the existence
         if (client.checkExists().forPath(workerCheckPath) != null) {
 
           client.delete().forPath(workerCheckPath);
-          LOG.info("Worker PersStatePath deleted: " + workerCheckPath);
+          LOG.info("Worker PersStateDir deleted: " + workerCheckPath);
         }
       } catch (Exception e) {
-        throw new Twister2Exception("Worker PersStatePath cannot be deleted: " + workerCheckPath,
+        throw new Twister2Exception("Worker PersStateDir cannot be deleted: " + workerCheckPath,
             e);
       }
     }
@@ -180,8 +182,8 @@ public final class ZKPersStateManager {
                                            WorkerInfo workerInfo,
                                            WorkerState newStatus) {
 
-    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
-    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerInfo.getWorkerID());
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    String workerPersPath = ZKUtils.workerPath(workersPersDir, workerInfo.getWorkerID());
     WorkerWithState workerWithState = new WorkerWithState(workerInfo, newStatus);
 
     try {
@@ -199,7 +201,7 @@ public final class ZKPersStateManager {
                                                    String workersPersDir,
                                                    int workerID) {
 
-    String workerPersPath = ZKUtils.constructWorkerPath(workersPersDir, workerID);
+    String workerPersPath = ZKUtils.workerPath(workersPersDir, workerID);
 
     try {
       if (client.checkExists().forPath(workerPersPath) != null) {
@@ -223,7 +225,7 @@ public final class ZKPersStateManager {
                                                        String rootPath,
                                                        String jobName) {
 
-    String workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
+    String workersPersDir = ZKUtils.persDir(rootPath, jobName);
 
     try {
       List<String> children = client.getChildren().forPath(workersPersDir);
@@ -244,4 +246,50 @@ public final class ZKPersStateManager {
   }
 
 
+  /**
+   * read the body of persistent directory body
+   * decode and return
+   */
+  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName)
+      throws Exception {
+
+    String persDir = ZKUtils.persDir(rootPath, jobName);
+
+    try {
+      byte[] jobBytes = client.getData().forPath(persDir);
+      return decodeJobZnode(jobBytes);
+    } catch (Exception e) {
+      LOG.severe("Could not read job znode body: " + e.getMessage());
+      throw e;
+    }
+  }
+
+  /**
+   * decode job znode body bytes
+   */
+  public static JobAPI.Job decodeJobZnode(byte[] body) throws InvalidProtocolBufferException {
+    return JobAPI.Job.newBuilder().mergeFrom(body).build();
+  }
+
+  /**
+   * Create job znode with JobAPI.Job object as its payload
+   * Assumes that there is no job znode exists in the ZooKeeper
+   * This method should be called by the submitting client
+   */
+  public static void updateJobZNode(CuratorFramework client, String rootPath, JobAPI.Job job)
+      throws Exception {
+
+    String persDir = ZKUtils.persDir(rootPath, job.getJobName());
+    try {
+      client
+          .setData()
+          .forPath(persDir, job.toByteArray());
+
+      LOG.info("Job object in PersStateDir updated: " + persDir);
+
+    } catch (Exception e) {
+      LOG.severe("Could not update the job znode: " + e.getMessage());
+      throw e;
+    }
+  }
 }

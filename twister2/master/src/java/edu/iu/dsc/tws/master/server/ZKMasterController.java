@@ -11,7 +11,6 @@
 //  limitations under the License.
 package edu.iu.dsc.tws.master.server;
 
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -29,8 +28,8 @@ import edu.iu.dsc.tws.api.config.Config;
 import edu.iu.dsc.tws.api.faulttolerance.FaultToleranceContext;
 import edu.iu.dsc.tws.common.zk.WorkerWithState;
 import edu.iu.dsc.tws.common.zk.ZKContext;
+import edu.iu.dsc.tws.common.zk.ZKEphemStateManager;
 import edu.iu.dsc.tws.common.zk.ZKEventsManager;
-import edu.iu.dsc.tws.common.zk.ZKJobZnodeUtil;
 import edu.iu.dsc.tws.common.zk.ZKPersStateManager;
 import edu.iu.dsc.tws.common.zk.ZKUtils;
 import edu.iu.dsc.tws.master.dashclient.models.JobState;
@@ -85,8 +84,8 @@ public class ZKMasterController {
     this.workerMonitor = workerMonitor;
 
     rootPath = ZKContext.rootNode(config);
-    workersPersDir = ZKUtils.constructWorkersPersDir(rootPath, jobName);
-    workersEphemDir = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
+    workersPersDir = ZKUtils.persDir(rootPath, jobName);
+    workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
   }
 
   /**
@@ -112,7 +111,7 @@ public class ZKMasterController {
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
       if (initialState == JobMasterState.JM_RESTARTED) {
-        JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+        JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
         numberOfWorkers = job.getNumberOfWorkers();
       }
 
@@ -141,7 +140,7 @@ public class ZKMasterController {
    * create ephemeral znode for job master
    */
   private void createJMEphemZnode(JobMasterState initialState) {
-    String jmPath = ZKUtils.constructJMEphemPath(rootPath, jobName);
+    String jmPath = ZKUtils.jmEphemPath(rootPath, jobName);
 
     // put masterAddress and its state into znode body
     byte[] jmZnodeBody = ZKUtils.encodeJobMasterZnode(masterAddress, initialState.getNumber());
@@ -289,7 +288,7 @@ public class ZKMasterController {
     WorkerWithState workerWithState =
         ZKPersStateManager.getWorkerWithState(client, workersPersDir, removedWorkerID);
 
-    String workerBodyText = new String(event.getData().getData(), StandardCharsets.UTF_8);
+    String workerBodyText = ZKEphemStateManager.decodeWorkerZnodeBody(event.getData().getData());
 
     // need to distinguish between completed, scaled down and failed workers
     // if a worker completed before, it has left the job by completion
@@ -309,7 +308,7 @@ public class ZKMasterController {
       // removed event received for completed worker, nothing to do
       return;
 
-    } else if (ZKUtils.DELETE_TAG.equals(workerBodyText)) {
+    } else if (ZKEphemStateManager.DELETE_TAG.equals(workerBodyText)) {
       // restarting worker deleted the previous ephemeral znode
       // ignore this event, because the worker is already re-joining
       LOG.info("Restarting worker deleted znode from previous run: " + workerPath);

@@ -103,7 +103,7 @@ public class ZKBaseController {
 
     this.jobName = jobName;
     this.numberOfWorkers = numberOfWorkers;
-    this.jobPath = ZKUtils.constructWorkersEphemDir(rootPath, jobName);
+    this.jobPath = ZKUtils.ephemDir(rootPath, jobName);
 
     jobWorkers = new HashMap<>(numberOfWorkers);
   }
@@ -124,7 +124,7 @@ public class ZKBaseController {
 
       // update numberOfWorkers from jobZnode
       // with scaling up/down, it may have been changed
-      JobAPI.Job job = ZKJobZnodeUtil.readJobZNodeBody(client, jobName, config);
+      JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
       numberOfWorkers = job.getNumberOfWorkers();
 
       // cache jobZnode data, and watch that node for changes
@@ -316,7 +316,7 @@ public class ZKBaseController {
       @Override
       public void nodeChanged() throws Exception {
         byte[] jobZnodeBodyBytes = client.getData().forPath(jobPath);
-        JobAPI.Job job = ZKJobZnodeUtil.decodeJobZnode(jobZnodeBodyBytes);
+        JobAPI.Job job = ZKPersStateManager.decodeJobZnode(jobZnodeBodyBytes);
         LOG.info("Job znode changed. New number of workers: " + job.getNumberOfWorkers());
 
         if (numberOfWorkers == job.getNumberOfWorkers()) {

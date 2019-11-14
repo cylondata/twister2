@@ -33,7 +33,7 @@ public final class ZKEventsManager {
    */
   public static void createEventsZNode(CuratorFramework client, String rootPath, String jobName) {
 
-    String eventsDir = ZKUtils.constructEventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
 
     try {
       client
@@ -54,7 +54,7 @@ public final class ZKEventsManager {
                                       String rootPath,
                                       String jobName) {
 
-    String eventsDir = ZKUtils.constructEventsDir(rootPath, jobName);
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
 
     try {
       eventCounter = client.getChildren().forPath(eventsDir).size();
@@ -70,7 +70,7 @@ public final class ZKEventsManager {
    * increase the eventCounter by one
    */
   public static String constructEventPath(String rootPath, String jobName) {
-    return ZKUtils.constructEventsDir(rootPath, jobName) + "/" + eventCounter++;
+    return ZKUtils.eventsDir(rootPath, jobName) + "/" + eventCounter++;
   }
 
   public static void publishEvent(CuratorFramework client,
