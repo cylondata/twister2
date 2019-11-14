@@ -470,6 +470,10 @@ public class JobMaster {
     return zkMasterController;
   }
 
+  public WorkerHandler getWorkerHandler() {
+    return workerHandler;
+  }
+
   /**
    * this method finishes the job
    * It is executed when the worker completed message received from all workers

@@ -124,12 +124,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
       return null;
     }
 
-    List<Integer> ids = workerList.stream()
-        .map(wi -> wi.getWorkerID())
-        .sorted()
-        .collect(Collectors.toList());
-
-    LOG.info("All workers joined. Worker IDs: " + ids);
+    LOG.info("All workers joined. Worker IDs: " + getIDs(workerList));
 
     // syncs with all workers
     LOG.info("Waiting on a barrier ........................ ");
@@ -145,6 +140,13 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
 
     LOG.info("Proceeded through the barrier ........................ ");
     return workerList;
+  }
+
+  private List<Integer> getIDs(List<JobMasterAPI.WorkerInfo> workerList) {
+    return workerList.stream()
+        .map(wi -> wi.getWorkerID())
+        .sorted()
+        .collect(Collectors.toList());
   }
 
   private void waitAndComplete() {
@@ -175,7 +177,7 @@ public class BasicK8sWorker implements IWorker, IAllJoinedListener, IScalerListe
   }
 
   public void allWorkersJoined(List<JobMasterAPI.WorkerInfo> workerList) {
-    LOG.info("allWorkersJoined event received. Number of workers: " + workerList.size());
+    LOG.info("allWorkersJoined event received. IDs: " + getIDs(workerList));
 
     synchronized (waitObject) {
       waitObject.notify();

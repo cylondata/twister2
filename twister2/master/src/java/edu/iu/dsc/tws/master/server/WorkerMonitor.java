@@ -130,10 +130,6 @@ public class WorkerMonitor implements MessageHandler {
     }
   }
 
-  public WorkerWithState getWorkerWithState(int workerID) {
-    return workers.get(workerID);
-  }
-
   /**
    * get the list of workerIDs sorted
    */
@@ -162,10 +158,6 @@ public class WorkerMonitor implements MessageHandler {
    */
   public boolean existWorker(int workerID) {
     return workers.containsKey(workerID);
-  }
-
-  public JobState getJobState() {
-    return jobState;
   }
 
   public boolean isAllJoined() {
@@ -284,7 +276,7 @@ public class WorkerMonitor implements MessageHandler {
 
       // inform Driver if exist
       if (driver != null) {
-        driver.allWorkersJoined(constructWorkerList());
+        driver.allWorkersJoined(getWorkerInfoList());
       }
 
       // if the job is becoming all joined for the first time, inform dashboard
@@ -412,10 +404,17 @@ public class WorkerMonitor implements MessageHandler {
       rrServer.sendMessage(scaledMessage, wID);
     }
 
-    // if all newly scaled up workers are already joined
-    // send WorkersJoined messages
+    // in the case of very unlikely but possible scenerio
+    // all scaled up workers may be already joined
+    // in that case, publish the event
     if (allWorkersJoined()) {
-      sendWorkersJoinedMessage();
+      allJoined = true;
+
+      if (jobMaster.getZkMasterController() == null) {
+        jobMaster.getWorkerHandler().sendWorkersJoinedMessage();
+      } else {
+        jobMaster.getZkMasterController().publishAllJoined();
+      }
     }
 
     // send Scaled message to the dashboard
@@ -619,50 +618,6 @@ public class WorkerMonitor implements MessageHandler {
     }
 
     return true;
-  }
-
-  /**
-   * send WorkersJoined message to all workers and the driver
-   */
-  public void sendWorkersJoinedMessage() {
-
-    LOG.info("Sending WorkersJoined messages ...");
-
-    JobMasterAPI.WorkersJoined joinedMessage = constructWorkersJoinedMessage();
-
-    // send the message to all workers
-    for (Integer workerID : workers.keySet()) {
-      rrServer.sendMessage(joinedMessage, workerID);
-    }
-  }
-
-  /**
-   * construct WorkersJoined message
-   */
-  private JobMasterAPI.WorkersJoined constructWorkersJoinedMessage() {
-
-    JobMasterAPI.WorkersJoined.Builder joinedBuilder = JobMasterAPI.WorkersJoined.newBuilder()
-        .setNumberOfWorkers(numberOfWorkers);
-
-    for (WorkerWithState worker : workers.values()) {
-      joinedBuilder.addWorker(worker.getInfo());
-    }
-
-    return joinedBuilder.build();
-  }
-
-  /**
-   * construct WorkerList to send to Driver
-   */
-  private List<JobMasterAPI.WorkerInfo> constructWorkerList() {
-
-    List<JobMasterAPI.WorkerInfo> workerList = new LinkedList<>();
-
-    for (WorkerWithState worker : workers.values()) {
-      workerList.add(worker.getInfo());
-    }
-
-    return workerList;
   }
 
 }

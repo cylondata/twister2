@@ -255,17 +255,20 @@ public class ZKMasterController {
 
     // if currently all workers exist in the job, let the workers know that all joined
     if (!initialAllJoined && workerMonitor.isAllJoined()) {
-
-      List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
-
-      JobMasterAPI.AllWorkersJoined allWorkersJoined = JobMasterAPI.AllWorkersJoined.newBuilder()
-              .addAllWorkerInfo(workers)
-              .build();
-      JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
-          .setAllJoined(allWorkersJoined)
-          .build();
-      ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
+      publishAllJoined();
     }
+  }
+
+  public void publishAllJoined() {
+    List<JobMasterAPI.WorkerInfo> workers = workerMonitor.getWorkerInfoList();
+
+    JobMasterAPI.AllWorkersJoined allWorkersJoined = JobMasterAPI.AllWorkersJoined.newBuilder()
+        .addAllWorkerInfo(workers)
+        .build();
+    JobMasterAPI.JobEvent jobEvent = JobMasterAPI.JobEvent.newBuilder()
+        .setAllJoined(allWorkersJoined)
+        .build();
+    ZKEventsManager.publishEvent(client, rootPath, jobName, jobEvent);
   }
 
   /**

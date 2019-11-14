@@ -12,6 +12,7 @@
 package edu.iu.dsc.tws.master.server;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,7 +45,6 @@ public class WorkerHandler implements MessageHandler {
   private boolean zkUsed;
 
   private HashMap<Integer, RequestID> waitList;
-
 
   public WorkerHandler(WorkerMonitor workerMonitor, RRServer rrServer, boolean zkUsed) {
     this.workerMonitor = workerMonitor;
@@ -117,7 +117,7 @@ public class WorkerHandler implements MessageHandler {
       LOG.info("All workers joined the job. Worker IDs: " + workerMonitor.getWorkerIDs());
       sendListWorkersResponseToWaitList();
 
-      workerMonitor.sendWorkersJoinedMessage();
+      sendWorkersJoinedMessage();
     }
 
   }
@@ -246,6 +246,26 @@ public class WorkerHandler implements MessageHandler {
     rrServer.sendResponse(id, response);
     LOG.fine("WorkerStateChangeResponse sent:\n" + response);
 
+  }
+
+  /**
+   * send WorkersJoined message to all workers and the driver
+   */
+  public void sendWorkersJoinedMessage() {
+
+    LOG.info("Sending WorkersJoined messages ...");
+
+    List<JobMasterAPI.WorkerInfo> workerInfoList = workerMonitor.getWorkerInfoList();
+
+    JobMasterAPI.WorkersJoined joinedMessage = JobMasterAPI.WorkersJoined.newBuilder()
+        .setNumberOfWorkers(workerInfoList.size())
+        .addAllWorker(workerInfoList)
+        .build();
+
+    // send the message to all workers
+    for (JobMasterAPI.WorkerInfo workerInfo : workerInfoList) {
+      rrServer.sendMessage(joinedMessage, workerInfo.getWorkerID());
+    }
   }
 
 
