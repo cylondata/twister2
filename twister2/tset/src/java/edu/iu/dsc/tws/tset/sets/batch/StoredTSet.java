@@ -48,15 +48,15 @@ import edu.iu.dsc.tws.tset.sources.DataPartitionSourceFunc;
 public abstract class StoredTSet<T> extends BatchTSetImpl<T> implements Storable<T> {
   private SinkFunc<?> storingSinkFunc;
   private String storedSourcePrefix;
-  private SourceTSet<T> storedSource;
+  protected SourceTSet<T> storedSource;
 
   /*
   Sink function type is unknown as we need to preserve the output datao bject type to T. In doing
   so, we would need to have several types of sink functions that can convert the comms message to
    T. example: for direct, sink func would convert Iterator<T> to T.
    */
-  StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
-             int parallelism) {
+  public StoredTSet(BatchTSetEnvironment tSetEnv, String name, SinkFunc<?> sinkFunc,
+                    int parallelism) {
     super(tSetEnv, name, parallelism);
     this.storingSinkFunc = sinkFunc;
     this.storedSourcePrefix = "stored(" + getId() + ")";

@@ -66,7 +66,7 @@ public class TSetFTExample implements CheckpointingBatchTSetIWorker, Serializabl
 
       @Override
       public boolean hasNext() {
-        return count < 10;
+        return count < 1024 * 1024 * 10;
       }
 
       @Override
@@ -75,10 +75,14 @@ public class TSetFTExample implements CheckpointingBatchTSetIWorker, Serializabl
       }
     }, 2);
 
+    long t1 = System.currentTimeMillis();
     PersistedTSet<Integer> cache = source.direct().persist();
 
+    // persist will take under a second, when loading from a checkpoint
+    LOG.info("Persist took : " + (System.currentTimeMillis() - t1));
+
     cache.direct().forEach(i -> {
-      LOG.info("i : " + i);
+      //LOG.info("i : " + i);
     });
 
   }
