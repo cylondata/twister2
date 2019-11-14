@@ -37,8 +37,11 @@
 package edu.iu.dsc.tws.common.zk;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,6 +117,9 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // WorkerInfo object for this worker
   private WorkerInfo workerInfo;
 
+  // initial state of the worker
+  private WorkerState initialState;
+
   // the client to connect to ZK server
   protected CuratorFramework client;
 
@@ -137,6 +143,11 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   // a flag to show whether all workers joined the job
   // Initially it is false. It becomes true when all workers joined the job.
   private boolean allJoined = false;
+
+  // last event index at the time of restart, if restarted
+  private int numberOfPastEvents;
+  // put past events into this sorted map
+  private TreeMap<Integer, JobMasterAPI.JobEvent> pastEvents;
 
   // synchronization object for waiting all workers to join the job
   protected Object waitObject = new Object();
@@ -177,11 +188,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
    * The body of the worker znode will be updated as the status of worker changes
    * from STARTING, RUNNING, COMPLETED
    */
-  public void initialize(WorkerState initialState) throws Exception {
+  public void initialize(WorkerState initState) throws Exception {
 
-    if (!(initialState == WorkerState.STARTED || initialState == WorkerState.RESTARTED)) {
+    this.initialState = initState;
+
+    if (!(initState == WorkerState.STARTED || initState == WorkerState.RESTARTED)) {
       throw new Exception("initialState has to be either WorkerState.STARTED or "
-          + "WorkerState.RESTARTED. Supplied value: " + initialState);
+          + "WorkerState.RESTARTED. Supplied value: " + initState);
     }
 
     try {
@@ -193,6 +206,17 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       // with scaling up/down, it may have been changed
       JobAPI.Job job = ZKPersStateManager.readJobZNode(client, rootPath, jobName);
       numberOfWorkers = job.getNumberOfWorkers();
+
+      // if this worker is started with scaling up, or
+      // if it is coming from failure
+      // we need to handle past events
+      numberOfPastEvents = ZKEventsManager.getNumberOfPastEvents(client, rootPath, jobName);
+      pastEvents = new TreeMap<>(Collections.reverseOrder());
+
+      if (isRestarted()) {
+        // delete ephemeral worker znode from previous run if any
+        ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, workerInfo.getWorkerID());
+      }
 
       // We cache children data for parent path.
       // So we will listen for all workers in the job
@@ -208,7 +232,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
       daiForBarrier = new DistributedAtomicInteger(client,
           daiPathForBarrier, new ExponentialBackoffRetry(1000, 3));
 
-      createWorkerZnode(initialState);
+      createWorkerZnode();
 
       LOG.info("This worker: " + workerInfo.getWorkerID() + " initialized successfully.");
 
@@ -216,6 +240,32 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 //      LOG.log(Level.SEVERE, "Exception when initializing ZKWorkerController", e);
       throw e;
     }
+  }
+
+  /**
+   * create the znode for this worker
+   */
+  private void createWorkerZnode() {
+    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
+    String workerPath = ZKUtils.workerPath(workersEphemDir, workerInfo.getWorkerID());
+
+    workerEphemZNode =
+        ZKEphemStateManager.createWorkerZnode(client, rootPath, jobName, workerInfo.getWorkerID());
+    workerEphemZNode.start();
+    try {
+      workerEphemZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      LOG.log(Level.SEVERE,
+          "Could not create worker ephemeral znode: " + workerPath, e);
+      throw new RuntimeException("Could not create worker znode: " + workerPath, e);
+    }
+
+    String fullWorkerPath = workerEphemZNode.getActualPath();
+    LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
+  }
+
+  private boolean isRestarted() {
+    return initialState == WorkerState.RESTARTED;
   }
 
   /**
@@ -367,6 +417,7 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   }
 
   /**
+   * TODO: not implemented yet
    * add a single IJobMasterListener
    * if additional IJobMasterListener tried to be added,
    * do not add and return false
@@ -378,32 +429,6 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
     jobMasterListener = iJobMasterListener;
     return true;
-  }
-
-  /**
-   * create the znode for this worker
-   */
-  private void createWorkerZnode(WorkerState initialState) {
-    String workersEphemDir = ZKUtils.ephemDir(rootPath, jobName);
-    String workerPath = ZKUtils.workerPath(workersEphemDir, workerInfo.getWorkerID());
-
-    if (initialState == WorkerState.RESTARTED) {
-      ZKEphemStateManager.removeEphemZNode(client, rootPath, jobName, workerInfo.getWorkerID());
-    }
-
-    workerEphemZNode =
-        ZKEphemStateManager.createWorkerZnode(client, rootPath, jobName, workerInfo.getWorkerID());
-    workerEphemZNode.start();
-    try {
-      workerEphemZNode.waitForInitialCreate(10000, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      LOG.log(Level.SEVERE,
-          "Could not create worker ephemeral znode: " + workerPath, e);
-      throw new RuntimeException("Could not create worker znode: " + workerPath, e);
-    }
-
-    String fullWorkerPath = workerEphemZNode.getActualPath();
-    LOG.info("An ephemeral znode is created for this worker: " + fullWorkerPath);
   }
 
   /**
@@ -458,44 +483,51 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
   /**
    * when a new znode added to this job znode,
    * take necessary actions
-   * TODO: we should think about how to handle past events for restarted workers
    */
   private void eventPublished(PathChildrenCacheEvent event) {
 
-    // first determine whether the job master has joined
-    // job master path ends with "jm".
-    // worker paths end with workerID
     String eventPath = event.getData().getPath();
+    int eventIndex = ZKUtils.getWorkerIDFromPersPath(eventPath);
+
     byte[] eventData = event.getData().getData();
     JobMasterAPI.JobEvent jobEvent;
     try {
-      jobEvent = JobMasterAPI.JobEvent.newBuilder()
-          .mergeFrom(eventData)
-          .build();
+      jobEvent = ZKEventsManager.decodeJobEvent(eventData);
     } catch (InvalidProtocolBufferException e) {
       LOG.log(Level.SEVERE, "Could not decode received JobEvent from the path: " + eventPath, e);
       return;
     }
 
-    if (jobEvent.hasAllJoined()) {
-      JobMasterAPI.AllWorkersJoined allWorkersJoined = jobEvent.getAllJoined();
-      workers.clear();
-      workers.addAll(allWorkersJoined.getWorkerInfoList());
-      allJoined = true;
+    // if there are already events when the worker has started, handle those
+    if (eventIndex < numberOfPastEvents) {
 
-      synchronized (waitObject) {
-        waitObject.notify();
+      // ignore all past events for a worker that is not restarted
+      if (!isRestarted()) {
+        return;
       }
 
-      if (allJoinedListener != null) {
-        allJoinedListener.allWorkersJoined(cloneWorkers());
+      // if the worker is restarted, put all events into the map object
+      // we will use the latest allJoined event only from the past events
+      pastEvents.put(eventIndex, jobEvent);
+      if (pastEvents.size() == numberOfPastEvents) {
+        processPastEvents();
       }
 
       return;
     }
 
+    if (jobEvent.hasAllJoined()) {
+      processAllJoinedEvent(jobEvent);
+      return;
+    }
+
     if (jobEvent.hasFailed()) {
       JobMasterAPI.WorkerFailed workerFailed = jobEvent.getFailed();
+      // if the event is about this worker, ignore it
+      if (workerFailed.getWorkerID() == workerInfo.getWorkerID()) {
+        return;
+      }
+
       LOG.info(String.format("Worker[%s] FAILED. ", workerFailed.getWorkerID()));
 
       if (failureListener != null) {
@@ -504,7 +536,13 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
     }
 
     if (jobEvent.hasRestarted()) {
+
       JobMasterAPI.WorkerRestarted workerRestarted = jobEvent.getRestarted();
+      // if the event is about this worker, ignore it
+      if (workerRestarted.getWorkerInfo().getWorkerID() == workerInfo.getWorkerID()) {
+        return;
+      }
+
       LOG.info(String.format("Worker[%s] RESTARTED.",
           workerRestarted.getWorkerInfo().getWorkerID()));
 
@@ -517,6 +555,37 @@ public class ZKWorkerController implements IWorkerController, IWorkerStatusUpdat
 
   }
 
+  /**
+   * look for an AllJoined event among past events,
+   * if there is, process the one with highest index
+   * ignore all other past events
+   * PastEvents are sorted in reverse order, so we process the first one we find
+   */
+  private void processPastEvents() {
+    for (Map.Entry<Integer, JobMasterAPI.JobEvent> entry: pastEvents.entrySet()) {
+      if (entry.getValue().hasAllJoined()) {
+        LOG.info("AllWorkersJoined event from past events. Event index: " + entry.getKey());
+        processAllJoinedEvent(entry.getValue());
+        return;
+      }
+    }
+  }
+
+  private void processAllJoinedEvent(JobMasterAPI.JobEvent jobEvent) {
+
+    JobMasterAPI.AllWorkersJoined allWorkersJoined = jobEvent.getAllJoined();
+    workers.clear();
+    workers.addAll(allWorkersJoined.getWorkerInfoList());
+    allJoined = true;
+
+    synchronized (waitObject) {
+      waitObject.notify();
+    }
+
+    if (allJoinedListener != null) {
+      allJoinedListener.allWorkersJoined(cloneWorkers());
+    }
+  }
 
   /**
    * try to increment the daiForBarrier

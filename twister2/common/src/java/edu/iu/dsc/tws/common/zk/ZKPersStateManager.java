@@ -250,8 +250,7 @@ public final class ZKPersStateManager {
    * read the body of persistent directory body
    * decode and return
    */
-  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName)
-      throws Exception {
+  public static JobAPI.Job readJobZNode(CuratorFramework client, String rootPath, String jobName) {
 
     String persDir = ZKUtils.persDir(rootPath, jobName);
 
@@ -260,7 +259,7 @@ public final class ZKPersStateManager {
       return decodeJobZnode(jobBytes);
     } catch (Exception e) {
       LOG.severe("Could not read job znode body: " + e.getMessage());
-      throw e;
+      throw new Twister2RuntimeException(e);
     }
   }
 

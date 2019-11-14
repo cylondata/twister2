@@ -219,9 +219,6 @@ public class ZKMasterController {
 
     boolean initialAllJoined = workerMonitor.isAllJoined();
 
-    // first determine whether the job master has joined
-    // job master path ends with "jm".
-    // worker paths end with workerID
     String addedChildPath = event.getData().getPath();
     int workerID = ZKUtils.getWorkerIDFromEphemPath(addedChildPath);
     WorkerWithState workerWithState =

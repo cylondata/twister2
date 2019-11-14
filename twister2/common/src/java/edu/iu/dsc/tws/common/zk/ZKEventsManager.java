@@ -13,6 +13,8 @@ package edu.iu.dsc.tws.common.zk;
 
 import java.util.logging.Logger;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 
@@ -24,7 +26,8 @@ public final class ZKEventsManager {
 
   private static int eventCounter = 0;
 
-  private ZKEventsManager() { }
+  private ZKEventsManager() {
+  }
 
   /**
    * Create job znode for persistent states
@@ -93,6 +96,30 @@ public final class ZKEventsManager {
       throw new Twister2RuntimeException("JobEvent can not be created for the path: "
           + eventPath, e);
     }
+  }
+
+  public static int getNumberOfPastEvents(CuratorFramework client,
+                                          String rootPath,
+                                          String jobName) {
+
+    String eventsDir = ZKUtils.eventsDir(rootPath, jobName);
+
+    try {
+      int numberOfPastEvents = client.getChildren().forPath(eventsDir).size();
+      LOG.info("Number of past events: " + numberOfPastEvents);
+      return numberOfPastEvents;
+    } catch (Exception e) {
+      throw new Twister2RuntimeException("Could not get children of events directory: "
+          + eventsDir, e);
+    }
+  }
+
+  public static JobMasterAPI.JobEvent decodeJobEvent(byte[] eventData)
+      throws InvalidProtocolBufferException {
+
+    return JobMasterAPI.JobEvent.newBuilder()
+        .mergeFrom(eventData)
+        .build();
   }
 
 }
